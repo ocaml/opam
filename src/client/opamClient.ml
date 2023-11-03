@@ -635,6 +635,57 @@ let init_checks ?(hard_fail_exn=true) init_config =
   if hard_fail && hard_fail_exn then OpamStd.Sys.exit_because `Configuration_error
   else not (soft_fail || hard_fail)
 
+let git_for_windows_check =
+  if Sys.win32 then
+    fun cygbin ->
+      let gitcmd = OpamSystem.resolve_command "git" in
+      match gitcmd with
+      | None -> (* git *)
+        OpamConsole.note "no git!"
+      | Some gitcmd ->
+        let bindir = Filename.dirname gitcmd in
+        let bashcmd = Filename.concat bindir "bash.exe" in
+        (* We don't want to resolve it, just to check if it exists and is exe *)
+        let check_bash = OpamSystem.resolve_command ~env:[||] bashcmd in
+        match check_bash with
+        | None -> ()
+        | Some bashcmd -> (* found bash in git prefix *)
+          let is_cygwin =
+            OpamStd.Option.map_default (fun prefix ->
+                OpamStd.String.starts_with ~prefix bashcmd)
+              false cygbin
+          in
+          let git4cmd_bindir =
+            Filename.dirname bindir
+          in
+          let git4cmd_cmddir =
+            Filename.concat git4cmd_bindir "cmd"
+          in
+          let is_git4win =
+            let file = Filename.concat git4cmd_cmddir "git.exe" in
+            Sys.file_exists file
+          in
+          if is_cygwin then
+            OpamConsole.warning
+              "You are using Cygwin git, \
+               consider installing Git for Windows: https://gitforwindows.org \
+               and check that it is well in your Path"
+          else
+          if is_git4win then
+            OpamConsole.warning
+              "You are using Git for Windows, \
+               but your path contains the wrong binary directory.\n\
+               Consider reinstalling or add %s in your path instead of %s"
+              git4cmd_cmddir bindir
+          else
+            OpamConsole.warning
+              "A path in you Path contains Unix tools that doesn't come \
+               from Cygwin or Git for Windows: %s.\n\
+               Consider installing Git for Windows: https://gitforwindows.org \
+               and cleaning your Path"
+              bindir
+  else fun _ -> ()
+
 let windows_checks ?cygwin_setup config =
   let vars = OpamFile.Config.global_variables config in
   let env =
@@ -866,10 +917,12 @@ let windows_checks ?cygwin_setup config =
       else
         config
   in
-  OpamCoreConfig.update
-    ?cygbin:OpamStd.Option.Op.(
-        OpamSysInteract.Cygwin.cygbin_opt config
-        >>| OpamFilename.Dir.to_string) ();
+  let cygbin = OpamStd.Option.Op.(
+      OpamSysInteract.Cygwin.cygbin_opt config
+      >>| OpamFilename.Dir.to_string)
+  in
+  OpamCoreConfig.update ?cygbin ();
+  git_for_windows_check cygbin;
   config
 
 let update_with_init_config ?(overwrite=false) config init_config =
