@@ -681,6 +681,16 @@ let windows_checks ?cygwin_setup config =
              OpamFilename.(Dir.to_string (dirname_dir (dirname cygcheck))));
       config
   in
+  let install_cygwin_tools () =
+    let packages =
+      match OpamSystem.resolve_command "git" with
+      | None -> OpamInitDefaults.required_packages_for_cygwin
+      | Some _ ->
+        List.filter (fun c -> not OpamSysPkg.(equal (of_string "git") c))
+          OpamInitDefaults.required_packages_for_cygwin
+    in
+    OpamSysInteract.Cygwin.install ~packages
+  in
   let header () = OpamConsole.header_msg "Unix support infrastructure" in
   let get_cygwin = function
     | Some cygcheck
@@ -777,10 +787,7 @@ let windows_checks ?cygwin_setup config =
         match prompt () with
         | `Abort -> OpamStd.Sys.exit_because `Aborted
         | `Internal ->
-          let cygcheck =
-            OpamSysInteract.Cygwin.install
-              ~packages:OpamInitDefaults.required_packages_for_cygwin
-          in
+          let cygcheck = install_cygwin_tools () in
           let config = success cygcheck in
           config
         | `Specify ->
@@ -819,9 +826,7 @@ let windows_checks ?cygwin_setup config =
              header ();
              let cygcheck =
                match setup with
-               | `internal ->
-                 OpamSysInteract.Cygwin.install
-                   ~packages:OpamInitDefaults.required_packages_for_cygwin
+               | `internal -> install_cygwin_tools ()
                | (`default_location | `location _ as setup) ->
                  let cygroot =
                    match setup with
