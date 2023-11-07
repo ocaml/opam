@@ -680,8 +680,8 @@ CAMLprim value OPAMW_GetProcessAncestry(value unit)
                 }
                 cur->LowPart = entry.th32ProcessID;
                 cur->HighPart = entry.th32ParentProcessID;
+                cur[1].QuadPart = 0LL;
                 if (cur->LowPart == target) {
-                  cur[1].QuadPart = 0LL;
                   break;
                 } else {
                   cur++;
