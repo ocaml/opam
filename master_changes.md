@@ -105,7 +105,7 @@ users)
 ## Internal
 
 ## Internal: Windows
-  * Fix sporadic crash in shell detection (seen in native containers) [#5714 @dra27]
+  * Fix sporadic crash and segfault in shell detection (seen in native containers) [#5714 @dra27]
 
 ## Test
 

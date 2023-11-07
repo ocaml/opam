@@ -675,6 +675,7 @@ CAMLprim value OPAMW_GetProcessAncestry(value unit)
                     read_entry = FALSE;
                     break;
                   } else {
+                    cur = ptr + (cur - processes);
                     processes = ptr;
                   }
                 }
