@@ -121,6 +121,7 @@ let base_env =
   propagate "TMPDIR" @
   propagate "TMP" @
   propagate "TEMP" @
+  (if Sys.win32 then ["SHELL", "/bin/sh"] else []) @
   [
     "OPAMKEEPBUILDDIR", "1";
     "OPAMCOLOR", "never";

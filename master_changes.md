@@ -98,6 +98,7 @@ users)
 ### Tests
 
 ### Engine
+  * Set `SHELL` to `/bin/sh` in Windows to ensure `opam env` commands are consistent [#5723 @dra27]
 
 ## Github Actions
 
