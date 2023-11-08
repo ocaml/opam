@@ -118,3 +118,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamSystem.apply_cygpath`: runs `cygpath` over the argument [#5723 @dra27 - function itself added in #3348]
