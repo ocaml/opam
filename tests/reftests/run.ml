@@ -541,6 +541,11 @@ let parse_command = Parse.command
 let common_filters ?opam dir =
    let tmpdir = OpamSystem.real_path (Filename.get_temp_dir_name ()) in
    let open Re in
+   let dir_to_regex dir =
+     if Sys.win32 then
+       [str dir; str (OpamSystem.back_to_forward dir); str (OpamSystem.apply_cygpath dir)]
+     else
+       [str dir] in
    [
      seq [ bol;
            alt [ str "#=== ERROR";
@@ -554,11 +559,10 @@ let common_filters ?opam dir =
      GrepV;
      seq [bol; str cmd_prompt],
      Sed "##% ";
-     alt [str dir; str (OpamSystem.back_to_forward dir)],
+     alt (dir_to_regex dir),
      Sed "${BASEDIR}";
      seq [
-          alt [str tmpdir;
-               str (OpamSystem.back_to_forward tmpdir)];
+          alt (dir_to_regex tmpdir);
           rep (set "/\\");
           str "opam-";
           rep1 (alt [xdigit; char '-'])],
