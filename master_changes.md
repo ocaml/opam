@@ -80,6 +80,7 @@ users)
   * Remove `bigarray` dependency [#5612 @kit-ty-kate]
   * Remove use of deprecated `Printf.kprintf" [#5612 @kit-ty-kate]
   * [BUG] Fix "make cold" on Windows when gcc is available [#5635 @kit-ty-kate - fixes #5600]
+  * Fix incorrect error message when alternate C compiler is missing [#5667 @dra27 - partial fix #5661]
 
 ## Infrastructure
   * Test OCaml 5.0 and 5.1 in CI [#5672 @kit-ty-kate]

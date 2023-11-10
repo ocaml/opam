@@ -10,6 +10,7 @@ check_linker text eol=lf
 *.m4 text eol=lf
 changelog_checker text eol=lf
 *.cmd text eol=crlf
+shell/autogen text eol=lf
 
 # For diffing simplicity, the patch re-write test uses LF endings on Windows
 tests/patcher-test.reference text eol=lf
