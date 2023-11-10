@@ -34,13 +34,18 @@ endef
 
 SRC_EXTS = cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format result seq stdlib-shims
 PKG_EXTS = $(SRC_EXTS) dune-local findlib ocamlbuild topkg mccs
+ALL_EXTS = $(SRC_EXTS) $(PKG_EXTS) ocaml flexdll
 
+MCCS_SRCS = mccs
+ALL_EXTS += $(MCCS_SRCS)
 ifeq ($(MCCS_ENABLED),true)
-SRC_EXTS := $(SRC_EXTS) mccs
+SRC_EXTS += $(MCCS_SRCS)
 endif
 
+0INSTALL_SRCS = opam-0install-cudf 0install-solver
+ALL_EXTS += $(0INSTALL_SRCS)
 ifeq ($(OPAM_0INSTALL_SOLVER_ENABLED),true)
-SRC_EXTS := $(SRC_EXTS) opam-0install-cudf 0install-solver
+SRC_EXTS += $(0INSTALL_SRCS)
 endif
 
 include Makefile.sources
@@ -141,7 +146,7 @@ archives: $(SRC_EXTS:=.download)
 archives-pkg: $(PKG_EXTS:=.pkgdownload)
 	@
 
-cache-archives: $(SRC_EXTS:=.cache) $(PKG_EXTS:=.pkgcache) ocaml.cache flexdll.cache
+cache-archives: $(ALL_EXTS:=.cache) $(ALL_EXTS:=.pkgcache)
 	@
 
 has-archives: $(addprefix archives/, $(notdir $(URL_ocaml)) $(notdir $(URL_flexdll)) $(ARCHIVES) $(filter-out $(ARCHIVES), $(foreach pkg,$(PKG_EXTS), $(notdir $(URL_PKG_$(pkg))))))
