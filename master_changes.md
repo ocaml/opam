@@ -56,7 +56,7 @@ New option/command/subcommand are prefixed with ◈.
 ## Build
 
 ## Infrastructure
-  *
+  * Ensure the full archive includes the 0install sources [#5624 @dra27]
 
 ## Admin
   *
