@@ -7,8 +7,8 @@ env:
   OPAMBSROOT: ~/.cache/.opam.cached
   OPAM12CACHE: ~/.cache/opam1.2/cache
   # This should be identical to the value in appveyor.yml
-  OPAM_TEST_REPO_SHA: 3d6779beedc761067596bf5c3f5c25ab57a7e3e7
-  OPAM_REPO_SHA: 3d6779beedc761067596bf5c3f5c25ab57a7e3e7
+  OPAM_TEST_REPO_SHA: 14bdd2a9acb9bd5bb46b4b44d6d7f59b4321f5d9
+  OPAM_REPO_SHA: 14bdd2a9acb9bd5bb46b4b44d6d7f59b4321f5d9
   # Default ocaml version for some jobs
   OCAML_VERSION: 4.12.0
   ## variables for cache paths
@@ -200,7 +200,6 @@ jobs:
       fail-fast: false
     env:
       SOLVER: ${{ matrix.solver }}
-      OPAM_REPO_SHA: 3d6779beedc761067596bf5c3f5c25ab57a7e3e7
       OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
     steps:
     - uses: actions/checkout@v2
