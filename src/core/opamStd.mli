@@ -503,6 +503,9 @@ module Sys : sig
   (** Append .exe (only if missing) to executable filenames on Windows *)
   val executable_name : string -> string
 
+  (** Remove .exe (if present) from an executable filename on Windows *)
+  val chop_exe_suffix : string -> string
+
   (** The different families of shells we know about *)
   type powershell_host = Powershell_pwsh | Powershell
   type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish

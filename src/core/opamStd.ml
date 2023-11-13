@@ -1073,6 +1073,9 @@ module OpamSys = struct
     else
       fun x -> x
 
+  let chop_exe_suffix name =
+    Option.default name (Filename.chop_suffix_opt name ~suffix:".exe")
+
   let windows_process_ancestry = Lazy.from_fun OpamStubs.getProcessAncestry
 
   type shell_choice = Accept of shell
@@ -1085,10 +1088,11 @@ module OpamSys = struct
       | "pwsh.exe" -> Some (Accept (SH_pwsh Powershell_pwsh))
       | "cmd.exe" -> Some (Accept SH_cmd)
       | "env.exe" -> Some (Accept SH_sh)
+      | "" -> None
       | name ->
         Option.map
           (fun shell -> Accept shell)
-          (shell_of_string (Filename.chop_suffix name ".exe"))
+          (shell_of_string (chop_exe_suffix name))
     in
     lazy (
       let lazy ancestors = windows_process_ancestry in

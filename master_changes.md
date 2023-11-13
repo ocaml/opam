@@ -106,6 +106,7 @@ users)
 ## Internal
 
 ## Internal: Windows
+  * Fix sporadic crash and segfault in shell detection (seen in native containers) [#5714 @dra27]
 
 ## Test
 
@@ -159,3 +160,4 @@ users)
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]
   * `OpamSystem.resolve_command`: in command resolution path, check that the file is not a directory and that it is a regular file [#5606 @rjbou - fix #5585 #5597 #5650 #5626]
   * `OpamStd.Config.env_level`: fix level parsing, it was inverted (eg, "no" gives level 1, and "yes" level 0) [#5686 @smorimoto]
+  * `OpamStd.Sys.chop_exe_suffix`: removes `.exe` from the end of a path, if present
