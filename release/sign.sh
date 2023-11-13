@@ -28,5 +28,8 @@ OUTDIR="out/$TAG"
 cd "${OUTDIR}"
 
 for f in opam-$TAG-*; do
+  if ! [ "${f: -4}" == ".sig" ]; then
     sign "$f"
+  fi
 done
+sign opam-full-$TAG.tar.gz

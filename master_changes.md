@@ -93,6 +93,10 @@ users)
 
 ## Release scripts
   * Add ppc64le and s390x support [#5420 @kit-ty-kate]
+  * Update sign script to sign only binaries, and sign archive [#5616 @rjbou]
+  * Update release script to run it on mac or linux [#5616 @rjbou]
+  * Bump OpenBSD to 7.3
+  * Makefile: use vendoredps deps instead of make lib-ext [#5616 @rjbou]
 
 ## Admin
   * Add `add-extrafiles` command to add, check, and update `extra-files:` field according files present in `files/` directory [#5647 @rjbou]
