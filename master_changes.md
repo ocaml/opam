@@ -28,6 +28,7 @@ users)
   * [BUG] On install driven by `.install` file, track intermediate directories too, in order to have them suppressed at package removal [#5691 @rjbou - fix #5688]
   * [BUG] With `--assume-built`, resolve variables in depends filter according switch & global environment, not only depends predefined variables [#570 @rjbou - fix #5698]
   * [BUG] Handle undefined variables defaults to false in dependencies formula resolution for assume built [#5701 rjbou]
+  * Reinstall if `x-env-path-rewrite` is updated [#5636 @rjbou]
 
 ## Remove
 
@@ -64,8 +65,13 @@ users)
 
 ## Clean
 
+## Env
+  * When computing environment variables updates, use rewriting rules (defined in opam file, or default per variable) to split, join, quote, etc. [#5636 @rjbou - fix #5602 #4690 #2927]
+
 ## Opamfile
   * Update populating extra-files fields log [#5640 @rjbou]
+  * Fix `x-locked` type error message [#5636 @rjbou]
+  * Add `x-env-path-rewrite` extensions field to permit specification of rewriting rules for variables defined in `setenv` and `build-env`: no rewrite; separator and path format formulae [#5636 @rjbou - fix #5602 #4690 #2927]
 
 ## External dependencies
 
@@ -104,6 +110,7 @@ users)
 ## Shell
 
 ## Internal
+  * `environment` file now stores environmnet variable rewriting rules [#5636 @rjbou]
 
 ## Internal: Windows
   * Fix sporadic crash and segfault in shell detection (seen in native containers) [#5714 @dra27]
@@ -123,6 +130,7 @@ users)
   * dot-install: add a test for removal of non specified in .install empty directories [#5701 @rjbou]
   * Add test in assume-built for depends with switch variable filters [#5700 @rjbou]
   * Add undefined variable handling in assume built test [#5701 @rjbou]
+  * Add `env.unix` & `env.win32` to test environment variables rewriting rules [#5636 @rjbou]
 
 ### Engine
   * With real path resolved for all opam temp dir, remove `/private` from mac temp dir regexp [#5654 @rjbou]
@@ -138,6 +146,7 @@ users)
 ## Doc
   * Fix typos in readme [#5706 @MisterDA]
   * Fix formatting in the Manual [#5708 @kit-ty-kate]
+  * Add `x-env-path-rewriting` documentation [#5636 @rjbou]
 
 ## Security fixes
 
@@ -152,12 +161,30 @@ users)
 ## opam-solver
 
 ## opam-format
-## opam-format
   * `OpamFilter`: add `expand_interpolations_in_file_full` which allows setting the output file along with the input file [#5629 @rgrinberg]
   * `OpamFilter`: expose `string_interp_regex` which allows clients to identify variable interpolations in strings [#5633 @gridbugs]
+  * `OpamTypes.env_update`: change from tuple to a record [#5636 @rjbou]
+  * `OpamTypesBase`: add `env_update`, `env_update_resolved`, and `env_update_unresolved` builders [#5636 @rjbou]
+  * `OpamTypes.env_update`: add a `rewrite` field, that contains environment variable rewriting rules (formula to resolved, or already resolved, or no rewriting) [#5636 @rjbou]
+  * `OpamPp.fallback`: add name concatenation and printing fallback too [#5636 @rjbou]
+  * `OpamFormat`: add `formula_items` to permit definition of formulae pp not only of the type `package-formula` [#5636 @rjbou]
+  * `OpamTypesBase`: add to_string function for `path_format` & `separator` [#5636 @rjbou]
+  * `OpamFormat.V`: add `path_format` & `separator` value parser printer [#5636 @rjbou]
+  * `OpamFile.OPAM`: add handling of `x-env-path-rewrite` extensions field, that specifies rewrite rules [#5636 @rjbou]
+  * `OpamFile.Environment`: add parsing-printing of rewriting rules, keeping backward compatibility [#5636 @rjbou]
+  * `OpamFile.OPAM`: `effective_part` keeps `x-env-path-rewrite`, affects also `effectively_equal` [#5636 @rjbou]
+  * `OpamTypesBase`: add `env_update_resolved` and `env_update_unresolved` builders [#5636 @rjbou]
+  * `OpamPp.fallback`: add name concatenation and printing fallback too [#5636 @rjbou]
+  * `OpamFormat`: add `formula_items` to permit definition of formulae pp not only of the type `package-formula` [#5636 @rjbou]
+  * `OpamTypesBase`: add to_string function for `path_format` & `separator` [#5636 @rjbou]
+  * `OpamFormat.V`: add `path_format` & `separator` value parser printer [#5636 @rjbou]
+  * `OpamFile.OPAM`: add handling of `x-env-path-rewrite` extensions field, that specifies rewrite rules [#5636 @rjbou]
+  * `OpamFile.Environment`: add parsing-printing of rewriting rules, keeping backward compatibility [#5636 @rjbou]
+  * `OpamFile.OPAM`: `effective_part` keeps `x-env-path-rewrite`, affects also `effectively_equal` [#5636 @rjbou]
 
 ## opam-core
   * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path` before returning it [#5654 @rjbou]
   * `OpamSystem.resolve_command`: in command resolution path, check that the file is not a directory and that it is a regular file [#5606 @rjbou - fix #5585 #5597 #5650 #5626]
   * `OpamStd.Config.env_level`: fix level parsing, it was inverted (eg, "no" gives level 1, and "yes" level 0) [#5686 @smorimoto]
   * `OpamStd.Sys.chop_exe_suffix`: removes `.exe` from the end of a path, if present
+  * `OpamSystem.get_cygpath_path_transform`: add labeled argument to specify if path is a pathlist [#5636 @rjbou]

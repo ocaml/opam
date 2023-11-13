@@ -508,19 +508,25 @@ module V = struct
       List.rev_append (ors_to_list f) (rev_ors_to_list e)
     | x -> [x]
 
-  let package_formula_items kind constraints =
+  let formula_items ~name kind ?only atom constraints =
     let split, join = match kind with
       | `Conj -> ands_to_list, OpamFormula.ands
       | `Disj -> ors_to_list, OpamFormula.ors
     in
+    let keep = match only with
+      | None -> fun _ -> true
+      | Some `And -> fun x -> not (OpamStd.Compare.equal `Or x)
+      | Some `Or -> fun x -> not (OpamStd.Compare.equal `And x)
+    in
+    let pp_atom = map_option atom constraints in
     let rec parse_formula ~pos:_ l =
       let rec aux v = match v.pelem with
         | String _ | Option (_,_) ->
-          Atom (parse (package_atom constraints) ~pos:v.pos v)
+          Atom (parse pp_atom ~pos:v.pos v)
         | Group g -> Block (parse_formula ~pos:v.pos g.pelem)
-        | Logop ({ pelem = `Or; _}, e1, e2) ->
+        | Logop ({ pelem = `Or; _}, e1, e2) when keep `Or ->
           let left = aux e1 in Or (left, aux e2)
-        | Logop ({ pelem = `And; _}, e1, e2) ->
+        | Logop ({ pelem = `And; _}, e1, e2) when keep `And  ->
           let left = aux e1 in And (left, aux e2)
         | _ -> unexpected ~pos:(value_pos v) ()
       in
@@ -537,35 +543,79 @@ module V = struct
         | Empty -> assert false
         | Block f ->
           nullify_pos @@ Group (nullify_pos @@ print_formula ~inner:true f)
-        | And (e,f) ->
+        | And (e,f) when keep `And ->
           group_if @@ nullify_pos @@
           Logop (nullify_pos `And, aux ~in_and:true e, aux ~in_and:true f)
-        | Or (e,f) ->
+        | Or (e,f) when keep `Or ->
           group_if ~cond:in_and @@ nullify_pos @@
           Logop (nullify_pos `Or, aux e, aux f)
-        | Atom at -> group_if (print (package_atom constraints) at)
+        | Atom at -> group_if (print pp_atom at)
+        | _ -> unexpected ()
       in
       let fl = if inner then [f] else split f in
       List.map (aux ~in_and:false) fl
     in
-    pp ~name:"pkg-formula" parse_formula print_formula
+    pp ~name parse_formula print_formula
+
+  let package_formula_items kind constraints =
+    formula_items ~name:"pkg-formula" kind pkgname constraints
 
   let package_formula kind constraints =
     list -| package_formula_items kind constraints
 
-  let env_binding =
-    let parse ~pos:_ v = match v.pelem with
-      | Relop ({ pelem = `Eq;_}, { pelem = Ident i;_}, { pelem = String s;_}) ->
-        i, OpamParserTypes.Eq, s, None
-      | Env_binding ({ pelem = Ident i; _}, op, { pelem = String s; _}) ->
-        i, op.pelem, s, None
+  let path_format =
+    let parse ~pos:_ v =
+      match v.pelem with
+      | String "host" -> Host
+      | String "target" -> Target
+      | String "target-quoted" -> Target_quoted
+      | String "host-quoted" -> Host_quoted
       | _ -> unexpected ()
     in
-    let print (id, op, str, _) =
+    let print ht =
+      nullify_pos (String (OpamTypesBase.string_of_path_format ht))
+    in
+    pp ~name:"path-format" parse print
+
+  let separator =
+    let parse ~pos:_ v =
+      match v.pelem with
+      | String ":" -> SColon
+      | String ";" -> SSemiColon
+      | _ -> unexpected ()
+    in
+    let print sep =
+      nullify_pos (String (String.make 1 (OpamTypesBase.char_of_separator sep)))
+    in
+    pp ~name:"separator" parse print
+
+  let env_binding_t empty =
+    let parse ~pos:_ v = match v.pelem with
+      | Relop ({ pelem = `Eq;_}, { pelem = Ident i;_}, { pelem = String s;_}) ->
+        { envu_var = i; envu_op = OpamParserTypes.Eq;
+          envu_value = s; envu_comment = None;
+          envu_rewrite = Some empty;
+        }
+      | Env_binding ({ pelem = Ident i; _}, op, { pelem = String s; _}) ->
+        { envu_var = i; envu_op = op.pelem;
+          envu_value = s; envu_comment = None;
+          envu_rewrite = Some empty;
+        }
+      | _ -> unexpected ()
+    in
+    let print { envu_var; envu_op; envu_value; envu_comment = _ ;
+                envu_rewrite = _} =
       nullify_pos @@
-      Env_binding (print ident id, nullify_pos op, print string str)
+      Env_binding (print ident envu_var, nullify_pos envu_op,
+                   print string envu_value)
     in
     list -| singleton -| pp ~name:"env-binding" parse print
+
+  let env_binding =
+    env_binding_t (SPF_Resolved None)
+
+  let env_binding_unresolved =
+    env_binding_t (SPF_Unresolved (Empty, Empty))
 
   (* Only used by the deprecated "os" field *)
   let os_constraint =

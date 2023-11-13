@@ -221,3 +221,33 @@ let map_success f = function
 let iter_success f = function
   | Success x -> f x
   | Conflicts _ -> ()
+
+(** Environment update helpers *)
+let env_update ?comment:envu_comment ~rewrite:envu_rewrite
+    envu_var envu_op envu_value =
+  { envu_var; envu_op; envu_value; envu_comment; envu_rewrite }
+
+let env_update_resolved ?comment:envu_comment ?rewrite
+    envu_var envu_op envu_value =
+  { envu_var; envu_op; envu_value; envu_comment;
+    envu_rewrite = OpamStd.Option.default (Some (SPF_Resolved None)) rewrite;
+  }
+
+let env_update_unresolved ?comment:envu_comment ?rewrite
+    envu_var envu_op envu_value =
+  { envu_var; envu_op; envu_value; envu_comment;
+    envu_rewrite =
+      OpamStd.Option.default (Some (SPF_Unresolved (Empty, Empty)))
+        rewrite;
+  }
+
+(** Environment update path transformers functions *)
+let string_of_path_format = function
+  | Host -> "host"
+  | Target -> "target"
+  | Target_quoted -> "target-quoted"
+  | Host_quoted -> "host-quoted"
+
+let char_of_separator = function
+  | SSemiColon -> ';'
+  | SColon -> ':'

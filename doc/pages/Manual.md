@@ -639,8 +639,7 @@ Some fields define updates to environment variables in the form:
 
 The allowed update operators `update-op` denote how the string is applied to the
 environment variable. Prepend and append operators assume list of elements
-separated by an OS-specific character (`;` on Windows, `:` on Cygwin or any
-other system).
+separated by an OS-specific character.
 - `=` override (or set if undefined)
 - `+=` or `:=` prepend. They differ when the variable is unset of empty, where `:=` adds a trailing separator.
 - `=+` or `=:` append. They differ when the variable is unset of empty, where `=:` adds a leading separator.
@@ -651,6 +650,59 @@ other system).
 `FOO = ""` causes `FOO` to be set _but empty_ on Unix but _unset_ on Windows.
 
 `FOO += ""`, `FOO := ""`, etc. are all ignored - i.e. opam never adds empty segments to an existing variable.
+
+#### Environment update portability
+<a id="env-update-rewrite"></a>
+
+Some fields define an environment update portability specification. In the opam
+file it is the [`x-env-path-rewrite:`](#opamfield-x-env-path-rewrite) field, of the
+form:
+
+```BNF
+<environment-rewrites> ::= { <environment-rewrite> }*
+<environment-rewrite>  ::= <ident> <bool>
+                         | <ident> <separator-formula> <path-format-formula>
+
+<separator-formula>    ::= <separator-formula> "|" <separator-formula>
+                         | ( <separator-formula> )
+                         | <separator> { { <distrib-formula> }* }
+<path-format-formula>  ::= <path-format-formula> "|" <path-format-formula>
+                         | ( <path-format-formula> )
+                         | <path-format> { { <distrib-formula> }* }
+
+<separator>            ::= (") ":" (") | (") ";" (")
+<path-format>          ::= (") "host" (") | (") "host-quoted" (") | (") "target" (") | (") "target-quoted" (")
+
+<distrib-formula>      ::= <distrib-formula> <logop> <distrib-formula>
+                         | "!" <distrib-formula>
+                         | "(" <distrib-formula> ")"
+<logop>                ::= "&" | "|"
+```
+
+The `<separator>` defines the path separator to use for the variable.
+The `<path-format>` defines the way to handle variables path formatting:
+- host: use the *host* interpretation of PATHs (i.e. convert via `cygpath` on
+  Windows).
+- host-quoted: use the *host* interpretation of entries and double-quote any
+  entries which include the separator character.
+- target: use the *target* interpretation of entries (i.e. rewrite slashes to
+  backslashes on Windows).
+- target-quoted: use the *target* interpretation of entries and double-quote
+  any entries which include the separator character.
+
+If a variable is not mentioned in `x-env-path-rewrite`, the separator is assumed to be `;` on Windows and `:` on all other systems; no slash or quoting transformations are performed. There are two special default cases:
+* `PKG_CONFIG_PATH` uses `:` separator and is `target-quoted`
+* `PATH` on Windows uses `;` separator and is `target-quoted`
+
+For example, on Windows:
+- `[FOO false]`: `FOO` won't be translated nor rewritten, and default separator is used if needed
+- `[FOO true]`: `FOO` is rewritten using defaults `;` and `target` with slash rewriting
+  - `FOO = "a:/path/to"` -> FOO=a:\path\to
+- `[FOO ":" "target-quoted"]: `FOO` will be appended using `:` separator, if the added path contains '/' they are transformed into `\`, and if the added path contains a `:`, the added path will be quoted
+  - `FOO += "a/path/to"` -> FOO=a\path\to:R:\previous\path
+  - `FOO += "a:path/to"` -> FOO="a:path\to":R:\previous\path
+- `[FOO ":" "host"]: `FOO` will be appended using `:`, and its path will be translated according to the host translator, i.e. `cygpath <path>`:
+  - `FOO += "A:\path\to"` -> FOO=/cygdrive/a/path/to:/previous/path
 
 ### URLs
 
@@ -1124,6 +1176,9 @@ files.
     - `OPAMCLI=2.0` (since opam 2.1)
     - `TMP` and `TMPDIR` are set by the sandbox script (bubblewrap), but should not be relied on since the sandbox is not used on all platforms and can be disabled by the user.
 
+  See [`x-env-path-rewrite:`](#opamfield-x-env-path-rewrite)
+  for path portability of environment variables on Windows.
+
 - <a id="opamsection-extra-sources">`extra-source <string> "{" <url-file> "}"`</a>:
   allows the definition of extra files that need downloading into the source
   tree before the package can be patched (if necessary) and built. The format is
@@ -1131,6 +1186,9 @@ files.
   single file (version-controlled remotes are not allowed). The leading
   `<string>` indicates the name the file should be saved to, and is relative to
   the root of the source tree.
+
+  See [`x-env-path-rewrite:`](#opamfield-x-env-path-rewrite)
+  for path portability of environment variables on Windows.
 
 - <a id="opamfield-extra-files">`extra-files: [ [ <string> <checksum> ] ... ]`</a>:
   optionally lists the files below `files/` with their checksums. Used
@@ -1151,6 +1209,11 @@ files.
        pin` or `opam install|upgrade DIR` again to get the new pins if the field
        has changed. Even then, this won't unpin any packages that would have
        been removed from `pin-depends:`.
+
+- <a id="opamfield-x-env-path-rewrite">`x-env-path-rewrite: [ <environment-update-rewrite> ... ]`</a>:
+  a specific extra field, used to specify rewrite rules for environment variables
+  defined in [`setenv:`](#opamfield-setenv) and [`build-env`](#opamfield-build-env).
+  See [`environment update portability`](#env-update-rewrite) for syntax.
 
 - <a id="opamfield-extra-fields">`x-*: <value>`</a>:
   extra fields prefixed with `x-` can be defined for use by external tools. opam

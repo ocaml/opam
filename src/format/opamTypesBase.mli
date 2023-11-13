@@ -76,3 +76,24 @@ val all_package_flags: package_flag list
 (** Map on a solver result *)
 val map_success: ('a -> 'b) -> ('a,'fail) result -> ('b,'fail) result
 val iter_success: ('a -> unit) -> ('a, 'b) result -> unit
+
+(** Environment update helpers *)
+(* Build an environment update *)
+val env_update:
+  ?comment:string -> rewrite:'a separator_path_format option
+  -> string -> env_update_op_kind -> string
+  -> 'a env_update
+
+val env_update_resolved:
+  ?comment:string -> ?rewrite:spf_resolved separator_path_format option
+  -> string -> env_update_op_kind -> string
+  -> spf_resolved env_update
+
+val env_update_unresolved:
+  ?comment:string -> ?rewrite:spf_unresolved separator_path_format option
+  -> string -> env_update_op_kind -> string
+  -> spf_unresolved env_update
+
+(* Path transformers & separator functions *)
+val string_of_path_format: path_format -> string
+val char_of_separator: separator -> char

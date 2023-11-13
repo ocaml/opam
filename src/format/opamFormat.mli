@@ -171,8 +171,20 @@ module V : sig
     (value list, 'a) t ->
     (value list, (name * 'a) OpamFormula.formula) t
 
+  (** Generic [package_formula_items] pp *)
+  val formula_items :
+    name:string ->
+    [< `Conj | `Disj ] ->
+    ?only:[ `And | `Or ] ->
+    (value, 'a) t ->
+    (value list, 'b) t ->
+    (value list, ('a * 'b) OpamFormula.formula) t
+
   (** Environment variable updates syntax *)
-  val env_binding : (value, env_update) t
+  val separator : (value, separator) t
+  val path_format : (value, path_format) t
+  val env_binding : (value, spf_resolved env_update) t
+  val env_binding_unresolved : (value, spf_unresolved env_update) t
 
   val os_constraint : (value, (bool * string) OpamFormula.formula) t
 end

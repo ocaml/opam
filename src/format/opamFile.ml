@@ -551,26 +551,157 @@ module Environment = LineFile(struct
     let internal = "environment"
     let atomic = true
 
-    type t = env_update list
+    type t = spf_resolved env_update list
 
     let empty = []
 
+    type optional_parts = [
+      | `comment of string
+      | `format of separator * path_format
+      | `norewrite
+      | `comment_format of string * separator * path_format
+      | `comment_norewrite of string
+    ]
+
     let pp =
-      (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons ~fold:List.fold_right @@
-       Pp.identity ^+
-       Pp.of_pair "env_update_op"
-         (OpamLexer.FullPos.env_update_op, OpamPrinter.env_update_op_kind) ^+
-       Pp.identity ^+
-       Pp.opt Pp.singleton)
+      let path_format : (string, path_format) Pp.t =
+        Pp.of_pair "path-format"
+          ((function
+              | "host" -> Host
+              | "target" -> Target
+              | "target-quoted" -> Target_quoted
+              | "host-quoted" -> Host_quoted
+              | _ -> Pp.unexpected ()),
+           OpamTypesBase.string_of_path_format)
+      in
+      let separator : (string, separator) Pp.t =
+        Pp.of_pair "separator"
+          ((function
+              | ":" -> SColon
+              | ";" -> SSemiColon
+              | _ -> Pp.unexpected ()),
+           (fun sep -> String.make 1 (char_of_separator sep)))
+      in
+      let env : (string, env_update_op_kind) Pp.t =
+        (Pp.of_pair "env_update_op"
+           (OpamLexer.FullPos.env_update_op, OpamPrinter.env_update_op_kind))
+      in
+      let failparse name = failwith (Printf.sprintf "parse <%s>" name) in
+      let failprint name = failwith (Printf.sprintf "print <%s>" name) in
+      let norewrite: (string, [ `norewrite ]) Pp.t =
+        let name = "norewrite" in
+        Pp.of_pair name
+          ((function "norewrite" -> `norewrite | _ -> failparse name),
+           (function `norewrite -> "norewrite" ))
+      in
+      let comment_and_sepformat : (string list, optional_parts) Pp.t =
+        (separator ^+ path_format ^+ (Pp.last -| Pp.identity))
+        -| (let name = "separator-pathi-format-comment" in
+            Pp.of_pair name
+              ((fun (sep, (fmt, comment)) ->
+                  `comment_format (comment, sep, fmt)),
+               (function
+                 | `comment_format (comment, sep, fmt) -> sep, (fmt, comment)
+                 | _ -> failprint name)))
+      in
+      let comment_and_norewrite : (string list, optional_parts) Pp.t =
+        (norewrite ^+ (Pp.last -| Pp.identity))
+        -| (let name = "norewrite-comment" in
+            Pp.of_pair name
+              ((fun (`norewrite, comment) ->
+                  `comment_norewrite comment),
+               (function
+                 | `comment_norewrite comment -> `norewrite, comment
+                 | _ -> failprint name)))
+      in
+      let only_comment : (string list, optional_parts) Pp.t =
+        Pp.singleton
+        -| (let name = "only-comment" in
+            Pp.of_pair name
+              ((fun x -> `comment x),
+               (function `comment x -> x | _ -> failprint name)))
+      in
+      let only_format : (string list, optional_parts) Pp.t =
+        (separator ^+ (Pp.last -| path_format))
+        -| (let name = "only-path-format" in
+            Pp.of_pair name
+              ((fun sh -> `format sh),
+               (function `format sh -> sh | _ -> failprint name)))
+      in
+      let only_norewrite : (string list, optional_parts) Pp.t =
+        Pp.last -| norewrite
+        -| (let name = "only-norewrite" in
+            Pp.of_pair name
+              ((function `norewrite -> `norewrite),
+               (function `norewrite -> `norewrite | _ -> failprint name)))
+      in
+      let optional_parts : (string list, optional_parts option) Pp.t =
+        Pp.opt
+        @@ Pp.fallback comment_and_sepformat
+        @@ Pp.fallback comment_and_norewrite
+        @@ Pp.fallback only_norewrite
+        @@ Pp.fallback only_format only_comment
+      in
+      (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons
+         ~fold:List.fold_right
+       @@ (Pp.identity
+           ^+ env
+           ^+ Pp.identity
+           ^+ optional_parts))
       -| Pp.pp (fun ~pos:_ -> List.rev) List.rev
 
 
     let pp =
-       pp -|
-       Pp.map_list
-         (Pp.pp
-           (fun ~pos:_ (a, (b, (c, d))) -> (a, b, c, d))
-           (fun (a, b, c, d) -> (a, (b, (c, d)))))
+      pp -|
+      Pp.map_list
+        (Pp.pp
+           (fun ~pos:_ (envu_var, (envu_op, (envu_value, optional_parts))) ->
+              let envu = {
+                envu_var; envu_op; envu_value; envu_comment = None;
+                envu_rewrite = Some (SPF_Resolved None);
+              } in
+              match optional_parts with
+              | None -> envu
+              | Some (`comment_format (comment, sep, fmt)) ->
+                { envu with
+                  envu_comment = Some comment;
+                  envu_rewrite = Some (SPF_Resolved (Some (sep, fmt)));
+                }
+              | Some (`comment comment) ->
+                { envu with
+                  envu_comment = Some comment;
+                }
+              | Some (`format (sep, fmt)) ->
+                { envu with
+                  envu_rewrite = Some (SPF_Resolved (Some (sep, fmt)));
+                }
+              | Some `norewrite ->
+                { envu with
+                  envu_rewrite = None;
+                }
+              | Some (`comment_norewrite comment) ->
+                { envu with
+                  envu_comment = Some comment;
+                  envu_rewrite = None;
+                }
+           )
+           (fun {envu_var; envu_op; envu_value; envu_comment; envu_rewrite} ->
+             let optional_parts =
+               match envu_comment, envu_rewrite with
+               | None, Some (SPF_Resolved None) ->
+                 None
+               | None, Some (SPF_Resolved (Some (sep, fmt))) ->
+                 Some (`format (sep, fmt))
+               | None, None ->
+                 Some `norewrite
+               | Some comment, Some (SPF_Resolved (Some (sep, fmt))) ->
+                 Some (`comment_format (comment, sep, fmt))
+               | Some comment, Some (SPF_Resolved None) ->
+                 Some (`comment comment)
+               | Some comment, None ->
+                 Some (`comment_norewrite comment)
+             in
+             (envu_var, (envu_op, (envu_value, optional_parts)))))
 
   end)
 
@@ -1850,7 +1981,7 @@ module Switch_configSyntax = struct
     variables: (variable * variable_contents) list;
     opam_root: dirname option;
     wrappers: Wrappers.t;
-    env: env_update list;
+    env: spf_resolved env_update list;
     invariant: OpamFormula.t option;
     depext_bypass: OpamSysPkg.Set.t;
   }
@@ -2402,7 +2533,7 @@ module OPAMSyntax = struct
     conflict_class : name list;
     available  : filter;
     flags      : package_flag list;
-    env        : env_update list;
+    env        : spf_unresolved env_update list;
 
     (* Build instructions *)
     build      : command list;
@@ -2413,7 +2544,7 @@ module OPAMSyntax = struct
     (* Auxiliary data affecting the build *)
     substs     : basename list;
     patches    : (basename * filter option) list;
-    build_env  : env_update list;
+    build_env  : spf_unresolved env_update list;
     features   : (OpamVariable.t * filtered_formula * string) list;
     extra_sources: (basename * URL.t) list;
 
@@ -2564,10 +2695,11 @@ module OPAMSyntax = struct
   let env (t:t) =
     List.map
       (fun env -> match t.name, env with
-        | Some name, (var,op,value,None) ->
-          var, op, value,
-          Some ("Updated by package " ^ OpamPackage.Name.to_string name)
-        | _, b -> b)
+         | Some name, { envu_comment = None; _ } ->
+           { env with
+             envu_comment =
+               Some ("Updated by package " ^ OpamPackage.Name.to_string name) }
+         | _, b -> b)
       t.env
 
   let build t = t.build
@@ -2929,7 +3061,7 @@ module OPAMSyntax = struct
          Pp.V.ident -|
          Pp.of_pair "package-flag" (pkg_flag_of_string, string_of_pkg_flag));
       "setenv", no_cleanup Pp.ppacc with_env env
-        (Pp.V.map_list ~depth:2 Pp.V.env_binding);
+        (Pp.V.map_list ~depth:2 Pp.V.env_binding_unresolved);
 
       "build", no_cleanup Pp.ppacc with_build build
         (Pp.V.map_list ~depth:2 Pp.V.command);
@@ -2946,7 +3078,7 @@ module OPAMSyntax = struct
         (Pp.V.map_list ~depth:1 @@
          Pp.V.map_option pp_basename (Pp.opt Pp.V.filter));
       "build-env", no_cleanup Pp.ppacc with_build_env build_env
-        (Pp.V.map_list ~depth:2 Pp.V.env_binding);
+        (Pp.V.map_list ~depth:2 Pp.V.env_binding_unresolved);
       "features", no_cleanup Pp.ppacc with_features features
         (Pp.V.map_list ~depth:1 @@
          Pp.V.map_options_2
@@ -3187,7 +3319,7 @@ module OPAMSyntax = struct
         { t with locked = Some locked }
         |> Pp.parse ~pos pp_constraint
       | Some {pos; _} ->
-        Pp.bad_format ~pos "Field %s must be a bool"
+        Pp.bad_format ~pos "Field %s must be a string"
           (OpamConsole.colorise `underline locked_xfield)
       | None -> { t with locked = None }
     in
@@ -3201,6 +3333,63 @@ module OPAMSyntax = struct
         add_extension t locked_xfield (nullify_pos @@ String locked)
         |> Pp.print pp_constraint
     in
+    Pp.pp parse print
+
+  let rewrite_xfield = "x-env-path-rewrite"
+  let handle_env_paths =
+    let pp =
+      let filtered pp =
+        let name = pp.Pp.ppname^"-filtered-formula" in
+        Pp.V.list
+        -| Pp.V.formula_items ~name `Disj ~only:`Or
+          pp Pp.V.filter
+      in
+      let rewrite pp =
+        pp -|
+        Pp.pp ~name:"-x-env-path-rewrite-formula"
+          (fun ~pos:_ (name,separator,path) -> name, Some (separator, path))
+          (function n, Some (sep, ht) -> n, sep, ht | _ -> assert false)
+      in
+      let norewrite pp =
+        pp -|
+        Pp.pp ~name:"x-env-path-rewrite-bool"
+          (fun ~pos:_ (name, rewrite) ->
+             if rewrite then name, Some (Empty,  Empty)
+             else name, None)
+          (function
+            | n, None -> n, false
+            | n, Some (Empty, Empty) -> n, true
+            | _ -> assert false)
+      in
+      Pp.V.map_list @@
+      Pp.fallback
+        (norewrite @@ Pp.V.map_pair Pp.V.ident Pp.V.bool)
+        (rewrite @@ Pp.V.map_triple Pp.V.ident
+           (filtered Pp.V.separator) (filtered Pp.V.path_format))
+    in
+    let parse ~pos t =
+      if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
+      else
+      match OpamStd.String.Map.find_opt rewrite_xfield t.extensions with
+      | None -> t
+      | Some value ->
+        let rewrites = Pp.parse pp value ~pos |> OpamStd.String.Map.of_list in
+        let update env =
+          List.map (fun upd ->
+              match OpamStd.String.Map.find_opt upd.envu_var rewrites with
+              | Some (Some (sep, ht)) ->
+                { upd with envu_rewrite = Some (SPF_Unresolved (sep, ht)) }
+              | Some None ->
+                { upd with envu_rewrite = None; }
+              | None -> upd)
+            env
+        in
+        { t with
+          env = update t.env;
+          build_env = update t.build_env;
+        }
+    in
+    let print t = t in (* extension field is rewritten as is *)
     Pp.pp parse print
 
   (* Doesn't handle package name encoded in directory name *)
@@ -3223,7 +3412,8 @@ module OPAMSyntax = struct
       ~errmsg:"The url.subpath field is not allowed in files with \
                `opam-version` <= 2.0" -|
     handle_subpath_2_0 -|
-    handle_locked
+    handle_locked -|
+    handle_env_paths
 
   let pp_raw = Pp.I.map_file @@ pp_raw_fields
 
@@ -3386,7 +3576,11 @@ module OPAM = struct
       doc        = empty.doc;
       bug_reports = empty.bug_reports;
 
-      extensions  = empty.extensions;
+      (* We keep only `x-env-path-rewrite` as it affects build/install *)
+      extensions  =
+        OpamStd.String.Map.filter (fun x _ -> String.equal rewrite_xfield x)
+          t.extensions;
+
       url         = OpamStd.Option.map effective_url t.url;
       descr       = empty.descr;
 
@@ -3790,7 +3984,7 @@ module CompSyntax = struct
     make         : string list ;
     build        : command list ;
     packages     : formula ;
-    env          : env_update list;
+    env          : spf_unresolved env_update list;
     tags         : string list;
   }
 
@@ -3827,9 +4021,8 @@ module CompSyntax = struct
   let preinstalled t = t.preinstalled
   let env (t:t) =
     List.map (function
-        | var,op,value,None ->
-          var, op, value,
-          Some ("Updated by compiler " ^ t.name)
+        | { envu_comment = None; _ } as env ->
+          { env with envu_comment = Some ("Updated by compiler " ^ t.name) }
         | b -> b)
       t.env
 
@@ -3892,7 +4085,7 @@ module CompSyntax = struct
       "packages", Pp.ppacc with_packages packages
         (Pp.V.package_formula `Conj (Pp.V.constraints Pp.V.version));
       "env", Pp.ppacc with_env env
-        (Pp.V.map_list ~depth:2 Pp.V.env_binding);
+        (Pp.V.map_list ~depth:2 Pp.V.env_binding_unresolved);
       "preinstalled", Pp.ppacc_opt with_preinstalled
         (fun t -> if t.preinstalled then Some true else None)
         Pp.V.bool;
