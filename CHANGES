@@ -3,6 +3,107 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.2.0~alpha3:
+* Add `x-env-path-rewrite` extensions field to specify the rewriting rules for
+  environment variables defined in `setenv` and `build-env`, useful for
+  platforms like Windows [#5636 @rjbou - fix #5602 #4690 #2927]
+  * The `environment` file now stores environment variable rewriting rules
+    [#5636 @rjbou]
+  * Reinstall a package if its `x-env-path-rewrite` is updated [#5636 @rjbou]
+* (*) Sandbox: Make /tmp writable again to restore POSIX compliancy
+  [#5634 #5662 @kit-ty-kate - fixes #5462]
+* (+) opam tree: Allow packages with a specific version, directories or local
+  opam files, as input [#5613 @kit-ty-kate]
+* (+) opam tree: Add handling of `--recurse` and `--subpath` for directory
+  arguments [#5613 @kit-ty-kate]
+* (+) opam admin: Add `add-extrafiles` command to add, check, and update
+  `extra-files:` field according files present in `files/` directory
+  [#5647 @rjbou]
+* (+) Allow to mark a set of warnings as errors using a new syntax -W @1..9
+  [#5652 @kit-ty-kate @rjbou - fixes #5651]
+* Create ppc64le and s390x binaries during releases [#5420 @kit-ty-kate]
+* Fix incorrect error message when alternate C compiler is missing on Windows
+  [#5667 @dra27 - partial fix #5661]
+* Fix `x-locked` error message [#5636 @rjbou]
+* opam lint: Improve the debug log when checking extra-files [#5640 @rjbou]
+* [BUG] Fix sporadic crash and segfault in shell detection (seen in native
+  containers) [#5714 @dra27]
+* [BUG] Fix extra-files handling when linting packages from repositories
+  [#5639 @rjbou]
+* [BUG] On install driven by `.install` file, track intermediate directories
+  too, in order to have them suppressed at package removal
+  [#5691 @rjbou - fix #5688]
+* [BUG] With `--assume-built`, resolve variables in depends filter according
+  switch & global environment, not only depends predefined variables
+  [#5700 @rjbou - fix #5698]
+* [BUG] Handle undefined variables defaults to false in dependencies formula
+  resolution for assume built [#5701 rjbou]
+* [BUG] Fix `OPAMCURL` and `OPAMFETCH` handling [#5607 @rjbou - fix #5597]
+* [BUG] Fix the `OPAMVERBOSE` setting, levels 0 and 1 were inverted: "no" gave
+  level 1, and "yes" gave level 0 [#5686 @smorimoto]
+* [BUG] Fix "make cold" on Windows when gcc is available
+  [#5635 @kit-ty-kate - fixes #5600]
+* Improve the documentation [#5636 #5706 #5708 @MisterDA @kit-ty-kate @rjbou]
+* Improve and extend the tests [#5560 #5600 #5607 #5636 #5639 #5647 #5672 #5686
+  #5691 #5700 #5701 @kit-ty-kate @rjbou]
+* Improve the test infrastructure [#5560 #5606 #5607 #5607 #5654 #5657 @rjbou]
+* API changes:
+  * `OpamSystem.mk_temp_dir`: resolve real path with `OpamSystem.real_path`
+    before returning it [#5654 @rjbou]
+  * `OpamSystem.resolve_command`: in command resolution path, check that the
+    file is not a directory and that it is a regular file
+    [#5606 @rjbou - fix #5585 #5597 #5650 #5626]
+  * `OpamStd.Config.env_level`: fix level parsing, it was inverted (eg, "no"
+    gives level 1, and "yes" level 0) [#5686 @smorimoto]
+  * `OpamStd.Sys.chop_exe_suffix`: removes `.exe` from the end of a path, if
+     present [#5714 @dra27]
+  * `OpamSystem.get_cygpath_path_transform`: add labeled argument to specify
+    if path is a pathlist [#5636 @rjbou]
+  * `OpamSystem.apply_cygpath_path_transform`: fix cygpath call, use resolved
+    name [#5716 @rjbou]
+  * `OpamTreeCommand.run`: now takes an `atom` instead of `name`
+    [#5613 @kit-ty-kate]
+  * `OpamFilter`: add `expand_interpolations_in_file_full` which allows setting
+    the output file along with the input file [#5629 @rgrinberg]
+  * `OpamFilter`: expose `string_interp_regex` which allows clients to identify
+    variable interpolations in strings [#5633 @gridbugs]
+  * `OpamTypes.env_update`: change from tuple to a record [#5636 @rjbou]
+  * `OpamTypesBase`: add `env_update`, `env_update_resolved`, and
+    `env_update_unresolved` builders [#5636 @rjbou]
+  * `OpamTypes.env_update`: add a `rewrite` field, that contains environment
+    variable rewriting rules (formula to resolved, or already resolved, or no
+    rewriting) [#5636 @rjbou]
+  * `OpamPp.fallback`: add name concatenation and printing fallback too
+    [#5636 @rjbou]
+  * `OpamFormat`: add `formula_items` to permit definition of formulae pp not
+    only of the type `package-formula` [#5636 @rjbou]
+  * `OpamTypesBase`: add to_string function for `path_format` & `separator`
+    [#5636 @rjbou]
+  * `OpamFormat.V`: add `path_format` & `separator` value parser printer
+    [#5636 @rjbou]
+  * `OpamFile.OPAM`: add handling of `x-env-path-rewrite` extensions field,
+    that specifies rewrite rules [#5636 @rjbou]
+  * `OpamFile.Environment`: add parsing-printing of rewriting rules, keeping
+    backward compatibility [#5636 @rjbou]
+  * `OpamFile.OPAM`: `effective_part` keeps `x-env-path-rewrite`, affects also
+    `effectively_equal` [#5636 @rjbou]
+  * `OpamTypesBase`: add `env_update_resolved` and `env_update_unresolved`
+    builders [#5636 @rjbou]
+  * `OpamPp.fallback`: add name concatenation and printing fallback too
+    [#5636 @rjbou]
+  * `OpamFormat`: add `formula_items` to permit definition of formulae pp not
+    only of the type `package-formula` [#5636 @rjbou]
+  * `OpamTypesBase`: add to_string function for `path_format` & `separator`
+    [#5636 @rjbou]
+  * `OpamFormat.V`: add `path_format` & `separator` value parser printer
+    [#5636 @rjbou]
+  * `OpamFile.OPAM`: add handling of `x-env-path-rewrite` extensions field,
+    that specifies rewrite rules [#5636 @rjbou]
+  * `OpamFile.Environment`: add parsing-printing of rewriting rules, keeping
+    backward compatibility [#5636 @rjbou]
+  * `OpamFile.OPAM`: `effective_part` keeps `x-env-path-rewrite`, affects also
+    `effectively_equal` [#5636 @rjbou]
+
 2.2.0~alpha2:
 * Permit internal Cygwin install on Windows [#5545 @rjbou @dra27]
 * Add `--no-cygwin-setup`, `--cygwin-internal-install`,
