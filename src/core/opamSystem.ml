@@ -548,12 +548,12 @@ let get_cygpath_function =
     let f = Lazy.from_val (fun x -> x) in
     fun ~command:_ -> f
 
-let apply_cygpath_path_transform ~pathlist path =
+let apply_cygpath_path_transform ~pathlist cygpath path =
   let args = if pathlist then [ "--path" ] else [] in
   let r =
     OpamProcess.run
-      (OpamProcess.command ~name:(temp_file "command")
-         ~verbose:false "cygpath" (args @ ["--"; path]))
+      (OpamProcess.command ~name:(temp_file "command") ~verbose:false
+         cygpath (args @ ["--"; path]))
   in
   OpamProcess.cleanup ~force:true r;
   if OpamProcess.is_success r then
@@ -567,7 +567,7 @@ let get_cygpath_path_transform =
   if Sys.win32 then
     lazy (
       match resolve_command "cygpath" with
-      | Some _ -> apply_cygpath_path_transform
+      | Some cygpath -> apply_cygpath_path_transform cygpath
       | None -> fun ~pathlist:_ x -> x)
   else
     Lazy.from_val (fun ~pathlist:_ x -> x)
