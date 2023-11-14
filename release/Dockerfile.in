@@ -14,6 +14,7 @@ RUN tar xzf %OCAMLV%.tar.gz
 WORKDIR ocaml-%OCAMLV%
 RUN sed -i 's/gnueabi/*eabi/' configure
 RUN sed -i 's/musl/musl*/' configure
+RUN sed -i -e 's/NGROUPS_MAX/65536/' otherlibs/unix/getgroups.c
 RUN ./configure %CONF% -prefix /usr/local
 RUN make "-j$(nproc)" && make install && rm -rf /root/ocaml-%OCAMLV% /root/ocaml-%OCAMLV%.tar.gz
 
