@@ -30,6 +30,8 @@
 
 * a blog entry in opam.ocaml.org
 * a announcement in discuss.ocaml.org
+* copy the blog entry from opam.ocaml.org for https://github.com/ocaml/ocaml.org/tree/main/data/changelog/opam
+* announce the release on the OCaml Discord server
 
 
 ## After release
@@ -40,7 +42,6 @@
 
 ### On a release candidate
 * create a branch to a `x.y` for rc's and the final release
-* remove `shell/install.sh`
 
 ---
 

@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.2.0~alpha3"
+version: "2.2.0~alpha4~dev"
 synopsis: "State library for opam 2.2"
 description: """
 Handling of the ~/.opam hierarchy, repository and switch states.

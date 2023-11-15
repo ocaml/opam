@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.2.0~alpha3"
+version: "2.2.0~alpha4~dev"
 synopsis: "Bootstrapped development binary for opam 2.2"
 description: """
 This package compiles (bootstraps) opam. For consistency and safety of the installation, the binaries are not installed into the PATH, but into lib/opam-devel, from where the user can manually install them system-wide.

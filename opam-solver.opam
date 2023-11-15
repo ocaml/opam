@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.2.0~alpha3"
+version: "2.2.0~alpha4~dev"
 synopsis: "Solver library for opam 2.2"
 description: """
 Solver and Cudf interaction. This library is based on the Cudf and Dose libraries, and handles calls to the external solver from opam.
