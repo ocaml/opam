@@ -1,3 +1,11 @@
+---
+slug: Usage.html
+order: 2
+title: Usage
+description: |
+  A quick introduction to using opam in your OCaml development workflow.
+---
+
 # Using opam
 
 This document starts with a quick introduction, then covers most commonly-used

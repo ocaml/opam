@@ -1,3 +1,11 @@
+---
+slug: Install.html
+order: 0
+title: Install
+description: |
+  How to install Opam
+---
+
 # How to install opam
 
 This page describes how to install and configure opam. For further help on how
