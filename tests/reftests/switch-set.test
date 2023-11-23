@@ -75,3 +75,170 @@ Selecting opam switch -.
 Would select opam switch bar.
 ### opam switch show
 -
+### : OPAMSWITCH & OPAMROOT specific handling on last env storage and reverts :
+### opam sw create foo --empty
+### <set-switch.sh>
+unset `env | grep OPAM | cut -f 1 -d = | grep -v OPAMROOT | grep -v OPAMNOENVNOTICE`
+case $1 in
+  opam)
+    opam sw foo
+    ;;
+  env)
+    export OPAMSWITCH=foo
+    ;;
+esac
+echo "# current switch"
+opam sw show
+echo "# OPAMSWITCH current value"
+echo $OPAMSWITCH
+echo "# opam env"
+echo "$(opam env)" | grep OPAMSWITCH
+echo "# opam env with switch bar"
+echo "$(opam env --set-switch --sw bar)" | grep OPAMSWITCH
+eval $(opam env --set-switch --sw bar)
+echo "# OPAMSWITCH current value"
+echo $OPAMSWITCH
+echo "# opam env"
+echo "$(opam env)" | grep OPAMSWITCH
+echo "# OPAMSWITCH current value"
+echo $OPAMSWITCH
+echo "# current switch"
+opam sw show
+echo "# evaluate opam env"
+eval $(opam env)
+echo "# OPAMSWITCH current value"
+echo $OPAMSWITCH
+echo "# current switch"
+opam sw show
+### sh set-switch.sh opam
+# current switch
+foo
+# OPAMSWITCH current value
+
+# opam env
+# opam env with switch bar
+OPAMSWITCH='bar'; export OPAMSWITCH;
+# OPAMSWITCH current value
+bar
+# opam env
+OPAMSWITCH=''; export OPAMSWITCH;
+# OPAMSWITCH current value
+bar
+# current switch
+bar
+# evaluate opam env
+# OPAMSWITCH current value
+
+# current switch
+foo
+### sh set-switch.sh env
+# current switch
+foo
+# OPAMSWITCH current value
+foo
+# opam env
+# opam env with switch bar
+OPAMSWITCH='bar'; export OPAMSWITCH;
+# OPAMSWITCH current value
+bar
+# opam env
+OPAMSWITCH=''; export OPAMSWITCH;
+# OPAMSWITCH current value
+bar
+# current switch
+bar
+# evaluate opam env
+# OPAMSWITCH current value
+
+# current switch
+foo
+### opam init --bare --bypass-checks --root ./foo ./REPO -n | grep -v Cygwin
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### opam switch create sw-foo --root ./foo --empty
+### opam init --bare --bypass-checks --root ./bar ./REPO -n | grep -v Cygwin
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### opam switch create sw-bar --root ./bar --empty
+### <set-root.sh>
+unset `env | grep OPAM | cut -f 1 -d = | grep -v OPAMNOENVNOTICE`
+case $1 in
+  opam)
+    ARGF="--root foo"
+    ;;
+  env)
+    export OPAMROOT=${BASEDIR}/foo
+    ;;
+esac
+echo "# current root"
+opam var root $ARGF
+echo "# OPAMROOT current value"
+echo $OPAMROOT
+echo "# opam env"
+echo "$(opam env $ARGF)" | grep OPAMROOT
+echo "# opam env with root bar"
+echo "$(opam env --set-root --root ./bar)" | grep OPAMROOT
+eval $(opam env --set-root --root ./bar)
+echo "# OPAMROOT current value"
+echo $OPAMROOT
+echo "# opam env"
+echo "$(opam env)" | grep OPAMROOT
+echo "# OPAMROOT current value"
+echo $OPAMROOT
+echo "# current root"
+opam var root
+echo "evaluate opam env"
+eval $(opam env)
+echo "# OPAMROOT current value"
+echo $OPAMROOT
+echo "# current root"
+opam var root
+### sh set-root.sh opam
+# current root
+${BASEDIR}/foo
+# OPAMROOT current value
+
+# opam env
+[NOTE] To make opam select ${BASEDIR}/foo as its root in the current shell, add --set-root or set OPAMROOT
+# opam env with root bar
+OPAMROOT='${BASEDIR}/bar'; export OPAMROOT;
+# OPAMROOT current value
+${BASEDIR}/bar
+# opam env
+OPAMROOT=''; export OPAMROOT;
+# OPAMROOT current value
+${BASEDIR}/bar
+# current root
+${BASEDIR}/bar
+evaluate opam env
+# OPAMROOT current value
+
+# current root
+[ERROR] ${BASEDIR} exists, but does not appear to be a valid opam root. Please remove it and use `opam init', or specify a different `--root' argument
+# Return code 50 #
+### sh set-root.sh env
+# current root
+${BASEDIR}/foo
+# OPAMROOT current value
+${BASEDIR}/foo
+# opam env
+# opam env with root bar
+OPAMROOT='${BASEDIR}/bar'; export OPAMROOT;
+# OPAMROOT current value
+${BASEDIR}/bar
+# opam env
+OPAMROOT=''; export OPAMROOT;
+# OPAMROOT current value
+${BASEDIR}/bar
+# current root
+${BASEDIR}/bar
+evaluate opam env
+# OPAMROOT current value
+
+# current root
+[ERROR] ${BASEDIR} exists, but does not appear to be a valid opam root. Please remove it and use `opam init', or specify a different `--root' argument
+# Return code 50 #
