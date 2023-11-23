@@ -72,6 +72,7 @@ users)
 
 ## Release scripts
   * Workaround incorrect `NGROUPS_MAX` in `<limits.h>` in musl for release builds [#5383 @dra27]
+  * Fix check for adding `-lsha_stubs` only on `master` on OpenBSD [#5733 @punchagan]
 
 ## Admin
 
