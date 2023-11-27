@@ -636,55 +636,62 @@ let init_checks ?(hard_fail_exn=true) init_config =
   else not (soft_fail || hard_fail)
 
 let git_for_windows_check =
-  if Sys.win32 then
-    fun cygbin ->
-      let gitcmd = OpamSystem.resolve_command "git" in
-      match gitcmd with
-      | None -> (* git *)
-        OpamConsole.note "no git!"
-      | Some gitcmd ->
-        let bindir = Filename.dirname gitcmd in
-        let bashcmd = Filename.concat bindir "bash.exe" in
-        (* We don't want to resolve it, just to check if it exists and is exe *)
-        let check_bash = OpamSystem.resolve_command ~env:[||] bashcmd in
-        match check_bash with
-        | None -> ()
-        | Some bashcmd -> (* found bash in git prefix *)
-          let is_cygwin =
-            OpamStd.Option.map_default (fun prefix ->
-                OpamStd.String.starts_with ~prefix bashcmd)
-              false cygbin
-          in
-          let git4cmd_bindir =
-            Filename.dirname bindir
-          in
-          let git4cmd_cmddir =
-            Filename.concat git4cmd_bindir "cmd"
-          in
-          let is_git4win =
-            let file = Filename.concat git4cmd_cmddir "git.exe" in
-            Sys.file_exists file
-          in
-          if is_cygwin then
-            OpamConsole.warning
-              "You are using Cygwin git, \
-               consider installing Git for Windows: https://gitforwindows.org \
-               and check that it is well in your Path"
-          else
-          if is_git4win then
-            OpamConsole.warning
-              "You are using Git for Windows, \
-               but your path contains the wrong binary directory.\n\
-               Consider reinstalling or add %s in your path instead of %s"
-              git4cmd_cmddir bindir
-          else
-            OpamConsole.warning
-              "A path in you Path contains Unix tools that doesn't come \
-               from Cygwin or Git for Windows: %s.\n\
-               Consider installing Git for Windows: https://gitforwindows.org \
-               and cleaning your Path"
-              bindir
-  else fun _ -> ()
+  if not Sys.win32 && not Sys.cygwin then fun _ -> None else
+  fun cygbin ->
+    let contains_git p =
+      OpamSystem.resolve_command ~env:[||] (Filename.concat p "git.exe")
+    in
+    let gits =
+      OpamStd.Env.get "PATH"
+      |> OpamStd.Sys.split_path_variable
+      |> OpamStd.List.filter_map (fun p ->
+          match contains_git p with
+          | Some git ->
+            Some (git, OpamSystem.bin_contains_bash p)
+          | None -> None)
+    in
+    (if gits = [] then
+       OpamConsole.warning
+         "No preinstalled git software found, we recommend using Git for \
+          Windows https://gitforwindows.org or winget. You can install it \
+          and relaunch opam initialisation. Otherwise, opam will install \
+          directly git from Cygwin."
+     else
+     let is_in_cygwin p =
+       match cygbin with
+       | None -> false
+       | Some cygbin -> OpamStd.String.starts_with ~prefix:cygbin p
+     in
+     OpamConsole.msg "Found those git binaries in path:\n%s\n"
+       (OpamStd.Format.itemize (fun (git, has_bash) ->
+            Printf.sprintf "%s%s"
+              git
+              (if has_bash
+               && not (is_in_cygwin git) then
+                 " but contains bash in it, which is dangerous" else ""))
+           gits));
+    let rec get_gitbin () =
+      match OpamConsole.read "Enter Git for Windows or winget binary path:" with
+      | None -> get_gitbin ()
+      | Some gitbin ->
+        match contains_git gitbin, OpamSystem.bin_contains_bash gitbin with
+        | Some _, false ->
+          OpamConsole.note "Using git from %s" gitbin;
+          gitbin
+        | Some _, true ->
+          OpamConsole.error
+            "A bash executable was found in %s, which will override \
+             usual bash. Please check you binary path"
+            gitbin;
+          get_gitbin ()
+        | None, _ ->
+          OpamConsole.error "No git executable found in %s" gitbin;
+          get_gitbin ()
+    in
+    if OpamConsole.confirm ~default:false
+        "Do you want to specify which git to use (non cygwin)?" then
+      Some (get_gitbin ())
+    else None
 
 let windows_checks ?cygwin_setup config =
   let vars = OpamFile.Config.global_variables config in
@@ -922,7 +929,15 @@ let windows_checks ?cygwin_setup config =
       >>| OpamFilename.Dir.to_string)
   in
   OpamCoreConfig.update ?cygbin ();
-  git_for_windows_check cygbin;
+  let gitbinpath = git_for_windows_check cygbin in
+  OpamCoreConfig.update ?gitbinpath ();
+  let config =
+    match gitbinpath with
+    | Some gitbin ->
+      OpamFile.Config.with_gitbinfield
+        (OpamFilename.Dir.of_string gitbin) config
+    | None -> config
+  in
   config
 
 let update_with_init_config ?(overwrite=false) config init_config =

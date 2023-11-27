@@ -172,6 +172,8 @@ module Config: sig
   val with_sys_pkg_manager_cmd: filename OpamStd.String.Map.t -> t -> t
 
   val with_swh_fallback: bool -> t -> t
+  val with_gitbinfield: dirname -> t -> t
+  val with_gitbinfield_opt: dirname option -> t -> t
 
   (** Return the opam version *)
   val opam_version: t  -> opam_version
@@ -233,6 +235,8 @@ module Config: sig
      sources *)
   val swh_fallback: t -> bool
 
+  val gitbinfield: t -> dirname option
+
   val fields: (string * (t, value) OpamPp.field_parser) list
 
   (** All file fields as print-AST, Fields within sections are
@@ -265,6 +269,7 @@ module InitConfig: sig
   val recommended_tools: t -> (string list * string option * filter option) list
   val required_tools: t -> (string list * string option * filter option) list
   val init_scripts: t -> ((string * string) * filter option) list
+  val gitbinfield: t -> dirname option
 
   val with_opam_version: opam_version -> t -> t
   val with_repositories:

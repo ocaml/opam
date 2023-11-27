@@ -837,13 +837,19 @@ module Env = struct
     let lazy_env = lazy (to_list (raw_env ())) in
     fun () -> Lazy.force lazy_env
 
-  let cyg_env cygbin =
+  let cyg_env cygbin gitbinpath =
     let env = raw_env () in
     let f v =
       match OpamString.cut_at v '=' with
       | Some (path, c) when Name.equal_string path "path" ->
-        Printf.sprintf "%s=%s;%s"
-          path cygbin c
+        (match gitbinpath with
+         | None ->
+           Printf.sprintf "%s=%s;%s" path cygbin c
+         | Some gitbinpath ->
+           if String.equal gitbinpath cygbin then
+             Printf.sprintf "%s=%s;%s" path cygbin c
+           else
+             Printf.sprintf "%s=%s;%s;%s" path gitbinpath cygbin c)
       | _ -> v
     in
     Array.map f env
@@ -1203,7 +1209,7 @@ module OpamSys = struct
     if Sys.win32 then
       let results = Hashtbl.create 17 in
       let requires_cygwin cygcheck name =
-        let env = Env.cyg_env (Filename.dirname cygcheck) in
+        let env = Env.cyg_env (Filename.dirname cygcheck) None in
         let cmd = OpamCompat.Filename.quote_command cygcheck [name] in
         let ((c, _, _) as process) = Unix.open_process_full cmd env in
         let rec check_dll platform =

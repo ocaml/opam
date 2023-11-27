@@ -531,10 +531,15 @@ let compilation_env t opam =
   let cygwin_env =
     match OpamSysInteract.Cygwin.cygbin_opt t.switch_global.config with
     | Some cygbin ->
-      [ OpamTypesBase.env_update_resolved "PATH" EqPlus
-          (OpamFilename.Dir.to_string cygbin)
+      let cygbin = OpamFilename.Dir.to_string cygbin in
+      [ OpamTypesBase.env_update_resolved "PATH" EqPlus cygbin
           ~comment:"Cygwin path"
-      ]
+      ] @ (match OpamCoreConfig.(!r.gitbinpath) with
+          | None -> []
+          | Some gitbinpath ->
+            if String.equal cygbin gitbinpath then [] else
+              [ OpamTypesBase.env_update_resolved "PATH" PlusEq
+                  gitbinpath ~comment:"Git binary path"])
     | None -> []
   in
   let shell_sanitization = "shell env sanitization" in

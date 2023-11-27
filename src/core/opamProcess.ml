@@ -15,7 +15,7 @@ let log ?level fmt =
 let default_env =
   let f () = lazy (
     match OpamCoreConfig.(!r.cygbin) with
-    | Some cygbin -> OpamStd.Env.cyg_env cygbin
+    | Some cygbin -> OpamStd.Env.cyg_env cygbin OpamCoreConfig.(!r.gitbinpath)
     | None -> OpamStd.Env.raw_env ()
   ) in
  fun () -> Lazy.force (f ())

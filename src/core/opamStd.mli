@@ -456,7 +456,7 @@ module Env : sig
 
   val list: unit -> (Name.t * string) list
   val raw_env: unit -> string Array.t
-  val cyg_env: string -> string Array.t
+  val cyg_env: string -> string option -> string Array.t
 end
 
 (** {2 System query and exit handling} *)

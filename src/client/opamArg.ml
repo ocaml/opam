@@ -575,7 +575,8 @@ let apply_global_options cli o =
       (`A (List.map (fun s -> `String s) (Array.to_list Sys.argv)))
   );
   (* We need to retrieve very early cygwin root path to set up 'cygbin' config
-     field. It is retrieved from config file, and we use a low level reading of
+     field and git binary path.
+     It is retrieved from config file, and we use a low level reading of
      that file instead of OpamStateConfig.safe_load to avoid multiple error
      messages displayed if an error is detected in the config file. If there is
      an error, or best effort notification, it will be highlighted after
@@ -596,6 +597,9 @@ let apply_global_options cli o =
               { pelem = String cygcheck; _}::_  ->
               let cygbin = Filename.dirname cygcheck in
               OpamCoreConfig.update ~cygbin ()
+            | Some { pelem = String "gitbinfield"; _},
+              { pelem = String gitbinpath; _}::_  ->
+              OpamCoreConfig.update ~gitbinpath ()
             | _, element::elements -> aux (Some element) elements
           in
           aux None elements

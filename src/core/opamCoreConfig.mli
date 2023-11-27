@@ -72,6 +72,7 @@ type t = private {
   (** If set, will take full md5 of all files when checking diffs (to track
       installations), rather than rely on just file size and mtime *)
   cygbin: string option;
+  gitbinpath: string option;
   set : bool;
   (** Options have not yet been initialised (i.e. defaults are active) *)
 }
@@ -92,6 +93,7 @@ type 'a options_fun =
   ?merged_output:bool ->
   ?precise_tracking:bool ->
   ?cygbin:string ->
+  ?gitbinpath:string ->
   'a
 
 val default : t

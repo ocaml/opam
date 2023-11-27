@@ -1407,6 +1407,7 @@ module ConfigSyntax = struct
     depext_cannot_install : bool;
     depext_bypass: OpamSysPkg.Set.t;
     sys_pkg_manager_cmd: filename OpamStd.String.Map.t;
+    gitbinfield: dirname option;
     swh_fallback: bool;
   }
 
@@ -1451,6 +1452,7 @@ module ConfigSyntax = struct
   let depext_bypass t = t.depext_bypass
 
   let sys_pkg_manager_cmd t = t.sys_pkg_manager_cmd
+  let gitbinfield t = t.gitbinfield
 
   let swh_fallback t = t.swh_fallback
 
@@ -1503,6 +1505,8 @@ module ConfigSyntax = struct
   let with_sys_pkg_manager_cmd sys_pkg_manager_cmd t =
     { t with sys_pkg_manager_cmd }
   let with_swh_fallback swh_fallback t = { t with swh_fallback }
+  let with_gitbinfield gitbinfield t = { t with gitbinfield  = Some gitbinfield }
+  let with_gitbinfield_opt gitbinfield t = { t with gitbinfield }
 
   let empty = {
     opam_version = file_format_version;
@@ -1528,6 +1532,7 @@ module ConfigSyntax = struct
     depext_cannot_install = false;
     depext_bypass = OpamSysPkg.Set.empty;
     sys_pkg_manager_cmd = OpamStd.String.Map.empty;
+    gitbinfield = None;
     swh_fallback = true;
   }
 
@@ -1632,6 +1637,9 @@ module ConfigSyntax = struct
                Pp.V.string
                (Pp.V.string -| Pp.of_module "filename" (module OpamFilename))))
          -| Pp.of_pair "Distribution Map" OpamStd.String.Map.(of_list, bindings));
+      "gitbinfield", Pp.ppacc_opt
+        with_gitbinfield gitbinfield
+        (Pp.V.string -| Pp.of_module "dirname" (module OpamFilename.Dir));
       "swh-fallback", Pp.ppacc
         with_swh_fallback swh_fallback
         Pp.V.bool;
@@ -1707,6 +1715,7 @@ module InitConfigSyntax = struct
     recommended_tools : (string list * string option * filter option) list;
     required_tools : (string list * string option * filter option) list;
     init_scripts : ((string * string) * filter option) list;
+    gitbinfield: dirname option;
   }
 
   let opam_version t = t.opam_version
@@ -1727,6 +1736,7 @@ module InitConfigSyntax = struct
   let init_scripts t = t.init_scripts
   let criterion kind t =
     OpamStd.(List.assoc_opt Compare.equal kind t.solver_criteria)
+  let gitbinfield t = t.gitbinfield
 
   let with_opam_version opam_version t = {t with opam_version}
   let with_repositories repositories t = {t with repositories}
@@ -1750,6 +1760,7 @@ module InitConfigSyntax = struct
                                     kind t.solver_criteria)
     in
     { t with solver_criteria }
+  let with_gitbinfield gitbinfield t = { t with gitbinfield  = Some gitbinfield }
 
   let empty = {
     opam_version = format_version;
@@ -1768,6 +1779,7 @@ module InitConfigSyntax = struct
     recommended_tools = [];
     required_tools = [];
     init_scripts = [];
+    gitbinfield = None;
   }
 
   let pp_repository_def =
@@ -1867,6 +1879,9 @@ module InitConfigSyntax = struct
                  (Pp.V.string)
                  (Pp.V.string_tr))
               (Pp.opt Pp.V.filter)));
+      "gitbinfield", Pp.ppacc_opt
+        with_gitbinfield gitbinfield
+        (Pp.V.string -| Pp.of_module "dirname" (module OpamFilename.Dir));
     ] @
     List.map
       (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
@@ -1912,6 +1927,7 @@ module InitConfigSyntax = struct
       recommended_tools = list t2.recommended_tools t1.recommended_tools;
       required_tools = list t2.required_tools t1.required_tools;
       init_scripts = list t2.init_scripts t1.init_scripts;
+      gitbinfield = opt t2.gitbinfield t1.gitbinfield;
     }
 
 end
