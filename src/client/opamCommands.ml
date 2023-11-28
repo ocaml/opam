@@ -327,12 +327,22 @@ let init cli =
     else
       Term.const None
   in
+  let gitbin =
+    if Sys.win32 then
+      mk_opt ~cli (cli_from ~experimental:true cli2_2)
+        ["git-location"] "DIR"
+        "Specify git binary directory. \
+         Ensure that it doesn't contains bash in the same directory"
+        Arg.(some dirname) None
+    else
+      Term.const None
+  in
   let init global_options
       build_options repo_kind repo_name repo_url
       interactive update_config completion env_hook no_sandboxing shell
       dot_profile_o compiler no_compiler config_file no_config_file reinit
       show_opamrc bypass_checks
-      cygwin_internal cygwin_location
+      cygwin_internal cygwin_location gitbin
       () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
@@ -410,7 +420,7 @@ let init cli =
         let reinit conf =
           OpamClient.reinit ~init_config ~interactive ?dot_profile
             ?update_config ?env_hook ?completion ~inplace ~bypass_checks
-            ~check_sandbox:(not no_sandboxing) ?cygwin_setup
+            ~check_sandbox:(not no_sandboxing) ?cygwin_setup ?gitbin
             conf shell
         in
         let config =
@@ -450,7 +460,7 @@ let init cli =
         ?repo ~bypass_checks ?dot_profile
         ?update_config ?env_hook ?completion
         ~check_sandbox:(not no_sandboxing)
-        ?cygwin_setup
+        ?cygwin_setup ?gitbin
         shell
     in
     OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
@@ -499,7 +509,7 @@ let init cli =
           $setup_completion $env_hook $no_sandboxing $shell_opt cli
           cli_original $dot_profile_flag cli cli_original $compiler
           $no_compiler $config_file $no_config_file $reinit $show_default_opamrc
-          $bypass_checks $cygwin_internal $cygwin_location)
+          $bypass_checks $cygwin_internal $cygwin_location $gitbin)
 
 (* LIST *)
 let list_doc = "Display the list of available packages."
