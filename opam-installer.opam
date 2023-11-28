@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.2.0~alpha3"
+version: "2.2.0~alpha4~dev"
 synopsis: "Installation of files to a prefix, following opam conventions"
 description: """
 opam-installer is a small tool that can read *.install files, as defined by opam [1], and execute them to install or remove package files without going through opam.
