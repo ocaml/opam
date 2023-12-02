@@ -1854,6 +1854,9 @@ module Config = struct
   let env_string var =
     env (fun s -> s) var
 
+  let env_string_list var =
+    env (fun s -> OpamString.split s ',') var
+
   let env_float var =
     env float_of_string var
 
