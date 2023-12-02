@@ -304,6 +304,8 @@ let environment_variables =
       "see option `--skip-updates'.";
       "STATS", cli_original, (fun v -> STATS (env_bool v)),
       "display stats at the end of command.";
+      "VERBOSE_ON", cli_from cli2_2, (fun v -> VERBOSEON (env_string_list v)),
+      "see option --verbose-on";
       "WORKINGDIR", cli_original, (fun v -> WORKINGDIR (env_bool v)),
       "see option `--working-dir'.";
     ] in
