@@ -31,7 +31,7 @@ module E = struct
     | SKIPUPDATE of bool option
     | STATS of bool option
     | WORKINGDIR of bool option
-    | VERBOSEON of string option
+    | VERBOSEON of string list option
 
   open OpamStd.Config.E
   let assumedepexts = value (function ASSUMEDEPEXTS b -> b | _ -> None)
@@ -54,7 +54,7 @@ module E = struct
   let skipupdate = value (function SKIPUPDATE b -> b | _ -> None)
   let stats = value (function STATS b -> b | _ -> None)
   let workingdir = value (function WORKINGDIR b -> b | _ -> None)
-  let _verboseon = value (function VERBOSEON s -> s | _ -> None)
+  let verboseon = value (function VERBOSEON s -> s | _ -> None)
 
 end
 
@@ -205,7 +205,8 @@ let initk k =
     ?assume_depexts:(E.assumedepexts ())
     ?cli:None
     ?scrubbed_environment_variables:None
-    ?verbose_on:None
+    ?verbose_on:(E.verboseon() >>| List.map (OpamPackage.Name.of_string) 
+                >>| (OpamPackage.Name.Set.of_list))
 
 let init ?noop:_ = initk (fun () -> ())
 

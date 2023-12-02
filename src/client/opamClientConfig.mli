@@ -33,7 +33,7 @@ module E: sig
     | SKIPUPDATE of bool option
     | STATS of bool option
     | WORKINGDIR of bool option
-    | VERBOSEON of string option
+    | VERBOSEON of string list option
     val cli: unit -> string option
     val rootisok: unit -> bool option
     val noaggregate: unit -> bool option
