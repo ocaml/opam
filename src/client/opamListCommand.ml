@@ -664,6 +664,7 @@ let default_package_listing_format = {
 }
 
 let display st format packages =
+  OpamTrace.with_span "ListCommand.display" @@ fun () ->
   let packages =
     if format.all_versions then packages else
       OpamPackage.Name.Set.fold (fun name ->
@@ -714,6 +715,7 @@ let display st format packages =
     OpamConsole.print_table ?cut:format.wrap stdout ~sep:format.separator
 
 let get_switch_state gt rt =
+  OpamTrace.with_span "ListCommand.get_switch_state" @@ fun () ->
   match OpamStateConfig.get_switch_opt () with
   | None -> OpamSwitchState.load_virtual gt rt
   | Some sw -> OpamSwitchState.load `Lock_none gt rt sw

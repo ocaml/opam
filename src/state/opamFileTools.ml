@@ -1180,6 +1180,8 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
     opam
 
 let read_opam dir =
+  OpamTrace.with_span "FileTools.read_opam"
+      ~data:["dir", `String (OpamFilename.Dir.to_string dir)] @@ fun () ->
   let (opam_file: OpamFile.OPAM.t OpamFile.t) =
     OpamFile.make (dir // "opam")
   in

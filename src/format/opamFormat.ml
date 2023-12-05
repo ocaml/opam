@@ -704,6 +704,7 @@ module I = struct
   type ('a, 'value) fields_def = (string * ('a, 'value) field_parser) list
 
   let fields ?name ~empty ?(sections=[]) ?(mandatory_fields=[]) ppas =
+    OpamTrace.with_span "OpamFormat.fields" @@ fun () ->
     let parse ~pos items =
       (* For consistency, always read fields in ppa order, ignoring file
          order. Some parsers may depend on it. *)

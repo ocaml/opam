@@ -97,6 +97,7 @@ users)
 ## Shell
 
 ## Internal
+  * Add tracing for opam itself, enabled if `TRACE_FILE` is set in the environment [#5757 @c-cube]
 
 ## Internal: Windows
 

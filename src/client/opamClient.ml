@@ -19,6 +19,7 @@ let slog = OpamConsole.slog
 
 (* Splits a list of atoms into the installed and uninstalled ones*)
 let get_installed_atoms t atoms =
+  OpamTrace.with_span "Client.get_installed_atoms" @@ fun () ->
   List.fold_left (fun (packages, not_installed) atom ->
       try
         let nv =
@@ -66,6 +67,7 @@ let update_dev_packages_t ?autolock ?(only_installed=false) atoms t =
 let compute_upgrade_t
     ?(strict_upgrade=true) ?(auto_install=false) ?(only_installed=false)
     ~all ~formula atoms t =
+  OpamTrace.with_span "Client.compute_upgrade" @@ fun () ->
   let packages = OpamFormula.packages_of_atoms t.packages atoms in
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
   let atoms =
@@ -340,6 +342,7 @@ let upgrade_t
     t
 
 let upgrade t ?formula ?check ?only_installed ~all names =
+  OpamTrace.with_span "Client.upgrade" @@ fun () ->
   let atoms = OpamSolution.sanitize_atom_list t names in
   let t = update_dev_packages_t ~autolock:true ?only_installed atoms t in
   upgrade_t ?check ~strict_upgrade:(not all) ?only_installed ~all
@@ -347,6 +350,7 @@ let upgrade t ?formula ?check ?only_installed ~all names =
 
 let fixup ?(formula=OpamFormula.Empty) t =
   (* @LG reimplement as an alias for 'opam upgrade --criteria=fixup --best-effort --update-invariant *)
+  OpamTrace.with_span "Client.fixup" @@ fun () ->
   log "FIXUP";
   let resolve pkgs =
     pkgs,
@@ -409,6 +413,7 @@ let fixup ?(formula=OpamFormula.Empty) t =
 
 let update
     gt ~repos_only ~dev_only ?(all=false) names =
+  OpamTrace.with_span "Client.update" @@ fun () ->
   log "UPDATE %a" (slog @@ String.concat ", ") names;
   let rt = OpamRepositoryState.load `Lock_none gt in
   let st, repos_only =
@@ -550,6 +555,7 @@ let update
   rt
 
 let init_checks ?(hard_fail_exn=true) init_config =
+  OpamTrace.with_span "Client.init_checks" @@ fun () ->
   (* Check for the external dependencies *)
   let check_external_dep name =
     OpamSystem.resolve_command name <> None
@@ -636,6 +642,7 @@ let init_checks ?(hard_fail_exn=true) init_config =
   else not (soft_fail || hard_fail)
 
 let windows_checks ?cygwin_setup config =
+  OpamTrace.with_span "Client.windows_checks" @@ fun () ->
   let vars = OpamFile.Config.global_variables config in
   let env =
     List.map (fun (v, c, s) -> v, (lazy (Some c), s)) vars
@@ -900,6 +907,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
     ?(check_sandbox=true) ?(bypass_checks=false) ?cygwin_setup
     config shell =
+  OpamTrace.with_span "Client.reinit" @@ fun () ->
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
   let config = windows_checks ?cygwin_setup config in
@@ -945,6 +953,7 @@ let init
     ?(check_sandbox=true)
     ?cygwin_setup
     shell =
+  OpamTrace.with_span "Client.init" @@ fun () ->
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
   let root = OpamStateConfig.(!r.root_dir) in
@@ -1069,6 +1078,7 @@ let init
   gt, rt, default_compiler
 
 let check_installed ~build ~post t atoms =
+  OpamTrace.with_span "Client.check_installed" @@ fun () ->
   let available = (Lazy.force t.available_packages) in
   let uninstalled = OpamPackage.Set.Op.(available -- t.installed) in
   let pkgs =
@@ -1125,6 +1135,7 @@ let check_installed ~build ~post t atoms =
     ) pkgs OpamPackage.Map.empty
 
 let assume_built_restrictions ?available_packages t atoms =
+  OpamTrace.with_span "Client.assume_built_restrictions" @@ fun () ->
   let missing = check_installed ~build:false ~post:false t atoms in
   let atoms =
     if OpamPackage.Map.is_empty missing then atoms else
@@ -1179,6 +1190,7 @@ let assume_built_restrictions ?available_packages t atoms =
   { t with available_packages }, fixed_atoms
 
 let filter_unpinned_locally t atoms f =
+  OpamTrace.with_span "Client.filter_unpinned_locally" @@ fun () ->
   OpamStd.List.filter_map (fun at ->
       let n,_ = at in
       if OpamSwitchState.is_pinned t n &&
@@ -1198,6 +1210,7 @@ let filter_unpinned_locally t atoms f =
 let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
     ?(download_only=false) atoms ?(formula=OpamFormula.Empty)
     add_to_roots ~deps_only ~assume_built =
+  OpamTrace.with_span "Client.install" @@ fun () ->
   log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
   let available_packages = Lazy.force t.available_packages in
 
@@ -1455,6 +1468,7 @@ let install t ?formula ?autoupdate ?add_to_roots
     ~ignore_conflicts ~depext_only ~deps_only ~download_only ~assume_built
 
 let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
+  OpamTrace.with_span "Client.remove" @@ fun () ->
   log "REMOVE autoremove:%b %a" autoremove
     (slog OpamFormula.string_of_atoms) atoms;
 
@@ -1543,6 +1557,7 @@ let remove t ~autoremove ~force ?formula names =
   remove_t ~autoremove ~force ?formula atoms t
 
 let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
+  OpamTrace.with_span "Client.reinstall" @@ fun () ->
   log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
 
   let packages = OpamFormula.packages_of_atoms t.packages atoms in

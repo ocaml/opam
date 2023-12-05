@@ -121,6 +121,7 @@ let rec preprocess_argv cli yes_args confirm args =
 
 (* Handle git-like plugins *)
 let check_and_run_external_commands () =
+  OpamTrace.with_span "CliMain.check_and_run_external_commands" @@ fun () ->
   (* Pre-process the --yes and --cli options *)
   let (cli, yes, confirm_level, argv) =
     match Array.to_list Sys.argv with
@@ -439,6 +440,7 @@ let rec main_catch_all f =
     exit exit_code
 
 let run () =
+  OpamTrace.setup ~trace_file:None ();
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
   OpamArg.preinit_opam_env_variables ();
@@ -456,7 +458,10 @@ let run () =
   let to_new_cmdliner_api (term, info) = Cmd.v info term in
   let default, default_info = default in
   let commands = List.map to_new_cmdliner_api commands in
-  match Cmd.eval_value ~catch:false ~argv (Cmd.group ~default default_info commands) with
+  match
+    OpamTrace.with_span "CliMain.Cmd.eval_value" @@ fun () ->
+    Cmd.eval_value ~catch:false ~argv (Cmd.group ~default default_info commands)
+  with
   | Error _ -> exit (OpamStd.Sys.get_exit_code `Bad_arguments)
   | Ok _    -> exit (OpamStd.Sys.get_exit_code `Success)
 
@@ -464,6 +469,7 @@ let json_out () =
   match OpamClientConfig.(!r.json_out) with
   | None   -> ()
   | Some s ->
+    OpamTrace.with_span "cli-main.json-out" @@ fun () ->
     let file_name () =
       match OpamStd.String.cut_at s '%' with
       | None -> OpamFilename.of_string s

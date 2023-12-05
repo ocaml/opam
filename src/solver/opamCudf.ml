@@ -1524,6 +1524,7 @@ let call_external_solver ~version_map univ req =
     Dose_algo.Depsolver.Sat(None,Cudf.load_universe [])
 
 let check_request ?(explain=true) ~version_map univ req =
+  OpamTrace.with_span "Cudf.check_request" @@ fun () ->
   let chrono = OpamConsole.timer () in
   log "Checking request...";
   let result = Dose_algo.Depsolver.check_request ~explain (to_cudf univ req) in
@@ -1546,6 +1547,7 @@ let check_request ?(explain=true) ~version_map univ req =
 
 (* Return the universe in which the system has to go *)
 let get_final_universe ~version_map univ req =
+  OpamTrace.with_span "Cudf.get_final_universe" @@ fun () ->
   let fail msg =
     let f = dump_cudf_error ~version_map univ req in
     let msg =
@@ -1593,6 +1595,7 @@ let actions_of_diff (install, remove) =
   actions
 
 let resolve ~extern ~version_map universe request =
+  OpamTrace.with_span "Cudf.resolve" @@ fun () ->
   log "resolve request=%a" (slog string_of_request) request;
   let resp =
     let check () = check_request ~version_map universe request in

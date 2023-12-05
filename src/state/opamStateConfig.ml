@@ -229,6 +229,7 @@ let is_newer_than_self ?lock_kind gt =
   is_readonly_opamroot_t ?lock_kind gt <> Some false
 
 let load_if_possible_raw ?lock_kind root version (read,read_wo_err) f =
+  OpamTrace.with_span "StateConfig.load_if_possible_raw" @@ fun () ->
   match is_readonly_opamroot_raw ?lock_kind version with
   | None ->
     OpamConsole.error_and_exit `Locked
@@ -270,6 +271,7 @@ let load ?lock_kind opamroot =
 module Switch = struct
 
   let load_raw ?lock_kind root config readf switch =
+    OpamTrace.with_span "StateConfig.Switch.load_raw" @@ fun () ->
     load_if_possible_t ?lock_kind root config readf
       (OpamPath.Switch.switch_config root switch)
 
@@ -293,6 +295,7 @@ module Switch = struct
       switch
 
   let safe_read_selections ?lock_kind gt switch =
+    OpamTrace.with_span "StateConfig.safe_read_selections" @@ fun () ->
     load_if_possible ?lock_kind gt
       OpamFile.SwitchSelections.(safe read_opt BestEffort.read_opt empty)
       (OpamPath.Switch.selections gt.root switch)
@@ -302,6 +305,7 @@ end
 (* repos *)
 module Repos = struct
   let safe_read ?lock_kind gt =
+    OpamTrace.with_span "StateConfig.Repos.safe_read" @@ fun () ->
     load_if_possible ?lock_kind gt
       OpamFile.Repos_config.(safe read_opt BestEffort.read_opt empty)
       (OpamPath.repos_config gt.root)
@@ -331,6 +335,7 @@ let downgrade_2_1_switch f =
           |> OpamFile.Switch_config.read_from_string)
 
 let local_switch_exists root switch =
+  OpamTrace.with_span "StateConfig.local_switch_exists" @@ fun () ->
   (* we don't use safe loading function to avoid errors displaying *)
   let f = OpamPath.Switch.switch_config root switch in
   match OpamFile.Switch_config.BestEffort.read_opt f with
@@ -348,6 +353,7 @@ let local_switch_exists root switch =
         else false
 
 let resolve_local_switch root s =
+  OpamTrace.with_span "opamStateConfig.resolve_local_switch" @@ fun () ->
   let switch_root = OpamSwitch.get_root root s in
   if OpamSwitch.is_external s && OpamFilename.dirname_dir switch_root = root
   then OpamSwitch.of_string (OpamFilename.remove_prefix_dir root switch_root)
@@ -366,6 +372,7 @@ let get_current_switch_from_cwd root =
 
 (* do we want `load_defaults` to fail / run a format upgrade ? *)
 let load_defaults ?lock_kind root_dir =
+  OpamTrace.with_span "opam-state.load-defaults" @@ fun () ->
   let current_switch =
     match E.switch () with
     | Some "" | None -> get_current_switch_from_cwd root_dir

@@ -253,6 +253,7 @@ let find_package_opt rt repo_list nv =
     None repo_list
 
 let build_index rt repo_list =
+  OpamTrace.with_span "RepositoryState.build_index" @@ fun () ->
   List.fold_left (fun acc repo_name ->
       try
         let repo_opams = OpamRepositoryName.Map.find repo_name rt.repo_opams in

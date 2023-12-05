@@ -1102,6 +1102,7 @@ module OpamSys = struct
     )
 
   let guess_shell_compat () =
+    OpamTrace.with_span "Std.guess_shell_compat" @@ fun () ->
     let parent_guess () =
       let ppid = Unix.getppid () in
       let dir = Filename.concat "/proc" (string_of_int ppid) in

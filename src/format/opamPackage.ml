@@ -226,6 +226,9 @@ let of_archive f =
 let list dir =
   log "list %a" (slog OpamFilename.Dir.to_string) dir;
   if OpamFilename.exists_dir dir then (
+    OpamTrace.with_span "pkg.list-dir"
+      ~data:["dir", `String (OpamFilename.Dir.to_string dir)] @@ fun () ->
+
     let files = OpamFilename.rec_files dir in
     List.fold_left (fun set f ->
         match of_filename f with

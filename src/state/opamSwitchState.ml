@@ -230,6 +230,7 @@ let depexts_unavailable_raw sys_packages nv =
   | _ -> None
 
 let load lock_kind gt rt switch =
+  OpamTrace.with_span "SwitchState.load" @@ fun () ->
   OpamFormatUpgrade.as_necessary_repo_switch_light_upgrade lock_kind `Switch gt;
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE %@ %a" (slog OpamSwitch.to_string) switch;
@@ -617,6 +618,7 @@ let load lock_kind gt rt switch =
   st
 
 let load_virtual ?repos_list ?(avail_default=true) gt rt =
+  OpamTrace.with_span "SwitchState.load_virtual" @@ fun () ->
   let repos_list = match repos_list with
     | Some rl -> rl
     | None -> OpamGlobalState.repos_list gt
@@ -943,6 +945,7 @@ let universe st
     ?reinstall
     ~requested
     user_action =
+  OpamTrace.with_span "SwitchState.universe" @@ fun () ->
   let chrono = OpamConsole.timer () in
   let names = OpamPackage.names_of_packages requested in
   let requested_allpkgs =
