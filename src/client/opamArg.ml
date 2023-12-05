@@ -1637,16 +1637,21 @@ let package_selection cli =
       "Only includes packages which have the given tag set"
       Arg.string
   in
+  let latests_only =
+    mk_flag ~cli (cli_from cli2_2) ["latests-only"]  ~section
+      "List only the latest version of each package."
+  in
   let filter
       depends_on required_by conflicts_with coinstallable_with resolve
       recursive depopts nobuild post dev doc_flag test dev_setup field_match
-      has_flag has_tag
+      has_flag has_tag latests_only
     =
     let dependency_toggles = {
       OpamListCommand.
       recursive; depopts; build = not nobuild; post; test; dev_setup;
       doc = doc_flag; dev
     } in
+    (if latests_only then [OpamListCommand.Latests_only] else []) @
     List.map (fun flag -> OpamListCommand.Flag flag) has_flag @
     List.map (fun tag -> OpamListCommand.Tag tag) has_tag @
     List.map (fun (field,patt) ->
@@ -1675,7 +1680,7 @@ let package_selection cli =
         depends_on $ required_by $ conflicts_with $ coinstallable_with $
         resolve $ recursive $ depopts $ nobuild $ post cli $ dev cli $
         doc_flag cli $ test cli $ dev_setup cli $ field_match $ has_flag $
-        has_tag)
+        has_tag $ latests_only)
 
 let package_listing_section = "OUTPUT FORMAT OPTIONS"
 
