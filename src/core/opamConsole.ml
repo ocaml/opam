@@ -509,19 +509,22 @@ let clear_status =
   else
     clear_status_unix
 
+let flush_out ch =
+  flush (if ch = `stdout then stderr else stdout)
+
 let print_message =
   if Sys.win32 then
-    fun ch fmt ->
-      flush (if ch = `stdout then stderr else stdout);
+    fun ~force_flush ch fmt ->
+      if force_flush then flush_out ch;
       clear_status ();
       (* win32_print_message *always* flushes *)
       Printf.ksprintf (win32_print_message ch) fmt
   else
-    fun ch fmt ->
+    fun ~force_flush ch fmt ->
       let output_string =
         let output_string ch s =
           output_string ch s;
-          flush ch
+        if force_flush then flush ch
         in
         match ch with
         | `stdout -> flush stderr; output_string stdout
@@ -594,23 +597,23 @@ let slog to_string f x = Format.pp_print_string f (to_string x)
 
 let error fmt =
   Printf.ksprintf (fun str ->
-    print_message `stderr "%a %s\n" (acolor `red) "[ERROR]"
+    print_message ~force_flush:true `stderr "%a %s\n" (acolor `red) "[ERROR]"
       (OpamStd.Format.reformat ~start_column:8 ~indent:8 str)
   ) fmt
 
 let warning fmt =
   Printf.ksprintf (fun str ->
-    print_message `stderr "%a %s\n" (acolor `yellow) "[WARNING]"
+    print_message ~force_flush:true `stderr "%a %s\n" (acolor `yellow) "[WARNING]"
       (OpamStd.Format.reformat ~start_column:10 ~indent:10 str)
   ) fmt
 
 let note fmt =
   Printf.ksprintf (fun str ->
-    print_message `stderr "%a %s\n" (acolor `blue) "[NOTE]"
+    print_message ~force_flush:true `stderr "%a %s\n" (acolor `blue) "[NOTE]"
       (OpamStd.Format.reformat ~start_column:7 ~indent:7 str)
   ) fmt
 
-let errmsg fmt = print_message `stderr fmt
+let errmsg fmt = print_message ~force_flush:true `stderr fmt
 
 let error_and_exit reason fmt =
   Printf.ksprintf (fun str ->
@@ -618,11 +621,13 @@ let error_and_exit reason fmt =
     OpamStd.Sys.exit_because reason
   ) fmt
 
-let msg fmt = print_message `stdout fmt
+let msg fmt = print_message ~force_flush:true `stdout fmt
+let msg_no_flush fmt = print_message ~force_flush:false `stdout fmt
 
 let formatted_msg ?indent fmt =
   Printf.ksprintf
-    (fun s -> print_message `stdout "%s" (OpamStd.Format.reformat ?indent s))
+    (fun s -> print_message ~force_flush:true `stdout "%s"
+      (OpamStd.Format.reformat ?indent s))
     fmt
 
 let last_status = ref ""
@@ -680,7 +685,7 @@ let header_msg fmt =
       let wpad = header_width () - String.length str - 2 in
       let wpadl = 4 in
       let wpadr = wpad - wpadl - if utf8_extended () then 4 else 0 in
-      print_message `stdout "\n%s %s%s%s\n"
+      print_message ~force_flush:true `stdout "\n%s %s%s%s\n"
         (colorise `cyan (String.sub padding 0 wpadl))
         (colorise `bold str)
         (if wpadr > 0 then
@@ -704,7 +709,7 @@ let header_error fmt =
           let wpad = header_width () - String.length head - 8 in
           let wpadl = 4 in
           let wpadr = wpad - wpadl in
-          print_message `stderr "\n%s %s %s %s\n%s\n"
+          print_message ~force_flush:true `stderr "\n%s %s %s %s\n%s\n"
             (colorise `red (String.sub padding 0 wpadl))
             (colorise `bold "ERROR")
             (colorise `bold head)
@@ -855,7 +860,7 @@ let print_table ?cut oc ~sep table =
   in
   let output_string s =
     if oc = stdout then
-      msg "%s\n" s
+      msg_no_flush "%s\n" s
     else if oc = stderr then
       errmsg "%s\n" s
     else begin
@@ -875,15 +880,20 @@ let print_table ?cut oc ~sep table =
     in
     clean [] (List.rev sl)
   in
-  let print_line l = match cut with
+
+  let terminal_columns = OpamStd.Sys.terminal_columns () in
+
+  let print_line l =
+    OpamTrace.with_span "Console.print_table.print_line" @@ fun () ->
+    match cut with
     | `None ->
       let s = List.map (replace_newlines "\\n") l |> String.concat sep in
       output_string s;
     | `Truncate ->
       let s = List.map (replace_newlines " ") l |> String.concat sep in
-      output_string (cut_at_visual s (OpamStd.Sys.terminal_columns ()));
+      output_string (cut_at_visual s terminal_columns);
     | `Wrap wrap_sep ->
-      let width = OpamStd.Sys.terminal_columns () in
+      let width = terminal_columns in
       let base_indent = 10 in
       let sep_len = visual_length sep in
       let wrap_sep_len = visual_length wrap_sep in
@@ -960,7 +970,9 @@ let print_table ?cut oc ~sep table =
       in
       output_string str;
   in
-  List.iter (fun l -> print_line (cleanup_trailing l)) table
+  List.iter (fun l -> print_line (cleanup_trailing l)) table;
+  OpamTrace.instant "console.print_table.flush";
+  flush oc
 
 let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
   assert (List.length options < 10);
@@ -991,9 +1003,9 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
             nums_options)
     in
     let nlines = List.length Re.(all (compile (char '\n')) text) in
-    msg "%s" text;
+    msg_no_flush "%s" text;
     let select a =
-      msg "%s\n" OpamStd.(List.assoc Compare.equal a options_nums); a
+      msg_no_flush "%s\n" OpamStd.(List.assoc Compare.equal a options_nums); a
     in
     let default_s = OpamStd.(List.assoc Compare.equal default options_nums) in
     let no_s = OpamStd.(List.assoc Compare.equal no options_nums) in

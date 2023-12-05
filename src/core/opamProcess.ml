@@ -698,7 +698,11 @@ let safe_wait fallback_pid f x =
   with e -> cleanup (); raise e
 
 let wait (p:t) =
-  OpamTrace.with_span "process.wait" ~data:["p", `String p.p_name] @@ fun () ->
+  OpamTrace.with_span "process.wait"
+      ~data:["p", `String p.p_name; "args",
+      `String (String.concat " "p.p_args)]
+  @@ fun () ->
+
   set_verbose_process p;
   let _, return = safe_wait p.p_pid (Unix.waitpid []) p.p_pid in
   exit_status p return

@@ -88,7 +88,8 @@ let unexpected ?pos () = raise (Unexpected pos)
 
 (** Basic pp usage *)
 
-let parse pp ~pos x = try pp.parse ~pos x with
+let parse pp ~pos x =
+  try pp.parse ~pos x with
   | Bad_version _ | Bad_format _ | Bad_format_list _ as e ->
     raise (add_pos pos e)
   | Unexpected (Some pos) -> bad_format ~pos "expected %s" pp.ppname

@@ -856,7 +856,8 @@ module Syntax = struct
      re-writing files with a guarantee that it hasn't been rewritten in the
      meantime *)
 
-  let parser_main lexbuf filename =
+  let parser_main lexbuf filename : opamfile =
+    OpamTrace.with_span "OpamFile.Syntax.parser_main" @@ fun () ->
     let error msg =
       let curr = lexbuf.Lexing.lex_curr_p in
       let start = lexbuf.Lexing.lex_start_p in
@@ -904,7 +905,9 @@ module Syntax = struct
 
   let to_string_with_preserved_format
       filename ?(format_from=filename) ?format_from_string
-      ~empty ?(sections=[]) ~fields pp t =
+      ~empty ?(sections=[]) ~fields pp t : string =
+    OpamTrace.with_span "OpamFile.Syntax.to_string_with_preserved_format"
+      @@ fun () ->
     let current_str_opt =
       match format_from_string with
       | Some s -> Some s
@@ -1178,19 +1181,24 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
     | opamfile -> opamfile
 
     let of_channel filename (ic:in_channel) =
+      OpamTrace.with_span "OpamFile.of_channel" @@ fun () ->
       let opamfile = Syntax.of_channel filename ic |> catch_future_syntax_error in
       Pp.parse X.pp ~pos:(pos_file filename) opamfile
       |> snd
 
     let to_channel filename oc t =
+      OpamTrace.with_span "OpamFile.to_channel"
+          ~data:["f", `String (to_string filename)] @@ fun () ->
       Syntax.to_channel filename oc (to_opamfile filename t)
 
     let of_string (filename:filename) str =
+      OpamTrace.with_span "OpamFile.of_string" @@ fun () ->
       let opamfile = Syntax.of_string filename str |> catch_future_syntax_error in
       Pp.parse X.pp ~pos:(pos_file filename) opamfile
       |> snd
 
     let to_string filename t =
+      OpamTrace.with_span "OpamFile.to_string" @@ fun () ->
       Syntax.to_string filename (to_opamfile filename t)
   end
 

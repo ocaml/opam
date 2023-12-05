@@ -230,6 +230,7 @@ let depexts_unavailable_raw sys_packages nv =
   | _ -> None
 
 let load lock_kind gt rt switch =
+  OpamTrace.with_span "SwitchState.load" @@ fun () ->
   OpamFormatUpgrade.as_necessary_repo_switch_light_upgrade lock_kind `Switch gt;
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE %@ %a" (slog OpamSwitch.to_string) switch;
