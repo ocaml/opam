@@ -6,5 +6,5 @@ val with_span : ?data:(string * OpamJson.t) list -> string -> (unit -> 'a) -> 'a
 
 val instant : ?data:(string * OpamJson.t) list -> string -> unit
 
-val counter : string -> (string * int) list -> unit
+val counter : string -> (string * float) list -> unit
 
