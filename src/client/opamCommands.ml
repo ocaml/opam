@@ -2569,6 +2569,7 @@ let with_repos_rt gt repos f =
 
 let switch_doc = "Manage multiple installation prefixes."
 let switch cli =
+  OpamTrace.with_span "Commands.switch" @@ fun () ->
   let shell = OpamStd.Sys.guess_shell_compat () in
   let doc = switch_doc in
   let commands = [
@@ -4403,6 +4404,7 @@ let admin =
 (* Note: for cli versionning check, all commands must be constructed with
    [OpamArg.mk_command] or [OpamArg.mk_command_ret]. *)
 let commands cli =
+  OpamTrace.with_span "Commands.commands" @@ fun () ->
   let show = show cli in
   let remove = remove cli in
   let repository = repository cli in

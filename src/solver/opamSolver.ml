@@ -585,6 +585,7 @@ let dependency_graph
   g
 
 let dependency_sort ~depopts ~build ~post universe packages =
+  OpamTrace.with_span "Solver.dependency_sort" @@ fun () ->
   let cudf_universe, cudf_packages =
     load_cudf_universe_with_packages
       ~depopts ~build ~post universe universe.u_packages packages

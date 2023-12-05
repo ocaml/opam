@@ -15,6 +15,8 @@ let log fmt = OpamConsole.log "XSYS" fmt
 
 let run_command
     ?vars ?(discard_err=false) ?allow_stdin ?verbose ?(dryrun=false) cmd args =
+  OpamTrace.with_span "sys-interact.run-command"
+    ~data:["cmd", `String cmd] @@ fun () ->
   let clean_output =
     if not discard_err then
       fun k -> k None
@@ -378,6 +380,7 @@ let yum_cmd = lazy begin
 end
 
 let packages_status ?(env=OpamVariable.Map.empty) config packages =
+  OpamTrace.with_span "sys-interact.packages-status" @@ fun () ->
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
@@ -467,6 +470,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
   in
   let compute_sets_for_arch ~pacman =
     let get_avail_w_virtuals () =
+      OpamTrace.with_span "comput-sets-for-archs" @@ fun () ->
       let package_provided str =
         OpamSysPkg.of_string
           (match OpamStd.String.cut_at str '=' with
@@ -991,6 +995,7 @@ let package_manager_name ?env config =
   | [] -> assert false
 
 let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
+  OpamTrace.with_span "sys-interact.sudo-run-cmd" @@ fun () ->
   let cmd, args =
     let not_root = Unix.getuid () <> 0  in
     match cmd, OpamSysPoll.os env with

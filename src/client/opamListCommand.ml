@@ -664,6 +664,7 @@ let default_package_listing_format = {
 }
 
 let display st format packages =
+  OpamTrace.with_span "ListCommand.display" @@ fun () ->
   let packages =
     if format.all_versions then packages else
       OpamPackage.Name.Set.fold (fun name ->

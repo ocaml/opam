@@ -846,6 +846,7 @@ let read fmt =
     ) fmt
 
 let print_table ?cut oc ~sep table =
+  OpamTrace.with_span "Console.print_table" @@ fun () ->
   let open OpamStd.Format in
   let cut =
     match cut with

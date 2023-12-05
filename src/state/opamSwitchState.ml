@@ -617,6 +617,7 @@ let load lock_kind gt rt switch =
   st
 
 let load_virtual ?repos_list ?(avail_default=true) gt rt =
+  OpamTrace.with_span "SwitchState.load_virtual" @@ fun () ->
   let repos_list = match repos_list with
     | Some rl -> rl
     | None -> OpamGlobalState.repos_list gt
