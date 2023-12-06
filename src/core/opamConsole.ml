@@ -884,7 +884,6 @@ let print_table ?cut oc ~sep table =
   let terminal_columns = OpamStd.Sys.terminal_columns () in
 
   let print_line l =
-    OpamTrace.with_span "Console.print_table.print_line" @@ fun () ->
     match cut with
     | `None ->
       let s = List.map (replace_newlines "\\n") l |> String.concat sep in

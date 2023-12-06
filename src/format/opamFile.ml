@@ -108,6 +108,7 @@ module MakeIO (F : IO_Arg) = struct
   let slog = OpamConsole.slog
 
   let write f v =
+    OpamTrace.with_span "OpamFile.write" @@ fun () ->
     let filename = OpamFilename.to_string f in
     let chrono = OpamConsole.timer () in
     let write =
@@ -1181,7 +1182,8 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
     | opamfile -> opamfile
 
     let of_channel filename (ic:in_channel) =
-      OpamTrace.with_span "OpamFile.of_channel" @@ fun () ->
+      OpamTrace.with_span "OpamFile.of_channel"
+          ~data:["f", `String (OpamFilename.to_string filename)] @@ fun () ->
       let opamfile = Syntax.of_channel filename ic |> catch_future_syntax_error in
       Pp.parse X.pp ~pos:(pos_file filename) opamfile
       |> snd

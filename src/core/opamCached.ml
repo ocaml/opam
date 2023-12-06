@@ -57,7 +57,9 @@ end = struct
   let marshal_from_file file fd =
     let chrono = OpamConsole.timer () in
     let f ic =
-      OpamTrace.with_span "Cached.marshal_from_file" @@ fun () ->
+      OpamTrace.with_span "Cached.marshal_from_file"
+          ~data:["sz", `Float (float_of_int @@ in_channel_length ic)]
+      @@ fun () ->
       try
         let (cache: t) = Marshal.from_channel ic in
         log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());

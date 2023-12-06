@@ -196,6 +196,7 @@ let write gt =
   OpamFile.Config.write (OpamPath.config gt.root) gt.config
 
 let fix_switch_list gt =
+  OpamTrace.with_span "GlobalState.fix_switch_list" @@ fun () ->
   let known_switches0 = switches gt in
   let known_switches =
     match OpamStateConfig.get_switch_opt () with

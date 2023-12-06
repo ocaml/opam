@@ -271,6 +271,7 @@ let load ?lock_kind opamroot =
 module Switch = struct
 
   let load_raw ?lock_kind root config readf switch =
+    OpamTrace.with_span "StateConfig.Switch.load_raw" @@ fun () ->
     load_if_possible_t ?lock_kind root config readf
       (OpamPath.Switch.switch_config root switch)
 
@@ -294,6 +295,7 @@ module Switch = struct
       switch
 
   let safe_read_selections ?lock_kind gt switch =
+    OpamTrace.with_span "StateConfig.safe_read_selections" @@ fun () ->
     load_if_possible ?lock_kind gt
       OpamFile.SwitchSelections.(safe read_opt BestEffort.read_opt empty)
       (OpamPath.Switch.selections gt.root switch)
@@ -303,6 +305,7 @@ end
 (* repos *)
 module Repos = struct
   let safe_read ?lock_kind gt =
+    OpamTrace.with_span "StateConfig.Repos.safe_read" @@ fun () ->
     load_if_possible ?lock_kind gt
       OpamFile.Repos_config.(safe read_opt BestEffort.read_opt empty)
       (OpamPath.repos_config gt.root)
@@ -332,6 +335,7 @@ let downgrade_2_1_switch f =
           |> OpamFile.Switch_config.read_from_string)
 
 let local_switch_exists root switch =
+  OpamTrace.with_span "StateConfig.local_switch_exists" @@ fun () ->
   (* we don't use safe loading function to avoid errors displaying *)
   let f = OpamPath.Switch.switch_config root switch in
   match OpamFile.Switch_config.BestEffort.read_opt f with
