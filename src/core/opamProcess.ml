@@ -501,7 +501,8 @@ let empty_result = {
 
 (* XXX: the function might block for ever for some channels kinds *)
 let read_lines f =
-  OpamTrace.with_span "process.read_lines" @@ fun () ->
+  OpamTrace.with_span "process.read_lines"
+      ~data:["f", `String f] @@ fun () ->
   try
     let ic = open_in f in
     let lines = ref [] in

@@ -48,6 +48,9 @@ let eval_redirect gt repo repo_root =
     | None -> None
 
 let repository rt repo =
+  OpamTrace.with_span "Update.repository"
+      ~data:["name", `String (OpamRepositoryName.to_string repo.repo_name)]
+  @@ fun () ->
   let max_loop = 10 in
   let gt = rt.repos_global in
   if repo.repo_url = OpamUrl.empty then Done None else
@@ -161,6 +164,10 @@ let repository rt repo =
 
 let repositories rt repos =
   let command repo =
+    OpamTrace.with_span "Update.repository"
+      ~data:["name", `String (OpamRepositoryName.to_string repo.repo_name)]
+    @@ fun () ->
+
     OpamProcess.Job.catch
       (fun ex ->
          OpamStd.Exn.fatal ex;
@@ -198,6 +205,8 @@ let repositories rt repos =
   failed, rt
 
 let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
+  OpamTrace.with_span "Update.fetch_dev_package"
+      ~data:["pkg", `String (OpamPackage.to_string nv)] @@ fun () ->
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
@@ -433,6 +442,7 @@ let dev_package st ?autolock ?working_dir nv =
       (fun st -> st), match result with Result () -> true | _ -> false
 
 let dev_packages st ?autolock ?(working_dir=OpamPackage.Set.empty) packages =
+  OpamTrace.with_span "Update.dev_packages" @@ fun () ->
   log "update-dev-packages";
   let command nv =
     let working_dir = OpamPackage.Set.mem nv working_dir in
@@ -471,6 +481,7 @@ let dev_packages st ?autolock ?(working_dir=OpamPackage.Set.empty) packages =
   success, st, updated_set
 
 let pinned_packages st ?autolock ?(working_dir=OpamPackage.Name.Set.empty) names =
+  OpamTrace.with_span "Update.pinned_packages" @@ fun () ->
   log "update-pinned-packages";
   let command name =
     let working_dir = OpamPackage.Name.Set.mem name working_dir in
@@ -539,6 +550,7 @@ let active_caches st nvs =
   global_cache @ repo_cache
 
 let cleanup_source st old_opam_opt new_opam =
+  OpamTrace.with_span "Update.cleanup_source" @@ fun () ->
   let open OpamStd.Option.Op in
   let base_url urlf =
     let u = OpamFile.URL.url urlf in
@@ -559,6 +571,7 @@ let cleanup_source st old_opam_opt new_opam =
       (OpamSwitchState.source_dir st (OpamFile.OPAM.package new_opam))
 
 let download_package_source_t st url nv_dirs =
+  OpamTrace.with_span "Update.downl0ad_package_source" @@ fun () ->
   let cache_dir = OpamRepositoryPath.download_cache st.switch_global.root in
   let cache_urls = active_caches st (List.map fst nv_dirs) in
   let fetch_source_job =
