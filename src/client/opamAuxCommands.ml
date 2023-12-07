@@ -395,6 +395,7 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
 
 let simulate_autopin st ?quiet ?(for_view=false) ?locked ?recurse ?subpath
     atom_or_local_list =
+  OpamTrace.with_span "AuxCommands.simulate_autopin" @@ fun () ->
   let atoms, to_pin, obsolete_pins, already_pinned_set =
     autopin_aux st ?quiet ~for_view ?recurse ?subpath ?locked atom_or_local_list
   in

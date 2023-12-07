@@ -715,6 +715,7 @@ let display st format packages =
     OpamConsole.print_table ?cut:format.wrap stdout ~sep:format.separator
 
 let get_switch_state gt rt =
+  OpamTrace.with_span "ListCommand.get_switch_state" @@ fun () ->
   match OpamStateConfig.get_switch_opt () with
   | None -> OpamSwitchState.load_virtual gt rt
   | Some sw -> OpamSwitchState.load `Lock_none gt rt sw

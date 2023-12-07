@@ -380,7 +380,7 @@ let yum_cmd = lazy begin
 end
 
 let packages_status ?(env=OpamVariable.Map.empty) config packages =
-  OpamTrace.with_span "sys-interact.packages-status" @@ fun () ->
+  OpamTrace.with_span "sys-interact.packages_status" @@ fun () ->
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
@@ -470,7 +470,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
   in
   let compute_sets_for_arch ~pacman =
     let get_avail_w_virtuals () =
-      OpamTrace.with_span "comput-sets-for-archs" @@ fun () ->
+      OpamTrace.with_span "SysInteract.compute-sets-for-archs" @@ fun () ->
       let package_provided str =
         OpamSysPkg.of_string
           (match OpamStd.String.cut_at str '=' with
@@ -496,9 +496,12 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       *)
       (* Discard stderr to not have it pollute output. Plus, exit code is the
          number of packages not found. *)
-      run_command ~discard_err:true pacman ["-Si"]
-      |> snd
-      |> List.fold_left (fun (avail, provides, latest) l ->
+      let _, p = run_command ~discard_err:true pacman ["-Si"] in
+
+      OpamTrace.with_span "parse_pacman_output"
+          ~data:["n", `Float (float_of_int (List.length p))]
+      @@ fun () ->
+      List.fold_left (fun (avail, provides, latest) l ->
           match OpamStd.String.split l ' ' with
           | "Name"::":"::p::_ ->
             p +++ avail, provides, Some (OpamSysPkg.of_string p)
@@ -512,7 +515,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
             in
             ps ++ avail, provides, None
           | _ -> avail, provides, latest)
-        (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
+        (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None) p
       |> (fun (a,p,_) -> a,p)
     in
     let get_installed str_pkgs =
@@ -522,6 +525,8 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
          >extra/cmark 0.29.0-1
          >    CommonMark parsing and rendering library and program in C
       *)
+      OpamTrace.with_span "SysInteract.get_installed" @@ fun () ->
+
       let re_pkg =
         Re.(compile @@ seq
               [ bol;

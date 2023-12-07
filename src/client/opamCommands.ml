@@ -940,6 +940,7 @@ let show cli =
   let show global_options fields show_empty raw where
       list_files file normalise no_lint just_file all_versions sort atom_locs
       () =
+  OpamTrace.with_span "Commands.show" @@ fun () ->
     let print_just_file opamf opam =
       if not no_lint then OpamFile.OPAM.print_errors opam;
       let opam =

@@ -501,7 +501,7 @@ let empty_result = {
 
 (* XXX: the function might block for ever for some channels kinds *)
 let read_lines f =
-  OpamTrace.with_span "process.read_lines"
+  OpamTrace.with_span "Process.read_lines"
       ~data:["f", `String f] @@ fun () ->
   try
     let ic = open_in f in
@@ -756,7 +756,11 @@ let dry_wait_one = function
   | _ -> raise (Invalid_argument "dry_wait_one")
 
 let run command =
-  OpamTrace.with_span "process.run" ~data:["cmd", `String command.cmd] @@ fun () ->
+  OpamTrace.with_span "Process.run"
+      ~data:["cmd", `String command.cmd;
+             "args", `String (String.concat " " command.args)]
+  @@ fun () ->
+
   let command =
     { command with
       cmd_stdin = OpamStd.Option.Op.(command.cmd_stdin ++ Some (not Sys.win32)) }
