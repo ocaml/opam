@@ -98,6 +98,8 @@ users)
 ### Tests
 
 ### Engine
+  * Set `SHELL` to `/bin/sh` in Windows to ensure `opam env` commands are consistent [#5723 @dra27]
+  * Substitution for `BASEDIR` and `OPAMTMP` now recognise the directory with either forward-slashes, back-slashes, or converted to Cygwin notation (i.e. C:\cygwin64\tmp\..., C:/cygwin64/tmp/..., or /tmp/...) [#5723 @dra27]
 
 ## Github Actions
 
@@ -117,3 +119,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamSystem.apply_cygpath`: runs `cygpath` over the argument [#5723 @dra27 - function itself added in #3348]
