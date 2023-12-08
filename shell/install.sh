@@ -235,11 +235,11 @@ DOWNLOAD_ONLY=
 while [ $# -gt 0 ]; do
     case "$1" in
         --dev)
-            if [ $VERSION = $DEV_VERSION ]; then
+            if [ "$VERSION" = "$DEV_VERSION" ]; then
               echo "There is no dev version. Launching with last release $VERSION."
             fi
             VERSION=$DEV_VERSION
-            if [ -z "$NOBACKUP" ] && [ $VERSION != $DEV_VERSION ]; then NOBACKUP=0; fi;;
+            if [ -z "$NOBACKUP" ] && [ "$VERSION" != "$DEV_VERSION" ]; then NOBACKUP=0; fi;;
         --restore)
             if [ $# -lt 2 ]; then echo "Option $1 requires an argument"; exit 2; fi
             shift;
@@ -337,7 +337,7 @@ download_and_check() {
 
 DOWNLOAD_ONLY=${DOWNLOAD_ONLY:-0}
 
-if [ $DOWNLOAD_ONLY -eq 1 ]; then
+if [ "$DOWNLOAD_ONLY" -eq 1 ]; then
     OPAM_BIN_LOC="$PWD/$OPAM_BIN"
     if [ -e "$OPAM_BIN_LOC" ]; then
         echo "Found opam binary in $OPAM_BIN_LOC ..."
@@ -455,7 +455,7 @@ while true; do
         read R
         case "$R" in
             ""|"y"|"Y"|"yes")
-            xsudo mkdir -p $BINDIR
+            xsudo mkdir -p "$BINDIR"
             break;;
         esac
     fi
@@ -493,7 +493,7 @@ if [ -d "$OPAMROOT" ]; then
         fi
         FREE=$(df -k "$OPAMROOT" | awk 'NR>1 {print $4}')
         NEEDED=$(du -sk "$OPAMROOT" | awk '{print $1}')
-        if ! [ $NEEDED -lt $FREE ]; then
+        if ! [ "$NEEDED" -lt "$FREE" ]; then
             echo "Error: not enough free space to backup. You can retry with --no-backup,"
             echo "--fresh, or remove '$OPAMROOT'"
             exit 1
@@ -529,4 +529,4 @@ if [ ! "$NOBACKUP" = 1 ]; then
     echo "## Run this script again with '--restore $EXISTING_OPAMV' to revert."
 fi
 
-rm -f $TMP/$OPAM_BIN
+rm -f "$TMP/$OPAM_BIN"
