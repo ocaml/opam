@@ -4,6 +4,8 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
 2.2.0~alpha3:
+* Add tracing for opam itself, enabled if TRACE_FILE is set in the
+  environment [#5757 @c-cube]
 * Add `x-env-path-rewrite` extensions field to specify the rewriting rules for
   environment variables defined in `setenv` and `build-env`, useful for
   platforms like Windows [#5636 @rjbou - fix #5602 #4690 #2927]
