@@ -34,7 +34,6 @@ depends: [
   "re" {>= "1.9.0"}
   "dune" {>= "2.0.0"}
   "sha" {>= "1.13"}
-  "mtime" {>= "2.0"}
   "jsonm"
   "swhid_core"
   "uutf"

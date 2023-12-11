@@ -7,16 +7,15 @@ type state = {
 
 let output : state option ref = ref None
 
-let start_time_s_ : Mtime.t = Mtime_clock.now ()
+let start_time_s_ : float = Unix.gettimeofday ()
+
+let[@inline] now_s () : float =
+  Unix.gettimeofday() -. start_time_s_
 
 (** time in microseconds *)
-let[@inline] now_s () : float =
-  let t = Mtime_clock.now () in
-  (Mtime.span t start_time_s_ |> Mtime.Span.to_float_ns) /. 1e9
-
 let[@inline] now_us () : float =
-  let t = Mtime_clock.now () in
-  (Mtime.span t start_time_s_ |> Mtime.Span.to_float_ns) /. 1e3
+  let t = Unix.gettimeofday () -. start_time_s_ in
+  t *. 1e6
 
 let[@inline] pid () : float = float_of_int @@ Unix.getpid ()
 let[@inline] tid () : float = float_of_int 0
