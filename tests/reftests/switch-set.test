@@ -121,16 +121,15 @@ OPAMSWITCH='bar'; export OPAMSWITCH;
 # OPAMSWITCH current value
 bar
 # opam env
-OPAMSWITCH=''; export OPAMSWITCH;
 # OPAMSWITCH current value
 bar
 # current switch
 bar
 # evaluate opam env
 # OPAMSWITCH current value
-
+bar
 # current switch
-foo
+bar
 ### sh set-switch.sh env
 # current switch
 foo
@@ -142,16 +141,15 @@ OPAMSWITCH='bar'; export OPAMSWITCH;
 # OPAMSWITCH current value
 bar
 # opam env
-OPAMSWITCH=''; export OPAMSWITCH;
 # OPAMSWITCH current value
 bar
 # current switch
 bar
 # evaluate opam env
 # OPAMSWITCH current value
-
+bar
 # current switch
-foo
+bar
 ### opam init --bare --bypass-checks --root ./foo ./REPO -n | grep -v Cygwin
 No configuration file found, using built-in defaults.
 
@@ -209,17 +207,15 @@ OPAMROOT='${BASEDIR}/bar'; export OPAMROOT;
 # OPAMROOT current value
 ${BASEDIR}/bar
 # opam env
-OPAMROOT=''; export OPAMROOT;
 # OPAMROOT current value
 ${BASEDIR}/bar
 # current root
 ${BASEDIR}/bar
 evaluate opam env
 # OPAMROOT current value
-
+${BASEDIR}/bar
 # current root
-[ERROR] ${BASEDIR} exists, but does not appear to be a valid opam root. Please remove it and use `opam init', or specify a different `--root' argument
-# Return code 50 #
+${BASEDIR}/bar
 ### sh set-root.sh env
 # current root
 ${BASEDIR}/foo
@@ -231,14 +227,12 @@ OPAMROOT='${BASEDIR}/bar'; export OPAMROOT;
 # OPAMROOT current value
 ${BASEDIR}/bar
 # opam env
-OPAMROOT=''; export OPAMROOT;
 # OPAMROOT current value
 ${BASEDIR}/bar
 # current root
 ${BASEDIR}/bar
 evaluate opam env
 # OPAMROOT current value
-
+${BASEDIR}/bar
 # current root
-[ERROR] ${BASEDIR} exists, but does not appear to be a valid opam root. Please remove it and use `opam init', or specify a different `--root' argument
-# Return code 50 #
+${BASEDIR}/bar
