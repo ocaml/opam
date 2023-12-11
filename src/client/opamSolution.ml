@@ -1302,6 +1302,7 @@ let apply ?ask t ~requested ?print_requested ?add_roots
     ?(skip=OpamPackage.Map.empty)
     ?(assume_built=false)
     ?(download_only=false) ?force_remove solution0 =
+  OpamTrace.with_span "Solution.apply" @@ fun () ->
   let names = OpamPackage.names_of_packages requested in
   let print_requested = OpamStd.Option.default names print_requested in
   log "apply";
@@ -1454,6 +1455,7 @@ let apply ?ask t ~requested ?print_requested ?add_roots
   )
 
 let resolve t action ?reinstall ~requested request =
+  OpamTrace.with_span "Solution.resolve" @@ fun () ->
   if OpamClientConfig.(!r.json_out <> None) then
     OpamJson.append "switch" (OpamSwitch.to_json t.switch);
   OpamRepositoryState.check_last_update ();

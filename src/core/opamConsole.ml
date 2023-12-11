@@ -810,6 +810,7 @@ let pause fmt =
     Printf.ifprintf () fmt
 
 let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
+  OpamTrace.with_span "Console.confirm" @@ fun () ->
   Printf.ksprintf (fun s ->
       if OpamCoreConfig.(!r.safe_mode) then false else
       let prompt =
