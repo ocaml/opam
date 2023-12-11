@@ -945,6 +945,7 @@ let universe st
     ?reinstall
     ~requested
     user_action =
+  OpamTrace.with_span "SwitchState.universe" @@ fun () ->
   let chrono = OpamConsole.timer () in
   let names = OpamPackage.names_of_packages requested in
   let requested_allpkgs =

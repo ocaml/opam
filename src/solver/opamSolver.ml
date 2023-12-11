@@ -331,6 +331,7 @@ let opam2cudf_set universe version_map packages =
       OpamCudf.Set.empty
 
 let load_cudf_packages opam_universe ?version_map opam_packages =
+  OpamTrace.with_span "Solver.load_cudf_packages" @@ fun () ->
   let chrono = OpamConsole.timer () in
   let version_map = match version_map with
     | Some vm -> vm
@@ -367,6 +368,7 @@ let map_to_cudf_universe cudf_packages_map =
 
 (* load a cudf universe from an opam one *)
 let load_cudf_universe opam_universe ?version_map opam_packages =
+  OpamTrace.with_span "Solver.load_cudf_universe" @@ fun () ->
   let load_f = load_cudf_packages opam_universe ?version_map opam_packages in
   fun ?add_invariant ?depopts ~build ~post () ->
     log "Load cudf universe (depopts:%a, build:%b, post:%b)"
@@ -436,6 +438,7 @@ let cycle_conflict ~version_map univ cycles =
   OpamCudf.cycle_conflict ~version_map univ cycles
 
 let resolve universe request =
+  OpamTrace.with_span "Solver.resolve" @@ fun () ->
   log "resolve request=%a" (slog string_of_request) request;
   let all_packages = universe.u_available ++ universe.u_installed in
   let version_map = cudf_versions_map universe in
@@ -464,6 +467,7 @@ let resolve universe request =
     opam_invariant_package version_map universe.u_invariant
   in
   let solution =
+    OpamTrace.with_span "Solver.resolve.solution" @@ fun () ->
     try
       Cudf.add_package cudf_universe invariant_pkg;
       Cudf.add_package cudf_universe deprequest_pkg;
