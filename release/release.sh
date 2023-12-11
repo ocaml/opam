@@ -42,13 +42,11 @@ qemu_build() {
 
   if ! ${SSH} -p "${port}" root@localhost true; then
       qemu-img convert -O raw "./qemu-base-images/${image}.qcow2" "./qemu-base-images/${image}.raw"
-      "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 2G &
+      "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 2G -smp "${JOBS}" &
       sleep 60
   fi
   ${SSH} -p "${port}" root@localhost "${install}"
-  # NOTE: JOBS=1 because qemu does not support proper multithreading from arm64 to x86_64 yet because of memory model differences.
-  # See https://wiki.qemu.org/Features/tcg-multithread
-  make TAG="$TAG" JOBS=1 qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR=opam-release-$TAG
+  make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR="opam-release-$TAG"
   ${SSH} -p "${port}" root@localhost "shutdown -p now"
 }
 
