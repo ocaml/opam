@@ -27,7 +27,6 @@ cd "$DIR"
 LC_ALL=C
 CWD=$(pwd)
 JOBS=$(sysctl -n hw.ncpu)
-JOBS=$(echo "${JOBS} / 1.5" | bc)
 SSH="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
 OUTDIR="out/$TAG"
