@@ -695,8 +695,9 @@ let git_for_windows_check =
           get_gitbin ()
     in
     match gitbin with
-    | Some gitbin ->
+    | Some (Left gitbin) ->
       Some (get_gitbin ~gitbin:(OpamFilename.Dir.to_string gitbin) ())
+    | Some (Right ()) -> None
     | None ->
       if OpamConsole.confirm ~default:false
           "Do you want to specify which git to use (non cygwin)?" then

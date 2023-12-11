@@ -337,12 +337,21 @@ let init cli =
     else
       Term.const None
   in
+  let nogitbin =
+    if Sys.win32 then
+      mk_flag ~cli (cli_from ~experimental:true cli2_2)
+        ["no-git-location"]
+        "Don't specify nor ask to specify git binary directory."
+    else
+      Term.const false
+  in
+
   let init global_options
       build_options repo_kind repo_name repo_url
       interactive update_config completion env_hook no_sandboxing shell
       dot_profile_o compiler no_compiler config_file no_config_file reinit
       show_opamrc bypass_checks
-      cygwin_internal cygwin_location gitbin
+      cygwin_internal cygwin_location gitbin nogitbin
       () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
@@ -410,6 +419,15 @@ let init cli =
       | `none, None -> None
       | (`default_location | `none), Some dir -> Some (`location dir)
       | (`internal | `default_location | `no) as setup, None -> Some setup
+    in
+    let gitbin =
+      match gitbin, nogitbin with
+      | Some _, true ->
+        OpamConsole.error_and_exit `Bad_arguments
+          "Options --no-git-location and --git-location are incompatible";
+      | None, false -> None
+      | Some d, false -> Some (Left d)
+      | None, true -> Some (Right ())
     in
     if already_init then
       if reinit then
@@ -509,7 +527,7 @@ let init cli =
           $setup_completion $env_hook $no_sandboxing $shell_opt cli
           cli_original $dot_profile_flag cli cli_original $compiler
           $no_compiler $config_file $no_config_file $reinit $show_default_opamrc
-          $bypass_checks $cygwin_internal $cygwin_location $gitbin)
+          $bypass_checks $cygwin_internal $cygwin_location $gitbin $nogitbin)
 
 (* LIST *)
 let list_doc = "Display the list of available packages."
