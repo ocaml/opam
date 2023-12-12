@@ -52,7 +52,7 @@ build/%.image: build/Dockerfile.%
 	docker build -t opam-build-$* -f $^ build
 	touch $@
 
-SHA_LINK = $(if $(shell mkdir -p build/tmp_extract && tar xf "$(OUTDIR)/opam-full-$(VERSION).tar.gz" -C build/tmp_extract && grep -F URL_sha build/tmp_extract/opam-full-$(VERSION)/src_ext/Makefile.sources),-lsha_stubs)
+SHA_LINK = $(if $(shell mkdir -p build/tmp_extract && tar xzf "$(OUTDIR)/opam-full-$(VERSION).tar.gz" -C build/tmp_extract && grep -F URL_sha build/tmp_extract/opam-full-$(VERSION)/src_ext/Makefile.sources),-lsha_stubs)
 
 # Actually, this is for alpine 3.13, and varies
 CLINKING_linux = \
