@@ -339,7 +339,11 @@ let create
     let () =
       try OpamStd.Exn.fatal e with e ->
         OpamStd.Exn.finalise e @@ fun () ->
-        OpamConsole.warning "Switch %s left partially installed"
+        OpamConsole.error
+          "Switch %s left %s installed.\n\
+           To clean it, use 'opam switch remove %s'"
+          (OpamConsole.colorise `underline (OpamSwitch.to_string st.switch))
+          (OpamConsole.colorise `bold "partially")
           (OpamSwitch.to_string st.switch)
     in
     OpamStd.Exn.finalise e @@ fun () ->
