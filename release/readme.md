@@ -46,7 +46,7 @@
 
 ## Device requirements
 * Mac M1
-* installed: git, gpg
+* installed: git, gpg, qemu>=8.1.0, docker>=24.0.0
 * opam repo with the tag fetched
 * Have the secret key available
 * Launch docker using the Docker GUI macOS app
