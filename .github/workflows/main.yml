@@ -204,6 +204,15 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
     - name: Build
       run: bash -exu .github/scripts/main/main.sh ${{ matrix.host }}
+    - name: 'Upload opam binaries for Windows'
+      if: endsWith(matrix.host, '-pc-windows')
+      uses: actions/upload-artifact@v3
+      with:
+        name: opam-exe-${{ matrix.host }}-${{ matrix.ocamlv }}-${{ matrix.build }}
+        path: |
+          D:\Local\bin\opam.exe
+          D:\Local\bin\opam-installer.exe
+          D:\Local\bin\opam-putenv.exe
     - name: Test (basic - Cygwin)
       if: endsWith(matrix.host, '-pc-cygwin')
       run: bash -exu .github/scripts/main/test.sh
