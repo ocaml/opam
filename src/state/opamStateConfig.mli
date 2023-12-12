@@ -32,7 +32,6 @@ module E : sig
     | WITHDEVSETUP of bool option
     | WITHDOC of bool option
     | WITHTEST of bool option
-    | VERBOSE of string option
   val root: unit -> string option
   val switch: unit -> string option
 end

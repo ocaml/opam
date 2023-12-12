@@ -30,7 +30,6 @@ module E = struct
     | WITHDEVSETUP of bool option
     | WITHDOC of bool option
     | WITHTEST of bool option
-    | VERBOSE of string option
 
   open OpamStd.Config.E
   let builddoc = value (function BUILDDOC b -> b | _ -> None)
@@ -49,7 +48,6 @@ module E = struct
   let withdevsetup = value (function WITHDEVSETUP b -> b | _ -> None)
   let withdoc = value (function WITHDOC b -> b | _ -> None)
   let withtest = value (function WITHTEST b -> b | _ -> None)
-  let verbose = value (function VERBOSE s -> s | _ -> None)
 end
 
 type t = {
