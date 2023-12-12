@@ -242,6 +242,87 @@ i.1
 
 j.1
 '-- a.1 [*]
+### : dev variable
+### <pkg:l.1>
+opam-version: "2.0"
+depends: [ "a" "l-dev" {dev} ]
+### <pkg:l-dev.1>
+opam-version: "2.0"
+### <pin:l/l.opam>
+opam-version: "2.0"
+depends: [ "a" "l-dev" {dev} ]
+### opam tree l
+The following actions are simulated:
+=== install 1 package
+  - install l 1
+
+l.1
+'-- a.1
+### opam tree l --dev
+The following actions are simulated:
+=== install 2 packages
+  - install l     1
+  - install l-dev 1 [required by l]
+
+l.1
+|-- a.1
+'-- l-dev.1 (dev)
+### opam tree l --no-switch
+The following actions are simulated:
+=== install 2 packages
+  - install a 1 [required by l]
+  - install l 1
+
+l.1
+'-- a.1
+### opam tree l --dev --no-switch
+The following actions are simulated:
+=== install 3 packages
+  - install a     1 [required by l]
+  - install l     1
+  - install l-dev 1 [required by l]
+
+l.1
+|-- a.1
+'-- l-dev.1 (dev)
+### opam pin ./l
+l is now pinned to file://${BASEDIR}/l (version 1)
+
+The following actions will be performed:
+=== install 2 packages
+  - install l     1 (pinned)
+  - install l-dev 1          [required by l]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved l.1  (file://${BASEDIR}/l)
+-> installed l-dev.1
+-> installed l.1
+Done.
+### opam tree l
+l.1
+|-- a.1
+'-- l-dev.1
+### opam tree l --no-switch
+The following actions are simulated:
+=== install 2 packages
+  - install a 1 [required by l]
+  - install l 1
+
+l.1
+'-- a.1
+### opam tree l --dev --no-switch
+The following actions are simulated:
+=== install 3 packages
+  - install a     1 [required by l]
+  - install l     1
+  - install l-dev 1 [required by l]
+
+l.1
+|-- a.1
+'-- l-dev.1 (dev)
+### ::::::::::::::::
+### : Empty switch :
+### ::::::::::::::::
 ### opam switch create void --empty
 ### opam tree f h
 The following actions are simulated:
@@ -281,6 +362,9 @@ e.1
 [WARNING] Not installed package a, skipping
 [ERROR] No package to display
 # Return code 5 #
+### ::::::::::::::::
+### : --not-switch :
+### ::::::::::::::::
 ### opam tree --no-switch | '…' -> '...' | '`' -> "'"
 opam: --no-switch can't be used without specifying a package or a path
 Usage: opam tree [--recursive] [--subpath=PATH] [OPTION]... [PACKAGES]...
@@ -388,6 +472,9 @@ Done.
     You can temporarily relax the switch invariant with `--update-invariant'
 
 # Return code 20 #
+### ::::::::::::::::::::::::::::::::::::
+### : Arguments as packages, directory :
+### ::::::::::::::::::::::::::::::::::::
 ### <pkg:i.1>
 opam-version: "2.0"
 depends: "a"

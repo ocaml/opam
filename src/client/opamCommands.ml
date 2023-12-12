@@ -828,7 +828,12 @@ let tree ?(why=false) cli =
     else
       (apply_global_options cli global_options;
        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+       (if no_switch then
+          fun k ->
+            k @@ OpamSwitchState.load_virtual gt rt
+        else
+          OpamSwitchState.with_ `Lock_none ~rt gt) @@ fun st ->
        let st, atoms =
          OpamAuxCommands.simulate_autopin
            st ~recurse ?subpath ~quiet:true
@@ -840,7 +845,7 @@ let tree ?(why=false) cli =
            depopts = false;
            build = true;
          } in
-       OpamTreeCommand.run st tog ~no_constraint ~no_switch mode filter atoms;
+       OpamTreeCommand.run st tog ~no_constraint mode filter atoms;
        `Ok ())
   in
   mk_command_ret ~cli (cli_from cli2_2) "tree" ~doc ~man

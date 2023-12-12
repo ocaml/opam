@@ -379,8 +379,10 @@ let print_solution st new_st missing solution =
 (** Setting states for building *)
 
 let get_universe tog st =
-  let OpamListCommand.{doc; test; dev_setup; _} = tog in
-  OpamSwitchState.universe st ~doc ~test ~dev_setup ~requested:st.installed Query
+  let OpamListCommand.{doc; test; dev_setup; dev; _} = tog in
+  OpamSwitchState.universe st ~doc ~test ~dev_setup ~force_dev_deps:dev
+    ~requested:st.installed
+    Query
 
 let simulate_new_state tog st universe install names =
   match OpamSolver.resolve universe
@@ -401,25 +403,7 @@ let dry_install tog st universe install =
   simulate_new_state tog st universe install
     (OpamPackage.Name.Set.of_list (List.map fst install))
 
-let raw_state tog st install =
-  let OpamListCommand.{doc; test; dev_setup; _} = tog in
-  let names = OpamPackage.Name.Set.of_list (List.map fst install) in
-  let requested =
-    OpamPackage.packages_of_names
-      (Lazy.force st.available_packages)
-      names
-  in
-  let universe =
-    OpamSwitchState.universe st ~doc ~test ~dev_setup ~requested Query
-  in
-  let universe =
-    { universe
-      with u_installed = OpamPackage.Set.empty;
-           u_installed_roots = OpamPackage.Set.empty }
-  in
-  simulate_new_state tog st universe install names
-
-let run st tog ?no_constraint ?(no_switch=false) mode filter atoms =
+let run st tog ?no_constraint mode filter atoms =
   let open OpamPackage.Set.Op in
   let select, missing =
     List.fold_left (fun (select, missing) atom ->
@@ -436,9 +420,6 @@ let run st tog ?no_constraint ?(no_switch=false) mode filter atoms =
     match mode, filter, missing with
     | Deps, _, [] -> st, universe
     | Deps, Roots_from, _::_ ->
-      if no_switch then
-        raw_state tog st missing
-      else
         dry_install tog st universe missing
     | Deps, Leads_to, _::_
     | ReverseDeps, _, _ ->
@@ -462,6 +443,6 @@ let run st tog ?no_constraint ?(no_switch=false) mode filter atoms =
   in
   print ?no_constraint forest;
   if OpamClientConfig.(!r.json_out) <> None then
-    (if not no_switch then
+    (if OpamSwitch.compare st.switch OpamSwitch.unset <> 0 then
        OpamJson.append "switch" (OpamSwitch.to_json st.switch);
      OpamJson.append "tree" (forest_to_json ?no_constraint forest))

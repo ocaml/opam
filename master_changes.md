@@ -43,6 +43,8 @@ users)
 ## Update / Upgrade
 
 ## Tree
+  * Fix `--dev` option, force dev dependencies when option is given [#5687 @rjbou - fix #5675]
+  * Fix `--no-switch` option, instead of emptying switch from it installed packages, load a virtual switch at the beginning when `--no-switch` is given [#5687 @rjbou - fix #5675]
 
 ## Exec
 
@@ -98,6 +100,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add some additional test to tree, for `--dev` && `--no-switch` [#5687 @rjbou]
 
 ### Engine
   * Set `SHELL` to `/bin/sh` in Windows to ensure `opam env` commands are consistent [#5723 @dra27]
