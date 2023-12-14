@@ -459,6 +459,17 @@ let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
                      ["bash -exu .github/scripts/main/hygiene.sh"]
     ++ end_job f
 
+let empty_job ~oc ~workflow f
+(*    ~analyse_job:_ *)
+(*    ~build_linux_job:_ *)
+(*    ~build_windows_job:_ *)
+(*    ~build_macOS_job:_ *)
+(*    ~uploadbin_label_job:_ *)
+  =
+  job ~oc ~workflow ~runs_on:(Runner [Linux]) "NO-OP"
+  ++ run "no-op" ["echo something"]
+  ++ end_job f
+
 let main oc : unit =
   let env = [
     ("OPAMBSVERSION", "2.1.0");
@@ -482,20 +493,20 @@ let main oc : unit =
     ("opam-bs-cache", "${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}");
   ] in
   workflow ~oc ~env "Builds, tests & co"
-    ++ analyse_job ~keys ~platforms:[Linux] (fun analyse_job ->
-       cygwin_job ~analyse_job (fun cygwin_job ->
-       main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux (4, 08) (fun build_linux_job ->
-       main_build_job ~analyse_job ~cygwin_job Windows latest_ocaml (fun build_windows_job ->
-       main_build_job ~analyse_job ~cygwin_job MacOS latest_ocaml (fun build_macOS_job ->
-       main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux (fun _ ->
-       main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
-       cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam cold" Linux (fun _ ->
-       solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile solver backends" Linux (fun _ ->
-       solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
-       upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux (fun _ ->
-       upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
-       hygiene_job ~analyse_job (Specific (Linux, "22.04")) (fun _ ->
-       end_workflow)))))))))))))
+  ++ analyse_job ~keys ~platforms:[Linux]
+  @@ fun analyse_job -> cygwin_job ~analyse_job
+  @@ fun cygwin_job -> main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux (4, 08)
+  @@ fun build_linux_job -> main_build_job ~analyse_job ~cygwin_job Windows latest_ocaml
+  @@ fun build_windows_job -> main_build_job ~analyse_job ~cygwin_job MacOS latest_ocaml
+  @@ fun build_macOS_job -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux
+  @@ fun _ -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
+  @@ fun _ -> cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam cold" Linux
+  @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile solver backends" Linux
+  @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
+  @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux
+  @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
+  @@ fun _ -> hygiene_job ~analyse_job (Specific (Linux, "22.04"))
+  @@ fun _ -> end_workflow
 
 let () =
   let oc = open_out "main.yml" in
