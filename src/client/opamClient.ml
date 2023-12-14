@@ -711,14 +711,17 @@ let git_for_windows_check =
         header ();
         get_gitbin ~gitbin:(OpamFilename.Dir.to_string gitbin) ()
       | None ->
-        header ();
-        OpamConsole.msg
-          "Cygwin Git is functional but have credentials issues, \
-           we recommend using:\n%s\n"
-          (OpamStd.Format.itemize (fun s -> s)
-             [ "winget with 'winget install Git.Git'";
-               "Git for Windows available at https://gitforwindows.org" ]);
-        menu ()
+        if OpamStd.Sys.tty_out then
+          (header ();
+           OpamConsole.msg
+             "Cygwin Git is functional but have credentials issues, \
+              we recommend using:\n%s\n"
+             (OpamStd.Format.itemize (fun s -> s)
+                [ "winget with 'winget install Git.Git'";
+                  "Git for Windows available at https://gitforwindows.org" ]);
+           menu ())
+        else
+          None
     in
     OpamStd.Option.iter (fun _ ->
         OpamConsole.msg
