@@ -149,6 +149,23 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
       run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
+    - name: Check binary label
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
+      run: |
+        BINARY_LABEL=$(gh api --jq '.labels.[].name' /repos/${{ github.repository }}/pulls/${{ github.event.number }} | grep "CI:BINARIES" || echo "other")
+        echo "BINARY_LABEL=$BINARY_LABEL" >> $GITHUB_ENV
+    - name: Upload opam binaries
+      if: env.BINARY_LABEL == 'CI:BINARIES' && matrix.ocamlv == '4.14.1'
+      uses: actions/upload-artifact@v3
+      continue-on-error: true
+      with:
+        name: opam-exe-${{ runner.os }}-${{ matrix.ocamlv }}
+        path: |
+          /home/runner/local/bin/opam
+          /home/runner/local/bin/opam-installer
+        retention-days: 15
     - name: Test (basic)
       run: bash -exu .github/scripts/main/test.sh
 
@@ -204,15 +221,24 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
     - name: Build
       run: bash -exu .github/scripts/main/main.sh ${{ matrix.host }}
-    - name: 'Upload opam binaries for Windows'
-      if: endsWith(matrix.host, '-pc-windows')
+    - name: Check binary label
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
+      run: |
+        BINARY_LABEL=$(gh api --jq '.labels.[].name' /repos/${{ github.repository }}/pulls/${{ github.event.number }} | grep "CI:BINARIES" || echo "other")
+        echo "BINARY_LABEL=$BINARY_LABEL" >> $GITHUB_ENV
+    - name: Upload opam binaries
+      if: env.BINARY_LABEL == 'CI:BINARIES' && endsWith(matrix.host, '-pc-cygwin')
       uses: actions/upload-artifact@v3
+      continue-on-error: true
       with:
         name: opam-exe-${{ matrix.host }}-${{ matrix.ocamlv }}-${{ matrix.build }}
         path: |
           D:\Local\bin\opam.exe
           D:\Local\bin\opam-installer.exe
           D:\Local\bin\opam-putenv.exe
+        retention-days: 15
     - name: Test (basic - Cygwin)
       if: endsWith(matrix.host, '-pc-cygwin')
       run: bash -exu .github/scripts/main/test.sh
@@ -264,6 +290,23 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
       run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
+    - name: Check binary label
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
+      run: |
+        BINARY_LABEL=$(gh api --jq '.labels.[].name' /repos/${{ github.repository }}/pulls/${{ github.event.number }} | grep "CI:BINARIES" || echo "other")
+        echo "BINARY_LABEL=$BINARY_LABEL" >> $GITHUB_ENV
+    - name: Upload opam binaries
+      if: env.BINARY_LABEL == 'CI:BINARIES'
+      uses: actions/upload-artifact@v3
+      continue-on-error: true
+      with:
+        name: opam-exe-${{ runner.os }}-${{ matrix.ocamlv }}
+        path: |
+          /Users/runner/local/bin/opam
+          /Users/runner/local/bin/opam-installer
+        retention-days: 15
     - name: Test (basic)
       run: bash -exu .github/scripts/main/test.sh
 

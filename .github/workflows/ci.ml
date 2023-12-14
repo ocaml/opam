@@ -326,8 +326,65 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
     else
       (matrix, []) in
   let matrix = ((platform <> Windows), matrix, includes) in
-  let needs = if platform = Windows then [analyse_job; cygwin_job] else [analyse_job] in
+  let needs =
+    [analyse_job]
+    @ (if platform = Windows then [cygwin_job] else [])
+  in
   let host = host_of_platform platform in
+  let retrieve_labels =
+    run "Check binary label" ~shell:"bash" ~env:["GH_TOKEN","${{ secrets.GITHUB_TOKEN }}"]
+      [
+        {|BINARY_LABEL=$(gh api --jq '.labels.[].name' /repos/${{ github.repository }}/pulls/${{ github.event.number }} | grep "CI:BINARIES" || echo "other")|};
+        {|echo "BINARY_LABEL=$BINARY_LABEL" >> $GITHUB_ENV|}
+      ]
+  in
+  let upload_binaries =
+    let cond =
+      let label =
+        Predicate (true, Compare ("env.BINARY_LABEL", "CI:BINARIES"))
+      in
+      match runner with
+      | MacOS -> label
+      | Windows ->
+        And (label,
+             Predicate (true, EndsWith ("matrix.host", "-pc-cygwin")))
+      | Linux ->
+        And (label,
+             Predicate (true, Compare ("matrix.ocamlv", "4.14.1")))
+    in
+    let withs =
+      let name =
+        match runner with
+        | Linux | MacOS ->
+          Literal ["opam-exe-${{ runner.os }}-${{ matrix.ocamlv }}"]
+        | Windows ->
+          Literal
+            ["opam-exe-${{ matrix.host }}-${{ matrix.ocamlv }}-${{ matrix.build }}"]
+      in
+      let paths =
+        let prefix =
+          match runner with
+          | MacOS -> "/Users/runner/local/bin/"
+          | Linux -> "/home/runner/local/bin/"
+          | Windows -> "D:\\Local\\bin\\"
+        in
+        let binaries = ["opam-installer"; "opam"] in
+        match runner with
+        | MacOS | Linux ->
+          Literal ((List.rev_map (fun s -> prefix ^ s)) binaries)
+        | Windows ->
+          Literal ((List.rev_map (fun s -> prefix ^ s ^ ".exe"))
+                     ("opam-putenv":: binaries))
+      in
+      [
+        "name", name;
+        "path", paths;
+        "retention-days", Literal ["15"];
+      ]
+    in
+    uses "Upload opam binaries" "actions/upload-artifact@v3"
+      ~cond ~withs ~continue_on_error:true
+  in
   job ~oc ~workflow ~runs_on:(Runner [runner]) ?shell ?section ~needs ~matrix ("Build-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ only_on Windows (git_lf_checkouts ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-cygwin"))) ~shell:"cmd" ~title:"Configure LF checkout for Cygwin" ())
@@ -338,6 +395,8 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
     ++ only_on Windows (unpack_cygwin "${{ matrix.build }}" "${{ matrix.host }}")
     ++ build_cache OCaml platform "${{ matrix.ocamlv }}" host
     ++ run "Build" ["bash -exu .github/scripts/main/main.sh " ^ host]
+    ++ retrieve_labels
+    ++ upload_binaries
     ++ not_on Windows (run "Test (basic)" ["bash -exu .github/scripts/main/test.sh"])
     ++ only_on Windows (run "Test (basic - Cygwin)" ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-cygwin"))) ["bash -exu .github/scripts/main/test.sh"])
     ++ only_on Windows (run "Test (basic - native Windows)" ~env:[("OPAMROOT", {|D:\a\opam\opam\.opam|})] ~shell:"cmd" ~cond:(Predicate(false, EndsWith("matrix.host", "-pc-cygwin")))
