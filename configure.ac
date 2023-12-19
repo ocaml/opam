@@ -347,7 +347,7 @@ AC_CHECK_OCAML_PKG([sha])
 AC_CHECK_OCAML_PKG([swhid_core])
 
 # Optional dependencies
-AC_CHECK_OCAML_PKG_AT_LEAST([mccs],[1.1+9])
+AC_CHECK_OCAML_PKG_AT_LEAST([mccs],[1.1+17])
 
 AS_IF([test "x${with_mccs}" = "xno" && test "x$OCAML_PKG_mccs" != "xno"],
       [AC_MSG_ERROR([Option --without-mccs is not available without uninstalling the 'mccs' package])])

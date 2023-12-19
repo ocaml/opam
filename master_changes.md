@@ -71,6 +71,8 @@ users)
 ## VCS
 
 ## Build
+  * Vendor mccs.1.1+17 [#5769 @kit-ty-kate]
+  * Require mccs >= 1.1+17 [#5769 @kit-ty-kate]
 
 ## Infrastructure
 
@@ -87,6 +89,7 @@ users)
 ## Opam file format
 
 ## Solver
+  * Fix debug logs showing up regardless of verbosity on macOS 12.7.1 / 13.6.3 / 14.2 and FreeBSD [#5769 @kit-ty-kate]
 
 ## Client
 
