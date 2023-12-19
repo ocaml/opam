@@ -841,19 +841,6 @@ let extract_explanations cudfnv2opam reasons : explanation list =
   let module CS = ChainSet in
   (* Definitions and printers *)
   log ~level:3 "Reasons: %a" (Pp_explanation.pp_reasonlist cudfnv2opam) reasons;
-  let all_opam =
-    let add p set =
-      if is_artefact p then set
-      else OpamPackage.Set.add (cudf2opam p) set
-    in
-    List.fold_left (fun acc -> function
-        | Conflict (l, r, _) -> add l @@ add r @@ acc
-        | Dependency (l, _, rs) ->
-          List.fold_left (fun acc p -> add p acc) (add l acc) rs
-        | Missing (p, _) -> add p acc)
-      OpamPackage.Set.empty
-      reasons
-  in
   let print_set pkgs =
     if Set.exists is_artefact pkgs then
       if Set.exists is_opam_invariant pkgs then "(invariant)"
@@ -866,9 +853,8 @@ let extract_explanations cudfnv2opam reasons : explanation list =
     in
     let strs =
       OpamPackage.Name.Map.mapi (fun name versions ->
-          let all_versions = OpamPackage.versions_of_name all_opam name in
           let formula =
-            OpamFormula.formula_of_version_set all_versions versions
+            OpamFormula.ors (OpamPackage.Version.Set.fold (fun v acc -> OpamFormula.Atom (`Eq, v) :: acc) versions [])
           in
           OpamFormula.to_string (Atom (name, formula)))
         nvs

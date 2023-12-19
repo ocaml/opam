@@ -83,7 +83,7 @@ let installability_check univ =
   let unav_roots = filter_roots graph uninstallable in
   unav_roots, uninstallable
 
-let formula_of_pkglist packages = function
+let formula_of_pkglist = function
   | [] -> OpamFormula.Empty
   | [p] ->
     let nv = OpamCudf.cudf2opam p in
@@ -93,10 +93,11 @@ let formula_of_pkglist packages = function
     let nvs = List.map OpamCudf.cudf2opam (p::ps) in
     Atom
       (name,
-       OpamFormula.formula_of_version_set
-         (OpamPackage.versions_of_name packages name)
-         (OpamPackage.versions_of_packages
-            (OpamPackage.Set.of_list nvs)))
+       OpamFormula.ors
+         (OpamPackage.Set.fold
+            (fun pkg acc -> OpamFormula.Atom (`Eq, OpamPackage.version pkg) :: acc)
+            (OpamPackage.Set.of_list nvs)
+            []))
 
 let cycle_check univ =
   let cudf_univ =
@@ -221,7 +222,7 @@ let cycle_check univ =
   let cycle_formulas =
     cy |>
     List.map @@ List.map @@ fun p ->
-    formula_of_pkglist univ.u_packages (OpamCudf.Map.find p node_map)
+    formula_of_pkglist (OpamCudf.Map.find p node_map)
   in
   cycle_packages, cycle_formulas
 

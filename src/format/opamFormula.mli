@@ -199,17 +199,6 @@ val simplify_ineq_formula:
 (** Like [simplify_ineq_formula], but specialised on version formulas *)
 val simplify_version_formula: version_formula -> version_formula option
 
-(** A more aggressive version of [simplify_version_formula] that attempts to
-    find a shorter formula describing the same subset of versions within a given
-    set. The empty formula is returned for an empty set, and the original
-    formula is otherwise returned as is if no versions match. *)
-val simplify_version_set: OpamPackage.Version.Set.t -> version_formula -> version_formula
-
-(** [formula_of_version_set set subset] generates a formula that is enough to
-    describe all packages of [subset] and exclude packages otherwise in [set] *)
-val formula_of_version_set:
-  OpamPackage.Version.Set.t -> OpamPackage.Version.Set.t -> version_formula
-
 (** {2 Atoms} *)
 
 (** Return all the atoms *)
