@@ -28,7 +28,7 @@ build: [
 depends: [
   "ocaml" {>= "4.02.3"}
   "opam-format" {= version}
-  "mccs" {>= "1.1+9"}
+  "mccs" {>= "1.1+17"}
   ("dose3" {>= "6.1"} | "dose3" {>= "5"} & "ocaml" {= "4.02.3"})
   "cudf" {>= "0.7"}
   "dune" {>= "1.11.0"}

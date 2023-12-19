@@ -59,6 +59,8 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Build
   * Upgrade the vendored dune to 3.14.0 [#5869 @kit-ty-kate]
+  * Vendor mccs.1.1+17 [#5769 @kit-ty-kate]
+  * Require mccs >= 1.1+17 [#5769 @kit-ty-kate]
 
 ## Infrastructure
   *
@@ -75,7 +77,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Solver
-  *
+  * Fix debug logs showing up regardless of verbosity on macOS 12.7.1 / 13.6.3 / 14.2 and FreeBSD [#5769 @kit-ty-kate]
 
 ## Client
 
