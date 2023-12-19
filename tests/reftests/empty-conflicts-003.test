@@ -26,58 +26,58 @@ Done.
     - disml -> yojson < 1.6.0
   * No agreement on the version of ocaml:
     - (invariant) -> ocaml-base-compiler = 4.14.0 -> ocaml = 4.14.0
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0
   * Incompatible packages:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0
     - disml -> yojson < 1.6.0
   * Missing dependency:
     - disml -> ppx_deriving_yojson >= 3.3 -> ocaml < 4.08.0 -> ocaml-variants >= 4.02.1 -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'
   * Missing dependency:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0 -> ocaml-base-compiler < 3.07+1 | ocaml-system < 3.07+1 | ocaml-variants < 3.8~
-    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0 -> ocaml-variants < 3.8~ | ocaml-system = 3.07 | ocaml-base-compiler = 3.07
+    no matching version
     unmet availability conditions: 'sys-ocaml-version = "3.07"'
-    no matching version
-  * Missing dependency:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0 -> ocaml-base-compiler = 3.07+1 | ocaml-system = 3.07+1 | ocaml-variants < 3.8~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0 -> ocaml-variants < 3.8~ | ocaml-system = 3.07+1 | ocaml-base-compiler = 3.07+1
+    no matching version
     unmet availability conditions: 'sys-ocaml-version = "3.07+1"'
-    no matching version
-  * Missing dependency:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0 -> ocaml-base-compiler = 3.07+2 | ocaml-system = 3.07+2 | ocaml-variants < 3.8~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0 -> ocaml-variants < 3.8~ | ocaml-system = 3.07+2 | ocaml-base-compiler = 3.07+2
+    no matching version
     unmet availability conditions: 'sys-ocaml-version = "3.07+2"'
-    no matching version
-  * Missing dependency:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0 -> ocaml-base-compiler = 3.08.0 | ocaml-system < 3.08.1~ | ocaml-variants < 3.08.1~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0 -> ocaml-variants < 3.08.1~ | ocaml-system < 3.08.1~ | ocaml-base-compiler = 3.08.0
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.0"'
-    no matching version
-  * Missing dependency:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0 -> ocaml-base-compiler = 3.08.1 | ocaml-system < 3.08.2~ | ocaml-variants < 3.08.2~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0 -> ocaml-variants < 3.08.2~ | ocaml-system < 3.08.2~ | ocaml-base-compiler = 3.08.1
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.1"'
-    no matching version
-  * Missing dependency:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0 -> ocaml-base-compiler = 3.08.2 | ocaml-system < 3.08.3~ | ocaml-variants < 3.08.3~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0 -> ocaml-variants < 3.08.3~ | ocaml-system < 3.08.3~ | ocaml-base-compiler = 3.08.2
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.2"'
-    no matching version
-  * Missing dependency:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0 -> ocaml-base-compiler = 3.08.3 | ocaml-system < 3.08.4~ | ocaml-variants < 3.08.4~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0 -> ocaml-variants < 3.08.4~ | ocaml-system < 3.08.4~ | ocaml-base-compiler = 3.08.3
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.3"'
-    no matching version
-  * Missing dependency:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0 -> ocaml-base-compiler = 3.08.4 | ocaml-system < 3.08.5~ | ocaml-variants < 3.08.5~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0 -> ocaml-variants < 3.08.5~ | ocaml-system < 3.08.5~ | ocaml-base-compiler = 3.08.4
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.4"'
-    no matching version
-  * Missing dependency:
-    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune -> ocaml < 4.08.0 -> ocaml-base-compiler = 3.09.0 | ocaml-system < 3.09.1~ | ocaml-variants < 3.09.1~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
-    unmet availability conditions, e.g. 'sys-ocaml-version = "3.09.0"'
+  * Missing dependency:
+    - disml -> ppx_deriving_yojson >= 3.3 -> result -> dune >= 1.0 -> ocaml < 4.08.0 -> ocaml-variants < 3.09.1~ | ocaml-system < 3.09.1~ | ocaml-base-compiler = 3.09.0
     no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.09.0"'
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
 
 No solution found, exiting
 # Return code 20 #

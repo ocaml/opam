@@ -157,11 +157,11 @@ let upgrade_t
     if not (OpamPackage.Name.Set.is_empty requested) then
       (OpamConsole.error "Package conflict!";
        OpamConsole.errmsg "%s"
-         (OpamCudf.string_of_conflicts t.packages
+         (OpamCudf.string_of_conflicts
             (OpamSwitchState.unavailable_reason t) cs);
        OpamStd.Sys.exit_because `No_solution);
     let reasons, cycles =
-      OpamCudf.conflict_explanations t.packages
+      OpamCudf.conflict_explanations
         (OpamSwitchState.unavailable_reason t) cs in
     if cycles <> [] then begin
       OpamConsole.error
@@ -363,7 +363,7 @@ let fixup ?(formula=OpamFormula.Empty) t =
     | _, Success _ -> true
     | _, Conflicts cs ->
       log "conflict: %a"
-        (slog (OpamCudf.string_of_conflicts t.packages @@
+        (slog (OpamCudf.string_of_conflicts @@
                OpamSwitchState.unavailable_reason t))
         cs;
       false
@@ -390,7 +390,7 @@ let fixup ?(formula=OpamFormula.Empty) t =
          Either fix the package prerequisites or change the invariant \
          with 'opam switch set-invariant'.";
       OpamConsole.errmsg "%s"
-        (OpamCudf.string_of_conflicts t.packages
+        (OpamCudf.string_of_conflicts
            (OpamSwitchState.unavailable_reason t) cs);
       t, Conflicts cs
     | Success solution ->
@@ -1381,7 +1381,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       log "conflict!";
       OpamConsole.error "Package conflict!";
       let (conflicts, _cycles) as explanations =
-        OpamCudf.conflict_explanations_raw t.packages cs
+        OpamCudf.conflict_explanations_raw cs
       in
       let has_missing_depexts =
         let check = function

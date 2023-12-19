@@ -277,7 +277,7 @@ module Json = struct
     | Conflicts cs ->
       let causes, cycles =
         OpamCudf.conflict_explanations
-          t.packages (OpamSwitchState.unavailable_reason t) cs
+          (OpamSwitchState.unavailable_reason t) cs
       in
       let causes = List.map OpamCudf.string_of_conflict causes in
       let toj l = `A (List.map (fun s -> `String s) l) in
@@ -1471,7 +1471,7 @@ let resolve_and_apply ?ask t action ?reinstall ~requested ?print_requested
   | Conflicts cs ->
     log "conflict!";
     OpamConsole.msg "%s"
-      (OpamCudf.string_of_conflicts t.packages
+      (OpamCudf.string_of_conflicts
          (OpamSwitchState.unavailable_reason t) cs);
     t, Conflicts cs
   | Success solution ->

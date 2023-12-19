@@ -18,61 +18,61 @@ Done.
 [ERROR] Package conflict!
   * No agreement on the version of ppxlib:
     - GT -> ppxlib < 0.25
-    - ppxlib >= 0.25.0
+    - ppxlib = 0.25.0
   * No agreement on the version of ocaml:
     - (invariant) -> ocaml-variants = 4.14.0+trunk -> ocaml = 4.14.0
     - GT -> ocaml < 4.12
     You can temporarily relax the switch invariant with `--update-invariant'
   * No agreement on the version of ocaml-variants:
     - (invariant) -> ocaml-variants = 4.14.0+trunk
-    - GT -> camlp5 < 8.00 -> ocaml < 4.00.1 -> ocaml-variants < 3.09.2~
+    - GT -> camlp5 < 8.00 -> ocaml <= 4.00.0 -> ocaml-variants < 3.09.2~
   * Missing dependency:
-    - GT -> ocaml < 4.12 -> ocaml-base-compiler < 3.07+1 | ocaml-system < 3.07+1 | ocaml-variants < 3.8~
-    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+    - GT -> ocaml < 4.12 -> ocaml-variants < 3.8~ | ocaml-system = 3.07 | ocaml-base-compiler = 3.07
+    no matching version
     unmet availability conditions: 'sys-ocaml-version = "3.07"'
-    no matching version
-  * Missing dependency:
-    - GT -> ocaml < 4.12 -> ocaml-base-compiler = 3.07+1 | ocaml-system = 3.07+1 | ocaml-variants < 3.8~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - GT -> ocaml < 4.12 -> ocaml-variants < 3.8~ | ocaml-system = 3.07+1 | ocaml-base-compiler = 3.07+1
+    no matching version
     unmet availability conditions: 'sys-ocaml-version = "3.07+1"'
-    no matching version
-  * Missing dependency:
-    - GT -> ocaml < 4.12 -> ocaml-base-compiler = 3.07+2 | ocaml-system = 3.07+2 | ocaml-variants < 3.8~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - GT -> ocaml < 4.12 -> ocaml-variants < 3.8~ | ocaml-system = 3.07+2 | ocaml-base-compiler = 3.07+2
+    no matching version
     unmet availability conditions: 'sys-ocaml-version = "3.07+2"'
-    no matching version
-  * Missing dependency:
-    - GT -> ocaml < 4.12 -> ocaml-base-compiler = 3.08.0 | ocaml-system < 3.08.1~ | ocaml-variants < 3.08.1~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - GT -> ocaml < 4.12 -> ocaml-variants < 3.08.1~ | ocaml-system < 3.08.1~ | ocaml-base-compiler = 3.08.0
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.0"'
-    no matching version
-  * Missing dependency:
-    - GT -> ocaml < 4.12 -> ocaml-base-compiler = 3.08.1 | ocaml-system < 3.08.2~ | ocaml-variants < 3.08.2~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - GT -> ocaml < 4.12 -> ocaml-variants < 3.08.2~ | ocaml-system < 3.08.2~ | ocaml-base-compiler = 3.08.1
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.1"'
-    no matching version
-  * Missing dependency:
-    - GT -> ocaml < 4.12 -> ocaml-base-compiler = 3.08.2 | ocaml-system < 3.08.3~ | ocaml-variants < 3.08.3~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - GT -> ocaml < 4.12 -> ocaml-variants < 3.08.3~ | ocaml-system < 3.08.3~ | ocaml-base-compiler = 3.08.2
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.2"'
-    no matching version
-  * Missing dependency:
-    - GT -> ocaml < 4.12 -> ocaml-base-compiler = 3.08.3 | ocaml-system < 3.08.4~ | ocaml-variants < 3.08.4~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - GT -> ocaml < 4.12 -> ocaml-variants < 3.08.4~ | ocaml-system < 3.08.4~ | ocaml-base-compiler = 3.08.3
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.3"'
-    no matching version
-  * Missing dependency:
-    - GT -> ocaml < 4.12 -> ocaml-base-compiler = 3.08.4 | ocaml-system < 3.08.5~ | ocaml-variants < 3.08.5~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - GT -> ocaml < 4.12 -> ocaml-variants < 3.08.5~ | ocaml-system < 3.08.5~ | ocaml-base-compiler = 3.08.4
+    no matching version
     unmet availability conditions, e.g. 'sys-ocaml-version = "3.08.4"'
-    no matching version
-  * Missing dependency:
-    - GT -> ocaml < 4.12 -> ocaml-base-compiler = 3.09.0 | ocaml-system < 3.09.1~ | ocaml-variants < 3.09.1~
     unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
-    unmet availability conditions, e.g. 'sys-ocaml-version = "3.09.0"'
-    no matching version
   * Missing dependency:
-    - GT -> camlp5 < 8.00 -> ocaml < 4.08.1 -> ocaml-variants < 4.08.1~ -> ocaml-beta
+    - GT -> ocaml < 4.12 -> ocaml-variants < 3.09.1~ | ocaml-system < 3.09.1~ | ocaml-base-compiler = 3.09.0
+    no matching version
+    unmet availability conditions, e.g. 'sys-ocaml-version = "3.09.0"'
+    unmet availability conditions: 'arch != "arm64" & arch != "arm32" & arch != "ppc64"'
+  * Missing dependency:
+    - GT -> camlp5 < 8.00 -> ocaml <= 4.08.0 -> ocaml-variants < 4.08.1~ -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'
   * Missing dependency:
     - GT -> camlp5 < 8.00 -> ocaml < 4.10.0 -> ocaml-variants < 4.08.2~ -> ocaml-beta
@@ -81,13 +81,13 @@ Done.
     - GT -> camlp5 < 8.00 -> ocaml < 4.10.0 -> ocaml-variants < 4.09.1~ -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'
   * Missing dependency:
-    - GT -> camlp5 < 8.00 -> ocaml < 4.10.1 -> ocaml-variants < 4.10.1~ -> ocaml-beta
+    - GT -> camlp5 < 8.00 -> ocaml <= 4.10.0 -> ocaml-variants < 4.10.1~ -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'
   * Missing dependency:
-    - GT -> camlp5 < 8.00 -> ocaml < 4.11.1 -> ocaml-variants < 4.10.2~ -> ocaml-beta
+    - GT -> camlp5 < 8.00 -> ocaml <= 4.11.0 -> ocaml-variants < 4.10.2~ -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'
   * Missing dependency:
-    - GT -> camlp5 < 8.00 -> ocaml < 4.11.1 -> ocaml-variants < 4.11.1~ -> ocaml-beta
+    - GT -> camlp5 < 8.00 -> ocaml <= 4.11.0 -> ocaml-variants < 4.11.1~ -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'
 
 No solution found, exiting

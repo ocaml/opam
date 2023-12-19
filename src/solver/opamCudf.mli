@@ -228,7 +228,7 @@ type explanation =
     when called on an unavailable package (the reason can't be known this deep
     in the solver) *)
 val string_of_conflicts:
-  package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
+  (name * OpamFormula.version_formula -> string) -> conflict ->
   string
 
 val string_of_explanations:
@@ -240,7 +240,7 @@ val string_of_explanations:
     - the reasons why the request can't be satisfied with conflict explanations
     - the cycles in the actions to process (exclusive with the first) *)
 val conflict_explanations:
-  package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
+  (name * OpamFormula.version_formula -> string) -> conflict ->
   (string * string list * string list) list * string list
 
 val string_of_explanation:
@@ -248,7 +248,7 @@ val string_of_explanation:
   string * string list * string list
 
 val conflict_explanations_raw:
-  package_set -> conflict -> explanation list * Action.t list list
+  conflict -> explanation list * Action.t list list
 
 (** Properly concat a single conflict as returned by [conflict_explanations] for
    display *)

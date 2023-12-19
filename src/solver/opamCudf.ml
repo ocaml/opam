@@ -677,29 +677,35 @@ let arrow_concat sl =
   in
   String.concat (OpamConsole.colorise `yellow arrow) sl
 
-let formula_of_vpkgl cudfnv2opam all_packages vpkgl =
-  let atoms =
-    List.map (fun vp ->
-        try vpkg2atom cudfnv2opam vp
-        with Not_found ->
-          OpamPackage.Name.of_string (Dose_common.CudfAdd.decode (fst vp)), None)
+let formula_of_vpkgl cudfnv2opam vpkgl =
+  let formula_map =
+    List.fold_left (fun acc vp ->
+        let name, version_constraint =
+          try vpkg2atom cudfnv2opam vp
+          with Not_found ->
+            (OpamPackage.Name.of_string (Dose_common.CudfAdd.decode (fst vp)), None)
+        in
+        let version_formula = match version_constraint with
+          | Some version_constraint -> OpamFormula.Atom version_constraint
+          | None -> OpamFormula.Empty
+        in
+        let update prev =
+          OpamFormula.Or (prev, version_formula)
+        in
+        OpamPackage.Name.Map.update name update OpamFormula.Empty acc)
+      OpamPackage.Name.Map.empty
       vpkgl
   in
-  let names = OpamStd.List.sort_nodup compare (List.map fst atoms) in
-  let by_name =
-    List.map (fun name ->
-        let formula =
-          OpamFormula.ors (List.map (function
-              | n, Some atom when n = name -> Atom atom
-              | _ -> Empty)
-              atoms)
-        in
-        let all_versions = OpamPackage.versions_of_name all_packages name in
-        let formula = OpamFormula.simplify_version_set all_versions formula in
-        Atom (name, formula))
-      names
+  let simplified_formula_list =
+    OpamPackage.Name.Map.fold (fun pkg version_formula acc ->
+        match OpamFormula.simplify_version_formula version_formula with
+        | None -> assert false (* simplifying disjunctions of atoms should always
+                                  return a satisfiable formula *)
+        | Some formula -> OpamFormula.Atom (pkg, formula) :: acc)
+      formula_map
+      []
   in
-  OpamFormula.ors by_name
+  OpamFormula.ors simplified_formula_list
 
 (* - Conflict message handling machinery - *)
 
@@ -829,7 +835,7 @@ module Pp_explanation = struct
   let pp_explanationlist fmt l = pp_list pp_explanation fmt l
 end
 
-let extract_explanations packages cudfnv2opam reasons : explanation list =
+let extract_explanations cudfnv2opam reasons : explanation list =
   log "Conflict reporting";
   let open Dose_algo.Diagnostic in
   let module CS = ChainSet in
@@ -895,9 +901,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
               (fun (n, _) -> Set.exists (fun p -> p.package = n) pkgs)
               vpkgl
           in
-          (* TODO: We should aim to use what does give us not guess the formula *)
-          (* Dose is precise enough from what i'm seeing *)
-          formula_of_vpkgl cudfnv2opam packages vpkgl
+          formula_of_vpkgl cudfnv2opam vpkgl
         in
         let s = OpamFormula.to_string f in
         (if hl_last && r = [] then OpamConsole.colorise' [`red;`bold]  s else s)
@@ -1039,7 +1043,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
                 in
                 `Missing (Some csp, msg, OpamFormula.Empty)
               else
-              let fdeps = formula_of_vpkgl cudfnv2opam packages deps in
+              let fdeps = formula_of_vpkgl cudfnv2opam deps in
               let sdeps = OpamFormula.to_string fdeps in
               `Missing (Some csp, sdeps, fdeps)
             in
@@ -1082,11 +1086,11 @@ let string_of_conflict ?(start_column=0) (msg1, msg2, msg3) =
   OpamStd.List.concat_map ~left:"\n" ~nil:"" "\n"
     (fun s -> OpamStd.Format.reformat ~indent:2 ~width s) msg3
 
-let conflict_explanations_raw packages = function
+let conflict_explanations_raw = function
   | univ, version_map, Conflict_dep reasons ->
     let r = reasons () in
     let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
-    List.rev (extract_explanations packages cudfnv2opam r),
+    List.rev (extract_explanations cudfnv2opam r),
     []
   | _univ, _version_map, Conflict_cycle cycles ->
     [], cycles
@@ -1117,11 +1121,11 @@ let string_of_explanation unav_reasons = function
     in
     (msg1, [msg2], msg3)
 
-let conflict_explanations packages unav_reasons = function
+let conflict_explanations unav_reasons = function
   | univ, version_map, Conflict_dep reasons ->
     let r = reasons () in
     let cudfnv2opam = cudfnv2opam ~cudf_universe:univ ~version_map in
-    let explanations = extract_explanations packages cudfnv2opam r in
+    let explanations = extract_explanations cudfnv2opam r in
     List.rev_map (string_of_explanation unav_reasons) explanations, []
   | _univ, _version_map, Conflict_cycle cycles ->
     [], strings_of_cycles cycles
@@ -1154,9 +1158,9 @@ let string_of_explanations unav_reasons (cflts, cycles) =
   Buffer.add_string b "\n";
   Buffer.contents b
 
-let string_of_conflicts packages unav_reasons conflict =
+let string_of_conflicts unav_reasons conflict =
   string_of_explanations unav_reasons
-    (conflict_explanations_raw packages conflict)
+    (conflict_explanations_raw conflict)
 
 let check flag p =
   try Cudf.lookup_typed_package_property p flag = `Bool true

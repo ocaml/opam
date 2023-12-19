@@ -80,10 +80,10 @@ Nothing to do.
     - mirage-solo5
   * Incompatible packages:
     - (invariant) -> ocaml-system
-    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-base-compiler < 3.07+1
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml <= 4.03.0 -> ocaml-base-compiler = 3.07
     You can temporarily relax the switch invariant with `--update-invariant'
   * Missing dependency:
-    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-variants -> ocaml-beta
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml <= 4.03.0 -> ocaml-variants >= 3.09.1 -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'
 
 No solution found, exiting
@@ -96,10 +96,10 @@ No solution found, exiting
     - mirage-solo5
   * Incompatible packages:
     - (invariant) -> ocaml-system
-    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-base-compiler < 3.07+1
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml <= 4.03.0 -> ocaml-base-compiler = 3.07
     You can temporarily relax the switch invariant with `--update-invariant'
   * Missing dependency:
-    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-variants -> ocaml-beta
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml <= 4.03.0 -> ocaml-variants >= 3.09.1 -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'
 
 No solution found, exiting
@@ -112,10 +112,10 @@ No solution found, exiting
     - mirage-solo5
   - Incompatible packages:
     - (invariant) -> ocaml-system
-    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-base-compiler < 3.07+1
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml <= 4.03.0 -> ocaml-base-compiler = 3.07
     You can temporarily relax the switch invariant with `--update-invariant'
   - Missing dependency:
-    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml < 4.04.0 -> ocaml-variants -> ocaml-beta
+    - mirage-solo5 -> ocaml-freestanding < 0.3.0 -> ocaml <= 4.03.0 -> ocaml-variants >= 3.09.1 -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'
 
 You may run "opam upgrade --fixup" to let opam fix the current state.
