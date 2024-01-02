@@ -204,6 +204,9 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
     - name: Build
       run: bash -exu .github/scripts/main/main.sh ${{ matrix.host }}
+    - name: Test "static" binaries on Windows
+      if: endsWith(matrix.host, '-pc-cygwin') == false
+      run: ldd ./opam.exe | test "$(grep -v -F /cygdrive/c/Windows/)" = ''
     - name: Test (basic - Cygwin)
       if: endsWith(matrix.host, '-pc-cygwin')
       run: bash -exu .github/scripts/main/test.sh
