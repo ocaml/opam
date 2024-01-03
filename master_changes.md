@@ -73,6 +73,7 @@ users)
 ## Build
   * Vendor mccs.1.1+17 [#5769 @kit-ty-kate]
   * Require mccs >= 1.1+17 [#5769 @kit-ty-kate]
+  * Add ./configure --enable-static to compile the opam binary statically [#5680 @kit-ty-kate - fixes #5647]
 
 ## Infrastructure
 

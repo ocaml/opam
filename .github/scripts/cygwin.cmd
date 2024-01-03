@@ -49,8 +49,6 @@ if not exist %CYGWIN_CACHE_DIR%\%CYGWIN_DISTRO%\cache.tar (
 ::        C:\Windows\system32 (overriding curl, bash, etc. in System32) but after Mercurial
 ::        and Git (so that they are not overridden).
 set Path=C:\Program Files\Mercurial;C:\Program Files\Git\cmd;%CYGWIN_ROOT%\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\
-if "%3" equ "i686-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%3\sys-root\mingw\bin;%Path%
-if "%3" equ "x86_64-w64-mingw32" set Path=%CYGWIN_ROOT%\usr\%3\sys-root\mingw\bin;%Path%
 if "%3" equ "x86_64-pc-cygwin" set Path=%CYGWIN_ROOT%\bin;%Path%
 
 ::echo %CYGWIN_ROOT%\bin>> %GITHUB_PATH%
