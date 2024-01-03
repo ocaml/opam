@@ -149,6 +149,12 @@ pkg_add opam
 Opam is available in the ports and packages tree on FreeBSD 11 or higher.
 
 ```
+pkg install ocaml-opam
+```
+
+or to install from source:
+
+```
 cd /usr/ports/devel/ocaml-opam
 make install
 ```
