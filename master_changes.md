@@ -113,6 +113,7 @@ users)
 ## Github Actions
 
 ## Doc
+  * Improve the installation instructions on FreeBSD [#5775 lukstafi]
 
 ## Security fixes
 
