@@ -105,3 +105,4 @@ doc/*.build
 src/x_build_libs.ocp
 # dev setup
 /.ocamlinit
+trace.json

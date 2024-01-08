@@ -57,6 +57,9 @@ end = struct
   let marshal_from_file file fd =
     let chrono = OpamConsole.timer () in
     let f ic =
+      OpamTrace.with_span "Cached.marshal_from_file"
+          ~data:["sz", `Float (float_of_int @@ in_channel_length ic)]
+      @@ fun () ->
       try
         let (cache: t) = Marshal.from_channel ic in
         log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
@@ -82,6 +85,7 @@ end = struct
     | None -> None
 
   let save cache_file t =
+    OpamTrace.with_span "Cached.save" @@ fun () ->
     if OpamCoreConfig.(!r.safe_mode) then
       log "Running in safe mode, not upgrading the %s cache" X.name
     else

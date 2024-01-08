@@ -940,6 +940,7 @@ let show cli =
   let show global_options fields show_empty raw where
       list_files file normalise no_lint just_file all_versions sort atom_locs
       () =
+  OpamTrace.with_span "Commands.show" @@ fun () ->
     let print_just_file opamf opam =
       if not no_lint then OpamFile.OPAM.print_errors opam;
       let opam =
@@ -2569,6 +2570,7 @@ let with_repos_rt gt repos f =
 
 let switch_doc = "Manage multiple installation prefixes."
 let switch cli =
+  OpamTrace.with_span "Commands.switch" @@ fun () ->
   let shell = OpamStd.Sys.guess_shell_compat () in
   let doc = switch_doc in
   let commands = [
@@ -4403,6 +4405,7 @@ let admin =
 (* Note: for cli versionning check, all commands must be constructed with
    [OpamArg.mk_command] or [OpamArg.mk_command_ret]. *)
 let commands cli =
+  OpamTrace.with_span "Commands.commands" @@ fun () ->
   let show = show cli in
   let remove = remove cli in
   let repository = repository cli in

@@ -376,6 +376,8 @@ let revision dirname url =
 
 let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
     file checksums remote_urls =
+  OpamTrace.with_span "repository.pull-file"
+    ~data:["f", `String (OpamFilename.to_string file)] @@ fun () ->
   (match cache_dir with
    | Some cache_dir ->
      let text = OpamProcess.make_command_text label "dl" in
@@ -438,6 +440,7 @@ let packages_with_prefixes repo_root =
   OpamPackage.prefixes (OpamRepositoryPath.packages_dir repo_root)
 
 let validate_repo_update repo repo_root update =
+  OpamTrace.with_span "repository.validate-repo-update" @@ fun () ->
   match
     repo.repo_trust,
     OpamRepositoryConfig.(!r.validation_hook),
@@ -529,6 +532,7 @@ let cleanup_repo_update upd =
     | _ -> ()
 
 let update repo repo_root =
+  OpamTrace.with_span "repository.update" @@ fun () ->
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
   B.fetch_repo_update repo.repo_name repo_root repo.repo_url @@+ function

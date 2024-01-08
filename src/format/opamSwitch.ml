@@ -20,6 +20,9 @@ let is_external s =
 let external_dirname = "_opam"
 
 let check s =
+  OpamTrace.with_span "opamSwitch.check"
+      ~data:["len", `Float (float_of_int (String.length s))] @@ fun () ->
+
   if String.compare s "" = 0 &&
     let re =
       Re.(compile @@

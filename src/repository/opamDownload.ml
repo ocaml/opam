@@ -57,7 +57,7 @@ let ftp_args = [
   CIdent "url", None;
 ]
 
-let download_args ~url ~out ~retry ?checksum ~compress () =
+let download_args ~url ~out ~retry ?checksum ~compress () : string list =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =
     match cmd with
@@ -117,6 +117,8 @@ let tool_return url ret =
       else Done ()
 
 let download_command ~compress ?checksum ~url ~dst () =
+  OpamTrace.with_span "Download.download_command"
+      ~data:["url", `String (OpamUrl.to_string url)] @@ fun () ->
   let cmd, args =
     match
       download_args

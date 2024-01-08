@@ -501,6 +501,8 @@ let empty_result = {
 
 (* XXX: the function might block for ever for some channels kinds *)
 let read_lines f =
+  OpamTrace.with_span "Process.read_lines"
+      ~data:["f", `String f] @@ fun () ->
   try
     let ic = open_in f in
     let lines = ref [] in
@@ -696,7 +698,12 @@ let safe_wait fallback_pid f x =
   try let r = aux () in cleanup (); r
   with e -> cleanup (); raise e
 
-let wait p =
+let wait (p:t) =
+  OpamTrace.with_span "process.wait"
+      ~data:["p", `String p.p_name; "args",
+      `String (String.concat " "p.p_args)]
+  @@ fun () ->
+
   set_verbose_process p;
   let _, return = safe_wait p.p_pid (Unix.waitpid []) p.p_pid in
   exit_status p return
@@ -749,6 +756,11 @@ let dry_wait_one = function
   | _ -> raise (Invalid_argument "dry_wait_one")
 
 let run command =
+  OpamTrace.with_span "Process.run"
+      ~data:["cmd", `String command.cmd;
+             "args", `String (String.concat " " command.args)]
+  @@ fun () ->
+
   let command =
     { command with
       cmd_stdin = OpamStd.Option.Op.(command.cmd_stdin ++ Some (not Sys.win32)) }

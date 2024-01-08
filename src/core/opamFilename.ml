@@ -435,6 +435,8 @@ let patch ?preprocess filename dirname =
 let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
 
 let with_flock flag ?dontblock file f =
+  OpamTrace.with_span "Filename.with_flock"
+      ~data:["f", `String (to_string file)] @@ fun () ->
   let lock = OpamSystem.flock flag ?dontblock (to_string file) in
   try
     let (fd, ch) =

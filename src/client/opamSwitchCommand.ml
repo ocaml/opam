@@ -20,6 +20,7 @@ let log fmt = OpamConsole.log "SWITCH" fmt
 let slog = OpamConsole.slog
 
 let list gt ~print_short =
+  OpamTrace.with_span "SwitchCommand.list" @@ fun () ->
   log "list";
   let gt = OpamGlobalState.fix_switch_list gt in
   if print_short then
@@ -27,7 +28,11 @@ let list gt ~print_short =
       (List.sort compare (OpamFile.Config.installed_switches gt.config))
   else
   let installed_switches =
+    OpamTrace.with_span "SwitchCommand.installed_switches" @@ fun () ->
     OpamGlobalState.fold_switches (fun sw sel acc ->
+        OpamTrace.with_span "fold-switch"
+          ~data:["sw", `String (OpamSwitch.to_string sw)] @@ fun () ->
+
         let opams =
           OpamPackage.Set.fold (fun nv acc ->
               match
@@ -146,6 +151,7 @@ let list gt ~print_short =
   | _ -> ()
 
 let clear_switch ?(keep_debug=false) (gt: rw global_state) switch =
+  OpamTrace.with_span "SwitchCommands.clear_switch" @@ fun () ->
   let module C = OpamFile.Config in
   let config = gt.config in
   let config =
@@ -170,6 +176,7 @@ let clear_switch ?(keep_debug=false) (gt: rw global_state) switch =
   with OpamSystem.Internal_error _ -> gt
 
 let remove gt ?(confirm = true) switch =
+  OpamTrace.with_span "SwitchCommands.remove" @@ fun () ->
   log "remove switch=%a" (slog OpamSwitch.to_string) switch;
   if not (OpamGlobalState.switch_exists gt switch) then (
     OpamConsole.msg "The compiler switch %s does not exist.\n"
@@ -185,6 +192,7 @@ let remove gt ?(confirm = true) switch =
   else gt
 
 let set_invariant_raw st invariant =
+  OpamTrace.with_span "SwitchCommands.set_invariant_raw" @@ fun () ->
   let switch_config = {st.switch_config with invariant = Some invariant} in
   let st = {st with switch_invariant = invariant; switch_config } in
   if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
@@ -194,6 +202,7 @@ let set_invariant_raw st invariant =
 
 let install_compiler
     ?(additional_installs=[]) ?(deps_only=false) ?(ask=false) t =
+  OpamTrace.with_span "SwitchCommands.install_compiler" @@ fun () ->
   let invariant = t.switch_invariant in
   if invariant = OpamFormula.Empty && additional_installs = [] then begin
     (if not OpamClientConfig.(!r.show) &&
@@ -290,6 +299,9 @@ let install_compiler
 
 let create
     gt ~rt ?synopsis ?repos ~update_config ~invariant switch post =
+  OpamTrace.with_span "SwitchCommands.create"
+    ~data:["sw", `String (OpamSwitch.to_string switch)] @@ fun () ->
+
   let update_config = update_config && not (OpamSwitch.is_external switch) in
   let comp_dir = OpamPath.Switch.root gt.root switch in
   let simulate = OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) in
@@ -359,6 +371,7 @@ let create
     OpamGlobalState.drop gt
 
 let switch lock gt switch =
+  OpamTrace.with_span "SwitchCommands.switch" @@ fun () ->
   log "switch switch=%a" (slog OpamSwitch.to_string) switch;
   if OpamGlobalState.switch_exists gt switch then
     OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
@@ -378,6 +391,7 @@ let switch lock gt switch =
     (OpamStd.Format.itemize OpamSwitch.to_string installed_switches)
 
 let switch_previous lock gt =
+  OpamTrace.with_span "SwitchCommands.switch_previous" @@ fun () ->
   match OpamFile.Config.previous_switch gt.config with
   | Some switch_name ->
     OpamConsole.msg
@@ -391,6 +405,7 @@ let switch_previous lock gt =
       "No previously used switch could be found"
 
 let import_t ?ask importfile t =
+  OpamTrace.with_span "SwitchCommands.import" @@ fun () ->
   log "import switch";
 
   let extra_files = importfile.OpamFile.SwitchExport.extra_files in
@@ -531,6 +546,7 @@ let import_t ?ask importfile t =
   t
 
 let freeze_url src_dir nv url =
+  OpamTrace.with_span "SwitchCommands.freeze_url" @@ fun () ->
   let url_t = OpamFile.URL.url url in
   match url_t.backend with
   | #OpamUrl.version_control ->
@@ -560,6 +576,7 @@ let freeze_url src_dir nv url =
       (OpamPackage.Name.to_string nv.name)
 
 let freeze_opam src_dir nv opam =
+  OpamTrace.with_span "SwitchCommands.freeze_opam" @@ fun () ->
   let url =
     OpamStd.Option.map
       (fun url -> freeze_url src_dir nv url)
@@ -576,6 +593,7 @@ let freeze_opam src_dir nv opam =
 
 let export rt ?(freeze=false) ?(full=false)
     ?(switch=OpamStateConfig.get_switch ()) filename =
+  OpamTrace.with_span "SwitchCommands.export" @@ fun () ->
   let root = OpamStateConfig.(!r.root_dir) in
   let export =
     OpamFilename.with_flock `Lock_none (OpamPath.Switch.lock root switch)
@@ -650,10 +668,12 @@ let export rt ?(freeze=false) ?(full=false)
   | Some f -> OpamFile.SwitchExport.write f export
 
 let show () =
+  OpamTrace.with_span "SwitchCommands.show" @@ fun () ->
   OpamConsole.msg "%s\n"
     (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
 
 let reinstall init_st =
+  OpamTrace.with_span "SwitchCommands.reinstall" @@ fun () ->
   let switch = init_st.switch in
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
   let gt = init_st.switch_global in
@@ -680,6 +700,8 @@ let reinstall init_st =
     st
 
 let import st filename =
+  OpamTrace.with_span "SwitchCommands.import" @@ fun () ->
+
   let import_str = match filename with
     | None   -> OpamSystem.string_of_channel stdin
     | Some f -> OpamFilename.read (OpamFile.filename f)
@@ -698,6 +720,7 @@ let import st filename =
   import_t importfile st
 
 let set_invariant ?(force=false) st invariant =
+  OpamTrace.with_span "SwitchCommands.set_invariant" @@ fun () ->
   let satisfied = OpamFormula.satisfies_depends st.installed invariant in
   let names =
     OpamPackage.Name.Set.of_list (List.map fst (OpamFormula.atoms invariant))
@@ -717,6 +740,7 @@ let set_invariant ?(force=false) st invariant =
   set_invariant_raw st invariant
 
 let get_compiler_packages ?repos rt =
+  OpamTrace.with_span "SwitchCommands.get_compiler_packages" @@ fun () ->
   let repos = match repos with
     | None -> OpamGlobalState.repos_list rt.repos_global
     | Some r -> r
@@ -732,6 +756,7 @@ let get_compiler_packages ?repos rt =
   |> OpamPackage.keys
 
 let guess_compiler_invariant ?repos rt strings =
+  OpamTrace.with_span "SwitchCommands.guess_compiler_invariant" @@ fun () ->
   let repos = match repos with
     | None -> OpamGlobalState.repos_list rt.repos_global
     | Some r -> r
