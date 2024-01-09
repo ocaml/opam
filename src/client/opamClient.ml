@@ -656,7 +656,7 @@ let git_for_windows_check =
         match gitbin with
         | Some _ -> gitbin
         | None ->
-          OpamConsole.read "Enter winget or Git for Windows binary path (\\bin):"
+          OpamConsole.read "Please enter the path containing git.exe (e.g. C:\Program Files\Git\cmd):"
       in
       match bin with
       | None -> None
@@ -668,7 +668,7 @@ let git_for_windows_check =
         | Some _, true ->
           OpamConsole.error
             "A bash executable was found in %s, which will override \
-             usual bash. Please check you binary path."
+             Cygwin's bash. Please check your binary path."
             gitbin;
           None
         | None, _ ->
@@ -701,7 +701,7 @@ let git_for_windows_check =
       | `Specify -> loop ()
       | `Location gitbin -> loop ~gitbin ()
       | `Abort ->
-        OpamConsole.note "Once your choosen Git installed, relaunch opam init.";
+        OpamConsole.note "Once your choosen Git installed, open a new PowerShell or Command Prompt window, and relaunch opam init.";
         OpamStd.Sys.exit_because `Aborted
     in
     let gitbin =
@@ -714,11 +714,11 @@ let git_for_windows_check =
         if OpamStd.Sys.tty_out then
           (header ();
            OpamConsole.msg
-             "Cygwin Git is functional but have credentials issues, \
+             "Cygwin Git is functional but can have credentials issues for private repositories, \
               we recommend using:\n%s\n"
              (OpamStd.Format.itemize (fun s -> s)
-                [ "winget with 'winget install Git.Git'";
-                  "Git for Windows available at https://gitforwindows.org" ]);
+                [ "Install via 'winget install Git.Git'";
+                  "Git for Windows can be downloaded and installed from https://gitforwindows.org" ]);
            menu ())
         else
           None
