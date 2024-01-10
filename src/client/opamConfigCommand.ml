@@ -93,9 +93,7 @@ let rec print_csh_env = function
 
 let rec print_pwsh_env = function
   | [] -> ()
-  | (k, v, comment) :: r ->
-    if OpamConsole.verbose () then
-      OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
+  | (k, v, _) :: r ->
     if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
     then
       OpamConsole.msg "$env:%s = '%s'\n"
@@ -105,9 +103,7 @@ let rec print_pwsh_env = function
 let print_cmd_env env =
   let rec aux = function
     | [] -> ()
-    | (k, v, comment) :: r ->
-      if OpamConsole.verbose () then
-        OpamStd.Option.iter (OpamConsole.msg ": %s;\n") comment;
+    | (k, v, _) :: r ->
       if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
       then begin
         let is_special = function
