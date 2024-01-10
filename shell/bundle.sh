@@ -69,7 +69,7 @@ fi
 comma() ( IFS=, ; echo "$*"; )
 
 TMP=$(mktemp -d /tmp/opam-bundle.XXXX)
-CONTENT="$TMP/$(basename ${TARGET%%.*})"
+CONTENT="$TMP/$(basename "${TARGET%%.*}")"
 REPO="$CONTENT/repo"
 
 mkdir -p "$CONTENT"

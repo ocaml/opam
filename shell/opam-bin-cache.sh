@@ -4,7 +4,7 @@ COMMAND=$1; shift
 ID=$1; shift
 
 if [ -z "$ID" ]; then
-    if [ $COMMAND = wrap ]; then exec "$@"
+    if [ "$COMMAND" = wrap ]; then exec "$@"
     else exit 0
     fi
 fi

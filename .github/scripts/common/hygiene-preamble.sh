@@ -13,12 +13,12 @@ if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
   # we need to get history from base ref to head ref for check configure
   depth=10
   set +e
-  git cat-file -e $BASE_REF_SHA
+  git cat-file -e "$BASE_REF_SHA"
   r=$?
   while [ $r -ne 0 ] ; do
-    git fetch origin $GITHUB_REF --depth=$depth
+    git fetch origin "$GITHUB_REF" --depth=$depth
     depth=$(( $depth + 10 ))
-    git cat-file -e $BASE_REF_SHA
+    git cat-file -e "$BASE_REF_SHA"
     r=$?
   done
   set -e

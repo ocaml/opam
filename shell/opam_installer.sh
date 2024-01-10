@@ -35,8 +35,8 @@ EOF
 #
 PROGNAME=$0
 error() {
-    echo -n "`basename $PROGNAME`: " >&2
-    for s in "$@"; do echo $s; done
+    echo -n "`basename "$PROGNAME"`: " >&2
+    for s in "$@"; do echo "$s"; done
     exit 1
 }
 
@@ -70,17 +70,17 @@ COMP=${2:-$default_ocaml}
 file="opam-$VERSION-$(uname -m || echo unknown)-$(uname -s || echo unknown)"
 
 echo Downloading opam...
-getopam "https://github.com/ocaml/opam/releases/download/$VERSION" $file
+getopam "https://github.com/ocaml/opam/releases/download/$VERSION" "$file"
 
 mkdir -p "$BINDIR" 2>/dev/null || true
 if [ ! -w "$BINDIR" ]; then
     echo "You don't have write access to $BINDIR: sudo may ask for your password"
     if [ ! -d "$BINDIR" ]; then sudo mkdir -p "$BINDIR"; fi
-    sudo install -g root -o root -m 755 $TMP/$file $BINDIR/opam
+    sudo install -g root -o root -m 755 "$TMP"/"$file" "$BINDIR"/opam
 else
-    install -m 755 $TMP/$file $BINDIR/opam
+    install -m 755 "$TMP"/"$file" "$BINDIR"/opam
 fi
-rm -f $TMP/$file
+rm -f "$TMP"/"$file"
 
 OPAM=$(which opam || echo "$BINDIR/opam")
 if [ "$OPAM" != "$BINDIR/opam" ]; then

@@ -21,7 +21,7 @@ sign() {
     fi
 }
 
-DIR=$(dirname $0)
+DIR=$(dirname "$0")
 cd "$DIR"
 
 OUTDIR="out/$TAG"

@@ -21,7 +21,7 @@ if test "$(uname -s)" != Darwin -o "$(uname -m)" != arm64; then
   exit 1
 fi
 
-DIR=$(dirname $0)
+DIR=$(dirname "$0")
 cd "$DIR"
 
 LC_ALL=C
@@ -56,8 +56,8 @@ make JOBS="${JOBS}" TAG="$TAG" armhf-linux
 make JOBS="${JOBS}" TAG="$TAG" arm64-linux
 make JOBS="${JOBS}" TAG="$TAG" ppc64le-linux
 make JOBS="${JOBS}" TAG="$TAG" s390x-linux
-[ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
-[ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+[ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-"$TAG" GIT_URL="$CWD/.."
+[ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-"$TAG" GIT_URL="$CWD/.."
 [ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
 [ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.4-amd64 "pkg_add gmake curl bzip2" gmake x86_64 &
 [ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.2-RELEASE-amd64 "pkg install -y gmake curl bzip2" gmake x86_64 &

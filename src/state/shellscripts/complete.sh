@@ -67,14 +67,14 @@ _opam()
   compgen_opt=()
   _opam_reply=()
 
-  if [ $COMP_CWORD -eq 1 ]; then
+  if [ "$COMP_CWORD" -eq 1 ]; then
       _opam_add_f opam help topics
-      COMPREPLY=( $(compgen -W "${_opam_reply[*]}" -- $cur) )
+      COMPREPLY=( $(compgen -W "${_opam_reply[*]}" -- "$cur") )
       unset _opam_reply
       return 0
   fi
 
-  case "$(_opam_argtype $cmd $prev)" in
+  case "$(_opam_argtype "$cmd" "$prev")" in
       LEVEL|JOBS|RANK) _opam_add 1 2 3 4 5 6 7 8 9;;
       FILE|FILENAME) compgen_opt+=(-o filenames -f);;
       DIR|ROOT) compgen_opt+=(-o filenames -d);;
@@ -105,12 +105,12 @@ _opam()
   case "$cmd" in
       install|show|info|inst|ins|in|i|inf|sh)
           _opam_add_f opam list --safe -a -s
-          if [ $COMP_CWORD -gt 2 ]; then
+          if [ "$COMP_CWORD" -gt 2 ]; then
               _opam_add_f _opam_flags "$cmd"
           fi;;
       reinstall|remove|uninstall|reinst|remov|uninst|unins)
           _opam_add_f opam list --safe -i -s
-          if [ $COMP_CWORD -gt 2 ]; then
+          if [ "$COMP_CWORD" -gt 2 ]; then
               _opam_add_f _opam_flags "$cmd"
           fi;;
       upgrade|upg)
@@ -173,7 +173,7 @@ _opam()
           _opam_add_f _opam_flags "$cmd"
           ;;
       source|so)
-          if [ $COMP_CWORD -eq 2 ]; then
+          if [ "$COMP_CWORD" -eq 2 ]; then
               _opam_add_f opam list --safe -A -s
           else
               _opam_add_f _opam_flags "$cmd"
@@ -201,23 +201,23 @@ _opam()
                   esac
           esac;;
       unpin)
-          if [ $COMP_CWORD -eq 2 ]; then
+          if [ "$COMP_CWORD" -eq 2 ]; then
               _opam_add_f opam pin list --safe -s
           else
               _opam_add_f _opam_flags "$cmd"
           fi;;
       var|v)
-          if [ $COMP_CWORD -eq 2 ]; then _opam_add_f _opam_vars
+          if [ "$COMP_CWORD" -eq 2 ]; then _opam_add_f _opam_vars
           else _opam_add_f _opam_flags "$cmd"; fi;;
       exec|e)
-          if [ $COMP_CWORD -eq 2 ]; then compgen_opt+=(-c)
+          if [ "$COMP_CWORD" -eq 2 ]; then compgen_opt+=(-c)
           else _opam_add_f _opam_flags "$cmd"; fi;;
       lint|build)
-          if [ $COMP_CWORD -eq 2 ]; then
+          if [ "$COMP_CWORD" -eq 2 ]; then
               compgen_opt+=(-f -X '!*opam' -o plusdirs)
           else _opam_add_f _opam_flags "$cmd"; fi;;
       admin)
-          if [ $COMP_CWORD -eq 2 ]; then
+          if [ "$COMP_CWORD" -eq 2 ]; then
               _opam_add_f _opam_commands "$cmd"
           else _opam_add_f _opam_flags "$cmd" "$subcmd"; fi;;
       *)

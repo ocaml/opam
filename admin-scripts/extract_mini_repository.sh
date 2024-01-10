@@ -101,7 +101,7 @@ done
 ## Fetch the packages and compilers archives
 
 for version in ${COMPILERS}; do
-    opam admin make --resolve --compiler ${version} ocaml.${version} ${PACKAGES}
+    opam admin make --resolve --compiler ${version} ocaml.${version} "${PACKAGES}"
 done
 
 ## Remove the unrequired package "versions

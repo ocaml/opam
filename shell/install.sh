@@ -384,7 +384,7 @@ if [ -z "$NOBACKUP" ] && [ ! "$FRESH" = 1 ] && [ -z "$RESTORE" ]; then
 fi
 
 xsudo() {
-    local CMD=$1; shift
+    local CMD="$1"; shift
     local DST
     for DST in "$@"; do : ; done
 
@@ -487,7 +487,7 @@ if [ -e "$EXISTING_OPAM" ]; then
         xsudo rm -f "$EXISTING_OPAM"
     else
         xsudo mv "$EXISTING_OPAM" "$EXISTING_OPAM.$EXISTING_OPAMV"
-        echo "## $EXISTING_OPAM backed up as $(basename $EXISTING_OPAM).$EXISTING_OPAMV"
+        echo "## $EXISTING_OPAM backed up as $(basename "$EXISTING_OPAM").$EXISTING_OPAMV"
     fi
 fi
 
@@ -503,11 +503,11 @@ if [ -d "$OPAMROOT" ]; then
             esac
         else
             mv "$OPAMROOT" "$OPAMROOT.$EXISTING_OPAMV"
-            echo "## $OPAMROOT backed up as $(basename $OPAMROOT).$EXISTING_OPAMV"
+            echo "## $OPAMROOT backed up as $(basename "$OPAMROOT").$EXISTING_OPAMV"
         fi
         echo "## opam $VERSION installed. Please run 'opam init' to get started"
     elif [ ! "$NOBACKUP" = 1 ]; then
-        echo "## Backing up $OPAMROOT to $(basename $OPAMROOT).$EXISTING_OPAMV (this may take a while)"
+        echo "## Backing up $OPAMROOT to $(basename "$OPAMROOT").$EXISTING_OPAMV (this may take a while)"
         if [ -e "$OPAMROOT.$EXISTING_OPAMV" ]; then
             echo "ERROR: there is already a backup at $OPAMROOT.$EXISTING_OPAMV"
             echo "Please move it away or run with --no-backup"
@@ -520,7 +520,7 @@ if [ -d "$OPAMROOT" ]; then
             exit 1
         fi
         cp -a "$OPAMROOT" "$OPAMROOT.$EXISTING_OPAMV"
-        echo "## $OPAMROOT backed up as $(basename $OPAMROOT).$EXISTING_OPAMV"
+        echo "## $OPAMROOT backed up as $(basename "$OPAMROOT").$EXISTING_OPAMV"
     fi
     rm -f "$OPAMROOT"/repo/*/*.tar.gz*
 fi
