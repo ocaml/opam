@@ -165,5 +165,5 @@ val opam_init:
   ?merged_output:bool ->
   ?precise_tracking:bool ->
   ?cygbin:string ->
-  ?gitbinpath:string ->
+  ?git_location:string ->
   unit -> unit

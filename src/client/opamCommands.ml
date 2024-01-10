@@ -327,7 +327,7 @@ let init cli =
     else
       Term.const None
   in
-  let gitbin =
+  let git_location =
     if Sys.win32 then
       mk_opt ~cli (cli_from ~experimental:true cli2_2)
         ["git-location"] "DIR"
@@ -337,7 +337,7 @@ let init cli =
     else
       Term.const None
   in
-  let nogitbin =
+  let no_git_location =
     if Sys.win32 then
       mk_flag ~cli (cli_from ~experimental:true cli2_2)
         ["no-git-location"]
@@ -351,7 +351,7 @@ let init cli =
       interactive update_config completion env_hook no_sandboxing shell
       dot_profile_o compiler no_compiler config_file no_config_file reinit
       show_opamrc bypass_checks
-      cygwin_internal cygwin_location gitbin nogitbin
+      cygwin_internal cygwin_location git_location no_git_location
       () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
@@ -420,8 +420,8 @@ let init cli =
       | (`default_location | `none), Some dir -> Some (`location dir)
       | (`internal | `default_location | `no) as setup, None -> Some setup
     in
-    let gitbin =
-      match gitbin, nogitbin with
+    let git_location =
+      match git_location, no_git_location with
       | Some _, true ->
         OpamConsole.error_and_exit `Bad_arguments
           "Options --no-git-location and --git-location are incompatible";
@@ -438,7 +438,7 @@ let init cli =
         let reinit conf =
           OpamClient.reinit ~init_config ~interactive ?dot_profile
             ?update_config ?env_hook ?completion ~inplace ~bypass_checks
-            ~check_sandbox:(not no_sandboxing) ?cygwin_setup ?gitbin
+            ~check_sandbox:(not no_sandboxing) ?cygwin_setup ?git_location
             conf shell
         in
         let config =
@@ -478,7 +478,7 @@ let init cli =
         ?repo ~bypass_checks ?dot_profile
         ?update_config ?env_hook ?completion
         ~check_sandbox:(not no_sandboxing)
-        ?cygwin_setup ?gitbin
+        ?cygwin_setup ?git_location
         shell
     in
     OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
@@ -527,7 +527,7 @@ let init cli =
           $setup_completion $env_hook $no_sandboxing $shell_opt cli
           cli_original $dot_profile_flag cli cli_original $compiler
           $no_compiler $config_file $no_config_file $reinit $show_default_opamrc
-          $bypass_checks $cygwin_internal $cygwin_location $gitbin $nogitbin)
+          $bypass_checks $cygwin_internal $cygwin_location $git_location $no_git_location)
 
 (* LIST *)
 let list_doc = "Display the list of available packages."

@@ -597,9 +597,9 @@ let apply_global_options cli o =
               { pelem = String cygcheck; _}::_  ->
               let cygbin = Filename.dirname cygcheck in
               OpamCoreConfig.update ~cygbin ()
-            | Some { pelem = String "gitbinfield"; _},
-              { pelem = String gitbinpath; _}::_  ->
-              OpamCoreConfig.update ~gitbinpath ()
+            | Some { pelem = String "git-location"; _},
+              { pelem = String git_location; _}::_  ->
+              OpamCoreConfig.update ~git_location ()
             | _, element::elements -> aux (Some element) elements
           in
           aux None elements
