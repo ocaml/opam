@@ -1,3 +1,4 @@
+#!/bin/bash
 # This script check that the current master changelog has been updated by PR,
 # ignoring some internal files.
 # It is used by the changelog_check github action.

@@ -1,3 +1,4 @@
+#!/bin/bash
 _opam_env_hook() {
  local previous_exit_status=$?;
  eval $(opam env --shell=bash --readonly 2> /dev/null <&- );

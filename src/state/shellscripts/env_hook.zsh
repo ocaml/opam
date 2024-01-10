@@ -1,3 +1,4 @@
+#!/bin/zsh
 _opam_env_hook() {
     eval $(opam env --shell=zsh --readonly 2> /dev/null <&-);
 }

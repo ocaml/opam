@@ -1,3 +1,4 @@
+#!/bin/zsh
 #compdef opam
 
 if [ -z "$ZSH_VERSION" ]; then return 0; fi

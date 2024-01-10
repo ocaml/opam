@@ -1,3 +1,4 @@
+#!/bin/bash
 case $GITHUB_EVENT_NAME in
   pull_request)
     BRANCH=$GITHUB_HEAD_REF

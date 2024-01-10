@@ -1,3 +1,4 @@
+#!/bin/bash
 . .github/scripts/common/preamble.sh
 
 if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "x" = "x$BASE_REF_SHA$PR_REF_SHA" ] ; then
