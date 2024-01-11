@@ -107,6 +107,7 @@ users)
 ## Reftests
 ### Tests
   * Add some additional test to tree, for `--dev` && `--no-switch` [#5687 @rjbou]
+  * switch-set: add test that checks unsetting `OPAMSWITCH` when it was set by `opam env --set-switch` on an already set `OPAMSWITCH` variable in environment [#5742 rjbou]
 
 ### Engine
   * Set `SHELL` to `/bin/sh` in Windows to ensure `opam env` commands are consistent [#5723 @dra27]

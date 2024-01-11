@@ -297,7 +297,15 @@ let ensure_env_aux ?(base=[]) ?(set_opamroot=false) ?(set_opamswitch=false)
         not (String.equal upd.envu_var "OPAM_LAST_ENV"))
       updates
   in
-  let last_env_file = write_last_env_file gt switch updates in
+  let last_env_file =
+    write_last_env_file gt switch
+      (* We remove OPAMSWITCH & OPAMROOT as they are not supposed
+         to be reverted *)
+      (List.filter (fun upd ->
+           not ((String.equal upd.envu_var "OPAMSWITCH")
+                || (String.equal upd.envu_var "OPAMROOT")))
+          updates)
+  in
   let updates =
     OpamStd.Option.map_default (fun target ->
         (env_update_resolved "OPAM_LAST_ENV" Eq
