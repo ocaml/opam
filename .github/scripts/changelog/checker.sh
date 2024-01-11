@@ -50,7 +50,7 @@ done
 echo "> kept changes"
 cat $diffile
 
-num_changes=`wc -l $diffile | cut -f 1 -d ' '`
+num_changes=$(wc -l $diffile | cut -f 1 -d ' ')
 
 if [ "$num_changes" -ne 0 ] ; then
   if [ $updated -eq 0 ] ; then

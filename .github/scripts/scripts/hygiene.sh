@@ -51,4 +51,4 @@ if [[ $GITHUB_EVENT_NAME = 'pull_request' ]]; then
 fi
 
 
-exit $ERROR
+exit "$ERROR"

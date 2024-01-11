@@ -11,11 +11,11 @@ while read name prefix version url; do
     findlib) package=ocamlfind;;
     dune-local) package=dune;;
   esac
-  latest=$(opam show $package -f all-versions | sed -e 's/  base//')
+  latest=$(opam show "$package" -f all-versions | sed -e 's/  base//')
   latest=${latest##* }
-  package_url=$(opam show $package."$latest" -f url.src: | sed -e 's/"//g')
+  package_url=$(opam show "$package"."$latest" -f url.src: | sed -e 's/"//g')
   md5=$(sed -n -e "s/MD5$prefix$name *= *\(.*\)/\1/p" Makefile.sources)
-  package_md5=$(opam show $package."$latest" -f url.checksum: | sed -n -e "/md5/s/.*md5=\([a-fA-F0-9]\{32\}\).*/\1/p")
+  package_md5=$(opam show "$package"."$latest" -f url.checksum: | sed -n -e "/md5/s/.*md5=\([a-fA-F0-9]\{32\}\).*/\1/p")
   if [[ -z $package_md5 ]] ; then
     echo -e "\n$name: [\033[1;33mWARN\033[m] no md5 given in opam, downloading $package_url to check"
     package_md5=$(curl -LSs "$package_url" | md5sum | cut -f1 -d' ')

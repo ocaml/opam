@@ -35,7 +35,7 @@ EOF
 #
 PROGNAME=$0
 error() {
-    echo -n "`basename "$PROGNAME"`: " >&2
+    echo -n "$(basename "$PROGNAME"): " >&2
     for s in "$@"; do echo "$s"; done
     exit 1
 }

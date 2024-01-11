@@ -14,16 +14,16 @@ BOOTSTRAP_ROOT=${BOOTSTRAP_ROOT:-..}
 BOOTSTRAP_TARGETS=${BOOTSTRAP_TARGETS:-world.opt}
 mkdir -p "$BOOTSTRAP_DIR"
 cd "$BOOTSTRAP_DIR"
-URL=`sed -ne 's/URL_ocaml *= *//p' "$BOOTSTRAP_ROOT"/src_ext/Makefile | tr -d '\r'`
-MD5=`sed -ne 's/MD5_ocaml *= *//p' "$BOOTSTRAP_ROOT"/src_ext/Makefile | tr -d '\r'`
-V=`echo "${URL}"| sed -e 's|.*/\([^/]*\)\.tar\.gz|\1|'`
-FV_URL=`sed -ne 's/URL_flexdll *= *//p' "$BOOTSTRAP_ROOT"/src_ext/Makefile | tr -d '\r'`
-FLEXDLL=`echo "${FV_URL}"| sed -e 's|.*/\([^/]*\)|\1|'`
+URL=$(sed -ne 's/URL_ocaml *= *//p' "$BOOTSTRAP_ROOT"/src_ext/Makefile | tr -d '\r')
+MD5=$(sed -ne 's/MD5_ocaml *= *//p' "$BOOTSTRAP_ROOT"/src_ext/Makefile | tr -d '\r')
+V=$(echo "${URL}"| sed -e 's|.*/\([^/]*\)\.tar\.gz|\1|')
+FV_URL=$(sed -ne 's/URL_flexdll *= *//p' "$BOOTSTRAP_ROOT"/src_ext/Makefile | tr -d '\r')
+FLEXDLL=$(echo "${FV_URL}"| sed -e 's|.*/\([^/]*\)|\1|')
 if [ ! -e "${V}".tar.gz ]; then
   cp "$BOOTSTRAP_ROOT"/src_ext/archives/"${V}".tar.gz . 2>/dev/null || ${CURL} "${URL}"
 fi
 
-ACTUALMD5=`openssl md5 "${V}".tar.gz  2> /dev/null | cut -f 2 -d ' '`
+ACTUALMD5=$(openssl md5 "${V}".tar.gz  2> /dev/null | cut -f 2 -d ' ')
 if [ -z "$ACTUALMD5" ]; then
   echo "Blank checksum returned; is openssl installed?"
   exit 2
@@ -64,7 +64,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
     "msvc")
       HOST=i686-pc-windows
       if ! command -v ml > /dev/null ; then
-        eval `"$BOOTSTRAP_ROOT"/../shell/msvs-detect --arch=x86`
+        eval $("$BOOTSTRAP_ROOT"/../shell/msvs-detect --arch=x86)
         if [ -n "${MSVS_NAME}" ] ; then
           PATH_PREPEND="${MSVS_PATH}"
           LIB_PREPEND="${MSVS_LIB};"
@@ -75,7 +75,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
     "msvc64")
       HOST=x86_64-pc-windows
       if ! command -v ml64 > /dev/null ; then
-        eval `"$BOOTSTRAP_ROOT"/../shell/msvs-detect --arch=x64`
+        eval $("$BOOTSTRAP_ROOT"/../shell/msvs-detect --arch=x64)
         if [ -n "${MSVS_NAME}" ] ; then
           PATH_PREPEND="${MSVS_PATH}"
           LIB_PREPEND="${MSVS_LIB};"
@@ -99,10 +99,10 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
         HOST=i686-w64-mingw32
       elif [ ${TRY64} -eq 1 ] && command -v ml64 > /dev/null ; then
         HOST=x86_64-pc-windows
-        PATH_PREPEND=`bash "$BOOTSTRAP_ROOT"/../shell/check_linker`
+        PATH_PREPEND=$(bash "$BOOTSTRAP_ROOT"/../shell/check_linker)
       elif command -v ml > /dev/null ; then
         HOST=i686-pc-windows
-        PATH_PREPEND=`bash "$BOOTSTRAP_ROOT"/../shell/check_linker`
+        PATH_PREPEND=$(bash "$BOOTSTRAP_ROOT"/../shell/check_linker)
       else
         if [ ${TRY64} -eq 1 ] ; then
           HOST=x86_64-pc-windows
@@ -111,7 +111,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
           HOST=i686-pc-windows
           HOST_ARCH=x86
         fi
-        eval `"$BOOTSTRAP_ROOT"/../shell/msvs-detect --arch=${HOST_ARCH}`
+        eval $("$BOOTSTRAP_ROOT"/../shell/msvs-detect --arch=${HOST_ARCH})
         if [ -z "${MSVS_NAME}" ] ; then
           echo "No appropriate C compiler was found -- unable to build OCaml"
           exit 1
@@ -131,8 +131,8 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
     cp "$BOOTSTRAP_ROOT"/src_ext/archives/"${FLEXDLL}" . 2>/dev/null || ${CURL} "${FV_URL}"
   fi
   cd "${V}"
-  PREFIX=`cd .. ; pwd`/ocaml
-  WINPREFIX=`echo "${PREFIX}" | cygpath -f - -m`
+  PREFIX=$(cd .. ; pwd)/ocaml
+  WINPREFIX=$(echo "${PREFIX}" | cygpath -f - -m)
   if [ "${GEN_CONFIG_ONLY}" -eq 0 ] ; then
     tar -xzf "$BOOTSTRAP_ROOT"/"${FLEXDLL}"
     rm -rf flexdll
@@ -141,7 +141,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
     Lib="${LIB_PREPEND}${Lib}" \
     Include="${INC_PREPEND}${Include}" \
       ./configure --prefix "$WINPREFIX" \
-                  --build=$BUILD --host=$HOST \
+                  --build="$BUILD" --host=$HOST \
                   --disable-stdlib-manpages \
                   "$BOOTSTRAP_EXTRA_OPTS"
     for target in $BOOTSTRAP_TARGETS; do
@@ -151,7 +151,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
   fi
   OCAMLLIB=${WINPREFIX}/lib/ocaml
 else
-  PREFIX=`cd .. ; pwd`/ocaml
+  PREFIX=$(cd .. ; pwd)/ocaml
   if [ "${GEN_CONFIG_ONLY}" -eq 0 ] ; then
     ./configure --prefix "${PREFIX}" "$BOOTSTRAP_EXTRA_OPTS" --disable-stdlib-manpages
     for target in $BOOTSTRAP_TARGETS; do
@@ -167,14 +167,14 @@ if [ "${GEN_CONFIG_ONLY}" -eq 0 ] ; then
 fi
 
 # Generate src_ext/Makefile.config
-PATH_PREPEND=`echo "${PATH_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+PATH_PREPEND=$(echo "${PATH_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g')
 echo "export PATH:=${PATH_PREPEND}${PREFIX}/bin:\$(PATH)" > "$BOOTSTRAP_ROOT"/../src_ext/Makefile.config
 if [ -n "${LIB_PREPEND}" ] ; then
-  LIB_PREPEND=`echo "${LIB_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+  LIB_PREPEND=$(echo "${LIB_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g')
   echo "export Lib:=${LIB_PREPEND}\$(Lib)" >> "$BOOTSTRAP_ROOT"/../src_ext/Makefile.config
 fi
 if [ -n "${INC_PREPEND}" ] ; then
-  INC_PREPEND=`echo "${INC_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g'`
+  INC_PREPEND=$(echo "${INC_PREPEND}" | sed -e 's/#/\\\\#/g' -e 's/\\$/$$/g')
   echo "export Include:=${INC_PREPEND}\$(Include)" >> "$BOOTSTRAP_ROOT"/../src_ext/Makefile.config
 fi
 echo "export OCAMLLIB=${OCAMLLIB}" >> "$BOOTSTRAP_ROOT"/../src_ext/Makefile.config

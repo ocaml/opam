@@ -19,8 +19,8 @@ OPAM_UPGRADE=${OPAM_UPGRADE:-0}
 
 OPAM_REPO_MAIN=https://github.com/ocaml/opam-repository.git
 
-OPAM12CACHE=`eval echo "$OPAM12CACHE"`
-OPAMBSROOT=`eval echo "$OPAMBSROOT"`
+OPAM12CACHE=$(eval echo "$OPAM12CACHE")
+OPAMBSROOT=$(eval echo "$OPAMBSROOT")
 
 OPAMBSSWITCH=opam-build
 
@@ -46,7 +46,7 @@ init-bootstrap () {
     if [ "${OPAM_REPO%.git}" != "${OPAM_REPO_MAIN%.git}" ]; then
       opam init --no-setup git+$OPAM_REPO_MAIN#"$OPAM_REPO_SHA"
     else
-      opam init --no-setup git+$OPAM_REPO_CACHE#"$OPAM_REPO_SHA"
+      opam init --no-setup git+"$OPAM_REPO_CACHE"#"$OPAM_REPO_SHA"
     fi
 
     cat >> "$OPAMROOT"/config <<EOF

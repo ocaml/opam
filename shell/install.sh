@@ -312,11 +312,11 @@ check_sha512() {
     OPAM_BIN_LOC="$1"
     if command -v openssl > /dev/null; then
         sha512_devnull="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
-        sha512_check=`openssl sha512 2>&1 < /dev/null | cut -f 2 -d ' '`
-        if [ "x$sha512_devnull" = "x$sha512_check" ]; then
-            sha512=`openssl sha512 "$OPAM_BIN_LOC" 2> /dev/null | cut -f 2 -d ' '`
-            check=`bin_sha512`
-            test "x$sha512" = "x$check"
+        sha512_check=$(openssl sha512 2>&1 < /dev/null | cut -f 2 -d ' ')
+        if [ "$sha512_devnull" = "$sha512_check" ]; then
+            sha512=$(openssl sha512 "$OPAM_BIN_LOC" 2> /dev/null | cut -f 2 -d ' ')
+            check=$(bin_sha512)
+            test "$sha512" = "$check"
         else
             echo "openssl 512 option not handled, binary integrity check can't be performed."
             return 0
