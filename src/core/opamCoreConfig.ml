@@ -64,6 +64,7 @@ type t = {
   merged_output: bool;
   precise_tracking: bool;
   cygbin: string option;
+  git_location: string option;
   set: bool;
 }
 
@@ -83,6 +84,7 @@ type 'a options_fun =
   ?merged_output:bool ->
   ?precise_tracking:bool ->
   ?cygbin:string ->
+  ?git_location:string ->
   'a
 
 let default = {
@@ -104,6 +106,7 @@ let default = {
   merged_output = true;
   precise_tracking = false;
   cygbin = None;
+  git_location = None;
   set = false;
 }
 
@@ -123,6 +126,7 @@ let setk k t
     ?merged_output
     ?precise_tracking
     ?cygbin
+    ?git_location
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -144,6 +148,7 @@ let setk k t
     merged_output = t.merged_output + merged_output;
     precise_tracking = t.precise_tracking + precise_tracking;
     cygbin = (match cygbin with Some _ -> cygbin | None -> t.cygbin);
+    git_location = (match git_location with Some _ -> git_location | None -> t.git_location);
     set = true;
   }
 
@@ -185,6 +190,7 @@ let initk k =
     ?merged_output:(E.mergeout ())
     ?precise_tracking:(E.precisetracking ())
     ?cygbin:None
+    ?git_location:None
 
 let init ?noop:_ = initk (fun () -> ())
 

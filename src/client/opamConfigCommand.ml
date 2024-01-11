@@ -429,6 +429,7 @@ type 'config fld_updater =  ('config -> 'config -> 'config)
    First argument is the addition function, the second the remove one. *)
 type 'config fld_policy =
   | Atomic
+  | Atomic_pp of ('config -> 'config)
   | Modifiable of 'config fld_updater * 'config fld_updater
   | InModifiable of 'config fld_updater * 'config fld_updater
 
@@ -590,8 +591,10 @@ let set_opt ?(inner=false) field value conf =
            add (updf value) conf.stg_config
          | `Remove value, (Modifiable (_, rem) | InModifiable (_, rem)) ->
            rem (updf value) conf.stg_config
+         | `Overwrite value, Atomic_pp pp ->
+           pp @@ parse value conf.stg_config
          | `Overwrite value, _ -> (updf value)
-         | _, Atomic -> assert false
+         | _, (Atomic | Atomic_pp _) -> assert false
        with
        | (OpamPp.Bad_format (_,_) | Parsing.Parse_error) as e ->
          OpamConsole.error_and_exit `Bad_arguments
@@ -852,14 +855,26 @@ let global_allowed_fields, global_allowed_sections =
         Config.with_sys_pkg_manager_cmd (Config.sys_pkg_manager_cmd Config.empty);
         "swh-fallback", Atomic,
         Config.with_swh_fallback (Config.swh_fallback Config.empty);
+        "git-location", Atomic_pp
+          (fun c ->
+             OpamStd.Option.iter (fun git_location ->
+                 if OpamSystem.bin_contains_bash
+                     (OpamFilename.Dir.to_string git_location) then
+                   OpamConsole.error_and_exit `False
+                     "Found a bash in given git bin directory,\
+                      which is dangerous!")
+               (Config.git_location c);
+             c),
+        Config.with_git_location_opt
+          (InitConfig.git_location in_config ++ Config.git_location Config.empty);
       ] @ List.map (fun f ->
-        f, Atomic, Config.with_criteria
-          (Config.criteria Config.empty))
+          f, Atomic, Config.with_criteria
+            (Config.criteria Config.empty))
         [ "solver-criteria";
           "solver-upgrade-criteria";
           "solver-fixup-criteria" ]
-        @ allwd_wrappers wrapper_init Config.wrappers Config.with_wrappers
-      )
+      @ allwd_wrappers wrapper_init Config.wrappers Config.with_wrappers
+    )
   in
   (fun () -> Lazy.force allowed_fields),
   fun () -> []

@@ -635,12 +635,118 @@ let init_checks ?(hard_fail_exn=true) init_config =
   if hard_fail && hard_fail_exn then OpamStd.Sys.exit_because `Configuration_error
   else not (soft_fail || hard_fail)
 
-let windows_checks ?cygwin_setup config =
+let git_for_windows_check =
+  if not Sys.win32 && not Sys.cygwin then fun ?git_location:_ () -> None else
+  fun ?git_location () ->
+    let header () = OpamConsole.header_msg "Git" in
+    let contains_git p =
+      OpamSystem.resolve_command ~env:[||] (Filename.concat p "git.exe")
+    in
+    let gits =
+      OpamStd.Env.get "PATH"
+      |> OpamStd.Sys.split_path_variable
+      |> OpamStd.List.filter_map (fun p ->
+          match contains_git p with
+          | Some git ->
+            Some (git, OpamSystem.bin_contains_bash p)
+          | None -> None)
+    in
+    let get_git_location ?git_location () =
+      let bin =
+        match git_location with
+        | Some _ -> git_location
+        | None ->
+          OpamConsole.read "Please enter the path containing git.exe (e.g. C:\\Program Files\\Git\\cmd):"
+      in
+      match bin with
+      | None -> None
+      | Some git_location ->
+        match contains_git git_location, OpamSystem.bin_contains_bash git_location with
+        | Some _, false ->
+          OpamConsole.msg "Using Git from %s" git_location;
+          Some git_location
+        | Some _, true ->
+          OpamConsole.error
+            "A bash executable was found in %s, which will override \
+             Cygwin's bash. Please check your binary path."
+            git_location;
+          None
+        | None, _ ->
+          OpamConsole.error "No Git executable found in %s." git_location;
+          None
+    in
+    let rec loop ?git_location () =
+      match get_git_location ?git_location () with
+      | Some _ as git_location -> git_location
+      | None -> menu ()
+    and menu () =
+      let prompt () =
+        let options =
+          (`Default, "Use default Cygwin Git")
+          :: (List.filter_map (fun (git, bash) ->
+              if bash then None else
+              let bin = Filename.dirname git in
+              Some (`Location bin, "Use found git in "^bin))
+              gits)
+          @ [
+            `Specify, "Enter the location of installed Git";
+            `Abort, "Abort initialisation to install recommended Git.";
+          ]
+        in
+        OpamConsole.menu "Which Git should opam use?"
+          ~default:`Default ~no:`Default ~options
+      in
+      match prompt () with
+      | `Default -> None
+      | `Specify -> loop ()
+      | `Location git_location -> loop ~git_location ()
+      | `Abort ->
+        OpamConsole.note "Once your choosen Git installed, open a new PowerShell or Command Prompt window, and relaunch opam init.";
+        OpamStd.Sys.exit_because `Aborted
+    in
+    let git_location =
+      match git_location with
+      | Some (Right ()) -> None
+      | Some (Left git_location) ->
+        header ();
+        get_git_location ~git_location:(OpamFilename.Dir.to_string git_location) ()
+      | None ->
+        if OpamStd.Sys.tty_out then
+          (header ();
+           OpamConsole.msg
+             "Cygwin Git is functional but can have credentials issues for private repositories, \
+              we recommend using:\n%s\n"
+             (OpamStd.Format.itemize (fun s -> s)
+                [ "Install via 'winget install Git.Git'";
+                  "Git for Windows can be downloaded and installed from https://gitforwindows.org" ]);
+           menu ())
+        else
+          None
+    in
+    OpamStd.Option.iter (fun _ ->
+        OpamConsole.msg
+          "You can change that later with \
+           'opam option \"git-location=C:\\A\\Path\\bin\"'")
+      git_location;
+    git_location
+
+let windows_checks ?cygwin_setup ?git_location config =
   let vars = OpamFile.Config.global_variables config in
   let env =
     List.map (fun (v, c, s) -> v, (lazy (Some c), s)) vars
     |> OpamVariable.Map.of_list
   in
+  (* Git handling *)
+  let git_location : string option = git_for_windows_check ?git_location () in
+  OpamCoreConfig.update ?git_location ();
+  let config =
+    match git_location with
+    | Some git_location ->
+      OpamFile.Config.with_git_location
+        (OpamFilename.Dir.of_string git_location) config
+    | None -> config
+  in
+  (* Cygwin handling *)
   let success cygcheck =
     let config =
       let os_distribution = OpamVariable.of_string "os-distribution" in
@@ -680,6 +786,16 @@ let windows_checks ?cygwin_setup config =
            Printf.sprintf "Cygwin at %s"
              OpamFilename.(Dir.to_string (dirname_dir (dirname cygcheck))));
       config
+  in
+  let install_cygwin_tools () =
+    let packages =
+      match OpamSystem.resolve_command "git" with
+      | None -> OpamInitDefaults.required_packages_for_cygwin
+      | Some _ ->
+        List.filter (fun c -> not OpamSysPkg.(equal (of_string "git") c))
+          OpamInitDefaults.required_packages_for_cygwin
+    in
+    OpamSysInteract.Cygwin.install ~packages
   in
   let header () = OpamConsole.header_msg "Unix support infrastructure" in
   let get_cygwin = function
@@ -777,10 +893,7 @@ let windows_checks ?cygwin_setup config =
         match prompt () with
         | `Abort -> OpamStd.Sys.exit_because `Aborted
         | `Internal ->
-          let cygcheck =
-            OpamSysInteract.Cygwin.install
-              ~packages:OpamInitDefaults.required_packages_for_cygwin
-          in
+          let cygcheck = install_cygwin_tools () in
           let config = success cygcheck in
           config
         | `Specify ->
@@ -819,9 +932,7 @@ let windows_checks ?cygwin_setup config =
              header ();
              let cygcheck =
                match setup with
-               | `internal ->
-                 OpamSysInteract.Cygwin.install
-                   ~packages:OpamInitDefaults.required_packages_for_cygwin
+               | `internal -> install_cygwin_tools ()
                | (`default_location | `location _ as setup) ->
                  let cygroot =
                    match setup with
@@ -861,10 +972,11 @@ let windows_checks ?cygwin_setup config =
       else
         config
   in
-  OpamCoreConfig.update
-    ?cygbin:OpamStd.Option.Op.(
-        OpamSysInteract.Cygwin.cygbin_opt config
-        >>| OpamFilename.Dir.to_string) ();
+  let cygbin = OpamStd.Option.Op.(
+      OpamSysInteract.Cygwin.cygbin_opt config
+      >>| OpamFilename.Dir.to_string)
+  in
+  OpamCoreConfig.update ?cygbin ();
   config
 
 let update_with_init_config ?(overwrite=false) config init_config =
@@ -898,11 +1010,12 @@ let update_with_init_config ?(overwrite=false) config init_config =
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
-    ?(check_sandbox=true) ?(bypass_checks=false) ?cygwin_setup
+    ?(check_sandbox=true) ?(bypass_checks=false)
+    ?cygwin_setup ?git_location
     config shell =
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
-  let config = windows_checks ?cygwin_setup config in
+  let config = windows_checks ?cygwin_setup ?git_location config in
   let _all_ok =
     if bypass_checks then false else
       init_checks ~hard_fail_exn:false init_config
@@ -943,7 +1056,7 @@ let init
     ?repo ?(bypass_checks=false)
     ?dot_profile ?update_config ?env_hook ?(completion=true)
     ?(check_sandbox=true)
-    ?cygwin_setup
+    ?cygwin_setup ?git_location
     shell =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
@@ -979,7 +1092,7 @@ let init
             init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
-        let config = windows_checks ?cygwin_setup config in
+        let config = windows_checks ?cygwin_setup ?git_location config in
 
         let dontswitch =
           if bypass_checks then false else

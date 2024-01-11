@@ -865,7 +865,7 @@ module Syntax = struct
           start =
             start.Lexing.pos_lnum,
             start.Lexing.pos_cnum - start.Lexing.pos_bol;
-          stop = (* XXX here we take current position, where error occurs as end position *) 
+          stop = (* XXX here we take current position, where error occurs as end position *)
             curr.Lexing.pos_lnum,
             curr.Lexing.pos_cnum - curr.Lexing.pos_bol;
         }
@@ -1407,6 +1407,7 @@ module ConfigSyntax = struct
     depext_cannot_install : bool;
     depext_bypass: OpamSysPkg.Set.t;
     sys_pkg_manager_cmd: filename OpamStd.String.Map.t;
+    git_location: dirname option;
     swh_fallback: bool;
   }
 
@@ -1451,6 +1452,7 @@ module ConfigSyntax = struct
   let depext_bypass t = t.depext_bypass
 
   let sys_pkg_manager_cmd t = t.sys_pkg_manager_cmd
+  let git_location t = t.git_location
 
   let swh_fallback t = t.swh_fallback
 
@@ -1503,6 +1505,8 @@ module ConfigSyntax = struct
   let with_sys_pkg_manager_cmd sys_pkg_manager_cmd t =
     { t with sys_pkg_manager_cmd }
   let with_swh_fallback swh_fallback t = { t with swh_fallback }
+  let with_git_location git_location t = { t with git_location = Some git_location }
+  let with_git_location_opt git_location t = { t with git_location }
 
   let empty = {
     opam_version = file_format_version;
@@ -1528,6 +1532,7 @@ module ConfigSyntax = struct
     depext_cannot_install = false;
     depext_bypass = OpamSysPkg.Set.empty;
     sys_pkg_manager_cmd = OpamStd.String.Map.empty;
+    git_location = None;
     swh_fallback = true;
   }
 
@@ -1632,6 +1637,9 @@ module ConfigSyntax = struct
                Pp.V.string
                (Pp.V.string -| Pp.of_module "filename" (module OpamFilename))))
          -| Pp.of_pair "Distribution Map" OpamStd.String.Map.(of_list, bindings));
+      "git-location", Pp.ppacc_opt
+        with_git_location git_location
+        (Pp.V.string -| Pp.of_module "dirname" (module OpamFilename.Dir));
       "swh-fallback", Pp.ppacc
         with_swh_fallback swh_fallback
         Pp.V.bool;
@@ -1707,6 +1715,7 @@ module InitConfigSyntax = struct
     recommended_tools : (string list * string option * filter option) list;
     required_tools : (string list * string option * filter option) list;
     init_scripts : ((string * string) * filter option) list;
+    git_location: dirname option;
   }
 
   let opam_version t = t.opam_version
@@ -1727,6 +1736,7 @@ module InitConfigSyntax = struct
   let init_scripts t = t.init_scripts
   let criterion kind t =
     OpamStd.(List.assoc_opt Compare.equal kind t.solver_criteria)
+  let git_location t = t.git_location
 
   let with_opam_version opam_version t = {t with opam_version}
   let with_repositories repositories t = {t with repositories}
@@ -1750,6 +1760,7 @@ module InitConfigSyntax = struct
                                     kind t.solver_criteria)
     in
     { t with solver_criteria }
+  let with_git_location git_location t = { t with git_location  = Some git_location }
 
   let empty = {
     opam_version = format_version;
@@ -1768,6 +1779,7 @@ module InitConfigSyntax = struct
     recommended_tools = [];
     required_tools = [];
     init_scripts = [];
+    git_location = None;
   }
 
   let pp_repository_def =
@@ -1867,6 +1879,9 @@ module InitConfigSyntax = struct
                  (Pp.V.string)
                  (Pp.V.string_tr))
               (Pp.opt Pp.V.filter)));
+      "git-location", Pp.ppacc_opt
+        with_git_location git_location
+        (Pp.V.string -| Pp.of_module "dirname" (module OpamFilename.Dir));
     ] @
     List.map
       (fun (fld, ppacc) -> fld, Pp.embed with_wrappers wrappers ppacc)
@@ -1912,6 +1927,7 @@ module InitConfigSyntax = struct
       recommended_tools = list t2.recommended_tools t1.recommended_tools;
       required_tools = list t2.required_tools t1.required_tools;
       init_scripts = list t2.init_scripts t1.init_scripts;
+      git_location = opt t2.git_location t1.git_location;
     }
 
 end

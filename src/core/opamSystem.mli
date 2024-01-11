@@ -185,6 +185,8 @@ type command = string list
     if found in PATH) *)
 val resolve_command: ?env:string array -> ?dir:string -> string -> string option
 
+val bin_contains_bash: string -> bool
+
 (** Returns a function which should be applied to arguments for a given command
     by determining if the command is the Cygwin variant of the command. Returns
     the identity function otherwise. *)

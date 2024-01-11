@@ -18,6 +18,8 @@ users)
 ## Plugins
 
 ## Init
+  * Check and advertise to use Git for Windows [#5718 @rjbou - fix #5617]
+  * Add the `--git-location` and `--no-git-location` arguments [#5718 @rjbou]
 
 ## Config report
 
@@ -39,6 +41,7 @@ users)
 ## Show
 
 ## Var/Option
+  * Add a new git-location option on Windows [#5718 @rjbou]
 
 ## Update / Upgrade
 

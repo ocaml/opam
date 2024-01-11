@@ -513,6 +513,12 @@ let resolve_command ?env ?dir name =
   | `Cmd cmd -> Some cmd
   | `Denied | `Not_found -> None
 
+let bin_contains_bash =
+  if not Sys.win32 && not Sys.cygwin then fun _ -> false else
+  fun bin ->
+    (resolve_command ~env:[||] (Filename.concat bin "bash.exe"))
+    <> None
+
 let apply_cygpath name =
   (* XXX Deeper bug, looking in the cygvoke code (see OpamProcess.create) *)
   match resolve_command "cygpath" with
