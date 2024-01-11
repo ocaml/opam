@@ -11,15 +11,12 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
-  * Bump version to 2.2.0~alpha4~dev [#5732 @kit-ty-kate]
 
 ## Global CLI
 
 ## Plugins
 
 ## Init
-  * Check and advertise to use Git for Windows [#5718 @rjbou - fix #5617]
-  * Add the `--git-location` and `--no-git-location` arguments [#5718 @rjbou]
 
 ## Config report
 
@@ -30,7 +27,6 @@ users)
 ## Remove
 
 ## Switch
-  * Precise message for Ctrl-c-ed opam switch creation "Switch left partially installed" [#5713 @rjbou - fix #5710]
 
 ## Config
 
@@ -41,13 +37,10 @@ users)
 ## Show
 
 ## Var/Option
-  * Add a new git-location option on Windows [#5718 @rjbou]
 
 ## Update / Upgrade
 
 ## Tree
-  * Fix `--dev` option, force dev dependencies when option is given [#5687 @rjbou - fix #5675]
-  * Fix `--no-switch` option, instead of emptying switch from it installed packages, load a virtual switch at the beginning when `--no-switch` is given [#5687 @rjbou - fix #5675]
 
 ## Exec
 
@@ -62,8 +55,6 @@ users)
 ## Clean
 
 ## Env
-  * Fix `opam env` containing carriage return on Cygwin [#5715 @dra27 @rjbou @kit-ty-kate - fix #5684]
-  * Remove stray comments from pwsh and cmd env [#5715 @dra27]
 
 ## Opamfile
 
@@ -76,15 +67,10 @@ users)
 ## VCS
 
 ## Build
-  * Vendor mccs.1.1+17 [#5769 @kit-ty-kate]
-  * Require mccs >= 1.1+17 [#5769 @kit-ty-kate]
-  * Add ./configure --enable-static to compile the opam binary statically [#5680 @kit-ty-kate - fixes #5647]
 
 ## Infrastructure
 
 ## Release scripts
-  * Workaround incorrect `NGROUPS_MAX` in `<limits.h>` in musl for release builds [#5383 @dra27]
-  * Fix check for adding `-lsha_stubs` only on `master` on OpenBSD [#5733 @punchagan]
 
 ## Admin
 
@@ -95,7 +81,6 @@ users)
 ## Opam file format
 
 ## Solver
-  * Fix debug logs showing up regardless of verbosity on macOS 12.7.1 / 13.6.3 / 14.2 and FreeBSD [#5769 @kit-ty-kate]
 
 ## Client
 
