@@ -137,7 +137,7 @@ cd ..
 rm -rf "ocaml-$OCAML_VERSION"
 
 if [[ $PLATFORM != 'Windows' ]]; then
-  echo > "$OCAML_LOCAL/bin/ocamldoc" <<"EOF"
+  cat > "$OCAML_LOCAL/bin/ocamldoc" <<"EOF"
 #!/bin/sh
 
 echo 'ocamldoc is not supposed to be called'>&2

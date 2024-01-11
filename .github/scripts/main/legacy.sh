@@ -5,7 +5,7 @@ set -xue
 . .github/scripts/main/preamble.sh
 
 eval $(opam env)
-OPAMCONFIRMLEVEL= OPAMCLI=2.0 opam upgrade --unlock-base --yes
+OPAMCONFIRMLEVEL='' OPAMCLI=2.0 opam upgrade --unlock-base --yes
 
 for package in core format installer ; do
   opam pin add --yes --no-action opam-$package .

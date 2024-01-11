@@ -42,7 +42,7 @@ while [ $# -gt 0 ]; do
             MAKESELF=1;;
         -o)
             if [ $# -lt 2 ]; then echo "Missing argument to $1" >&2; exit 2; fi
-            TARGET="$(cd $(dirname "$1"); pwd)/$(basename "$1")";;
+            TARGET="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")";;
         -*)
             echo "Unrecognised option $1" >&2
             help; exit 2;;
@@ -221,10 +221,10 @@ opam install --yes --destdir "\$DESTDIR" ${INSTALL_PACKAGES[@]}
 EOF
 
 chmod a+x bootstrap.sh configure.sh compile.sh
-cd $(dirname "$CONTENT")
+cd "$(dirname "$CONTENT")"
 if [ -n "$MAKESELF" ]; then
-    makeself $(basename "$CONTENT") "$TARGET" "$(basename "${TARGET%%.*}")" ./compile.sh
+    makeself "$(basename "$CONTENT")" "$TARGET" "$(basename "${TARGET%%.*}")" ./compile.sh
 else
-    tar cz $(basename "$CONTENT") -f "$TARGET"
+    tar cz "$(basename "$CONTENT")" -f "$TARGET"
 fi
 echo "Bundle has been generated as $TARGET"

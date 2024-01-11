@@ -400,7 +400,7 @@ xsudo() {
             exit 1
         fi
         echo "Write access to '$DSTDIR' required, using '$SUDO'."
-        echo "Command: $CMD $@"
+        echo "Command: $CMD $*"
         if [ "$CMD" = "install" ]; then
             "$SUDO" "$CMD" -g 0 -o root "$@"
         else
@@ -421,8 +421,8 @@ if [ -n "$RESTORE" ]; then
         exit 1
     fi
     if [ "$NOBACKUP" = 1 ]; then
-        printf "## This will clear $OPAM and $OPAMROOT. Continue ? [Y/n] "
-        read R
+        printf "## This will clear %s and %s. Continue ? [Y/n] " "$OPAM" "$OPAMROOT"
+        read -r R
         case "$R" in
             ""|"y"|"Y"|"yes")
                 xsudo rm -f "$OPAM"
@@ -435,7 +435,7 @@ if [ -n "$RESTORE" ]; then
     fi
     xsudo mv "$OPAM_BAK" "$OPAM"
     mv "$OPAMROOT_BAK" "$OPAMROOT"
-    printf "## Opam $RESTORE and its root were restored."
+    printf "## Opam %s and its root were restored." "$RESTORE"
     if [ "$NOBACKUP" = 1 ]; then echo
     else echo " Opam $OPAMV was backed up."
     fi
@@ -453,16 +453,16 @@ if [ -n "$EXISTING_OPAM" ]; then
 fi
 
 while true; do
-    printf "## Where should it be installed ? [$DEFAULT_BINDIR] "
-    read BINDIR
+    printf "## Where should it be installed ? [%s] " "$DEFAULT_BINDIR"
+    read -r BINDIR
     if [ -z "$BINDIR" ]; then BINDIR="$DEFAULT_BINDIR"; fi
 
     if [ -d "$BINDIR" ]; then break
     else
         if [ "${BINDIR#\~/}" != "$BINDIR" ] ; then
             RES_BINDIR="$HOME/${BINDIR#\~/}"
-            printf "## '$BINDIR' resolves to '$RES_BINDIR', do you confirm [Y/n] "
-            read R
+            printf "## '%s' resolves to '%s', do you confirm [Y/n] " "$BINDIR" "$RES_BINDIR"
+            read -r R
             case "$R" in
                 ""|"y"|"Y"|"yes")
                    BINDIR="$RES_BINDIR"
@@ -472,8 +472,8 @@ while true; do
                    ;;
             esac
         fi
-        printf "## $BINDIR does not exist. Create ? [Y/n] "
-        read R
+        printf "## %s does not exist. Create ? [Y/n] " "$BINDIR"
+        read -r R
         case "$R" in
             ""|"y"|"Y"|"yes")
             xsudo mkdir -p "$BINDIR"
@@ -494,8 +494,8 @@ fi
 if [ -d "$OPAMROOT" ]; then
     if [ "$FRESH" = 1 ]; then
         if [ "$NOBACKUP" = 1 ]; then
-            printf "## This will clear $OPAMROOT. Continue ? [Y/n] "
-            read R
+            printf "## This will clear %s. Continue ? [Y/n] " "$OPAMROOT"
+            read -r R
             case "$R" in
                 ""|"y"|"Y"|"yes")
                     rm -rf "$OPAMROOT";;

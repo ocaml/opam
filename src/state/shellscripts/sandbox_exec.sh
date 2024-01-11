@@ -11,7 +11,8 @@ POL="$POL"'(allow file-write* (regex #"^(/private)?(/var)?/tmp/"))'
 
 add_mounts() {
     if [ -d "$2" ]; then
-      local DIR="$(cd "$2" && pwd -P)"
+      local DIR
+      DIR="$(cd "$2" && pwd -P)"
       case "$1" in
           ro) POL="$POL"'(deny file-write* (subpath "'"$DIR"'"))';;
           rw) POL="$POL"'(allow file-write* (subpath "'"$DIR"'"))';;

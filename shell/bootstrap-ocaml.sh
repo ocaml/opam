@@ -45,7 +45,7 @@ cd "${V}"
 PATH_PREPEND=
 LIB_PREPEND=
 INC_PREPEND=
-if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
+if [ -n "$1" ] && [ -n "${COMSPEC}" ] && [ -x "${COMSPEC}" ] ; then
   case "$(uname -m)" in
     'i686')
       BUILD=i686-pc-cygwin
@@ -87,7 +87,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
       if [ "$1" != "auto" ] ; then
         echo "Compiler architecture $1 not recognised -- mingw64, mingw, msvc64, msvc (or auto)"
       fi
-      if [ -n "${PROCESSOR_ARCHITEW6432}" -o "${PROCESSOR_ARCHITECTURE}" = "AMD64" ] ; then
+      if [ -n "${PROCESSOR_ARCHITEW6432}" ] || [ "${PROCESSOR_ARCHITECTURE}" = "AMD64" ] ; then
         TRY64=1
       else
         TRY64=0

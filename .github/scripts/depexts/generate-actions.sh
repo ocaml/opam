@@ -153,7 +153,7 @@ make
 EOF
 
 test_depext () {
-  for pkg in $@ ; do
+  for pkg in "$@" ; do
     echo "./opam install $pkg || true" >> "$dir"/entrypoint.sh
   done
 }

@@ -86,7 +86,7 @@ OPAM=$(which opam || echo "$BINDIR/opam")
 if [ "$OPAM" != "$BINDIR/opam" ]; then
     echo "WARNING: you have a different version of opam installed at $OPAM"
     echo "It is highly recommended that you remove it."
-    read -p "[press enter to continue]" x
+    read -p "[press enter to continue]" _
     OPAM="$BINDIR/opam"
 fi
 

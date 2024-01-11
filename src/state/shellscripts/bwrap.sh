@@ -50,7 +50,8 @@ add_mounts() {
 add_sys_mounts() {
     for dir in "$@"; do
         if [ -L "$dir" ]; then
-            local src=$(readlink -f "$dir")
+            local src
+            src=$(readlink -f "$dir")
             add_mount sym "$src" "$dir"
         else
             add_mounts ro "$dir"
@@ -71,7 +72,8 @@ done
 
 mount_linked_cache() {
   local l_cache=$1
-  local cache=$(readlink -m "$l_cache")
+  local cache
+  cache=$(readlink -m "$l_cache")
   mkdir -p "$cache"
   add_mount rw "$l_cache" "$cache"
 }
