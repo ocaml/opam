@@ -59,6 +59,8 @@ users)
 ## Clean
 
 ## Env
+  * Fix `opam env` containing carriage return on Cygwin [#5715 @dra27 @rjbou @kit-ty-kate - fix #5684]
+  * Remove stray comments from pwsh and cmd env [#5715 @dra27]
 
 ## Opamfile
 
