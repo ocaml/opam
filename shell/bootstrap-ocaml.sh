@@ -20,7 +20,7 @@ V=$(echo "${URL}"| sed -e 's|.*/\([^/]*\)\.tar\.gz|\1|')
 FV_URL=$(sed -ne 's/URL_flexdll *= *//p' "$BOOTSTRAP_ROOT"/src_ext/Makefile | tr -d '\r')
 FLEXDLL=$(echo "${FV_URL}"| sed -e 's|.*/\([^/]*\)|\1|')
 if [ ! -e "${V}".tar.gz ]; then
-  cp "$BOOTSTRAP_ROOT"/src_ext/archives/"${V}".tar.gz . 2>/dev/null || ${CURL} "${URL}"
+  cp "$BOOTSTRAP_ROOT/src_ext/archives/${V}".tar.gz . 2>/dev/null || ${CURL} "${URL}"
 fi
 
 ACTUALMD5=$(openssl md5 "${V}".tar.gz  2> /dev/null | cut -f 2 -d ' ')
@@ -128,13 +128,13 @@ if [ -n "$1" ] && [ -n "${COMSPEC}" ] && [ -x "${COMSPEC}" ] ; then
   fi
   cd ..
   if [ ! -e "${FLEXDLL}" ]; then
-    cp "$BOOTSTRAP_ROOT"/src_ext/archives/"${FLEXDLL}" . 2>/dev/null || ${CURL} "${FV_URL}"
+    cp "$BOOTSTRAP_ROOT/src_ext/archives/${FLEXDLL}" . 2>/dev/null || ${CURL} "${FV_URL}"
   fi
   cd "${V}"
   PREFIX=$(cd .. ; pwd)/ocaml
   WINPREFIX=$(echo "${PREFIX}" | cygpath -f - -m)
   if [ "${GEN_CONFIG_ONLY}" -eq 0 ] ; then
-    tar -xzf "$BOOTSTRAP_ROOT"/"${FLEXDLL}"
+    tar -xzf "$BOOTSTRAP_ROOT/${FLEXDLL}"
     rm -rf flexdll
     mv flexdll-* flexdll
     PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" \

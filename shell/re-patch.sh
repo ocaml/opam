@@ -38,7 +38,7 @@ for package in $(cd patches ; find . -maxdepth 1 -mindepth 1 -type d | sed -e 's
   # Re-do the patches
   for mode in $modes ; do
     # Extract the package in this mode
-    make "$package"."$mode"
+    make "$package.$mode"
     rm -rf "$package"
     if [[ -e $package.tar.gz ]] ; then
       tarball=$package.tar.gz
@@ -47,9 +47,9 @@ for package in $(cd patches ; find . -maxdepth 1 -mindepth 1 -type d | sed -e 's
       tarball=$package.tbz
       tar_flag=j
     fi
-    rm -rf tmp-"$package"."$mode"
-    mkdir tmp-"$package"."$mode"
-    cd tmp-"$package"."$mode"
+    rm -rf tmp-"$package.$mode"
+    mkdir tmp-"$package.$mode"
+    cd tmp-"$package.$mode"
     tar -x$tar_flag -f ../"$tarball"
     while IFS= read -r -d '' dir ; do
       if [[ $dir = "." || $dir = ".." ]] ; then continue ; fi
@@ -80,6 +80,6 @@ for package in $(cd patches ; find . -maxdepth 1 -mindepth 1 -type d | sed -e 's
     done
 
     cd ..
-    rm -rf tmp-"$package"."$mode"
+    rm -rf tmp-"$package.$mode"
   done
 done

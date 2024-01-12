@@ -76,11 +76,11 @@ mkdir -p "$BINDIR" 2>/dev/null || true
 if [ ! -w "$BINDIR" ]; then
     echo "You don't have write access to $BINDIR: sudo may ask for your password"
     if [ ! -d "$BINDIR" ]; then sudo mkdir -p "$BINDIR"; fi
-    sudo install -g root -o root -m 755 "$TMP"/"$file" "$BINDIR"/opam
+    sudo install -g root -o root -m 755 "$TMP/$file" "$BINDIR"/opam
 else
-    install -m 755 "$TMP"/"$file" "$BINDIR"/opam
+    install -m 755 "$TMP/$file" "$BINDIR"/opam
 fi
-rm -f "$TMP"/"$file"
+rm -f "$TMP/$file"
 
 OPAM=$(which opam || echo "$BINDIR/opam")
 if [ "$OPAM" != "$BINDIR/opam" ]; then

@@ -44,9 +44,9 @@ init-bootstrap () {
     export OPAMROOT=$OPAMBSROOT
     # The system compiler will be picked up
     if [ "${OPAM_REPO%.git}" != "${OPAM_REPO_MAIN%.git}" ]; then
-      opam init --no-setup git+$OPAM_REPO_MAIN#"$OPAM_REPO_SHA"
+      opam init --no-setup git+"$OPAM_REPO_MAIN#$OPAM_REPO_SHA"
     else
-      opam init --no-setup git+"$OPAM_REPO_CACHE"#"$OPAM_REPO_SHA"
+      opam init --no-setup git+"$OPAM_REPO_CACHE#$OPAM_REPO_SHA"
     fi
 
     cat >> "$OPAMROOT"/config <<EOF

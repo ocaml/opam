@@ -58,7 +58,7 @@ case $GITHUB_EVENT_NAME in
     CheckConfigure "$GITHUB_SHA"
     ;;
   pull_request)
-    for commit in $(git rev-list "$BASE_REF_SHA"..."$PR_REF_SHA" --reverse)
+    for commit in $(git rev-list "$BASE_REF_SHA...$PR_REF_SHA" --reverse)
     do
       echo "check configure for $commit"
       CheckConfigure "$commit"
