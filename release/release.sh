@@ -32,6 +32,36 @@ SSH="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 OUTDIR="out/$TAG"
 mkdir -p "$OUTDIR"
 
+windows_build() {
+  local port=$1
+  local image=$2
+
+  if ! ${SSH} -p "${port}" opam@localhost cd; then
+    qemu-img convert -O raw "./${image}.qcow2" "./${image}.raw"
+    # NOTE: -machine q35 seems to be required to avoid random but recurring crashes
+    "qemu-system-x86_64" -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" -machine q35 &
+    sleep 120
+  fi
+
+  # Disable Windows Defender before anything else (makes the build process faster)
+  # TODO: ... doesn't work
+  #       as well as the following line to add to the readme.md: Open the Windows Security app and turn off "Tamper Protection" and Real-time protection" from "Virus & threat protection -> Virus & threat protection settings -> Manage settings"
+  #${SSH} -p "${port}" opam@localhost "powershell -c 'Set-MpPreference -Force \
+  #                                    -DisableBehaviorMonitoring \$True \
+  #                                    -DisableRealtimeMonitoring \$True \
+  #                                    -DisableScriptScanning \$True \
+  #                                    -EnableLowCpuPriority \$True'"
+
+  ${SSH} -p "${port}" opam@localhost "curl -LO https://cygwin.com/setup-x86_64.exe"
+  ${SSH} -p "${port}" opam@localhost '.\setup-x86_64.exe -q -O -s https://cygwin.mirror.uk.sargasso.net -P make,diffutils,mingw64-x86_64-gcc-g++,mingw64-i686-gcc-g++,rsync,patch,curl,unzip,git,binutils'
+
+  make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE=make REMOTE_DIR="opam-release-$TAG" 'REMOTE_SHELL=C:\Cygwin64\bin\bash.exe -l' SSH_USER=opam ULIMIT=""
+
+  ${SSH} -p "${port}" opam@localhost "shutdown /s /f"
+
+  wait
+}
+
 qemu_build() {
   local port=$1
   local image=$2
@@ -59,6 +89,6 @@ make JOBS="${JOBS}" TAG="$TAG" s390x-linux
 [ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
 [ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
 [ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
-[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.4-amd64 "pkg_add gmake curl bzip2" gmake x86_64 &
-[ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.2-RELEASE-amd64 "pkg install -y gmake curl bzip2" gmake x86_64 &
-wait
+[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.4-amd64 "pkg_add gmake curl bzip2" gmake x86_64
+[ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.2-RELEASE-amd64 "pkg install -y gmake curl bzip2" gmake x86_64
+[ -f "${OUTDIR}/opam-$TAG-x86_64-windows" ] || windows_build 9997 Windows-10-x86_64

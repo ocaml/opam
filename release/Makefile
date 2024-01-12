@@ -4,10 +4,12 @@ OPAM_VERSION = $(subst -,~,$(VERSION))
 GIT_URL = ..
 
 OCAMLV = 4.14.2
+FLEXDLLV = 0.43
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
+FLEXDLL_URL = https://github.com/ocaml/flexdll/archive/refs/tags/$(FLEXDLLV).tar.gz
 
-HOST_OS = $(shell uname -s | tr A-Z a-z | sed 's/darwin/macos/')
+HOST_OS = $(shell uname -s | tr A-Z a-z | sed -e 's/_.*//' -e 's/darwin/macos/' -e 's/cygwin/windows/')
 HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
 OUTDIR = out/$(TAG)
 
@@ -70,6 +72,13 @@ CLINKING_macos = \
 CLINKING_openbsd = $(CLINKING_macos)
 CLINKING_freebsd = $(CLINKING_macos)
 
+CLINKING_windows = \
+-lunix -lmccs_stubs -lmccs_glpk_stubs $(SHA_LINK) \
+-lopam_stubs_win32_stubs \
+-l:libstdc++.a -l:libpthread.a \
+-Wl,-static \
+-ladvapi32 -lgdi32 -luser32 -lshell32 -lole32 -luuid -luserenv
+
 LINKING = (-noautolink $(patsubst %,-cclib %,$(CLINKING_$(1))))
 
 EXPORTS_openbsd = \
@@ -80,6 +89,7 @@ EXPORTS_freebsd = \
 CPATH=/usr/local/include: \
 LIBRARY_PATH=/usr/local/lib: \
 
+EXTRA_CONFIGURE_ARGS_windows = --host=x86_64-w64-mingw32 --with-flexdll
 
 %: opam-$(VERSION)-%
 
@@ -93,8 +103,11 @@ build/$(HOST).env:
 	mkdir -p build/$(HOST)
 	cd build/$(HOST) && curl -OL $(OCAML_URL)
 	cd build/$(HOST) && tar xzf ocaml-$(OCAMLV).tar.gz
+	cd build/$(HOST)/ocaml-$(OCAMLV) && curl -OL $(FLEXDLL_URL)
+	cd build/$(HOST)/ocaml-$(OCAMLV) && tar xzf $(shell basename "$(FLEXDLL_URL)")
+	cd build/$(HOST)/ocaml-$(OCAMLV) && rmdir flexdll && mv "flexdll-$(FLEXDLLV)" flexdll
 	cd build/$(HOST)/ocaml-$(OCAMLV) && \
-	  ./configure --prefix "$(shell pwd)/build/$(HOST)" && \
+	  ./configure --prefix "$(shell pwd)/build/$(HOST)" $(EXTRA_CONFIGURE_ARGS_$(HOST_OS)) && \
 	  $(MAKE) -j$(JOBS) && \
 	  $(MAKE) install
 	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
@@ -137,21 +150,24 @@ distclean: clean
 
 REMOTE_DIR = /tmp/opam-release
 REMOTE_MAKE = make
+REMOTE_SHELL = /bin/sh
 SSH = ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 SCP = scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 remote: $(OUTDIR)/opam-full-$(VERSION).tar.gz
-	$(SSH) "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
+	$(SSH) "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/$(OUTDIR)"
 	$(SCP) Makefile "$(REMOTE):$(REMOTE_DIR)/"
 	$(SCP) "$^" "$(REMOTE):$(REMOTE_DIR)/$^"
 	$(SSH) "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
 	$(SCP) "$(REMOTE):$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
+SSH_USER = root
+ULIMIT = ulimit -s 8192 &&
 qemu: $(OUTDIR)/opam-full-$(VERSION).tar.gz
-	$(SSH) -p "$(QEMU_PORT)" root@localhost "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
-	$(SCP) -P "$(QEMU_PORT)" Makefile "root@localhost:$(REMOTE_DIR)/"
-	$(SCP) -P "$(QEMU_PORT)" "$^" "root@localhost:$(REMOTE_DIR)/$^"
-	$(SSH) -p "$(QEMU_PORT)" root@localhost 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
-	$(SCP) -P "$(QEMU_PORT)" "root@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
+	$(SSH) -p "$(QEMU_PORT)" $(SSH_USER)@localhost "$(REMOTE_SHELL) -c \"mkdir -p $(REMOTE_DIR)/$(OUTDIR)\""
+	$(SCP) -P "$(QEMU_PORT)" Makefile "$(SSH_USER)@localhost:$(REMOTE_DIR)/"
+	$(SCP) -P "$(QEMU_PORT)" "$^" "$(SSH_USER)@localhost:$(REMOTE_DIR)/$^"
+	$(SSH) -p "$(QEMU_PORT)" $(SSH_USER)@localhost "$(REMOTE_SHELL) -c \"cd $(REMOTE_DIR) && $(ULIMIT) $(REMOTE_MAKE) host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)\""
+	$(SCP) -P "$(QEMU_PORT)" "$(SSH_USER)@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	LOCAL_RELEASE_DIR=$(shell mktemp -d); \

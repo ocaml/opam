@@ -77,6 +77,7 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Add windows to the release script [#5789 @kit-ty-kate]
 
 ## Install script
 
