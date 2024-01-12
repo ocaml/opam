@@ -67,6 +67,7 @@ users)
 ## Format upgrade
 
 ## Sandbox
+  * Mark the user temporary directory (as returned by `getconf DARWIN_USER_TEMP_DIR`) as writable when TMPDIR is not defined on macOS [#5780 @ElectreAAS]
 
 ## VCS
 
