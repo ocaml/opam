@@ -7,6 +7,33 @@
 * run `make tests`, `opam-rt` [checked by github actions]
 * update the CHANGE file: take `master_changes.md` content to fill it
 
+## Windows setup
+
+* Download Windows 10 English International 64bit from https://www.microsoft.com/en-gb/software-download/windows10ISO
+* Run qemu-img create -f qcow2 Windows-10-x86_64.qcow2 32G
+* Run qemu-system-x86_64 -cdrom <path-to-the-windows-iso> -drive file=Windows-10-x86_64.qcow2 -smp 2 -m 6G
+* Install Windows. Everything stays as default except:
+  * Click "I don’t have a product key"
+  * Click "Custom: ..." not "Upgrade: ..."
+* This will take a couple of hours
+* Upon restart:
+  * username: opam
+  * no password
+  * no location
+  * no find my device
+  * send required diagnostic data
+  * no improve inking & typing
+  * no tailored experiences
+  * no advertasing
+  * no cortana
+* Setup OpenSSH Server by following https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=gui
+
+
+* Open a terminal:
+  * Run curl -LO https://cygwin.com/setup-x86_64.exe
+  * Run setup-x86_64.exe 
+
+
 ## Github release
 
 [ once bump version & changes PRs merged ]
