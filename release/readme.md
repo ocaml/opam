@@ -26,13 +26,16 @@
   * no tailored experiences
   * no advertasing
   * no cortana
+* Open services.msc and disable the Windows Update service
 * Setup OpenSSH Server by following https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=gui
-
-
-* Open a terminal:
-  * Run curl -LO https://cygwin.com/setup-x86_64.exe
-  * Run setup-x86_64.exe 
-
+* Open cmd.exe as administrator and run "notepad C:/ProgramData/ssh/sshd_config"
+  * Uncomment and set:
+    * PermitEmptyPasswords yes
+    * PermitRootLogin yes
+    * PasswordAuthentication yes
+  * Save and close both applications
+* Open regedit.exe and set HKey_Local_Machine\SYSTEM\CurrentControlSet\Control\Lsa\LimitBlankPasswordUse to 0
+* Shutdown the computer using the startmenu button
 
 ## Github release
 

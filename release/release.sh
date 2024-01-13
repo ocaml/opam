@@ -29,8 +29,31 @@ CWD=$(pwd)
 JOBS=$(sysctl -n hw.ncpu)
 SSH="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
-OUTDIR="out/$TAG"
-mkdir -p "$OUTDIR"
+#OUTDIR="out/$TAG"
+#mkdir -p "$OUTDIR"
+
+windows_build() {
+  local port=$1
+  local image=$2
+  local arch=$3
+
+  # TODO: detect if the image is already running
+#  qemu-img convert -O raw "./${image}.qcow2" "./${image}.raw"
+#  "qemu-system-${arch}" -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}"
+  "qemu-system-${arch}" -drive "file=./${image}.qcow2" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" &
+
+  # TODO: Probably more?
+  sleep 120
+
+#  ${SSH} -p "${port}" opam@localhost "curl -LO https://cygwin.com/setup-x86_64.exe"
+#  ${SSH} -p "${port}" opam@localhost '.\setup-x86_64.exe -q -O -s https://cygwin.mirror.uk.sargasso.net -P make,diffutils,mingw64-x86_64-gcc-g++,mingw64-i686-gcc-g++,rsync,patch,curl,unzip,git'
+
+#  make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR="opam-release-$TAG"
+
+  ${SSH} -p "${port}" opam@localhost "shutdown /s /f"
+
+  wait
+}
 
 qemu_build() {
   local port=$1
@@ -49,16 +72,17 @@ qemu_build() {
   ${SSH} -p "${port}" root@localhost "shutdown -p now"
 }
 
-make JOBS="${JOBS}" TAG="$TAG" "${OUTDIR}/opam-full-$TAG.tar.gz"
-make JOBS="${JOBS}" TAG="$TAG" x86_64-linux
-make JOBS="${JOBS}" TAG="$TAG" i686-linux
-make JOBS="${JOBS}" TAG="$TAG" armhf-linux
-make JOBS="${JOBS}" TAG="$TAG" arm64-linux
-make JOBS="${JOBS}" TAG="$TAG" ppc64le-linux
-make JOBS="${JOBS}" TAG="$TAG" s390x-linux
-[ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
-[ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
-[ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
-[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.4-amd64 "pkg_add gmake curl bzip2" gmake x86_64 &
-[ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.2-RELEASE-amd64 "pkg install -y gmake curl bzip2" gmake x86_64 &
-wait
+#make JOBS="${JOBS}" TAG="$TAG" "${OUTDIR}/opam-full-$TAG.tar.gz"
+#make JOBS="${JOBS}" TAG="$TAG" x86_64-linux
+#make JOBS="${JOBS}" TAG="$TAG" i686-linux
+#make JOBS="${JOBS}" TAG="$TAG" armhf-linux
+#make JOBS="${JOBS}" TAG="$TAG" arm64-linux
+#make JOBS="${JOBS}" TAG="$TAG" ppc64le-linux
+#make JOBS="${JOBS}" TAG="$TAG" s390x-linux
+#[ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+#[ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+#[ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
+#[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.4-amd64 "pkg_add gmake curl bzip2" gmake x86_64 &
+#[ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.2-RELEASE-amd64 "pkg install -y gmake curl bzip2" gmake x86_64 &
+#wait
+windows_build 9997 Windows-10-x86_64 x86_64
