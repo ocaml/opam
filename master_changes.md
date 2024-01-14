@@ -121,6 +121,8 @@ users)
 ## Doc
   * Improve the installation instructions on FreeBSD [#5775 lukstafi]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
