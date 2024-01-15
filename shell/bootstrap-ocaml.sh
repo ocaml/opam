@@ -143,7 +143,7 @@ if [ -n "$1" ] && [ -n "${COMSPEC}" ] && [ -x "${COMSPEC}" ] ; then
       ./configure --prefix "$WINPREFIX" \
                   --build="$BUILD" --host=$HOST \
                   --disable-stdlib-manpages \
-                  "$BOOTSTRAP_EXTRA_OPTS"
+                  $BOOTSTRAP_EXTRA_OPTS
     for target in $BOOTSTRAP_TARGETS; do
       PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" Lib="${LIB_PREPEND}${Lib}" Include="${INC_PREPEND}${Include}" make -j "$target"
     done
@@ -153,7 +153,7 @@ if [ -n "$1" ] && [ -n "${COMSPEC}" ] && [ -x "${COMSPEC}" ] ; then
 else
   PREFIX=$(cd .. ; pwd)/ocaml
   if [ "${GEN_CONFIG_ONLY}" -eq 0 ] ; then
-    ./configure --prefix "${PREFIX}" "$BOOTSTRAP_EXTRA_OPTS" --disable-stdlib-manpages
+    ./configure --prefix "${PREFIX}" $BOOTSTRAP_EXTRA_OPTS --disable-stdlib-manpages
     for target in $BOOTSTRAP_TARGETS; do
       ${MAKE:-make} -j "$target"
     done
