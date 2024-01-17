@@ -293,7 +293,7 @@ let analyse_job ~oc ~workflow ~platforms ~keys f =
     ++ only_with Windows (git_lf_checkouts ~cond:(Predicate(true, Runner Windows)) ~shell:"cmd" ~title:"Configure Git for Windows" ())
     ++ checkout ()
     ++ run "Determine cache keys" ~id:"keys" keys
-    ++ cache ?cond:linux_guard ~key_prefix:"steps.keys" ~check_only:true Archives 
+    ++ cache ?cond:linux_guard ~key_prefix:"steps.keys" ~check_only:true Archives
     ++ build_cache ?cond:not_windows_guard Archives
     ++ end_job f
 
@@ -340,13 +340,19 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
     ++ run "Build" ["bash -exu .github/scripts/main/main.sh " ^ host]
     ++ not_on Windows (run "Test (basic)" ["bash -exu .github/scripts/main/test.sh"])
     ++ only_on Windows (run ~cond:(Predicate(false, EndsWith("matrix.host", "-pc-cygwin"))) "Test \"static\" binaries on Windows" ["ldd ./opam.exe | test \"$(grep -v -F /cygdrive/c/Windows/)\" = ''"])
+    ++ only_on Windows
+      (uses "Upload opam binaries for Windows"
+         ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-windows")))
+         ~withs:[ ("name", Literal ["opam-exe-${{ matrix.host }}-${{ matrix.ocamlv }}-${{ matrix.build }}"]);
+                  ("path", Literal ["D:\\Local\\bin\\opam.exe"; "D:\\Local\\bin\\opam-installer.exe"; "D:\\Local\\bin\\opam-putenv.exe"]) ]
+         "actions/upload-artifact@v3")
     ++ only_on Windows (run "Test (basic - Cygwin)" ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-cygwin"))) ["bash -exu .github/scripts/main/test.sh"])
     ++ only_on Windows (run "Test (basic - native Windows)" ~env:[("OPAMROOT", {|D:\a\opam\opam\.opam|})] ~shell:"cmd" ~cond:(Predicate(false, EndsWith("matrix.host", "-pc-cygwin")))
          ({|set Path=D:\Cache\ocaml-local\bin;%Path%|} ::
           {|if "${{ matrix.host }}" equ "x86_64-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"|} ::
           {|if "${{ matrix.host }}" equ "i686-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"|} ::
           run_or_fail [
-           {|opam init --yes --bare default git+file://D:/opam-repository#${{ env.OPAM_TEST_REPO_SHA }}|};
+           {|opam init --yes --bare default git+file://D:/opam-repository#${{ env.OPAM_TEST_REPO_SHA }} --no-git-location|};
            {|opam switch --yes create default ocaml-system|};
            {|opam env|};
            {|opam install --yes lwt|};
@@ -446,7 +452,7 @@ let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
     ++ install_sys_dune [os_of_platform platform]
     ++ checkout ()
     ++ cache Archives
-    ++ uses "Get changed files" ~id:"files" (* ~continue_on_error:true see https://github.com/jitterbit/get-changed-files/issues/19 *) "Ana06/get-changed-files@v2.2.0" (* see https://github.com/jitterbit/get-changed-files/issues/55 ; Ana06'fork contains #19 and #55 fixes *) 
+    ++ uses "Get changed files" ~id:"files" (* ~continue_on_error:true see https://github.com/jitterbit/get-changed-files/issues/19 *) "Ana06/get-changed-files@v2.2.0" (* see https://github.com/jitterbit/get-changed-files/issues/55 ; Ana06'fork contains #19 and #55 fixes *)
     ++ run "Changed files list" [
          "for changed_file in ${{ steps.files.outputs.modified }}; do";
          "  echo \"M  ${changed_file}.\"";

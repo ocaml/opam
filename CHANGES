@@ -3,6 +3,49 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.2.0~beta1:
+* Check and advertise to use Git for Windows [#5718 @rjbou - fix #5617]
+  * (+) Add the `--git-location` and `--no-git-location` cli arguments
+  * (+) Add a new `git-location` modifiable opam option on Windows
+* When compiling opam on Windows with MinGW, the resulting opam binary now
+  contains libstdc++ instead of requiring the DLL to be distributed alongside
+  it or present in the environment [#5680 @kit-ty-kate - fixes #5647]
+  * Add `./configure --enable-static` to compile the opam binary statically
+    on Linux
+* Fix `opam env` containing carriage return on Cygwin
+  [#5715 @dra27 @rjbou @kit-ty-kate - fix #5684]
+  * Remove stray comments from pwsh and cmd env
+* Fix debug logs showing up regardless of verbosity on
+  macOS 12.7.1 / 13.6.3 / 14.2 and FreeBSD [#5769 @kit-ty-kate]
+  * Upgrade to, and require mccs >= 1.1+17
+* Fix `opam tree --dev` [#5687 @rjbou - fix #5675]
+* Fix `opam tree --no-switch`. Instead of emptying the current switch from its
+  installed packages, it load a fresh virtual switch [#5687 @rjbou - fix #5675]
+* Display a more precise message when Ctrl-C'ing during an opam switch creation
+  ("Switch left partially installed") [#5713 @rjbou - fix #5710]
+* Improve and fix the release scripts (already used for 2.2.0~alpha3)
+  * Workaround incorrect `NGROUPS_MAX` in `<limits.h>` in musl for release
+    builds [#5383 @dra27]
+  * Fix check for adding `-lsha_stubs` only on `master` on OpenBSD
+    [#5733 @punchagan]
+* Improve the documentation [#5775 lukstafi]
+* Improve and extend the tests [#5687 #5742 @rjbou]
+* Improve the test infrastructure [#5723 @dra27]
+* API changes:
+  * `OpamCoreConfig`: add `git_location` field [#5718 @rjbou ]
+  * `OpamStd.Env.cyg_env`: add git location argument and labels
+    `cygbin` and `git_location` [#5718 @rjbou]
+  * `OpamSystem.apply_cygpath`: runs `cygpath` over the argument
+    [#5723 @dra27 - function itself added in #3348]
+  * `OpamFile.Config`: add git-location field and its functions
+    [#5718 @rjbou]
+  * `OpamClient`: on `init` and `reinit` add git lookup in windows
+    checks [#5718 @rjbou]
+  * `OpamClient.init`: add option `git-location` argument for git 
+    binary location configuration  [#5718 @rjbou]
+  * `OpamTreeCommand.run`: remove optional argument `no_switch`
+    [@rjbou #5687]
+
 2.2.0~alpha3:
 * Add `x-env-path-rewrite` extensions field to specify the rewriting rules for
   environment variables defined in `setenv` and `build-env`, useful for
