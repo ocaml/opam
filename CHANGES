@@ -4,13 +4,13 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
 2.2.0~beta1:
-* (*) Check and advertise to use Git for Windows [#5718 @rjbou - fix #5617]
-  * (+) Add the `--git-location` and `--no-git-location` arguments
-  * (+) Add a new `git-location` option on Windows
-* (*) When compiling opam on Windows with MinGW, the resulting opam binary now
+* Check and advertise to use Git for Windows [#5718 @rjbou - fix #5617]
+  * (+) Add the `--git-location` and `--no-git-location` cli arguments
+  * (+) Add a new `git-location` modifiable opam option on Windows
+* When compiling opam on Windows with MinGW, the resulting opam binary now
   contains libstdc++ instead of requiring the DLL to be distributed alongside
   it or present in the environment [#5680 @kit-ty-kate - fixes #5647]
-  * (*) Add ./configure --enable-static to compile the opam binary statically
+  * Add `./configure --enable-static` to compile the opam binary statically
     on Linux
 * Fix `opam env` containing carriage return on Cygwin
   [#5715 @dra27 @rjbou @kit-ty-kate - fix #5684]
@@ -32,8 +32,19 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * Improve and extend the tests [#5687 #5742 @rjbou]
 * Improve the test infrastructure [#5723 @dra27]
 * API changes:
+  * `OpamCoreConfig`: add `git_location` field [#5718 @rjbou ]
+  * `OpamStd.Env.cyg_env`: add git location argument and labels
+    `cygbin` and `git_location` [#5718 @rjbou]
   * `OpamSystem.apply_cygpath`: runs `cygpath` over the argument
     [#5723 @dra27 - function itself added in #3348]
+  * `OpamFile.Config`: add git-location field and its functions
+    [#5718 @rjbou]
+  * `OpamClient`: on `init` and `reinit` add git lookup in windows
+    checks [#5718 @rjbou]
+  * `OpamClient.init`: add option `git-location` argument for git 
+    binary location configuration  [#5718 @rjbou]
+  * `OpamTreeCommand.run`: remove optional argument `no_switch`
+    [@rjbou #5687]
 
 2.2.0~alpha3:
 * Add `x-env-path-rewrite` extensions field to specify the rewriting rules for
