@@ -3,10 +3,10 @@ name: Test scripts
 on:
   pull_request:
     paths:
-    - 'shell/install.sh'
-    - '.github/workflows/scripts.yml'
-    - '.github/scripts/scripts/hygiene.sh'
-    - '.github/scripts/common/hygiene-preamble.sh'
+      - 'shell/install.sh'
+      - '.github/workflows/scripts.yml'
+      - '.github/scripts/scripts/hygiene.sh'
+      - '.github/scripts/common/hygiene-preamble.sh'
 
 defaults:
   run:
