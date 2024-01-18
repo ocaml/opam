@@ -155,8 +155,8 @@ let end_job ~oc ~workflow ~job f = f job ~oc ~workflow
 let (++) = (@@)
 
 type condition =
-| And of condition * condition
-| Or of condition * condition
+| And of condition list
+| Or of condition list
 | Predicate of bool * variable
 and variable =
 | Runner of os_only platform
@@ -165,16 +165,25 @@ and variable =
 | Contains of string * string
 | Compare of string * string
 
+let all_predicates =
+  List.for_all (function Predicate(_, _) -> true | _ -> false)
+
 let emit_condition ~oc ~indent =
   let indent = String.make indent ' ' in
   let rec to_yaml condition =
     match condition with
-    | And ((Predicate(_, _) as l), (Predicate(_, _) as r)) -> recurse l ^ " && " ^ recurse r
-    | Or ((Predicate(_, _) as l), (Predicate(_, _) as r)) -> recurse l ^ " || " ^ recurse r
+    | And predicates when all_predicates predicates ->
+        String.concat " && " (List.map recurse predicates)
+    | Or predicates when all_predicates predicates ->
+        String.concat " || " (List.map recurse predicates)
     | cond -> recurse cond
   and recurse = function
-    | And (l, r) -> Printf.sprintf "((%s) && (%s))" (recurse l) (recurse r)
-    | Or (l, r) -> Printf.sprintf "((%s) || (%s))" (recurse l) (recurse r)
+    | And tests ->
+        String.concat " && " (List.map recurse tests)
+        |> Printf.sprintf "(%s)"
+    | Or tests ->
+        String.concat " || " (List.map recurse tests)
+        |> Printf.sprintf "(%s)"
     | Predicate (op, EndsWith(variable, constant)) ->
         let op = if op then "" else " == false" in
         Printf.sprintf "endsWith(%s, '%s')%s" variable constant op

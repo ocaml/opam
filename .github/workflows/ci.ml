@@ -216,7 +216,7 @@ let build_cache ?cond name =
     if cache.always_build then
       cond
     else
-      Option.map_default (fun cond -> Some (And (cond, miss))) (Some miss) cond
+      Option.map_default (fun cond -> Some (And [cond; miss])) (Some miss) cond
   in
   run ?cond ?shell:cache.build_shell (Printf.sprintf "%s %s%s" (if cache.always_build then "Unpack" else "Create") cache.name (if cache.always_build then "" else " cache")) cache.build)
 
@@ -234,7 +234,7 @@ let install_sys_packages packages ~descr ?cond platforms =
       let not_windows = Predicate(false, Runner Windows) in
       let cond =
         if List.mem Windows platforms then
-          Option.map_default (fun cond -> Some (And (not_windows, cond))) (Some not_windows) cond
+          Option.map_default (fun cond -> Some (And [not_windows; cond])) (Some not_windows) cond
         else
           cond
       in
@@ -467,7 +467,12 @@ let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
          "  echo \"AD ${changed_file}.\"";
          "done";
        ]
-    ++ run "Hygiene" ~cond:(Or(Predicate(true, Contains("steps.files.outputs.modified", "configure.ac")), Predicate(true, Contains("steps.files.outputs.all", "src_ext")))) ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}"); ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}")] ["bash -exu .github/scripts/main/hygiene.sh"]
+    ++ run "Hygiene" ~cond:(Or[Predicate(true, Contains("steps.files.outputs.modified", "configure.ac"));
+                               Predicate(true, Contains("steps.files.outputs.all", "src_ext"));
+                               Predicate(true, Contains("steps.files.outputs.all", ".github/workflows"))])
+                     ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}");
+                           ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}")]
+                     ["bash -exu .github/scripts/main/hygiene.sh"]
     ++ end_job f
 
 let main oc : unit =
