@@ -69,6 +69,7 @@ users)
 ## Build
 
 ## Infrastructure
+  * Fix depexts CI workflow and ensure all workflows run on master push [#5788 @dra27]
 
 ## Release scripts
 
