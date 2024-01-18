@@ -7,6 +7,10 @@ on:
       - '.github/workflows/scripts.yml'
       - '.github/scripts/scripts/hygiene.sh'
       - '.github/scripts/common/hygiene-preamble.sh'
+  push:
+    branches:
+      - 'master'
+      - '2.**'
 
 defaults:
   run:

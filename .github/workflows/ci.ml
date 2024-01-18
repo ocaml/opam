@@ -26,16 +26,6 @@ let workflow ~oc ~env name f =
 {|name: %s
 
 on:
-  push:
-    paths:
-      - 'src/**'
-      - '!src/tools/**'
-      - 'src_ext/**'
-      - 'dune'
-      - 'dune-project'
-      - '*.opam'
-      - 'Makefile*'
-      - 'configure*'
   pull_request:
     paths:
       - 'src/**'
@@ -51,6 +41,10 @@ on:
       - 'tests/**'
       - '!tests/bench/**'
       - 'shell/'
+  push:
+    branches:
+      - 'master'
+      - '2.**'
 |} name;
   if env <> [] then begin
     output_char oc '\n';
