@@ -36,24 +36,21 @@ windows_build() {
   local port=$1
   local image=$2
   local arch=$3
-  local make=make
 
-  # TODO: detect if the image is already running
-#  qemu-img convert -O raw "./${image}.qcow2" "./${image}.raw"
-#  "qemu-system-${arch}" -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}"
-  "qemu-system-${arch}" -drive "file=./${image}.qcow2" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" &
+  if ! ${SSH} -p "${port}" opam@localhost dir; then
+    qemu-img convert -O raw "./${image}.qcow2" "./${image}.raw"
+    "qemu-system-${arch}" -M q35 -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" &
+    sleep 120
+  fi
 
-  # TODO: Probably more?
-#  sleep 120
+  ${SSH} -p "${port}" opam@localhost "curl -LO https://cygwin.com/setup-x86_64.exe"
+  ${SSH} -p "${port}" opam@localhost '.\setup-x86_64.exe -q -O -s https://cygwin.mirror.uk.sargasso.net -P make,diffutils,mingw64-x86_64-gcc-g++,mingw64-i686-gcc-g++,rsync,patch,curl,unzip,git'
 
-#  ${SSH} -p "${port}" opam@localhost "curl -LO https://cygwin.com/setup-x86_64.exe"
-#  ${SSH} -p "${port}" opam@localhost '.\setup-x86_64.exe -q -O -s https://cygwin.mirror.uk.sargasso.net -P make,diffutils,mingw64-x86_64-gcc-g++,mingw64-i686-gcc-g++,rsync,patch,curl,unzip,git'
+  make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE=make REMOTE_DIR="opam-release-$TAG" 'REMOTE_SHELL=C:\Cygwin64\bin\bash.exe -l' SSH_USER=opam ULIMIT=""
 
-  make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR="opam-release-$TAG" 'REMOTE_SHELL=C:\Cygwin64\bin\bash.exe -l'
+  ${SSH} -p "${port}" opam@localhost "shutdown /s /f"
 
-#  ${SSH} -p "${port}" opam@localhost "shutdown /s /f"
-
-#  wait
+  wait
 }
 
 qemu_build() {

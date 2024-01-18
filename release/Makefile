@@ -150,12 +150,14 @@ remote: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	$(SSH) "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
 	$(SCP) "$(REMOTE):$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
+SSH_USER = root
+ULIMIT = ulimit -s 8192 &&
 qemu: $(OUTDIR)/opam-full-$(VERSION).tar.gz
-	$(SSH) -p "$(QEMU_PORT)" opam@localhost "$(REMOTE_SHELL) -c \"mkdir -p $(REMOTE_DIR)/$(OUTDIR)\""
-	$(SCP) -P "$(QEMU_PORT)" Makefile "opam@localhost:$(REMOTE_DIR)/"
-	$(SCP) -P "$(QEMU_PORT)" "$^" "opam@localhost:$(REMOTE_DIR)/$^"
-	$(SSH) -p "$(QEMU_PORT)" opam@localhost "$(REMOTE_SHELL) -c \"cd $(REMOTE_DIR) && $(REMOTE_MAKE) host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)\""
-	$(SCP) -P "$(QEMU_PORT)" "opam@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
+	$(SSH) -p "$(QEMU_PORT)" $(SSH_USER)@localhost "$(REMOTE_SHELL) -c \"mkdir -p $(REMOTE_DIR)/$(OUTDIR)\""
+	$(SCP) -P "$(QEMU_PORT)" Makefile "$(SSH_USER)@localhost:$(REMOTE_DIR)/"
+	$(SCP) -P "$(QEMU_PORT)" "$^" "$(SSH_USER)@localhost:$(REMOTE_DIR)/$^"
+	$(SSH) -p "$(QEMU_PORT)" $(SSH_USER)@localhost "$(REMOTE_SHELL) -c \"cd $(REMOTE_DIR) && $(ULIMIT) $(REMOTE_MAKE) host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)\""
+	$(SCP) -P "$(QEMU_PORT)" "$(SSH_USER)@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	LOCAL_RELEASE_DIR=$(shell mktemp -d); \
