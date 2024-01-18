@@ -6,6 +6,7 @@ GIT_URL = ..
 OCAMLV = 4.14.0
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
+FLEXDLL_URL = https://github.com/ocaml/flexdll/archive/refs/tags/0.43.tar.gz
 
 HOST_OS = $(shell uname -s | tr A-Z a-z | sed 's/darwin/macos/')
 HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
@@ -93,8 +94,11 @@ build/$(HOST).env:
 	mkdir -p build/$(HOST)
 	cd build/$(HOST) && curl -OL $(OCAML_URL)
 	cd build/$(HOST) && tar xzf ocaml-$(OCAMLV).tar.gz
+	cd build/$(HOST)/ocaml-$(OCAMLV) && curl -OL $(FLEXDLL_URL)
+	cd build/$(HOST)/ocaml-$(OCAMLV) && tar xzf $(shell basename "$(FLEXDLL_URL)")
+	cd build/$(HOST)/ocaml-$(OCAMLV) && rmdir flexdll && mv flexdll-0.43 flexdll
 	cd build/$(HOST)/ocaml-$(OCAMLV) && \
-	  ./configure --prefix "$(shell pwd)/build/$(HOST)" && \
+	  ./configure --prefix "$(shell pwd)/build/$(HOST)" --host=x86_64-w64-mingw32 --with-flexdll && \
 	  $(MAKE) -j$(JOBS) && \
 	  $(MAKE) install
 	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
@@ -136,21 +140,22 @@ distclean: clean
 
 REMOTE_DIR = /tmp/opam-release
 REMOTE_MAKE = make
+REMOTE_SHELL = /bin/sh
 SSH = ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 SCP = scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 remote: $(OUTDIR)/opam-full-$(VERSION).tar.gz
-	$(SSH) "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
+	$(SSH) "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/$(OUTDIR)"
 	$(SCP) Makefile "$(REMOTE):$(REMOTE_DIR)/"
 	$(SCP) "$^" "$(REMOTE):$(REMOTE_DIR)/$^"
 	$(SSH) "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
 	$(SCP) "$(REMOTE):$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 qemu: $(OUTDIR)/opam-full-$(VERSION).tar.gz
-	$(SSH) -p "$(QEMU_PORT)" root@localhost "mkdir -p $(REMOTE_DIR)/${OUTDIR}"
-	$(SCP) -P "$(QEMU_PORT)" Makefile "root@localhost:$(REMOTE_DIR)/"
-	$(SCP) -P "$(QEMU_PORT)" "$^" "root@localhost:$(REMOTE_DIR)/$^"
-	$(SSH) -p "$(QEMU_PORT)" root@localhost 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
-	$(SCP) -P "$(QEMU_PORT)" "root@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
+	$(SSH) -p "$(QEMU_PORT)" opam@localhost "$(REMOTE_SHELL) -c \"mkdir -p $(REMOTE_DIR)/$(OUTDIR)\""
+	$(SCP) -P "$(QEMU_PORT)" Makefile "opam@localhost:$(REMOTE_DIR)/"
+	$(SCP) -P "$(QEMU_PORT)" "$^" "opam@localhost:$(REMOTE_DIR)/$^"
+	$(SSH) -p "$(QEMU_PORT)" opam@localhost "$(REMOTE_SHELL) -c \"cd $(REMOTE_DIR) && $(REMOTE_MAKE) host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)\""
+	$(SCP) -P "$(QEMU_PORT)" "opam@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	LOCAL_RELEASE_DIR=$(shell mktemp -d); \

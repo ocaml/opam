@@ -29,13 +29,14 @@ CWD=$(pwd)
 JOBS=$(sysctl -n hw.ncpu)
 SSH="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
-#OUTDIR="out/$TAG"
-#mkdir -p "$OUTDIR"
+OUTDIR="out/$TAG"
+mkdir -p "$OUTDIR"
 
 windows_build() {
   local port=$1
   local image=$2
   local arch=$3
+  local make=make
 
   # TODO: detect if the image is already running
 #  qemu-img convert -O raw "./${image}.qcow2" "./${image}.raw"
@@ -43,16 +44,16 @@ windows_build() {
   "qemu-system-${arch}" -drive "file=./${image}.qcow2" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" &
 
   # TODO: Probably more?
-  sleep 120
+#  sleep 120
 
 #  ${SSH} -p "${port}" opam@localhost "curl -LO https://cygwin.com/setup-x86_64.exe"
 #  ${SSH} -p "${port}" opam@localhost '.\setup-x86_64.exe -q -O -s https://cygwin.mirror.uk.sargasso.net -P make,diffutils,mingw64-x86_64-gcc-g++,mingw64-i686-gcc-g++,rsync,patch,curl,unzip,git'
 
-#  make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR="opam-release-$TAG"
+  make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR="opam-release-$TAG" 'REMOTE_SHELL=C:\Cygwin64\bin\bash.exe -l'
 
-  ${SSH} -p "${port}" opam@localhost "shutdown /s /f"
+#  ${SSH} -p "${port}" opam@localhost "shutdown /s /f"
 
-  wait
+#  wait
 }
 
 qemu_build() {
@@ -64,7 +65,7 @@ qemu_build() {
 
   if ! ${SSH} -p "${port}" root@localhost true; then
       qemu-img convert -O raw "./qemu-base-images/${image}.qcow2" "./qemu-base-images/${image}.raw"
-      "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 2G -smp "${JOBS}" &
+      "qemu-system-${arch}" -M q35 -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 2G -smp "${JOBS}" &
       sleep 60
   fi
   ${SSH} -p "${port}" root@localhost "${install}"
@@ -72,7 +73,7 @@ qemu_build() {
   ${SSH} -p "${port}" root@localhost "shutdown -p now"
 }
 
-#make JOBS="${JOBS}" TAG="$TAG" "${OUTDIR}/opam-full-$TAG.tar.gz"
+make JOBS="${JOBS}" TAG="$TAG" "${OUTDIR}/opam-full-$TAG.tar.gz"
 #make JOBS="${JOBS}" TAG="$TAG" x86_64-linux
 #make JOBS="${JOBS}" TAG="$TAG" i686-linux
 #make JOBS="${JOBS}" TAG="$TAG" armhf-linux
