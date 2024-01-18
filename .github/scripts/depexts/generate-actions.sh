@@ -21,6 +21,8 @@ EOF
 mainlibs="m4 git rsync patch tar unzip bzip2 make wget"
 ocaml="ocaml ocaml-compiler-libs"
 
+OCAML_CONSTRAINT=''
+
 case "$target" in
   alpine)
     cat >$dir/Dockerfile << EOF
@@ -37,6 +39,8 @@ RUN pacman -Syu --noconfirm $mainlibs $ocaml gcc diffutils
 EOF
     ;;
  centos)
+   # CentOS 7 doesn't support OCaml 5 (GCC is too old)
+   OCAML_CONSTRAINT=' & < "5.0"'
     cat >$dir/Dockerfile << EOF
 FROM centos:7
 RUN yum install -y $mainlibs $ocaml
@@ -97,6 +101,8 @@ EOF
     ;;
 esac
 
+OCAML_INVARIANT="\"ocaml\" {>= \"4.09.0\"$OCAML_CONSTRAINT}"
+
 # Copy 2.1 opam binary from cache
 cp binary/opam $dir/opam
 
@@ -120,10 +126,10 @@ set -eux
 
 git config --global --add safe.directory /github/workspace
 # For systems that don't have an up to date compiler, to avoid ocaml-secondary
-echo 'default-invariant: [ "ocaml" {>= "4.09.0"} ]' > /opam/opamrc
+echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
 opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
 echo 'archive-mirrors: "https://opam.ocaml.org/cache"' >> \$OPAMROOT/config
-opam switch create this-opam ocaml
+opam switch create this-opam --formula='$OCAML_INVARIANT'
 
 # Workdir is /github/workpaces
 cd /github/workspace
