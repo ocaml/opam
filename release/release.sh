@@ -42,6 +42,9 @@ windows_build() {
     sleep 120
   fi
 
+  # Disable Windows Defender before anything else (makes the build process 4x faster)
+  ${SSH} -p "${port}" opam@localhost 'powershell -c "Set-MpPreference -DisableRealtimeMonitoring $false"'
+
   ${SSH} -p "${port}" opam@localhost "curl -LO https://cygwin.com/setup-x86_64.exe"
   ${SSH} -p "${port}" opam@localhost '.\setup-x86_64.exe -q -O -s https://cygwin.mirror.uk.sargasso.net -P make,diffutils,mingw64-x86_64-gcc-g++,mingw64-i686-gcc-g++,rsync,patch,curl,unzip,git,binutils'
 
