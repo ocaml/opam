@@ -61,7 +61,7 @@ qemu_build() {
 
   if ! ${SSH} -p "${port}" root@localhost true; then
       qemu-img convert -O raw "./qemu-base-images/${image}.qcow2" "./qemu-base-images/${image}.raw"
-      "qemu-system-${arch}" -M q35 -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 2G -smp "${JOBS}" &
+      "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 2G -smp "${JOBS}" &
       sleep 60
   fi
   ${SSH} -p "${port}" root@localhost "${install}"
