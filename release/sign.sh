@@ -27,6 +27,6 @@ cd "$DIR"
 OUTDIR="out/$TAG"
 cd "${OUTDIR}"
 
-for f in opam-$TAG-*; do
+for f in opam-$TAG-* opam-full-$TAG.tar.gz; do
     sign "$f"
 done
