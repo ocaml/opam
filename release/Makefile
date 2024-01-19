@@ -8,7 +8,7 @@ OCAMLV = 4.14.0
 OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
 FLEXDLL_URL = https://github.com/ocaml/flexdll/archive/refs/tags/0.43.tar.gz
 
-HOST_OS = $(shell uname -s | tr A-Z a-z | sed 's/darwin/macos/')
+HOST_OS = $(shell uname -s | tr A-Z a-z | sed -e 's/_.*//' -e 's/darwin/macos/')
 HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
 OUTDIR = out/$(TAG)
 
@@ -70,6 +70,13 @@ CLINKING_macos = \
 
 CLINKING_openbsd = $(CLINKING_macos)
 CLINKING_freebsd = $(CLINKING_macos)
+
+CLINKING_cygwin = \
+-lunix -lmccs_stubs -lmccs_glpk_stubs $(SHA_LINK) \
+-lopam_stubs_win32_stubs \
+-l:libstdc++.a -l:libpthread.a \
+-Wl,-static \
+-ladvapi32 -lgdi32 -luser32 -lshell32
 
 LINKING = (-noautolink $(patsubst %,-cclib %,$(CLINKING_$(1))))
 
