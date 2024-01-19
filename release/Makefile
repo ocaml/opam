@@ -88,6 +88,7 @@ EXPORTS_freebsd = \
 CPATH=/usr/local/include: \
 LIBRARY_PATH=/usr/local/lib: \
 
+EXTRA_CONFIGURE_ARGS_windows = --host=x86_64-w64-mingw32 --with-flexdll
 
 %: opam-$(VERSION)-%
 
@@ -105,7 +106,7 @@ build/$(HOST).env:
 	cd build/$(HOST)/ocaml-$(OCAMLV) && tar xzf $(shell basename "$(FLEXDLL_URL)")
 	cd build/$(HOST)/ocaml-$(OCAMLV) && rmdir flexdll && mv flexdll-0.43 flexdll
 	cd build/$(HOST)/ocaml-$(OCAMLV) && \
-	  ./configure --prefix "$(shell pwd)/build/$(HOST)" --host=x86_64-w64-mingw32 --with-flexdll && \
+	  ./configure --prefix "$(shell pwd)/build/$(HOST)" $(EXTRA_CONFIGURE_ARGS_$(HOST_OS)) && \
 	  $(MAKE) -j$(JOBS) && \
 	  $(MAKE) install
 	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
