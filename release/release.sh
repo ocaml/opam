@@ -43,7 +43,7 @@ windows_build() {
   fi
 
   ${SSH} -p "${port}" opam@localhost "curl -LO https://cygwin.com/setup-x86_64.exe"
-  ${SSH} -p "${port}" opam@localhost '.\setup-x86_64.exe -q -O -s https://cygwin.mirror.uk.sargasso.net -P make,diffutils,mingw64-x86_64-gcc-g++,mingw64-i686-gcc-g++,rsync,patch,curl,unzip,git'
+  ${SSH} -p "${port}" opam@localhost '.\setup-x86_64.exe -q -O -s https://cygwin.mirror.uk.sargasso.net -P make,diffutils,mingw64-x86_64-gcc-g++,mingw64-i686-gcc-g++,rsync,patch,curl,unzip,git,binutils'
 
   make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE=make REMOTE_DIR="opam-release-$TAG" 'REMOTE_SHELL=C:\Cygwin64\bin\bash.exe -l' SSH_USER=opam ULIMIT=""
 
