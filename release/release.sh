@@ -35,11 +35,10 @@ mkdir -p "$OUTDIR"
 windows_build() {
   local port=$1
   local image=$2
-  local arch=$3
 
-  if ! ${SSH} -p "${port}" opam@localhost dir; then
+  if ! ${SSH} -p "${port}" opam@localhost cd; then
     qemu-img convert -O raw "./${image}.qcow2" "./${image}.raw"
-    "qemu-system-${arch}" -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" &
+    "qemu-system-x86_64" -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" &
     sleep 120
   fi
 
@@ -71,16 +70,16 @@ qemu_build() {
 }
 
 make JOBS="${JOBS}" TAG="$TAG" "${OUTDIR}/opam-full-$TAG.tar.gz"
-#make JOBS="${JOBS}" TAG="$TAG" x86_64-linux
-#make JOBS="${JOBS}" TAG="$TAG" i686-linux
-#make JOBS="${JOBS}" TAG="$TAG" armhf-linux
-#make JOBS="${JOBS}" TAG="$TAG" arm64-linux
-#make JOBS="${JOBS}" TAG="$TAG" ppc64le-linux
-#make JOBS="${JOBS}" TAG="$TAG" s390x-linux
-#[ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
-#[ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
-#[ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
-#[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.4-amd64 "pkg_add gmake curl bzip2" gmake x86_64 &
-#[ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.2-RELEASE-amd64 "pkg install -y gmake curl bzip2" gmake x86_64 &
-#wait
-windows_build 9997 Windows-10-x86_64 x86_64
+make JOBS="${JOBS}" TAG="$TAG" x86_64-linux
+make JOBS="${JOBS}" TAG="$TAG" i686-linux
+make JOBS="${JOBS}" TAG="$TAG" armhf-linux
+make JOBS="${JOBS}" TAG="$TAG" arm64-linux
+make JOBS="${JOBS}" TAG="$TAG" ppc64le-linux
+make JOBS="${JOBS}" TAG="$TAG" s390x-linux
+[ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+[ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+[ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
+[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.4-amd64 "pkg_add gmake curl bzip2" gmake x86_64 &
+[ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.2-RELEASE-amd64 "pkg install -y gmake curl bzip2" gmake x86_64 &
+[ -f "${OUTDIR}/opam-$TAG-x86_64-windows" ] || windows_build 9997 Windows-10-x86_64 &
+wait
