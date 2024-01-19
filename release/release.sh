@@ -39,7 +39,7 @@ windows_build() {
 
   if ! ${SSH} -p "${port}" opam@localhost dir; then
     qemu-img convert -O raw "./${image}.qcow2" "./${image}.raw"
-    "qemu-system-${arch}" -M q35 -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" &
+    "qemu-system-${arch}" -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" &
     sleep 120
   fi
 
