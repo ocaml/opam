@@ -107,7 +107,10 @@ build/$(HOST).env:
 	cd build/$(HOST)/ocaml-$(OCAMLV) && tar xzf $(shell basename "$(FLEXDLL_URL)")
 	cd build/$(HOST)/ocaml-$(OCAMLV) && rmdir flexdll && mv "flexdll-$(FLEXDLLV)" flexdll
 	cd build/$(HOST)/ocaml-$(OCAMLV) && \
-	  ./configure --prefix "$(shell pwd)/build/$(HOST)" $(EXTRA_CONFIGURE_ARGS_$(HOST_OS)) && \
+	  ./configure --prefix "$(shell pwd)/build/$(HOST)" \
+	    --disable-debug-runtime --disable-debugger --disable-instrumented-runtime \
+	    --disable-ocamldoc --disable-stdlib-manpages --disable-ocamltest \
+	    $(EXTRA_CONFIGURE_ARGS_$(HOST_OS)) && \
 	  $(MAKE) -j$(JOBS) && \
 	  $(MAKE) install
 	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
