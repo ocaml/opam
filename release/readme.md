@@ -27,7 +27,7 @@
   * no advertasing
   * no cortana
 * Open Task Scheduler, go to "Task Scheduler Library -> Microsoft -> Windows -> WindowsUpdate", left click "Scheduled Start" and click "disable"
-* Open services.msc and disable the Windows Update service
+* Open services.msc, go to the Windows Update service, right click to Properties and set "Startup type" to "Disabled", as well as click on Stop. Then click apply and OK.
 * Setup OpenSSH Server by following https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=gui
 * Open cmd.exe as administrator and run "notepad C:/ProgramData/ssh/sshd_config"
   * Uncomment and set:
@@ -78,7 +78,7 @@
 
 ## Device requirements
 * Mac M1
-* ~100GB of disk free
+* >=70GB of disk space free
 * installed: git, gpg, qemu>=8.1.0, docker>=24.0.0
 * opam repo with the tag fetched
 * Have the secret key available
