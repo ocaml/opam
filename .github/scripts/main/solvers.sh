@@ -17,7 +17,7 @@ case "$SOLVER" in
     if [[ $RUNNER_OS = 'macOS' ]]; then
       # brew may require extra flags to override the system-installed python,
       # so we assume the presence of python3 on the macOS runners.
-      opam option --global 'depext-bypass=["python@3"]'
+      opam option --global 'depext-bypass=["python@3.9"]'
     fi
     ;;
   0install)
