@@ -68,6 +68,7 @@ users)
 ## VCS
 
 ## Build
+  * Do not check for cppo in the configure script (not used directly anymore since #5498) [#5794 @kit-ty-kate]
 
 ## Infrastructure
 

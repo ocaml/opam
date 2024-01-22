@@ -677,7 +677,6 @@ LN_S
 DUNE_SECONDARY
 BUNZIP2
 PATCH
-CPPO
 DUNE
 FETCH
 OCAMLFIND
@@ -5740,108 +5739,6 @@ else
 fi
 
 if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}cppo", so it can be a program name with args.
-set dummy ${ac_tool_prefix}cppo; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CPPO+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test -n "$CPPO"; then
-  ac_cv_prog_CPPO="$CPPO" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CPPO="${ac_tool_prefix}cppo"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-CPPO=$ac_cv_prog_CPPO
-if test -n "$CPPO"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CPPO" >&5
-printf "%s\n" "$CPPO" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_prog_CPPO"; then
-  ac_ct_CPPO=$CPPO
-  # Extract the first word of "cppo", so it can be a program name with args.
-set dummy cppo; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_ac_ct_CPPO+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if test -n "$ac_ct_CPPO"; then
-  ac_cv_prog_ac_ct_CPPO="$ac_ct_CPPO" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_CPPO="cppo"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-ac_ct_CPPO=$ac_cv_prog_ac_ct_CPPO
-if test -n "$ac_ct_CPPO"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CPPO" >&5
-printf "%s\n" "$ac_ct_CPPO" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-  if test "x$ac_ct_CPPO" = x; then
-    CPPO=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    CPPO=$ac_ct_CPPO
-  fi
-else
-  CPPO="$ac_cv_prog_CPPO"
-fi
-
-if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}patch", so it can be a program name with args.
 set dummy ${ac_tool_prefix}patch; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
@@ -7374,7 +7271,6 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_uutf" = "xno" ||
        test "x$OCAML_PKG_sha" = "xno" ||
        test "x$OCAML_PKG_swhid_core" = "xno" ||
-       test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}
 then :
 
