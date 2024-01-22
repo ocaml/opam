@@ -1,41 +1,25 @@
 name: Builds, tests & co
 
 on:
-  push:
-    paths:
-    - 'src/**'
-    - '!src/tools/**'
-    - 'src_ext/**'
-    - 'dune'
-    - 'dune-project'
-    - '*.opam'
-    - 'Makefile*'
-    - 'configure*'
   pull_request:
     paths:
-    - 'src/**'
-    - '!src/tools/**'
-    - 'src_ext/**'
-    - 'dune'
-    - 'dune-project'
-    - '*.opam'
-    - 'Makefile*'
-    - 'configure*'
-    - '.github/scripts/**'
-    - '.github/workflows/main.yml'
-    - 'tests/**'
-    - '!tests/bench/**'
-    - 'shell/'
-#    paths-ignore:
-#    - 'release/**'
-#    - 'shell/**'
-#    - 'admin-scripts/**'
-#    - 'doc/**'
-#    - 'CHANGES'
-#    - 'LICENSE'
-#    - 'CONTRIBUTING.md'
-#    - 'master_changes.md'
-#    - 'README.md'
+      - 'src/**'
+      - '!src/tools/**'
+      - 'src_ext/**'
+      - 'dune'
+      - 'dune-project'
+      - '*.opam'
+      - 'Makefile*'
+      - 'configure*'
+      - '.github/scripts/**'
+      - '.github/workflows/main.yml'
+      - 'tests/**'
+      - '!tests/bench/**'
+      - 'shell/'
+  push:
+    branches:
+      - 'master'
+      - '2.**'
 
 env:
   OPAMBSVERSION: 2.1.0
@@ -616,5 +600,5 @@ jobs:
       env:
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
         PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
-      if: contains(steps.files.outputs.modified, 'configure.ac') || contains(steps.files.outputs.all, 'src_ext')
+      if: contains(steps.files.outputs.modified, 'configure.ac') || contains(steps.files.outputs.all, 'src_ext') || contains(steps.files.outputs.all, '.github/workflows')
       run: bash -exu .github/scripts/main/hygiene.sh

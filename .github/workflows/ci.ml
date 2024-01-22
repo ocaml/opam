@@ -26,41 +26,25 @@ let workflow ~oc ~env name f =
 {|name: %s
 
 on:
-  push:
-    paths:
-    - 'src/**'
-    - '!src/tools/**'
-    - 'src_ext/**'
-    - 'dune'
-    - 'dune-project'
-    - '*.opam'
-    - 'Makefile*'
-    - 'configure*'
   pull_request:
     paths:
-    - 'src/**'
-    - '!src/tools/**'
-    - 'src_ext/**'
-    - 'dune'
-    - 'dune-project'
-    - '*.opam'
-    - 'Makefile*'
-    - 'configure*'
-    - '.github/scripts/**'
-    - '.github/workflows/main.yml'
-    - 'tests/**'
-    - '!tests/bench/**'
-    - 'shell/'
-#    paths-ignore:
-#    - 'release/**'
-#    - 'shell/**'
-#    - 'admin-scripts/**'
-#    - 'doc/**'
-#    - 'CHANGES'
-#    - 'LICENSE'
-#    - 'CONTRIBUTING.md'
-#    - 'master_changes.md'
-#    - 'README.md'
+      - 'src/**'
+      - '!src/tools/**'
+      - 'src_ext/**'
+      - 'dune'
+      - 'dune-project'
+      - '*.opam'
+      - 'Makefile*'
+      - 'configure*'
+      - '.github/scripts/**'
+      - '.github/workflows/main.yml'
+      - 'tests/**'
+      - '!tests/bench/**'
+      - 'shell/'
+  push:
+    branches:
+      - 'master'
+      - '2.**'
 |} name;
   if env <> [] then begin
     output_char oc '\n';
@@ -216,7 +200,7 @@ let build_cache ?cond name =
     if cache.always_build then
       cond
     else
-      Option.map_default (fun cond -> Some (And (cond, miss))) (Some miss) cond
+      Option.map_default (fun cond -> Some (And [cond; miss])) (Some miss) cond
   in
   run ?cond ?shell:cache.build_shell (Printf.sprintf "%s %s%s" (if cache.always_build then "Unpack" else "Create") cache.name (if cache.always_build then "" else " cache")) cache.build)
 
@@ -234,7 +218,7 @@ let install_sys_packages packages ~descr ?cond platforms =
       let not_windows = Predicate(false, Runner Windows) in
       let cond =
         if List.mem Windows platforms then
-          Option.map_default (fun cond -> Some (And (not_windows, cond))) (Some not_windows) cond
+          Option.map_default (fun cond -> Some (And [not_windows; cond])) (Some not_windows) cond
         else
           cond
       in
@@ -467,8 +451,24 @@ let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
          "  echo \"AD ${changed_file}.\"";
          "done";
        ]
-    ++ run "Hygiene" ~cond:(Or(Predicate(true, Contains("steps.files.outputs.modified", "configure.ac")), Predicate(true, Contains("steps.files.outputs.all", "src_ext")))) ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}"); ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}")] ["bash -exu .github/scripts/main/hygiene.sh"]
+    ++ run "Hygiene" ~cond:(Or[Predicate(true, Contains("steps.files.outputs.modified", "configure.ac"));
+                               Predicate(true, Contains("steps.files.outputs.all", "src_ext"));
+                               Predicate(true, Contains("steps.files.outputs.all", ".github/workflows"))])
+                     ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}");
+                           ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}")]
+                     ["bash -exu .github/scripts/main/hygiene.sh"]
     ++ end_job f
+
+let empty_job ~oc ~workflow f
+(*    ~analyse_job:_ *)
+(*    ~build_linux_job:_ *)
+(*    ~build_windows_job:_ *)
+(*    ~build_macOS_job:_ *)
+(*    ~uploadbin_label_job:_ *)
+  =
+  job ~oc ~workflow ~runs_on:(Runner [Linux]) "NO-OP"
+  ++ run "no-op" ["echo something"]
+  ++ end_job f
 
 let main oc : unit =
   let env = [
@@ -493,20 +493,20 @@ let main oc : unit =
     ("opam-bs-cache", "${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}");
   ] in
   workflow ~oc ~env "Builds, tests & co"
-    ++ analyse_job ~keys ~platforms:[Linux] (fun analyse_job ->
-       cygwin_job ~analyse_job (fun cygwin_job ->
-       main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux (4, 08) (fun build_linux_job ->
-       main_build_job ~analyse_job ~cygwin_job Windows latest_ocaml (fun build_windows_job ->
-       main_build_job ~analyse_job ~cygwin_job MacOS latest_ocaml (fun build_macOS_job ->
-       main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux (fun _ ->
-       main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
-       cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam cold" Linux (fun _ ->
-       solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile solver backends" Linux (fun _ ->
-       solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
-       upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux (fun _ ->
-       upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS (fun _ ->
-       hygiene_job ~analyse_job (Specific (Linux, "22.04")) (fun _ ->
-       end_workflow)))))))))))))
+  ++ analyse_job ~keys ~platforms:[Linux]
+  @@ fun analyse_job -> cygwin_job ~analyse_job
+  @@ fun cygwin_job -> main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux (4, 08)
+  @@ fun build_linux_job -> main_build_job ~analyse_job ~cygwin_job Windows latest_ocaml
+  @@ fun build_windows_job -> main_build_job ~analyse_job ~cygwin_job MacOS latest_ocaml
+  @@ fun build_macOS_job -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux
+  @@ fun _ -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
+  @@ fun _ -> cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam cold" Linux
+  @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile solver backends" Linux
+  @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
+  @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux
+  @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
+  @@ fun _ -> hygiene_job ~analyse_job (Specific (Linux, "22.04"))
+  @@ fun _ -> end_workflow
 
 let () =
   let oc = open_out "main.yml" in
