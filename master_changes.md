@@ -11,6 +11,7 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
+  * Bump the version number after the release of 2.2.0~beta1 [#5785 @kit-ty-kate]
 
 ## Global CLI
 
@@ -95,17 +96,12 @@ users)
 
 ## Reftests
 ### Tests
-  * Add some additional test to tree, for `--dev` && `--no-switch` [#5687 @rjbou]
-  * switch-set: add test that checks unsetting `OPAMSWITCH` when it was set by `opam env --set-switch` on an already set `OPAMSWITCH` variable in environment [#5742 rjbou]
 
 ### Engine
-  * Set `SHELL` to `/bin/sh` in Windows to ensure `opam env` commands are consistent [#5723 @dra27]
-  * Substitution for `BASEDIR` and `OPAMTMP` now recognise the directory with either forward-slashes, back-slashes, or converted to Cygwin notation (i.e. C:\cygwin64\tmp\..., C:/cygwin64/tmp/..., or /tmp/...) [#5723 @dra27]
 
 ## Github Actions
 
 ## Doc
-  * Improve the installation instructions on FreeBSD [#5775 lukstafi]
 
 ## Security fixes
 
@@ -121,4 +117,3 @@ users)
 ## opam-format
 
 ## opam-core
-  * `OpamSystem.apply_cygpath`: runs `cygpath` over the argument [#5723 @dra27 - function itself added in #3348]
