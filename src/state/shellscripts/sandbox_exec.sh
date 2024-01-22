@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is only used on macOS, where /bin/bash is both guaranteed to exist and
+# This script is only used on macOS, where /bin/bash is both guaranteed to exist
 # and to be for the native architecture, which is why /usr/bin/env bash is not used.
 # See https://github.com/ocaml/opam/issues/5450
 set -ue
@@ -20,10 +20,10 @@ add_mounts() {
 }
 
 if [ -z ${TMPDIR+x} ]; then
-  # Others applications obtain the per-user temporary
+  # Other applications obtain the per-user temporary
   # directory differently; the latter should be made readable/writable
   # too and getconf seems to be a robust way to get it
-  if [ -z /usr/bin/getconf ]; then
+  if command -v getconf > /dev/null ; then
     TMPDIR=$(getconf DARWIN_USER_TEMP_DIR)
     add_mounts rw "$TMPDIR"
     export TMPDIR
