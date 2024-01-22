@@ -276,10 +276,20 @@ module Cygwin = struct
     in
     OpamDownload.download_as ~overwrite ?checksum url_setupexe dst
 
+  let set_fstab_noacl =
+    let orig = "binary," in
+    let re = Re.compile (Re.str orig) in
+    fun fstab ->
+      let content = OpamFilename.read fstab in
+      let content = Re.replace_string re ~by:("noacl,"^orig) content in
+      OpamFilename.with_open_out_bin_atomic fstab
+        (fun oc -> Stdlib.output_string oc content)
+
   let install ~packages =
     let open OpamProcess.Job.Op in
     let cygwin_root = internal_cygroot () in
     let cygwin_bin = cygwin_root / "bin" in
+    let fstab = cygwin_root / "etc" // "fstab" in
     let cygcheck = cygwin_bin // cygcheckexe in
     let local_cygwin_setupexe = cygsetup () in
     if OpamFilename.exists cygcheck then
@@ -317,6 +327,7 @@ module Cygwin = struct
          (OpamFilename.to_string local_cygwin_setupexe)
          args @@> fun r ->
        OpamSystem.raise_on_process_error r;
+       set_fstab_noacl fstab;
        Done ());
     cygcheck
 

@@ -20,6 +20,7 @@ users)
 ## Init
   * Add rsync package to internal Cygwin packages list (enables local pinning and is used by the VCS backends [#5808 @dra27]
   * Recommend enabling Developer Mode on Windows [#5831 @dra27]
+  * Disable ACL in Cygwin internal install to avoid permission mismatch errors [#5796 @kit-ty-kate - fix #5781]
 
 ## Config report
 
