@@ -1487,12 +1487,9 @@ let config cli =
             if n <> 0 then [Printf.sprintf "%d (%s)" n label]
             else [] in
           print "jobs" "%d" (Lazy.force OpamStateConfig.(!r.jobs));
-          match OpamStateConfig.get_switch_opt () with
-          | None -> print "current-switch" "%s" "none set"; `Ok ()
-          | Some switch ->
-            OpamSwitchState.with_ `Lock_none ~switch gt @@ fun state ->
-            print "repositories" "%s"
-              (let repos = state.switch_repos.repositories in
+          let print_repositories name rt =
+            print name "%s"
+              (let repos = rt.repositories in
                let default, nhttp, nlocal, nvcs =
                  OpamRepositoryName.Map.fold
                    (fun _ repo (dft, nhttp, nlocal, nvcs) ->
@@ -1502,7 +1499,7 @@ let config cli =
                         then
                           OpamRepositoryName.Map.find
                             repo.repo_name
-                            state.switch_repos.repos_definitions |>
+                            rt.repos_definitions |>
                           OpamFile.Repo.stamp
                         else dft
                       in
@@ -1520,6 +1517,14 @@ let config cli =
                | Some v -> Printf.sprintf " (default repo at %s)" v
                | None -> ""
               );
+          in
+          OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+          print_repositories "all-repositories" rt;
+          match OpamStateConfig.get_switch_opt () with
+          | None -> print "current-switch" "%s" "none set"; `Ok ()
+          | Some switch ->
+            OpamSwitchState.with_ `Lock_none ~switch gt @@ fun state ->
+            print_repositories "repositories" state.switch_repos;
             print "pinned" "%s"
               (if OpamPackage.Set.is_empty state.pinned then "0" else
                let pinnings =
