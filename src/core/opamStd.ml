@@ -1093,7 +1093,6 @@ module OpamSys = struct
         Some (Accept (SH_pwsh Powershell))
       | "pwsh.exe" -> Some (Accept (SH_pwsh Powershell_pwsh))
       | "cmd.exe" -> Some (Accept SH_cmd)
-      | "env.exe" -> Some (Accept SH_sh)
       | "" -> None
       | name ->
         Option.map

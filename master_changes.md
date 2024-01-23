@@ -57,6 +57,7 @@ users)
 ## Clean
 
 ## Env
+  * Fix shell detection on Windows when opam is called via Cygwin's /usr/bin/env even though cmd/powershell is used [#5797 @kit-ty-kate]
 
 ## Opamfile
 
