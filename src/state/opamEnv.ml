@@ -1235,13 +1235,9 @@ let setup
           menu shell (OpamStd.Option.map OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell))
             default
         | `Change_file ->
-          let open OpamStd.Option.Op in
           let dot_profile =
-            (OpamConsole.read "Enter the name of the file to update:"
-             >>| (fun f ->
-                 if Filename.is_implicit f then Filename.concat (OpamStd.Sys.home ()) f
-                 else f)
-             >>| OpamFilename.of_string)
+            OpamStd.Option.map OpamFilename.of_string @@
+              OpamConsole.read "Enter the name of the file to update:"
           in
           menu shell dot_profile `Yes
       in
