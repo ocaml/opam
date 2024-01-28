@@ -154,6 +154,7 @@ let required_packages_for_cygwin =
     "patch";
     "tar";
     "unzip";
+    "rsync";
   ] |> List.map OpamSysPkg.of_string
 
 let init_scripts () = [

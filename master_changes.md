@@ -18,6 +18,7 @@ users)
 ## Plugins
 
 ## Init
+  * Add rsync package to internal Cygwin packages list (enables local pinning and is used by the VCS backends [#5808 @dra27]
 
 ## Config report
 
