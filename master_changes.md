@@ -143,3 +143,4 @@ users)
   * `OpamFile.InitConfig`: add `sys-pkg-manager-cmd` field [#5847 @rjbou]
 
 ## opam-core
+  * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
