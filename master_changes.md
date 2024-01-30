@@ -104,6 +104,7 @@ users)
 ## Github Actions
 
 ## Doc
+  * Fix a typo in the documentation of `opam lint --recursive` [#5812 @Khady]
 
 ## Security fixes
 
