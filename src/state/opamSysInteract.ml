@@ -932,7 +932,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
                  |> OpamStd.String.Set.elements);
        `AsUser "rpm", "-q"::"--whatprovides"::packages], None
   | Cygwin ->
-    (* We use setp_x86_64 to install package instead of `cygcheck` that is
+    (* We use setup_x86_64 to install package instead of `cygcheck` that is
        stored in `sys-pkg-manager-cmd` field *)
     [`AsUser (OpamFilename.to_string (Cygwin.cygsetup ())),
      [ "--root"; (OpamFilename.Dir.to_string (Cygwin.cygroot config));
