@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: OCaml Discuss Forum
+    url: https://discuss.ocaml.org/
+    about: This is the best place to start with questions about using opam.
+  - name: opam Package Repository
+    url: https://github.com/ocaml/opam-repository/issues
+    about: >-
+      Please report packaging issues there.
