@@ -1531,7 +1531,7 @@ let assume_built ?section cli =
 
 let recurse ?section cli =
   mk_flag ~cli (cli_from cli2_2) ?section ["recursive"]
-    "Allow recursive lookups of (b,*.opam) files. Cf. $(i,--subpath) also."
+    "Allow recursive lookups of $(b,*.opam) files. Cf. $(i,--subpath) also."
 
 let subpath ?section cli =
   mk_opt ~cli (cli_from cli2_2) ?section ["subpath"] "PATH"
