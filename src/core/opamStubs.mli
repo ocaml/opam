@@ -135,3 +135,9 @@ val win_create_process : string -> string -> string option -> Unix.file_descr ->
 val getConsoleWindowClass : unit -> string option
 (** Windows only. Returns the name of the class for the Console window or [None]
     if there is no console. *)
+
+val setErrorMode : int -> int
+(** Windows only. Directly wraps SetErrorMode. *)
+
+val getErrorMode : unit -> int
+(** Windows only. Directly wraps GetErrorMode. *)

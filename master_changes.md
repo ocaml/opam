@@ -96,6 +96,7 @@ users)
 ## Internal
 
 ## Internal: Windows
+  * Ensure that the system critical error dialog is disabled when opam starts [#5828 @dra27]
 
 ## Test
 
