@@ -32,16 +32,38 @@ let default_invariant =
      OpamFormula.Atom
        (`Geq, OpamPackage.Version.of_string "4.05.0"))
 
-let eval_variables = [
+let sys_ocaml_version =
   OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
-  "OCaml version present on your system independently of opam, if any";
-  OpamVariable.of_string "sys-ocaml-arch", ["sh"; "-c"; "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"],
-  "Target architecture of the OCaml compiler present on your system";
-  OpamVariable.of_string "sys-ocaml-cc", ["sh"; "-c"; "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"],
-  "Host C Compiler type of the OCaml compiler present on your system";
-  OpamVariable.of_string "sys-ocaml-libc", ["sh"; "-c"; "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"],
-  "Host C Runtime Library type of the OCaml compiler present on your system";
-]
+  "OCaml version present on your system independently of opam, if any"
+
+let sys_config_variables =
+  (* For Windows, these only return results for OCaml 4.08+ *)
+  List.map (fun (var, comment, unix, win32) ->
+      let var = OpamVariable.of_string var in
+      if Sys.win32 then var, win32, comment
+      else var, unix, comment)
+    [
+      "sys-ocaml-arch",
+      "Target architecture of the OCaml compiler present on your system",
+      ["sh"; "-c";
+       "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"],
+      ["cmd"; "/d"; "/c";
+       "for /f %f in ('ocamlc -config-var architecture 2^>nul') do @if '%f' equ 'i386' (echo i686) else if '%f' equ 'amd64' (echo x86_64) else (echo %f)"];
+      "sys-ocaml-cc",
+      "Host C Compiler type of the OCaml compiler present on your system",
+      ["sh"; "-c";
+       "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"],
+      ["cmd"; "/d"; "/c"; "ocamlc -config-var ccomp_type 2>nul"];
+      "sys-ocaml-libc",
+      "Host C Runtime Library type of the OCaml compiler present on your system",
+      ["sh"; "-c";
+       "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"],
+      ["cmd"; "/d"; "/c";
+       "for /f %f in ('ocamlc -config-var os_type 2^>nul') do @if '%f' equ 'Win32' (echo msvc) else (echo libc)"];
+    ]
+
+let eval_variables =
+  sys_ocaml_version :: sys_config_variables
 
 let os_filter os =
   FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString os)
