@@ -113,7 +113,13 @@ let load lock_kind =
   in
   let eval_variables = OpamFile.Config.eval_variables config in
   let global_variables =
-    let env = lazy (OpamEnv.get_pure () |> OpamTypesBase.env_array) in
+    let env = lazy (
+      let env = OpamEnv.get_pure () |> OpamTypesBase.env_array in
+      match OpamCoreConfig.(!r.cygbin) with
+      | Some cygbin ->
+        OpamStd.Env.cyg_env ~env ~cygbin
+          ~git_location:OpamCoreConfig.(!r.git_location)
+      | None -> env) in
     List.fold_left (fun acc (v, cmd, doc) ->
         OpamVariable.Map.update v
           (fun previous_value ->

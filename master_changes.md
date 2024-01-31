@@ -168,3 +168,4 @@ users)
 
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
+  * `OpamStd.Env.cyg_env`: takes the environment to cygify, usually `OpamStd.Env.raw_env` [#5829 @dra27]
