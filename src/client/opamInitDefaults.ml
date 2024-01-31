@@ -46,18 +46,18 @@ let sys_config_variables =
       "sys-ocaml-arch",
       "Target architecture of the OCaml compiler present on your system",
       ["sh"; "-c";
-       "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"],
+       "ocamlc -config 2>/dev/null | tr -d '\\r' | sed -n -e 's/i386/i686/;s/amd64/x86_64/;s/^architecture: //p'"],
       ["cmd"; "/d"; "/c";
        "for /f %f in ('ocamlc -config-var architecture 2^>nul') do @if '%f' equ 'i386' (echo i686) else if '%f' equ 'amd64' (echo x86_64) else (echo %f)"];
       "sys-ocaml-cc",
       "Host C Compiler type of the OCaml compiler present on your system",
       ["sh"; "-c";
-       "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"],
+       "ocamlc -config 2>/dev/null | tr -d '\\r' | sed -n -e 's/^ccomp_type: //p'"],
       ["cmd"; "/d"; "/c"; "ocamlc -config-var ccomp_type 2>nul"];
       "sys-ocaml-libc",
       "Host C Runtime Library type of the OCaml compiler present on your system",
       ["sh"; "-c";
-       "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"],
+       "ocamlc -config 2>/dev/null | tr -d '\\r' | sed -n -e 's/^os_type: Win32/msvc/p;s/^os_type: .*/libc/p'"],
       ["cmd"; "/d"; "/c";
        "for /f %f in ('ocamlc -config-var os_type 2^>nul') do @if '%f' equ 'Win32' (echo msvc) else (echo libc)"];
     ]
