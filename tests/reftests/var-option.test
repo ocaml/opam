@@ -37,6 +37,8 @@ Removed variable sys-ocaml-arch in global configuration
 Removed variable sys-ocaml-cc in global configuration
 ### opam var sys-ocaml-libc= --global
 Removed variable sys-ocaml-libc in global configuration
+### opam var sys-ocaml-system= --global
+Removed variable sys-ocaml-system in global configuration
 ### opam option wrap-build-commands=[] --global
 Set to '[]' the field wrap-build-commands in global configuration
 ### opam option wrap-install-commands=[] --global

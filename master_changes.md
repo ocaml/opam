@@ -29,6 +29,7 @@ users)
   * Properly test if "we're in interactive mode" instead of "in a tty" in fish script [#5866 @ElectreAAS]
   * Make the computation of the init default `sys-ocaml-*` eval variables on Windows faster, no more depending on Cygwin [#5829 @dra27 @rjbou]
   * Simplify computation of OCaml init default `sys-ocaml-*` eval variables on Unix [#5829 @dra27]
+  * Add a init OCaml `sys-ocaml-system` eval variable [#5829 @dra27]
 
 ## Config report
 

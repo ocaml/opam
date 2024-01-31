@@ -1284,6 +1284,11 @@ let sys_ocaml_eval_variables =
       if Sys.win32 then var, win32, comment
       else var, unix, comment)
     [
+      "sys-ocaml-system",
+      "Target system of the OCaml compiler present on your system",
+      ["sh"; "-c";
+       "ocamlc -config 2>/dev/null | tr -d '\\r' | sed -n -e 's/system: //p'"],
+      ["cmd"; "/d"; "/c"; "ocamlc -config-var system 2>nul"];
       "sys-ocaml-arch",
       "Target architecture of the OCaml compiler present on your system",
       ["sh"; "-c";
