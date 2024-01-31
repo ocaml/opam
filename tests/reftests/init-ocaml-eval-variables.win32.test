@@ -65,7 +65,7 @@ Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | grep eval-variables
-eval-variables: [sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"]
+eval-variables: [[sys-ocaml-libc ["cmd" "/d" "/c" "for /f %f in ('ocamlc -config-var os_type 2^>nul') do @if '%f' equ 'Win32' (echo msvc) else (echo libc)"] "Host C Runtime Library type of the OCaml compiler present on your system"] [sys-ocaml-cc ["cmd" "/d" "/c" "ocamlc -config-var ccomp_type 2>nul"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-arch ["cmd" "/d" "/c" "for /f %f in ('ocamlc -config-var architecture 2^>nul') do @if '%f' equ 'i386' (echo i686) else if '%f' equ 'amd64' (echo x86_64) else (echo %f)"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"]]
 ### rm "$OPAMROOT/config"
 ### :::::::::::::::::::::
 ### :III: From 2.1 root :
@@ -84,4 +84,4 @@ Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | grep eval-variables
-eval-variables: [[sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"] [sys-ocaml-arch ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-cc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-libc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"] "Host C Runtime Library type of the OCaml compiler present on your system"]]
+eval-variables: [[sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"] [sys-ocaml-arch ["cmd" "/d" "/c" "for /f %f in ('ocamlc -config-var architecture 2^>nul') do @if '%f' equ 'i386' (echo i686) else if '%f' equ 'amd64' (echo x86_64) else (echo %f)"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-cc ["cmd" "/d" "/c" "ocamlc -config-var ccomp_type 2>nul"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-libc ["cmd" "/d" "/c" "for /f %f in ('ocamlc -config-var os_type 2^>nul') do @if '%f' equ 'Win32' (echo msvc) else (echo libc)"] "Host C Runtime Library type of the OCaml compiler present on your system"]]

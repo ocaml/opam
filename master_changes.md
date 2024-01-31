@@ -78,6 +78,7 @@ users)
  * Add support for Wolfi OS, treat it like Apline family as it uses apk too [#5878 @xnox]
 
 ## Format upgrade
+  * Handle init OCaml `sys-ocaml-*` eval variables during format upgrade from 2.0 -> 2.1 -> 2.2 [#5829 @dra27]
 
 ## Sandbox
   * Mark the user temporary directory (as returned by `getconf DARWIN_USER_TEMP_DIR`) as writable when TMPDIR is not defined on macOS [#5780 @ElectreAAS]
