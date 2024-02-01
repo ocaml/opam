@@ -3818,7 +3818,7 @@ let lint cli =
        enable-as-error warning or error number $(b,N) or \
        all warnings with numbers between $(b,N) and $(b,M) inclusive.\n\
        All warnings are enabled by default, unless $(i,WARNS) starts with \
-       $(b,+), which disables all but the selected ones."
+       $(b,+) or $(b,@), which disables all but the selected ones."
       warn_selector []
   in
   let package =
