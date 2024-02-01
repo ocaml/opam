@@ -325,6 +325,12 @@ module Cygwin = struct
            [ "--packages";
              OpamStd.List.concat_map "," OpamSysPkg.to_string spkgs ]
        in
+       let args =
+         if Unix.has_symlink () then
+           "--symlink-type" :: "native" :: args
+         else
+           args
+       in
        OpamSystem.make_command
          (OpamFilename.to_string local_cygwin_setupexe)
          args @@> fun r ->
@@ -974,12 +980,19 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        "--packages";
        String.concat "," packages;
      ] @ (if Cygwin.is_internal config then
-            [ "--upgrade-also";
-              "--only-site";
-              "--site"; Cygwin.mirror;
-              "--local-package-dir";
-              OpamFilename.Dir.to_string (Cygwin.internal_cygcache ());
-            ] else [])
+            let common =
+              [ "--upgrade-also";
+                "--only-site";
+                "--site"; Cygwin.mirror;
+                "--local-package-dir";
+                OpamFilename.Dir.to_string (Cygwin.internal_cygcache ());
+              ]
+            in
+            if Unix.has_symlink () then
+              "--symlink-type" :: "native" :: common
+            else
+              common
+          else [])
     ],
     None
   | Debian ->
