@@ -299,10 +299,31 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
         | #OpamUrl.version_control -> true
         | _ -> false)
   in
-  let check_upstream =
-    check_upstream &&
+  let is_url_archive =
     not (OpamFile.OPAM.has_flag Pkgflag_Conf t) &&
     url_vcs = Some false
+  in
+  let check_upstream = check_upstream && is_url_archive in
+  let check_double compare to_str lst =
+    let double =
+      List.sort compare lst
+      |> List.fold_left (fun (last, dbl) elem ->
+          match last with
+          | Some last ->
+            if compare last elem = 0 then
+              Some elem, OpamStd.String.Map.update (to_str elem) ((+) 1) 1 dbl
+            else
+              Some elem, dbl
+          | None -> Some elem, dbl)
+        (None, OpamStd.String.Map.empty)
+      |> snd
+    in
+    if OpamStd.String.Map.is_empty double then false, None else
+      true,
+      Some (List.map (fun (elem, occ) ->
+          Printf.sprintf "%s: %d occurence%s"
+            elem occ (if occ = 1 then "" else "s"))
+          (OpamStd.String.Map.bindings double))
   in
   let warnings = [
     cond 20 `Warning
@@ -679,7 +700,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
         Printf.sprintf "Found %s variable%s, predefined one%s" var s_ nvar)
        (rem_test || rem_doc));
     cond 59 `Warning "url doesn't contain a checksum"
-      (check_upstream &&
+      (is_url_archive &&
        OpamStd.Option.map OpamFile.URL.checksum t.url = Some []);
     (let upstream_error =
        if not check_upstream then None else
@@ -875,6 +896,26 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
     cond 68 `Warning
       "Missing field 'license'"
       (t.license = []);
+    (let has_double, detail =
+       check_double OpamFilename.Base.compare OpamFilename.Base.to_string
+         (match OpamFile.OPAM.extra_files t with
+          | Some extra_files -> List.map fst extra_files
+          | None -> [])
+     in
+     cond 69 `Error
+       "Field 'extra-files' contains duplicated files"
+       ?detail
+       has_double);
+    (let has_double, detail =
+       check_double OpamHash.compare_kind OpamHash.string_of_kind
+         (match OpamFile.OPAM.url t with
+          | Some url ->
+            List.map OpamHash.kind (OpamFile.URL.checksum url)
+          | None -> [])
+     in
+     cond 70 `Error
+       "Field 'url.checksum' contains duplicated checksums"
+       ?detail has_double);
   ]
   in
   format_errors @

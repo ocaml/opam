@@ -9,8 +9,27 @@
 (*                                                                        *)
 (**************************************************************************)
 
-module Base = struct
+let is_escapable =
+  let re =
+    Re.(compile @@ seq [
+        alt [ char '/'; char '\\'];
+        str "..";
+        alt [ char '/'; char '\\']
+      ])
+  in
+  fun s -> Re.matches re s <> []
+
+module AbstractString = struct
   include OpamStd.AbstractString
+  let of_string s =
+    let path = of_string s in
+    if is_escapable path then
+      failwith ("Path must not contain '..': "^path);
+    path
+end
+
+module Base = struct
+  include AbstractString
 
   let compare = String.compare
   let equal = String.equal
@@ -27,7 +46,7 @@ let slog = OpamConsole.slog
 
 module Dir = struct
 
-  include OpamStd.AbstractString
+  include AbstractString
 
   let compare = String.compare
   let equal = String.equal
@@ -531,7 +550,7 @@ module Set = OpamStd.Set.Make(O)
 
 module SubPath = struct
 
-  include OpamStd.AbstractString
+  include AbstractString
 
   let compare = String.compare
   let equal = String.equal

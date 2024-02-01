@@ -352,10 +352,24 @@ homepage: "egapemoh"
 maintainer: "maint@tain.er"
 license: "ISC"
 bug-reports: "https://nobug"
-url { src:"https://u.rl" }
+url {
+  src:"an-archive.tgz"
+  checksum: "md5=00000000000000000000000000000000"
+}
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 37: Missing field 'dev-repo'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+bug-reports: "https://nobug"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
 ### : E39: Command 'make' called directly, use the built-in variable instead
 ### <lint.opam>
 opam-version: "2.0"
@@ -658,6 +672,7 @@ echo "extra-files: [ \"more-file-good-md5\" \"md5=$hsh\" ]" >> REPO/packages/lin
 # Return code 1 #
 ### opam lint --package lint.2
 <default>/lint.2: Passed.
+### OPAMREPOSITORYTARRING=0
 ### : W54: External dependencies should not contain spaces nor empty string
 ### <lint.opam>
 opam-version: "2.0"
@@ -798,9 +813,47 @@ license: "ISC"
 dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 url { src:"an-archive.tgz" }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 59: url doesn't contain a checksum
 ### opam lint ./lint.opam --check-upstream
 ${BASEDIR}/lint.opam: Warnings.
            warning 59: url doesn't contain a checksum
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url { src:"an-archive.tgz" }
+flags: conf
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 46: Package is flagged "conf" but has source, install or remove instructions
+# Return code 1 #
+### opam lint ./lint.opam --check-upstream
+${BASEDIR}/lint.opam: Errors.
+             error 46: Package is flagged "conf" but has source, install or remove instructions
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url { src:"git+https://a/repo" }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### opam lint ./lint.opam --check-upstream
+${BASEDIR}/lint.opam: Passed.
 ### : E60: Upstream check failed
 ### <lint.opam>
 opam-version: "2.0"
@@ -875,12 +928,36 @@ authors: "the testing team"
 homepage: "egapemoh"
 maintainer: "maint@tain.er"
 license: "ISC"
-dev-repo: "hg+https://to@li.nt"
+dev-repo: "git+file://./../to@li.nt"
 bug-reports: "https://nobug"
-url { src:"file://./my/path" }
+url {
+  src:"file://./my/url/path"
+  checksum: "md5=00000000000000000000000000000000"
+  mirrors: [
+    "file:///good/mirror"
+    "file:///wrong/../mirror"
+    "file:///another/./mirror/"
+  ]
+}
+extra-source "relative" {
+  src:"file:///my/./../extrasource/path"
+  checksum: "md5=00000000000000000000000000000000"
+}
+extra-source "notrelative" {
+  src:"file:///my/extrasource..path.patch"
+  checksum: "md5=00000000000000000000000000000000"
+}
+pin-depends: [
+  [ "pinned.1" "/my/../pinned/package" ]
+]
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
-             error 65: URLs must be absolute: "./my/path"
+             error  3: File format error in 'dev-repo' at line 8, column 0: while expecting vc-url: OpamUrl.Parse_error("Url must not contain '..': ./../to@li.nt")
+             error  3: File format error in 'pin-depends' at line 28, column 15: while expecting URL: OpamUrl.Parse_error("Url must not contain '..': /my/../pinned/package")
+             error  3: File format error in 'extra-source': missing URL
+             error  3: File format error in 'url.mirrors' at line 15, column 4: while expecting url: OpamUrl.Parse_error("Url must not contain '..': /wrong/../mirror")
+           warning 37: Missing field 'dev-repo'
+             error 65: URLs must be absolute: "./my/url/path"
 # Return code 1 #
 ### : W66: String that can't be resolved to bool in filtered package formula
 ### <lint.opam>
@@ -929,3 +1006,96 @@ bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 68: Missing field 'license'
+### : E69: Field 'extra-files' contains duplicated files
+### <pkg:lint.3>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### <pkg:lint.3:single-file>
+file
+### <pkg:lint.3:double-file>
+file
+### <pkg:lint.3:quadra-file>
+file
+### <hash.sh>
+set -ue
+path=REPO/packages/lint/lint.3
+md5=`openssl md5 $path/files/single-file | cut -f2 -d' '`
+echo "extra-files:[" >> $path/opam
+echo "  [\"single-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"double-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"double-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"quadra-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"quadra-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"quadra-file\" \"md5=$md5\"]" >> $path/opam
+echo "  [\"quadra-file\" \"md5=$md5\"]" >> $path/opam
+echo "]" >> $path/opam
+### sh hash.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam lint --package lint.3
+<default>/lint.3: Errors.
+             error 69: Field 'extra-files' contains duplicated files: "double-file: 2 occurences", "quadra-file: 4 occurences"
+# Return code 1 #
+### : several extra-source
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+extra-source "double-file" {
+  src:"https://git.url/repo.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+extra-source "single-file" {
+  src:"https://git.url/repo.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+extra-source "double-file" {
+  src:"https://git.url/repo.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error  3: File format error in 'extra-source': Duplicate section extra-source
+# Return code 1 #
+### : E70: Field 'url.checksum' contains duplicated checksums
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url {
+  src:"an-archive.tgz"
+  checksum:[
+  "md5=00000000000000000000000000000000"
+  "md5=11111111111111111111111111111111"
+  "sha256=2222222222222222222222222222222222222222222222222222222222222222"
+  "sha256=3333333333333333333333333333333333333333333333333333333333333333"
+  "sha256=4444444444444444444444444444444444444444444444444444444444444444"
+  "sha512=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+  ]
+}
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 70: Field 'url.checksum' contains duplicated checksums: "md5: 2 occurences", "sha256: 3 occurences"
+# Return code 1 #
