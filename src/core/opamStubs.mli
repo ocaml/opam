@@ -145,3 +145,7 @@ val getErrorMode : unit -> int
 
 val setConsoleToUTF8 : unit -> unit
 (** Windows only. Directly wraps SetConsoleOutputCP(CP_UTF8). *)
+
+val getVersionInfo : string -> win32_version_info option
+(** Windows only. Returns the version info block for a file or [None] if the
+    file either doesn't exist or doesn't have one. *)

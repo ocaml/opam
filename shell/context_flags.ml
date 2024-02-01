@@ -15,7 +15,16 @@ match Sys.argv.(1) with
       print_string "i686"
 | "clibs" ->
     if Sys.win32 then
-      print_string "(-ladvapi32 -lgdi32 -luser32 -lshell32 -lole32 -luuid)"
+      let common =
+        "-ladvapi32 -lgdi32 -luser32 -lshell32 -lole32 -luuid"
+      in
+      if Config.system = "mingw" then
+        (* This appears to be a packaging bug in i686-w64-mingw32, as
+           GetFileVersionInfoEx and friends are include in the x86_64 copy of
+           libversion.a *)
+        Printf.printf "(%s -lwindowsapp)" common
+      else
+        Printf.printf "(%s)" common
     else
       print_string "()"
 | _ ->

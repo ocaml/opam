@@ -28,7 +28,8 @@
 #include <TlHelp32.h>
 #include <Knownfolders.h>
 #include <Objbase.h>
-#include <WinCon.h>
+#define STRSAFE_NO_DEPRECATE
+#include <strsafe.h>
 
 #include <stdio.h>
 
@@ -803,4 +804,113 @@ CAMLprim value OPAMW_SetConsoleToUTF8(value _unit) {
   SetConsoleCP(CP_UTF8);
   SetConsoleOutputCP(CP_UTF8);
   return Val_unit;
+}
+
+CAMLprim value OPAMW_GetVersionInfo(value file)
+{
+  CAMLparam0();
+  CAMLlocal5(result, v1, v2, v3, v4);
+  CAMLlocal1(str);
+
+  LPWSTR filename = caml_stat_strdup_to_utf16(String_val(file));
+  UINT size;
+  LPVOID versionBlock = NULL;
+  LPDWORD ignored = 0;
+  wchar_t *this = NULL;
+
+  if ((size = GetFileVersionInfoSizeEx(FILE_VER_GET_NEUTRAL, filename, ignored)) != 0 &&
+      (versionBlock = malloc(size)) != NULL &&
+      GetFileVersionInfoEx(FILE_VER_GET_NEUTRAL, filename, size, size, versionBlock) &&
+      (this = malloc(42 * sizeof(wchar_t))) != NULL) {
+    /* Read the fixed version info */
+    VS_FIXEDFILEINFO *info;
+    ULARGE_INTEGER ul;
+    if (VerQueryValue(versionBlock, L"\\", (void **)&info, &size)) {
+      v1 = caml_alloc_small(2, 0);
+      Field(v1, 0) = Val_int(HIWORD(info->dwStrucVersion));
+      Field(v1, 1) = Val_int(LOWORD(info->dwStrucVersion));
+      v2 = caml_alloc_small(4, 0);
+      Field(v2, 0) = Val_int(HIWORD(info->dwFileVersionMS));
+      Field(v2, 1) = Val_int(LOWORD(info->dwFileVersionMS));
+      Field(v2, 2) = Val_int(HIWORD(info->dwFileVersionLS));
+      Field(v2, 3) = Val_int(LOWORD(info->dwFileVersionLS));
+      v3 = caml_alloc_small(4, 0);
+      Field(v3, 0) = Val_int(HIWORD(info->dwProductVersionMS));
+      Field(v3, 1) = Val_int(LOWORD(info->dwProductVersionMS));
+      Field(v3, 2) = Val_int(HIWORD(info->dwProductVersionLS));
+      Field(v3, 3) = Val_int(LOWORD(info->dwProductVersionLS));
+      result = caml_alloc_small(11, 0);
+      ul.HighPart = info->dwFileDateMS;
+      ul.LowPart = info->dwFileDateLS;
+      v4 = caml_copy_int64(ul.QuadPart);
+      Field(result, 0) = Val_int(info->dwSignature);
+      Field(result, 1) = v1;
+      Field(result, 2) = v2;
+      Field(result, 3) = v3;
+      Field(result, 4) = Val_int(info->dwFileFlagsMask);
+      Field(result, 5) = Val_int(info->dwFileFlags);
+      Field(result, 6) = Val_int(info->dwFileOS);
+      Field(result, 7) = Val_int(info->dwFileType);
+      Field(result, 8) = Val_int(info->dwFileSubtype);
+      Field(result, 9) = v4;
+      Field(result, 10) = Val_emptylist;
+    } else {
+      v1 = caml_alloc(4, 0);
+      result = caml_alloc(11, 0);
+      Store_field(result, 2, v1);
+      Store_field(result, 3, v1);
+    }
+
+    /* Read the strings */
+    struct LANGUAGE_AND_CODEPAGE {
+      WORD wLanguage;
+      WORD wCodePage;
+    } *translations;
+
+    if (VerQueryValue(versionBlock, L"\\VarFileInfo\\Translation", (LPVOID*)&translations, &size)) {
+      wchar_t *keys[] =
+        {L"Comments", L"CompanyName", L"FileDescription", L"FileVersion", L"InternalName",
+         L"LegalCopyright", L"LegalTrademarks", L"OriginalFilename", L"ProductName",
+         L"ProductVersion", L"PrivateBuild", L"SpecialBuild"};
+      wchar_t *buf;
+      int count = size / sizeof(struct LANGUAGE_AND_CODEPAGE);
+      v1 = Val_emptylist;
+      wcscpy(this, L"\\StringFileInfo\\");
+      for (int i = count - 1; i >= 0; i--) {
+        StringCchPrintf(this + 16, 9, L"%04x%04x", translations[i].wLanguage,
+                                                   translations[i].wCodePage);
+        v2 = caml_alloc_small(2, 0);
+        Field(v2, 0) = Val_int(translations[i].wLanguage);
+        Field(v2, 1) = Val_int(translations[i].wCodePage);
+        v3 = caml_alloc(2, 0);
+        Store_field(v3, 0, v2);
+        v2 = caml_alloc(12, 0);
+        Store_field(v3, 1, v2);
+        for (int j = 0; j < sizeof(keys) / sizeof(wchar_t*); j++) {
+          StringCchPrintf(this + 24, 18, L"\\%s", keys[j]);
+          if (VerQueryValue(versionBlock, this, (LPVOID*)&buf, &size)) {
+            str = caml_copy_string_of_utf16(buf);
+            v4 = caml_alloc_small(1, 0);
+            Field(v4, 0) = str;
+            Store_field(v2, j, v4);
+          }
+        }
+        v2 = caml_alloc_small(2, 0);
+        Field(v2, 0) = v3;
+        Field(v2, 1) = v1;
+        v1 = v2;
+      }
+      Store_field(result, 10, v1);
+    }
+
+    v1 = caml_alloc_small(1, 0);
+    Field(v1, 0) = result;
+    result = v1;
+  }
+
+  caml_stat_free(filename);
+  free(versionBlock);
+  free(this);
+
+  CAMLreturn(result);
 }

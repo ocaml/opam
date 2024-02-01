@@ -80,3 +80,36 @@ type windows_cpu_architecture =
 | IA64    (* 0x6 *)
 | Intel   (* 0x0 *)
 | Unknown (* 0xffff *)
+
+
+(** Predefined version information strings (see VerQueryValueW) *)
+type win32_non_fixed_version_info = {
+  comments: string option;
+  companyName: string option;
+  fileDescription: string option;
+  fileVersionString: string option;
+  internalName: string option;
+  legalCopyright: string option;
+  legalTrademarks: string option;
+  originalFilename: string option;
+  productName: string option;
+  productVersionString: string option;
+  privateBuild: string option;
+  specialBuild: string option;
+}
+
+(** VS_FIXEDFILEINFO *)
+type win32_version_info = {
+  signature: int; (** [0xFEEF04BD] *)
+  version: int * int; (** Structure version number *)
+  fileVersion: int * int * int * int; (** File version *)
+  productVersion: int * int * int * int; (** Product version *)
+  fileFlagsMask: int; (** Valid bits in {!fileFlags} *)
+  fileFlags: int; (** File attributes (see VS_FIXEDFILEINFO) *)
+  fileOS: int; (** File OS (see VS_FIXEDFILEINFO) *)
+  fileType: int; (** File Type (see VS_FIXEDFILEINFO) *)
+  fileSubtype: int; (** File Sub-type (see VS_FIXEDFILEINFO) *)
+  fileDate: int64; (** File creation time stamp *)
+  strings: ((int * int) * win32_non_fixed_version_info) list;
+    (** Non-fixed string table. First field is a pair of Language and Codepage ID. *)
+}
