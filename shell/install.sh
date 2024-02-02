@@ -390,12 +390,21 @@ xsudo() {
 
     local DSTDIR=$(dirname "$DST")
     if [ ! -w "$DSTDIR" ]; then
-        echo "Write access to $DSTDIR required, using 'sudo'."
+        if command -v sudo > /dev/null ; then
+            SUDO=sudo
+        elif command -v doas > /dev/null ; then
+            SUDO=doas
+        else
+            echo "Write access to '$DSTDIR' required, but neither sudo or doas is installed."
+            echo "Aborting..."
+            exit 1
+        fi
+        echo "Write access to '$DSTDIR' required, using '$SUDO'."
         echo "Command: $CMD $@"
         if [ "$CMD" = "install" ]; then
-            sudo "$CMD" -g 0 -o root "$@"
+            "$SUDO" "$CMD" -g 0 -o root "$@"
         else
-            sudo "$CMD" "$@"
+            "$SUDO" "$CMD" "$@"
         fi
     else
         "$CMD" "$@"
