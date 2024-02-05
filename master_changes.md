@@ -76,6 +76,9 @@ users)
 
 ## Release scripts
 
+## Install script
+  * Add support for doas as an alternative to sudo [#5820 @kit-ty-kate - fix #5792]
+
 ## Admin
 
 ## Opam installer
