@@ -336,6 +336,92 @@ CAMLprim value OPAMW_waitpids(value vpid_reqs, value vpid_len)
   return alloc_process_status(pid_req, status);
 }
 
+CAMLprim value OPAMW_ReadRegistry(value hKey, value sub_key,
+                                  value value_name, value value_type)
+{
+  CAMLparam0();
+  CAMLlocal2(result, v);
+
+  HKEY key;
+  DWORD type;
+  LSTATUS ret;
+  LPVOID lpData = NULL;
+  DWORD cbData;
+  LPWSTR lpSubKey, lpValueName;
+  HKEY root = roots[Int_val(hKey)];
+
+  if (!caml_string_is_c_safe(sub_key) || !caml_string_is_c_safe(value_name))
+    caml_invalid_argument("OPAMW_ReadRegistry");
+
+  if (!(lpSubKey = caml_stat_strdup_to_utf16(String_val(sub_key)))) {
+    caml_stat_free(lpData);
+    caml_raise_out_of_memory();
+  }
+  if (!(lpValueName = caml_stat_strdup_to_utf16(String_val(value_name)))) {
+    caml_stat_free(lpData);
+    caml_stat_free(lpSubKey);
+    caml_raise_out_of_memory();
+  }
+
+  ret =
+    RegGetValue(root, lpSubKey, lpValueName, RRF_RT_ANY, &type, NULL, &cbData);
+
+  if (ret == ERROR_SUCCESS) {
+    /* Cases match OpamStubsTypes.registry_value */
+    switch (Int_val(value_type)) {
+      case 0:
+        if (type != REG_SZ)
+          ret = ERROR_BAD_FORMAT;
+        break;
+      default:
+        caml_stat_free(lpSubKey);
+        caml_stat_free(lpValueName);
+        caml_failwith("OPAMW_ReadRegistry: value not implemented");
+        break;
+    }
+
+    if (ret == ERROR_SUCCESS) {
+      if ((lpData = malloc(cbData)) == NULL) {
+        caml_stat_free(lpSubKey);
+        caml_stat_free(lpValueName);
+        caml_raise_out_of_memory();
+      }
+
+      ret =
+        RegGetValue(root, lpSubKey, lpValueName, RRF_RT_ANY, NULL, lpData, &cbData);
+
+      caml_stat_free(lpSubKey);
+      caml_stat_free(lpValueName);
+
+      if (ret == ERROR_SUCCESS) {
+        switch(Int_val(value_type)) {
+        case 0:
+          int len;
+          cbData = (cbData / 2) - 1; /* bytes -> characters; remove NULL terminator */
+          len = win_wide_char_to_multi_byte((wchar_t *)lpData, cbData, NULL, 0);
+          v = caml_alloc_string(len);
+          win_wide_char_to_multi_byte((wchar_t *)lpData, cbData, (char *)String_val(v), len);
+          break;
+        }
+        free(lpData);
+        result = caml_alloc_small(1, 0);
+        Field(result, 0) = v;
+      }
+    }
+  } else {
+    caml_stat_free(lpSubKey);
+    caml_stat_free(lpValueName);
+  }
+
+  if (ret == ERROR_FILE_NOT_FOUND) {
+    result = Val_none;
+  } else if (ret != ERROR_SUCCESS) {
+    caml_failwith("RegSetKeyValue");
+  }
+
+  CAMLreturn(result);
+}
+
 CAMLprim value OPAMW_WriteRegistry(value hKey,
                                    value sub_key,
                                    value value_name,

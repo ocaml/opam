@@ -63,6 +63,13 @@ val waitpids : int list -> int -> int * Unix.process_status
       [waitpids pids length] behaves like [Unix.wait], returning the pid and
       exit status of the first process to terminate. *)
 
+val readRegistry : registry_root -> string -> string -> 'a registry_value -> 'a option
+  (** Windows only. [readRegistry root key name value_type] reads the value
+      [name] from registry key [key] of [root]. As per Windows Registry
+      convention, the default value can be read by passing [""] for [name].
+
+      @raise Failure If the value in the registry does not have [value_type] *)
+
 val writeRegistry :
   registry_root -> string -> string -> 'a registry_value -> 'a -> unit
   (** Windows only. [writeRegistry root key name value_type value] sets the
