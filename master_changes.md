@@ -101,6 +101,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add test for variables resolution in filters, for all fields [#5643 @rjbou]
 
 ### Engine
 
