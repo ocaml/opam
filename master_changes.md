@@ -53,6 +53,7 @@ users)
 ## Repository
 
 ## Lock
+  * [BUG] Fix `pin-depends` for `with-*` dependencies [#5471 @rjbou - fix #5428]
 
 ## Clean
 
