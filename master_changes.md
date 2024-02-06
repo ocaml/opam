@@ -70,6 +70,7 @@ users)
 ## VCS
 
 ## Build
+  * Unset OPAM_SWITCH_PREFIX when using make cold [#5534 @kit-ty-kate]
 
 ## Infrastructure
   * Fix depexts CI workflow and ensure all workflows run on master push [#5788 @dra27]
