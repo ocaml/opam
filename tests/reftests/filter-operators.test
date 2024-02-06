@@ -1,0 +1,327 @@
+N0REP0
+### : Test filter operators :
+### OPAMSTRICT=0
+### <pkg:ok.1>
+opam-version: "2.0"
+### <pkg:a.1>
+opam-version: "2.0"
+### <pkg:b.1>
+opam-version: "2.0"
+### <pkg:c.1>
+opam-version: "2.0"
+### <pkg:ko.1>
+opam-version: "2.0"
+### <pkg:ko-bool.1>
+opam-version: "2.0"
+### <pkg:ko-int.1>
+opam-version: "2.0"
+### <pkg:ko-string.1>
+opam-version: "2.0"
+### <pkg:error.1>
+opam-version: "2.0"
+### opam switch create operators --empty
+### OPAMSHOW=1
+### :: undefined ::
+### <pkg:undefined.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { ?defin }
+]
+### opam install undefined
+The following actions would be performed:
+=== install 2 packages
+  - install ok        1 [required by undefined]
+  - install undefined 1
+### OPAMVAR_defin=something opam install undefined
+The following actions would be performed:
+=== install 3 packages
+  - install a         1 [required by undefined]
+  - install ok        1 [required by undefined]
+  - install undefined 1
+### <pkg:undefined.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { ?(defined & undefined) }
+]
+### OPAMVAR_defined=something opam install undefined
+The following actions would be performed:
+=== install 2 packages
+  - install ok        1 [required by undefined]
+  - install undefined 1
+### OPAMVAR_defined=something OPAMVAR_undefined=defined opam install undefined
+The following actions would be performed:
+=== install 2 packages
+  - install ok        1 [required by undefined]
+  - install undefined 1
+### <pkg:undefined.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { undefined | true }
+  "b" { undefined & false }
+]
+### opam install undefined
+The following actions would be performed:
+=== install 3 packages
+  - install a         1 [required by undefined]
+  - install ok        1 [required by undefined]
+  - install undefined 1
+### :: not ::
+### <pkg:not.1>
+opam-version: "2.0"
+depends: [ "ok" "a" { !bvar } ]
+### OPAMVAR_bvar=true opam install not
+The following actions would be performed:
+=== install 2 packages
+  - install not 1
+  - install ok  1 [required by not]
+### OPAMVAR_bvar=false opam install not
+The following actions would be performed:
+=== install 3 packages
+  - install a   1 [required by not]
+  - install not 1
+  - install ok  1 [required by not]
+### :: and ::
+### <pkg:and.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { true & true }
+  "ko" { true & false }
+  "error" { false & false }
+]
+### opam install and
+The following actions would be performed:
+=== install 3 packages
+  - install a   1 [required by and]
+  - install and 1
+  - install ok  1 [required by and]
+### :: or ::
+### <pkg:or.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { true | true }
+  "b" { true | false }
+  "ko" { false | false }
+]
+### opam install or
+The following actions would be performed:
+=== install 4 packages
+  - install a  1 [required by or]
+  - install b  1 [required by or]
+  - install ok 1 [required by or]
+  - install or 1
+### :: eq ::
+### <pkg:eq.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { 2=2 }
+  "ko-int" { 2=3 }
+  "b" { "a" = "a" }
+  "ko-string" { "a" = "b" }
+  "c" { true = true }
+  "ko-bool" { true = false }
+]
+### opam install eq
+The following actions would be performed:
+=== install 5 packages
+  - install a  1 [required by eq]
+  - install b  1 [required by eq]
+  - install c  1 [required by eq]
+  - install eq 1
+  - install ok 1 [required by eq]
+### :: neq ::
+### <pkg:neq.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { 2!=3 }
+  "ko-int" { 2!=2 }
+  "b" { "a" != "b" }
+  "ko-string" { "b" != "b" }
+  "c" { true != false }
+  "ko-bool" { true != true }
+]
+### opam install neq
+The following actions would be performed:
+=== install 5 packages
+  - install a   1 [required by neq]
+  - install b   1 [required by neq]
+  - install c   1 [required by neq]
+  - install neq 1
+  - install ok  1 [required by neq]
+### :: lt ::
+### <pkg:lt.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { 2<3 }
+  "ko-int" { 3<2 }
+  "b" { "a" < "b" }
+  "ko-string" { "b" < "a" }
+  "c" { false < true }
+  "ko-bool" { true < false }
+]
+### opam install lt
+The following actions would be performed:
+=== install 5 packages
+  - install a  1 [required by lt]
+  - install b  1 [required by lt]
+  - install c  1 [required by lt]
+  - install lt 1
+  - install ok 1 [required by lt]
+### :: lteq ::
+### <pkg:lteq.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { 2<=3 & 2<=2 }
+  "ko-int" { 3<=2 }
+  "b" { "a" <= "b" & "a" <= "a" }
+  "ko-string" { "b" <= "a" }
+  "c" { false <= true & false <= false }
+  "ko-bool" { true <= false }
+]
+### opam install lteq
+The following actions would be performed:
+=== install 5 packages
+  - install a    1 [required by lteq]
+  - install b    1 [required by lteq]
+  - install c    1 [required by lteq]
+  - install lteq 1
+  - install ok   1 [required by lteq]
+### :: gt ::
+### <pkg:gt.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { 4>3 }
+  "ko-int" { 3>4 }
+  "b" { "d" > "b" }
+  "ko-string" { "b" > "d" }
+  "c" { true > false }
+  "ko-bool" { false > true }
+]
+### opam install gt
+The following actions would be performed:
+=== install 5 packages
+  - install a  1 [required by gt]
+  - install b  1 [required by gt]
+  - install c  1 [required by gt]
+  - install gt 1
+  - install ok 1 [required by gt]
+### :: gteq ::
+### <pkg:gteq.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { 4>=3 & 4>=4 }
+  "ko-int" { 3>=4 }
+  "b" { "d" >= "b" & "d" >= "d" }
+  "ko-string" { "b" >= "d" }
+  "c" { true >= false & true >= true }
+  "ko-bool" { false >= true }
+]
+### opam install gteq
+The following actions would be performed:
+=== install 5 packages
+  - install a    1 [required by gteq]
+  - install b    1 [required by gteq]
+  - install c    1 [required by gteq]
+  - install gteq 1
+  - install ok   1 [required by gteq]
+### :: Combination ::
+### <pkg:comb.1>
+opam-version: "2.0"
+depends: [
+  "ok"
+  "a" { false & false | true }
+  "ko" { false & (false | true) }
+]
+### opam install comb
+The following actions would be performed:
+=== install 3 packages
+  - install a    1 [required by comb]
+  - install comb 1
+  - install ok   1 [required by comb]
+### :: Package combination ::
+### <pkg:pkg-comb.1>
+opam-version:"2.0"
+messages: [
+  "this is a package"
+  "with all defined variables" { a+b:var }
+]
+### OPAMVAR_a_var=true OPAMVAR_b_var=false opam install pkg-comb
+The following actions would be performed:
+=== install 1 package
+  - install pkg-comb 1  this is a package
+### OPAMVAR_a_var=false OPAMVAR_b_var=false opam install pkg-comb
+The following actions would be performed:
+=== install 1 package
+  - install pkg-comb 1  this is a package
+### OPAMVAR_a_var=true OPAMVAR_b_var=true opam install pkg-comb
+The following actions would be performed:
+=== install 1 package
+  - install pkg-comb 1  this is a package
+                        with all defined variables
+### <pkg:pkg-comb-enable.1>
+opam-version:"2.0"
+post-messages: [
+  "packages a & b are %{a+b:enable}%"
+]
+### OPAMSHOW=0
+### opam install pkg-comb-enable
+The following actions will be performed:
+=== install 1 package
+  - install pkg-comb-enable 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg-comb-enable.1
+Done.
+
+<><> pkg-comb-enable.1 installed successfully <><><><><><><><><><><><><><><><><>
+=> packages a & b are disable
+### opam install a
+The following actions will be performed:
+=== install 1 package
+  - install a 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a.1
+Done.
+### opam reinstall pkg-comb-enable
+The following actions will be performed:
+=== recompile 1 package
+  - recompile pkg-comb-enable 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   pkg-comb-enable.1
+-> installed pkg-comb-enable.1
+Done.
+
+<><> pkg-comb-enable.1 installed successfully <><><><><><><><><><><><><><><><><>
+=> packages a & b are disable
+### opam install b
+The following actions will be performed:
+=== install 1 package
+  - install b 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
+Done.
+### opam reinstall pkg-comb-enable
+The following actions will be performed:
+=== recompile 1 package
+  - recompile pkg-comb-enable 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   pkg-comb-enable.1
+-> installed pkg-comb-enable.1
+Done.
+
+<><> pkg-comb-enable.1 installed successfully <><><><><><><><><><><><><><><><><>
+=> packages a & b are enable

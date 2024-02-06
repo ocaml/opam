@@ -101,6 +101,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add test for filter operators in opam file [#5642 @rjbou]
 
 ### Engine
 
