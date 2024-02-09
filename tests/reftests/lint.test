@@ -816,7 +816,7 @@ url { src:"another-archive.tgz" }
 ### opam lint ./lint.opam --check-upstream
 ${BASEDIR}/lint.opam: Errors.
            warning 59: url doesn't contain a checksum
-             error 60: Upstream check failed: "Source not found: ${BASEDIR}/another-archive.tgz"
+             error 60: Upstream check failed: "Source not found: file ${OPAMTMP}/lint-check-upstream doesn't exist"
 # Return code 1 #
 ### <lint.opam>
 opam-version: "2.0"

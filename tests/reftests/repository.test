@@ -286,7 +286,7 @@ first  --
 ### <OPER/packages/fantom/fantom.0/opam>
 opam-version: "2.0"
 ### opam repository set-url oper ./OPER4
-[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Could not update repository "oper": directory ${BASEDIR}/OPER4/ doesn't exist
 [ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -325,7 +325,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper ./OPER4
-[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Could not update repository "oper": directory ${BASEDIR}/OPER4/ doesn't exist
 [ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -365,7 +365,7 @@ first  --
 [oper] Initialised
 ### :: Simply failing urls ::
 ### opam repository --this-switch add oper4 ./OPER4
-[ERROR] Could not update repository "oper4": rsync failed
+[ERROR] Could not update repository "oper4": directory ${BASEDIR}/OPER4/ doesn't exist
 [ERROR] Initial repository fetch failed
 # Return code 40 #
 ### opam repository --this-switch
@@ -373,7 +373,7 @@ first  --
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
  1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER4
-[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Could not update repository "oper": directory ${BASEDIR}/OPER4/ doesn't exist
 [ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam repository --this-switch
@@ -452,7 +452,7 @@ first  --
 ### <OPER/packages/fantom/fantom.0/opam>
 opam-version: "2.0"
 ### opam repository set-url oper ./OPER4
-[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Could not update repository "oper": directory ${BASEDIR}/OPER4/ doesn't exist
 [ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -491,7 +491,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper ./OPER4
-[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Could not update repository "oper": directory ${BASEDIR}/OPER4/ doesn't exist
 [ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -531,7 +531,7 @@ first  --
 [oper] Initialised
 ### ::: Simply failing urls :::
 ### opam repository --this-switch add oper4 ./OPER4
-[ERROR] Could not update repository "oper4": rsync failed
+[ERROR] Could not update repository "oper4": directory ${BASEDIR}/OPER4/ doesn't exist
 [ERROR] Initial repository fetch failed
 # Return code 40 #
 ### opam repository --this-switch
@@ -539,7 +539,7 @@ first  --
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
  1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER4
-[ERROR] Could not update repository "oper": rsync failed
+[ERROR] Could not update repository "oper": directory ${BASEDIR}/OPER4/ doesn't exist
 [ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam repository --this-switch
