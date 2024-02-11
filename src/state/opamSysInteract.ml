@@ -305,6 +305,7 @@ module Cygwin = struct
          "--no-shortcuts";
          "--no-startmenu";
          "--no-write-registry";
+         "--no-version-check";
          "--quiet-mode";
        ] @
          match packages with
@@ -953,6 +954,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
             let common =
               [ "--upgrade-also";
                 "--only-site";
+                "--no-version-check";
                 "--site"; Cygwin.mirror;
                 "--local-package-dir";
                 OpamFilename.Dir.to_string (Cygwin.internal_cygcache ());
