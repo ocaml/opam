@@ -76,7 +76,6 @@ end
 
 module type IO_Arg = sig
   val internal : string
-  val atomic : bool
   type t
   val empty : t
   val of_channel : 'a typed_file -> in_channel  -> t
@@ -110,15 +109,10 @@ module MakeIO (F : IO_Arg) = struct
   let write f v =
     let filename = OpamFilename.to_string f in
     let chrono = OpamConsole.timer () in
-    let write =
-      if F.atomic then
-        OpamFilename.with_open_out_bin_atomic
-      else
-        OpamFilename.with_open_out_bin
-    in
+    let write = OpamFilename.with_open_out_bin_atomic in
     write f (fun oc -> F.to_channel f oc v);
     Stats.write_files := filename :: !Stats.write_files;
-    log "Wrote %s%s in %.3fs" filename (if F.atomic then " atomically" else "") (chrono ())
+    log "Wrote %s atomically in %.3fs" filename (chrono ())
 
   let read_opt f =
     let filename = OpamFilename.prettify f in
@@ -195,7 +189,6 @@ end
 module DescrIO = struct
 
   let internal = "descr"
-  let atomic = false
   let format_version = OpamVersion.of_string "0"
 
   type t = string * string
@@ -288,8 +281,6 @@ module LinesBase = struct
 
   let internal = "lines"
 
-  let atomic = false
-
   let find_escapes s len =
     let rec aux acc i =
       if i < 0 then acc else
@@ -379,7 +370,6 @@ end
 
 module type LineFileArg = sig
   val internal: string
-  val atomic: bool
   type t
   val empty: t
   val pp: (string list list, t) Pp.t
@@ -416,7 +406,6 @@ end
 module Aliases = LineFile(struct
 
     let internal = "aliases"
-    let atomic = false
 
     type t = string switch_map
 
@@ -435,7 +424,6 @@ module Aliases = LineFile(struct
 module Repo_index (A : OpamStd.ABSTRACT) = LineFile(struct
 
     let internal = "repo-index"
-    let atomic = false
 
     type t = (repository_name * string option) A.Map.t
 
@@ -457,7 +445,6 @@ module Package_index = Repo_index(OpamPackage)
 module PkgList = LineFile (struct
 
     let internal = "package-version-list"
-    let atomic = false
 
     type t = package_set
 
@@ -528,7 +515,6 @@ module Pinned_legacy = struct
   include LineFile(struct
 
       let internal = "pinned"
-      let atomic = false
 
       type t = pin_option OpamPackage.Name.Map.t
 
@@ -549,7 +535,6 @@ end
 module Environment = LineFile(struct
 
     let internal = "environment"
-    let atomic = true
 
     type t = spf_resolved env_update list
 
@@ -713,7 +698,6 @@ module Environment = LineFile(struct
 module File_attributes = LineFile(struct
 
     let internal = "file_attributes"
-    let atomic = false
 
     type t = file_attribute_set
 
@@ -740,7 +724,6 @@ module File_attributes = LineFile(struct
 module StateTable = struct
 
   let internal = "export"
-  let atomic = false
 
   module M = OpamPackage.Name.Map
 
@@ -1158,7 +1141,6 @@ end
 
 module type SyntaxFileArg = sig
   val internal: string
-  val atomic: bool
   val format_version: OpamVersion.t
   type t
   val empty: t
@@ -1199,7 +1181,6 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
   include MakeIO(struct
       include X
       include IO
-      let atomic = false
     end)
 
 end
@@ -1376,7 +1357,6 @@ end
 module ConfigSyntax = struct
 
   let internal = "config"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.1"
   let file_format_version = OpamVersion.of_string "2.0"
   let root_version = OpamVersion.of_string "2.2~alpha"
@@ -1695,7 +1675,6 @@ end
 
 module InitConfigSyntax = struct
   let internal = "init-config"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.0"
 
   type t = {
@@ -1939,7 +1918,6 @@ end
 module Repos_configSyntax = struct
 
   let internal = "repos-config"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.0"
   let file_format_version = OpamVersion.of_string "2.0"
 
@@ -1984,7 +1962,6 @@ end
 module Switch_configSyntax = struct
 
   let internal = "switch-config"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.1"
   let file_format_version = OpamVersion.of_string "2.0"
   let oldest_compatible_format_version = OpamVersion.of_string "2.0"
@@ -2099,7 +2076,6 @@ end
 module SwitchSelectionsSyntax = struct
 
   let internal = "switch-state"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.0"
   let file_format_version = OpamVersion.of_string "2.0"
 
@@ -2170,7 +2146,6 @@ end
 module Repo_config_legacySyntax = struct
 
   let internal = "repo-file"
-  let atomic = false
   let format_version = OpamVersion.of_string "1.2"
 
   type t = {
@@ -2235,7 +2210,6 @@ end
 module Dot_configSyntax = struct
 
   let internal = ".config"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.0"
 
   type t = {
@@ -2328,7 +2302,6 @@ end
 module RepoSyntax = struct
 
   let internal = "repo"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.0"
 
   type t = {
@@ -2418,7 +2391,6 @@ end
 module URLSyntax = struct
 
   let internal = "url-file"
-  let atomic = false
   let format_version = OpamVersion.of_string "1.2"
 
   type t = {
@@ -2532,7 +2504,6 @@ end
 module OPAMSyntax = struct
 
   let internal = "opam"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.0"
 
   type t = {
@@ -3671,7 +3642,6 @@ end
 module Dot_installSyntax = struct
 
   let internal = ".install"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.0"
 
   type t =  {
@@ -3839,7 +3809,6 @@ end
 
 module ChangesSyntax = struct
   let internal = "changes"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.0"
 
   open OpamDirTrack
@@ -3905,7 +3874,6 @@ end
 module SwitchExportSyntax = struct
 
   let internal = "switch-export"
-  let atomic = false
   let format_version = OpamVersion.of_string "2.1"
 
   type t = {
@@ -3983,7 +3951,6 @@ end
 module CompSyntax = struct
 
   let internal = "comp"
-  let atomic = false
   let format_version = OpamVersion.of_string "1.2"
 
   type compiler = string
