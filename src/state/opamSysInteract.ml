@@ -306,7 +306,7 @@ module Cygwin = struct
          "--no-startmenu";
          "--no-write-registry";
          "--no-version-check";
-         "--quiet-mode";
+         "--quiet-mode"; "noinput";
        ] @
          match packages with
          | [] -> []
@@ -943,7 +943,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        stored in `sys-pkg-manager-cmd` field *)
     [`AsUser (OpamFilename.to_string (Cygwin.cygsetup ())),
      [ "--root"; (OpamFilename.Dir.to_string (Cygwin.cygroot config));
-       "--quiet-mode";
+       "--quiet-mode"; "noinput";
        "--no-shortcuts";
        "--no-startmenu";
        "--no-desktop";
