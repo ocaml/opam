@@ -68,6 +68,7 @@ users)
 ## External dependencies
   * Pass --symlink-type native to Cygwin setup if symlinks are available [#5830 @dra27]
   * Pass --no-version-check to Cygwin setup (suppresses a message box if setup needs updating) [#5830 @dra27]
+  * Pass --quiet-mode noinput to stop the user interrupting the setup GUI [#5830 @dra27]
 
 ## Format upgrade
   * Handle init OCaml `sys-ocaml-*` eval variables during format upgrade from 2.0 -> 2.1 -> 2.2 [#5829 @dra27]
