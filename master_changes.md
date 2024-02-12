@@ -70,6 +70,7 @@ users)
 ## VCS
 
 ## Build
+  * Do not check for cppo in the configure script (not used directly anymore since #5498) [#5794 @kit-ty-kate]
 
 ## Infrastructure
   * Fix depexts CI workflow and ensure all workflows run on master push [#5788 @dra27]

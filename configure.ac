@@ -273,7 +273,6 @@ AS_IF([test "x${enable_certificate_check}" = "xno"], [
 AC_CHECK_PROGS(FETCH,[curl wget],no)
 
 AC_CHECK_TOOL(DUNE,dune)
-AC_CHECK_TOOL(CPPO,cppo)
 AC_CHECK_TOOL(PATCH,patch)
 AC_CHECK_TOOL(BUNZIP2,bunzip2)
 
@@ -429,7 +428,6 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_uutf" = "xno" ||
        test "x$OCAML_PKG_sha" = "xno" ||
        test "x$OCAML_PKG_swhid_core" = "xno" ||
-       test "x$CPPO" = "x" ||
        test "x$OCAML_PKG_mccs$MCCS_ENABLED" = "xnotrue";}],[
   AS_IF([test "x${with_vendored_deps}" != "xyes"],[
     AC_MSG_ERROR([Dependencies missing. Use --with-vendored-deps or --disable-checks])
