@@ -483,6 +483,9 @@ let json_out () =
         (Printexc.to_string e)
 
 let main () =
+  if Sys.win32 then
+    (* Disable the critical error handling dialog *)
+    ignore (OpamStubs.setErrorMode (1 lor OpamStubs.getErrorMode ()));
   OpamStd.Sys.at_exit (fun () ->
       flush_all_noerror ();
       if OpamClientConfig.(!r.print_stats) then (

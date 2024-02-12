@@ -778,3 +778,13 @@ CAMLprim value OPAMW_GetConsoleWindowClass(value unit)
 
   CAMLreturn(result);
 }
+
+CAMLprim value OPAMW_SetErrorMode(value mode)
+{
+  return Val_int(SetErrorMode((UINT)Int_val(mode)));
+}
+
+CAMLprim value OPAMW_GetErrorMode(value mode)
+{
+  return Val_int(GetErrorMode());
+}
