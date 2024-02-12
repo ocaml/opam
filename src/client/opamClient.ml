@@ -731,6 +731,16 @@ let git_for_windows_check =
     git_location
 
 let windows_checks ?cygwin_setup ?git_location config =
+  if (not (Unix.has_symlink ())) then begin
+    OpamConsole.header_msg "Windows Developer Mode";
+    OpamConsole.msg "opam does not require Developer Mode to be enabled on Windows, but it is\n\
+                     recommended, in particular because it enables support for symlinks without\n\
+                     requiring opam to be run elevated (which we do %s recommend doing).\n\
+                     \n\
+                     More information on enabling Developer Mode may be obtained from\n\
+                       https://learn.microsoft.com/en-gb/windows/apps/get-started/enable-your-device-for-development\n"
+                     (OpamConsole.colorise `bold "not")
+  end;
   let vars = OpamFile.Config.global_variables config in
   let env =
     List.map (fun (v, c, s) -> v, (lazy (Some c), s)) vars
