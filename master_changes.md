@@ -57,6 +57,7 @@ users)
 ## Clean
 
 ## Env
+  * Fix shell detection on Windows when opam is called via Cygwin's /usr/bin/env even though cmd/powershell is used [#5797 @kit-ty-kate]
 
 ## Opamfile
 
@@ -71,6 +72,7 @@ users)
 
 ## Build
   * Do not check for cppo in the configure script (not used directly anymore since #5498) [#5794 @kit-ty-kate]
+  * Upgrade vendored cmdliner to 1.2.0 [#5797 @kit-ty-kate]
 
 ## Infrastructure
   * Fix depexts CI workflow and ensure all workflows run on master push [#5788 @dra27]
