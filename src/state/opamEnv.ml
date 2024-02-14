@@ -625,7 +625,7 @@ let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
           if reverse_env_update ~sepfmt var op arg
               (split_var ~sepfmt var v) = None then upd::notutd
           else List.filter (fun upd ->
-              OpamStd.Env.Name.equal_string var upd.envu_var) notutd)
+              not (OpamStd.Env.Name.equal_string var upd.envu_var)) notutd)
       []
       updates
   in

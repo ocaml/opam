@@ -60,6 +60,7 @@ users)
 ## Env
   * Fix shell detection on Windows when opam is called via Cygwin's /usr/bin/env even though cmd/powershell is used [#5797 @kit-ty-kate]
   * Fix incorrect deduplication of environment variables on update. Effect was that FOO += "" would occlude the value of FOO in the environment [#5837 @dra27]
+  * Fix regression from #5356 on the detection of out-of-date environment variables. As part of a refactoring, a filter predicate got inverted [#5837 @dra27]
 
 ## Opamfile
 
@@ -124,6 +125,7 @@ users)
 ## opam-repository
 
 ## opam-state
+  * `OpamEnv.env_expansion`: Fix detection of out-of-date environment variables, a filter predicate was inverted [#5837 @dra27]
 
 ## opam-solver
 
