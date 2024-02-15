@@ -134,6 +134,7 @@ users)
 ## opam-client
   * `OpamClient.windows_checks`: On existing cygwin install, permit to detect msys2 and store `os-distribution=msys2` in `global-variables` config file field [#5843 @rjbou]
   * `OpamClient.windows_checks`: When updating config file for msys2, resolve `pacman` path and store it in `sys-pkg-manager-cmd` for msys2 [#5843 @rjbou]
+  * `OpamArg.apply_global_options`: load MSYS2 Cygwin binary path too [#5843 @rjbou]
 
 ## opam-repository
 
@@ -141,6 +142,7 @@ users)
   * `OpamEnv.env_expansion`: Fix detection of out-of-date environment variables, a filter predicate was inverted [#5837 @dra27]
   * `OpamSysInteract.Cygwin.check_install`: add `variant` argument to permit checking that it is an Cygwin-like install if it is set to true, keep checking that it is a strictly Cygwin install if false [#5843 @rjbou]
   * `OpamSysInteract.Cygwin.check_install`: look for `cygcheck.exe` in `usr/bin` also as MSYS2 doesn't have "bin" [#5843 @rjbou]
+  * `OpamGlobalState.load_config`: load MSYS2 Cygwin binary path too at config file loading [#5843 @rjbou]
 
 ## opam-solver
 

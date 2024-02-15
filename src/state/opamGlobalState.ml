@@ -38,10 +38,22 @@ let load_config lock_kind global_lock root =
   let config =
     OpamFormatUpgrade.as_necessary lock_kind global_lock root config
   in
-  OpamStd.Option.iter
-    (fun cygbin ->
-       OpamCoreConfig.update ~cygbin:(OpamFilename.Dir.to_string cygbin) ())
-    (OpamSysInteract.Cygwin.cygbin_opt (fst config));
+  (* Update Cygwin variants cygbin *)
+  let cygbin =
+    let config = fst config in
+    match OpamSysInteract.Cygwin.cygbin_opt config with
+    | Some cygbin -> Some (OpamFilename.Dir.to_string cygbin)
+    | None ->
+      if List.exists (function
+          | (v, S "msys2", _) ->
+            String.equal (OpamVariable.to_string v) "os-distribution"
+          | _ -> false) (OpamFile.Config.global_variables config)
+      then
+        OpamStd.Option.map Filename.dirname
+          (OpamSystem.resolve_command "cygcheck")
+      else None
+  in
+  OpamCoreConfig.update ?cygbin ();
   config
 
 let inferred_from_system = "Inferred from system"
