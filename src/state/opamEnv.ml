@@ -877,14 +877,18 @@ let source root shell f =
   let fname = OpamFilename.to_string (OpamPath.init root // f) in
   match shell with
   | SH_csh ->
-    Printf.sprintf "if ( -f %s ) source %s >& /dev/null\n" fname fname
+    let fname = OpamStd.Env.escape_single_quotes fname in
+    Printf.sprintf "if ( -f '%s' ) source '%s' >& /dev/null\n" fname fname
   | SH_fish ->
-    Printf.sprintf "source %s > /dev/null 2> /dev/null; or true\n" fname
+    let fname = OpamStd.Env.escape_single_quotes ~using_backslashes:true fname in
+    Printf.sprintf "source '%s' > /dev/null 2> /dev/null; or true\n" fname
   | SH_sh | SH_bash ->
-    Printf.sprintf "test -r %s && . %s > /dev/null 2> /dev/null || true\n"
+    let fname = OpamStd.Env.escape_single_quotes fname in
+    Printf.sprintf "test -r '%s' && . '%s' > /dev/null 2> /dev/null || true\n"
       fname fname
   | SH_zsh ->
-    Printf.sprintf "[[ ! -r %s ]] || source %s  > /dev/null 2> /dev/null\n"
+    let fname = OpamStd.Env.escape_single_quotes fname in
+    Printf.sprintf "[[ ! -r '%s' ]] || source '%s' > /dev/null 2> /dev/null\n"
       fname fname
   | SH_cmd ->
     Printf.sprintf "if exist \"%s\" call \"%s\" >NUL 2>NUL\n" fname fname

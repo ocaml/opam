@@ -100,6 +100,7 @@ users)
 ## Client
 
 ## Shell
+  * Quote all the paths to OPAMROOT when creating the init scripts on Unix in case OPAMROOT contains spaces, backslashes or special characters [#5841 @kit-ty-kate - fix #5804]
 
 ## Internal
 
