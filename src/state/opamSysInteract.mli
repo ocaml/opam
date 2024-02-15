@@ -49,10 +49,12 @@ module Cygwin : sig
   (* Install an internal Cygwin install, in <root>/.cygwin *)
   val install: packages:OpamSysPkg.t list -> OpamFilename.t
 
-  (* [check_install path] checks a Cygwin installation at [path]. It checks
-     that 'path\cygcheck.exe' or 'path\bin\cygcheck.exe' exists. *)
+  (* [check_install ~variant path] checks a Cygwin install at [path]. It checks
+     that 'path\cygcheck.exe' or 'path\bin\cygcheck.exe' exists.
+     If [~variant] is false, checks that it is strictly a Cygwin install,
+     otherwise a Cygwin-like install as MSYS2. *)
   val check_install:
-    string -> (OpamFilename.t, string) result
+    variant:bool -> string -> (OpamFilename.t, string) result
 
   (* Returns true if Cygwin install is internal *)
   val is_internal: OpamFile.Config.t -> bool

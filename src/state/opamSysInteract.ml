@@ -333,13 +333,17 @@ module Cygwin = struct
 
   let default_cygroot = "C:\\cygwin64"
 
-  let check_install path =
+  let check_install ~variant path =
+    let is_cygwin =
+      if variant then OpamStd.Sys.is_cygwin_variant_cygcheck
+      else OpamStd.Sys.is_cygwin_cygcheck
+    in
     if not (Sys.file_exists path) then
       Error (Printf.sprintf "%s not found!" path)
     else if Filename.basename path = "cygcheck.exe" then
       (* We have cygcheck.exe path *)
       let cygbin = Some (Filename.dirname path) in
-      if OpamStd.Sys.is_cygwin_cygcheck ~cygbin then
+      if is_cygwin ~cygbin then
         Ok (OpamFilename.of_string path)
       else
         Error
@@ -352,7 +356,7 @@ module Cygwin = struct
     let cygbin = Filename.concat path "bin" in
     (* We have cygroot path *)
     if Sys.file_exists cygbin then
-      if OpamStd.Sys.is_cygwin_cygcheck ~cygbin:(Some cygbin) then
+      if is_cygwin ~cygbin:(Some cygbin) then
         Ok (OpamFilename.of_string (Filename.concat cygbin "cygcheck.exe"))
       else
         Error
