@@ -23,6 +23,7 @@ users)
   * Disable ACL in Cygwin internal install to avoid permission mismatch errors [#5796 @kit-ty-kate - fix #5781]
   * Add `sys-pkg-manager-cmd` as an accepted field in opamrc files [#5847 @rjbou - fix #5844]
   * Fix `git-location` handling in init config file [#5848 @rjbou - fix #5845]
+  * Fix MSYS2 support [#5843 @rjbou - fix #5683]
 
 ## Config report
 
@@ -131,6 +132,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamClient.windows_checks`: On existing cygwin install, permit to detect msys2 and store `os-distribution=msys2` in `global-variables` config file field [#5843 @rjbou]
 
 ## opam-repository
 
