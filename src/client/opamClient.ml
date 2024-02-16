@@ -1016,7 +1016,9 @@ let update_with_init_config ?(overwrite=false) config init_config =
   setifnew C.default_compiler C.with_default_compiler
     (I.default_compiler init_config) |>
   setifnew C.default_invariant C.with_default_invariant
-    (I.default_invariant init_config)
+    (I.default_invariant init_config) |>
+  setifnew C.sys_pkg_manager_cmd C.with_sys_pkg_manager_cmd
+    (I.sys_pkg_manager_cmd init_config)
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
