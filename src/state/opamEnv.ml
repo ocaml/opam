@@ -449,9 +449,10 @@ let add (env: env) (updates: 'r env_update list) : env =
     else
       updates
   in
+  let updates = expand updates in
   let update_keys =
-    List.fold_left (fun m upd ->
-        OpamStd.Env.Name.(Set.add (of_string upd.envu_var) m))
+    List.fold_left (fun m (var, _, _) ->
+        OpamStd.Env.Name.(Set.add var m))
       OpamStd.Env.Name.Set.empty updates
   in
   let env =
@@ -459,7 +460,7 @@ let add (env: env) (updates: 'r env_update list) : env =
         not (OpamStd.Env.Name.Set.mem k update_keys))
       env
   in
-  env @ expand updates
+  env @ updates
 
 let env_expansion ?opam st upd =
   let fenv v =
@@ -624,7 +625,7 @@ let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
           if reverse_env_update ~sepfmt var op arg
               (split_var ~sepfmt var v) = None then upd::notutd
           else List.filter (fun upd ->
-              OpamStd.Env.Name.equal_string var upd.envu_var) notutd)
+              not (OpamStd.Env.Name.equal_string var upd.envu_var)) notutd)
       []
       updates
   in
