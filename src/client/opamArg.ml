@@ -597,12 +597,12 @@ let apply_global_options cli o =
               { pelem = String cygcheck; _}::_  ->
               let cygbin = Filename.dirname cygcheck in
               OpamCoreConfig.update ~cygbin ()
-            | Some { pelem = String "git-location"; _},
-              { pelem = String git_location; _}::_  ->
-              OpamCoreConfig.update ~git_location ()
             | _, element::elements -> aux (Some element) elements
           in
           aux None elements
+        | { pelem = Variable ({ pelem = "git-location"; _},
+                              {pelem = String git_location; _}); _} ->
+          OpamCoreConfig.update ~git_location ()
         | _ -> ())
       opamfile.file_contents
   with
