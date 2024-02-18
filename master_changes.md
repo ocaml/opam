@@ -119,6 +119,7 @@ users)
   * Fix a typo in the documentation of `opam lint --recursive` [#5812 @Khady]
   * Fix the documentation of opam lint --warnings [#5818 @kit-ty-kate]
   * Fix a dead link to SPDX license expressions spec [#5849 @kit-ty-kate - fix #5846]
+  * Fix missing spaces in `opam --help` [#5850 @sorawee].
 
 ## Security fixes
 
