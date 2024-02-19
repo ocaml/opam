@@ -1715,6 +1715,7 @@ module InitConfigSyntax = struct
     recommended_tools : (string list * string option * filter option) list;
     required_tools : (string list * string option * filter option) list;
     init_scripts : ((string * string) * filter option) list;
+    sys_pkg_manager_cmd: filename OpamStd.String.Map.t;
     git_location: dirname option;
   }
 
@@ -1736,6 +1737,7 @@ module InitConfigSyntax = struct
   let init_scripts t = t.init_scripts
   let criterion kind t =
     OpamStd.(List.assoc_opt Compare.equal kind t.solver_criteria)
+  let sys_pkg_manager_cmd t = t.sys_pkg_manager_cmd
   let git_location t = t.git_location
 
   let with_opam_version opam_version t = {t with opam_version}
@@ -1760,7 +1762,10 @@ module InitConfigSyntax = struct
                                     kind t.solver_criteria)
     in
     { t with solver_criteria }
-  let with_git_location git_location t = { t with git_location  = Some git_location }
+  let with_sys_pkg_manager_cmd sys_pkg_manager_cmd t =
+    { t with sys_pkg_manager_cmd }
+  let with_git_location git_location t =
+    { t with git_location  = Some git_location }
 
   let empty = {
     opam_version = format_version;
@@ -1779,6 +1784,7 @@ module InitConfigSyntax = struct
     recommended_tools = [];
     required_tools = [];
     init_scripts = [];
+    sys_pkg_manager_cmd = OpamStd.String.Map.empty;
     git_location = None;
   }
 
@@ -1879,6 +1885,13 @@ module InitConfigSyntax = struct
                  (Pp.V.string)
                  (Pp.V.string_tr))
               (Pp.opt Pp.V.filter)));
+      "sys-pkg-manager-cmd", Pp.ppacc
+        with_sys_pkg_manager_cmd sys_pkg_manager_cmd
+        ((Pp.V.map_list ~depth:2
+            (Pp.V.map_pair
+               Pp.V.string
+               (Pp.V.string -| Pp.of_module "filename" (module OpamFilename))))
+        -| Pp.of_pair "Distribution Map" OpamStd.String.Map.(of_list, bindings));
       "git-location", Pp.ppacc_opt
         with_git_location git_location
         (Pp.V.string -| Pp.of_module "dirname" (module OpamFilename.Dir));
@@ -1927,6 +1940,10 @@ module InitConfigSyntax = struct
       recommended_tools = list t2.recommended_tools t1.recommended_tools;
       required_tools = list t2.required_tools t1.required_tools;
       init_scripts = list t2.init_scripts t1.init_scripts;
+      sys_pkg_manager_cmd =
+        (if OpamStd.String.Map.is_empty t2.sys_pkg_manager_cmd then
+          t1.sys_pkg_manager_cmd
+        else t2.sys_pkg_manager_cmd);
       git_location = opt t2.git_location t1.git_location;
     }
 

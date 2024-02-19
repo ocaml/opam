@@ -269,6 +269,7 @@ module InitConfig: sig
   val recommended_tools: t -> (string list * string option * filter option) list
   val required_tools: t -> (string list * string option * filter option) list
   val init_scripts: t -> ((string * string) * filter option) list
+  val sys_pkg_manager_cmd: t -> filename OpamStd.String.Map.t
   val git_location: t -> dirname option
 
   val with_opam_version: opam_version -> t -> t
