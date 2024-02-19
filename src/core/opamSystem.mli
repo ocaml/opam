@@ -202,8 +202,7 @@ val get_cygpath_function: command:string -> (string -> string) lazy_t
 val get_cygpath_path_transform: (pathlist:bool -> string -> string) lazy_t
 
 (** [apply_cygpath path] applies the `cygpath` command to [name] using
-    `cygpath -- name`. `cygpath` is resolved with default environment
-    in the function. *)
+    `cygpath -- name`. *)
 val apply_cygpath: string -> string
 
 (** [command cmd] executes the command [cmd] in the correct OPAM

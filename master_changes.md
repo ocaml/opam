@@ -63,6 +63,7 @@ users)
   * Fix shell detection on Windows when opam is called via Cygwin's /usr/bin/env even though cmd/powershell is used [#5797 @kit-ty-kate]
   * Fix incorrect deduplication of environment variables on update. Effect was that FOO += "" would occlude the value of FOO in the environment [#5837 @dra27]
   * Fix regression from #5356 on the detection of out-of-date environment variables. As part of a refactoring, a filter predicate got inverted [#5837 @dra27]
+  * Unixify Windows paths in init shells scripts (sh, bash, zsh, fish & tsh) [#5797 @rjbou]
 
 ## Opamfile
 
@@ -101,6 +102,7 @@ users)
 ## Client
 
 ## Shell
+  * Quote all the paths to OPAMROOT when creating the init scripts on Unix in case OPAMROOT contains spaces, backslashes or special characters [#5841 @kit-ty-kate - fix #5804]
 
 ## Internal
 
