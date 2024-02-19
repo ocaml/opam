@@ -747,7 +747,25 @@ let windows_checks ?cygwin_setup ?git_location config =
     |> OpamVariable.Map.of_list
   in
   (* Git handling *)
-  let git_location : string option = git_for_windows_check ?git_location () in
+  let git_location =
+    match git_location, OpamFile.Config.git_location config with
+    | None, None -> None
+    | Some (Right ()), None -> Some (Right ())
+    | Some (Right ()), Some _ ->
+      OpamConsole.note
+        "As '--no-git-location' is given in argument, ignoring field \
+         'git-location' in opamrc";
+      Some (Right ())
+    | Some (Left gl), None | None, Some gl -> Some (Left gl)
+    | Some (Left gl_cli), Some gl_config ->
+      OpamConsole.note
+        "Git location defined in opamrc '%s' and via CLI \
+         ('--git-location' option, %s). Keeping last one."
+        (OpamFilename.Dir.to_string gl_config)
+        (OpamFilename.Dir.to_string gl_cli) ;
+      Some (Left gl_cli)
+  in
+  let git_location = git_for_windows_check ?git_location () in
   OpamCoreConfig.update ?git_location ();
   let config =
     match git_location with
@@ -784,18 +802,18 @@ let windows_checks ?cygwin_setup ?git_location config =
           OpamStd.Sys.exit_because `Aborted
     in
     let config =
-    OpamFile.Config.with_sys_pkg_manager_cmd
-      (OpamStd.String.Map.add "cygwin" cygcheck
-         (OpamFile.Config.sys_pkg_manager_cmd config))
-      config
-      in
-      OpamConsole.note "Configured with %s for depexts"
-        (if OpamSysInteract.Cygwin.is_internal config then
-           "internal Cygwin install"
-         else
-           Printf.sprintf "Cygwin at %s"
-             OpamFilename.(Dir.to_string (dirname_dir (dirname cygcheck))));
-      config
+      OpamFile.Config.with_sys_pkg_manager_cmd
+        (OpamStd.String.Map.add "cygwin" cygcheck
+           (OpamFile.Config.sys_pkg_manager_cmd config))
+        config
+    in
+    OpamConsole.note "Configured with %s for depexts"
+      (if OpamSysInteract.Cygwin.is_internal config then
+         "internal Cygwin install"
+       else
+         Printf.sprintf "Cygwin at %s"
+           OpamFilename.(Dir.to_string (dirname_dir (dirname cygcheck))));
+    config
   in
   let install_cygwin_tools () =
     let packages =
@@ -1018,7 +1036,9 @@ let update_with_init_config ?(overwrite=false) config init_config =
   setifnew C.default_invariant C.with_default_invariant
     (I.default_invariant init_config) |>
   setifnew C.sys_pkg_manager_cmd C.with_sys_pkg_manager_cmd
-    (I.sys_pkg_manager_cmd init_config)
+    (I.sys_pkg_manager_cmd init_config) |>
+  setifnew C.git_location C.with_git_location_opt
+    (I.git_location init_config)
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
