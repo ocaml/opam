@@ -61,6 +61,9 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
    *        time in OPAM.
    *
    * [This stray " is here to terminate a previous part of the comment!]
+   *
+   * Automatically setting CYGWIN to at least contain winsymlinks:native was
+   * also added later to make sure the native links are used.
    *)
   let make_args argv =
     let b = Buffer.create 128 in
@@ -108,7 +111,7 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
   let (command_line, no_glob) = make_args (Array.to_list args) in
   log "cygvoke(%sglob): %s" (if no_glob then "no" else "") command_line;
   let env = Array.to_list env in
-  let set = ref false in
+  let cygwin_set = ref false in
   let f item =
     let (key, value) =
       match OpamStd.String.cut_at item '=' with
@@ -118,41 +121,56 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
     | "cygwin" ->
         let () =
           if key = "CYGWIN" then
-            set := true in
+            cygwin_set := true in
         let settings = OpamStd.String.split value ' ' in
-        let set = ref false in
+        let noglob_set = ref false in
+        let winsymlinks_set = ref false in
         let f setting =
           let setting = String.trim setting in
-          let setting =
+          let setting, value =
             match OpamStd.String.cut_at setting ':' with
-              Some (setting, _) -> setting
-            | None -> setting in
+            | Some (setting, value) -> (setting, Some value)
+            | None -> (setting, None) in
           match setting with
-            "glob" ->
+          | "glob" ->
               if no_glob then begin
                 log ~level:2 "Removing glob from %s" key;
                 false
               end else begin
                 log ~level:2 "Leaving glob in %s" key;
-                set := true;
+                noglob_set := true;
                 true
               end
           | "noglob" ->
               if no_glob then begin
                 log ~level:2 "Leaving noglob in %s" key;
-                set := true;
+                noglob_set := true;
                 true
               end else begin
                 log ~level:2 "Removing noglob from %s" key;
                 false
               end
+          | "winsymlinks" ->
+              begin match value with
+              | Some ("nativestrict" as value) | Some ("native" as value) ->
+                  log ~level:2 "Leaving %s:%s in %s" setting value key;
+                  winsymlinks_set := true;
+                  true
+              | Some _ | None -> false
+              end
           | _ ->
               true in
         let settings = List.filter f settings in
         let settings =
-          if not !set && no_glob then begin
+          if not !noglob_set && no_glob then begin
             log ~level:2 "Setting noglob in %s" key;
             "noglob"::settings
+          end else
+            settings in
+        let settings =
+          if not !winsymlinks_set then begin
+            log ~level:2 "Setting winsymlinks:native in %s" key;
+            settings @ ["winsymlinks:native"]
           end else
             settings in
         if settings = [] then begin
@@ -187,14 +205,16 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
         Some item in
   let env = OpamStd.List.filter_map f env in
   let env =
-    if !set then
+    if !cygwin_set then
       env
     else
       if no_glob then begin
-        log ~level:2 "Adding CYGWIN=noglob";
-        "CYGWIN=noglob"::env
-      end else
-        env in
+        log ~level:2 "Adding CYGWIN=winsymlinks:native noglob";
+        "CYGWIN=winsymlinks:native noglob"::env
+      end else begin
+        log ~level:2 "Adding CYGWIN=winsymlinks:native";
+        "CYGWIN=winsymlinks:native"::env
+      end in
   OpamStubs.win_create_process prog command_line
                                (Some(String.concat "\000" env ^ "\000"))
                                fd1 fd2 fd3
