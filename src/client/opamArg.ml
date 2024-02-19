@@ -1353,9 +1353,9 @@ let global_options cli =
        version-controlled directory, update to the current working state of \
        their source instead of the last committed state, or the ref they are \
        pointing to. As source directory is copied as it is, if it isn't clean \
-       it may result on a opam build failure.\
-       This only affects packages explicitly listed on the command-line.\
-       It can also be set with $(b,\\$OPAMWORKINGDIR). "
+       it may result on a opam build failure. This only affects packages \
+       explicitly listed on the command-line. It can also be set with \
+       $(b,\\$OPAMWORKINGDIR)."
   in
   let ignore_pin_depends =
     mk_flag ~cli cli_original ~section ["ignore-pin-depends"]
