@@ -35,7 +35,11 @@ let normalise_arch raw =
 
 let poll_arch () =
   let raw = match Sys.os_type with
-    | "Unix" | "Cygwin" -> OpamStd.Sys.uname "-m"
+    | "Unix" | "Cygwin" ->
+      begin match Option.map (String.split_on_char '-') (OpamStd.Sys.machine_triplet ()) with
+      | Some (arch::_) -> Some arch
+      | _ -> OpamStd.Sys.uname "-m"
+      end
     | "Win32" ->
       begin match OpamStubs.getArchitecture () with
       | OpamStubs.AMD64 -> Some "x86_64"
@@ -160,6 +164,9 @@ let poll_os_family () =
   | _ -> Lazy.force os_distribution
 let os_family = Lazy.from_fun poll_os_family
 
+let poll_machine_triplet () = OpamStd.Sys.machine_triplet ()
+let machine_triplet = Lazy.from_fun poll_machine_triplet
+
 let variables =
   List.map
     (fun (n, v) ->
@@ -171,6 +178,7 @@ let variables =
       "os-distribution", os_distribution;
       "os-version", os_version;
       "os-family", os_family;
+      "machine-triplet", machine_triplet;
     ]
 
 let cores =

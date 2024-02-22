@@ -993,18 +993,30 @@ module OpamSys = struct
 
   let etc () = "/etc"
 
-  let uname =
+  let get_process name =
     let memo = Hashtbl.create 7 in
     fun arg ->
       try Hashtbl.find memo arg with Not_found ->
         let r =
           try
-            with_process_in "uname" arg
+            with_process_in name arg
               (fun ic -> Some (OpamString.strip (input_line ic)))
           with Unix.Unix_error _ | Sys_error _ | Not_found -> None
         in
         Hashtbl.add memo arg r;
         r
+
+  let uname = get_process "uname"
+  let gcc = get_process "gcc"
+  let clang = get_process "clang"
+
+  let machine_triplet =
+    let machine_triplet = lazy (
+      match gcc "-dumpmachine" with
+      | None -> clang "-dumpmachine"
+      | v -> v
+    ) in
+    fun () -> Lazy.force machine_triplet
 
   let system () =
     (* CSIDL_SYSTEM = 0x25 *)
@@ -1026,14 +1038,22 @@ module OpamSys = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-          match uname "-s" with
-          | Some "Darwin"    -> Darwin
-          | Some "Linux"     -> Linux
-          | Some "FreeBSD"   -> FreeBSD
-          | Some "OpenBSD"   -> OpenBSD
-          | Some "NetBSD"    -> NetBSD
-          | Some "DragonFly" -> DragonFly
-          | _                -> Unix
+          match machine_triplet () with
+          | Some s when OpamString.contains ~sub:"darwin" s -> Darwin
+          | Some s when OpamString.contains ~sub:"linux" s -> Linux
+          | Some s when OpamString.contains ~sub:"freebsd" s -> FreeBSD
+          | Some s when OpamString.contains ~sub:"openbsd" s -> OpenBSD
+          | Some s when OpamString.contains ~sub:"netbsd" s -> NetBSD
+          | Some s when OpamString.contains ~sub:"dragonfly" s -> DragonFly
+          | _ -> (
+              match uname "-s" with
+              | Some "Darwin"    -> Darwin
+              | Some "Linux"     -> Linux
+              | Some "FreeBSD"   -> FreeBSD
+              | Some "OpenBSD"   -> OpenBSD
+              | Some "NetBSD"    -> NetBSD
+              | Some "DragonFly" -> DragonFly
+              | _                -> Unix)
         end
       | "Win32"  -> Win32
       | "Cygwin" -> Cygwin
