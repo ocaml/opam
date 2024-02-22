@@ -52,7 +52,7 @@ jobs:
       opam-bs-cache: ${{ steps.keys.outputs.opam-bs-cache }}
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Determine cache keys
       id: keys
       run: |
@@ -92,7 +92,7 @@ jobs:
         force-gzip: true
     - name: Checkout tree
       if: steps.cygwin64.outputs.cache-hit != 'true'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Create Cygwin64 cache
       if: steps.cygwin64.outputs.cache-hit != 'true'
       shell: cmd
@@ -112,7 +112,7 @@ jobs:
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -156,7 +156,7 @@ jobs:
         git config --system core.autocrlf false
         git config --system core.eol lf
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Cygwin64 Cache
       id: cygwin64
       if: matrix.build == 'x86_64-pc-cygwin'
@@ -230,7 +230,7 @@ jobs:
       fail-fast: true
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -268,7 +268,7 @@ jobs:
       OPAM_TEST: 1
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: src_ext/archives and opam-repository Cache
@@ -324,7 +324,7 @@ jobs:
     - name: Install gnu coreutils
       run: brew install coreutils
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -377,7 +377,7 @@ jobs:
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -413,7 +413,7 @@ jobs:
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -459,7 +459,7 @@ jobs:
       OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam
@@ -506,7 +506,7 @@ jobs:
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: opam 1.2 root Cache
       uses: actions/cache@v3
       with:
@@ -537,7 +537,7 @@ jobs:
       fail-fast: false
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: opam 1.2 root Cache
       uses: actions/cache@v3
       with:
@@ -569,7 +569,7 @@ jobs:
     - name: Install system's dune and ocaml packages
       run: sudo apt install dune ocaml
     - name: Checkout tree
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: ocaml-opam/cache@opam

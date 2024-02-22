@@ -119,6 +119,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Update checkout action to v4 [#5851 @rjbou]
 
 ## Doc
   * Fix a typo in the documentation of `opam lint --recursive` [#5812 @Khady]
