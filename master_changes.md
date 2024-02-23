@@ -23,6 +23,7 @@ users)
   * Disable ACL in Cygwin internal install to avoid permission mismatch errors [#5796 @kit-ty-kate - fix #5781]
   * Add `sys-pkg-manager-cmd` as an accepted field in opamrc files [#5847 @rjbou - fix #5844]
   * Fix `git-location` handling in init config file [#5848 @rjbou - fix #5845]
+  * Test if file exists before sourcing in fish + powershell [#5802 @ElectreAAS]
 
 ## Config report
 

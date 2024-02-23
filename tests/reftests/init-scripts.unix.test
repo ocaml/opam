@@ -45,10 +45,10 @@ fi
 [[ ! -r '${BASEDIR}/root/opam-init/variables.sh' ]] || source '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null
 ### cat root/opam-init/init.fish
 if isatty
-  source '${BASEDIR}/root/opam-init/env_hook.fish' > /dev/null 2> /dev/null; or true
+  test -r '${BASEDIR}/root/opam-init/env_hook.fish' && source '${BASEDIR}/root/opam-init/env_hook.fish' > /dev/null 2> /dev/null; or true
 end
 
-source '${BASEDIR}/root/opam-init/variables.fish' > /dev/null 2> /dev/null; or true
+test -r '${BASEDIR}/root/opam-init/variables.fish' && source '${BASEDIR}/root/opam-init/variables.fish' > /dev/null 2> /dev/null; or true
 ### cat root/opam-init/init.csh
 if ( $?prompt ) then
   if ( -f '${BASEDIR}/root/opam-init/env_hook.csh' ) source '${BASEDIR}/root/opam-init/env_hook.csh' >& /dev/null
@@ -58,7 +58,7 @@ if ( -f '${BASEDIR}/root/opam-init/variables.csh' ) source '${BASEDIR}/root/opam
 ### cat root/opam-init/init.cmd
 if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-init/variables.cmd" >NUL 2>NUL
 ### cat root/opam-init/init.ps1
-. "${BASEDIR}/root/opam-init/variables.ps1" *> $null
+if Test-Path "${BASEDIR}/root/opam-init/variables.ps1" { . "${BASEDIR}/root/opam-init/variables.ps1" *> $null }
 ### : Variables scripts :
 ### cat root/opam-init/variables.sh | grep -v man | grep -v MANPATH
 # Prefix of the current opam switch
