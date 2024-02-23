@@ -24,6 +24,7 @@ users)
   * Add `sys-pkg-manager-cmd` as an accepted field in opamrc files [#5847 @rjbou - fix #5844]
   * Fix `git-location` handling in init config file [#5848 @rjbou - fix #5845]
   * Test if file exists before sourcing in fish + powershell [#5802 @ElectreAAS]
+  * Make sure we're not in login mode before sourcing in fish [#5802 @ElectreAAS]
 
 ## Config report
 

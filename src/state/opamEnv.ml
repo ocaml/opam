@@ -896,6 +896,11 @@ let source root shell f =
   in
   Printf.sprintf if_exists_source sanitized_fname sanitized_fname
 
+let if_not_login_script shell t =
+  match shell with
+  | SH_fish -> Printf.sprintf "if not status is-login\n    %send\n" t
+  | _ -> t (* Seems this option is only needed for fish *)
+
 let if_interactive_script shell t e =
   let ielse else_opt = match else_opt with
     |  None -> ""
@@ -1119,7 +1124,7 @@ let update_dot_profile root dot_profile shell =
          # This section can be safely removed at any time if needed.\n\
          %s\
          # END opam configuration\n"
-        (source root shell init_file) in
+        (if_not_login_script shell (source root shell init_file)) in
     OpamFilename.write dot_profile (old_body ^ opam_section);
     OpamConsole.msg "  Added %d lines after line %d in %s.\n"
       (count_lines opam_section - 1) (count_lines old_body) pretty_dot_profile
@@ -1171,16 +1176,23 @@ let setup
         opam_root_msg;
       begin match dot_profile with
       | Some dot_profile ->
+        let re = Re.compile (Re.char '\n') in
+        let to_add = Re.replace_string re ~by:"\n    " @@
+          if_not_login_script shell @@
+          source root shell @@ init_file shell
+        in
+        let plural = if String.(contains (trim to_add) '\n') then "s" else "" in
         OpamConsole.msg
           "If you allow it to, this initialisation step will update\n\
-          \  your %s configuration by adding the following line to %s:\n\
+          \  your %s configuration by adding the following line%s to %s:\n\
            \n\
           \    %s\
            \n\
           \  Otherwise, every time"
         (OpamConsole.colorise `bold (string_of_shell shell))
+        plural
         (OpamConsole.colorise `cyan @@ OpamFilename.prettify dot_profile)
-        (OpamConsole.colorise `bold @@ source root shell (init_file shell));
+        (OpamConsole.colorise `bold to_add);
       | None ->
         OpamConsole.msg "When"
       end;
