@@ -875,14 +875,12 @@ let env_hook_script shell =
 
 let source root shell f =
   let if_exists_source: _ format = match shell with
-    | SH_csh -> "if ( -f '%s' ) source '%s' >& /dev/null\n"
-    | SH_fish -> "test -r '%s' && source '%s' > /dev/null 2> /dev/null; or true\n"
-    | SH_sh | SH_bash -> "test -r '%s' && . '%s' > /dev/null 2> /dev/null || true\n"
-    | SH_zsh -> "[[ ! -r '%s' ]] || source '%s' > /dev/null 2> /dev/null\n"
-    | SH_cmd ->
-      "if exist \"%s\" call \"%s\" >NUL 2>NUL\n" 
-    | SH_pwsh _ ->
-      "if Test-Path \"%s\" { . \"%s\" *> $null }\n" 
+    | SH_csh -> "if ( -f '%s' ) source '%s'\n"
+    | SH_fish -> "test -r '%s' && source '%s'\n"
+    | SH_sh | SH_bash -> "test -r '%s' && . '%s'\n"
+    | SH_zsh -> "[[ ! -r '%s' ]] || source '%s'\n"
+    | SH_cmd -> "if exist \"%s\" call \"%s\"\n"
+    | SH_pwsh _ -> "if Test-Path \"%s\" { . \"%s\" }\n"
   in
   let sanitized_fname =
     let fname = OpamFilename.to_string (OpamPath.init root // f) in
