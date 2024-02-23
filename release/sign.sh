@@ -21,12 +21,12 @@ sign() {
     fi
 }
 
-DIR=$(dirname $0)
+DIR=$(dirname "$0")
 cd "$DIR"
 
 OUTDIR="out/$TAG"
 cd "${OUTDIR}"
 
-for f in opam-$TAG-* opam-full-$TAG.tar.gz; do
+for f in opam-"$TAG"-* opam-full-"$TAG".tar.gz; do
     sign "$f"
 done

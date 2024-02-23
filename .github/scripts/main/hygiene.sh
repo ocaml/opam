@@ -58,7 +58,7 @@ case $GITHUB_EVENT_NAME in
     CheckConfigure "$GITHUB_SHA"
     ;;
   pull_request)
-    for commit in $(git rev-list $BASE_REF_SHA...$PR_REF_SHA --reverse)
+    for commit in $(git rev-list "$BASE_REF_SHA...$PR_REF_SHA" --reverse)
     do
       echo "check configure for $commit"
       CheckConfigure "$commit"
@@ -97,9 +97,9 @@ cd ..
 
 if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$BRANCH" = "master" ]; then
   (set +x ; echo -en "::group::check default cli\r") 2>/dev/null
-  CURRENT_MAJOR="`sed -n "s/^AC_INIT(\[opam],\[\([0-9]\+\)[^0-9]*.*])$/\1/p" configure.ac`"
-  DEFAULT_CLI_MAJOR="`sed -n "/let *default *=/s/.*(\([0-9]*\)[^0-9]*.*/\1/p" src/client/opamCLIVersion.ml`"
-  if [ $CURRENT_MAJOR -eq $DEFAULT_CLI_MAJOR ]; then
+  CURRENT_MAJOR="$(sed -n "s/^AC_INIT(\[opam],\[\([0-9]\+\)[^0-9]*.*])$/\1/p" configure.ac)"
+  DEFAULT_CLI_MAJOR="$(sed -n "/let *default *=/s/.*(\([0-9]*\)[^0-9]*.*/\1/p" src/client/opamCLIVersion.ml)"
+  if [ "$CURRENT_MAJOR" -eq "$DEFAULT_CLI_MAJOR" ]; then
     echo "Major viersion is default cli one: $CURRENT_MAJOR"
   else
     echo -e "[\e[31mERROR\e[0m] Major version $CURRENT_MAJOR and default cli version $DEFAULT_CLI_MAJOR mismatches"
@@ -125,4 +125,4 @@ please run dune exec --root=. -- ./ci.exe from .github/workflows and fixup the c
 fi
 (set +x ; echo -en "::endgroup::check workflow generation\r") 2>/dev/null
 
-exit $ERROR
+exit "$ERROR"

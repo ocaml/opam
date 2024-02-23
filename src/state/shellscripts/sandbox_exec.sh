@@ -11,7 +11,8 @@ POL="$POL"'(allow file-write* (regex #"^(/private)?(/var)?/tmp/"))'
 
 add_mounts() {
     if [ -d "$2" ]; then
-      local DIR="$(cd "$2" && pwd -P)"
+      local DIR
+      DIR="$(cd "$2" && pwd -P)"
       case "$1" in
           ro) POL="$POL"'(deny file-write* (subpath "'"$DIR"'"))';;
           rw) POL="$POL"'(allow file-write* (subpath "'"$DIR"'"))';;
@@ -82,7 +83,7 @@ case "$COMMAND" in
     remove)
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch/}" != "X${PWD}" ]; then
+        if [ "X${PWD#"$OPAM_SWITCH_PREFIX"/.opam-switch/}" != "X${PWD}" ]; then
           add_mounts rw "$PWD"
         fi
         ;;

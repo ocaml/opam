@@ -10,7 +10,7 @@ HOST="${3:-}"
 
 if [ "$PLATFORM" = Windows ]; then
   EXE='.exe'
-  if [ -e $OCAML_LOCAL.tar ]; then
+  if [ -e "$OCAML_LOCAL".tar ]; then
     mkdir -p "$OCAML_LOCAL"
     tar -C "$OCAML_LOCAL" -pxf "$OCAML_LOCAL.tar"
     exit 0
@@ -115,7 +115,7 @@ if [[ $OPAM_TEST -ne 1 ]] ; then
   fi
 fi
 
-if ! ./configure --prefix "$PREFIX"$HOST --with-vendored-deps ${CONFIGURE_SWITCHES:-} ; then
+if ! ./configure --prefix "$PREFIX$HOST" --with-vendored-deps "${CONFIGURE_SWITCHES:-}" ; then
   echo
   echo -e "[\e[31mERROR\e[0m] OCaml's configure script failed"
   (set +x ; echo -en "::group::config.log contents\r") 2>/dev/null
@@ -137,7 +137,7 @@ cd ..
 rm -rf "ocaml-$OCAML_VERSION"
 
 if [[ $PLATFORM != 'Windows' ]]; then
-  echo > "$OCAML_LOCAL/bin/ocamldoc" <<"EOF"
+  cat > "$OCAML_LOCAL/bin/ocamldoc" <<"EOF"
 #!/bin/sh
 
 echo 'ocamldoc is not supposed to be called'>&2

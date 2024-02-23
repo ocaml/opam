@@ -1,3 +1,4 @@
+#!/bin/bash
 . .github/scripts/common/preamble.sh
 
 CWD=$PWD
@@ -18,8 +19,8 @@ OPAM_UPGRADE=${OPAM_UPGRADE:-0}
 
 OPAM_REPO_MAIN=https://github.com/ocaml/opam-repository.git
 
-OPAM12CACHE=`eval echo $OPAM12CACHE`
-OPAMBSROOT=`eval echo $OPAMBSROOT`
+OPAM12CACHE=$(eval echo "$OPAM12CACHE")
+OPAMBSROOT=$(eval echo "$OPAMBSROOT")
 
 OPAMBSSWITCH=opam-build
 
@@ -43,12 +44,12 @@ init-bootstrap () {
     export OPAMROOT=$OPAMBSROOT
     # The system compiler will be picked up
     if [ "${OPAM_REPO%.git}" != "${OPAM_REPO_MAIN%.git}" ]; then
-      opam init --no-setup git+$OPAM_REPO_MAIN#$OPAM_REPO_SHA
+      opam init --no-setup git+"$OPAM_REPO_MAIN#$OPAM_REPO_SHA"
     else
-      opam init --no-setup git+$OPAM_REPO_CACHE#$OPAM_REPO_SHA
+      opam init --no-setup git+"$OPAM_REPO_CACHE#$OPAM_REPO_SHA"
     fi
 
-    cat >> $OPAMROOT/config <<EOF
+    cat >> "$OPAMROOT"/config <<EOF
 archive-mirrors: "https://opam.ocaml.org/cache"
 EOF
 
@@ -58,7 +59,7 @@ EOF
     if [[ $CURRENT_SWITCH != "default" ]] ; then
       opam switch default
       eval $(opam env)
-      opam switch remove $CURRENT_SWITCH
+      opam switch remove "$CURRENT_SWITCH"
     fi
 
     opam switch create $OPAMBSSWITCH ocaml-system

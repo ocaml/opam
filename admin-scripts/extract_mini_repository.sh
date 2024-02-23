@@ -75,7 +75,7 @@ rm -rf "${WORK_DIR}/${REPO_DIR_NAME}/.git"
 
 unrequired_compiler() {
   for version in ${COMPILERS}; do
-      if [ ${version} = "$1" ]; then return 1; fi
+      if [ "${version}" = "$1" ]; then return 1; fi
   done
   return 0
 }
@@ -101,7 +101,7 @@ done
 ## Fetch the packages and compilers archives
 
 for version in ${COMPILERS}; do
-    opam admin make --resolve --compiler ${version} ocaml.${version} ${PACKAGES}
+    opam admin make --resolve --compiler "${version}" ocaml."${version}" "${PACKAGES}"
 done
 
 ## Remove the unrequired package "versions

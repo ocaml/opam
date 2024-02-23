@@ -9,11 +9,11 @@ export OCAMLRUNPARAM=b
 # All environment variable are overwritten in job description
 # One cache per solver, $CACHE/opam.<solver>.cached
 export OPAMROOT=$OPAMBSROOT
-echo $OPAMROOT
+echo "$OPAMROOT"
 
 case "$SOLVER" in
   z3)
-    PKGS=$SOLVER
+    PKGS=("$SOLVER")
     if [[ $RUNNER_OS = 'macOS' ]]; then
       # brew may require extra flags to override the system-installed python,
       # so we assume the presence of python3 on the macOS runners.
@@ -21,7 +21,7 @@ case "$SOLVER" in
     fi
     ;;
   0install)
-    PKGS="$SOLVER opam-0install-cudf"
+    PKGS=("$SOLVER" opam-0install-cudf)
     ;;
   *)
     echo -e "\e[31mSolver $SOLVER not handled\e[0m";
@@ -30,9 +30,9 @@ case "$SOLVER" in
 esac
 
 opam update --depexts
-opam switch create $SOLVER ocaml-system || true
+opam switch create "$SOLVER" ocaml-system || true
 opam upgrade --all
-opam install $PKGS
+opam install "${PKGS[@]}"
 opam install . --deps
 opam clean --logs --switch-cleanup
 eval $(opam env)

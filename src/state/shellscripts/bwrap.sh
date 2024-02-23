@@ -50,7 +50,8 @@ add_mounts() {
 add_sys_mounts() {
     for dir in "$@"; do
         if [ -L "$dir" ]; then
-            local src=$(readlink -f "$dir")
+            local src
+            src=$(readlink -f "$dir")
             add_mount sym "$src" "$dir"
         else
             add_mounts ro "$dir"
@@ -71,7 +72,8 @@ done
 
 mount_linked_cache() {
   local l_cache=$1
-  local cache=$(readlink -m "$l_cache")
+  local cache
+  cache=$(readlink -m "$l_cache")
   mkdir -p "$cache"
   add_mount rw "$l_cache" "$cache"
 }
@@ -125,7 +127,7 @@ case "$COMMAND" in
     remove)
         add_mounts rw "$OPAM_SWITCH_PREFIX"
         add_mounts ro "$OPAM_SWITCH_PREFIX/.opam-switch"
-        if [ "X${PWD#$OPAM_SWITCH_PREFIX/.opam-switch/}" != "X${PWD}" ]; then
+        if [ "X${PWD#"$OPAM_SWITCH_PREFIX"/.opam-switch/}" != "X${PWD}" ]; then
           add_mounts rw "$PWD"
         fi
         ;;
