@@ -156,3 +156,4 @@ users)
 
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
+  * `OpamSystem.patch`: use `git -c core.autocrlf=false apply --unsafe-paths -p1 <patch>` instead of `patch` [#5400 @kit-ty-kate - fix #3433 #3782 #3639]
