@@ -984,8 +984,7 @@ module OpamSys = struct
       try Unix.getenv "HOME"
       with Not_found ->
         if Sys.win32 then
-          (* CSIDL_PROFILE = 0x28 *)
-          OpamStubs.(shGetFolderPath 0x28 SHGFP_TYPE_CURRENT)
+          OpamStubs.getPathToHome ()
         else
           Sys.getcwd ()
     ) in
@@ -1007,8 +1006,7 @@ module OpamSys = struct
         r
 
   let system () =
-    (* CSIDL_SYSTEM = 0x25 *)
-    OpamStubs.(shGetFolderPath 0x25 SHGFP_TYPE_CURRENT)
+    OpamStubs.getPathToSystem ()
 
   type os =
     | Darwin

@@ -350,7 +350,7 @@ AS_CASE([$TARGET],
     # NOTE: On Windows, the Windows specific dlls should stay dynamic for security reasons
     # NOTE: -l:libstdc++.a is necessary (vs. -lstdc++) as flexlink will use libstdc++.dll.a
     # which still depends on the DLL at runtime instead of libstdc++.a (that looks like a bug in flexlink)
-    platform_dependant_stuff="-cclib -lopam_stubs_win32_stubs -cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32"
+    platform_dependant_stuff="-cclib -lopam_stubs_win32_stubs -cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid"
   ])
 AS_CASE([${support_static},${enable_static}],
   [no,yes],[AC_MSG_ERROR([--enable-static is not available on this platform (${TARGET}).])],

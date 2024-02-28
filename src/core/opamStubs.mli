@@ -105,9 +105,10 @@ val process_putenv : int32 -> string -> string -> bool
     if the target process is 32-bit and the current process is 64-bit or vice
     versa (outcomes vary from a no-op to a segfault). *)
 
-val shGetFolderPath : int -> shGFP_type -> string
-(** Windows only. [shGetFolderPath nFolder dwFlags] retrieves the location of a special
-    folder by CSIDL value. See https://msdn.microsoft.com/en-us/library/windows/desktop/bb762181.aspx *)
+val getPathToHome : unit -> string
+val getPathToSystem : unit -> string
+val getPathToLocalAppData : unit -> string
+(** Windows only. retrieves the location of the wanted directory *)
 
 val sendMessageTimeout :
   nativeint -> int -> int -> ('a, 'b, 'c) winmessage -> 'a -> 'b -> int * 'c
