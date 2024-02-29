@@ -133,6 +133,7 @@ users)
 # API updates
 ## opam-client
   * `OpamClient.windows_checks`: On existing cygwin install, permit to detect msys2 and store `os-distribution=msys2` in `global-variables` config file field [#5843 @rjbou]
+  * `OpamClient.windows_checks`: When updating config file for msys2, resolve `pacman` path and store it in `sys-pkg-manager-cmd` for msys2 [#5843 @rjbou]
 
 ## opam-repository
 

@@ -813,7 +813,24 @@ let windows_checks ?cygwin_setup ?git_location config =
           OpamStd.Sys.exit_because `Aborted
     in
     let config =
-      if is_msys2 cygcheck then config else
+      if is_msys2 cygcheck then
+        let env =
+          OpamStd.Env.cyg_env ~cygbin:(OpamFilename.Dir.to_string cygbin)
+            ~git_location:None
+        in
+        match OpamSystem.resolve_command ~env "pacman.exe" with
+        | Some pacman ->
+          if OpamConsole.confirm
+              "Found package manager pacman binary at %s.\n\
+               Do you want to use it for depexts?"
+              pacman then
+            OpamFile.Config.with_sys_pkg_manager_cmd
+              (OpamStd.String.Map.add distrib (OpamFilename.of_string pacman)
+                 (OpamFile.Config.sys_pkg_manager_cmd config))
+              config
+          else config
+        | None -> config
+      else
         OpamFile.Config.with_sys_pkg_manager_cmd
           (OpamStd.String.Map.add distrib cygcheck
              (OpamFile.Config.sys_pkg_manager_cmd config))
