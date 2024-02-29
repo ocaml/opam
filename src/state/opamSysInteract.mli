@@ -50,7 +50,8 @@ module Cygwin : sig
   val install: packages:OpamSysPkg.t list -> OpamFilename.t
 
   (* [check_install ~variant path] checks a Cygwin install at [path]. It checks
-     that 'path\cygcheck.exe' or 'path\bin\cygcheck.exe' exists.
+     that 'path\cygcheck.exe', 'path\bin\cygcheck.exe', or
+     'path\usr\bin\cygcheck.exe' exists.
      If [~variant] is false, checks that it is strictly a Cygwin install,
      otherwise a Cygwin-like install as MSYS2. *)
   val check_install:
