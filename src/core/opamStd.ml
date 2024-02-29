@@ -1005,8 +1005,9 @@ module OpamSys = struct
         Hashtbl.add memo arg r;
         r
 
-  let system () =
-    OpamStubs.getPathToSystem ()
+  let system =
+    let system = Lazy.from_fun OpamStubs.getPathToSystem in
+    fun () -> Lazy.force system
 
   type os =
     | Darwin

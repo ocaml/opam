@@ -111,6 +111,7 @@ users)
   * Ensure that the system critical error dialog is disabled when opam starts [#5828 @dra27]
   * Fix loading git location at init [#5843 @rjbou]
   * Remove use of deprecated function SHGetFolderPath and use SHGetKnownFolderPath instead [#5862 @kit-ty-kate]
+  * Improve performance by only calling OpamStubs.getPathToSystem once [#5862 @dra27]
 
 ## Test
 
