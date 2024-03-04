@@ -25,6 +25,7 @@ users)
   * Fix `git-location` handling in init config file [#5848 @rjbou - fix #5845]
   * Fix MSYS2 support [#5843 @rjbou - fix #5683]
   * Test if file exists before sourcing in fish + powershell [#5864 @ElectreAAS]
+  * Don't silence errors in init scripts [#5865 @ElectreAAS]
 
 ## Config report
 

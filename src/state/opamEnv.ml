@@ -887,19 +887,19 @@ let source root shell f =
       fname fname
   | SH_fish ->
     let fname = unix_transform ~using_backslashes:true () in
-    Printf.sprintf "test -r '%s' && source '%s' > /dev/null 2> /dev/null; or true\n" fname fname
+    Printf.sprintf "test -r '%s' && source '%s'; or true\n" fname fname
   | SH_sh | SH_bash ->
     let fname = unix_transform () in
-    Printf.sprintf "test -r '%s' && . '%s' > /dev/null 2> /dev/null || true\n"
+    Printf.sprintf "test -r '%s' && . '%s' || true\n"
       fname fname
   | SH_zsh ->
     let fname = unix_transform () in
-    Printf.sprintf "[[ ! -r '%s' ]] || source '%s' > /dev/null 2> /dev/null\n"
+    Printf.sprintf "[[ ! -r '%s' ]] || source '%s'\n"
       fname fname
   | SH_cmd ->
-    Printf.sprintf "if exist \"%s\" call \"%s\" >NUL 2>NUL\n" fname fname
+    Printf.sprintf "if exist \"%s\" call \"%s\"\n" fname fname
   | SH_pwsh _ ->
-    Printf.sprintf "if Test-Path \"%s\" { . \"%s\" *> $null }\n" fname fname
+    Printf.sprintf "if Test-Path \"%s\" { . \"%s\" }\n" fname fname
 
 let if_interactive_script shell t e =
   let ielse else_opt = match else_opt with
