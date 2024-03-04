@@ -1254,14 +1254,6 @@ module OpamSys = struct
     else
     fun ~cygbin:_ _ -> `Native
 
-  let is_cygwin_cygcheck ~cygbin =
-    match cygbin with
-    | Some cygbin ->
-      let cygpath = Filename.concat cygbin "cygpath.exe" in
-      Sys.file_exists cygpath
-      && (get_windows_executable_variant ~cygbin:(Some cygbin) cygpath = `Cygwin)
-    | None -> false
-
   let get_cygwin_variant ~cygbin cmd =
     (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
        Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
@@ -1273,6 +1265,20 @@ module OpamSys = struct
 
   let is_cygwin_variant ~cygbin cmd =
     get_cygwin_variant ~cygbin cmd = `Cygwin
+
+  let is_cygwin_cygcheck_t ~variant ~cygbin =
+    match cygbin with
+    | Some cygbin ->
+      let cygpath = Filename.concat cygbin "cygpath.exe" in
+      Sys.file_exists cygpath
+      && (variant ~cygbin:(Some cygbin) cygpath = `Cygwin)
+    | None -> false
+
+  let is_cygwin_variant_cygcheck ~cygbin =
+    is_cygwin_cygcheck_t ~variant:get_cygwin_variant ~cygbin
+
+  let is_cygwin_cygcheck ~cygbin =
+    is_cygwin_cygcheck_t ~variant:get_windows_executable_variant ~cygbin
 
   exception Exit of int
   exception Exec of string * string array * string array

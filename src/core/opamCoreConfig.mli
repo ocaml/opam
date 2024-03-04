@@ -72,7 +72,10 @@ type t = private {
   (** If set, will take full md5 of all files when checking diffs (to track
       installations), rather than rely on just file size and mtime *)
   cygbin: string option;
+  (** Windows specific: the path of binary directory (bin/) of currently used
+      Cygwin install: internal or external Cygwin, or MSYS2. *)
   git_location: string option;
+  (** Windows specific: the full path of the git binary to use on Windows. *)
   set : bool;
   (** Options have not yet been initialised (i.e. defaults are active) *)
 }

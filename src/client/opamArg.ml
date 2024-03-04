@@ -600,6 +600,21 @@ let apply_global_options cli o =
             | _, element::elements -> aux (Some element) elements
           in
           aux None elements
+        | { pelem = Variable ({ pelem = "global-variables"; _},
+                              {pelem = List { pelem = elements; _}; _}); _} ->
+          let rec aux last elements =
+            match last, elements with
+            | _, [] -> ()
+            | Some { pelem = Ident "os-distribution"; _},
+              { pelem = String "msys2"; _}::_  ->
+              let cygbin =
+                OpamStd.Option.map Filename.dirname
+                  (OpamSystem.resolve_command "cygcheck")
+              in
+              OpamCoreConfig.update ?cygbin ()
+            | _, element::elements -> aux (Some element) elements
+          in
+          aux None elements
         | { pelem = Variable ({ pelem = "git-location"; _},
                               {pelem = String git_location; _}); _} ->
           OpamCoreConfig.update ~git_location ()

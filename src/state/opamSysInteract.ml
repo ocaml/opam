@@ -8,6 +8,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamTypes
+
 let log fmt = OpamConsole.log "XSYS" fmt
 
 (* Run commands *)
@@ -333,13 +335,17 @@ module Cygwin = struct
 
   let default_cygroot = "C:\\cygwin64"
 
-  let check_install path =
+  let check_install ~variant path =
+    let is_cygwin =
+      if variant then OpamStd.Sys.is_cygwin_variant_cygcheck
+      else OpamStd.Sys.is_cygwin_cygcheck
+    in
     if not (Sys.file_exists path) then
       Error (Printf.sprintf "%s not found!" path)
     else if Filename.basename path = "cygcheck.exe" then
       (* We have cygcheck.exe path *)
       let cygbin = Some (Filename.dirname path) in
-      if OpamStd.Sys.is_cygwin_cygcheck ~cygbin then
+      if is_cygwin ~cygbin then
         Ok (OpamFilename.of_string path)
       else
         Error
@@ -349,19 +355,32 @@ module Cygwin = struct
     else if not (Sys.is_directory path) then
       Error (Printf.sprintf "%s is not a directory" path)
     else
-    let cygbin = Filename.concat path "bin" in
-    (* We have cygroot path *)
-    if Sys.file_exists cygbin then
-      if OpamStd.Sys.is_cygwin_cygcheck ~cygbin:(Some cygbin) then
-        Ok (OpamFilename.of_string (Filename.concat cygbin "cygcheck.exe"))
+    (* We have cygroot alike path *)
+    let bin = Filename.concat path "bin" in
+    let usr_bin = Filename.concat (Filename.concat path "usr") "bin" in
+    let check cygbin =
+      if Sys.file_exists cygbin then
+        if is_cygwin ~cygbin:(Some cygbin) then
+          Some (Left (OpamFilename.of_string
+                        (Filename.concat cygbin "cygcheck.exe")))
+        else
+          Some (Right cygbin)
       else
-        Error
-          (Printf.sprintf
-             "%s found, but it does not appear to be a Cygwin installation"
-             path)
-    else
+        None
+    in
+    (* We need to keep that order, to have a better error message *)
+    match check bin, check usr_bin with
+    | Some (Left cygcheck), _ | _, Some (Left cygcheck) ->
+      Ok cygcheck
+    | Some (Right cygbin), _ | _, Some (Right cygbin) ->
       Error
-        (Printf.sprintf "bin\\cygcheck.exe not found in %s"
+        (Printf.sprintf
+           "%s found, but it does not appear to be a Cygwin installation"
+           cygbin)
+    | _, None ->
+      Error
+        (Printf.sprintf
+           "cygcheck.exe not found in %s subdirectories bin or usr\bin"
            path)
 
   (* Set setup.exe in the good place, ie in .opam/.cygwin/ *)

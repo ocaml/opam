@@ -63,6 +63,7 @@ type t = {
   errlog_length: int;
   merged_output: bool;
   precise_tracking: bool;
+  (* Updated in OpamGlobalState.load_config and OpamArg.opam_init *)
   cygbin: string option;
   git_location: string option;
   set: bool;

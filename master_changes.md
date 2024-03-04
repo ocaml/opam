@@ -23,6 +23,7 @@ users)
   * Disable ACL in Cygwin internal install to avoid permission mismatch errors [#5796 @kit-ty-kate - fix #5781]
   * Add `sys-pkg-manager-cmd` as an accepted field in opamrc files [#5847 @rjbou - fix #5844]
   * Fix `git-location` handling in init config file [#5848 @rjbou - fix #5845]
+  * Fix MSYS2 support [#5843 @rjbou - fix #5683]
 
 ## Config report
 
@@ -131,11 +132,17 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamClient.windows_checks`: On existing cygwin install, permit to detect msys2 and store `os-distribution=msys2` in `global-variables` config file field [#5843 @rjbou]
+  * `OpamClient.windows_checks`: When updating config file for msys2, resolve `pacman` path and store it in `sys-pkg-manager-cmd` for msys2 [#5843 @rjbou]
+  * `OpamArg.apply_global_options`: load MSYS2 Cygwin binary path too [#5843 @rjbou]
 
 ## opam-repository
 
 ## opam-state
   * `OpamEnv.env_expansion`: Fix detection of out-of-date environment variables, a filter predicate was inverted [#5837 @dra27]
+  * `OpamSysInteract.Cygwin.check_install`: add `variant` argument to permit checking that it is an Cygwin-like install if it is set to true, keep checking that it is a strictly Cygwin install if false [#5843 @rjbou]
+  * `OpamSysInteract.Cygwin.check_install`: look for `cygcheck.exe` in `usr/bin` also as MSYS2 doesn't have "bin" [#5843 @rjbou]
+  * `OpamGlobalState.load_config`: load MSYS2 Cygwin binary path too at config file loading [#5843 @rjbou]
 
 ## opam-solver
 
@@ -143,3 +150,4 @@ users)
   * `OpamFile.InitConfig`: add `sys-pkg-manager-cmd` field [#5847 @rjbou]
 
 ## opam-core
+  * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
