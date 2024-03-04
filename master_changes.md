@@ -25,6 +25,7 @@ users)
   * Fix `git-location` handling in init config file [#5848 @rjbou - fix #5845]
   * Fix MSYS2 support [#5843 @rjbou - fix #5683]
   * Test if file exists before sourcing in fish + powershell [#5864 @ElectreAAS]
+  * Replace the dependency on GNU patch by a strict dependency on git [#5400 @kit-ty-kate - fix #3433 #3782 #3639]
 
 ## Config report
 
@@ -155,3 +156,4 @@ users)
 
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
+  * `OpamSystem.patch`: use `git -c core.autocrlf=false apply --unsafe-paths -p1 <patch>` instead of `patch` [#5400 @kit-ty-kate - fix #3433 #3782 #3639]
