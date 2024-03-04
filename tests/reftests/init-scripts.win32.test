@@ -1,5 +1,5 @@
 N0REP0
-### rm -rf $OPAMROOT
+### rm -rf "$OPAMROOT"
 ### opam init -na --bypass-checks --bare REPO --root root | grep -v Cygwin
 No configuration file found, using built-in defaults.
 

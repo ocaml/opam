@@ -120,6 +120,7 @@ users)
 ## Reftests
 ### Tests
   * Add init scripts tests [#5864 @rjbou]
+  * Fix the reftests when running in a directory containing spaces [#5867 @kit-ty-kate]
 
 ### Engine
 

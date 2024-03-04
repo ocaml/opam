@@ -677,7 +677,7 @@ let _ =
     let _, local = get_files v in
     List.iter (write (Sys.getcwd ())) local
   | _ -> ()
-### rm -rf $OPAMROOT
+### rm -rf "$OPAMROOT"
 ### OPAMSYSCOMP=2
 ### opam init -na default ./default --bare --bypass-checks --no-opamrc --debug-level=0 | grep -v Cygwin
 No configuration file found, using built-in defaults.

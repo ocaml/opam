@@ -2,7 +2,7 @@
 ### OPAMYES=1
 ### cp -R ${OPAMROOT}/repo/default .
 ### opam option opam-root-version --global | '"' -> '' >$ OPAMROOTVERSION
-### rm -rf ${OPAMROOT}
+### rm -rf "${OPAMROOT}"
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["false"] "no system compiler" ]
 ### opam init --no-setup --bypass-checks default default/ --fake --config opamrc | grep -v Cygwin
@@ -26,7 +26,7 @@ Faking installation of ocaml.4.10.0
 Done.
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
-### rm -rf ${OPAMROOT}
+### rm -rf "${OPAMROOT}"
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.02.3"] "old system compiler" ]
 ### opam init --no-setup --bypass-checks default default/ --fake --config opamrc | grep -v Cygwin
@@ -50,7 +50,7 @@ Faking installation of ocaml.4.10.0
 Done.
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
-### rm -rf ${OPAMROOT}
+### rm -rf "${OPAMROOT}"
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.07.0"] "new system compiler" ]
 ### opam init --no-setup --bypass-checks default default/ --fake --config opamrc | grep -v Cygwin
@@ -100,7 +100,7 @@ opam-version: "2.0"
 ### <pkg:comp.1>
 opam-version: "2.0"
 ### :: default setup ::
-### rm -rf $OPAMROOT
+### rm -rf "$OPAMROOT"
 ### opam init --bypass-checks --bare --no-setup default REPO/ | grep -v Cygwin
 No configuration file found, using built-in defaults.
 
@@ -122,7 +122,7 @@ wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "maco
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### :: full configred opamrc ::
-### rm -rf $OPAMROOT
+### rm -rf "$OPAMROOT"
 ### <opamrc>
 opam-version: "2.0"
 repositories: "norepo" {"REPO/"}
@@ -199,7 +199,7 @@ repositories: "norepo" {"file://${BASEDIR}/REPO"}
 ### sh $OPAMROOT/opam-init/hooks/a-script.sh test
 script test launched STOP i repeat STOP script test launched
 ### :: partially configured opamrc ::
-### rm -rf $OPAMROOT
+### rm -rf "$OPAMROOT"
 ### <opamrc>
 opam-version: "2.0"
 repositories: "norepo" {"REPO/"}

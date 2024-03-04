@@ -8,7 +8,7 @@ build: [ "false" ]
 ### <pkg:comp.3>
 opam-version:"2.0"
 flags: compiler
-### rm -rf $OPAMROOT
+### rm -rf "$OPAMROOT"
 ### opam init -na default REPO --bare --bypass-checks --no-opamrc --json=out.json
 No configuration file found, using built-in defaults.
 
