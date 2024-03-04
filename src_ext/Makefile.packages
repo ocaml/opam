@@ -107,7 +107,7 @@ dose3-pkg-build:
 	dune install "--prefix=$(OCAMLROOT)" -p dose3 dose3
 
 dune-local-pkg-build:
-	ocaml bootstrap.ml
+	ocaml boot/bootstrap.ml
 	cp dune.exe $(OCAMLBIN)/dune$(EXT_EXE)
 
 mccs-pkg-build:

@@ -54,6 +54,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Build
+  * Upgrade the vendored dune to 3.14.0 [#5869 @kit-ty-kate]
 
 ## Infrastructure
   *

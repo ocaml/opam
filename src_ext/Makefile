@@ -108,7 +108,7 @@ DUNE_CLONE=
 endif
 
 dune-local/_boot/install/default/bin/dune$(EXE): $(DUNE_CLONE)
-	cd dune-local && ocaml bootstrap.ml && ./boot.exe --release
+	cd dune-local && ocaml boot/bootstrap.ml && ./boot.exe --release
 
 build-pkg: clone-pkg $(PKG_EXTS:=.pkgbuild)
 	@
