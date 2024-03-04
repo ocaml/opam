@@ -29,36 +29,36 @@ variables.sh
 ### : Init scripts :
 ### cat root/opam-init/init.sh
 if [ -t 0 ]; then
-  test -r '${BASEDIR}/root/opam-init/complete.sh' && . '${BASEDIR}/root/opam-init/complete.sh' > /dev/null 2> /dev/null || true
+  test -r '${BASEDIR}/root/opam-init/complete.sh' && . '${BASEDIR}/root/opam-init/complete.sh' || true
 
-  test -r '${BASEDIR}/root/opam-init/env_hook.sh' && . '${BASEDIR}/root/opam-init/env_hook.sh' > /dev/null 2> /dev/null || true
+  test -r '${BASEDIR}/root/opam-init/env_hook.sh' && . '${BASEDIR}/root/opam-init/env_hook.sh' || true
 fi
 
-test -r '${BASEDIR}/root/opam-init/variables.sh' && . '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null || true
+test -r '${BASEDIR}/root/opam-init/variables.sh' && . '${BASEDIR}/root/opam-init/variables.sh' || true
 ### cat root/opam-init/init.zsh
 if [[ -o interactive ]]; then
-  [[ ! -r '${BASEDIR}/root/opam-init/complete.zsh' ]] || source '${BASEDIR}/root/opam-init/complete.zsh' > /dev/null 2> /dev/null
+  [[ ! -r '${BASEDIR}/root/opam-init/complete.zsh' ]] || source '${BASEDIR}/root/opam-init/complete.zsh'
 
-  [[ ! -r '${BASEDIR}/root/opam-init/env_hook.zsh' ]] || source '${BASEDIR}/root/opam-init/env_hook.zsh' > /dev/null 2> /dev/null
+  [[ ! -r '${BASEDIR}/root/opam-init/env_hook.zsh' ]] || source '${BASEDIR}/root/opam-init/env_hook.zsh'
 fi
 
-[[ ! -r '${BASEDIR}/root/opam-init/variables.sh' ]] || source '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null
+[[ ! -r '${BASEDIR}/root/opam-init/variables.sh' ]] || source '${BASEDIR}/root/opam-init/variables.sh'
 ### cat root/opam-init/init.fish
 if isatty
-  test -r '${BASEDIR}/root/opam-init/env_hook.fish' && source '${BASEDIR}/root/opam-init/env_hook.fish' > /dev/null 2> /dev/null; or true
+  test -r '${BASEDIR}/root/opam-init/env_hook.fish' && source '${BASEDIR}/root/opam-init/env_hook.fish'; or true
 end
 
-test -r '${BASEDIR}/root/opam-init/variables.fish' && source '${BASEDIR}/root/opam-init/variables.fish' > /dev/null 2> /dev/null; or true
+test -r '${BASEDIR}/root/opam-init/variables.fish' && source '${BASEDIR}/root/opam-init/variables.fish'; or true
 ### cat root/opam-init/init.csh
 if ( $?prompt ) then
-  if ( -f '${BASEDIR}/root/opam-init/env_hook.csh' ) source '${BASEDIR}/root/opam-init/env_hook.csh' >& /dev/null
+  if ( -f '${BASEDIR}/root/opam-init/env_hook.csh' ) source '${BASEDIR}/root/opam-init/env_hook.csh'
 endif
 
-if ( -f '${BASEDIR}/root/opam-init/variables.csh' ) source '${BASEDIR}/root/opam-init/variables.csh' >& /dev/null
+if ( -f '${BASEDIR}/root/opam-init/variables.csh' ) source '${BASEDIR}/root/opam-init/variables.csh'
 ### cat root/opam-init/init.cmd
-if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-init/variables.cmd" >NUL 2>NUL
+if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-init/variables.cmd"
 ### cat root/opam-init/init.ps1
-if Test-Path "${BASEDIR}/root/opam-init/variables.ps1" { . "${BASEDIR}/root/opam-init/variables.ps1" *> $null }
+if Test-Path "${BASEDIR}/root/opam-init/variables.ps1" { . "${BASEDIR}/root/opam-init/variables.ps1" }
 ### : Variables scripts :
 ### cat root/opam-init/variables.sh | grep -v man | grep -v MANPATH
 # Prefix of the current opam switch
