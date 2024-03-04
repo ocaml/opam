@@ -43,7 +43,7 @@ fi
 
 [[ ! -r '${BASEDIR}/root/opam-init/variables.sh' ]] || source '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null
 ### cat root/opam-init/init.fish
-if isatty
+if status is-interactive
   test -r '${BASEDIR}/root/opam-init/env_hook.fish' && source '${BASEDIR}/root/opam-init/env_hook.fish' > /dev/null 2> /dev/null; or true
 end
 
@@ -107,8 +107,8 @@ if [[ -z ${precmd_functions[(r)_opam_env_hook]} ]]; then
 fi
 ### cat root/opam-init/env_hook.fish
 set -gx OPAMNOENVNOTICE true;
-function __opam_env_export_eval --on-event fish_prompt;
-    eval (opam env --shell=fish --readonly 2> /dev/null);
+function __opam_env_export_eval --on-event fish_prompt
+    eval (opam env --shell=fish --readonly 2> /dev/null)
 end
 ### cat root/opam-init/env_hook.csh
 if ( ! ${?OPAMNOENVNOTICE} ) setenv OPAMNOENVNOTICE ""
