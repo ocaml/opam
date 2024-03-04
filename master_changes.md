@@ -84,6 +84,7 @@ users)
   * Do not check for cppo in the configure script (not used directly anymore since #5498) [#5794 @kit-ty-kate]
   * Upgrade vendored cmdliner to 1.2.0 [#5797 @kit-ty-kate]
   * Add winsymlinks:native to the CYGWIN environment variable when installing a package on Windows [#5793 @kit-ty-kate - fix #5782]
+  * Upgrade the vendored dune to 3.14.0 [#5869 @kit-ty-kate]
 
 ## Infrastructure
   * Fix depexts CI workflow and ensure all workflows run on master push [#5788 @dra27]

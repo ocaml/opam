@@ -16,8 +16,8 @@ if [[ $OCAML_BRANCH -gt 407 ]]; then
   fi
   make -C src_ext dune-local.stamp
   cd src_ext/dune-local
-  ocaml bootstrap.ml
-  cp dune.exe "$PREFIX/bin/dune$EXE"
+  ocaml boot/bootstrap.ml
+  cp _boot/dune.exe "$PREFIX/bin/dune$EXE"
   cd ../..
 
   ./configure --with-vendored-deps
