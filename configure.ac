@@ -281,6 +281,9 @@ AX_COMPARE_VERSION([$OCAMLVERSION], [lt], [4.08.0],
   [DUNE_SECONDARY=])
 AC_SUBST([DUNE_SECONDARY])
 
+AS_IF([test -n "$DUNE" -a "x$with_vendored_deps" = "xyes"],[
+  DUNE=''
+])
 AS_CASE([$DUNE,$with_dune],
   [,yes],     [AC_MSG_ERROR([Dune was not found in PATH])],
   [*,no],     [DUNE=''],

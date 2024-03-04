@@ -5981,6 +5981,12 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
 
 
+if test -n "$DUNE" -a "x$with_vendored_deps" = "xyes"
+then :
+
+  DUNE=''
+
+fi
 case $DUNE,$with_dune in #(
   ,yes) :
     as_fn_error $? "Dune was not found in PATH" "$LINENO" 5 ;; #(
