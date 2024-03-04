@@ -26,6 +26,8 @@
 #include <Windows.h>
 #include <Shlobj.h>
 #include <TlHelp32.h>
+#include <Knownfolders.h>
+#include <Objbase.h>
 
 #include <stdio.h>
 
@@ -549,24 +551,29 @@ CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
     caml_failwith(result);
 }
 
-/*
- * Somewhat against my better judgement, wrap SHGetFolderPath rather than
- * SHGetKnownFolderPath to maintain XP compatibility. OPAM already requires
- * Windows Vista+ because of GetCurrentConsoleFontEx, but there may be a
- * workaround for that for XP lusers.
- */
-CAMLprim value OPAMW_SHGetFolderPath(value nFolder, value dwFlags)
+static value OPAMW_SHGetKnownFolderPath(REFKNOWNFOLDERID rfid)
 {
-  WCHAR szPath[MAX_PATH];
+  PWSTR path = NULL;
+  value result;
 
-  if (SUCCEEDED(SHGetFolderPath(NULL,
-                                Int_val(nFolder),
-                                NULL,
-                                Int_val(dwFlags),
-                                szPath)))
-    return caml_copy_string_of_utf16(szPath);
-  else
-    caml_failwith("OPAMW_SHGetFolderPath");
+  if (SUCCEEDED(SHGetKnownFolderPath(rfid, 0, NULL, &path))) {
+    result = caml_copy_string_of_utf16(path);
+    CoTaskMemFree(path);
+    return result;
+  } else {
+    CoTaskMemFree(path);
+    caml_failwith("OPAMW_SHGetKnownFolderPath");
+  }
+}
+
+CAMLprim value OPAMW_GetPathToHome(value _unit) {
+  return OPAMW_SHGetKnownFolderPath(&FOLDERID_Profile);
+}
+CAMLprim value OPAMW_GetPathToSystem(value _unit) {
+  return OPAMW_SHGetKnownFolderPath(&FOLDERID_System);
+}
+CAMLprim value OPAMW_GetPathToLocalAppData(value _unit) {
+  return OPAMW_SHGetKnownFolderPath(&FOLDERID_LocalAppData);
 }
 
 CAMLprim value OPAMW_SendMessageTimeout(value vhWnd,

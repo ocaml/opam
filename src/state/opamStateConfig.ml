@@ -82,8 +82,7 @@ let default = {
     else
       let open OpamFilename in
       let local_appdata =
-        (* CSIDL_LOCAL_APPDATA = 0x1c *)
-        Dir.of_string (OpamStubs.(shGetFolderPath 0x1c SHGFP_TYPE_CURRENT))
+        Dir.of_string (OpamStubs.getPathToLocalAppData ())
       in
       concat_and_resolve local_appdata "opam"
     );
