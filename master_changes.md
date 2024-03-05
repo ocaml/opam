@@ -88,6 +88,7 @@ users)
 
 ## Infrastructure
   * Fix depexts CI workflow and ensure all workflows run on master push [#5788 @dra27]
+  * Update src_ext/Makefile.dune along with src_ext/Makefile.sources [#5871 @dra27]
 
 ## Release scripts
 
