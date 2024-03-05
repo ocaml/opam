@@ -1,0 +1,251 @@
+diff -Naur a/boot/duneboot.ml b/boot/duneboot.ml
+--- a/boot/duneboot.ml	2024-02-12 10:12:19.000000000 +0000
++++ b/boot/duneboot.ml	2024-03-05 15:30:37.141802013 +0000
+@@ -1067,6 +1067,7 @@
+   ~ocaml_config
+   ~dependencies
+   ~c_files
++  ~build_flags
+   ~link_flags
+   { target = name, main; external_libraries; _ }
+   =
+@@ -1114,7 +1115,7 @@
+         Process.run
+           ~cwd:build_dir
+           Config.compiler
+-          (List.concat [ [ "-c"; "-g" ]; external_includes; [ file ] ])
++          (List.concat [ [ "-c"; "-g" ]; external_includes; build_flags; [ file ] ])
+         >>| fun () -> Filename.chop_extension file ^ ext_obj))
+   >>= fun obj_files ->
+   let compiled_ml_ext =
+@@ -1151,6 +1152,12 @@
+ 
+ and clear dir = List.iter (readdir dir) ~f:rm_rf
+ 
++let get_flags ocaml_system flags =
++  match List.assoc_opt ocaml_system flags with
++  | None -> []
++  | Some flags -> flags
++;;
++
+ (** {2 Bootstrap process} *)
+ let main () =
+   (try clear build_dir with
+@@ -1164,15 +1171,14 @@
+   let c_files = List.map ~f:(fun (_, _, c_files) -> c_files) libraries |> List.concat in
+   get_dependencies libraries
+   >>= fun dependencies ->
+-  let link_flags =
++  let ocaml_system =
+     match StringMap.find_opt "system" ocaml_config with
+     | None -> assert false
+-    | Some platform ->
+-      (match List.assoc_opt platform Libs.link_flags with
+-       | None -> []
+-       | Some flags -> flags)
++    | Some s -> s
+   in
+-  build ~ocaml_config ~dependencies ~c_files ~link_flags task
++  let build_flags = get_flags ocaml_system Libs.build_flags in
++  let link_flags = get_flags ocaml_system Libs.link_flags in
++  build ~ocaml_config ~dependencies ~c_files ~build_flags ~link_flags task
+ ;;
+ 
+ let () = Fiber.run (main ())
+diff -Naur a/boot/libs.ml b/boot/libs.ml
+--- a/boot/libs.ml	2024-02-12 10:12:19.000000000 +0000
++++ b/boot/libs.ml	2024-03-05 15:30:37.141802013 +0000
+@@ -114,3 +114,10 @@
+     [ "-cclib"; "-lshell32"; "-cclib"; "-lole32"; "-cclib"; "-luuid" ])
+   ; ("beos", [ "-cclib"; "-lbsd" ])
+   ]
++
++let build_flags =
++  [ ("win32", [ "-ccopt"; "-D_UNICODE"; "-ccopt"; "-DUNICODE" ])
++  ; ("win64", [ "-ccopt"; "-D_UNICODE"; "-ccopt"; "-DUNICODE" ])
++  ; ("mingw", [ "-ccopt"; "-D_UNICODE"; "-ccopt"; "-DUNICODE" ])
++  ; ("mingw64", [ "-ccopt"; "-D_UNICODE"; "-ccopt"; "-DUNICODE" ])
++  ]
+diff -Naur a/src/dune_rules/bootstrap_info.ml b/src/dune_rules/bootstrap_info.ml
+--- a/src/dune_rules/bootstrap_info.ml	2024-02-12 10:12:19.000000000 +0000
++++ b/src/dune_rules/bootstrap_info.ml	2024-03-05 15:30:37.141802013 +0000
+@@ -15,6 +15,9 @@
+       | Some x -> Left x
+       | None -> Right lib)
+   in
++  let windows_system_values = [ "win32"; "win64"; "mingw"; "mingw64" ] in
++  let win_build_flags = [ "-ccopt"; "-D_UNICODE"; "-ccopt"; "-DUNICODE" ] in
++  let build_flags = List.map windows_system_values ~f:(fun f -> f, win_build_flags) in
+   let link_flags =
+     let win_link_flags =
+       [ "-cclib"; "-lshell32"; "-cclib"; "-lole32"; "-cclib"; "-luuid" ]
+@@ -22,12 +25,9 @@
+     (* additional link flags keyed by the platform *)
+     [ ( "macosx"
+       , [ "-cclib"; "-framework CoreFoundation"; "-cclib"; "-framework CoreServices" ] )
+-    ; "win32", win_link_flags
+-    ; "win64", win_link_flags
+-    ; "mingw", win_link_flags
+-    ; "mingw64", win_link_flags
+-    ; "beos", [ "-cclib"; "-lbsd" ] (* flags for Haiku *)
+     ]
++    @ List.map windows_system_values ~f:(fun w -> w, win_link_flags)
++    @ [ "beos", [ "-cclib"; "-lbsd" ] (* flags for Haiku *) ]
+   in
+   let+ locals =
+     Memo.parallel_map locals ~f:(fun x ->
+@@ -87,6 +87,11 @@
+               "link_flags"
+               (let open Dyn in
+                list (pair string (list string)) link_flags)
++          ; Pp.nop
++          ; def
++              "build_flags"
++              (let open Dyn in
++               list (pair string (list string)) build_flags)
+           ]))
+ ;;
+ 
+diff -Naur a/vendor/spawn/src/dune b/vendor/spawn/src/dune
+--- a/vendor/spawn/src/dune	2024-02-12 10:12:19.000000000 +0000
++++ b/vendor/spawn/src/dune	2024-03-05 15:30:37.141802013 +0000
+@@ -2,5 +2,14 @@
+  (name spawn)
+  (foreign_stubs
+   (language c)
++  (flags (:standard (:include flags.sexp)))
+   (names spawn_stubs))
+  (libraries unix threads.posix))
++
++(rule
++  (with-stdout-to flags.sexp
++    (run ocaml %{dep:flags.ml})))
++
++(rule
++  (with-stdout-to flags.ml
++    (echo "print_endline @@ if Sys.win32 then \"(-DUNICODE -D_UNICODE)\" else \"()\"")))
+diff -Naur a/vendor/spawn/src/spawn.ml b/vendor/spawn/src/spawn.ml
+--- a/vendor/spawn/src/spawn.ml	2024-02-12 10:12:19.000000000 +0000
++++ b/vendor/spawn/src/spawn.ml	2024-03-05 15:30:37.141802013 +0000
+@@ -44,15 +44,17 @@
+   type t = string
+ 
+   let of_list env =
+-    let len =
+-      List.fold_left env ~init:1 ~f:(fun acc s -> acc + String.length s + 1)
+-    in
+-    let buf = Buffer.create len in
+-    List.iter env ~f:(fun s ->
++    if env = [] then
++      "\000\000"
++    else
++      let len = List.fold_left env ~init:1 ~f:(fun acc s -> acc + String.length s + 1) in
++      let buf = Buffer.create (len + 1) in
++      List.iter env ~f:(fun s ->
+         Buffer.add_string buf s;
+         Buffer.add_char buf '\000');
+-    Buffer.add_char buf '\000';
+-    Buffer.contents buf
++      Buffer.add_char buf '\000';
++      Buffer.contents buf
++  ;;
+ end
+ 
+ module Env_unix : Env = struct
+diff -Naur a/vendor/spawn/src/spawn_stubs.c b/vendor/spawn/src/spawn_stubs.c
+--- a/vendor/spawn/src/spawn_stubs.c	2024-02-12 10:12:19.000000000 +0000
++++ b/vendor/spawn/src/spawn_stubs.c	2024-03-05 15:30:37.141802013 +0000
+@@ -1,5 +1,25 @@
+ #define _GNU_SOURCE
+ 
++/* Must come before any other caml/ headers are included */
++#define CAML_INTERNALS
++
++#ifdef _WIN32
++/* for [caml_win32_multi_byte_to_wide_char] */
++#include <caml/osdeps.h>
++
++/* Prior to OCaml 5.0, the function was called win_multi_byte_to_wide_char */
++#include <caml/version.h>
++#if OCAML_VERSION_MAJOR < 5
++#define caml_win32_multi_byte_to_wide_char win_multi_byte_to_wide_char
++#define caml_win32_maperr win32_maperr
++#endif
++#endif
++
++/* for [caml_convert_signal_number] */
++#include <caml/signals.h>
++
++#undef CAML_INTERNALS
++
+ #include <caml/mlvalues.h>
+ #include <caml/memory.h>
+ #include <caml/alloc.h>
+@@ -8,9 +28,6 @@
+ 
+ #include <errno.h>
+ 
+-#include <caml/signals.h>
+-CAMLextern int caml_convert_signal_number(int);
+-
+ #if defined(__APPLE__)
+ 
+ # if defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+@@ -846,6 +863,22 @@
+ {
+   STARTUPINFO si;
+   PROCESS_INFORMATION pi;
++  WCHAR *prog = caml_stat_strdup_to_utf16(String_val(v_prog));
++  WCHAR *cmdline = caml_stat_strdup_to_utf16(String_val(v_cmdline));
++  WCHAR *env = NULL;
++  WCHAR *cwd = NULL;
++  BOOL result;
++
++  if (Is_block(v_env)) {
++    v_env = Field(v_env, 0);
++    mlsize_t len = caml_string_length(v_env);
++    int size = caml_win32_multi_byte_to_wide_char(String_val(v_env), len, NULL, 0);
++    env = caml_stat_alloc((size + 1) * sizeof(WCHAR));
++    caml_win32_multi_byte_to_wide_char(String_val(v_env), len, env, size);
++  }
++
++  if (Is_block(v_cwd))
++    cwd = caml_stat_strdup_to_utf16(String_val(Field(v_cwd, 0)));
+ 
+   ZeroMemory(&si, sizeof(si));
+   ZeroMemory(&pi, sizeof(pi));
+@@ -855,22 +888,22 @@
+   if (!dup2_and_clear_close_on_exec(v_stdin , &si.hStdInput ) ||
+       !dup2_and_clear_close_on_exec(v_stdout, &si.hStdOutput) ||
+       !dup2_and_clear_close_on_exec(v_stderr, &si.hStdError )) {
+-    win32_maperr(GetLastError());
++    caml_win32_maperr(GetLastError());
+     close_std_handles(&si);
+     uerror("DuplicateHandle", Nothing);
+   }
+ 
+-  if (!CreateProcess(String_val(v_prog),
+-                     Bytes_val(v_cmdline),
+-                     NULL,
+-                     NULL,
+-                     TRUE,
+-                     0,
+-                     Is_block(v_env) ? Bytes_val(Field(v_env, 0)) : NULL,
+-                     Is_block(v_cwd) ? String_val(Field(v_cwd, 0)) : NULL,
+-                     &si,
+-                     &pi)) {
+-    win32_maperr(GetLastError());
++  result =
++    CreateProcess(prog, cmdline, NULL, NULL, TRUE, CREATE_UNICODE_ENVIRONMENT,
++                  env, cwd, &si, &pi);
++
++  caml_stat_free(prog);
++  caml_stat_free(cmdline);
++  caml_stat_free(env);
++  caml_stat_free(cwd);
++
++  if (!result) {
++    caml_win32_maperr(GetLastError());
+     close_std_handles(&si);
+     uerror("CreateProcess", Nothing);
+   }
