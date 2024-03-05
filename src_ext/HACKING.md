@@ -32,8 +32,6 @@ The Dune vendored dependency is a special case: firstly, in lib-ext mode it's op
 2. Add `package` to `SRC_EXTS` or `PKG_EXTS in `src_ext/Makefile`.
 3. Put any requires patches in `src_ext/patches/` (in `package.common/` for both modes, `package/` for `lib-ext` mode and `package.pkg/` for `lib-pkg` mode).
 4. If the package's build system is not Dune, create `src_ext/dune-package`. The build system `touch`es `package.opam` when assembling the sources.
-5. Add a `package.pkgbuild:` entry to `src_ext/Makefile.packages` containing the dependencies of `package`.
-6. Add a `package-pkg-build:` target with the build steps for building and installing `package`. Various utility variables are available in `src_ext/Makefile.packages`, in particular `$(OCAMLBIN)` is the compiler's `bin` directory and `$(SITELIB)` is the ocamlfind library root (effectively `%{lib}%` in opam) and `$(OCAMLROOT)` is the actual prefix of the compiler's installation.
 
 ## Testing
 

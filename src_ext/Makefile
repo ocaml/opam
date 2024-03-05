@@ -33,7 +33,7 @@ MD5_PKG_$(1) = $(MD5_$(1))
 endef
 
 SRC_EXTS = cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format seq stdlib-shims spdx_licenses opam-0install-cudf 0install-solver uutf jsonm sha swhid_core
-PKG_EXTS = $(SRC_EXTS) dune-local findlib ocamlbuild topkg mccs
+PKG_EXTS = $(SRC_EXTS) dune-local findlib mccs
 
 ifeq ($(MCCS_ENABLED),true)
 SRC_EXTS := $(SRC_EXTS) mccs
@@ -41,7 +41,6 @@ endif
 
 include Makefile.sources
 ifneq ($(shell PATH="$(PATH)" command -v ocamlc 2>/dev/null),)
-include Makefile.packages
 endif
 
 ARCHIVES = $(foreach lib,$(SRC_EXTS),$(notdir $(URL_$(lib))))
@@ -50,7 +49,7 @@ lib_of = $(foreach lib,$(SRC_EXTS),$(if $(findstring $(1),$(URL_$(lib))),$(lib),
 ARCHIVE_FILE = $(1)$(patsubst %.tbz,.tbz,$(patsubst %.tar.gz,.tar.gz,$(URL_$(2)$(1))))
 DOWNLOAD_COOKIE = touch $(1).$(4)download && \
                   $(if $(filter $(MD5_$(2)$(1)),$(MD5_$(3)$(1))),touch,rm -f) $(1).$(5)download && \
-                  rm -f $(call ARCHIVE_FILE,$(1),$(2)) $(1).stamp $(1).pkgbuild
+                  rm -f $(call ARCHIVE_FILE,$(1),$(2)) $(1).stamp
 
 SILENT ?=
 
@@ -98,8 +97,8 @@ lib-pkg-urls:
 	@find patches -type f | grep '\.\(pkg\|common\)/' | xargs sha1sum
 
 reset-lib-pkg:
-	@rm -f ../bootstrap/ocaml/bin/ocamlbuild* ../bootstrap/ocaml/bin/ocamlfind* `ls ../bootstrap/ocaml/bin/* | grep -v "flexlink\|\/ocaml[^\/]*$$"` ../bootstrap/ocaml/lib/topfind
-	@rm -rf ../bootstrap/ocaml/lib/ocaml/site-lib ../bootstrap/ocaml/etc *.pkgbuild
+	@rm -f ../bootstrap/ocaml/bin/ocamlfind* `ls ../bootstrap/ocaml/bin/* | grep -v "flexlink\|\/ocaml[^\/]*$$"` ../bootstrap/ocaml/lib/topfind
+	@rm -rf ../bootstrap/ocaml/lib/ocaml/site-lib ../bootstrap/ocaml/etc
 
 ifeq ($(DUNE),)
 DUNE_DEP=dune-local/_boot/install/default/bin/dune$(EXE)
@@ -117,12 +116,8 @@ endif
 dune-local/_boot/install/default/bin/dune$(EXE): $(DUNE_CLONE)
 	cd dune-local && ocaml bootstrap.ml && ./boot.exe --release
 
-build-pkg: clone-pkg $(PKG_EXTS:=.pkgbuild)
+build-pkg: clone-pkg
 	@
-
-%.pkgbuild: | %.pkgstamp
-	@rm -f $*.pkgstamp
-	$(MAKE) MAKEFLAGS= -f ../Makefile.packages -C $* $*-pkg-build && touch $@
 
 .PHONY: def-ignore
 def-ignore:
@@ -218,7 +213,7 @@ GET_ARCHIVE=\
        touch $*/$*.opam; \
      done; \
    fi
-	@touch $@ && rm -f $*.pkgstamp $*.pkgbuild
+	@touch $@ && rm -f $*.pkgstamp
 
 %.pkgstamp: %.pkgdownload
 	mkdir -p tmp-$*
@@ -246,6 +241,6 @@ clean:
 
 distclean: clean
 	rm -rf dune-local secondary $(SRC_EXTS) $(PKG_EXTS)
-	rm -f *.tar.gz *.tbz *.*stamp *.*download *.pkgbuild dune \
+	rm -f *.tar.gz *.tbz *.*stamp *.*download dune \
         Makefile.config
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true

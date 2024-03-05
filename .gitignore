@@ -11,13 +11,11 @@ tests/reftests/.merlin
 .envrc
 src_ext/*.*download
 src_ext/*.*stamp
-src_ext/*.pkgbuild
 src_ext/*.tar.gz
 src_ext/*.tbz
 src_ext/0install-solver/
 src_ext/archives/*
 src_ext/base64/
-src_ext/camlp4
 src_ext/cmdliner/
 src_ext/cppo/
 src_ext/cudf/
@@ -28,7 +26,6 @@ src_ext/extlib/
 src_ext/findlib
 src_ext/lib
 src_ext/mccs/
-src_ext/ocamlbuild
 src_ext/ocamlgraph/
 src_ext/opam-0install-cudf/
 src_ext/jsonm/
@@ -41,7 +38,7 @@ src_ext/seq/
 src_ext/sha/
 src_ext/spdx_licenses/
 src_ext/stdlib-shims/
-src_ext/topkg/
+src_ext/swhid_core/
 Opam.Runtime.*/
 *.tar.bz2
 *.annot

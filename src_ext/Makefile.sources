@@ -65,12 +65,6 @@ $(call PKG_SAME,dune-local)
 URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.9.5.tar.gz
 MD5_PKG_findlib = 8b893525ce36cb3d4d4952483bcc7cf4
 
-URL_PKG_ocamlbuild = https://github.com/ocaml/ocamlbuild/archive/refs/tags/0.14.2.tar.gz
-MD5_PKG_ocamlbuild = 2f407fadd57b073155a6aead887d9676
-
-URL_PKG_topkg = https://erratique.ch/software/topkg/releases/topkg-1.0.6.tbz
-MD5_PKG_topkg = 12f6f0a0220da2e4f685a94cb5248157
-
 URL_seq = https://github.com/c-cube/seq/archive/v0.3.1.tar.gz
 MD5_seq = de05d9dedd492fa4e3c0c87bc2792475
 
