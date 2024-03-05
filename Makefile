@@ -21,7 +21,7 @@ else
 endif
 
 ifeq ($(DUNE),)
-  DUNE_EXE = src_ext/dune-local/dune.exe
+  DUNE_EXE = src_ext/dune-local/_boot/dune.exe
   ifeq ($(shell command -v cygpath 2>/dev/null),)
     DUNE := $(DUNE_EXE)
   else
@@ -48,7 +48,7 @@ else
   DUNE_PROFILE_ARG = --profile=$(DUNE_PROFILE)
 endif
 
-src_ext/dune-local/dune.exe: src_ext/dune-local.stamp $(DUNE_SECONDARY)
+src_ext/dune-local/_boot/dune.exe: src_ext/dune-local.stamp $(DUNE_SECONDARY)
 ifeq ($(DUNE_SECONDARY),)
 	cd src_ext/dune-local && ocaml boot/bootstrap.ml
 else
