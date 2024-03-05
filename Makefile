@@ -22,7 +22,7 @@ else
   DUNE_EXE=
   # NB make does not export the PATH update in Makefile.config to $(shell ...)
   ifeq ($(shell PATH='$(PATH)' $(DUNE) build --root . --help=plain 2>/dev/null \
-                  | grep -F -- '$(DUNE_PROMOTE_ARG) '),)
+                  | grep -F -- '$(DUNE_PROMOTE_ARG)'),)
     DUNE_PROMOTE_ARG =
   endif
 endif
