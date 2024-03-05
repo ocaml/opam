@@ -15,7 +15,7 @@ open Lib
 
 let ocamls = [
   (* Fully supported versions *)
-   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1"; "5.0.0"; "5.1.0"; "4.14.1";
+   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1"; "5.0.0"; "5.1.1"; "4.14.1";
 ]
 
 (* Entry point for the workflow. Workflows are specified as continuations where
