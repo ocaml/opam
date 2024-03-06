@@ -85,10 +85,13 @@ users)
   * Upgrade vendored cmdliner to 1.2.0 [#5797 @kit-ty-kate]
   * Add winsymlinks:native to the CYGWIN environment variable when installing a package on Windows [#5793 @kit-ty-kate - fix #5782]
   * Upgrade the vendored dune to 3.14.0 [#5869 @kit-ty-kate]
+  * Upgrade the vendored re to 1.11.0 [#5869 @dra27]
+  * Upgrade the vendored ocamlgraph to 2.1.0 [#5869 @dra27]
+  * Upgrade the vendored opam-file-format to 2.1.6 [#5869 @dra27]
 
 ## Infrastructure
   * Fix depexts CI workflow and ensure all workflows run on master push [#5788 @dra27]
-  * Update src_ext/Makefile.dune along with src_ext/Makefile.sources [#5871 @dra27]
+  * Update src_ext/Makefile.dune along with src_ext/Makefile.sources [#5869 @dra27]
 
 ## Release scripts
 
@@ -128,6 +131,8 @@ users)
 
 ## Github Actions
   * Update checkout action to v4 [#5851 @rjbou]
+  * Test OCaml 5.1.1 [#5869 @dra27]
+  * Fix the cache key [#5869 @dra27]
 
 ## Doc
   * Fix a typo in the documentation of `opam lint --recursive` [#5812 @Khady]
