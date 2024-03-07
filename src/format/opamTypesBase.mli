@@ -64,6 +64,11 @@ val env_array: env -> string array
 val filter_ident_of_string:
   string -> name option list * variable * (string * string) option
 
+(** Like [Filter_ident_of_string] but parses also '%{?pkg+:var:}% syntax for
+    variables with package name that contains a '+' *)
+val filter_ident_of_string_interp:
+  string -> name option list * variable * (string * string) option
+
 val string_of_filter_ident:
   name option list * variable * (string * string) option -> string
 

@@ -247,7 +247,7 @@ and _options_:
 <section>       ::= <ident> [ <string> ] "{" <file-contents> "}"
 <ident>         ::= { <identchar> }* <letter> { <identchar> }*
 <varident>      ::= [ ( <ident> | "_" ) { "+" ( <ident> | "_" ) }* : ] <ident>
-<identchar>     ::= <letter> | <digit>  | "_" | "-"
+<identchar>     ::= <letter> | <digit>  | "_" | "-" | "+"
 <letter>        ::= "a".."z" | "A".."Z"
 <digit>         ::= "0".."9"
 <value>         ::= <bool> | <int> | <string> | <ident> | <varident> | <operator> | <list> | <option> | "(" <value> ")"
@@ -383,7 +383,14 @@ insert different strings depending on the boolean value of a variable.
 Additionally, boolean package variables may be combined using the following
 form: `name1+name2+name3:var` is the conjunction of `var` for each of `name1`,
 `name2` and `name3`, _i.e_ it is equivalent to `name1:var & name2:var &
-name3:var`
+name3:var`.
+
+**Warning**: if the package name contains a `+` character (e.g. `conf-g++`),
+their variables may only be accessed using opam 2.2 via string interpolation,
+with the following syntax:
+```
+"%{?conf-g++:your-variable:}%"
+```
 
 #### Scopes
 

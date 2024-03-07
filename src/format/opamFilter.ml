@@ -255,7 +255,8 @@ let expand_string_aux ?(partial=false) ?(escape_value=fun x -> x) ?default env t
        str)
     else
     let fident = String.sub str 2 (String.length str - 4) in
-    resolve_ident ~no_undef_expand:partial env (filter_ident_of_string fident)
+    resolve_ident ~no_undef_expand:partial env
+      (filter_ident_of_string_interp fident)
     |> value_string ?default:(default fident) |> escape_value
   in
   Re.replace string_interp_regex ~f text
@@ -307,7 +308,7 @@ let map_variables_in_string f =
     ~default:(fun fid_string ->
         try
           fid_string |>
-          filter_ident_of_string |>
+          filter_ident_of_string_interp |>
           map_variables_in_fident f |>
           string_of_filter_ident
         with Failure _ -> fid_string)

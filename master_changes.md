@@ -76,6 +76,7 @@ users)
   * Unixify Windows paths in init shells scripts (sh, bash, zsh, fish & tsh) [#5797 @rjbou]
 
 ## Opamfile
+  * Hijack the `%{?val_if_true:val_if_false}%` syntax to support extending the variables of packages with + in their name [#5840 @kit-ty-kate]
 
 ## External dependencies
  * Add support for Wolfi OS, treat it like Apline family as it uses apk too [#5878 @xnox]
@@ -156,6 +157,7 @@ users)
   * Fix missing spaces in `opam --help` [#5850 @sorawee].
   * Manual: add missing 'since opam 2.2' annotation when mentionning with-dev-setup [#5885 @kit-ty-kate]
   * Installation: update badges for Ubuntu and Fedora to newer versions [#5905 @AldanTanneo]
+  * Manual: update regarding `pkg+` variables new syntax [#5840 @kit-ty-kate]
 
 ## Security fixes
 
@@ -178,6 +180,7 @@ users)
 
 ## opam-format
   * `OpamFile.InitConfig`: add `sys-pkg-manager-cmd` field [#5847 @rjbou]
+  * `OpamTypesBase`: add `filter_ident_of_string_interp` that is used for parsing variables in string interpolation like `filter_ident_of_string` but permits the parsing of '%{?pkg+:var:}%' syntax [#5840 @rjbou]
 
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]

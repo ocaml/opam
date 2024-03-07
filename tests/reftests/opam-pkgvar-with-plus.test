@@ -37,11 +37,11 @@ The following actions will be simulated:
 === install 1 package
   - install var-with-plus 1
 
-+ echo "'?pkg+:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg+a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg1+pkg2:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -60,11 +60,11 @@ The following actions will be simulated:
 === install 1 package
   - install var-with-plus 1
 
-+ echo "'?pkg+:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg+a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg1+pkg2:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -83,11 +83,11 @@ The following actions will be simulated:
 === install 1 package
   - install var-with-plus 1
 
-+ echo "'?pkg+:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg+a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg1+pkg2:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -106,11 +106,11 @@ The following actions will be simulated:
 === install 1 package
   - install var-with-plus 1
 
-+ echo "'?pkg+:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg+a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg1+pkg2:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -129,11 +129,11 @@ The following actions will be simulated:
 === install 1 package
   - install var-with-plus 1
 
-+ echo "'?pkg+:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg+a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg1+pkg2:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -152,11 +152,11 @@ The following actions will be simulated:
 === install 1 package
   - install var-with-plus 1
 
-+ echo "'?pkg+:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg+a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg1+pkg2:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -175,11 +175,11 @@ The following actions will be simulated:
 === install 1 package
   - install var-with-plus 1
 
-+ echo "'?pkg+:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg+a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg++a:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "'?pkg1+pkg2:installed:'" "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "'pkg1+pkg2:installed'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
