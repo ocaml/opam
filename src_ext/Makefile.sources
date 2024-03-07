@@ -13,8 +13,8 @@ MD5_base64 = bfdd16aa8c136412878109df8791fc01
 
 $(call PKG_SAME,base64)
 
-URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.10.4/re-1.10.4.tbz
-MD5_re = 68c427f8b55507f8b61c613ee6a5b3da
+URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.11.0/re-1.11.0.tbz
+MD5_re = e0199e32947fd33fcc1b8e69de2308a1
 
 $(call PKG_SAME,re)
 
@@ -23,8 +23,8 @@ MD5_cmdliner = b860881cc90c68b703dca0f35bdd4cdb
 
 $(call PKG_SAME,cmdliner)
 
-URL_ocamlgraph = https://github.com/backtracking/ocamlgraph/releases/download/2.0.0/ocamlgraph-2.0.0.tbz
-MD5_ocamlgraph = 2d07fcf3501e1d4997c03fa94cea22f0
+URL_ocamlgraph = https://github.com/backtracking/ocamlgraph/releases/download/2.1.0/ocamlgraph-2.1.0.tbz
+MD5_ocamlgraph = 4200d8f223aa7a32b4024e4553821c7c
 
 $(call PKG_SAME,ocamlgraph)
 
@@ -53,8 +53,8 @@ MD5_0install-solver = 030edc9b1d3676c06d51397ffb5a737d
 
 $(call PKG_SAME,0install-solver)
 
-URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/refs/tags/2.1.5.tar.gz
-MD5_opam-file-format = 46dadff2565d8371cdc606d33d408fc4
+URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/refs/tags/2.1.6.tar.gz
+MD5_opam-file-format = 706ce5fc3e77db746a4c8b11d79cefef
 
 $(call PKG_SAME,opam-file-format)
 

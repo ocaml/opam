@@ -41,6 +41,7 @@ src_ext/seq/
 src_ext/sha/
 src_ext/spdx_licenses/
 src_ext/stdlib-shims/
+src_ext/swhid_core/
 src_ext/topkg/
 Opam.Runtime.*/
 *.tar.bz2

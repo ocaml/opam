@@ -9,16 +9,19 @@ OCAML_LOCAL="$4"
 PLATFORM="$5"
 
 if [[ $OCAML_BRANCH -gt 407 ]]; then
+  make -C src_ext dune-local.stamp
+  cd src_ext/dune-local
+  ocaml boot/bootstrap.ml
+  cp _boot/dune.exe "$PREFIX/bin/dune$EXE"
+  cd ../..
+
+  git clean -dfX
+
   if [[ -n $GITHUB_BASE_REF ]]; then
     git tag combak
     git fetch origin $GITHUB_BASE_REF
     git checkout origin/$GITHUB_BASE_REF
   fi
-  make -C src_ext dune-local.stamp
-  cd src_ext/dune-local
-  ocaml bootstrap.ml
-  cp dune.exe "$PREFIX/bin/dune$EXE"
-  cd ../..
 
   ./configure --with-vendored-deps
   make
