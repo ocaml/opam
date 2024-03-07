@@ -1428,6 +1428,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:var-option.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-var-syntax)
+ (action
+  (diff var-syntax.test var-syntax.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-var-syntax)))
+
+(rule
+ (targets var-syntax.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:var-syntax.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-with-dev-setup)
  (action
   (diff with-dev-setup.test with-dev-setup.out)))
