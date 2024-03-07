@@ -922,7 +922,7 @@ let if_interactive_script shell t e =
   | SH_csh ->
     Printf.sprintf "if ( $?prompt ) then\n  %s%sendif\n" t @@ ielse e
   | SH_fish ->
-    Printf.sprintf "if isatty\n  %s%send\n" t @@ ielse e
+    Printf.sprintf "if status is-interactive\n  %s%send\n" t @@ ielse e
   | SH_cmd ->
     Printf.sprintf "echo %%cmdcmdline%% | find /i \"%%~0\" >nul\nif errorlevel 1 (\n%s%s)\n" t @@ ielse_cmd e
   | SH_pwsh _ ->

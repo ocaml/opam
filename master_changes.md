@@ -26,6 +26,7 @@ users)
   * Fix MSYS2 support [#5843 @rjbou - fix #5683]
   * Test if file exists before sourcing in fish + powershell [#5864 @ElectreAAS]
   * Replace the dependency on GNU patch by a strict dependency on git [#5400 @kit-ty-kate - fix #3433 #3782 #3639]
+  * Properly test if "we're in interactive mode" instead of "in a tty" in fish script [#5866 @ElectreAAS]
 
 ## Config report
 
