@@ -38,13 +38,12 @@ The following actions will be simulated:
   - install var-with-plus 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [var-with-plus: echo]
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 Processing  2/3: [var-with-plus: echo false]
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -64,13 +63,13 @@ The following actions will be simulated:
   - install var-with-plus 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [var-with-plus: echo]
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+Processing  2/3: [var-with-plus: echo true]
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 Processing  2/3: [var-with-plus: echo false]
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -90,13 +89,13 @@ The following actions will be simulated:
   - install var-with-plus 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [var-with-plus: echo]
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+Processing  2/3: [var-with-plus: echo true]
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 Processing  2/3: [var-with-plus: echo false]
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -116,13 +115,13 @@ The following actions will be simulated:
   - install var-with-plus 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [var-with-plus: echo]
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+Processing  2/3: [var-with-plus: echo true]
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 Processing  2/3: [var-with-plus: echo false]
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -142,13 +141,13 @@ The following actions will be simulated:
   - install var-with-plus 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [var-with-plus: echo]
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+Processing  2/3: [var-with-plus: echo true]
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 Processing  2/3: [var-with-plus: echo false]
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -168,13 +167,13 @@ The following actions will be simulated:
   - install var-with-plus 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [var-with-plus: echo]
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+Processing  2/3: [var-with-plus: echo true]
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 Processing  2/3: [var-with-plus: echo false]
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 + echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1
 Installing var-with-plus.1.
@@ -194,12 +193,13 @@ The following actions will be simulated:
   - install var-with-plus 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [var-with-plus: echo]
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
-+ echo "" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+Processing  2/3: [var-with-plus: echo true]
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+Processing  2/3: [var-with-plus: echo false]
++ echo "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 Processing  2/3: [var-with-plus: echo true]
 + echo "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
 -> compiled  var-with-plus.1

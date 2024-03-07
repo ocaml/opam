@@ -71,6 +71,7 @@ users)
   * Unixify Windows paths in init shells scripts (sh, bash, zsh, fish & tsh) [#5797 @rjbou]
 
 ## Opamfile
+  * Hijack the `%{?val_if_true:val_if_false}%` syntax to support extending the variables of packages with + in their name [#5840 @kit-ty-kate]
 
 ## External dependencies
 
@@ -122,6 +123,7 @@ users)
 ## Reftests
 ### Tests
   * Add init scripts tests [#5864 @rjbou]
+  * Add a test testing showing the current behaviour of opam with variable expention, in particular when the package contains pluses [#5840 @kit-ty-kate]
 
 ### Engine
 

@@ -115,12 +115,20 @@ let env_array l =
 
 
 let string_of_filter_ident (pkgs,var,converter) =
-  OpamStd.List.concat_map ~nil:"" "+" ~right:":"
-    (function None -> "_" | Some n -> OpamPackage.Name.to_string n) pkgs ^
-  OpamVariable.to_string var ^
-  (match converter with
-   | Some (it,ifu) -> "?"^it^":"^ifu
-   | None -> "")
+  (* TODO: Remove in opam 3.0.
+     Hack added in opam 2.2. This is a compatible syntax with opam 2.0 and 2.1
+     but supports + in the package name.
+     See https://github.com/ocaml/opam-file-format/issues/59 *)
+  match pkgs, converter with
+  | [Some pkg], None when OpamStd.String.contains_char (OpamPackage.Name.to_string pkg) '+' ->
+    "?"^OpamPackage.Name.to_string pkg^":"^OpamVariable.to_string var^":"
+  | _ ->
+    OpamStd.List.concat_map ~nil:"" "+" ~right:":"
+      (function None -> "_" | Some n -> OpamPackage.Name.to_string n) pkgs ^
+    OpamVariable.to_string var ^
+    (match converter with
+     | Some (it,ifu) -> "?"^it^":"^ifu
+     | None -> "")
 
 let filter_ident_of_string s =
   match OpamStd.String.rcut_at s ':' with
@@ -134,6 +142,16 @@ let filter_ident_of_string s =
     match OpamStd.String.rcut_at p '?' with
     | None ->
       get_names p, OpamVariable.of_string last, None
+    | Some ("",val_if_true) ->
+      (* TODO: Remove in opam 3.0.
+         Hack added in opam 2.2. This is a compatible syntax with opam 2.0 and 2.1
+         but supports + in the package name.
+         See https://github.com/ocaml/opam-file-format/issues/59 *)
+      (match OpamStd.String.rcut_at val_if_true ':' with
+       | None ->
+         [], OpamVariable.of_string last, None (* behaviour from opam 2.0 and 2.1 *)
+       | Some (p, var) ->
+         [Some (OpamPackage.Name.of_string p)], OpamVariable.of_string var, None)
     | Some (p,val_if_true) ->
       let converter = Some (val_if_true, last) in
       match OpamStd.String.rcut_at p ':' with
