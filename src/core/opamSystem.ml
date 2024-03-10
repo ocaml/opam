@@ -913,8 +913,7 @@ let cpu_count () =
   with Not_found | Process_error _ | Failure _ -> 1
 
 let cpu_count_memo =
-  let v = OpamLazy.from_fun cpu_count in
-  fun () -> OpamLazy.force v
+  OpamLazy.memo_unit cpu_count
 
 open OpamProcess.Job.Op
 
