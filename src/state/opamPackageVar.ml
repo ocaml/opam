@@ -61,18 +61,23 @@ let resolve_global gt full_var =
   match V.Full.read_from_env full_var with
   | Some _ as c -> c
   | None ->
-    match OpamVariable.Map.find_opt var gt.global_variables with
-    | Some (lazy (Some _ as some), _) -> some
-    | _ ->
+    let default () =
       match V.to_string var with
       | "opam-version"  -> Some (V.string OpamVersion.(to_string current))
-      | "jobs"          -> Some (V.int (OpamStateConfig.(Lazy.force !r.jobs)))
+      | "jobs"          -> Some (V.int (OpamStateConfig.(OpamLazy.force !r.jobs)))
       | "root"          -> Some (V.string (OpamFilename.Dir.to_string gt.root))
-      | "make"          -> Some (V.string OpamStateConfig.(Lazy.force !r.makecmd))
+      | "make"          -> Some (V.string OpamStateConfig.(OpamLazy.force !r.makecmd))
       | "exe"           -> Some (V.string (OpamStd.Sys.executable_name ""))
       | "switch"        -> OpamStd.Option.map (OpamSwitch.to_string @> V.string)
-                             (OpamStateConfig.get_switch_opt ())
+                            (OpamStateConfig.get_switch_opt ())
       | _               -> None
+    in
+    match OpamVariable.Map.find_opt var gt.global_variables with
+    | None -> default ()
+    | Some (lazyval, _) ->
+      match OpamLazy.force lazyval with
+      | None -> default ()
+      | Some x -> Some x
 
 (** Resolve switch-global variables only, as allowed by the 'available:'
     field *)
@@ -312,7 +317,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
          or from temporary repository in /tmp *)
       let repos_roots reponame =
         match Hashtbl.find st.switch_repos.repos_tmp reponame with
-        | lazy repo_root -> repo_root
+        | repo_root -> OpamLazy.force repo_root
         | exception Not_found ->
           OpamRepositoryPath.root st.switch_global.root reponame
       in

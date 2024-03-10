@@ -541,7 +541,7 @@ let apply_cygpath name =
 let get_cygpath_function =
   if Sys.win32 then
     fun ~command ->
-      lazy (
+      OpamLazy.create (fun () ->
         if OpamStd.Option.map_default
             (OpamStd.Sys.is_cygwin_variant
                ~cygbin:(OpamCoreConfig.(!r.cygbin)))
@@ -551,7 +551,7 @@ let get_cygpath_function =
         else fun x -> x
       )
   else
-    let f = Lazy.from_val (fun x -> x) in
+    let f = OpamLazy.from_val (fun x -> x) in
     fun ~command:_ -> f
 
 let apply_cygpath_path_transform ~pathlist cygpath path =
@@ -571,12 +571,12 @@ let get_cygpath_path_transform =
   (* We are running in a functioning Cygwin or MSYS2 environment if and only
      if `cygpath` is in the PATH. *)
   if Sys.win32 then
-    lazy (
+    OpamLazy.create (fun () ->
       match resolve_command "cygpath" with
       | Some cygpath -> apply_cygpath_path_transform cygpath
       | None -> fun ~pathlist:_ x -> x)
   else
-    Lazy.from_val (fun ~pathlist:_ x -> x)
+    OpamLazy.from_val (fun ~pathlist:_ x -> x)
 
 let runs = ref []
 let print_stats () =
@@ -912,6 +912,10 @@ let cpu_count () =
     int_of_string (List.hd ans)
   with Not_found | Process_error _ | Failure _ -> 1
 
+let cpu_count_memo =
+  let v = OpamLazy.from_fun cpu_count in
+  fun () -> OpamLazy.force v
+
 open OpamProcess.Job.Op
 
 module Tar = struct
@@ -984,22 +988,22 @@ module Tar = struct
         Some (Printf.sprintf "Tar needs %s to extract the archive" cmd)
       else None)
 
-  let tar_cmd = lazy (
+  let tar_cmd = OpamLazy.create (fun () ->
     match OpamStd.Sys.os () with
     | OpamStd.Sys.OpenBSD -> "gtar"
     | _ -> "tar"
   )
 
-  let cygpath_tar = lazy (
-    Lazy.force (get_cygpath_function ~command:(Lazy.force tar_cmd))
+  let cygpath_tar = OpamLazy.create (fun () ->
+    OpamLazy.force (get_cygpath_function ~command:(OpamLazy.force tar_cmd))
   )
 
   let extract_command =
     fun file ->
       OpamStd.Option.Op.(
         get_type file >>| fun typ ->
-        let f = Lazy.force cygpath_tar in
-        let tar_cmd = Lazy.force tar_cmd in
+        let f = OpamLazy.force cygpath_tar in
+        let tar_cmd = OpamLazy.force tar_cmd in
         let command c dir =
           make_command tar_cmd [ Printf.sprintf "xf%c" c ; f file; "-C" ; f dir ]
         in
@@ -1007,8 +1011,8 @@ module Tar = struct
 
   let compress_command =
     fun file dir ->
-      let f = Lazy.force cygpath_tar in
-      let tar_cmd = Lazy.force tar_cmd in
+      let f = OpamLazy.force cygpath_tar in
+      let tar_cmd = OpamLazy.force tar_cmd in
       make_command tar_cmd [
         "cfz"; f file;
         "-C" ; f (Filename.dirname dir);

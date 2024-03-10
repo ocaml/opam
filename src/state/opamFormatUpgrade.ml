@@ -378,12 +378,12 @@ let from_1_1_to_1_2 ~on_the_fly:_ root config =
       OpamFilename.move_dir ~src:d
         ~dst:(OpamFilename.Dir.of_string (Filename.chop_suffix s ".pinned"))
   in
-  let packages = lazy (
+  let packages = OpamLazy.create (fun () ->
     OpamPackage.Set.of_list
       (OpamPackage.Map.keys
          (OpamFile.Package_index.safe_read
-            (OpamFile.make (root / "repo" // "package-index"))))
-  ) in
+            (OpamFile.make (root / "repo" // "package-index")))))
+  in
   OpamSwitch.Map.iter (fun switch _ ->
       let switch_root = root / OpamSwitch.to_string switch in
       let pinned_version name =
@@ -398,7 +398,7 @@ let from_1_1_to_1_2 ~on_the_fly:_ root config =
         with e ->
           OpamStd.Exn.fatal e;
           try OpamPackage.version
-                (OpamPackage.max_version (Lazy.force packages) name)
+                (OpamPackage.max_version (OpamLazy.force packages) name)
           with Not_found -> OpamPackage.Version.of_string "0" in
       let fix_version nv =
         let obsolete_pinned_v = OpamPackage.Version.of_string "pinned" in
@@ -1136,24 +1136,20 @@ let erase_plugin_links root =
   if OpamFilename.exists_dir plugins_bin then
     List.iter OpamFilename.remove @@ OpamFilename.files_and_links plugins_bin
 
-let flock_root =
-  let dontblock =
-    let t = lazy (
-      (* Deadlock until one is killed in interactive mode, but abort in batch *)
-      if OpamStd.Sys.tty_out then None else Some true
-    ) in
-    fun () -> Lazy.force t
-  in
-  fun ?global_lock kind root ->
-    try
-      let global_lock = match global_lock with
-        | Some g -> g
-        | None -> OpamFilename.flock `Lock_read (OpamPath.lock root)
-      in
-      OpamFilename.with_flock_upgrade kind ?dontblock:(dontblock ()) global_lock
-    with OpamSystem.Locked ->
-      OpamConsole.error_and_exit `Locked
-        "Could not acquire lock for performing format upgrade."
+let flock_root_dontblock = OpamLazy.memo_unit (fun () ->
+  (* Deadlock until one is killed in interactive mode, but abort in batch *)
+  if OpamStd.Sys.tty_out then None else Some true)
+
+let flock_root ?global_lock kind root =
+  try
+    let global_lock = match global_lock with
+      | Some g -> g
+      | None -> OpamFilename.flock `Lock_read (OpamPath.lock root)
+    in
+    OpamFilename.with_flock_upgrade kind ?dontblock:(flock_root_dontblock ()) global_lock
+  with OpamSystem.Locked ->
+    OpamConsole.error_and_exit `Locked
+      "Could not acquire lock for performing format upgrade."
 
 let as_necessary ?reinit requested_lock global_lock root config =
   let root_version =
@@ -1331,8 +1327,8 @@ let as_necessary_repo_switch_light_upgrade lock_kind kind gt =
       (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config));
     if OpamConsole.confirm "Continue?" then
       flock_root `Lock_write gt.root @@ fun _ ->
-      OpamFile.Config.write config_f gt.config;
-      erase_plugin_links gt.root
+        OpamFile.Config.write config_f gt.config;
+        erase_plugin_links gt.root
     else
       OpamStd.Sys.exit_because `Aborted
   | _, _ -> ()

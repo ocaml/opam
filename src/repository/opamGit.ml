@@ -83,7 +83,7 @@ module VCS : OpamVCS.VCS = struct
        else Done (Some dir)
      | _ -> Done None)
     @@+ fun global_cache ->
-    let repo_url = OpamUrl.map_file_url (Lazy.force cygpath) repo_url in
+    let repo_url = OpamUrl.map_file_url (OpamLazy.force cygpath) repo_url in
     let origin = OpamUrl.base_url repo_url in
     let branch = OpamStd.Option.default "HEAD" repo_url.OpamUrl.hash in
     let opam_ref = remote_ref repo_url in

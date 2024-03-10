@@ -62,11 +62,11 @@ let get_universe ~with_test ~with_doc ~dev opams =
     u_reinstall = OpamPackage.Set.empty;
   }
 
-let installability_check univ =
+let installability_check ~task_pool univ =
   let packages = univ.u_packages in
   let graph =
     OpamCudf.Graph.of_universe @@
-    OpamSolver.load_cudf_universe
+    OpamSolver.load_cudf_universe ~task_pool
       ~depopts:false ~build:true ~post:true univ packages ()
   in
   let filter_roots g packages =
@@ -78,7 +78,7 @@ let installability_check univ =
         else acc)
       g OpamPackage.Set.empty
   in
-  let installable = OpamSolver.installable univ in
+  let installable = OpamSolver.installable ~task_pool univ in
   let uninstallable = packages -- installable in
   let unav_roots = filter_roots graph uninstallable in
   unav_roots, uninstallable
@@ -98,9 +98,9 @@ let formula_of_pkglist packages = function
          (OpamPackage.versions_of_packages
             (OpamPackage.Set.of_list nvs)))
 
-let cycle_check univ =
+let cycle_check ~task_pool univ =
   let cudf_univ =
-    OpamSolver.load_cudf_universe
+    OpamSolver.load_cudf_universe ~task_pool
       ~depopts:true ~build:true ~post:false univ univ.u_packages ()
   in
   let graph =
@@ -403,7 +403,7 @@ let get_obsolete univ opams =
       if is_obsolete then acc ++ pkgs else acc)
     aggregates PkgSet.empty
 
-let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
+let check ~task_pool ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
   let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
   let opams =
     OpamPackage.Map.fold (fun nv prefix acc ->
@@ -431,7 +431,7 @@ let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
       if not quiet then
         OpamConsole.msg "Checking installability of every package. This may \
                          take a few minutes...\n";
-      installability_check univ
+      installability_check ~task_pool univ
     )
   in
   if not quiet then
@@ -449,7 +449,7 @@ let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
   (* Cyclic dependency checks *)
   let cycle_packages, cycle_formulas =
     if not cycles then PkgSet.empty, []
-    else cycle_check univ
+    else cycle_check ~task_pool univ
   in
   if not quiet && cycle_formulas <> [] then
     (OpamConsole.error "Dependency cycles detected:";

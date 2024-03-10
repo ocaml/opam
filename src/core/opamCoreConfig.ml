@@ -202,8 +202,8 @@ let answer () =
   | _ -> `ask
 
 let answer_is =
-  let answer = lazy (answer ()) in
-  fun a -> Lazy.force answer = a
+  let answer = OpamLazy.create (fun () -> answer ()) in
+  fun a -> OpamLazy.force answer = a
 
 let answer_is_yes () =
   match answer () with

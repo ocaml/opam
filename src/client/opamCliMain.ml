@@ -253,7 +253,7 @@ let check_and_run_external_commands () =
           if OpamPackage.Set.is_empty plugins then
             plugins
           else
-            OpamPackage.Set.inter plugins (Lazy.force st.available_packages)
+            OpamPackage.Set.inter plugins (OpamLazy.force st.available_packages)
         in
         let installed = OpamPackage.Set.inter plugins st.installed in
         if OpamPackage.Set.is_empty candidates then (cli, argv)
@@ -299,14 +299,15 @@ let check_and_run_external_commands () =
           OpamSolverConfig.init ();
           OpamClientConfig.init ();
           OpamSwitchState.with_ `Lock_write gt (fun st ->
+              OpamMulticore.run_with_task_pool (fun task_pool ->
               OpamSwitchState.drop @@ (
               if cmd = None then
-                OpamClient.install st [OpamSolution.eq_atom_of_package nv]
+                OpamClient.install ~task_pool st [OpamSolution.eq_atom_of_package nv]
               else if root_upgraded then
-                OpamClient.reinstall st [OpamSolution.eq_atom_of_package nv]
+                OpamClient.reinstall ~task_pool st [OpamSolution.eq_atom_of_package nv]
               else
-                OpamClient.upgrade st ~all:false [OpamSolution.eq_atom_of_package nv])
-            );
+                OpamClient.upgrade ~task_pool st ~all:false [OpamSolution.eq_atom_of_package nv])
+            ));
           match OpamSystem.resolve_command ~env command with
           | None ->
             OpamConsole.error_and_exit `Package_operation_error
@@ -439,6 +440,7 @@ let rec main_catch_all f =
     exit exit_code
 
 let run () =
+  (*Dose_doseparse.StdDebug.all_enabled ();*)
   OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
   OpamArg.preinit_opam_env_variables ();

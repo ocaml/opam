@@ -34,7 +34,7 @@ end
 type dl_tool_kind = [ `Curl | `Default ]
 
 type t = {
-  download_tool: (OpamTypes.arg list * dl_tool_kind) Lazy.t;
+  download_tool: (OpamTypes.arg list * dl_tool_kind) OpamLazy.t;
   validation_hook: OpamTypes.arg list option;
   retries: int;
   force_checksums: bool option;
@@ -42,7 +42,7 @@ type t = {
 }
 
 type 'a options_fun =
-  ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t ->
+  ?download_tool:(OpamTypes.arg list * dl_tool_kind) OpamLazy.t ->
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->

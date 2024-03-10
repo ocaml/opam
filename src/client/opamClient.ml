@@ -65,7 +65,7 @@ let update_dev_packages_t ?autolock ?(only_installed=false) atoms t =
 
 let compute_upgrade_t
     ?(strict_upgrade=true) ?(auto_install=false) ?(only_installed=false)
-    ~all ~formula atoms t =
+    ~task_pool ~all ~formula atoms t =
   let packages = OpamFormula.packages_of_atoms t.packages atoms in
   let names = OpamPackage.Name.Set.of_list (List.rev_map fst atoms) in
   let atoms =
@@ -77,11 +77,11 @@ let compute_upgrade_t
             let strict_upgrade_atom = (n, Some (`Gt, nv.version)) in
             if not (OpamSwitchState.is_dev_package t nv) &&
                not (OpamPackage.has_name t.pinned n) &&
-               not (OpamPackage.Set.mem nv (Lazy.force t.reinstall)) &&
+               not (OpamPackage.Set.mem nv (OpamLazy.force t.reinstall)) &&
                OpamPackage.Set.exists
                  (not @* OpamSwitchState.avoid_version t)
                  (OpamFormula.packages_of_atoms
-                    (Lazy.force t.available_packages)
+                    (OpamLazy.force t.available_packages)
                     [strict_upgrade_atom])
             then strict_upgrade_atom
             else atom
@@ -110,15 +110,15 @@ let compute_upgrade_t
     List.partition (fun (n,_) ->
         match OpamPackage.package_of_name_opt t.installed n with
         | None -> true
-        | Some nv -> not (OpamPackage.Set.mem nv (Lazy.force t.available_packages)))
+        | Some nv -> not (OpamPackage.Set.mem nv (OpamLazy.force t.available_packages)))
       atoms
   in
   let criteria = if to_install = [] then `Upgrade else `Default in
   if all then
     names,
-    OpamSolution.resolve t Upgrade
+    OpamSolution.resolve ~task_pool t Upgrade
       ~requested:packages
-      ~reinstall:(Lazy.force t.reinstall)
+      ~reinstall:(OpamLazy.force t.reinstall)
       (OpamSolver.request
          ~install:to_install
          ~upgrade:to_upgrade
@@ -127,7 +127,7 @@ let compute_upgrade_t
          ~criteria ())
   else
   names,
-  OpamSolution.resolve t Upgrade
+  OpamSolution.resolve ~task_pool t Upgrade
     ~requested:packages
     (OpamSolver.request
        ~install:to_install
@@ -143,13 +143,13 @@ let print_requested requested formula =
 
 let upgrade_t
     ?strict_upgrade ?auto_install ?ask ?(check=false) ?(terse=false)
-    ?only_installed ~all atoms ?(formula=OpamFormula.Empty) t
+    ?only_installed ~task_pool ~all atoms ?(formula=OpamFormula.Empty) t
   =
   log "UPGRADE %a"
     (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
     atoms;
   match
-    compute_upgrade_t ?strict_upgrade ?auto_install ?only_installed ~all
+    compute_upgrade_t ?strict_upgrade ?auto_install ?only_installed ~task_pool ~all
       ~formula atoms t
   with
   | requested, Conflicts cs ->
@@ -192,7 +192,7 @@ let upgrade_t
     else
     let packages = OpamPackage.packages_of_names t.packages requested in
     let t, result =
-      OpamSolution.apply ?ask t ~requested:packages
+      OpamSolution.apply ?ask ~task_pool t ~requested:packages
         ~print_requested:(print_requested requested formula)
         solution
     in
@@ -213,8 +213,8 @@ let upgrade_t
         OpamConsole.msg "No package build needed.\n"
       else
         (let hdmsg = "Everything as up-to-date as possible" in
-         let unav = notuptodate -- Lazy.force t.available_packages in
-         let unopt = notuptodate %% Lazy.force t.available_packages in
+         let unav = notuptodate -- OpamLazy.force t.available_packages in
+         let unopt = notuptodate %% OpamLazy.force t.available_packages in
          let base =
            OpamPackage.packages_of_names unopt
              (OpamPackage.names_of_packages t.compiler_packages)
@@ -339,18 +339,18 @@ let upgrade_t
     OpamSolution.check_solution t (Success result);
     t
 
-let upgrade t ?formula ?check ?only_installed ~all names =
+let upgrade ~task_pool t ?formula ?check ?only_installed ~all names =
   let atoms = OpamSolution.sanitize_atom_list t names in
   let t = update_dev_packages_t ~autolock:true ?only_installed atoms t in
-  upgrade_t ?check ~strict_upgrade:(not all) ?only_installed ~all
+  upgrade_t ?check ~strict_upgrade:(not all) ?only_installed ~task_pool ~all
     atoms ?formula t
 
-let fixup ?(formula=OpamFormula.Empty) t =
+let fixup ?(formula=OpamFormula.Empty) ~task_pool t =
   (* @LG reimplement as an alias for 'opam upgrade --criteria=fixup --best-effort --update-invariant *)
   log "FIXUP";
   let resolve pkgs =
     pkgs,
-    OpamSolution.resolve t Upgrade
+    OpamSolution.resolve ~task_pool t Upgrade
       ~requested:pkgs
       (OpamSolver.request
          ~install:(OpamSolution.atoms_of_packages pkgs)
@@ -372,7 +372,7 @@ let fixup ?(formula=OpamFormula.Empty) t =
     let s =
       log "fixup-1/ keep installed packages with orphaned versions and roots";
       resolve (t.installed_roots %% t.installed
-               %% Lazy.force t.available_packages)
+               %% OpamLazy.force t.available_packages)
     in
     if is_success s then s else
     let s =
@@ -398,7 +398,7 @@ let fixup ?(formula=OpamFormula.Empty) t =
         print_requested (OpamPackage.names_of_packages requested) formula
       in
       let t, res =
-        OpamSolution.apply ~ask:true t
+        OpamSolution.apply ~task_pool ~ask:true t
           ~requested
           ~print_requested
           solution in
@@ -590,7 +590,7 @@ let init_checks ?(hard_fail_exn=true) init_config =
     let vs = OpamVariable.Full.variable v in
     OpamStd.Option.(Op.(of_Not_found
                           (OpamStd.List.assoc OpamVariable.equal vs)
-                          OpamSysPoll.variables >>= Lazy.force))
+                          OpamSysPoll.variables >>= OpamLazy.force))
   in
   let filter_tools =
     OpamStd.List.filter_map (fun (cmd,str,oflt) ->
@@ -743,7 +743,7 @@ let windows_checks ?cygwin_setup ?git_location config =
   end;
   let vars = OpamFile.Config.global_variables config in
   let env =
-    List.map (fun (v, c, s) -> v, (lazy (Some c), s)) vars
+    List.map (fun (v, c, s) -> v, (OpamLazy.create (fun () -> (Some c)), s)) vars
     |> OpamVariable.Map.of_list
   in
   (* Git handling *)
@@ -1057,7 +1057,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
       let vs = OpamVariable.Full.variable v in
       OpamStd.Option.(Op.(of_Not_found
                             (OpamStd.List.assoc OpamVariable.equal vs)
-                            OpamSysPoll.variables >>= Lazy.force))
+                            OpamSysPoll.variables >>= OpamLazy.force))
     in
     OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
         | None -> Some (nam,scr)
@@ -1084,6 +1084,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
   OpamRepositoryState.drop rt
 
 let init
+    ~task_pool
     ~init_config ~interactive
     ?repo ?(bypass_checks=false)
     ?dot_profile ?update_config ?env_hook ?(completion=true)
@@ -1139,7 +1140,7 @@ let init
             let vs = OpamVariable.Full.variable v in
             OpamStd.Option.(Op.(of_Not_found
                                   (OpamStd.List.assoc OpamVariable.equal vs)
-                                  OpamSysPoll.variables >>= Lazy.force))
+                                  OpamSysPoll.variables >>= OpamLazy.force))
           in
           let scripts = OpamFile.InitConfig.init_scripts init_config in
           OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
@@ -1187,12 +1188,12 @@ let init
           in
           let univ =
             OpamSwitchState.universe virt_st
-              ~requested:OpamPackage.Set.empty Query
+              ~requested:OpamPackage.Set.empty ~task_pool Query
           in
           let univ = { univ with u_invariant = invariant } in
           let default_compiler =
             OpamStd.List.find_opt
-              (OpamSolver.atom_coinstallability_check univ)
+              (OpamSolver.atom_coinstallability_check ~task_pool univ)
             alternatives
             |> OpamStd.Option.default []
           in
@@ -1214,7 +1215,7 @@ let init
   gt, rt, default_compiler
 
 let check_installed ~build ~post t atoms =
-  let available = (Lazy.force t.available_packages) in
+  let available = (OpamLazy.force t.available_packages) in
   let uninstalled = OpamPackage.Set.Op.(available -- t.installed) in
   let pkgs =
     OpamPackage.to_map
@@ -1269,7 +1270,7 @@ let check_installed ~build ~post t atoms =
           map
     ) pkgs OpamPackage.Map.empty
 
-let assume_built_restrictions ?available_packages t atoms =
+let assume_built_restrictions ?available_packages ~task_pool t atoms =
   let missing = check_installed ~build:false ~post:false t atoms in
   let atoms =
     if OpamPackage.Map.is_empty missing then atoms else
@@ -1297,14 +1298,14 @@ let assume_built_restrictions ?available_packages t atoms =
       t.pinned
   in
   let installed_dependencies =
-    OpamSwitchState.dependencies ~build:false ~post:false
+    OpamSwitchState.dependencies ~task_pool ~build:false ~post:false
       ~depopts:false ~installed:true ~unavailable:false
       t pinned
   in
   let available_packages =
     match available_packages with
     | Some a -> a
-    | None -> Lazy.force t.available_packages
+    | None -> OpamLazy.force t.available_packages
   in
   let uninstalled_dependencies =
     (OpamPackage.Map.values missing
@@ -1312,7 +1313,7 @@ let assume_built_restrictions ?available_packages t atoms =
      |> OpamPackage.packages_of_names available_packages)
     -- installed_dependencies
   in
-  let available_packages = lazy (
+  let available_packages = OpamLazy.create (fun () ->
     (available_packages -- uninstalled_dependencies) ++ t.installed ++ pinned
   ) in
   let fixed_atoms =
@@ -1340,11 +1341,11 @@ let filter_unpinned_locally t atoms f =
          None))
     atoms
 
-let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
+let install_t ~task_pool t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
     ?(download_only=false) atoms ?(formula=OpamFormula.Empty)
     add_to_roots ~deps_only ~assume_built =
   log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
-  let available_packages = Lazy.force t.available_packages in
+  let available_packages = OpamLazy.force t.available_packages in
 
   let atoms =
     let compl = function
@@ -1435,7 +1436,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
     get_installed_atoms t atoms in
   let pkg_reinstall =
     if assume_built then OpamPackage.Set.of_list pkg_skip
-    else Lazy.force t.reinstall %% OpamPackage.Set.of_list pkg_skip
+    else OpamLazy.force t.reinstall %% OpamPackage.Set.of_list pkg_skip
   in
   (* Add the packages to the list of package roots and display a
      warning for already installed package roots. *)
@@ -1502,7 +1503,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   then t else
   let t, atoms =
     if assume_built then
-      assume_built_restrictions ~available_packages t atoms
+      assume_built_restrictions ~task_pool ~available_packages t atoms
     else t, atoms
   in
   let request =
@@ -1516,7 +1517,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   let packages = OpamFormula.packages_of_atoms t.packages (atoms @ deps_atoms) in
   let solution =
     let reinstall = if assume_built then Some pkg_reinstall else None in
-    OpamSolution.resolve t Install
+    OpamSolution.resolve ~task_pool t Install
       ~requested:packages
       ?reinstall
       request in
@@ -1565,7 +1566,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
           dname_map OpamPackage.Map.empty
       in
       if depext_only then
-        (OpamSolution.install_depexts ~force_depext:true ~confirm:false t
+        (OpamSolution.install_depexts ~task_pool ~force_depext:true ~confirm:false t
            (OpamSolver.all_packages solution)), None
       else
       let add_roots =
@@ -1577,7 +1578,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
           add_to_roots
       in
       let t, res =
-        OpamSolution.apply ?ask t
+        OpamSolution.apply ?ask ~task_pool t
           ~requested:packages
           ~print_requested:(print_requested requested formula)
           ?add_roots ~skip
@@ -1589,17 +1590,17 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
 
 let install t ?formula ?autoupdate ?add_to_roots
     ?(deps_only=false) ?(ignore_conflicts=false) ?(assume_built=false)
-    ?(download_only=false) ?(depext_only=false) names =
+    ?(download_only=false) ?(depext_only=false) ~task_pool names =
   let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
   let autoupdate_atoms = match autoupdate with
     | None -> atoms
     | Some a -> OpamSolution.sanitize_atom_list ~permissive:true t a
   in
   let t = update_dev_packages_t autoupdate_atoms t in
-  install_t t atoms ?formula add_to_roots
+  install_t ~task_pool t atoms ?formula add_to_roots
     ~ignore_conflicts ~depext_only ~deps_only ~download_only ~assume_built
 
-let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
+let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) ~task_pool atoms t =
   log "REMOVE autoremove:%b %a" autoremove
     (slog OpamFormula.string_of_atoms) atoms;
 
@@ -1639,7 +1640,7 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
           -- packages
         in
         let keep_cone =
-          keep |> OpamSwitchState.dependencies t
+          keep |> OpamSwitchState.dependencies ~task_pool t
             ~build:true ~post:true ~depopts:true ~installed:true
         in
         let autoremove =
@@ -1648,11 +1649,11 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
         if atoms = [] then autoremove else
         (* restrict to the dependency cone of removed pkgs *)
         let remove_cone =
-          packages |> OpamSwitchState.reverse_dependencies t
+          packages |> OpamSwitchState.reverse_dependencies ~task_pool t
             ~build:true ~post:true ~depopts:false ~installed:true
         in
         autoremove %%
-        (remove_cone |> OpamSwitchState.dependencies t
+        (remove_cone |> OpamSwitchState.dependencies ~task_pool t
            ~build:true ~post:true ~depopts:false ~installed:true)
       else
         packages
@@ -1667,7 +1668,7 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
       print_requested (OpamPackage.names_of_packages packages) formula
     in
     let t, solution =
-      OpamSolution.resolve_and_apply ?ask t Remove
+      OpamSolution.resolve_and_apply ~task_pool ?ask t Remove
         ~force_remove:force
         ~requested:packages
         ~print_requested
@@ -1687,7 +1688,7 @@ let remove t ~autoremove ~force ?formula names =
   in
   remove_t ~autoremove ~force ?formula atoms t
 
-let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
+let reinstall_t t ?ask ?(force=false) ~task_pool ~assume_built atoms =
   log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
 
   let packages = OpamFormula.packages_of_atoms t.packages atoms in
@@ -1723,7 +1724,7 @@ let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
 
   let t, atoms =
     if assume_built then
-      assume_built_restrictions t atoms
+      assume_built_restrictions ~task_pool t atoms
     else t, atoms
   in
 
@@ -1733,7 +1734,7 @@ let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
   in
 
   let t, solution =
-    OpamSolution.resolve_and_apply ?ask t Reinstall
+    OpamSolution.resolve_and_apply ~task_pool ?ask t Reinstall
       ~reinstall:requested
       ~requested:packages
       ~assume_built
@@ -1742,15 +1743,15 @@ let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
   OpamSolution.check_solution t solution;
   t
 
-let reinstall t ?(assume_built=false) names =
+let reinstall ~task_pool t ?(assume_built=false) names =
   let atoms = OpamSolution.sanitize_atom_list t names in
   let t = update_dev_packages_t atoms t in
-  reinstall_t t ~assume_built atoms
+  reinstall_t ~task_pool  t ~assume_built atoms
 
 module PIN = struct
   open OpamPinCommand
 
-  let post_pin_action st was_pinned names =
+  let post_pin_action ~task_pool st was_pinned names =
     let names =
       OpamPackage.Set.Op.(st.pinned -- was_pinned)
       |> OpamPackage.names_of_packages
@@ -1762,6 +1763,7 @@ module PIN = struct
     in
     try
       upgrade_t
+        ~task_pool
         ~strict_upgrade:false ~auto_install:true ~ask:true ~terse:true
         ~all:false
        (List.map (fun name -> name, None) names) st
@@ -1790,7 +1792,7 @@ module PIN = struct
         "No package named %S found"
         (OpamPackage.Name.to_string name)
 
-  let pin st name ?(edit=false) ?version ?(action=true) ?subpath ?locked target =
+  let pin ~task_pool st name ?(edit=false) ?version ?(action=true) ?subpath ?locked target =
     try
       let pinned = st.pinned in
       let st =
@@ -1823,13 +1825,13 @@ module PIN = struct
           source_pin st name ?version ~edit ?locked (Some (get_upstream st name))
         | `None -> source_pin st name ?version ~edit ?locked None
       in
-      if action then (OpamConsole.msg "\n"; post_pin_action st pinned [name])
+      if action then (OpamConsole.msg "\n"; post_pin_action ~task_pool st pinned [name])
       else st
     with
     | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
     | OpamPinCommand.Nothing_to_do -> st
 
-  let url_pins st ?edit ?(action=true) ?locked ?(pre=fun _ -> ()) pins =
+  let url_pins st ?edit ?(action=true) ?locked ?(pre=fun _ -> ()) ~task_pool pins =
     let names = List.map (fun p -> p.pinned_name) pins in
     (match names with
      | _::_::_ ->
@@ -1858,10 +1860,10 @@ module PIN = struct
     in
     if action then
       (OpamConsole.msg "\n";
-       post_pin_action st pinned names)
+       post_pin_action ~task_pool st pinned names)
     else st
 
-  let edit st ?(action=true) ?version ?locked name =
+  let edit st ?(action=true) ?version ?locked ~task_pool name =
     let pinned = st.pinned in
     let st =
       if OpamPackage.has_name st.pinned name then
@@ -1895,10 +1897,10 @@ module PIN = struct
         OpamConsole.error_and_exit `Not_found
           "Package is not pinned, and no existing version was supplied."
     in
-    if action then post_pin_action st pinned [name]
+    if action then post_pin_action ~task_pool st pinned [name]
     else st
 
-  let unpin st ?(action=true) names =
+  let unpin ~task_pool st ?(action=true) names =
     let pinned_before = st.pinned in
     let st = unpin st names in
     let installed_unpinned = (pinned_before -- st.pinned) %% st.installed in
@@ -1912,7 +1914,7 @@ module PIN = struct
           (OpamPackage.Name.Set.of_list names)
       in
       let st, solution =
-        OpamSolution.resolve_and_apply st Upgrade
+        OpamSolution.resolve_and_apply st Upgrade ~task_pool
           ~requested
           (OpamSolver.request ~all ())
       in

@@ -64,7 +64,7 @@ let list t ns =
 
 let possibly_unix_path_env_value k v =
   if k = "PATH" then
-    (Lazy.force OpamSystem.get_cygpath_path_transform) ~pathlist:true v
+    (OpamLazy.force OpamSystem.get_cygpath_path_transform) ~pathlist:true v
   else v
 
 let rec print_env output = function
@@ -379,7 +379,7 @@ let expand gt str =
 let exec gt ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch command =
   log "config-exec command=%a" (slog (String.concat " ")) command;
   let switch = OpamStateConfig.get_switch () in
-  let st_lazy = lazy (
+  let st_lazy = OpamLazy.create (fun () ->
     let rt = OpamRepositoryState.load `Lock_none gt in
     OpamSwitchState.load `Lock_none gt rt switch
   ) in
@@ -397,7 +397,7 @@ let exec gt ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch command =
   in
   let env = OpamTypesBase.env_array env in
   let resolve var =
-    OpamPackageVar.resolve (Lazy.force st_lazy) var
+    OpamPackageVar.resolve (OpamLazy.force st_lazy) var
   in
   let cmd, args =
     match
@@ -663,7 +663,7 @@ let allwd_wrappers wdef wrappers with_wrappers  =
 
 let switch_allowed_fields, switch_allowed_sections =
   let allowed_fields =
-    lazy (
+    OpamLazy.create (fun () ->
       OpamFile.Switch_config.(
         [
           ("synopsis", Atomic,
@@ -703,7 +703,7 @@ let switch_allowed_fields, switch_allowed_sections =
     let rem_elem new_elems elems =
       List.filter (fun n -> not (List.mem n new_elems)) elems
     in
-    lazy (
+    OpamLazy.create (fun () ->
       OpamFile.Switch_config.([
           ("variables", InModifiable (
               (fun nc c -> { c with variables = nc.variables @ c.variables }),
@@ -712,8 +712,8 @@ let switch_allowed_fields, switch_allowed_sections =
            (fun c -> { c with variables = empty.variables }));
         ]))
   in
-  (fun () -> Lazy.force allowed_fields),
-  fun () -> Lazy.force allowed_sections
+  (fun () -> OpamLazy.force allowed_fields),
+  fun () -> OpamLazy.force allowed_sections
 
 let confset_switch gt switch switch_config =
   let config_f = OpamPath.Switch.switch_config gt.root switch in
@@ -768,7 +768,7 @@ let set_opt_switch gt ?st field value =
 
 let global_allowed_fields, global_allowed_sections =
   let allowed_fields =
-    lazy (
+    OpamLazy.create (fun () ->
       let open OpamStd.Option.Op in
       let open OpamFile in
       let in_config = OpamInitDefaults.init_config () in
@@ -876,7 +876,7 @@ let global_allowed_fields, global_allowed_sections =
       @ allwd_wrappers wrapper_init Config.wrappers Config.with_wrappers
     )
   in
-  (fun () -> Lazy.force allowed_fields),
+  (fun () -> OpamLazy.force allowed_fields),
   fun () -> []
 
 let confset_global gt =
@@ -1115,7 +1115,7 @@ let vars_list_global gt =
           match OpamStd.Option.Op.(
               OpamVariable.Map.find_opt var gt.global_variables
               >>| fst
-              >>= Lazy.force) with
+              >>= OpamLazy.force) with
           | Some c
             when (OpamVariable.string_of_variable_contents c) <> content ->
             "Set through local opam config or env"

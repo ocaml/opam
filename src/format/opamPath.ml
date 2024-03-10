@@ -49,12 +49,10 @@ let hooks_dir t = init t / "hooks"
 let log t = t / "log"
 
 let backup_file =
-  let file = lazy Unix.(
-      let tm = gmtime (Unix.gettimeofday ()) in
-      Printf.sprintf "state-%04d%02d%02d%02d%02d%02d.export"
-        (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
-    ) in
-  fun () -> Lazy.force file
+  OpamLazy.memo_unit (fun () ->
+    let tm = Unix.gmtime (Unix.gettimeofday ()) in
+    Printf.sprintf "state-%04d%02d%02d%02d%02d%02d.export"
+      (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec)
 
 let backup_dir t = t / "backup"
 

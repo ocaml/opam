@@ -145,6 +145,8 @@ let rec map f = function
     | Empty -> Empty
     | x -> Block x
 
+(* Offer a parallel_map ~task_pool perhaps? *)
+
 (* Maps top-down *)
 let rec map_formula f t =
   let t = f t in

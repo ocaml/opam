@@ -50,14 +50,14 @@ end
 
 type t = {
   cudf_file: string option;
-  solver: (module OpamCudfSolver.S) Lazy.t;
+  solver: (module OpamCudfSolver.S) OpamLazy.t;
   best_effort: bool;
   (* The following are options because the default can only be known once the
      solver is known, so we set it only if no customisation was made *)
-  solver_preferences_default: string option Lazy.t;
-  solver_preferences_upgrade: string option Lazy.t;
-  solver_preferences_fixup: string option Lazy.t;
-  solver_preferences_best_effort_prefix: string option Lazy.t;
+  solver_preferences_default: string option OpamLazy.t;
+  solver_preferences_upgrade: string option OpamLazy.t;
+  solver_preferences_fixup: string option OpamLazy.t;
+  solver_preferences_best_effort_prefix: string option OpamLazy.t;
   solver_timeout: float option;
   solver_allow_suboptimal: bool;
   cudf_trim: string option;
@@ -68,12 +68,12 @@ type t = {
 
 type 'a options_fun =
   ?cudf_file:string option ->
-  ?solver:((module OpamCudfSolver.S) Lazy.t) ->
+  ?solver:((module OpamCudfSolver.S) OpamLazy.t) ->
   ?best_effort:bool ->
-  ?solver_preferences_default:string option Lazy.t ->
-  ?solver_preferences_upgrade:string option Lazy.t ->
-  ?solver_preferences_fixup:string option Lazy.t ->
-  ?solver_preferences_best_effort_prefix:string option Lazy.t ->
+  ?solver_preferences_default:string option OpamLazy.t ->
+  ?solver_preferences_upgrade:string option OpamLazy.t ->
+  ?solver_preferences_fixup:string option OpamLazy.t ->
+  ?solver_preferences_best_effort_prefix:string option OpamLazy.t ->
   ?solver_timeout:float option ->
   ?solver_allow_suboptimal:bool ->
   ?cudf_trim:string option ->
@@ -83,17 +83,17 @@ type 'a options_fun =
   'a
 
 let default =
-  let solver = lazy (
+  let solver = OpamLazy.create (fun () ->
     OpamCudfSolver.get_solver OpamCudfSolver.default_solver_selection
   ) in
   {
     cudf_file = None;
     solver;
     best_effort = false;
-    solver_preferences_default = lazy None;
-    solver_preferences_upgrade = lazy None;
-    solver_preferences_fixup = lazy None;
-    solver_preferences_best_effort_prefix = lazy None;
+    solver_preferences_default = OpamLazy.from_val None;
+    solver_preferences_upgrade = OpamLazy.from_val None;
+    solver_preferences_fixup = OpamLazy.from_val None;
+    solver_preferences_best_effort_prefix = OpamLazy.from_val None;
     solver_timeout = Some 60.;
     solver_allow_suboptimal = true;
     cudf_trim = None;
@@ -148,28 +148,31 @@ let r = ref default
 let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
 let with_auto_criteria config =
-  let criteria = lazy (
-    let module S = (val Lazy.force config.solver) in
+  let criteria = OpamLazy.create (fun () ->
+    let module S = (val OpamLazy.force config.solver) in
     S.default_criteria
   ) in
   set config
     ~solver_preferences_default:
-      (lazy (match config.solver_preferences_default with
-           | lazy None -> Some (Lazy.force criteria).OpamCudfSolver.crit_default
-           | lazy some -> some))
+      (OpamLazy.create (fun () ->
+        match OpamLazy.force config.solver_preferences_default with
+        | None -> Some (OpamLazy.force criteria).OpamCudfSolver.crit_default
+        | some -> some))
     ~solver_preferences_upgrade:
-      (lazy (match config.solver_preferences_upgrade with
-           | lazy None -> Some (Lazy.force criteria).OpamCudfSolver.crit_upgrade
-           | lazy some -> some))
+      (OpamLazy.create (fun () ->
+        match OpamLazy.force config.solver_preferences_upgrade with
+        | None -> Some (OpamLazy.force criteria).OpamCudfSolver.crit_upgrade
+        | some -> some))
     ~solver_preferences_fixup:
-      (lazy (match config.solver_preferences_fixup with
-           | lazy None -> Some (Lazy.force criteria).OpamCudfSolver.crit_fixup
-           | lazy some -> some))
+      (OpamLazy.create (fun () ->
+        match OpamLazy.force config.solver_preferences_fixup with
+        | None -> Some (OpamLazy.force criteria).OpamCudfSolver.crit_fixup
+        | some -> some))
     ~solver_preferences_best_effort_prefix:
-      (lazy (match config.solver_preferences_best_effort_prefix with
-           | lazy None ->
-             (Lazy.force criteria).OpamCudfSolver.crit_best_effort_prefix
-           | lazy some -> some))
+      (OpamLazy.create (fun () ->
+        match OpamLazy.force config.solver_preferences_best_effort_prefix with
+        | None -> (OpamLazy.force criteria).OpamCudfSolver.crit_best_effort_prefix
+        | some -> some))
     ()
 
 let initk k =
@@ -177,20 +180,20 @@ let initk k =
   let solver =
     let open OpamCudfSolver in
     match E.externalsolver () with
-    | Some "" -> lazy (get_solver ~internal:true default_solver_selection)
-    | Some s -> lazy (solver_of_string s)
+    | Some "" -> OpamLazy.create (fun () ->get_solver ~internal:true default_solver_selection)
+    | Some s -> OpamLazy.create (fun () ->solver_of_string s)
     | None ->
       let internal = E.useinternalsolver () ++ E.noaspcud () in
-      lazy (get_solver ?internal default_solver_selection)
+      OpamLazy.create (fun () ->get_solver ?internal default_solver_selection)
   in
   let criteria =
-    E.criteria () >>| fun c -> lazy (Some c) in
+    E.criteria () >>| fun c -> OpamLazy.create (fun () ->Some c) in
   let upgrade_criteria =
-    (E.upgradecriteria () >>| fun c -> lazy (Some c)) ++ criteria in
+    (E.upgradecriteria () >>| fun c -> OpamLazy.create (fun () ->Some c)) ++ criteria in
   let fixup_criteria =
-    E.fixupcriteria () >>| fun c -> (lazy (Some c)) in
+    E.fixupcriteria () >>| fun c -> (OpamLazy.create (fun () ->Some c)) in
   let best_effort_prefix_criteria =
-    E.besteffortprefixcriteria () >>| fun c -> (lazy (Some c)) in
+    E.besteffortprefixcriteria () >>| fun c -> (OpamLazy.create (fun () ->Some c)) in
   let solver_timeout =
     E.solvertimeout () >>| fun f -> if f <= 0. then None else Some f in
   setk (setk (fun c -> r := with_auto_criteria c; k)) !r
@@ -214,11 +217,11 @@ let best_effort =
   let already_warned = ref false in
   fun () ->
     !r.best_effort &&
-    let crit = match Lazy.force !r.solver_preferences_default with
+    let crit = match OpamLazy.force !r.solver_preferences_default with
       | Some c -> c
       | None -> failwith "Solver criteria uninitialised"
     in
-    let pfx = Lazy.force !r.solver_preferences_best_effort_prefix in
+    let pfx = OpamLazy.force !r.solver_preferences_best_effort_prefix in
     pfx <> None ||
     OpamStd.String.contains ~sub:"opam-query" crit ||
     (if not !already_warned then begin
@@ -238,18 +241,18 @@ let criteria kind =
     | `Fixup -> !r.solver_preferences_fixup
   in
   let str =
-    match Lazy.force crit with
+    match OpamLazy.force crit with
     | Some c -> c
     | None -> failwith "Solver criteria uninitialised"
   in
   if !r.best_effort then
-    match !r.solver_preferences_best_effort_prefix with
-    | lazy (Some pfx) -> pfx ^ str
-    | lazy None -> str
+    match OpamLazy.force !r.solver_preferences_best_effort_prefix with
+    | Some pfx -> pfx ^ str
+    | None -> str
   else str
 
 let call_solver ~criteria cudf =
-  let module S = (val Lazy.force (!r.solver)) in
+  let module S = (val OpamLazy.force (!r.solver)) in
   OpamConsole.log "SOLVER" "Calling solver %s with criteria %s"
     (OpamCudfSolver.get_name (module S)) criteria;
   let chrono = OpamConsole.timer () in

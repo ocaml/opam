@@ -16,6 +16,7 @@ open OpamStateTypes
 
 (** Resolve an user request *)
 val resolve:
+  task_pool:Domainslib.Task.pool ->
   'a switch_state ->
   user_action ->
   ?reinstall:package_set ->
@@ -32,6 +33,7 @@ val resolve:
     requested packages, used for printing actions reasons. *)
 val apply:
   ?ask:bool ->
+  task_pool:Domainslib.Task.pool ->
   rw switch_state ->
   requested:package_set ->
   ?print_requested:OpamPackage.Name.Set.t ->
@@ -54,6 +56,7 @@ val resolve_and_apply:
   rw switch_state ->
   user_action ->
   ?reinstall:package_set ->
+  task_pool:Domainslib.Task.pool ->
   requested:package_set ->
   ?print_requested:OpamPackage.Name.Set.t ->
   ?add_roots:OpamPackage.Name.Set.t ->
@@ -80,7 +83,7 @@ val dry_run: 'a switch_state -> OpamSolver.solution -> 'a switch_state
    launched, without asking user (used by the `--depext-only` option). If
    [force_depext] is true, it overrides [OpamFile.Config.depext] value. *)
 val install_depexts:
-  ?force_depext:bool -> ?confirm:bool -> rw switch_state -> package_set -> rw switch_state
+  ?force_depext:bool -> ?confirm:bool -> task_pool:Domainslib.Task.pool -> rw switch_state -> package_set -> rw switch_state
 
 (** {2 Atoms} *)
 

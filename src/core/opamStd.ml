@@ -9,6 +9,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open Domainslib
+
 module type SET = sig
   include Set.S
   val map: (elt -> elt) -> t -> t
@@ -24,6 +26,7 @@ module type SET = sig
   val find_opt: (elt -> bool) -> t -> elt option
   val safe_add: elt -> t -> t
   val fixpoint: (elt -> t) -> t -> t
+  val parallel_fixpoint: task_pool:Domainslib.Task.pool -> (elt -> t) -> t -> t
   val map_reduce: ?default:'a -> (elt -> 'a) -> ('a -> 'a -> 'a) -> t -> 'a
 
   module Op : sig
@@ -315,6 +318,28 @@ module Set = struct
       let rec aux fullset curset =
         if is_empty curset then fullset else
         let newset = fold (fun nv set -> set ++ f nv) curset empty in
+        let fullset = fullset ++ curset in
+        aux fullset (newset -- fullset)
+      in
+      aux empty
+
+    let parallel_fixpoint ~task_pool f =
+      let open Op in
+
+      let rec aux fullset curset =
+        if is_empty curset then fullset else
+        let newset =
+          let size = S.cardinal curset in
+          let input = Array.make size (S.choose curset) in
+          let output = Array.make size empty in
+          let i = ref 0 in
+          S.iter (fun nv -> input.(!i) <- nv; incr i) curset;
+          Task.parallel_for task_pool ~start:0 ~finish:(size - 1) ~body:(fun i ->
+              output.(i) <- f input.(i));
+          let newset = ref empty in
+          Array.iter (fun res -> newset := res ++ !newset) output;
+          !newset
+        in
         let fullset = fullset ++ curset in
         aux fullset (newset -- fullset)
       in
@@ -834,8 +859,7 @@ module Env = struct
   let raw_env = Unix.environment
 
   let list =
-    let lazy_env = lazy (to_list (raw_env ())) in
-    fun () -> Lazy.force lazy_env
+    OpamLazy.memo_unit  (fun () -> to_list (raw_env ()))
 
   let cyg_env ~cygbin ~git_location =
     let env = raw_env () in
@@ -918,15 +942,15 @@ module OpamSys = struct
 
   let tty_in = Unix.isatty Unix.stdin
 
-  let default_columns = lazy (
-    let default = 16_000_000 in
-    let cols =
-      try int_of_string (Env.get "COLUMNS") with
-      | Not_found
-      | Failure _ -> default
-    in
-    if cols > 0 then cols else default
-  )
+  let default_columns =
+    OpamLazy.create (fun () ->
+      let default = 16_000_000 in
+      let cols =
+        try int_of_string (Env.get "COLUMNS") with
+        | Not_found
+        | Failure _ -> default
+      in
+      if cols > 0 then cols else default)
 
   let get_terminal_columns () =
     let fallback = 80 in
@@ -956,14 +980,14 @@ module OpamSys = struct
       in
       width
     with Not_found ->
-      Lazy.force default_columns
+      OpamLazy.force default_columns
 
   let terminal_columns =
-    let v = ref (lazy (get_terminal_columns ())) in
+    let v = ref (OpamLazy.create (fun () -> get_terminal_columns ())) in
     let () =
       try Sys.set_signal 28 (* SIGWINCH *)
             (Sys.Signal_handle
-               (fun _ -> v := lazy (get_terminal_columns ())))
+               (fun _ -> v := OpamLazy.create (fun () -> get_terminal_columns ())))
       with Invalid_argument _ -> ()
     in
     if Sys.win32 then
@@ -972,24 +996,22 @@ module OpamSys = struct
     else
       fun () ->
         if tty_out
-        then Lazy.force !v
-        else Lazy.force default_columns
+        then OpamLazy.force !v
+        else OpamLazy.force default_columns
 
   let home =
     (* Note: we ask Unix.getenv instead of Env.get to avoid
        forcing the environment in this function that is used
        before the .init() functions are called -- see
        OpamStateConfig.default. *)
-    let home = lazy (
-      try Unix.getenv "HOME"
-      with Not_found ->
-        if Sys.win32 then
-          (* CSIDL_PROFILE = 0x28 *)
-          OpamStubs.(shGetFolderPath 0x28 SHGFP_TYPE_CURRENT)
-        else
-          Sys.getcwd ()
-    ) in
-    fun () -> Lazy.force home
+    OpamLazy.memo_unit (fun () ->
+        try Unix.getenv "HOME"
+        with Not_found ->
+          if Sys.win32 then
+            (* CSIDL_PROFILE = 0x28 *)
+            OpamStubs.(shGetFolderPath 0x28 SHGFP_TYPE_CURRENT)
+          else
+            Sys.getcwd ())
 
   let etc () = "/etc"
 
@@ -1023,7 +1045,7 @@ module OpamSys = struct
     | Other of string
 
   let os =
-    let os = lazy (
+    OpamLazy.memo_unit (fun () ->
       match Sys.os_type with
       | "Unix" -> begin
           match uname "-s" with
@@ -1037,9 +1059,7 @@ module OpamSys = struct
         end
       | "Win32"  -> Win32
       | "Cygwin" -> Cygwin
-      | s        -> Other s
-    ) in
-    fun () -> Lazy.force os
+      | s        -> Other s)
 
   type powershell_host = Powershell_pwsh | Powershell
   type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
@@ -1082,7 +1102,7 @@ module OpamSys = struct
   let chop_exe_suffix name =
     Option.default name (Filename.chop_suffix_opt name ~suffix:".exe")
 
-  let windows_process_ancestry = Lazy.from_fun OpamStubs.getProcessAncestry
+  let windows_process_ancestry = OpamLazy.from_fun OpamStubs.getProcessAncestry
 
   type shell_choice = Accept of shell
 
@@ -1099,12 +1119,11 @@ module OpamSys = struct
           (fun shell -> Accept shell)
           (shell_of_string (chop_exe_suffix name))
     in
-    lazy (
-      let lazy ancestors = windows_process_ancestry in
+    OpamLazy.create (fun () ->
+      let ancestors = OpamLazy.force windows_process_ancestry in
       match OpamList.filter_map categorize_process ancestors with
       | [] -> None
-      | Accept most_relevant_shell :: _ -> Some most_relevant_shell
-    )
+      | Accept most_relevant_shell :: _ -> Some most_relevant_shell)
 
   let guess_shell_compat () =
     let parent_guess () =
@@ -1139,7 +1158,7 @@ module OpamSys = struct
     let test shell = shell_of_string (Filename.basename shell) in
     if Sys.win32 then
       let shell =
-        match Lazy.force windows_get_shell with
+        match OpamLazy.force windows_get_shell with
         | None ->
           Option.of_Not_found Env.get "SHELL" |> Option.replace test
         | some ->
@@ -1349,18 +1368,18 @@ module Win32 = struct
   end
 
   let (set_parent_pid, parent_putenv) =
-    let ppid = ref (OpamCompat.Lazy.map (function (_::(pid, _)::_) -> pid | _ -> 0l) OpamSys.windows_process_ancestry) in
-    let parent_putenv = lazy (
-      let {contents = lazy ppid} = ppid in
+    let ppid = ref (OpamLazy.map (function (_::(pid, _)::_) -> pid | _ -> 0l) OpamSys.windows_process_ancestry) in
+    let parent_putenv = OpamLazy.create (fun () ->
+      let ppid = OpamLazy.force !ppid in
       let our_architecture = OpamStubs.getProcessArchitecture None in
       let their_architecture = OpamStubs.getProcessArchitecture (Some ppid) in
       let no_opam_putenv =
-        let warning = lazy (
+        let warning = OpamLazy.create (fun () ->
           !console.warning "opam-putenv was not found - \
                             OPAM is unable to alter environment variables";
           false)
         in
-        fun _ _ -> Lazy.force warning
+        fun _ _ -> OpamLazy.force warning
       in
       if our_architecture <> their_architecture then
         match their_architecture with
@@ -1406,10 +1425,10 @@ module Win32 = struct
         | key -> OpamStubs.process_putenv ppid key)
     in
       ((fun pid ->
-          if Lazy.is_val parent_putenv then
+          if OpamLazy.is_val parent_putenv then
             failwith "Target parent already known";
-          ppid := Lazy.from_val pid),
-       (fun key -> (Lazy.force parent_putenv) key))
+          ppid := OpamLazy.from_val pid),
+       (fun key -> (OpamLazy.force parent_putenv) key))
 
   let persistHomeDirectory dir =
     (* Update our environment *)
@@ -1739,7 +1758,7 @@ module Config = struct
   let resolve_when ~auto = function
     | `Always -> true
     | `Never -> false
-    | `Auto -> Lazy.force auto
+    | `Auto -> OpamLazy.force auto
 
   let answer s =
     match String.lowercase_ascii s with
@@ -1766,8 +1785,7 @@ module Config = struct
     let find var = OpamList.find_map var !r
     let value_t var = try Some (find var) with Not_found -> None
     let value var =
-      let l = lazy (value_t var) in
-      fun () -> Lazy.force l
+      OpamLazy.memo_unit (fun () -> value_t var)
   end
 
 end

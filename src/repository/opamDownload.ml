@@ -58,7 +58,7 @@ let ftp_args = [
 ]
 
 let download_args ~url ~out ~retry ?checksum ~compress () =
-  let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
+  let cmd, _ = OpamLazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =
     match cmd with
     | [(CIdent "wget"), _] -> cmd @ wget_args
@@ -91,7 +91,7 @@ let download_args ~url ~out ~retry ?checksum ~compress () =
     cmd
 
 let tool_return url ret =
-  match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
+  match OpamLazy.force OpamRepositoryConfig.(!r.download_tool) with
   | _, `Default ->
     if OpamProcess.is_failure ret then
       fail (Some "Download command failed",
@@ -199,7 +199,7 @@ let download ?quiet ?validate ~overwrite ?compress ?checksum url dstdir =
 
 let post_tools = ["wget"; "curl"]
 let check_post_tool () =
-  match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
+  match OpamLazy.force OpamRepositoryConfig.(!r.download_tool) with
   | [(CIdent cmd), _], _ -> List.mem cmd post_tools
   | _ -> false
 

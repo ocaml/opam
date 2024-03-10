@@ -70,6 +70,7 @@ val trim_universe: Cudf.universe -> Set.t -> Cudf.universe
     [explain] is set to [false] *)
 val check_request:
   ?explain:bool ->
+  task_pool:Domainslib.Task.pool ->
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
@@ -77,6 +78,7 @@ val check_request:
 
 (** Compute the final universe state using the external solver. *)
 val get_final_universe:
+  task_pool:Domainslib.Task.pool ->
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->
   Cudf_types.vpkg request ->
@@ -132,6 +134,7 @@ exception Solver_failure of string
     an explanation of the error, or a resulting universe.
     [~extern] specifies whether the external solver should be used *)
 val resolve:
+  task_pool:Domainslib.Task.pool ->
   extern:bool ->
   version_map:int OpamPackage.Map.t ->
   Cudf.universe ->

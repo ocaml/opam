@@ -164,7 +164,7 @@ let atom_dependencies st tog atoms =
       OpamFormula.ors [acc; package_dependencies st tog nv])
     pkgs OpamFormula.Empty
 
-let get_universe st ?requested tog =
+let get_universe ~task_pool st ?requested tog =
   let requested =
     match requested with
     | Some r -> r
@@ -172,7 +172,7 @@ let get_universe st ?requested tog =
   in
   OpamSwitchState.universe st
     ~test:tog.test ~doc:tog.doc ~dev_setup:tog.dev_setup ~force_dev_deps:tog.dev
-    ~requested Query
+    ~requested ~task_pool Query
 
 let rec value_strings value =
   let module SS = OpamStd.String.Set in
@@ -211,22 +211,22 @@ let pattern_selector patterns =
               Atom (Pattern (version_patt, version))])
         patterns)
 
-let apply_selector ~base st = function
+let apply_selector ~task_pool ~base st = function
   | Any -> base
   | Installed -> st.installed
   | Root -> st.installed_roots
   | Compiler -> OpamSwitchState.invariant_root_packages st
-  | Available -> Lazy.force st.available_packages
+  | Available -> OpamLazy.force st.available_packages
   | Installable ->
-    OpamSolver.installable_subset
-      (OpamSwitchState.universe st ~requested:OpamPackage.Set.empty Query)
+    OpamSolver.installable_subset ~task_pool
+      (OpamSwitchState.universe st ~requested:OpamPackage.Set.empty ~task_pool Query)
       base
   | Pinned -> OpamPinned.packages st
   | (Required_by ({recursive=true; _} as tog, atoms)
     | Depends_on ({recursive=true; _} as tog, atoms)) as direction ->
     let deps_fun = match direction with
-      | Required_by _ -> OpamSwitchState.dependencies
-      | Depends_on _ -> OpamSwitchState.reverse_dependencies
+      | Required_by _ -> OpamSwitchState.dependencies ~task_pool
+      | Depends_on _ -> OpamSwitchState.reverse_dependencies ~task_pool
       | _ -> assert false
     in
     deps_fun ~depopts:tog.depopts ~build:tog.build ~post:tog.post
@@ -246,22 +246,22 @@ let apply_selector ~base st = function
     OpamSwitchState.conflicts_with st (OpamPackage.Set.of_list packages)
       base
   | Coinstallable_with (tog, packages) ->
-    let universe = get_universe st tog in
+    let universe = get_universe ~task_pool st tog in
     let set = OpamPackage.Set.of_list packages in
-    OpamSolver.coinstallable_subset universe set base
+    OpamSolver.coinstallable_subset ~task_pool universe set base
   | Solution (tog, atoms) ->
     let universe =
       let requested =
         OpamFormula.packages_of_atoms st.packages atoms
       in
-      get_universe st tog ~requested
+      get_universe ~task_pool st tog ~requested
     in
     let universe =
       { universe
         with u_installed = OpamPackage.Set.empty;
              u_installed_roots = OpamPackage.Set.empty }
     in
-    (match OpamSolver.resolve universe
+    (match OpamSolver.resolve ~task_pool universe
              (OpamSolver.request ~install:atoms ()) with
     | Success s -> OpamSolver.new_packages s
     | Conflicts cs ->
@@ -368,14 +368,14 @@ let apply_selector ~base st = function
        OpamPackage.Set.empty)
 
 
-let rec filter ~base st = function
+let rec filter ~task_pool ~base st = function
   | Empty -> base
-  | Atom select -> base %% apply_selector ~base st select
-  | Block b -> filter ~base st b
+  | Atom select -> base %% apply_selector ~task_pool ~base st select
+  | Block b -> filter ~task_pool ~base st b
   | And (a, b) ->
-    let base = filter ~base st a in
-    filter ~base st b
-  | Or (a, b) -> filter ~base st a ++ filter ~base st b
+    let base = filter ~task_pool ~base st a in
+    filter ~task_pool ~base st b
+  | Or (a, b) -> filter ~task_pool ~base st a ++ filter ~task_pool ~base st b
 
 type output_format =
   | Name
@@ -598,7 +598,7 @@ let detail_printer ?prettify ?normalise ?(sort=false) st nv =
     String.concat "  "
   | Available_versions ->
     let available =
-      OpamPackage.packages_of_name (Lazy.force st.available_packages) nv.name
+      OpamPackage.packages_of_name (OpamLazy.force st.available_packages) nv.name
     in
     OpamStd.List.concat_map "  " (fun nv ->
         OpamPackage.Version.to_string nv.version % version_color st nv)
@@ -663,7 +663,7 @@ let default_package_listing_format = {
   order = `Standard;
 }
 
-let display st format packages =
+let display ~task_pool st format packages =
   let packages =
     if format.all_versions then packages else
       OpamPackage.Name.Set.fold (fun name ->
@@ -672,7 +672,7 @@ let display st format packages =
             let get = OpamPackage.Set.max_elt in
             try get (pkgs %% st.installed) with Not_found ->
             try get (pkgs %% st.pinned) with Not_found ->
-            try get (pkgs %% Lazy.force st.available_packages) with Not_found ->
+            try get (pkgs %% OpamLazy.force st.available_packages) with Not_found ->
               get pkgs
           in
           OpamPackage.Set.add nv)
@@ -684,9 +684,10 @@ let display st format packages =
       let universe =
         OpamSwitchState.universe st
           ~requested:packages
+          ~task_pool
           Query
       in
-      OpamSolver.dependency_sort ~depopts:true ~build:true ~post:false
+      OpamSolver.dependency_sort ~task_pool ~depopts:true ~build:true ~post:false
         universe packages
     else match format.order with
       | `Custom o -> List.sort o (OpamPackage.Set.elements packages)
@@ -847,7 +848,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
         (let choose =
            try OpamPackage.Set.choose (nvs %% st.pinned) with Not_found ->
            try OpamPackage.Set.choose (nvs %% st.installed) with Not_found ->
-           try OpamPackage.Set.max_elt (nvs %% Lazy.force st.available_packages)
+           try OpamPackage.Set.max_elt (nvs %% OpamLazy.force st.available_packages)
            with Not_found ->
              OpamPackage.Set.max_elt nvs
          in

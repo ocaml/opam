@@ -37,12 +37,13 @@ val create:
     defaults to [false]. *)
 val install_compiler:
   ?additional_installs:atom list -> ?deps_only:bool -> ?ask:bool ->
-  rw switch_state -> rw switch_state
+  task_pool:Domainslib.Task.pool -> rw switch_state -> rw switch_state
 
 (** Import a file which contains the packages to install.  *)
 val import:
   rw switch_state ->
   OpamFile.SwitchExport.t OpamFile.t option ->
+  task_pool:Domainslib.Task.pool -> 
   rw switch_state
 
 (** Export a file which contains the installed packages. If [full] is specified
@@ -70,7 +71,7 @@ val switch: 'a lock -> rw global_state -> switch -> unit
 val switch_previous: 'a lock -> rw global_state -> unit
 
 (** Reinstall the given compiler switch. *)
-val reinstall: rw switch_state -> rw switch_state
+val reinstall: task_pool:Domainslib.Task.pool -> rw switch_state -> rw switch_state
 
 (** Updates the switch invariant and the associated config files, and writes the
     config file unless [show] or [dry_run] are activated globally. Low-level

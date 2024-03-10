@@ -172,7 +172,7 @@ module Make (VCS: VCS) = struct
         f
       in
       let args = [
-        "--files-from"; (Lazy.force convert_path) stdout_file;
+        "--files-from"; (OpamLazy.force convert_path) stdout_file;
       ] in
       OpamLocal.rsync_dirs ~args repo_url repo_root @@+ fun result ->
       OpamSystem.remove stdout_file;

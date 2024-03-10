@@ -193,7 +193,7 @@ let set_invariant_raw st invariant =
   st
 
 let install_compiler
-    ?(additional_installs=[]) ?(deps_only=false) ?(ask=false) t =
+    ?(additional_installs=[]) ?(deps_only=false) ?(ask=false) ~task_pool t =
   let invariant = t.switch_invariant in
   if invariant = OpamFormula.Empty && additional_installs = [] then begin
     (if not OpamClientConfig.(!r.show) &&
@@ -215,7 +215,7 @@ let install_compiler
   OpamConsole.msg "Switch invariant: %s\n"
     (OpamFileTools.dep_formula_to_string invariant);
   let solution =
-    OpamSolution.resolve t Switch
+    OpamSolution.resolve ~task_pool t Switch
       ~requested:(OpamPackage.packages_of_names t.packages roots)
       (OpamSolver.request ~install:additional_installs ())
   in
@@ -260,7 +260,7 @@ let install_compiler
   in
   let t =
     let base_comp =
-      OpamSwitchState.compute_invariant_packages
+      OpamSwitchState.compute_invariant_packages ~task_pool
         { t with installed = t.installed
                              -- (OpamSolver.removed_packages solution)
                              ++ (OpamSolver.new_packages solution) }
@@ -279,6 +279,7 @@ let install_compiler
   in
   let t, result =
     OpamSolution.apply t
+      ~task_pool
       ~ask:(OpamClientConfig.(!r.show) || ask)
       ~requested:(OpamPackage.packages_of_names t.packages roots)
       ~add_roots:roots ~skip
@@ -320,7 +321,8 @@ let create
       in
       let st = { st with switch_invariant = invariant; switch_config } in
       let available_packages =
-        lazy (OpamSwitchState.compute_available_packages gt switch switch_config
+        OpamLazy.create (fun () ->
+          OpamSwitchState.compute_available_packages gt switch switch_config
                 ~pinned:OpamPackage.Set.empty
                 ~opams:st.opams)
       in
@@ -390,7 +392,7 @@ let switch_previous lock gt =
     OpamConsole.error_and_exit `Not_found
       "No previously used switch could be found"
 
-let import_t ?ask importfile t =
+let import_t ?ask ~task_pool importfile t =
   log "import switch";
 
   let extra_files = importfile.OpamFile.SwitchExport.extra_files in
@@ -429,7 +431,8 @@ let import_t ?ask importfile t =
   in
   let t =
     { t with reinstall =
-               lazy OpamPackage.Set.Op.(Lazy.force t.reinstall ++ to_reinstall) }
+        OpamLazy.create (fun () ->
+          OpamPackage.Set.Op.(OpamLazy.force t.reinstall ++ to_reinstall)) }
   in
 
   let opams =
@@ -465,7 +468,7 @@ let import_t ?ask importfile t =
 
   let t =
     { t with
-      available_packages = lazy available;
+      available_packages = OpamLazy.create (fun () -> available);
       packages;
       compiler_packages;
       pinned;
@@ -499,8 +502,7 @@ let import_t ?ask importfile t =
     in
 
     let add_roots = OpamPackage.names_of_packages import_sel.sel_roots in
-
-    OpamSolution.resolve_and_apply ?ask t Import
+    OpamSolution.resolve_and_apply ?ask t Import ~task_pool
       ~requested:((to_install %% available) ++ unavailable_version)
       ~add_roots
       (OpamSolver.request ~install:to_import ())
@@ -653,7 +655,7 @@ let show () =
   OpamConsole.msg "%s\n"
     (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
 
-let reinstall init_st =
+let reinstall ~task_pool init_st =
   let switch = init_st.switch in
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
   let gt = init_st.switch_global in
@@ -671,9 +673,9 @@ let reinstall init_st =
     { init_st with
       installed = OpamPackage.Set.empty;
       installed_roots = OpamPackage.Set.empty;
-      reinstall = lazy OpamPackage.Set.empty; }
+      reinstall = OpamLazy.create (fun () -> OpamPackage.Set.empty); }
   in
-  import_t { OpamFile.SwitchExport.
+  import_t ~task_pool { OpamFile.SwitchExport.
              selections = OpamSwitchState.selections init_st;
              extra_files = OpamHash.Map.empty;
              overlays = OpamPackage.Name.Map.empty; }

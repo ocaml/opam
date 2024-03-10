@@ -37,7 +37,7 @@ end
 type dl_tool_kind = [ `Curl | `Default ]
 
 type t = {
-  download_tool: (arg list * dl_tool_kind) Lazy.t;
+  download_tool: (arg list * dl_tool_kind) OpamLazy.t;
   validation_hook: arg list option;
   retries: int;
   force_checksums: bool option;
@@ -45,7 +45,7 @@ type t = {
 }
 
 type 'a options_fun =
-  ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t ->
+  ?download_tool:(OpamTypes.arg list * dl_tool_kind) OpamLazy.t ->
   ?validation_hook:arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
@@ -53,7 +53,7 @@ type 'a options_fun =
   'a
 
 let default = {
-  download_tool = lazy (
+  download_tool = OpamLazy.create (fun () ->
     let os = OpamStd.Sys.os () in
     try
       let curl = "curl", `Curl in
@@ -128,13 +128,13 @@ let initk k =
       )
     |> (fun fetch ->
         match E.curl (), fetch with
-        | None, fetch -> OpamStd.Option.map Lazy.from_val fetch
+        | None, fetch -> OpamStd.Option.map OpamLazy.from_val fetch
         | Some cmd, Some (((CIdent "curl"| CString "curl"), filter)::args, _) ->
-          Some (lazy ((CString cmd, filter)::args, `Curl))
+          Some (OpamLazy.create (fun () ->(CString cmd, filter)::args, `Curl))
         | Some cmd, None ->
-          Some (lazy ([CString cmd, None], `Curl))
+          Some (OpamLazy.create (fun () ->[CString cmd, None], `Curl))
         | Some _, _ -> (* ignored *)
-          OpamStd.Option.map Lazy.from_val fetch)
+          OpamStd.Option.map OpamLazy.from_val fetch)
   in
   let validation_hook =
     E.validationhook () >>| fun s ->

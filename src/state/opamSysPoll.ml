@@ -50,7 +50,7 @@ let poll_arch () =
   match raw with
   | None | Some "" -> None
   | Some a -> Some (normalise_arch a)
-let arch = Lazy.from_fun poll_arch
+let arch = OpamLazy.from_fun poll_arch
 
 let normalise_os raw =
   match String.lowercase_ascii raw with
@@ -66,10 +66,10 @@ let poll_os () =
   match raw with
   | None | Some "" -> None
   | Some s -> Some (normalise_os s)
-let os = Lazy.from_fun poll_os
+let os = OpamLazy.from_fun poll_os
 
 let os_release_field =
-  let os_release_file = lazy (
+  let os_release_file = OpamLazy.create (fun () ->
     List.find Sys.file_exists ["/etc/os-release"; "/usr/lib/os-release"] |>
     OpamProcess.read_lines |>
     OpamStd.List.filter_map (fun s ->
@@ -83,16 +83,16 @@ let os_release_field =
         with Scanf.Scan_failure _ | End_of_file -> None)
   ) in
   fun f ->
-    try Some (OpamStd.List.assoc String.equal f (Lazy.force os_release_file))
+    try Some (OpamStd.List.assoc String.equal f (OpamLazy.force os_release_file))
     with Not_found -> None
 
 let is_android, android_release =
-  let prop = lazy (command_output ["getprop"; "ro.build.version.release"]) in
-  (fun () -> Lazy.force prop <> None),
-  (fun () -> Lazy.force prop)
+  let prop = OpamLazy.create (fun () -> command_output ["getprop"; "ro.build.version.release"]) in
+  (fun () -> OpamLazy.force prop <> None),
+  (fun () -> OpamLazy.force prop)
 
 let poll_os_distribution () =
-  let lazy os = os in
+  let os = OpamLazy.force os in
   match os with
   | Some "macos" as macos ->
     if OpamSystem.resolve_command "brew" <> None then Some "homebrew"
@@ -123,10 +123,10 @@ let poll_os_distribution () =
     in
     if cygwin then Some "cygwin" else os
   | os -> os
-let os_distribution = Lazy.from_fun poll_os_distribution
+let os_distribution = OpamLazy.from_fun poll_os_distribution
 
 let poll_os_version () =
-  let lazy os = os in
+  let os = OpamLazy.force os in
   match os with
   | Some "linux" ->
     android_release () >>= norm >>+ fun () ->
@@ -146,25 +146,25 @@ let poll_os_version () =
     OpamStd.Sys.uname "-U" >>= norm
   | _ ->
     OpamStd.Sys.uname "-r" >>= norm
-let os_version = Lazy.from_fun poll_os_version
+let os_version = OpamLazy.from_fun poll_os_version
 
 let poll_os_family () =
-  let lazy os = os in
+  let os = OpamLazy.force os in
   match os with
   | Some "linux" ->
     (os_release_field "ID_LIKE" >>= fun s ->
      Scanf.sscanf s " %s" norm (* first word *))
-    ++ Lazy.force os_distribution
+    ++ OpamLazy.force os_distribution
   | Some ("freebsd" | "openbsd" | "netbsd" | "dragonfly") -> Some "bsd"
   | Some ("win32" | "cygwin") -> Some "windows"
-  | _ -> Lazy.force os_distribution
-let os_family = Lazy.from_fun poll_os_family
+  | _ -> OpamLazy.force os_distribution
+let os_family = OpamLazy.from_fun poll_os_family
 
 let variables =
   List.map
     (fun (n, v) ->
        OpamVariable.of_string n,
-       OpamCompat.Lazy.map (OpamStd.Option.map (fun v -> OpamTypes.S v)) v)
+       OpamLazy.map (OpamStd.Option.map (fun v -> OpamTypes.S v)) v)
     [
       "arch", arch;
       "os", os;
@@ -174,8 +174,7 @@ let variables =
     ]
 
 let cores =
-  let v = Lazy.from_fun OpamSystem.cpu_count in
-  fun () -> Lazy.force v
+  OpamSystem.cpu_count_memo
 
 (* Exported functions *)
 let resolve_or_poll var poll env =
@@ -183,8 +182,12 @@ let resolve_or_poll var poll env =
   | Some (S c) -> Some c
   | _ ->
     match OpamVariable.Map.find_opt (OpamVariable.of_string var) env with
-    | Some (lazy (Some (OpamTypes.S c)), _) -> Some c
-    | _ -> Lazy.force poll
+    (* | Some (lazy (Some (OpamTypes.S c)), _) -> Some c *)
+    | Some (lazyval, _) ->
+      (match OpamLazy.force lazyval with
+      | Some (OpamTypes.S c) -> Some c
+      | _ -> OpamLazy.force poll)
+    | _ -> OpamLazy.force poll
 
 let arch = resolve_or_poll "arch" arch
 let os = resolve_or_poll "os" os

@@ -380,11 +380,11 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
       OpamPackage.Map.union (fun _ o -> o) st.opams local_opams;
     packages =
       OpamPackage.Set.union st.packages local_packages;
-    available_packages = lazy (
+    available_packages = OpamLazy.create (fun () ->
       OpamPackage.Set.union
         (OpamPackage.Set.filter
            (fun nv -> not (OpamPackage.Name.Set.mem nv.name local_names))
-           (Lazy.force st.available_packages))
+           (OpamLazy.force st.available_packages))
         (OpamSwitchState.compute_available_packages
            st.switch_global st.switch st.switch_config ~pinned
            ~opams:local_opams)
@@ -520,7 +520,7 @@ let check_and_revert_sandboxing root config =
     | None ->
       OpamStd.Option.(Op.(of_Not_found
                             (OpamStd.List.assoc OpamVariable.equal fv)
-                            OpamSysPoll.variables >>= Lazy.force))
+                            OpamSysPoll.variables >>= OpamLazy.force))
   in
   match OpamFilter.commands env sdbx_wrappers with
   | [] -> config

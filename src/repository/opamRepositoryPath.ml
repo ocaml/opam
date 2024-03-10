@@ -18,11 +18,9 @@ let tar root name = root / "repo" // (OpamRepositoryName.to_string name ^ ".tar.
 let download_cache root = root / "download-cache"
 
 let pin_cache_dir =
-  let dir =
-    lazy (OpamSystem.mk_temp_dir ~prefix:"opam-pin-cache" ()
-          |> OpamFilename.Dir.of_string )
-  in
-  fun () -> Lazy.force dir
+  OpamLazy.memo_unit (fun () ->
+    OpamSystem.mk_temp_dir ~prefix:"opam-pin-cache" ()
+    |> OpamFilename.Dir.of_string)
 
 let pin_cache u =
   pin_cache_dir () /

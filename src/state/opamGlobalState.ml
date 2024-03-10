@@ -85,7 +85,7 @@ let load lock_kind =
   let global_variables =
     List.fold_left (fun acc (v,value) ->
         OpamVariable.Map.add v
-          (lazy (Some (OpamStd.Option.default (S "unknown") (Lazy.force value))),
+          (OpamLazy.create (fun () -> Some (OpamStd.Option.default (S "unknown") (OpamLazy.force value))),
            (* Careful on changing it, it is used to determine user defined
               variables on `config report`. See [OpamConfigCommand.help]. *)
            inferred_from_system)
@@ -95,21 +95,21 @@ let load lock_kind =
   in
   let global_variables =
     List.fold_left (fun acc (v,value,doc) ->
-        OpamVariable.Map.add v (lazy (Some value), doc) acc)
+        OpamVariable.Map.add v (OpamLazy.create (fun () -> Some value), doc) acc)
       global_variables
       (OpamFile.Config.global_variables config)
   in
   let eval_variables = OpamFile.Config.eval_variables config in
   let global_variables =
-    let env = lazy (OpamEnv.get_pure () |> OpamTypesBase.env_array) in
+    let env = OpamLazy.create (fun () -> OpamEnv.get_pure () |> OpamTypesBase.env_array) in
     List.fold_left (fun acc (v, cmd, doc) ->
         OpamVariable.Map.update v
           (fun previous_value ->
-             (lazy
-               (try
+             (OpamLazy.create
+               (fun () -> try
                   let ret =
                     OpamSystem.read_command_output
-                      ~env:(Lazy.force env)
+                      ~env:(OpamLazy.force env)
                       ~allow_stdin:false
                       cmd
                   in
@@ -119,9 +119,9 @@ let load lock_kind =
                   log "Failed to evaluate global variable %a: %a"
                     (slog OpamVariable.to_string) v
                     (slog Printexc.to_string) e;
-                  Lazy.force (fst previous_value))),
+                  OpamLazy.force (fst previous_value))),
              doc)
-          (lazy None, "")
+          (OpamLazy.create (fun () -> None), "")
           acc)
       global_variables eval_variables
   in

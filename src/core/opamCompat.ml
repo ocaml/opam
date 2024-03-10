@@ -48,16 +48,6 @@ module Unix = struct
   include Unix
 end
 
-module Lazy = struct
-  [@@@warning "-32"]
-
-  (** NOTE: OCaml >= 4.13 *)
-  let map f x =
-    lazy (f (Lazy.force x))
-
-  include Stdlib.Lazy
-end
-
 module Filename = struct
   [@@@warning "-32"]
 

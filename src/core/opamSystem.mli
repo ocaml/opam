@@ -190,7 +190,7 @@ val bin_contains_bash: string -> bool
 (** Returns a function which should be applied to arguments for a given command
     by determining if the command is the Cygwin variant of the command. Returns
     the identity function otherwise. *)
-val get_cygpath_function: command:string -> (string -> string) lazy_t
+val get_cygpath_function: command:string -> (string -> string) OpamLazy.t
 
 (** Returns a function which should be applied to a path (or a path list), if
     in a functioning Cygwin or MSYS2 environment, translating the Windows or a
@@ -199,7 +199,7 @@ val get_cygpath_function: command:string -> (string -> string) lazy_t
     otherwise.
     [pathlist] argument permit to specify if it is applied to a path or a path
     list, by giving the `--path` argument in the last case. *)
-val get_cygpath_path_transform: (pathlist:bool -> string -> string) lazy_t
+val get_cygpath_path_transform: (pathlist:bool -> string -> string) OpamLazy.t
 
 (** [apply_cygpath path] applies the `cygpath` command to [name] using
     `cygpath -- name`. *)
@@ -255,6 +255,9 @@ val mkdir: string -> unit
 
 (** Get the number of active processors on the system *)
 val cpu_count: unit -> int
+
+(** Get the number of active processors on the system, but memoizes the answer. *)
+val cpu_count_memo: unit -> int
 
 (** {2 File locking function} *)
 

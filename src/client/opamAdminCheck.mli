@@ -13,17 +13,18 @@ open OpamTypes
 (** Analyses a given package universe, and returns
     [uninstallable_roots,uninstallable]. The first is a subset of the second,
     where internal dependents have been removed. *)
-val installability_check: universe -> package_set * package_set
+val installability_check: task_pool:Domainslib.Task.pool -> universe -> package_set * package_set
 
 (** Analyses a universe for dependency cycles. Returns the set of packages
     involved, and the cycles (reduced to formula lists) *)
-val cycle_check: universe -> package_set * formula list list
+val cycle_check: task_pool:Domainslib.Task.pool -> universe -> package_set * formula list list
 
 (** Runs checks on the repository at the given repository. Returns
     [all_packages], [uninstallable_roots], [uninstallable], [cycle_packages],
     [obsolete_packages]. If the corresponding option was disabled, the returned
     sets are empty. *)
 val check:
+  task_pool:Domainslib.Task.pool ->
   quiet:bool -> installability:bool -> cycles:bool -> obsolete:bool ->
   ignore_test:bool ->
   dirname -> package_set * package_set * package_set * package_set * package_set

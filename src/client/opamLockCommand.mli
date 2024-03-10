@@ -22,4 +22,4 @@ val select_packages:
   'a switch_state -> 'a switch_state * package_set
 
 (** Returns the locked opam file, according its depends, depopts, and pins. *)
-val lock_opam: ?only_direct:bool -> 'a switch_state -> OpamFile.OPAM.t -> OpamFile.OPAM.t
+val lock_opam: ?only_direct:bool -> task_pool:Domainslib.Task.pool -> 'a switch_state -> OpamFile.OPAM.t -> OpamFile.OPAM.t

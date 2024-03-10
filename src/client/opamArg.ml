@@ -500,12 +500,12 @@ let apply_global_options cli o =
   let some x = match x with None -> None | some -> Some some in
   let solver =
     if o.use_internal_solver then
-      Some (lazy (OpamCudfSolver.get_solver ~internal:true
+      Some (OpamLazy.create (fun () -> OpamCudfSolver.get_solver ~internal:true
                     OpamCudfSolver.default_solver_selection))
     else
-      o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
+      o.external_solver >>| fun s -> OpamLazy.create (fun () -> OpamCudfSolver.solver_of_string s)
   in
-  let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
+  let solver_prefs = o.solver_preferences >>| fun p -> OpamLazy.create (fun () -> Some p) in
   let yes = OpamStd.Option.(map some o.yes) in
   init_opam_env_variabes cli;
   OpamClientConfig.opam_init
@@ -658,14 +658,14 @@ let apply_build_options cli b =
     ();
   OpamStateConfig.update
     (* ?root: -- handled globally *)
-    ?jobs:(b.jobs >>| fun j -> lazy j)
+    ?jobs:(b.jobs >>| fun j -> OpamLazy.create (fun () -> j))
     (* ?dl_jobs:int *)
     (* ?no_base_packages:(flag o.no_base_packages) -- handled globally *)
     ?build_test:(flag b.build_test)
     ?build_doc:(flag b.build_doc)
     ?dev_setup:(flag b.dev_setup)
     ?dryrun:(flag b.dryrun)
-    ?makecmd:(b.make >>| fun m -> lazy m)
+    ?makecmd:(b.make >>| fun m -> OpamLazy.create (fun () -> m))
     ?ignore_constraints_on:
       (b.ignore_constraints_on >>|
        OpamPackage.Name.Set.of_list)

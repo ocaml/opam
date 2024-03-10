@@ -104,7 +104,6 @@ module Name = struct
   module Set = OpamStd.Set.Make(O)
 
   module Map = OpamStd.Map.Make(O)
-
 end
 
 type t = {

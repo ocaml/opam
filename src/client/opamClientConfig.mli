@@ -97,7 +97,7 @@ val search_files: string list
 val opam_init:
   ?root_dir:OpamTypes.dirname ->
   ?strict:bool ->
-  ?solver:(module OpamCudfSolver.S) Lazy.t ->
+  ?solver:(module OpamCudfSolver.S) OpamLazy.t ->
   ?skip_version_checks:bool ->
   ?all_parens:bool ->
   ?log_dir:OpamTypes.dirname ->
@@ -122,13 +122,13 @@ val opam_init:
   ?scrubbed_environment_variables:string list ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:OpamStateTypes.provenance ->
-  ?jobs:int Lazy.t ->
+  ?jobs:int OpamLazy.t ->
   ?dl_jobs:int ->
   ?build_test:bool ->
   ?build_doc:bool ->
   ?dev_setup:bool ->
   ?dryrun:bool ->
-  ?makecmd:string Lazy.t ->
+  ?makecmd:string OpamLazy.t ->
   ?ignore_constraints_on:OpamPackage.Name.Set.t ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
@@ -136,17 +136,17 @@ val opam_init:
   ?no_depexts:bool ->
   ?cudf_file:string option ->
   ?best_effort:bool ->
-  ?solver_preferences_default:string option Lazy.t ->
-  ?solver_preferences_upgrade:string option Lazy.t ->
-  ?solver_preferences_fixup:string option Lazy.t ->
-  ?solver_preferences_best_effort_prefix: string option Lazy.t ->
+  ?solver_preferences_default:string option OpamLazy.t ->
+  ?solver_preferences_upgrade:string option OpamLazy.t ->
+  ?solver_preferences_fixup:string option OpamLazy.t ->
+  ?solver_preferences_best_effort_prefix: string option OpamLazy.t ->
   ?solver_timeout:float option ->
   ?solver_allow_suboptimal:bool ->
   ?cudf_trim:string option ->
   ?dig_depth:int ->
   ?preprocess:bool ->
   ?version_lag_power:int ->
-  ?download_tool:(OpamTypes.arg list * OpamRepositoryConfig.dl_tool_kind) Lazy.t ->
+  ?download_tool:(OpamTypes.arg list * OpamRepositoryConfig.dl_tool_kind) OpamLazy.t ->
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->

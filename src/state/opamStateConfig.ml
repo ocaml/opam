@@ -55,13 +55,13 @@ type t = {
   root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t option;
   switch_from: provenance;
-  jobs: int Lazy.t;
+  jobs: int OpamLazy.t;
   dl_jobs: int;
   build_test: bool;
   build_doc: bool;
   dev_setup: bool;
   dryrun: bool;
-  makecmd: string Lazy.t;
+  makecmd: string OpamLazy.t;
   ignore_constraints_on: name_set;
   unlock_base: bool;
   no_env_notice: bool;
@@ -89,17 +89,17 @@ let default = {
     );
   current_switch = None;
   switch_from = `Default;
-  jobs = lazy (max 1 (OpamSysPoll.cores () - 1));
+  jobs = OpamLazy.create (fun () -> max 1 (OpamSysPoll.cores () - 1));
   dl_jobs = 3;
   build_test = false;
   build_doc = false;
   dev_setup = false;
   dryrun = false;
-  makecmd = lazy OpamStd.Sys.(
+  makecmd = OpamLazy.create (fun () -> OpamStd.Sys.(
       match os () with
       | FreeBSD | OpenBSD | NetBSD | DragonFly -> "gmake"
       | _ -> "make"
-    );
+    ));
   ignore_constraints_on = OpamPackage.Name.Set.empty;
   unlock_base = false;
   no_env_notice = false;
@@ -111,13 +111,13 @@ type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:provenance ->
-  ?jobs:(int Lazy.t) ->
+  ?jobs:(int OpamLazy.t) ->
   ?dl_jobs:int ->
   ?build_test:bool ->
   ?build_doc:bool ->
   ?dev_setup:bool ->
   ?dryrun:bool ->
-  ?makecmd:string Lazy.t ->
+  ?makecmd:string OpamLazy.t ->
   ?ignore_constraints_on:name_set ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
@@ -179,13 +179,13 @@ let initk k =
     ?root_dir:(E.root () >>| OpamFilename.Dir.of_string)
     ?current_switch
     ?switch_from
-    ?jobs:(E.jobs () >>| fun s -> lazy s)
+    ?jobs:(E.jobs () >>| fun s -> OpamLazy.create (fun () -> s))
     ?dl_jobs:(E.downloadjobs ())
     ?build_test:(E.withtest () ++ E.buildtest ())
     ?build_doc:(E.withdoc () ++ E.builddoc ())
     ?dev_setup:(E.withdevsetup())
     ?dryrun:(E.dryrun ())
-    ?makecmd:(E.makecmd () >>| fun s -> lazy s)
+    ?makecmd:(E.makecmd () >>| fun s -> OpamLazy.create (fun () -> s))
     ?ignore_constraints_on:
       (E.ignoreconstraints () >>| fun s ->
        OpamStd.String.split s ',' |>
@@ -380,14 +380,14 @@ let load_defaults ?lock_kind root_dir =
     OpamRepositoryConfig.update
       ?download_tool:(OpamFile.Config.dl_tool conf >>| function
         | (CString c,None)::_ as t
-          when OpamStd.String.ends_with ~suffix:"curl" c -> lazy (t, `Curl)
-        | t -> lazy (t, `Default))
+          when OpamStd.String.ends_with ~suffix:"curl" c -> OpamLazy.create (fun () ->t, `Curl)
+        | t -> OpamLazy.create (fun () ->t, `Default))
       ~validation_hook:(OpamFile.Config.validation_hook conf)
       ();
     update
       ?current_switch:(OpamFile.Config.switch conf)
       ~switch_from:`Default
-      ?jobs:(OpamFile.Config.jobs conf >>| fun s -> lazy s)
+      ?jobs:(OpamFile.Config.jobs conf >>| fun s -> OpamLazy.create (fun () -> s))
       ~dl_jobs:(OpamFile.Config.dl_jobs conf)
       ();
     update ?current_switch ();

@@ -21,7 +21,7 @@ val os_distribution: gt_variables -> string option
 val os_version: gt_variables -> string option
 val os_family: gt_variables -> string option
 
-val variables: (OpamVariable.t * OpamTypes.variable_contents option Lazy.t) list
+val variables: (OpamVariable.t * OpamTypes.variable_contents option OpamLazy.t) list
 
 (** The function used internally to get our canonical names for architectures
     (returns its input lowercased if not a recognised arch). This is typically

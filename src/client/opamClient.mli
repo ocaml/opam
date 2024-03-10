@@ -19,6 +19,7 @@ open OpamStateTypes
     Returns the initial state and, in case a switch is to be created, its
     initial set of packages *)
 val init:
+  task_pool:Domainslib.Task.pool ->
   init_config:OpamFile.InitConfig.t ->
   interactive:bool ->
   ?repo:repository ->
@@ -59,12 +60,13 @@ val install:
   ?formula:formula ->
   ?autoupdate:atom list -> ?add_to_roots:bool -> ?deps_only:bool ->
   ?ignore_conflicts:bool -> ?assume_built:bool -> ?download_only:bool ->
-  ?depext_only:bool -> atom list ->
+  ?depext_only:bool -> task_pool:Domainslib.Task.pool -> atom list ->
   rw switch_state
 
 (** Low-level version of [reinstall], bypassing the package name sanitization
     and dev package update, and offering more control *)
 val install_t:
+  task_pool:Domainslib.Task.pool ->
   rw switch_state ->
   ?ask:bool -> ?ignore_conflicts:bool -> ?depext_only:bool -> ?download_only:bool ->
   atom list -> ?formula:formula ->
@@ -79,12 +81,12 @@ val check_installed:
 
 (** Reinstall the given set of packages. *)
 val reinstall:
-  rw switch_state -> ?assume_built:bool -> atom list -> rw switch_state
+  task_pool:Domainslib.Task.pool -> rw switch_state -> ?assume_built:bool -> atom list -> rw switch_state
 
 (** Low-level version of [reinstall], bypassing the package name sanitization
     and dev package update, and offering more control *)
 val reinstall_t:
-  rw switch_state -> ?ask:bool -> ?force:bool -> assume_built:bool -> atom list
+  rw switch_state -> ?ask:bool -> ?force:bool -> task_pool:Domainslib.Task.pool -> assume_built:bool -> atom list
   -> rw switch_state
 
 (** Update the local mirrors for the repositories and/or development packages.
@@ -101,6 +103,7 @@ val update:
     versions. The specified atoms are kept installed (or newly installed after a
     confirmation). The upgrade concerns them only unless [all] is specified. *)
 val upgrade:
+  task_pool:Domainslib.Task.pool ->
   rw switch_state ->
   ?formula:formula -> ?check:bool -> ?only_installed:bool ->
   all:bool -> atom list -> rw switch_state
@@ -112,16 +115,16 @@ val upgrade_t:
   ?strict_upgrade:bool -> ?auto_install:bool -> ?ask:bool -> ?check:bool ->
   ?terse:bool ->
   ?only_installed:bool ->
-  all:bool -> atom list -> ?formula:formula ->
+  task_pool:Domainslib.Task.pool -> all:bool -> atom list -> ?formula:formula ->
   rw switch_state -> rw switch_state
 
 (** Recovers from an inconsistent universe *)
-val fixup: ?formula:formula -> rw switch_state -> rw switch_state
+val fixup: ?formula:formula -> task_pool:Domainslib.Task.pool -> rw switch_state -> rw switch_state
 
 (** Remove the given list of packages. *)
 val remove:
   rw switch_state -> autoremove:bool -> force:bool ->
-  ?formula:formula -> atom list ->
+  ?formula:formula -> atom list -> task_pool:Domainslib.Task.pool ->
   rw switch_state
 
 module PIN: sig
@@ -129,6 +132,7 @@ module PIN: sig
   (** Set a package pinning. If [action], prompt for install/reinstall as
       appropriate after pinning. *)
   val pin:
+    task_pool:Domainslib.Task.pool ->
     rw switch_state ->
     OpamPackage.Name.t ->
     ?edit:bool -> ?version:version -> ?action:bool -> ?subpath:subpath ->
@@ -142,17 +146,19 @@ module PIN: sig
   val edit:
     rw switch_state ->
     ?action:bool -> ?version:version -> ?locked:string ->
+    task_pool:Domainslib.Task.pool ->
     OpamPackage.Name.t ->
     rw switch_state
 
   val url_pins:
     rw switch_state -> ?edit:bool -> ?action:bool -> ?locked:string ->
-    ?pre:(pinned_opam -> unit) -> pinned_opam list ->
+    ?pre:(pinned_opam -> unit) -> task_pool:Domainslib.Task.pool -> pinned_opam list ->
     rw switch_state
 
   val unpin:
+    task_pool:Domainslib.Task.pool -> 
     rw switch_state ->
-    ?action:bool -> OpamPackage.Name.t list -> rw switch_state
+    ?action:bool ->OpamPackage.Name.t list -> rw switch_state
 
   (** List the current pinned packages. *)
   val list: 'a switch_state -> short:bool -> unit
@@ -160,6 +166,6 @@ module PIN: sig
   (** Runs an install/upgrade on the listed packages if necessary.
       [post_pin_action st was_pinned names] takes the set of packages pinned
       beforehand, and a list of newly pinned packages *)
-  val post_pin_action: rw switch_state -> package_set -> name list -> rw switch_state
+  val post_pin_action: task_pool:Domainslib.Task.pool -> rw switch_state -> package_set -> name list -> rw switch_state
 
 end

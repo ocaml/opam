@@ -64,6 +64,7 @@ type selector =
 (** Applies a formula of selectors to filter the package from a given switch
     state *)
 val filter:
+  task_pool:Domainslib.Task.pool -> 
   base:package_set -> 'a switch_state ->
   selector OpamFormula.formula -> package_set
 
@@ -142,7 +143,7 @@ val default_package_listing_format: package_listing_format
     [normalise] supersedes [prettify] and uses a canonical way of displaying
     package definition file fields. [prettify] uses a nicer to read format for the
     package definition file fields. *)
-val display: 'a switch_state -> package_listing_format -> package_set -> unit
+val display: task_pool:Domainslib.Task.pool -> 'a switch_state -> package_listing_format -> package_set -> unit
 
 (** Display a general summary of a collection of packages. *)
 val info:

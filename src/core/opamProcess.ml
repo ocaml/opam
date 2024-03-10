@@ -13,12 +13,12 @@ let log ?level fmt =
   OpamConsole.log "PROC" ?level fmt
 
 let default_env =
-  let f () = lazy (
+  let f () = OpamLazy.create (fun () ->
     match OpamCoreConfig.(!r.cygbin) with
     | Some cygbin -> OpamStd.Env.cyg_env ~cygbin ~git_location:OpamCoreConfig.(!r.git_location)
     | None -> OpamStd.Env.raw_env ()
   ) in
- fun () -> Lazy.force (f ())
+ fun () -> OpamLazy.force (f ())
 
 let cygwin_create_process_env prog args env fd1 fd2 fd3 =
   (*
@@ -607,9 +607,9 @@ let verbose_print_cmd p =
      else Printf.sprintf " (CWD=%s)" p.p_cwd)
 
 let verbose_print_out =
-  let pfx = lazy (OpamConsole.colorise `yellow "- ") in
+  let pfx = OpamLazy.create (fun () ->OpamConsole.colorise `yellow "- ") in
   fun s ->
-    OpamConsole.msg "%s%s\n" (Lazy.force pfx) s
+    OpamConsole.msg "%s%s\n" (OpamLazy.force pfx) s
 
 (** Semi-synchronous printing of the output of a command *)
 let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =

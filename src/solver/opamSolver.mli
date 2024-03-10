@@ -58,7 +58,7 @@ val solution_to_json : solution OpamJson.encoder
 val solution_of_json : solution OpamJson.decoder
 
 (** Computes an opam->cudf version map from an universe *)
-val cudf_versions_map: universe -> int OpamPackage.Map.t
+val cudf_versions_map: task_pool:Domainslib.Task.pool -> universe -> int OpamPackage.Map.t
 
 (** Creates a CUDF universe from an OPAM universe, including the given packages.
     Evaluation of the first 3 arguments is staged. Warning: when [depopts] is
@@ -69,6 +69,7 @@ val cudf_versions_map: universe -> int OpamPackage.Map.t
     [Cudf.remove_package universe OpamCudf.opam_invariant_package]
     before exporting the results *)
 val load_cudf_universe:
+  task_pool:Domainslib.Task.pool ->
   universe -> ?version_map:int package_map ->
   package_set ->
   ?add_invariant:bool -> ?depopts:bool -> build:bool -> post:bool -> unit ->
@@ -89,6 +90,7 @@ val request:
 (** Given a description of packages, return a solution preserving the
     consistency of the initial description. *)
 val resolve :
+  task_pool:Domainslib.Task.pool ->
   universe -> atom request
   -> (solution, OpamCudf.conflict) result
 
@@ -96,14 +98,15 @@ val resolve :
 val get_atomic_action_graph : solution -> ActionGraph.t
 
 (** Keep only the packages that are installable. *)
-val installable: universe -> package_set
+val installable: task_pool:Domainslib.Task.pool -> universe -> package_set
 
 (** Like [installable], but within a subset and potentially much faster *)
-val installable_subset: universe -> package_set -> package_set
+val installable_subset: task_pool:Domainslib.Task.pool -> universe -> package_set -> package_set
 
 (** Sorts the given package set in topological order (as much as possible,
     beware of cycles in particular if [post] is [true]) *)
 val dependency_sort :
+  task_pool:Domainslib.Task.pool -> 
   depopts:bool -> build:bool -> post:bool ->
   universe ->
   package_set ->
@@ -112,6 +115,7 @@ val dependency_sort :
 module PkgGraph: Graph.Sig.I
   with type V.t = OpamPackage.t
 val dependency_graph :
+  task_pool:Domainslib.Task.pool -> 
   depopts:bool -> build:bool -> post:bool ->
   installed:bool ->
   ?unavailable:bool ->
@@ -119,26 +123,27 @@ val dependency_graph :
 
 (** Check the current set of installed packages in a universe for
     inconsistencies *)
-val check_for_conflicts : universe -> OpamCudf.conflict option
+val check_for_conflicts : task_pool:Domainslib.Task.pool -> universe -> OpamCudf.conflict option
 
 (** Checks the given package set for complete installability ; returns None if
     they can all be installed together *)
-val coinstallability_check : universe -> package_set -> OpamCudf.conflict option
+val coinstallability_check : task_pool:Domainslib.Task.pool -> universe -> package_set -> OpamCudf.conflict option
 
 (** Checks if the given atoms can be honored at the same time in the given
     universe *)
-val atom_coinstallability_check : universe -> atom list -> bool
+val atom_coinstallability_check :
+        task_pool:Domainslib.Task.pool -> universe -> atom list -> bool
 
 (** [coinstallable_subset univ set packages] returns the subset of [packages]
     which are individually co-installable with [set], i.e. that can be installed
     while [set] remains installed. This returns the empty set if [set]
     is already not coinstallable. `add_invariant` defaults to [true] *)
-val coinstallable_subset :
+val coinstallable_subset : task_pool:Domainslib.Task.pool ->
   universe -> ?add_invariant:bool -> package_set -> package_set -> package_set
 
 (** Dumps a cudf file containing all available packages in the given universe,
     plus version bindings (as '#v2v' comments) for the other ones. *)
-val dump_universe: universe -> out_channel -> unit
+val dump_universe: task_pool:Domainslib.Task.pool -> universe -> out_channel -> unit
 
 (** Filters actions in a solution. Dependents of a removed actions are removed
     to keep consistency unless [recursive] is set to false *)

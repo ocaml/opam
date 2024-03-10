@@ -56,6 +56,7 @@ val add_to_reinstall:
     given newly installed package. The updated state is written to disk unless
     [OpamStateConfig.(!r.dry_run)] and returned. *)
 val add_to_installed:
+        task_pool:Domainslib.Task.pool ->
   rw switch_state -> ?root:bool -> package -> rw switch_state
 
 (** Updates the package selections and switch config to take into account the
@@ -63,7 +64,7 @@ val add_to_installed:
     [OpamStateConfig.(!r.dry_run)], and returned. If [keep_as_root], the package
     isn't removed from the switch state [installed_roots] set. *)
 val remove_from_installed:
-  ?keep_as_root:bool -> rw switch_state -> package -> rw switch_state
+  ?keep_as_root:bool -> task_pool:Domainslib.Task.pool -> rw switch_state -> package -> rw switch_state
 
 (** Update the switch selections with the supplied optional arguments. Changes
     are written to disk and returned *)
@@ -72,4 +73,5 @@ val update_switch_state:
   ?installed_roots: package_set ->
   ?reinstall: package_set ->
   ?pinned: package_set ->
+  task_pool:Domainslib.Task.pool ->
   rw switch_state -> rw switch_state

@@ -121,8 +121,8 @@ let load_repo repo repo_root =
 (* Cleaning directories follows the repo path pattern:
    TMPDIR/opam-tmp-dir/repo-dir, defined in [load]. *)
 let clean_repo_tmp tmp_dir =
-  if Lazy.is_val tmp_dir then
-    (let dir = Lazy.force tmp_dir in
+  if OpamLazy.is_val tmp_dir then
+    (let dir = OpamLazy.force tmp_dir in
      OpamFilename.rmdir dir;
      let parent = OpamFilename.dirname_dir dir in
      if OpamFilename.dir_is_empty parent then
@@ -140,7 +140,7 @@ let cleanup rt =
 
 let get_root_raw root repos_tmp name =
   match Hashtbl.find repos_tmp name with
-  | lazy repo_root -> repo_root
+  | repo_root -> OpamLazy.force repo_root
   | exception Not_found -> OpamRepositoryPath.root root name
 
 let get_root rt name =
@@ -170,7 +170,7 @@ let load lock_kind gt =
     OpamRepositoryName.Map.filter (fun _ url -> url = None) repos_map
   in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
-  let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
+  let repos_tmp_root = OpamLazy.create (fun () -> OpamFilename.mk_tmp_dir ()) in
   let repos_tmp = Hashtbl.create 23 in
   OpamRepositoryName.Map.iter (fun name repo ->
       let uncompressed_root = OpamRepositoryPath.root gt.root repo.repo_name in
@@ -178,8 +178,8 @@ let load lock_kind gt =
       if not (OpamFilename.exists_dir uncompressed_root) &&
          OpamFilename.exists tar
       then
-        let tmp = lazy (
-          let tmp_root = Lazy.force repos_tmp_root in
+        let tmp = OpamLazy.create (fun () ->
+          let tmp_root = OpamLazy.force repos_tmp_root in
           try
             (* We rely on this path pattern to clean the repo.
                cf. [clean_repo_tmp] *)
@@ -307,4 +307,3 @@ let check_last_update () =
     OpamConsole.note "It seems you have not updated your repositories \
                       for a while. Consider updating them with:\n%s\n"
       (OpamConsole.colorise `bold "opam update");
-

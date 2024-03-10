@@ -689,12 +689,12 @@ let unpin_one st nv =
     OpamPackage.Map.filter (fun nv2 _ -> nv2.name = nv.name)
       st.repos_package_index
   in
-  let available_packages = lazy (
+  let available_packages = OpamLazy.create (fun () ->
     OpamSwitchState.compute_available_packages
       st.switch_global st.switch st.switch_config ~pinned:OpamPackage.Set.empty
       ~opams:repo_package |>
     OpamPackage.Set.union
-      (OpamPackage.Set.remove nv (Lazy.force st.available_packages))
+      (OpamPackage.Set.remove nv (OpamLazy.force st.available_packages))
   ) in
   match OpamPackage.Map.find_opt nv st.repos_package_index,
         OpamPackage.Map.find_opt nv st.installed_opams with

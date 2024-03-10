@@ -40,13 +40,13 @@ type t = private {
   root_dir: OpamFilename.Dir.t;
   current_switch: OpamSwitch.t option;
   switch_from: provenance;
-  jobs: int Lazy.t;
+  jobs: int OpamLazy.t;
   dl_jobs: int;
   build_test: bool;
   build_doc: bool;
   dev_setup: bool;
   dryrun: bool;
-  makecmd: string Lazy.t;
+  makecmd: string OpamLazy.t;
   ignore_constraints_on: name_set;
   unlock_base: bool;
   no_env_notice: bool;
@@ -58,13 +58,13 @@ type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:provenance ->
-  ?jobs:(int Lazy.t) ->
+  ?jobs:(int OpamLazy.t) ->
   ?dl_jobs:int ->
   ?build_test:bool ->
   ?build_doc:bool ->
   ?dev_setup:bool ->
   ?dryrun:bool ->
-  ?makecmd:string Lazy.t ->
+  ?makecmd:string OpamLazy.t ->
   ?ignore_constraints_on:name_set ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->

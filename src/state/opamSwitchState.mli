@@ -174,12 +174,12 @@ val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
     [unavaiable]: also consider unavailable packages
 *)
 val dependencies:
-  'a switch_state -> build:bool -> post:bool -> depopts:bool ->
+  'a switch_state -> task_pool:Domainslib.Task.pool -> build:bool -> post:bool -> depopts:bool ->
   installed:bool -> ?unavailable:bool -> package_set -> package_set
 
 (** Same as [dependencies] but for reverse dependencies. *)
 val reverse_dependencies:
-  'a switch_state -> build:bool -> post:bool -> depopts:bool ->
+  'a switch_state -> task_pool:Domainslib.Task.pool -> build:bool -> post:bool -> depopts:bool ->
   installed:bool -> ?unavailable:bool -> package_set -> package_set
 
 (** Returns required system packages of each of the given packages (elements are
@@ -210,6 +210,7 @@ val universe:
   ?dev_setup:bool ->
   ?force_dev_deps:bool ->
   ?reinstall:package_set ->
+  task_pool:Domainslib.Task.pool ->
   requested:package_set ->
   user_action -> universe
 
@@ -248,11 +249,11 @@ val update_repositories:
 val invariant_root_packages: 'a switch_state -> package_set
 
 (* Compute installed invariant dependency cone *)
-val compute_invariant_packages: 'a switch_state -> package_set
+val compute_invariant_packages: task_pool:Domainslib.Task.pool -> 'a switch_state -> package_set
 
 (* Returns set of packages of installed compiler packages and their
    dependencies (only build & depopts) *)
-val compiler_packages: 'a switch_state -> package_set
+val compiler_packages: task_pool:Domainslib.Task.pool -> 'a switch_state -> package_set
 
 (** {2 User interaction and reporting } *)
 

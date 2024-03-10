@@ -117,6 +117,10 @@ val ors_to_list: 'a formula -> 'a formula list
     will be simply removed *)
 val map: ('a -> 'b formula) -> 'a formula -> 'b formula
 
+(** Map on atoms. Atoms for which the given function returns Empty
+    will be simply removed *)
+(*val parallel_map: ?depth:int -> task_pool:Domainslib.Task.pool -> ('a -> 'b formula) -> 'a formula -> 'b formula*)
+
 (** Maps top-down on a formula *)
 val map_formula: ('a formula -> 'a formula) -> 'a formula -> 'a formula
 

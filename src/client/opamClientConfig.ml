@@ -225,7 +225,7 @@ let opam_init ?root_dir ?strict ?solver =
       (* fixme: in order to not revert config file solver value, we need to
          check it here *)
       (config >>= OpamFile.Config.solver >>|
-       fun s -> lazy (OpamCudfSolver.custom_solver s))
+       fun s -> OpamLazy.create (fun () -> OpamCudfSolver.custom_solver s))
     else solver
   in
   begin match config with
@@ -237,11 +237,11 @@ let opam_init ?root_dir ?strict ?solver =
       in
       OpamSolverConfig.update
         ?solver
-        ?solver_preferences_default:(criteria `Default >>| fun s-> lazy(Some s))
-        ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> lazy(Some s))
-        ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> lazy (Some s))
+        ?solver_preferences_default:(criteria `Default >>| fun s-> OpamLazy.create (fun () ->Some s))
+        ?solver_preferences_upgrade:(criteria `Upgrade >>| fun s-> OpamLazy.create (fun () ->Some s))
+        ?solver_preferences_fixup:(criteria `Fixup >>| fun s -> OpamLazy.create (fun () ->Some s))
         ?solver_preferences_best_effort_prefix:
-          (OpamFile.Config.best_effort_prefix conf >>| fun s -> lazy (Some s))
+          (OpamFile.Config.best_effort_prefix conf >>| fun s -> OpamLazy.create (fun () ->Some s))
         ();
       OpamStateConfig.update
         ()

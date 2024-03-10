@@ -23,3 +23,4 @@ val is_admin_subcommand: string -> bool
 
 val get_cmdliner_parser:
   OpamCLIVersion.Sourced.t -> OpamArg.command * OpamArg.command list
+

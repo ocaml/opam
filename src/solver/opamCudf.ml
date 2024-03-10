@@ -11,6 +11,7 @@
 
 open OpamTypes
 open OpamTypesBase
+open Domainslib
 
 let log ?level fmt = OpamConsole.log ?level "CUDF" fmt
 let slog = OpamConsole.slog
@@ -1249,7 +1250,7 @@ let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
-    let module Solver = (val OpamSolverConfig.(Lazy.force !r.solver)) in
+    let module Solver = (val OpamSolverConfig.(OpamLazy.force !r.solver)) in
     Printf.fprintf oc "# Solver: %s\n"
       (OpamCudfSolver.get_name (module Solver));
     Printf.fprintf oc "# Criteria: %s\n" criteria;
@@ -1345,10 +1346,10 @@ let compute_conflicts univ packages =
     (to_map packages)
     Set.empty
 
-let preprocess_cudf_request (props, univ, creq) criteria =
+let preprocess_cudf_request ~task_pool (props, univ, creq) criteria =
   let chrono = OpamConsole.timer () in
   let univ0 = univ in
-  let do_trimming =
+  let do_trimming_prom = Task.async task_pool (fun () ->
     match OpamSolverConfig.(!r.cudf_trim) with
     | Some "simple" -> Some false
     | b ->
@@ -1368,13 +1369,15 @@ let preprocess_cudf_request (props, univ, creq) criteria =
                                  neg_crit_re]))
         in
         Some (Re.execp (Re.compile all_neg_re) criteria)
+          )
   in
   let univ =
     let open Set.Op in
-    let to_install =
-      vpkg2set univ creq.Cudf.install
-      ++ Set.of_list (Cudf.lookup_packages univ opam_invariant_package_name)
-      ++ Set.of_list (Cudf.lookup_packages univ opam_deprequest_package_name)
+    let to_install_prom =
+      Task.async task_pool (fun () ->
+        vpkg2set univ creq.Cudf.install
+        ++ Set.of_list (Cudf.lookup_packages univ opam_invariant_package_name)
+        ++ Set.of_list (Cudf.lookup_packages univ opam_deprequest_package_name))
     in
     let to_install_formula =
       List.map (fun x -> [x]) @@
@@ -1382,8 +1385,8 @@ let preprocess_cudf_request (props, univ, creq) criteria =
       (opam_deprequest_package_name, None) ::
       creq.Cudf.install @ creq.Cudf.upgrade
     in
-    let packages =
-      match do_trimming with
+    let packages_prom = Task.async task_pool (fun () ->
+      match Task.await task_pool do_trimming_prom with
       | None ->
         Set.of_list (Cudf.get_packages univ)
       | Some false -> (* "simple" trimming *)
@@ -1422,15 +1425,21 @@ let preprocess_cudf_request (props, univ, creq) criteria =
                 not (OpamStd.String.Map.mem d.Cudf.package strong_deps_cone))
               (dependency_set univ p.Cudf.depends))
           interesting_set
+    )
     in
-    let conflicts = compute_conflicts univ to_install in
+    let conflicts_prom = Task.async task_pool (fun () ->
+      let to_install = Task.await task_pool to_install_prom in
+      compute_conflicts univ to_install)
+    in
+    let packages = Task.await task_pool packages_prom in
+    let conflicts = Task.await task_pool conflicts_prom in
     log "Conflicts: %a (%a) pkgs to remove"
       (slog OpamStd.Op.(string_of_int @* Set.cardinal)) conflicts
       (slog OpamStd.Op.(string_of_int @* Set.cardinal)) (conflicts %% packages);
     Cudf.load_universe (Set.elements (packages -- conflicts))
   in
   log "Preprocess cudf request (trimming: %s): from %d to %d packages in %.2fs"
-    (match do_trimming with
+    (match Task.await task_pool do_trimming_prom with
        None -> "none" | Some false -> "simple" | Some true -> "full")
     (Cudf.universe_size univ0)
     (Cudf.universe_size univ)
@@ -1452,7 +1461,7 @@ let trim_universe univ packages =
 
 exception Timeout of Dose_algo.Depsolver.solver_result option
 
-let call_external_solver ~version_map univ req =
+let call_external_solver ~task_pool ~version_map univ req =
   let cudf_request = to_cudf univ req in
   if Cudf.universe_size univ > 0 then
     let criteria = OpamSolverConfig.criteria req.criteria in
@@ -1468,14 +1477,14 @@ let call_external_solver ~version_map univ req =
         | OpamCudfSolver.Timeout None -> raise (Timeout None)
       in
       let r =
-        Dose_algo.Depsolver.check_request_using ~call_solver ~explain req
+        Dose_algo.Depsolver.check_request_using ~task_pool ~call_solver ~explain req
       in
       if !timed_out then raise (Timeout (Some r)) else r
     in
     try
       let cudf_request =
         if not OpamSolverConfig.(!r.preprocess) then cudf_request
-        else preprocess_cudf_request cudf_request criteria
+        else preprocess_cudf_request ~task_pool cudf_request criteria
       in
       let r =
         check_request_using
@@ -1523,10 +1532,10 @@ let call_external_solver ~version_map univ req =
   else
     Dose_algo.Depsolver.Sat(None,Cudf.load_universe [])
 
-let check_request ?(explain=true) ~version_map univ req =
+let check_request ?(explain=true) ~task_pool ~version_map univ req =
   let chrono = OpamConsole.timer () in
   log "Checking request...";
-  let result = Dose_algo.Depsolver.check_request ~explain (to_cudf univ req) in
+  let result = Dose_algo.Depsolver.check_request ~task_pool ~explain (to_cudf univ req) in
   log "Request checked in %.3fs" (chrono ());
   match result with
   | Dose_algo.Depsolver.Unsat
@@ -1545,7 +1554,7 @@ let check_request ?(explain=true) ~version_map univ req =
     conflict_empty ~version_map univ
 
 (* Return the universe in which the system has to go *)
-let get_final_universe ~version_map univ req =
+let get_final_universe  ~task_pool ~version_map univ req =
   let fail msg =
     let f = dump_cudf_error ~version_map univ req in
     let msg =
@@ -1553,7 +1562,7 @@ let get_final_universe ~version_map univ req =
         msg f
     in
     raise (Solver_failure msg) in
-  match call_external_solver ~version_map univ req with
+  match call_external_solver ~task_pool ~version_map univ req with
   | Dose_algo.Depsolver.Sat (_,u) -> Success (remove u dose_dummy_request None)
   | Dose_algo.Depsolver.Error "(CRASH) Solution file is empty" ->
     (* XXX Is this still needed with latest dose? *)
@@ -1592,14 +1601,23 @@ let actions_of_diff (install, remove) =
   let actions = Set.fold (fun p acc -> `Remove p :: acc) remove actions in
   actions
 
-let resolve ~extern ~version_map universe request =
+let resolve ~task_pool ~extern ~version_map universe request =
   log "resolve request=%a" (slog string_of_request) request;
   let resp =
-    let check () = check_request ~version_map universe request in
-    let solve () = get_final_universe ~version_map universe request in
-    if not extern then check () else
-    let module Solver : OpamCudfSolver.S =
-      (val Lazy.force OpamSolverConfig.(!r.solver))
+    (* XXX: may not need to run check () always *)
+    let check_prom =
+      Task.async task_pool (fun () ->
+        check_request ~task_pool ~version_map universe request)
+    in
+    let solve_prom =
+      Task.async task_pool (fun () ->
+        get_final_universe ~task_pool ~version_map universe request)
+    in
+    let check () = Task.await task_pool check_prom in
+    let solve () = Task.await task_pool solve_prom in
+    if not extern
+    then check () else
+      let module Solver : OpamCudfSolver.S = (val OpamLazy.force OpamSolverConfig.(!r.solver))
     in
     let wrong_unsat_msg =
       Printf.sprintf

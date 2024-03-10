@@ -44,7 +44,7 @@ type +'a lock = [< unlocked > `Lock_write ] as 'a
 
 (** Type of global state global variables *)
 type gt_variables =
-  (variable_contents option Lazy.t * string) OpamVariable.Map.t
+  (variable_contents option OpamLazy.t * string) OpamVariable.Map.t
 
 type gt_changes = { gtc_repo: bool; gtc_switch: bool }
 
@@ -90,7 +90,7 @@ type +'lock repos_state = {
   repo_opams: OpamFile.OPAM.t package_map repository_name_map;
   (** All opam files that can be found in the configured repositories *)
 
-  repos_tmp: (OpamRepositoryName.t, OpamFilename.Dir.t Lazy.t) Hashtbl.t;
+  repos_tmp: (OpamRepositoryName.t, OpamFilename.Dir.t OpamLazy.t) Hashtbl.t;
   (** Temporary directories containing the uncompressed contents of the
       repositories *)
 } constraint 'lock = 'lock lock
@@ -135,11 +135,11 @@ type +'lock switch_state = {
   packages: package_set;
   (** The set of all known packages *)
 
-  sys_packages: sys_pkg_status package_map Lazy.t;
+  sys_packages: sys_pkg_status package_map OpamLazy.t;
   (** Map of package and their system dependencies packages status. Only
       initialised for otherwise available packages *)
 
-  available_packages: package_set Lazy.t;
+  available_packages: package_set OpamLazy.t;
   (** The set of available packages, filtered by their [available:] field *)
 
   pinned: package_set;
@@ -158,10 +158,10 @@ type +'lock switch_state = {
       happen not to be installed at some point, but this indicates that the
       user would like them installed. *)
 
-  reinstall: package_set Lazy.t;
+  reinstall: package_set OpamLazy.t;
   (** The set of packages which need to be reinstalled *)
 
-  invalidated: package_set Lazy.t;
+  invalidated: package_set OpamLazy.t;
   (** The set of packages which are installed but no longer valid, e.g. because
       of removed system dependencies. Only packages which are unavailable end up
       in this set, they are otherwise put in [reinstall]. *)

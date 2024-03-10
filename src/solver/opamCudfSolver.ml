@@ -21,7 +21,7 @@ let default_compat_criteria = {
 
 module type ExternalArg = sig
   val name: string
-  val is_present: bool Lazy.t
+  val is_present: bool OpamLazy.t
   val command_name: string
   val command_args: OpamTypes.arg list
   val default_criteria: criteria_def
@@ -82,7 +82,7 @@ module External (E: ExternalArg) : S = struct
 
   let ext = ref None
 
-  let is_present () = Lazy.force E.is_present
+  let is_present () = OpamLazy.force E.is_present
 
   let command_name = Some E.command_name
 
@@ -99,7 +99,7 @@ module Aspcud_def = struct
 
   let command_name = "aspcud"
 
-  let is_present = lazy (
+  let is_present = OpamLazy.create (fun () ->
     match OpamSystem.resolve_command command_name with
     | None -> false
     | Some cmd ->
@@ -155,7 +155,7 @@ module Aspcud_old_def = struct
 
   let command_name = Aspcud_def.command_name
 
-  let is_present = lazy (OpamSystem.resolve_command command_name <> None)
+  let is_present = OpamLazy.create (fun () -> OpamSystem.resolve_command command_name <> None)
 
   let command_args = Aspcud_def.command_args
 
@@ -169,7 +169,7 @@ module Mccs_def = struct
 
   let command_name = "mccs"
 
-  let is_present = lazy (OpamSystem.resolve_command command_name <> None)
+  let is_present = OpamLazy.create (fun () -> OpamSystem.resolve_command command_name <> None)
 
   let command_args = [
     CString "-i", None; CIdent "input", None;
@@ -205,7 +205,7 @@ module Packup_def = struct
 
   let command_name = "packup"
 
-  let is_present = lazy (OpamSystem.resolve_command command_name <> None)
+  let is_present = OpamLazy.create (fun () -> OpamSystem.resolve_command command_name <> None)
 
   let command_args = [
     CIdent "input", None; CIdent "output", None;
@@ -222,7 +222,7 @@ let make_custom_solver name args criteria =
     (External (struct
        let command_name = name
        let name = name ^ "-custom"
-       let is_present = lazy true
+       let is_present = OpamLazy.from_val true
        let command_args = args
        let default_criteria = criteria
      end))

@@ -42,6 +42,7 @@ module type SET = sig
   (** Accumulates the resulting sets of a function of elements until a fixpoint
       is reached *)
   val fixpoint: (elt -> t) -> t -> t
+  val parallel_fixpoint: task_pool:Domainslib.Task.pool -> (elt -> t) -> t -> t
 
   (** [map_reduce f op t] applies [f] to every element of [t] and combines the
       results using associative operator [op]. Raises [Invalid_argument] on an
@@ -678,7 +679,7 @@ module Config : sig
 
   val env_when_ext: env_var -> when_ext option
 
-  val resolve_when: auto:(bool Lazy.t) -> when_ -> bool
+  val resolve_when: auto:(bool OpamLazy.t) -> when_ -> bool
 
   val env_answer: env_var -> answer option
 
@@ -725,7 +726,7 @@ module Config : sig
     type t = ..
     type t += REMOVED
     val find: (t -> 'a option) -> 'a
-    (* Lazy *)
+    (* OpamLazy *)
     val value: (t -> 'a option) -> (unit -> 'a option)
     (* Not lazy *)
     val value_t: (t -> 'a option) -> 'a option

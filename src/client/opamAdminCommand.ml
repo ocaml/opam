@@ -785,46 +785,47 @@ let check_command cli =
   let cmd global_options ignore_test print_short
       installability cycles obsolete () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = checked_repo_root () in
-    let installability, cycles, obsolete =
-      if installability || cycles || obsolete
-      then installability, cycles, obsolete
-      else true, true, false
-    in
-    let pkgs, unav_roots, uninstallable, cycle_packages, obsolete =
-      OpamAdminCheck.check
-        ~quiet:print_short ~installability ~cycles ~obsolete ~ignore_test
-        repo_root
-    in
-    let all_ok =
-      OpamPackage.Set.is_empty uninstallable &&
-      OpamPackage.Set.is_empty cycle_packages &&
-      OpamPackage.Set.is_empty obsolete
-    in
-    let open OpamPackage.Set.Op in
-    (if print_short then
-       OpamConsole.msg "%s\n"
-         (OpamStd.List.concat_map "\n" OpamPackage.to_string
-            (OpamPackage.Set.elements
-               (uninstallable ++ cycle_packages ++ obsolete)))
-     else if all_ok then
-       OpamConsole.msg "No issues detected on this repository's %d packages\n"
-         (OpamPackage.Set.cardinal pkgs)
-     else
-     let pr set msg =
-       if OpamPackage.Set.is_empty set then ""
-       else Printf.sprintf "- %d %s\n" (OpamPackage.Set.cardinal set) msg
-     in
-     OpamConsole.msg "Summary: out of %d packages (%d distinct names)\n\
-                      %s%s%s%s\n"
-       (OpamPackage.Set.cardinal pkgs)
-       (OpamPackage.Name.Set.cardinal (OpamPackage.names_of_packages pkgs))
-       (pr unav_roots "uninstallable roots")
-       (pr (uninstallable -- unav_roots) "uninstallable dependent packages")
-       (pr (cycle_packages -- uninstallable)
-          "packages part of dependency cycles")
-       (pr obsolete "obsolete packages"));
-    OpamStd.Sys.exit_because (if all_ok then `Success else `False)
+    OpamMulticore.run_with_task_pool (fun task_pool ->
+      let repo_root = checked_repo_root () in
+      let installability, cycles, obsolete =
+        if installability || cycles || obsolete
+        then installability, cycles, obsolete
+        else true, true, false
+      in
+      let pkgs, unav_roots, uninstallable, cycle_packages, obsolete =
+        OpamAdminCheck.check
+          ~quiet:print_short ~installability ~cycles ~obsolete ~ignore_test ~task_pool
+          repo_root
+      in
+      let all_ok =
+        OpamPackage.Set.is_empty uninstallable &&
+        OpamPackage.Set.is_empty cycle_packages &&
+        OpamPackage.Set.is_empty obsolete
+      in
+      let open OpamPackage.Set.Op in
+      (if print_short then
+        OpamConsole.msg "%s\n"
+          (OpamStd.List.concat_map "\n" OpamPackage.to_string
+              (OpamPackage.Set.elements
+                (uninstallable ++ cycle_packages ++ obsolete)))
+      else if all_ok then
+        OpamConsole.msg "No issues detected on this repository's %d packages\n"
+          (OpamPackage.Set.cardinal pkgs)
+      else
+      let pr set msg =
+        if OpamPackage.Set.is_empty set then ""
+        else Printf.sprintf "- %d %s\n" (OpamPackage.Set.cardinal set) msg
+      in
+      OpamConsole.msg "Summary: out of %d packages (%d distinct names)\n\
+                        %s%s%s%s\n"
+        (OpamPackage.Set.cardinal pkgs)
+        (OpamPackage.Name.Set.cardinal (OpamPackage.names_of_packages pkgs))
+        (pr unav_roots "uninstallable roots")
+        (pr (uninstallable -- unav_roots) "uninstallable dependent packages")
+        (pr (cycle_packages -- uninstallable)
+            "packages part of dependency cycles")
+        (pr obsolete "obsolete packages"));
+      OpamStd.Sys.exit_because (if all_ok then `Success else `False))
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
@@ -898,7 +899,7 @@ let get_virtual_switch_state repo_root env =
   let singl x = OpamRepositoryName.Map.singleton repo.repo_name x in
   let repos_tmp =
     let t = Hashtbl.create 1 in
-    Hashtbl.add t repo.repo_name (lazy repo_root); t
+    Hashtbl.add t repo.repo_name (OpamLazy.create (fun () -> repo_root)); t
   in
   let rt = {
     repos_global = gt;
@@ -912,7 +913,7 @@ let get_virtual_switch_state repo_root env =
     {gt with global_variables =
                OpamVariable.Map.of_list @@
                List.map (fun (var, value) ->
-                   var, (lazy (Some value), "Manually defined"))
+                   var, (OpamLazy.create (fun () -> (Some value)), "Manually defined"))
                  env }
   in
   OpamSwitchState.load_virtual
@@ -944,41 +945,42 @@ let list_command cli =
       global_options package_selection disjunction state_selection
       package_listing env packages () =
     OpamArg.apply_global_options cli global_options;
-    let format =
-      let force_all_versions =
-        match packages with
-        | [single] ->
-          let nameglob =
-            match OpamStd.String.cut_at single '.' with
-            | None -> single
-            | Some (n, _v) -> n
-          in
-          (try ignore (OpamPackage.Name.of_string nameglob); true
-           with Failure _ -> false)
-        | _ -> false
+    OpamMulticore.run_with_task_pool (fun task_pool ->
+      let format =
+        let force_all_versions =
+          match packages with
+          | [single] ->
+            let nameglob =
+              match OpamStd.String.cut_at single '.' with
+              | None -> single
+              | Some (n, _v) -> n
+            in
+            (try ignore (OpamPackage.Name.of_string nameglob); true
+            with Failure _ -> false)
+          | _ -> false
+        in
+        package_listing ~force_all_versions
       in
-      package_listing ~force_all_versions
+      let pattern_selector = OpamListCommand.pattern_selector packages in
+      let join =
+        if disjunction then OpamFormula.ors else OpamFormula.ands
+      in
+      let filter =
+        OpamFormula.ands [
+          Atom state_selection;
+          join (pattern_selector ::
+                List.map (fun x -> Atom x) package_selection);
+        ]
+      in
+      let st = get_virtual_switch_state (OpamFilename.cwd ()) env in
+      if not format.OpamListCommand.short && filter <> OpamFormula.Empty then
+        OpamConsole.msg "# Packages matching: %s\n"
+          (OpamListCommand.string_of_formula filter);
+      let results =
+        OpamListCommand.filter ~task_pool ~base:st.packages st filter
+      in
+      OpamListCommand.display ~task_pool st format results)
     in
-    let pattern_selector = OpamListCommand.pattern_selector packages in
-    let join =
-      if disjunction then OpamFormula.ors else OpamFormula.ands
-    in
-    let filter =
-      OpamFormula.ands [
-        Atom state_selection;
-        join (pattern_selector ::
-              List.map (fun x -> Atom x) package_selection);
-      ]
-    in
-    let st = get_virtual_switch_state (OpamFilename.cwd ()) env in
-    if not format.OpamListCommand.short && filter <> OpamFormula.Empty then
-      OpamConsole.msg "# Packages matching: %s\n"
-        (OpamListCommand.string_of_formula filter);
-    let results =
-      OpamListCommand.filter ~base:st.packages st filter
-    in
-    OpamListCommand.display st format results
-  in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ OpamArg.package_selection cli $
         or_arg cli $ state_selection_arg cli $ OpamArg.package_listing cli $
@@ -1011,60 +1013,61 @@ let filter_command cli =
       global_options package_selection disjunction state_selection env
       remove dryrun packages () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = OpamFilename.cwd () in
-    let pattern_selector = OpamListCommand.pattern_selector packages in
-    let join =
-      if disjunction then OpamFormula.ors else OpamFormula.ands
-    in
-    let filter =
-      OpamFormula.ands [
-        Atom state_selection;
-        join
-          (pattern_selector ::
-           List.map (fun x -> Atom x) package_selection)
-      ]
-    in
-    let st = get_virtual_switch_state repo_root env in
-    let packages = OpamListCommand.filter ~base:st.packages st filter in
-    if OpamPackage.Set.is_empty packages then
+    OpamMulticore.run_with_task_pool (fun task_pool ->
+      let repo_root = OpamFilename.cwd () in
+      let pattern_selector = OpamListCommand.pattern_selector packages in
+      let join =
+        if disjunction then OpamFormula.ors else OpamFormula.ands
+      in
+      let filter =
+        OpamFormula.ands [
+          Atom state_selection;
+          join
+            (pattern_selector ::
+            List.map (fun x -> Atom x) package_selection)
+        ]
+      in
+      let st = get_virtual_switch_state repo_root env in
+      let packages = OpamListCommand.filter ~task_pool ~base:st.packages st filter in
+      if OpamPackage.Set.is_empty packages then
+        if remove then
+          (OpamConsole.warning "No packages match the selection criteria";
+          OpamStd.Sys.exit_because `Success)
+        else
+          OpamConsole.error_and_exit `Not_found
+            "No packages match the selection criteria";
+      let num_total = OpamPackage.Set.cardinal st.packages in
+      let num_selected = OpamPackage.Set.cardinal packages in
       if remove then
-        (OpamConsole.warning "No packages match the selection criteria";
-         OpamStd.Sys.exit_because `Success)
+        OpamConsole.formatted_msg
+          "The following %d packages will be REMOVED from the repository (%d \
+          packages will be kept):\n%s\n"
+          num_selected (num_total - num_selected)
+          (OpamStd.List.concat_map " " OpamPackage.to_string
+            (OpamPackage.Set.elements packages))
       else
-        OpamConsole.error_and_exit `Not_found
-          "No packages match the selection criteria";
-    let num_total = OpamPackage.Set.cardinal st.packages in
-    let num_selected = OpamPackage.Set.cardinal packages in
-    if remove then
-      OpamConsole.formatted_msg
-        "The following %d packages will be REMOVED from the repository (%d \
-         packages will be kept):\n%s\n"
-        num_selected (num_total - num_selected)
-        (OpamStd.List.concat_map " " OpamPackage.to_string
-           (OpamPackage.Set.elements packages))
-    else
-      OpamConsole.formatted_msg
-        "The following %d packages will be kept in the repository (%d packages \
-         will be REMOVED):\n%s\n"
-        num_selected (num_total - num_selected)
-        (OpamStd.List.concat_map " " OpamPackage.to_string
-           (OpamPackage.Set.elements packages));
-    let packages =
-      if remove then packages else OpamPackage.Set.Op.(st.packages -- packages)
-    in
-    if not (dryrun || OpamConsole.confirm "Confirm?") then
-      OpamStd.Sys.exit_because `Aborted
-    else
-    let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
-    OpamPackage.Map.iter (fun nv prefix ->
-        if OpamPackage.Set.mem nv packages then
-          let d = OpamRepositoryPath.packages repo_root prefix nv in
-          if dryrun then
-            OpamConsole.msg "rm -rf %s\n" (OpamFilename.Dir.to_string d)
-          else
-            (OpamFilename.cleandir d;
-             OpamFilename.rmdir_cleanup d))
-      pkg_prefixes
+        OpamConsole.formatted_msg
+          "The following %d packages will be kept in the repository (%d packages \
+          will be REMOVED):\n%s\n"
+          num_selected (num_total - num_selected)
+          (OpamStd.List.concat_map " " OpamPackage.to_string
+            (OpamPackage.Set.elements packages));
+      let packages =
+        if remove then packages else OpamPackage.Set.Op.(st.packages -- packages)
+      in
+      if not (dryrun || OpamConsole.confirm "Confirm?") then
+        OpamStd.Sys.exit_because `Aborted
+      else
+      let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
+      OpamPackage.Map.iter (fun nv prefix ->
+          if OpamPackage.Set.mem nv packages then
+            let d = OpamRepositoryPath.packages repo_root prefix nv in
+            if dryrun then
+              OpamConsole.msg "rm -rf %s\n" (OpamFilename.Dir.to_string d)
+            else
+              (OpamFilename.cleandir d;
+              OpamFilename.rmdir_cleanup d))
+        pkg_prefixes)
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ OpamArg.package_selection cli $

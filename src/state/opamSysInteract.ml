@@ -241,9 +241,9 @@ module Cygwin = struct
 
   let internal_cygwin =
     let internal =
-      Lazy.from_fun @@ fun () -> (OpamStateConfig.(!r.root_dir) / ".cygwin")
+      OpamLazy.from_fun (fun () -> (OpamStateConfig.(!r.root_dir) / ".cygwin"))
     in
-    fun () -> Lazy.force internal
+    fun () -> OpamLazy.force internal
   let internal_cygroot () = internal_cygwin () / "root"
   let internal_cygcache () = internal_cygwin () / "cache"
   let cygsetup () = internal_cygwin () // setupexe
@@ -379,14 +379,14 @@ module Cygwin = struct
          OpamProcess.Job.run @@ download_setupexe dst)
 end
 
-let yum_cmd = lazy begin
-  if OpamSystem.resolve_command "yum" <> None then
-    "yum"
-  else if OpamSystem.resolve_command "dnf" <> None then
-    "dnf"
-  else
-    raise (OpamSystem.Command_not_found "yum or dnf")
-end
+let yum_cmd =
+  OpamLazy.create (fun () ->
+    if OpamSystem.resolve_command "yum" <> None then
+      "yum"
+    else if OpamSystem.resolve_command "dnf" <> None then
+      "dnf"
+    else
+      raise (OpamSystem.Command_not_found "yum or dnf"))
 
 let packages_status ?(env=OpamVariable.Map.empty) config packages =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
@@ -933,11 +933,11 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
     let epel_release = "epel-release" in
     let install_epel rest =
       if List.mem epel_release packages then
-        [`AsAdmin (Lazy.force yum_cmd), "install"::yes ["-y"] [epel_release]] @ rest
+        [`AsAdmin (OpamLazy.force yum_cmd), "install"::yes ["-y"] [epel_release]] @ rest
       else rest
     in
     install_epel
-      [`AsAdmin (Lazy.force yum_cmd), "install"::yes ["-y"]
+      [`AsAdmin (OpamLazy.force yum_cmd), "install"::yes ["-y"]
                 (OpamStd.String.Set.of_list packages
                  |> OpamStd.String.Set.remove epel_release
                  |> OpamStd.String.Set.elements);
@@ -1039,7 +1039,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     match family ~env () with
     | Alpine -> Some (`AsAdmin "apk", ["update"])
     | Arch -> Some (`AsAdmin "pacman", ["-Sy"])
-    | Centos -> Some (`AsAdmin (Lazy.force yum_cmd), ["makecache"])
+    | Centos -> Some (`AsAdmin (OpamLazy.force yum_cmd), ["makecache"])
     | Cygwin -> None
     | Debian -> Some (`AsAdmin "apt-get", ["update"])
     | Dummy test ->

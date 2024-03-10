@@ -141,7 +141,7 @@ let repository rt repo =
         (if OpamFilename.exists_dir local_dir then
            (* Mark the obsolete local directory for deletion once we complete: it's
               no longer needed once we have a tar.gz *)
-           Hashtbl.add rt.repos_tmp repo.repo_name (lazy local_dir))
+           Hashtbl.add rt.repos_tmp repo.repo_name (OpamLazy.create (fun () -> local_dir)))
       else if OpamFilename.exists tarred_repo then
         (OpamFilename.move_dir ~src:repo_root ~dst:local_dir;
          OpamFilename.remove tarred_repo);
@@ -489,7 +489,7 @@ let pinned_packages st ?autolock ?(working_dir=OpamPackage.Name.Set.empty) names
   in
   let st_update, updates =
     OpamParallel.reduce
-      ~jobs:(Lazy.force OpamStateConfig.(!r.jobs))
+      ~jobs:(OpamLazy.force OpamStateConfig.(!r.jobs))
       ~command
       ~merge
       ~nil:((fun st -> st), OpamPackage.Name.Set.empty)

@@ -29,6 +29,7 @@ val duplicate_symbol: string
 (** Outputs a dependency forest of the installed packages as a
     Unicode/ASCII-art tree. *)
 val run :
+  task_pool:Domainslib.Task.pool ->
   [< unlocked > `Lock_write ] switch_state ->
   (* package selection options *)
   OpamListCommand.dependency_toggles ->

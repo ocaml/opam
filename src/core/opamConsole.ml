@@ -15,7 +15,7 @@ let debug () = abs OpamCoreConfig.(!r.debug_level) > 0
 
 let verbose () = OpamCoreConfig.(!r.verbose_level) > 0
 
-let dumb_term = lazy (
+let dumb_term = OpamLazy.create (fun () ->
   try
     OpamStd.Env.get "TERM" = "dumb"
   with Not_found ->
@@ -23,28 +23,28 @@ let dumb_term = lazy (
 )
 
 let color =
-  let auto = lazy (
-    OpamStd.Sys.tty_out && not (Lazy.force dumb_term)
+  let auto = OpamLazy.create (fun () ->
+    OpamStd.Sys.tty_out && not (OpamLazy.force dumb_term)
   ) in
   fun () -> match OpamCoreConfig.(!r.color) with
     | `Always -> true
     | `Never -> false
-    | `Auto -> Lazy.force auto
+    | `Auto -> OpamLazy.force auto
 
 let disp_status_line () =
   match OpamCoreConfig.(!r.disp_status_line) with
   | `Always -> true
   | `Never -> false
-  | `Auto -> OpamStd.Sys.tty_out && (color () || not (Lazy.force dumb_term))
+  | `Auto -> OpamStd.Sys.tty_out && (color () || not (OpamLazy.force dumb_term))
 
 let utf8, utf8_extended =
-  let use_auto_utf8_extended = lazy (
+  let use_auto_utf8_extended = OpamLazy.create (fun () ->
     match OpamStd.Sys.os () with
     | Darwin -> true
     | Win32 -> OpamStubs.getConsoleWindowClass () <> Some "ConsoleWindowClass"
     | _ -> false
   ) in
-  let auto = lazy (
+  let auto = OpamLazy.create (fun () ->
     if Sys.win32 then
       let attempt handle =
         let (info : OpamStubs.console_font_infoex) =
@@ -77,11 +77,11 @@ let utf8, utf8_extended =
   (fun () -> match OpamCoreConfig.(!r.utf8) with
      | `Always | `Extended -> true
      | `Never -> false
-     | `Auto -> Lazy.force auto),
+     | `Auto -> OpamLazy.force auto),
   (fun () -> match OpamCoreConfig.(!r.utf8) with
      | `Extended -> true
      | `Always | `Never -> false
-     | `Auto -> Lazy.force auto && Lazy.force use_auto_utf8_extended)
+     | `Auto -> OpamLazy.force auto && OpamLazy.force use_auto_utf8_extended)
 
 module Symbols = struct
   let rightwards_arrow = Uchar.of_int 0x2192
@@ -140,18 +140,19 @@ let utf8_symbol main ?(alternates=[]) s =
           in
           let checker =
             let new_checker =
-              lazy {font = current_font;
-                    checker = OpamStubs.create_glyph_checker current_font;
-                    glyphs = Hashtbl.create 16}
+              OpamLazy.create (fun () ->
+                { font = current_font;
+                  checker = OpamStubs.create_glyph_checker current_font;
+                  glyphs = Hashtbl.create 16 })
             in
             match win32_glyph_checker with
             | {contents = Some {font; checker; _}} when font <> current_font ->
                 OpamStubs.delete_glyph_checker checker;
-                let checker = Lazy.force new_checker in
+                let checker = OpamLazy.force new_checker in
                 win32_glyph_checker := Some checker;
                 checker
             | {contents = None} ->
-                let checker = Lazy.force new_checker in
+                let checker = OpamLazy.force new_checker in
                 win32_glyph_checker := Some checker;
                 checker
             | {contents = Some checker} ->
@@ -281,20 +282,20 @@ let enable_win32_vt100 ch =
   with Not_found ->
     (ch, VT100 ignore)
 
-let stdout_state = lazy (enable_win32_vt100 OpamStubs.STD_OUTPUT_HANDLE)
-let stderr_state = lazy (enable_win32_vt100 OpamStubs.STD_ERROR_HANDLE)
+let stdout_state = OpamLazy.create (fun () -> enable_win32_vt100 OpamStubs.STD_OUTPUT_HANDLE)
+let stderr_state = OpamLazy.create (fun () -> enable_win32_vt100 OpamStubs.STD_ERROR_HANDLE)
 
 let get_win32_console_shim :
   type s . [ `stdout | `stderr ] -> s shim_return -> s = fun ch ->
     let ch = if ch = `stdout then stdout_state else stderr_state in
     function
     | Handle ->
-        Lazy.force ch
+        OpamLazy.force ch
     | Mode ->
-        Lazy.force ch |> snd
+        OpamLazy.force ch |> snd
     | Peek ->
-        if Lazy.is_val ch then
-          match Lazy.force ch with
+        if OpamLazy.is_val ch then
+          match OpamLazy.force ch with
           | (_, Shim) -> false
           | (_, VT100 force) -> force (); true
         else
@@ -322,7 +323,7 @@ let get_win32_console_shim :
  *)
 
 let is_windows_10 =
-  lazy (let (v, _, _, _) = OpamStubs.getWindowsVersion () in v >= 10)
+  OpamLazy.create (fun () -> let (v, _, _, _) = OpamStubs.getWindowsVersion () in v >= 10)
 
 let win32_print_message ch msg =
   let ocaml_ch =
@@ -375,7 +376,7 @@ let win32_print_message ch msg =
                 blend ~inheritbold:false (!color lor 0b1000)
             | "4"
             | "04" ->
-                if Lazy.force is_windows_10 then
+                if OpamLazy.force is_windows_10 then
                   attributes lor 0b1000000000000000
                 else
                   (* Don't have underline, so change the background *)
@@ -453,7 +454,7 @@ let carriage_delete_windows () =
 let carriage_delete =
   if not OpamStd.Sys.tty_out then fun () -> () else
   if Sys.win32 then
-    let carriage_delete = lazy (
+    let carriage_delete = OpamLazy.create (fun () ->
       match get_win32_console_shim `stdout Mode with
       | Shim ->
           carriage_delete_windows
@@ -462,7 +463,7 @@ let carriage_delete =
             force ();
             carriage_delete_unix ())
     in
-    fun () -> Lazy.force carriage_delete ()
+    fun () -> OpamLazy.force carriage_delete ()
   else
     carriage_delete_unix
 
@@ -475,12 +476,12 @@ let rollback_terminal nlines =
 let left_1_char =
   let left_1_char_unix () = Printf.printf "\027[D%!" in
   if Sys.win32 then
-    let f = lazy (
+    let f = OpamLazy.create (fun () ->
       match get_win32_console_shim `stdout Mode with
       | Shim -> fun () -> () (* unimplemented *)
       | VT100 force -> fun () -> force (); left_1_char_unix ()
     ) in
-    fun () -> Lazy.force f ()
+    fun () -> OpamLazy.force f ()
   else left_1_char_unix
 
 let displaying_status = ref false
@@ -493,7 +494,7 @@ let clear_status_unix () =
 
 let clear_status =
   if Sys.win32 then
-    let clear_status = lazy (
+    let clear_status = OpamLazy.create (fun () ->
       match get_win32_console_shim `stdout Mode with
       | Shim ->
           fun () ->
@@ -505,7 +506,7 @@ let clear_status =
             clear_status_unix ())
     in
     fun () ->
-      Lazy.force clear_status ()
+      OpamLazy.force clear_status ()
   else
     clear_status_unix
 
@@ -644,7 +645,7 @@ let write_status_windows fmt =
   in
   Printf.ksprintf print_string fmt
 
-let win32_print_functions = lazy (
+let win32_print_functions = OpamLazy.create (fun () ->
   match get_win32_console_shim `stdout Mode with
   | Shim ->
       (true, (fun s -> win32_print_message `stdout (s ^ "\n")), print_string)
@@ -656,7 +657,7 @@ let status_line fmt =
     debug () || not (disp_status_line ()) in
   let (use_shim, print_msg, print_string) =
     if Sys.win32 then
-      Lazy.force win32_print_functions
+      OpamLazy.force win32_print_functions
     else
       (false, print_endline, print_string)
   in

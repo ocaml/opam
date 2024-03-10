@@ -86,7 +86,7 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
      Done (Not_available (None, src)))
   else (
     OpamSystem.mkdir dst;
-    let convert_path = Lazy.force convert_path in
+    let convert_path = OpamLazy.force convert_path in
     call_rsync (fun () -> not (OpamSystem.dir_is_empty dst))
       ( rsync_arg :: args @ exclude_args @
         [ "--delete"; "--delete-excluded"; convert_path src; convert_path dst; ])
@@ -123,7 +123,7 @@ let rsync_file ?(args=[]) url dst =
     Done (Up_to_date dst)
   else
     (OpamFilename.mkdir (OpamFilename.dirname dst);
-     let convert_path = Lazy.force convert_path in
+     let convert_path = OpamLazy.force convert_path in
      call_rsync (fun () -> Sys.file_exists dst_s)
        ( rsync_arg :: args @ [ convert_path src_s; convert_path dst_s ])
      @@| function

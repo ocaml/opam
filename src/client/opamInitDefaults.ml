@@ -124,7 +124,7 @@ let dl_tool () =
   >>| fun cmd -> [(CString cmd), None]
 
 let recommended_tools () =
-  let make = OpamStateConfig.(Lazy.force !r.makecmd) in
+  let make = OpamStateConfig.(OpamLazy.force !r.makecmd) in
   [
     [make], None, None;
     ["cc"], None, Some not_win32_filter;

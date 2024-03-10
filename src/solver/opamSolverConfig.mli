@@ -33,12 +33,12 @@ end
 
 type t = private {
   cudf_file: string option;
-  solver: (module OpamCudfSolver.S) Lazy.t;
+  solver: (module OpamCudfSolver.S) OpamLazy.t;
   best_effort: bool;
-  solver_preferences_default: string option Lazy.t;
-  solver_preferences_upgrade: string option Lazy.t;
-  solver_preferences_fixup: string option Lazy.t;
-  solver_preferences_best_effort_prefix: string option Lazy.t;
+  solver_preferences_default: string option OpamLazy.t;
+  solver_preferences_upgrade: string option OpamLazy.t;
+  solver_preferences_fixup: string option OpamLazy.t;
+  solver_preferences_best_effort_prefix: string option OpamLazy.t;
   solver_timeout: float option;
   solver_allow_suboptimal: bool;
   cudf_trim: string option;
@@ -49,12 +49,12 @@ type t = private {
 
 type 'a options_fun =
   ?cudf_file:string option ->
-  ?solver:(module OpamCudfSolver.S) Lazy.t ->
+  ?solver:(module OpamCudfSolver.S) OpamLazy.t ->
   ?best_effort:bool ->
-  ?solver_preferences_default:string option Lazy.t ->
-  ?solver_preferences_upgrade:string option Lazy.t ->
-  ?solver_preferences_fixup:string option Lazy.t ->
-  ?solver_preferences_best_effort_prefix:string option Lazy.t ->
+  ?solver_preferences_default:string option OpamLazy.t ->
+  ?solver_preferences_upgrade:string option OpamLazy.t ->
+  ?solver_preferences_fixup:string option OpamLazy.t ->
+  ?solver_preferences_best_effort_prefix:string option OpamLazy.t ->
   ?solver_timeout:float option ->
   ?solver_allow_suboptimal:bool ->
   ?cudf_trim:string option ->

@@ -63,7 +63,7 @@ let transform_format ~(sepfmt:sep_path_format) =
          | `rewrite _ ->  OpamSystem.forward_to_back)
       | Host | Host_quoted ->
         (* noop on non windows *)
-        (Lazy.force OpamSystem.get_cygpath_path_transform) ~pathlist:false
+        (OpamLazy.force OpamSystem.get_cygpath_path_transform) ~pathlist:false
     in
     match format with
     | Target | Host -> translate
@@ -81,7 +81,7 @@ let resolve_separator_and_format :
     OpamStd.Option.(Op.(
         of_Not_found
           (OpamStd.List.assoc OpamVariable.equal fv)
-          OpamSysPoll.variables >>= Lazy.force))
+          OpamSysPoll.variables >>= OpamLazy.force))
   in
   let resolve var to_str formula =
     let evaluated =
@@ -299,15 +299,15 @@ let map_update_names env_keys updates =
   in
   List.map convert updates
 
-let global_env_keys = lazy (
+let global_env_keys = OpamLazy.create (fun () ->
   OpamStd.Env.list ()
   |> List.map fst
   |> OpamStd.Env.Name.Set.of_list)
 
-let updates_from_previous_instance = lazy (
+let updates_from_previous_instance = OpamLazy.create (fun () ->
   let get_env env_file =
     OpamStd.Option.map
-      (map_update_names (Lazy.force global_env_keys))
+      (map_update_names (OpamLazy.force global_env_keys))
       (OpamFile.Environment.read_opt env_file)
   in
   let open OpamStd.Option.Op in
@@ -331,7 +331,7 @@ let expand (updates: spf_resolved env_update list) : env =
   let updates =
     if Sys.win32 then
       (* Preserve the case of updates which are already in env *)
-      map_update_names (Lazy.force global_env_keys) updates
+      map_update_names (OpamLazy.force global_env_keys) updates
     else
       updates
   in
@@ -346,7 +346,7 @@ let expand (updates: spf_resolved env_update list) : env =
   in
   (* Reverse all previous updates, in reverse order, on current environment *)
   let reverts =
-    match Lazy.force updates_from_previous_instance with
+    match OpamLazy.force updates_from_previous_instance with
     | None -> []
     | Some updates ->
       List.fold_right (fun upd defs0 ->
@@ -876,7 +876,7 @@ let env_hook_script shell =
 let source root shell f =
   let fname = OpamFilename.to_string (OpamPath.init root // f) in
   let unix_transform ?using_backslashes () =
-    let cygpath = Lazy.force OpamSystem.get_cygpath_path_transform in
+    let cygpath = OpamLazy.force OpamSystem.get_cygpath_path_transform in
     cygpath ~pathlist:false fname
     |> OpamStd.Env.escape_single_quotes ?using_backslashes
   in

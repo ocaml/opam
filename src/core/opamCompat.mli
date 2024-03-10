@@ -20,11 +20,6 @@ module Either : sig
     | Right of 'b
 end
 
-module Lazy : sig
-  (* NOTE: OCaml >= 4.13 *)
-  val map : ('a -> 'b) -> 'a Lazy.t -> 'b Lazy.t
-end
-
 module Unix : sig
   (* `realpath` for OCaml >= 4.13.0,
      implementation with double chdir otherwise *)

@@ -135,11 +135,11 @@ let cut_leaves (mode: [ `succ | `pred]) ~names ~root st graph =
   (* return the new roots and the new graph *)
   OpamPackage.Set.inter root packages, graph
 
-let build_deps_forest st universe tog filter names =
+let build_deps_forest ~task_pool st universe tog filter names =
   let OpamListCommand.{ build; post; _ } = tog in
   let root, graph =
     let graph =
-      OpamSolver.dependency_graph
+      OpamSolver.dependency_graph ~task_pool
         ~depopts:false ~build ~post ~installed:true universe
     in
     let root =
@@ -182,11 +182,11 @@ let build_deps_forest st universe tog filter names =
   |> OpamStd.List.fold_left_map build_root OpamPackage.Set.empty
   |> snd
 
-let build_revdeps_forest st universe tog filter names =
+let build_revdeps_forest ~task_pool st universe tog filter names =
   let OpamListCommand.{ build; post; _ } = tog in
   let root, graph =
     let graph =
-      OpamSolver.dependency_graph
+      OpamSolver.dependency_graph ~task_pool
         ~depopts:false ~build ~post ~installed:true universe
     in
     let root =
@@ -233,12 +233,12 @@ let build_revdeps_forest st universe tog filter names =
   |> OpamStd.List.fold_left_map build_root OpamPackage.Set.empty
   |> snd
 
-let build st universe tog mode filter names =
+let build ~task_pool st universe tog mode filter names =
   match mode with
   | Deps ->
-    DepsForest (build_deps_forest st universe tog filter names)
+    DepsForest (build_deps_forest ~task_pool st universe tog filter names)
   | ReverseDeps ->
-    RevdepsForest (build_revdeps_forest st universe tog filter names)
+    RevdepsForest (build_revdeps_forest ~task_pool st universe tog filter names)
 
 
 (* Forest printing *)
@@ -365,12 +365,12 @@ let print_solution st new_st missing solution =
   let skip =
     OpamPackage.Set.fold
       (fun p m -> OpamPackage.Map.add p p m)
-      (Lazy.force new_st.reinstall)
+      (OpamLazy.force new_st.reinstall)
       OpamPackage.Map.empty
   in
   OpamSolver.print_solution ~messages ~append
-    ~requested:missing ~reinstall:(Lazy.force st.reinstall)
-    ~available:(Lazy.force st.available_packages)
+    ~requested:missing ~reinstall:(OpamLazy.force st.reinstall)
+    ~available:(OpamLazy.force st.available_packages)
     ~skip (* hide recompiled packages because they don't make sense here *)
     solution;
   OpamConsole.msg "\n"
@@ -384,13 +384,13 @@ let get_universe tog st =
     ~requested:st.installed
     Query
 
-let simulate_new_state tog st universe install names =
-  match OpamSolver.resolve universe
+let simulate_new_state ~task_pool tog st universe install names =
+  match OpamSolver.resolve ~task_pool universe
           (OpamSolver.request ~install ()) with
   | Success solution ->
     let new_st = OpamSolution.dry_run st solution in
     print_solution st new_st names solution;
-    new_st, get_universe tog new_st
+    new_st, get_universe ~task_pool tog new_st
   | Conflicts cs ->
     OpamConsole.error
       "Could not simulate installing the specified package(s) to this switch:";
@@ -403,7 +403,7 @@ let dry_install tog st universe install =
   simulate_new_state tog st universe install
     (OpamPackage.Name.Set.of_list (List.map fst install))
 
-let run st tog ?no_constraint mode filter atoms =
+let run ~task_pool st tog ?no_constraint mode filter atoms =
   let open OpamPackage.Set.Op in
   let select, missing =
     List.fold_left (fun (select, missing) atom ->
@@ -416,11 +416,11 @@ let run st tog ?no_constraint mode filter atoms =
       (OpamPackage.Set.empty, []) atoms
   in
   let st, universe =
-    let universe = get_universe tog st in
+    let universe = get_universe ~task_pool tog st in
     match mode, filter, missing with
     | Deps, _, [] -> st, universe
     | Deps, Roots_from, _::_ ->
-        dry_install tog st universe missing
+        dry_install ~task_pool tog st universe missing
     | Deps, Leads_to, _::_
     | ReverseDeps, _, _ ->
       (* non-installed names don't make sense in rev-deps *)
@@ -439,7 +439,7 @@ let run st tog ?no_constraint mode filter atoms =
   else
   let simulated = OpamFormula.packages_of_atoms st.installed missing in
   let forest =
-    build st universe tog mode filter (select ++ simulated)
+    build ~task_pool st universe tog mode filter (select ++ simulated)
   in
   print ?no_constraint forest;
   if OpamClientConfig.(!r.json_out) <> None then
