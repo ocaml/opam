@@ -1,0 +1,743 @@
+diff -ru dose3.old/src/algo/depsolver.ml dose3/src/algo/depsolver.ml
+--- dose3.old/src/algo/depsolver.ml	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/algo/depsolver.ml	2024-03-09 16:53:16.854662398 -0800
+@@ -13,6 +13,7 @@
+ open ExtLib
+ open Dose_common
+ open CudfAdd
++open Domainslib
+ 
+ include Util.Logging (struct
+   let label = "dose_algo.depsolver"
+@@ -24,20 +25,20 @@
+ 
+ let timer_init = Util.Timer.create "Algo.Depsolver.init"
+ 
+-let load ?(global_constraints = []) universe =
++let load ?(global_constraints = []) ~task_pool universe =
+   let global_constraints =
+     List.map
+       (fun (vpkg, l) -> (vpkg, List.map (CudfAdd.pkgtoint universe) l))
+       global_constraints
+   in
+-  Depsolver_int.init_solver_univ ~global_constraints universe
++  Depsolver_int.init_solver_univ ~task_pool ~global_constraints universe
+ 
+ (** [univcheck ?callback universe] check all packages in the
+     universe for installability
+ 
+     @return the number of packages that cannot be installed
+ *)
+-let univcheck ?(global_constraints = []) ?callback ?(explain = true) universe =
++let univcheck ?(global_constraints = []) ?callback ?(explain = true) ~task_pool universe =
+   let aux ?callback univ =
+     let global_constraints =
+       List.map
+@@ -46,7 +47,7 @@
+     in
+     Util.Timer.start timer_init ;
+     let solver =
+-      Depsolver_int.init_solver_univ ~global_constraints ~explain univ
++      Depsolver_int.init_solver_univ ~task_pool ~global_constraints ~explain univ
+     in
+     Util.Timer.stop timer_init () ;
+     Util.Timer.start timer_solver ;
+@@ -82,7 +83,7 @@
+     @param pkglist list of packages to be checked
+     @return the number of packages that cannot be installed
+ *)
+-let listcheck ?(global_constraints = []) ?callback ?(explain = true) universe
++let listcheck ?(global_constraints = []) ?callback ?(explain = true) ~task_pool universe
+     pkglist =
+   let aux ?callback univ idlist =
+     let global_constraints =
+@@ -92,7 +93,7 @@
+     in
+     Util.Timer.start timer_init ;
+     let solver =
+-      Depsolver_int.init_solver_univ ~global_constraints ~explain univ
++      Depsolver_int.init_solver_univ ~global_constraints ~explain ~task_pool univ
+     in
+     Util.Timer.stop timer_init () ;
+     Util.Timer.start timer_solver ;
+@@ -125,7 +126,7 @@
+       in
+       aux ~callback:callback_int universe idlist
+ 
+-let univcheck_lowmem ?(global_constraints = []) ?callback ?(explain = true)
++let univcheck_lowmem ?(global_constraints = []) ?callback ?(explain = true) ~task_pool
+     universe =
+   let pkglist = Cudf.get_packages universe in
+   let keeplist = List.flatten (List.map snd global_constraints) in
+@@ -177,52 +178,54 @@
+       let l = CudfAdd.Cudf_set.elements su in
+       let u = Cudf.load_universe l in
+       let pkglist = CudfAdd.Cudf_set.elements stt in
+-      let b = listcheck ~global_constraints ?callback ~explain u pkglist in
++      let b = listcheck ~global_constraints ?callback ~explain ~task_pool u pkglist in
+       b + acc)
+     0
+     (partitions keepset pkglist)
+ 
+-let edos_install_cache univ cudfpool pkglist =
++let edos_install_cache ~task_pool univ cudfpool pkglist =
+   let idlist = List.map (CudfAdd.pkgtoint univ) pkglist in
+   let closure = Depsolver_int.dependency_closure_cache cudfpool idlist in
+   let solver =
+-    Depsolver_int.init_solver_closure ~global_constraints:[] cudfpool closure
++    Depsolver_int.init_solver_closure ~task_pool ~global_constraints:[] cudfpool closure
+   in
+   let res = Depsolver_int.solve solver ~explain:true idlist in
+   Diagnostic.diagnosis solver.Depsolver_int.map univ res idlist
+ 
+-let edos_install ?(global_constraints = []) universe pkg =
++let edos_install  ?(global_constraints = []) ~task_pool universe pkg =
+   let global_constraints =
+     List.map
+       (fun (vpkg, l) -> (vpkg, List.map (CudfAdd.pkgtoint universe) l))
+       global_constraints
+   in
+-  let cudfpool = Depsolver_int.init_pool_univ ~global_constraints universe in
+-  edos_install_cache universe cudfpool [pkg]
++  let cudfpool = Depsolver_int.init_pool_univ ~task_pool ~global_constraints universe in
++  edos_install_cache ~task_pool universe cudfpool [pkg]
+ 
+-let edos_coinstall ?(global_constraints = []) universe pkglist =
++let num_domains = 16
++
++let edos_coinstall ?(global_constraints = []) ~task_pool universe pkglist =
+   let global_constraints =
+     List.map
+       (fun (vpkg, l) -> (vpkg, List.map (CudfAdd.pkgtoint universe) l))
+       global_constraints
+   in
+-  let cudfpool = Depsolver_int.init_pool_univ ~global_constraints universe in
+-  edos_install_cache universe cudfpool pkglist
++  let cudfpool = Depsolver_int.init_pool_univ ~task_pool ~global_constraints universe in
++  edos_install_cache ~task_pool universe cudfpool pkglist
+ 
+-let edos_coinstall_prod ?(global_constraints = []) universe ll =
++let edos_coinstall_prod ?(global_constraints = []) ~task_pool universe ll =
+   let global_constraints =
+     List.map
+       (fun (vpkg, l) -> (vpkg, List.map (CudfAdd.pkgtoint universe) l))
+       global_constraints
+   in
+-  let cudfpool = Depsolver_int.init_pool_univ ~global_constraints universe in
++  let cudfpool = Depsolver_int.init_pool_univ ~task_pool ~global_constraints universe in
+   let return a = [a] in
+   let bind m f = List.flatten (List.map f m) in
+   let rec permutation = function
+     | [] -> return []
+     | h :: t -> bind (permutation t) (fun t1 -> List.map (fun h1 -> h1 :: t1) h)
+   in
+-  List.map (edos_install_cache universe cudfpool) (permutation ll)
++  List.map (edos_install_cache ~task_pool universe cudfpool) (permutation ll)
+ 
+ let is_consistent univ =
+   match Cudf_checker.is_consistent univ with
+@@ -331,7 +334,7 @@
+     @param universe the package universe
+     @param pkglist a subset of [universe]
+ *)
+-let dependency_closure ?(global_constraints = []) ?maxdepth ?conjunctive
++let dependency_closure ?(global_constraints = []) ?maxdepth ?conjunctive ~task_pool
+     universe pkglist =
+   let global_constraints =
+     List.map
+@@ -342,7 +345,7 @@
+     let l = List.map (CudfAdd.pkgtoint universe) pkglist in
+     List.flatten (List.map snd global_constraints) @ l
+   in
+-  let pool = Depsolver_int.init_pool_univ ~global_constraints universe in
++  let pool = Depsolver_int.init_pool_univ ~task_pool ~global_constraints universe in
+   let l =
+     Depsolver_int.dependency_closure_cache ?maxdepth ?conjunctive pool idlist
+   in
+@@ -373,14 +376,14 @@
+ 
+ type enc = Cnf | Dimacs
+ 
+-let output_clauses ?(global_constraints = []) ?(enc = Cnf) universe =
++let output_clauses ?(global_constraints = []) ?(enc = Cnf) ~task_pool universe =
+   let global_constraints =
+     List.map
+       (fun (vpkg, l) -> (vpkg, List.map (CudfAdd.pkgtoint universe) l))
+       global_constraints
+   in
+   let solver =
+-    Depsolver_int.init_solver_univ ~global_constraints ~buffer:true universe
++    Depsolver_int.init_solver_univ ~task_pool ~global_constraints ~buffer:true universe
+   in
+   let clauses = Depsolver_int.S.dump solver.Depsolver_int.constraints in
+   let size = Cudf.universe_size universe in
+@@ -480,47 +483,50 @@
+   else Unsat None
+ 
+ let check_request_using ?call_solver ?dummy ?(explain = false)
+-    (pre, universe, request) =
+-  match (call_solver, dummy) with
+-  | (None, None) ->
+-      let (u, r) = add_dummy universe request dummy_request in
+-      remove_dummy ~explain pre (r, edos_install u r)
+-  | (None, Some dummy) ->
+-      let (u, r) = add_dummy universe request dummy in
+-      remove_dummy ~explain pre (r, edos_install u r)
+-  | (Some call_solver, None) -> (
+-      try
+-        let (presol, sol) = call_solver (pre, universe, request) in
+-        Sat (presol, sol)
+-      with
+-      | CudfSolver.Unsat when not explain -> Unsat None
+-      | CudfSolver.Unsat when explain ->
+-          let (u, r) = add_dummy universe request dummy_request in
+-          remove_dummy ~explain pre (r, edos_install u r))
+-  | (Some call_solver, Some dummy) -> (
+-      let (u, dr) = add_dummy universe request dummy in
+-      let dr_constr = (dr.Cudf.package, Some (`Eq, dr.Cudf.version)) in
+-      let r =
+-        { request with Cudf.install = dr_constr :: request.Cudf.install }
+-      in
+-      try
+-        let (presol, sol) = call_solver (pre, u, r) in
+-        let is = List.remove_if (Cudf.( =% ) dr) (Cudf.get_packages sol) in
+-        Sat (presol, Cudf.load_universe is)
+-      with
+-      | CudfSolver.Unsat when not explain -> Unsat None
+-      | CudfSolver.Unsat when explain -> (
+-          let (u, r) = add_dummy universe request dummy in
+-          match remove_dummy ~explain pre (r, edos_install u r) with
+-          | Sat _ as sol ->
+-              warning "External and Internal Solver do not agree." ;
+-              sol
+-          | sol -> sol)
+-      | CudfSolver.Error s -> Error s)
++    ~task_pool (pre, universe, request) =
++  let res =
++    match (call_solver, dummy) with
++    | (None, None) ->
++        let (u, r) = add_dummy universe request dummy_request in
++        remove_dummy ~explain pre (r, edos_install ~task_pool u r)
++    | (None, Some dummy) ->
++        let (u, r) = add_dummy universe request dummy in
++        remove_dummy ~explain pre (r, edos_install ~task_pool u r)
++    | (Some call_solver, None) -> (
++        try
++          let (presol, sol) = call_solver (pre, universe, request) in
++          Sat (presol, sol)
++        with
++        | CudfSolver.Unsat when not explain -> Unsat None
++        | CudfSolver.Unsat when explain ->
++            let (u, r) = add_dummy universe request dummy_request in
++            remove_dummy ~explain pre (r, edos_install ~task_pool u r))
++    | (Some call_solver, Some dummy) -> (
++        let (u, dr) = add_dummy universe request dummy in
++        let dr_constr = (dr.Cudf.package, Some (`Eq, dr.Cudf.version)) in
++        let r =
++          { request with Cudf.install = dr_constr :: request.Cudf.install }
++        in
++        try
++          let (presol, sol) = call_solver (pre, u, r) in
++          let is = List.remove_if (Cudf.( =% ) dr) (Cudf.get_packages sol) in
++          Sat (presol, Cudf.load_universe is)
++        with
++        | CudfSolver.Unsat when not explain -> Unsat None
++        | CudfSolver.Unsat when explain -> (
++            let (u, r) = add_dummy universe request dummy in
++            match remove_dummy ~explain pre (r, edos_install ~task_pool u r) with
++            | Sat _ as sol ->
++                warning "External and Internal Solver do not agree." ;
++                sol
++            | sol -> sol)
++        | CudfSolver.Error s -> Error s)
++  in
++  res
+ 
+ (** check if a cudf request is satisfiable. we do not care about
+     universe consistency . We try to install a dummy package *)
+-let check_request ?cmd ?criteria ?dummy ?explain cudf =
++let check_request ?cmd ?criteria ?dummy ?explain ~task_pool cudf =
+   let call_solver =
+     match cmd with
+     | Some cmd ->
+@@ -528,7 +534,7 @@
+         Some (CudfSolver.execsolver cmd criteria)
+     | None -> None
+   in
+-  check_request_using ?call_solver ?dummy ?explain cudf
++  check_request_using ?call_solver ?dummy ?explain ~task_pool cudf
+ 
+ type depclean_result =
+   Cudf.package
+@@ -537,20 +543,20 @@
+ 
+ (** Depclean. Detect useless dependencies and/or conflicts
+     to missing or broken packages *)
+-let depclean ?(global_constraints = []) ?(callback = fun _ -> ()) universe
++let depclean ?(global_constraints = []) ?(callback = fun _ -> ()) ~task_pool universe
+     pkglist =
+   let global_constraints =
+     List.map
+       (fun (vpkg, l) -> (vpkg, List.map (CudfAdd.pkgtoint universe) l))
+       global_constraints
+   in
+-  let cudfpool = Depsolver_int.init_pool_univ ~global_constraints universe in
++  let cudfpool = Depsolver_int.init_pool_univ ~task_pool ~global_constraints universe in
+   let is_broken =
+     let cache = Hashtbl.create (Cudf.universe_size universe) in
+     fun pkg ->
+       try Hashtbl.find cache pkg
+       with Not_found ->
+-        let r = edos_install_cache universe cudfpool [pkg] in
++        let r = edos_install_cache ~task_pool universe cudfpool [pkg] in
+         let res = not (Diagnostic.is_solution r) in
+         Hashtbl.add cache pkg res ;
+         res
+@@ -611,7 +617,7 @@
+                 depends
+             in
+             let _ = pool.(pkgid) <- (dll, pkgconf) in
+-            let res = edos_install_cache univ cudfpool [pkg] in
++            let res = edos_install_cache ~task_pool univ cudfpool [pkg] in
+             let _ = pool.(pkgid) <- (pkgdeps, pkgconf) in
+             if not (Diagnostic.is_solution res) then (vpkglist, vpkg, l) :: acc
+             else acc)
+diff -ru dose3.old/src/algo/depsolver.mli dose3/src/algo/depsolver.mli
+--- dose3.old/src/algo/depsolver.mli	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/algo/depsolver.mli	2024-03-05 17:56:56.825968960 -0800
+@@ -18,6 +18,7 @@
+ (** initialize the solver. *)
+ val load :
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   solver
+ 
+@@ -30,6 +31,7 @@
+     Packages marked as `Keep_package must be always installed.*)
+ val edos_install :
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   Cudf.package ->
+   Diagnostic.diagnosis
+@@ -37,6 +39,7 @@
+ (** check if the give package list can be installed in the universe  *)
+ val edos_coinstall :
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   Cudf.package list ->
+   Diagnostic.diagnosis
+@@ -45,6 +48,7 @@
+     the cartesian product. *)
+ val edos_coinstall_prod :
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   Cudf.package list list ->
+   Diagnostic.diagnosis list
+@@ -104,6 +108,7 @@
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
+   ?callback:(Diagnostic.diagnosis -> unit) ->
+   ?explain:bool ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   int
+ 
+@@ -111,6 +116,7 @@
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
+   ?callback:(Diagnostic.diagnosis -> unit) ->
+   ?explain:bool ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   int
+ 
+@@ -128,6 +134,7 @@
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
+   ?callback:(Diagnostic.diagnosis -> unit) ->
+   ?explain:bool ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   Cudf.package list ->
+   int
+@@ -144,6 +151,7 @@
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
+   ?maxdepth:int ->
+   ?conjunctive:bool ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   Cudf.package list ->
+   Cudf.package list
+@@ -166,6 +174,7 @@
+ val output_clauses :
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
+   ?enc:enc ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   string
+ 
+@@ -182,6 +191,7 @@
+ val depclean :
+   ?global_constraints:(Cudf_types.vpkglist * Cudf.package list) list ->
+   ?callback:(depclean_result -> unit) ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   Cudf.package list ->
+   depclean_result list
+@@ -211,6 +221,7 @@
+   ?criteria:string ->
+   ?dummy:Cudf.package ->
+   ?explain:bool ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.cudf ->
+   solver_result
+ 
+@@ -220,6 +231,7 @@
+   ?call_solver:(Cudf.cudf -> Cudf.preamble option * Cudf.universe) ->
+   ?dummy:Cudf.package ->
+   ?explain:bool ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.cudf ->
+   solver_result
+ 
+diff -ru dose3.old/src/algo/depsolver_int.ml dose3/src/algo/depsolver_int.ml
+--- dose3.old/src/algo/depsolver_int.ml	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/algo/depsolver_int.ml	2024-03-09 16:52:48.574662646 -0800
+@@ -10,6 +10,7 @@
+ (*  library, see the COPYING file for more information.                               *)
+ (**************************************************************************************)
+ 
++open Domainslib
+ open ExtLib
+ open Dose_common
+ 
+@@ -48,18 +49,18 @@
+ 
+ (* cudf uid -> cudf uid array . Here we assume cudf uid are sequential
+    and we can use them as an array index *)
+-let init_pool_univ ~global_constraints univ =
++let init_pool_univ ~task_pool ~global_constraints univ =
+   (* the last element of the array *)
+   let size = Cudf.universe_size univ in
+   let keep = Hashtbl.create 200 in
+-  let pool =
++  let pool = Array.make (size + 1) ([], []) in (* Create an array of the desired size *)
++  Task.parallel_for task_pool ~start:0 ~finish:size ~body:(fun uid ->
+     (* here I initalize the pool to size + 1, that is I reserve one spot
+      * to encode the global constraints associated with the universe.
+      * However, since they are global, I've to add the at the end, after
+      * I have analyzed all packages in the universe. *)
+-    Array.init (size + 1) (fun uid ->
+         try
+-          if uid = size then ([], []) (* the last index *)
++          if uid = size then Array.unsafe_set pool uid ([], []) (* the last index *)
+           else
+             let pkg = Cudf.package_by_uid univ uid in
+             let dll =
+@@ -108,13 +109,12 @@
+                                id)
+                            (CudfAdd.resolve_vpkg_int univ (name, Some (`Eq, v))))
+                    pkg.Cudf.provides) ;
+-            (dll, cl)
++            Array.unsafe_set pool uid (dll, cl)
+         with Not_found ->
+           fatal
+             "Package uid (%d) not found during solver pool initialization. \
+              Packages uid must have no gaps in the given universe"
+-            uid)
+-  in
++            uid);
+   let keep_dll =
+     Hashtbl.fold
+       (fun cnstr { contents = l } acc -> ([cnstr], l) :: acc)
+@@ -161,7 +161,7 @@
+   `SolverPool solverpool
+ 
+ (** initalise the sat solver. operate only on solver ids *)
+-let init_solver_cache ?(buffer = false) ?(explain = true) (`SolverPool varpool)
++let init_solver_cache ?(buffer = false) ?(explain = true) ~task_pool (`SolverPool varpool)
+     =
+   let num_conflicts = ref 0 in
+   let num_disjunctions = ref 0 in
+@@ -170,7 +170,7 @@
+   let varsize = Array.length varpool in
+   let add_depend constraints vpkgs pkg_id l =
+     let lit = S.lit_of_var pkg_id false in
+-    if List.length l = 0 then
++    if (match l with [] -> true | _ -> false) then
+       S.add_rule
+         constraints
+         [| lit |]
+@@ -308,16 +308,17 @@
+     @param buffer debug buffer to print out debug messages
+     @param univ cudf package universe
+ *)
+-let init_solver_univ ~global_constraints ?(buffer = false) ?(explain = true)
++let init_solver_univ ~task_pool ~global_constraints ?(buffer = false) ?(explain = true)
++
+     univ =
+   let map = new Util.identity in
+   (* here we convert a cudfpool in a varpool. The assumption
+    * that cudf package identifiers are contiguous is essential ! *)
+   let (`CudfPool (keep_constraints, pool)) =
+-    init_pool_univ ~global_constraints univ
++    init_pool_univ ~task_pool ~global_constraints univ
+   in
+   let varpool = `SolverPool pool in
+-  let constraints = init_solver_cache ~buffer ~explain varpool in
++  let constraints = init_solver_cache ~buffer ~explain ~task_pool varpool in
+   let gid = Cudf.universe_size univ in
+   let global_constraints = global_constraints <> [] in
+   { constraints; map; globalid = ((keep_constraints, global_constraints), gid) }
+@@ -330,7 +331,7 @@
+     @param pool dependencies and conflicts array idexed by package id
+     @param closure subset of packages used to initialize the solver
+ *)
+-let init_solver_closure ~global_constraints ?(buffer = false)
++let init_solver_closure ~task_pool ~global_constraints ?(buffer = false)
+     (`CudfPool (keep_constraints, cudfpool)) closure =
+   let gid = Array.length cudfpool - 1 in
+   let global_constraints = global_constraints <> [] in
+@@ -339,7 +340,7 @@
+   let varpool =
+     init_solver_pool map (`CudfPool (keep_constraints, cudfpool)) closure
+   in
+-  let constraints = init_solver_cache ~buffer varpool in
++  let constraints = init_solver_cache ~task_pool ~buffer varpool in
+   { constraints; map; globalid = ((keep_constraints, global_constraints), gid) }
+ 
+ (** return a copy of the state of the solver *)
+diff -ru dose3.old/src/algo/depsolver_int.mli dose3/src/algo/depsolver_int.mli
+--- dose3.old/src/algo/depsolver_int.mli	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/algo/depsolver_int.mli	2024-03-04 15:02:41.957045110 -0800
+@@ -79,6 +79,7 @@
+     The last index of the pool is the globalid.
+  *)
+ val init_pool_univ :
++  task_pool:Domainslib.Task.pool ->
+   global_constraints:global_constraints ->
+   Cudf.universe ->
+   [> `CudfPool of bool * pool ]
+@@ -93,7 +94,7 @@
+ 
+ (** Initalise the sat solver. Operates only on solver ids [SolverPool] *)
+ val init_solver_cache :
+-  ?buffer:bool -> ?explain:bool -> [< `SolverPool of pool ] -> S.state
++  ?buffer:bool -> ?explain:bool -> task_pool:Domainslib.Task.pool -> [< `SolverPool of pool ] -> S.state
+ 
+ (** Call the sat solver
+ 
+@@ -125,6 +126,7 @@
+     @param univ cudf package universe
+ *)
+ val init_solver_univ :
++  task_pool:Domainslib.Task.pool ->
+   global_constraints:global_constraints ->
+   ?buffer:bool ->
+   ?explain:bool ->
+@@ -140,6 +142,7 @@
+     @param closure subset of packages used to initialize the solver
+ *)
+ val init_solver_closure :
++  task_pool:Domainslib.Task.pool ->
+   global_constraints:global_constraints ->
+   ?buffer:bool ->
+   [< `CudfPool of bool * pool ] ->
+diff -ru dose3.old/src/algo/dune dose3/src/algo/dune
+--- dose3.old/src/algo/dune	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/algo/dune	2024-03-10 15:01:14.855440042 -0700
+@@ -1,7 +1,7 @@
+ (library
+  (name dose_algo)
+  (public_name dose3.algo)
+- (libraries extlib cudf dose3.common ocamlgraph)
++ (libraries extlib cudf dose3.common ocamlgraph domainslib)
+  (flags (:standard)))
+ 
+ (rule
+diff -ru dose3.old/src/algo/strongconflicts.ml dose3/src/algo/strongconflicts.ml
+--- dose3.old/src/algo/strongconflicts.ml	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/algo/strongconflicts.ml	2024-03-10 15:04:35.975438279 -0700
+@@ -54,10 +54,10 @@
+     Depsolver.trim.
+ *)
+ 
+-let strongconflicts universe =
++let strongconflicts ~task_pool universe =
+   let g = CG.create () in
+   let universe = Depsolver.trim universe in
+-  let ig = Strongconflicts_int.strongconflicts universe in
++  let ig = Strongconflicts_int.strongconflicts ~task_pool universe in
+   let inttovar = CudfAdd.inttopkg universe in
+   (* convert output graph *)
+   ICG.iter_vertex (fun v -> CG.add_vertex g (inttovar v)) ig ;
+diff -ru dose3.old/src/algo/strongconflicts_int.ml dose3/src/algo/strongconflicts_int.ml
+--- dose3.old/src/algo/strongconflicts_int.ml	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/algo/strongconflicts_int.ml	2024-03-10 15:02:47.625439229 -0700
+@@ -13,6 +13,7 @@
+ (** Strong Conflicts *)
+ 
+ open ExtLib
++open Domainslib
+ open Dose_common
+ 
+ include Util.Logging (struct
+@@ -80,8 +81,8 @@
+   else false
+ 
+ (* [strongconflicts mdf] return the list of strong conflicts *)
+-let strongconflicts univ =
+-  let solver = Depsolver_int.init_solver_univ ~global_constraints:[] univ in
++let strongconflicts ~task_pool univ =
++  let solver = Depsolver_int.init_solver_univ ~task_pool ~global_constraints:[] univ in
+   let reverse = Depsolver_int.reverse_dependencies univ in
+   let size = Cudf.universe_size univ in
+   let cache = IG.make size in
+diff -ru dose3.old/src/algo/strongdeps.ml dose3/src/algo/strongdeps.ml
+--- dose3.old/src/algo/strongdeps.ml	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/algo/strongdeps.ml	2024-03-09 12:14:36.924808973 -0800
+@@ -13,6 +13,7 @@
+ (** Strong Dependencies *)
+ 
+ open ExtLib
++open Domainslib
+ open Dose_common
+ 
+ include Util.Logging (struct
+@@ -74,9 +75,9 @@
+ *)
+ 
+ (** [strongdeps l] build the strong dependency graph of l *)
+-let strongdeps_int ?(transitive = true) graph univ pkglist =
++let strongdeps_int ?(transitive = true) ~task_pool graph univ pkglist =
+   let global_constraints = [] in
+-  let cudfpool = Depsolver_int.init_pool_univ ~global_constraints univ in
++  let cudfpool = Depsolver_int.init_pool_univ ~task_pool ~global_constraints univ in
+   let pkglist_size = List.length pkglist in
+   let universe_size = Cudf.universe_size univ in
+   Util.Progress.set_total mainbar pkglist_size ;
+@@ -89,7 +90,7 @@
+       if pkglist_size <> universe_size || somedisj cudfpool id then
+         let closure = Depsolver_int.dependency_closure_cache cudfpool [id] in
+         let solver =
+-          Depsolver_int.init_solver_closure ~global_constraints cudfpool closure
++          Depsolver_int.init_solver_closure ~global_constraints ~task_pool cudfpool closure
+         in
+         match Depsolver_int.solve solver ~explain:true [id] with
+         | Diagnostic.FailureInt _ -> ()
+@@ -103,12 +104,13 @@
+     (Defaultgraphs.PackageGraph.G.nb_edges graph) ;
+   Util.Timer.stop strongtimer graph
+ 
+-let strongdeps ?(transitive = true) univ pkglist =
++let strongdeps ?(transitive = true) ~task_pool univ pkglist =
+   let size = Cudf.universe_size univ in
+   let graph = Defaultgraphs.PackageGraph.G.create ~size () in
+-  strongdeps_int ~transitive graph univ pkglist
++  let res = strongdeps_int ~transitive ~task_pool graph univ pkglist in
++  res
+ 
+-let strongdeps_univ ?(transitive = true) univ =
++let strongdeps_univ ?(transitive = true) ~task_pool univ =
+   let size = Cudf.universe_size univ in
+   let graph = Defaultgraphs.PackageGraph.G.create ~size () in
+   Util.Progress.set_total conjbar size ;
+@@ -128,7 +130,7 @@
+     "conj dep graph: nodes %d , edges %d"
+     (Defaultgraphs.PackageGraph.G.nb_vertex graph)
+     (Defaultgraphs.PackageGraph.G.nb_edges graph) ;
+-  let g = strongdeps_int ~transitive graph univ l in
++  let g = strongdeps_int ~transitive ~task_pool graph univ l in
+   (* because the graph might still be transitive *)
+   (* if not transitive then O.transitive_reduction g; *)
+   g
+@@ -149,13 +151,13 @@
+ 
+ (** [strongdeps u l] build the strong dependency graph of all packages in
+     l wrt the universe u *)
+-let strongdeps ?(transitive = true) universe pkglist =
+-  strongdeps ~transitive universe (Depsolver.trimlist universe pkglist)
++let strongdeps ?(transitive = true) ~task_pool universe pkglist =
++  strongdeps ~transitive ~task_pool universe (Depsolver.trimlist universe pkglist)
+ 
+ (** [strongdeps_univ u] build the strong dependency graph of
+     all packages in the universe [u] *)
+-let strongdeps_univ ?(transitive = true) universe =
+-  strongdeps_univ ~transitive (Depsolver.trim universe)
++let strongdeps_univ ?(transitive = true) ~task_pool universe =
++  strongdeps_univ ~transitive ~task_pool (Depsolver.trim universe)
+ 
+ (** compute the impact set of the node [q], that is the list of all
+     packages [p] that strong depends on [q] *)
+diff -ru dose3.old/src/algo/strongdeps.mli dose3/src/algo/strongdeps.mli
+--- dose3.old/src/algo/strongdeps.mli	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/algo/strongdeps.mli	2024-03-09 12:13:44.684809431 -0800
+@@ -12,20 +12,24 @@
+ 
+ (** Strong Dependencies *)
+ 
+-(** [strongdeps u l] build the strong dependency graph of all packages in 
++(** [strongdeps u l] build the strong dependency graph of all packages in
+     [l] wrt the universe [u] *)
+ val strongdeps :
+   ?transitive:bool ->
++  task_pool:Domainslib.Task.pool ->
+   Cudf.universe ->
+   Cudf.package list ->
+   Defaultgraphs.PackageGraph.G.t
+ 
+-(** [strongdeps_univ u] build the strong dependency graph of 
++(** [strongdeps_univ u] build the strong dependency graph of
+     all packages in the universe [u] *)
+ val strongdeps_univ :
+-  ?transitive:bool -> Cudf.universe -> Defaultgraphs.PackageGraph.G.t
++  ?transitive:bool ->
++  task_pool:Domainslib.Task.pool ->
++  Cudf.universe ->
++  Defaultgraphs.PackageGraph.G.t
+ 
+-(** compute the impact set of the node [q], that is the list of all 
++(** compute the impact set of the node [q], that is the list of all
+     packages [p] that strong depends on [q] *)
+ val impactset :
+   Defaultgraphs.PackageGraph.G.t -> Cudf.package -> Cudf.package list
+@@ -33,7 +37,7 @@
+ (** compute the conjunctive dependency graph *)
+ val conjdeps_univ : Cudf.universe -> Defaultgraphs.PackageGraph.G.t
+ 
+-(** compute the conjunctive dependency graph considering only packages 
++(** compute the conjunctive dependency graph considering only packages
+     in [pkglist] *)
+ val conjdeps :
+   Cudf.universe -> Cudf.package list -> Defaultgraphs.PackageGraph.G.t
+diff -ru dose3.old/src/common/cudfSolver.ml dose3/src/common/cudfSolver.ml
+--- dose3.old/src/common/cudfSolver.ml	2021-07-22 00:14:19.000000000 -0700
++++ dose3/src/common/cudfSolver.ml	2024-03-10 15:13:34.915433554 -0700
+@@ -37,12 +37,25 @@
+     false
+ 
+ let prng = lazy (Random.State.make_self_init ())
++let prng_mutex = Mutex.create ()
+ 
+ (* bits and pieces borrowed from ocaml stdlib/filename.ml *)
+ let mktmpdir prefix suffix =
+   let temp_dir = try Sys.getenv "TMPDIR" with Not_found -> "/tmp" in
+   let temp_file_name temp_dir prefix suffix =
+-    let rnd = Random.State.bits (Lazy.force prng) land 0xFFFFFF in
++    let rnd =
++      let prng =
++        Mutex.lock prng_mutex;
++        try
++          let res = Lazy.force prng in
++          Mutex.unlock prng_mutex;
++          res
++        with e ->
++          Mutex.unlock prng_mutex;
++          raise e
++      in
++      Random.State.bits prng land 0xFFFFFF
++    in
+     Filename.concat temp_dir (Printf.sprintf "%s%06x%s" prefix rnd suffix)
+   in
+   let rec try_name counter =
