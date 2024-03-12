@@ -186,6 +186,9 @@ val s_pinned: string
 (** the number of versions of the package since this one, cubed *)
 val s_version_lag: string
 
+(** the avoid-version flag *)
+val s_avoid_version: string
+
 (** valid cudf name for the dummy package used for enforcing opam's switch
     invariants *)
 val opam_invariant_package_name: string
