@@ -472,55 +472,55 @@ let init cli =
           { repo_name; repo_url; repo_trust = None })
         repo_url
     in
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      let gt, rt, default_compiler =
-        OpamClient.init
-          ~task_pool
-          ~init_config ~interactive
-          ?repo ~bypass_checks ?dot_profile
-          ?update_config ?env_hook ?completion
-          ~check_sandbox:(not no_sandboxing)
-          ?cygwin_setup ?git_location
-          shell
-      in
-      OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
-      @@ fun () ->
-      if no_compiler then () else
-      let invariant, default_compiler, name =
-        match compiler with
-        | Some comp when String.length comp > 0 ->
-          OpamSwitchCommand.guess_compiler_invariant rt [comp],
-          [],
-          comp
-        | _ ->
-          OpamFile.Config.default_invariant gt.config,
-          default_compiler, "default"
-      in
-      OpamConsole.header_msg "Creating initial switch '%s' (invariant %s%s)"
-        name
-        (match invariant with
-        | OpamFormula.Empty -> "empty"
-        | c -> OpamFileTools.dep_formula_to_string c)
-        (match default_compiler with
-        | [] -> ""
-        | comp -> " - initially with "^ (OpamFormula.string_of_atoms comp));
-      let (), st =
-        try
-          OpamSwitchCommand.create
-            gt ~rt ~invariant ~update_config:true (OpamSwitch.of_string name) @@
-          (fun st ->
-            (),
-            OpamSwitchCommand.install_compiler ~task_pool st
-              ~ask:false
-              ~additional_installs:default_compiler)
-        with e ->
-          OpamStd.Exn.finalise e @@ fun () ->
-          OpamConsole.note
-            "Opam has been initialised, but the initial switch creation \
-            failed.\n\
-            Use 'opam switch create <compiler>' to get started."
-      in
-      OpamSwitchState.drop st)
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    let gt, rt, default_compiler =
+      OpamClient.init
+        ~task_pool
+        ~init_config ~interactive
+        ?repo ~bypass_checks ?dot_profile
+        ?update_config ?env_hook ?completion
+        ~check_sandbox:(not no_sandboxing)
+        ?cygwin_setup ?git_location
+        shell
+    in
+    OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
+    @@ fun () ->
+    if no_compiler then () else
+    let invariant, default_compiler, name =
+      match compiler with
+      | Some comp when String.length comp > 0 ->
+        OpamSwitchCommand.guess_compiler_invariant rt [comp],
+        [],
+        comp
+      | _ ->
+        OpamFile.Config.default_invariant gt.config,
+        default_compiler, "default"
+    in
+    OpamConsole.header_msg "Creating initial switch '%s' (invariant %s%s)"
+      name
+      (match invariant with
+      | OpamFormula.Empty -> "empty"
+      | c -> OpamFileTools.dep_formula_to_string c)
+      (match default_compiler with
+      | [] -> ""
+      | comp -> " - initially with "^ (OpamFormula.string_of_atoms comp));
+    let (), st =
+      try
+        OpamSwitchCommand.create
+          gt ~rt ~invariant ~update_config:true (OpamSwitch.of_string name) @@
+        (fun st ->
+          (),
+          OpamSwitchCommand.install_compiler ~task_pool st
+            ~ask:false
+            ~additional_installs:default_compiler)
+      with e ->
+        OpamStd.Exn.finalise e @@ fun () ->
+        OpamConsole.note
+          "Opam has been initialised, but the initial switch creation \
+          failed.\n\
+          Use 'opam switch create <compiler>' to get started."
+    in
+    OpamSwitchState.drop st
   in
   mk_command  ~cli cli_original "init" ~doc ~man
     Term.(const init
@@ -729,54 +729,54 @@ let list ?(force_search=false) cli =
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
     let all = OpamPackage.Set.union st.packages st.installed in
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      let results =
-        OpamListCommand.filter ~task_pool ~base:all st filter
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    let results =
+      OpamListCommand.filter ~task_pool ~base:all st filter
+    in
+    if not no_depexts && not silent then
+      (let drop_by_depexts =
+        List.fold_left (fun missing str ->
+            let is_missing pkgs =
+                if OpamStd.String.contains_char str '.' then
+                  let nv = OpamPackage.of_string str in
+                  if OpamPackage.Set.mem nv results then None else
+                    OpamPackage.Set.find_opt (OpamPackage.equal nv) pkgs
+                else
+                let n = OpamPackage.Name.of_string str in
+                if OpamPackage.has_name results n then None else
+                let exist = OpamPackage.packages_of_name pkgs n in
+                if OpamPackage.Set.is_empty exist then None else
+                  Some (OpamPackage.Set.max_elt exist)
+            in
+            match OpamStd.Option.Op.(
+                is_missing OpamPackage.Set.Op.(st.packages ++ st.pinned)
+                >>= OpamSwitchState.depexts_unavailable st) with
+            | Some nf ->  OpamStd.String.Map.add str nf missing
+            | None -> missing
+            | exception Failure _ -> missing (* invalid package *)
+          ) OpamStd.String.Map.empty packages
       in
-      if not no_depexts && not silent then
-        (let drop_by_depexts =
-          List.fold_left (fun missing str ->
-              let is_missing pkgs =
-                  if OpamStd.String.contains_char str '.' then
-                    let nv = OpamPackage.of_string str in
-                    if OpamPackage.Set.mem nv results then None else
-                      OpamPackage.Set.find_opt (OpamPackage.equal nv) pkgs
-                  else
-                  let n = OpamPackage.Name.of_string str in
-                  if OpamPackage.has_name results n then None else
-                  let exist = OpamPackage.packages_of_name pkgs n in
-                  if OpamPackage.Set.is_empty exist then None else
-                    Some (OpamPackage.Set.max_elt exist)
-              in
-              match OpamStd.Option.Op.(
-                  is_missing OpamPackage.Set.Op.(st.packages ++ st.pinned)
-                  >>= OpamSwitchState.depexts_unavailable st) with
-              | Some nf ->  OpamStd.String.Map.add str nf missing
-              | None -> missing
-              | exception Failure _ -> missing (* invalid package *)
-            ) OpamStd.String.Map.empty packages
-        in
-        if not (OpamStd.String.Map.is_empty drop_by_depexts) then
-          OpamConsole.note
-            "Some packages are unavailable because of their external dependencies. \
-              Use `--no-depexts' to show them anyway.\n%s"
-            (OpamStd.Format.itemize (fun (n, spkgs) ->
-                  Printf.sprintf "%s: %s" n
-                    (OpamStd.Format.pretty_list
-                      (List.map OpamSysPkg.to_string
-                          (OpamSysPkg.Set.elements spkgs))))
-                (OpamStd.String.Map.bindings drop_by_depexts)));
-      if not depexts then
-        (if not silent then
-          OpamListCommand.display ~task_pool st format results
-        else if OpamPackage.Set.is_empty results then
-          OpamStd.Sys.exit_because `False)
-      else
-      let results_depexts = OpamListCommand.get_depexts st results in
-      if not silent then
-        OpamListCommand.print_depexts results_depexts
-      else if OpamSysPkg.Set.is_empty results_depexts then
+      if not (OpamStd.String.Map.is_empty drop_by_depexts) then
+        OpamConsole.note
+          "Some packages are unavailable because of their external dependencies. \
+            Use `--no-depexts' to show them anyway.\n%s"
+          (OpamStd.Format.itemize (fun (n, spkgs) ->
+                Printf.sprintf "%s: %s" n
+                  (OpamStd.Format.pretty_list
+                    (List.map OpamSysPkg.to_string
+                        (OpamSysPkg.Set.elements spkgs))))
+              (OpamStd.String.Map.bindings drop_by_depexts)));
+    if not depexts then
+      (if not silent then
+        OpamListCommand.display ~task_pool st format results
+      else if OpamPackage.Set.is_empty results then
         OpamStd.Sys.exit_because `False)
+    else
+    let results_depexts = OpamListCommand.get_depexts st results in
+    if not silent then
+      OpamListCommand.print_depexts results_depexts
+    else if OpamSysPkg.Set.is_empty results_depexts then
+      OpamStd.Sys.exit_because `False
   in
   mk_command  ~cli cli_original "list" ~doc ~man
     Term.(const list $global_options cli $package_selection cli $state_selector
@@ -853,33 +853,33 @@ let tree ?(why=false) cli =
   in
   let tree global_options mode filter post dev doc test dev_setup no_constraint
       no_switch recurse subpath atoms_or_locals () =
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      if atoms_or_locals = [] && no_switch then
-        `Error
-          (true, "--no-switch can't be used without specifying a package or a path")
-      else
-        (apply_global_options cli global_options;
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-        (if no_switch then
-            fun k ->
-              k @@ OpamSwitchState.load_virtual gt rt
-          else
-            OpamSwitchState.with_ `Lock_none ~rt gt) @@ fun st ->
-        let st, atoms =
-          OpamAuxCommands.simulate_autopin
-            st ~recurse ?subpath ~quiet:true
-            ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
-        in
-        let tog = OpamListCommand.{
-            post; test; doc; dev; dev_setup;
-            recursive = false;
-            depopts = false;
-            build = true;
-          } in
-        OpamTreeCommand.run ~task_pool st tog ~no_constraint mode filter atoms;
-       `Ok ()))
-  in
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    if atoms_or_locals = [] && no_switch then
+      `Error
+        (true, "--no-switch can't be used without specifying a package or a path")
+    else
+      (apply_global_options cli global_options;
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      (if no_switch then
+          fun k ->
+            k @@ OpamSwitchState.load_virtual gt rt
+        else
+          OpamSwitchState.with_ `Lock_none ~rt gt) @@ fun st ->
+      let st, atoms =
+        OpamAuxCommands.simulate_autopin
+          st ~recurse ?subpath ~quiet:true
+          ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
+      in
+      let tog = OpamListCommand.{
+          post; test; doc; dev; dev_setup;
+          recursive = false;
+          depopts = false;
+          build = true;
+        } in
+      OpamTreeCommand.run ~task_pool st tog ~no_constraint mode filter atoms;
+      `Ok ())
+in
   mk_command_ret ~cli (cli_from cli2_2) "tree" ~doc ~man
     Term.(const tree $global_options cli $mode $filter
           $post cli $dev cli $doc_flag cli $test cli $dev_setup cli
@@ -1392,234 +1392,234 @@ let config cli =
       | None -> OpamStd.Sys.guess_shell_compat ()
     in
     let pwsh = match shell with SH_pwsh _ -> true | _ -> false in
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      match command, params with
-      | Some `env, [] ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        (match OpamStateConfig.get_switch_opt () with
-        | None -> `Ok ()
-        | Some sw ->
-          `Ok (OpamConfigCommand.env gt sw
-                  ~set_opamroot ~set_opamswitch
-                  ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
-                  ~pwsh ~cmd:(shell=SH_cmd)
-                  ~inplace_path))
-      | Some `revert_env, [] ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        (match OpamStateConfig.get_switch_opt () with
-        | None -> `Ok ()
-        | Some sw ->
-          `Ok (OpamConfigCommand.ensure_env gt sw;
-                OpamConfigCommand.print_eval_env
-                  ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
-                  ~pwsh ~cmd:(shell=SH_cmd)
-                  (OpamEnv.add [] [])))
-      | Some `list, [] ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        `Ok (OpamConfigCommand.vars_list gt)
-      | Some `list, params ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-        (try `Ok (OpamConfigCommand.list st
-                    (List.map OpamPackage.Name.of_string params))
-        with Failure msg -> `Error (false, msg))
-      | Some `expand, [str] ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        `Ok (OpamConfigCommand.expand gt str)
-      | Some `var, [var] ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        (try `Ok (OpamConfigCommand.var_show gt var)
-        with Failure msg -> `Error (false, msg))
-      | Some `subst, (_::_ as files) ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        `Ok (OpamConfigCommand.subst gt
-              (List.map OpamFilename.Base.of_string files))
-      | Some `pef, params ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-        (match params with
-        | [] | ["-"] -> OpamSwitchState.dump_pef_state st stdout; `Ok ()
-        | [file] ->
-          let oc = open_out file in
-          OpamSwitchState.dump_pef_state st oc;
-          close_out oc;
-          `Ok ()
-        | _ -> bad_subcommand ~cli commands ("config", command, params))
-      | Some `cudf, params ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamSwitchState.with_ `Lock_none gt @@ fun opam_state ->
-        let opam_univ =
-          OpamSwitchState.universe opam_state
-            ~requested:opam_state.packages
-            ~task_pool
-            Query
-        in
-        let dump oc = OpamSolver.dump_universe ~task_pool opam_univ oc in
-        (match params with
-        | [] -> `Ok (dump stdout)
-        | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
-        | _ -> bad_subcommand ~cli commands ("config", command, params))
-      | Some `report, [] -> (
-          let print label fmt = OpamConsole.msg ("# %-20s "^^fmt^^"\n") label in
-          OpamConsole.msg "# opam config report\n";
-          print "opam-version" "%s"
-            (OpamVersion.to_string (OpamVersion.full ()));
-          print "self-upgrade" "%s"
-            (if self_upgrade_status global_options = `Running then
-              OpamFilename.prettify
-                (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
-            else "no");
-          try
-            OpamGlobalState.with_ `Lock_none @@ fun gt ->
-            print "system" "%s" (OpamSysPoll.to_string gt.global_variables);
-            let module Solver = (val OpamSolverConfig.(OpamLazy.force !r.solver)) in
-            print "solver" "%s"
-              (OpamCudfSolver.get_name (module Solver));
-            print "install-criteria" "%s"
-              (OpamSolverConfig.criteria `Default);
-            print "upgrade-criteria" "%s"
-              (OpamSolverConfig.criteria `Upgrade);
-            let nprint label n =
-              if n <> 0 then [Printf.sprintf "%d (%s)" n label]
-              else [] in
-            print "jobs" "%d" (OpamLazy.force OpamStateConfig.(!r.jobs));
-            match OpamStateConfig.get_switch_opt () with
-            | None -> print "current-switch" "%s" "none set"; `Ok ()
-            | Some switch ->
-              OpamSwitchState.with_ `Lock_none ~switch gt @@ fun state ->
-              print "repositories" "%s"
-                (let repos = state.switch_repos.repositories in
-                let default, nhttp, nlocal, nvcs =
-                  OpamRepositoryName.Map.fold
-                    (fun _ repo (dft, nhttp, nlocal, nvcs) ->
-                        let dft =
-                          if OpamUrl.root repo.repo_url =
-                            OpamUrl.root OpamInitDefaults.repository_url
-                          then
-                            OpamRepositoryName.Map.find
-                              repo.repo_name
-                              state.switch_repos.repos_definitions |>
-                            OpamFile.Repo.stamp
-                          else dft
-                        in
-                        match repo.repo_url.OpamUrl.backend with
-                        | `http -> dft, nhttp+1, nlocal, nvcs
-                        | `rsync -> dft, nhttp, nlocal+1, nvcs
-                        | _ -> dft, nhttp, nlocal, nvcs+1)
-                    repos (None,0,0,0)
-                in
-                String.concat ", "
-                  (nprint "http" nhttp @
-                    nprint "local" nlocal @
-                    nprint "version-controlled" nvcs) ^
-                match default with
-                | Some v -> Printf.sprintf " (default repo at %s)" v
-                | None -> ""
-                );
-              print "pinned" "%s"
-                (if OpamPackage.Set.is_empty state.pinned then "0" else
-                let pinnings =
-                  OpamPackage.Set.fold (fun nv acc ->
-                      let opam = OpamSwitchState.opam state nv in
-                      let kind =
-                        if Some opam =
-                            OpamPackage.Map.find_opt nv state.repos_package_index
-                        then "version"
-                        else
-                          OpamStd.Option.to_string ~none:"local"
-                            (fun u -> OpamUrl.string_of_backend u.OpamUrl.backend)
-                            (OpamFile.OPAM.get_url opam)
-                      in
-                      OpamStd.String.Map.update kind succ 0 acc)
-                    state.pinned OpamStd.String.Map.empty
-                in
-                String.concat ", "
-                  (List.flatten (List.map (fun (k,v) -> nprint k v)
-                                    (OpamStd.String.Map.bindings pinnings)))
-                );
-              print "current-switch" "%s"
-                (OpamSwitch.to_string state.switch);
-              print "invariant" "%s"
-                (OpamFormula.to_string state.switch_invariant);
-              print "compiler-packages" "%s"
-                (let packages = OpamSwitchState.compiler_packages ~task_pool state in
-                if OpamPackage.Set.is_empty packages then "none" else
-                  String.concat ", "
-                    (List.map OpamPackage.to_string
-                        (OpamPackage.Set.elements packages)));
-              let process nv =
-                try
-                  let conf = OpamSwitchState.package_config state nv.name in
-                  let bindings =
-                    let f (name, value) =
-                      (OpamVariable.Full.create nv.name name,
-                      OpamVariable.string_of_variable_contents value)
-                    in
-                    List.map f (OpamFile.Dot_config.bindings conf)
-                  in
-                  let print (name, value) =
-                    let name = OpamVariable.Full.to_string name in
-                    print name "%s" value
-                  in
-                  List.iter print bindings
-                with Not_found -> ()
-              in
-              state.installed
-              |> OpamPackage.Set.filter (fun p ->
-                  match OpamSwitchState.opam_opt state p with
-                  | Some o -> OpamFile.OPAM.has_flag Pkgflag_Compiler o
-                  | None -> false)
-              |> OpamSwitchState.dependencies ~task_pool ~depopts:true ~post:true ~build:true
-                ~installed:true state
-              |> OpamPackage.Set.iter process;
-              if not Sys.win32 && List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
-              then OpamConsole.warning
-                  "PATH contains '.' : this is a likely cause of trouble.";
-              `Ok ()
-          with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
-      (* deprecated *)
-      | Some `exec, (_::_ as c) ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        `Ok (OpamConfigCommand.exec
-              gt ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch:false c)
-      | Some (`set | `unset as cmd), var::value ->
-        let args =
-          match cmd,value with
-          | `unset, [] -> Some None
-          | `set, v::_ -> Some (Some v)
-          |  _, _ -> None
-        in
-        (match args with
-        | None ->
-          bad_subcommand ~cli commands ("config", command, params)
-        | Some opt_value ->
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    match command, params with
+    | Some `env, [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      (match OpamStateConfig.get_switch_opt () with
+      | None -> `Ok ()
+      | Some sw ->
+        `Ok (OpamConfigCommand.env gt sw
+                ~set_opamroot ~set_opamswitch
+                ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+                ~pwsh ~cmd:(shell=SH_cmd)
+                ~inplace_path))
+    | Some `revert_env, [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      (match OpamStateConfig.get_switch_opt () with
+      | None -> `Ok ()
+      | Some sw ->
+        `Ok (OpamConfigCommand.ensure_env gt sw;
+              OpamConfigCommand.print_eval_env
+                ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+                ~pwsh ~cmd:(shell=SH_cmd)
+                (OpamEnv.add [] [])))
+    | Some `list, [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      `Ok (OpamConfigCommand.vars_list gt)
+    | Some `list, params ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      (try `Ok (OpamConfigCommand.list st
+                  (List.map OpamPackage.Name.of_string params))
+      with Failure msg -> `Error (false, msg))
+    | Some `expand, [str] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      `Ok (OpamConfigCommand.expand gt str)
+    | Some `var, [var] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      (try `Ok (OpamConfigCommand.var_show gt var)
+      with Failure msg -> `Error (false, msg))
+    | Some `subst, (_::_ as files) ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      `Ok (OpamConfigCommand.subst gt
+            (List.map OpamFilename.Base.of_string files))
+    | Some `pef, params ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      (match params with
+      | [] | ["-"] -> OpamSwitchState.dump_pef_state st stdout; `Ok ()
+      | [file] ->
+        let oc = open_out file in
+        OpamSwitchState.dump_pef_state st oc;
+        close_out oc;
+        `Ok ()
+      | _ -> bad_subcommand ~cli commands ("config", command, params))
+    | Some `cudf, params ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun opam_state ->
+      let opam_univ =
+        OpamSwitchState.universe opam_state
+          ~requested:opam_state.packages
+          ~task_pool
+          Query
+      in
+      let dump oc = OpamSolver.dump_universe ~task_pool opam_univ oc in
+      (match params with
+      | [] -> `Ok (dump stdout)
+      | [file] -> let oc = open_out file in dump oc; close_out oc; `Ok ()
+      | _ -> bad_subcommand ~cli commands ("config", command, params))
+    | Some `report, [] -> (
+        let print label fmt = OpamConsole.msg ("# %-20s "^^fmt^^"\n") label in
+        OpamConsole.msg "# opam config report\n";
+        print "opam-version" "%s"
+          (OpamVersion.to_string (OpamVersion.full ()));
+        print "self-upgrade" "%s"
+          (if self_upgrade_status global_options = `Running then
+            OpamFilename.prettify
+              (fst (self_upgrade_exe (OpamStateConfig.(!r.root_dir))))
+          else "no");
+        try
           OpamGlobalState.with_ `Lock_none @@ fun gt ->
-          let value =
-            OpamStd.Option.map_default (fun v -> `Overwrite v)
-              `Revert opt_value
-          in
-          let _ = OpamConfigCommand.set_var_switch gt var value in
-          `Ok ())
-      | Some (`set_global | `unset_global as cmd), var::value ->
-        let args =
-          match cmd,value with
-          |`unset_global, [] -> Some None
-          | `set_global, v::_ -> Some (Some v)
-          |  _, _ -> None
+          print "system" "%s" (OpamSysPoll.to_string gt.global_variables);
+          let module Solver = (val OpamSolverConfig.(OpamLazy.force !r.solver)) in
+          print "solver" "%s"
+            (OpamCudfSolver.get_name (module Solver));
+          print "install-criteria" "%s"
+            (OpamSolverConfig.criteria `Default);
+          print "upgrade-criteria" "%s"
+            (OpamSolverConfig.criteria `Upgrade);
+          let nprint label n =
+            if n <> 0 then [Printf.sprintf "%d (%s)" n label]
+            else [] in
+          print "jobs" "%d" (OpamLazy.force OpamStateConfig.(!r.jobs));
+          match OpamStateConfig.get_switch_opt () with
+          | None -> print "current-switch" "%s" "none set"; `Ok ()
+          | Some switch ->
+            OpamSwitchState.with_ `Lock_none ~switch gt @@ fun state ->
+            print "repositories" "%s"
+              (let repos = state.switch_repos.repositories in
+              let default, nhttp, nlocal, nvcs =
+                OpamRepositoryName.Map.fold
+                  (fun _ repo (dft, nhttp, nlocal, nvcs) ->
+                      let dft =
+                        if OpamUrl.root repo.repo_url =
+                          OpamUrl.root OpamInitDefaults.repository_url
+                        then
+                          OpamRepositoryName.Map.find
+                            repo.repo_name
+                            state.switch_repos.repos_definitions |>
+                          OpamFile.Repo.stamp
+                        else dft
+                      in
+                      match repo.repo_url.OpamUrl.backend with
+                      | `http -> dft, nhttp+1, nlocal, nvcs
+                      | `rsync -> dft, nhttp, nlocal+1, nvcs
+                      | _ -> dft, nhttp, nlocal, nvcs+1)
+                  repos (None,0,0,0)
+              in
+              String.concat ", "
+                (nprint "http" nhttp @
+                  nprint "local" nlocal @
+                  nprint "version-controlled" nvcs) ^
+              match default with
+              | Some v -> Printf.sprintf " (default repo at %s)" v
+              | None -> ""
+              );
+            print "pinned" "%s"
+              (if OpamPackage.Set.is_empty state.pinned then "0" else
+              let pinnings =
+                OpamPackage.Set.fold (fun nv acc ->
+                    let opam = OpamSwitchState.opam state nv in
+                    let kind =
+                      if Some opam =
+                          OpamPackage.Map.find_opt nv state.repos_package_index
+                      then "version"
+                      else
+                        OpamStd.Option.to_string ~none:"local"
+                          (fun u -> OpamUrl.string_of_backend u.OpamUrl.backend)
+                          (OpamFile.OPAM.get_url opam)
+                    in
+                    OpamStd.String.Map.update kind succ 0 acc)
+                  state.pinned OpamStd.String.Map.empty
+              in
+              String.concat ", "
+                (List.flatten (List.map (fun (k,v) -> nprint k v)
+                                  (OpamStd.String.Map.bindings pinnings)))
+              );
+            print "current-switch" "%s"
+              (OpamSwitch.to_string state.switch);
+            print "invariant" "%s"
+              (OpamFormula.to_string state.switch_invariant);
+            print "compiler-packages" "%s"
+              (let packages = OpamSwitchState.compiler_packages ~task_pool state in
+              if OpamPackage.Set.is_empty packages then "none" else
+                String.concat ", "
+                  (List.map OpamPackage.to_string
+                      (OpamPackage.Set.elements packages)));
+            let process nv =
+              try
+                let conf = OpamSwitchState.package_config state nv.name in
+                let bindings =
+                  let f (name, value) =
+                    (OpamVariable.Full.create nv.name name,
+                    OpamVariable.string_of_variable_contents value)
+                  in
+                  List.map f (OpamFile.Dot_config.bindings conf)
+                in
+                let print (name, value) =
+                  let name = OpamVariable.Full.to_string name in
+                  print name "%s" value
+                in
+                List.iter print bindings
+              with Not_found -> ()
+            in
+            state.installed
+            |> OpamPackage.Set.filter (fun p ->
+                match OpamSwitchState.opam_opt state p with
+                | Some o -> OpamFile.OPAM.has_flag Pkgflag_Compiler o
+                | None -> false)
+            |> OpamSwitchState.dependencies ~task_pool ~depopts:true ~post:true ~build:true
+              ~installed:true state
+            |> OpamPackage.Set.iter process;
+            if not Sys.win32 && List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
+            then OpamConsole.warning
+                "PATH contains '.' : this is a likely cause of trouble.";
+            `Ok ()
+        with e -> print "read-state" "%s" (Printexc.to_string e); `Ok ())
+    (* deprecated *)
+    | Some `exec, (_::_ as c) ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      `Ok (OpamConfigCommand.exec
+            gt ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch:false c)
+    | Some (`set | `unset as cmd), var::value ->
+      let args =
+        match cmd,value with
+        | `unset, [] -> Some None
+        | `set, v::_ -> Some (Some v)
+        |  _, _ -> None
+      in
+      (match args with
+      | None ->
+        bad_subcommand ~cli commands ("config", command, params)
+      | Some opt_value ->
+        OpamGlobalState.with_ `Lock_none @@ fun gt ->
+        let value =
+          OpamStd.Option.map_default (fun v -> `Overwrite v)
+            `Revert opt_value
         in
-        (match args with
-        | None ->
-          bad_subcommand ~cli commands ("config", command, params)
-        | Some opt_value ->
-          OpamGlobalState.with_ `Lock_write @@ fun gt ->
-          let value =
-            OpamStd.Option.map_default (fun v -> `Overwrite v)
-              `Revert opt_value
-          in
-          let _gt = OpamConfigCommand.set_var_global gt var value in
-          `Ok ())
-      | command, params -> bad_subcommand ~cli commands ("config", command, params))
-  in
+        let _ = OpamConfigCommand.set_var_switch gt var value in
+        `Ok ())
+    | Some (`set_global | `unset_global as cmd), var::value ->
+      let args =
+        match cmd,value with
+        |`unset_global, [] -> Some None
+        | `set_global, v::_ -> Some (Some v)
+        |  _, _ -> None
+      in
+      (match args with
+      | None ->
+        bad_subcommand ~cli commands ("config", command, params)
+      | Some opt_value ->
+        OpamGlobalState.with_ `Lock_write @@ fun gt ->
+        let value =
+          OpamStd.Option.map_default (fun v -> `Overwrite v)
+            `Revert opt_value
+        in
+        let _gt = OpamConfigCommand.set_var_global gt var value in
+        `Ok ())
+    | command, params -> bad_subcommand ~cli commands ("config", command, params)
+in
   mk_command_ret  ~cli cli_original "config" ~doc ~man
     Term.(const config
           $global_options cli $command $shell_opt cli cli_original $sexp cli
@@ -1812,79 +1812,79 @@ let install cli =
       download_only atoms_or_locals () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      if atoms_or_locals = [] && not restore && formula = OpamFormula.Empty then
-        `Error (true, "required argument PACKAGES is missing")
-      else
-      if assume_built && (deps_only || formula <> OpamFormula.Empty || depext_only) then
-        `Error (true, "option --assume-built is not compatible with --deps-only, \
-                      --formula or --depext-only")
-      else
-      if depext_only
-      && (OpamClientConfig.(!r.assume_depexts)
-          || OpamStateConfig.(!r.no_depexts)) then
-        `Error (true,
-                Printf.sprintf "--depext-only and --%s can't be used together"
-                  (if OpamClientConfig.(!r.assume_depexts) then "assume-depexts"
-                  else "no-depexts"))
-      else
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-      let pure_atoms =
-        OpamStd.List.filter_map (function `Atom a -> Some a | _ -> None)
-          atoms_or_locals
-      in
-      let atoms_or_locals =
-        if restore then
-          let to_restore = OpamPackage.Set.diff st.installed_roots st.installed in
-          if OpamPackage.Set.is_empty to_restore then
-            OpamConsole.msg "No packages to restore found\n"
-          else
-            OpamConsole.msg "Packages to be restored: %s\n"
-              (OpamPackage.Name.Set.to_string
-                (OpamPackage.names_of_packages to_restore));
-          atoms_or_locals @
-          List.map (fun p -> `Atom (OpamSolution.atom_of_package p))
-            (OpamPackage.Set.elements to_restore)
-        else atoms_or_locals
-      in
-      if formula = OpamFormula.Empty && atoms_or_locals = [] then `Ok () else
-      let st, atoms =
-        OpamAuxCommands.autopin
-          st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check||depext_only)
-          ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
-      in
-      if formula = OpamFormula.Empty && atoms = [] then
-        (OpamConsole.msg "Nothing to do\n";
-        OpamStd.Sys.exit_because `Success);
-      if check then
-        let missing =
-          OpamPackage.Map.fold (fun _ -> OpamPackage.Name.Set.union)
-            (OpamClient.check_installed ~build:true ~post:true st atoms)
-            (OpamPackage.Name.Set.empty)
-        in
-        if OpamPackage.Name.Set.is_empty missing then
-          (OpamConsole.errmsg "All dependencies installed\n";
-            OpamStd.Sys.exit_because `Success)
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    if atoms_or_locals = [] && not restore && formula = OpamFormula.Empty then
+      `Error (true, "required argument PACKAGES is missing")
+    else
+    if assume_built && (deps_only || formula <> OpamFormula.Empty || depext_only) then
+      `Error (true, "option --assume-built is not compatible with --deps-only, \
+                    --formula or --depext-only")
+    else
+    if depext_only
+    && (OpamClientConfig.(!r.assume_depexts)
+        || OpamStateConfig.(!r.no_depexts)) then
+      `Error (true,
+              Printf.sprintf "--depext-only and --%s can't be used together"
+                (if OpamClientConfig.(!r.assume_depexts) then "assume-depexts"
+                else "no-depexts"))
+    else
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+    let pure_atoms =
+      OpamStd.List.filter_map (function `Atom a -> Some a | _ -> None)
+        atoms_or_locals
+    in
+    let atoms_or_locals =
+      if restore then
+        let to_restore = OpamPackage.Set.diff st.installed_roots st.installed in
+        if OpamPackage.Set.is_empty to_restore then
+          OpamConsole.msg "No packages to restore found\n"
         else
-          (OpamConsole.errmsg "Missing dependencies:\n";
-            OpamConsole.msg "%s\n"
-              (OpamStd.List.concat_map " " OpamPackage.Name.to_string
-                (OpamPackage.Name.Set.elements missing));
-            OpamStd.Sys.exit_because `False)
-      else
-      let st =
-          OpamClient.install ~task_pool st atoms ~formula
-            ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
-            ~assume_built ~depext_only ~download_only
+          OpamConsole.msg "Packages to be restored: %s\n"
+            (OpamPackage.Name.Set.to_string
+              (OpamPackage.names_of_packages to_restore));
+        atoms_or_locals @
+        List.map (fun p -> `Atom (OpamSolution.atom_of_package p))
+          (OpamPackage.Set.elements to_restore)
+      else atoms_or_locals
+    in
+    if formula = OpamFormula.Empty && atoms_or_locals = [] then `Ok () else
+    let st, atoms =
+      OpamAuxCommands.autopin
+        st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check||depext_only)
+        ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
+    in
+    if formula = OpamFormula.Empty && atoms = [] then
+      (OpamConsole.msg "Nothing to do\n";
+      OpamStd.Sys.exit_because `Success);
+    if check then
+      let missing =
+        OpamPackage.Map.fold (fun _ -> OpamPackage.Name.Set.union)
+          (OpamClient.check_installed ~build:true ~post:true st atoms)
+          (OpamPackage.Name.Set.empty)
       in
-      match destdir with
-      | None -> `Ok ()
-      | Some dest ->
-        let packages = OpamFormula.packages_of_atoms st.installed atoms in
-        OpamAuxCommands.copy_files_to_destdir st dest packages;
-        `Ok ())
-  in
+      if OpamPackage.Name.Set.is_empty missing then
+        (OpamConsole.errmsg "All dependencies installed\n";
+          OpamStd.Sys.exit_because `Success)
+      else
+        (OpamConsole.errmsg "Missing dependencies:\n";
+          OpamConsole.msg "%s\n"
+            (OpamStd.List.concat_map " " OpamPackage.Name.to_string
+              (OpamPackage.Name.Set.elements missing));
+          OpamStd.Sys.exit_because `False)
+    else
+    let st =
+        OpamClient.install ~task_pool st atoms ~formula
+          ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
+          ~assume_built ~depext_only ~download_only
+    in
+    match destdir with
+    | None -> `Ok ()
+    | Some dest ->
+      let packages = OpamFormula.packages_of_atoms st.installed atoms in
+      OpamAuxCommands.copy_files_to_destdir st dest packages;
+      `Ok ()
+in
   mk_command_ret  ~cli cli_original "install" ~doc ~man
     Term.(const install $global_options cli $build_options cli
           $add_to_roots $deps_only $ignore_conflicts $restore $destdir
@@ -1934,43 +1934,43 @@ let remove cli =
       subpath formula atom_locs () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      match destdir with
-      | Some d ->
-        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-        let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
-        let packages = OpamFormula.packages_of_atoms st.installed atoms in
-        let uninst =
-          List.filter (fun (name, _) -> not (OpamPackage.has_name packages name))
-            atoms
-        in
-        if uninst <> [] then
-          OpamConsole.warning
-            "Can't remove the following packages from the given destdir, they \
-            need to be installed in opam: %s"
-            (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom uninst);
-        OpamAuxCommands.remove_files_from_destdir st d packages
-      | None ->
-        OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        let pure_atoms, pin_atoms =
-          List.partition (function `Atom _ -> true | _ -> false) atom_locs
-        in
-        let pin_atoms =
-          OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath pin_atoms
-        in
-        let st =
-          if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then st
-          else OpamPinCommand.unpin st (List.map fst pin_atoms)
-        in
-        let atoms =
-          List.map (function `Atom a -> a | _ -> assert false) pure_atoms
-          @ pin_atoms
-        in
-        let autoremove = autoremove || OpamClientConfig.(!r.autoremove) in
-        OpamSwitchState.drop
-          (OpamClient.remove ~task_pool st ~autoremove ~force ~formula atoms))
-  in
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    match destdir with
+    | Some d ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
+      let packages = OpamFormula.packages_of_atoms st.installed atoms in
+      let uninst =
+        List.filter (fun (name, _) -> not (OpamPackage.has_name packages name))
+          atoms
+      in
+      if uninst <> [] then
+        OpamConsole.warning
+          "Can't remove the following packages from the given destdir, they \
+          need to be installed in opam: %s"
+          (OpamStd.List.concat_map " " OpamFormula.short_string_of_atom uninst);
+      OpamAuxCommands.remove_files_from_destdir st d packages
+    | None ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let pure_atoms, pin_atoms =
+        List.partition (function `Atom _ -> true | _ -> false) atom_locs
+      in
+      let pin_atoms =
+        OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath pin_atoms
+      in
+      let st =
+        if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) then st
+        else OpamPinCommand.unpin st (List.map fst pin_atoms)
+      in
+      let atoms =
+        List.map (function `Atom a -> a | _ -> assert false) pure_atoms
+        @ pin_atoms
+      in
+      let autoremove = autoremove || OpamClientConfig.(!r.autoremove) in
+      OpamSwitchState.drop
+        (OpamClient.remove ~task_pool st ~autoremove ~force ~formula atoms)
+in
   mk_command  ~cli cli_original "remove" ~doc ~man
     Term.(const remove $global_options cli $build_options cli $autoremove
           $force $destdir $recurse cli $subpath cli $formula_flag cli
@@ -2011,56 +2011,56 @@ let reinstall cli =
       atoms_locs cmd () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      let open OpamPackage.Set.Op in
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      match cmd, atoms_locs with
-      | `Default, (_::_ as atom_locs) ->
-        OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        OpamSwitchState.drop @@ OpamClient.reinstall ~task_pool st ~assume_built
-          (OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs);
-        `Ok ()
-      | `Pending, [] | `Default, [] ->
-        OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        let atoms = OpamSolution.eq_atoms_of_packages (OpamLazy.force st.reinstall) in
-        OpamSwitchState.drop @@ OpamClient.reinstall ~task_pool st atoms;
-        `Ok ()
-      | `List_pending, [] ->
-        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-        OpamListCommand.display ~task_pool st
-          { OpamListCommand.default_package_listing_format
-            with OpamListCommand.
-              columns = [OpamListCommand.Package];
-              short = true;
-              header = false;
-              order = `Dependency;
-          }
-          (OpamLazy.force st.reinstall);
-        `Ok ()
-      | `Forget_pending, atom_locs ->
-        OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        let atoms = OpamAuxCommands.resolve_locals_pinned ~recurse ?subpath st atom_locs in
-        let reinstall = OpamLazy.force st.reinstall in
-        let to_forget = match atoms with
-          | [] -> reinstall
-          | atoms -> OpamFormula.packages_of_atoms reinstall atoms
-        in
-        OpamPackage.Set.iter (fun nv ->
-            try
-              let installed = OpamPackage.Map.find nv st.installed_opams in
-              let upstream = OpamPackage.Map.find nv st.opams in
-              if not (OpamFile.OPAM.effectively_equal installed upstream) &&
-                OpamConsole.confirm
-                  "Metadata of %s were updated. Force-update, without performing \
-                    the reinstallation?" (OpamPackage.to_string nv)
-              then OpamSwitchAction.install_metadata st nv
-            with Not_found -> ())
-          to_forget;
-        let reinstall = reinstall -- to_forget in
-        OpamSwitchState.drop @@ OpamSwitchAction.update_switch_state ~task_pool ~reinstall st;
-        `Ok ()
-      | _, _::_ ->
-        `Error (true, "Package arguments not allowed with this option"))
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    let open OpamPackage.Set.Op in
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    match cmd, atoms_locs with
+    | `Default, (_::_ as atom_locs) ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      OpamSwitchState.drop @@ OpamClient.reinstall ~task_pool st ~assume_built
+        (OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs);
+      `Ok ()
+    | `Pending, [] | `Default, [] ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let atoms = OpamSolution.eq_atoms_of_packages (OpamLazy.force st.reinstall) in
+      OpamSwitchState.drop @@ OpamClient.reinstall ~task_pool st atoms;
+      `Ok ()
+    | `List_pending, [] ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      OpamListCommand.display ~task_pool st
+        { OpamListCommand.default_package_listing_format
+          with OpamListCommand.
+            columns = [OpamListCommand.Package];
+            short = true;
+            header = false;
+            order = `Dependency;
+        }
+        (OpamLazy.force st.reinstall);
+      `Ok ()
+    | `Forget_pending, atom_locs ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let atoms = OpamAuxCommands.resolve_locals_pinned ~recurse ?subpath st atom_locs in
+      let reinstall = OpamLazy.force st.reinstall in
+      let to_forget = match atoms with
+        | [] -> reinstall
+        | atoms -> OpamFormula.packages_of_atoms reinstall atoms
+      in
+      OpamPackage.Set.iter (fun nv ->
+          try
+            let installed = OpamPackage.Map.find nv st.installed_opams in
+            let upstream = OpamPackage.Map.find nv st.opams in
+            if not (OpamFile.OPAM.effectively_equal installed upstream) &&
+              OpamConsole.confirm
+                "Metadata of %s were updated. Force-update, without performing \
+                  the reinstallation?" (OpamPackage.to_string nv)
+            then OpamSwitchAction.install_metadata st nv
+          with Not_found -> ())
+        to_forget;
+      let reinstall = reinstall -- to_forget in
+      OpamSwitchState.drop @@ OpamSwitchAction.update_switch_state ~task_pool ~reinstall st;
+      `Ok ()
+    | _, _::_ ->
+      `Error (true, "Package arguments not allowed with this option")
   in
   mk_command_ret  ~cli cli_original "reinstall" ~doc ~man
     Term.(const reinstall $global_options cli $build_options cli
@@ -2114,33 +2114,33 @@ let update cli =
   let update global_options jobs names repos_only dev_only depexts_only all
       check upgrade () =
     apply_global_options cli global_options;
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      OpamStateConfig.update
-        ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> OpamLazy.create (fun () -> j))
-        ();
-      OpamClientConfig.update ();
-      OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      if depexts_only then OpamSysInteract.update gt.config;
-      if depexts_only && not (repos_only || dev_only) then () else
-      let success, changed, rt =
-        OpamClient.update gt
-          ~repos_only:(repos_only && not dev_only)
-          ~dev_only:(dev_only && not repos_only)
-          ~all
-          names
-      in
-      OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
-      @@ fun () ->
-      if upgrade then
-        OpamSwitchState.with_ `Lock_write gt ~rt @@ fun st ->
-        OpamConsole.msg "\n";
-        OpamSwitchState.drop @@ OpamClient.upgrade ~task_pool st ~check ~all:true []
-      else if check then
-        OpamStd.Sys.exit_because (if changed then `Success else `False)
-      else if changed then
-        OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
-      if not success then OpamStd.Sys.exit_because `Sync_error)
-  in
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    OpamStateConfig.update
+      ?jobs:OpamStd.Option.Op.(jobs >>| fun j -> OpamLazy.create (fun () -> j))
+      ();
+    OpamClientConfig.update ();
+    OpamGlobalState.with_ `Lock_write @@ fun gt ->
+    if depexts_only then OpamSysInteract.update gt.config;
+    if depexts_only && not (repos_only || dev_only) then () else
+    let success, changed, rt =
+      OpamClient.update gt
+        ~repos_only:(repos_only && not dev_only)
+        ~dev_only:(dev_only && not repos_only)
+        ~all
+        names
+    in
+    OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
+    @@ fun () ->
+    if upgrade then
+      OpamSwitchState.with_ `Lock_write gt ~rt @@ fun st ->
+      OpamConsole.msg "\n";
+      OpamSwitchState.drop @@ OpamClient.upgrade ~task_pool st ~check ~all:true []
+    else if check then
+      OpamStd.Sys.exit_because (if changed then `Success else `False)
+    else if changed then
+      OpamConsole.msg "Now run 'opam upgrade' to apply any package updates.\n";
+    if not success then OpamStd.Sys.exit_because `Sync_error
+in
   mk_command  ~cli cli_original "update" ~doc ~man
   Term.(const update $global_options cli $jobs_flag cli cli_original $name_list
         $repos_only $dev_only $depexts_only $all $check $upgrade)
@@ -2184,25 +2184,25 @@ let upgrade cli =
       recurse subpath formula atom_locs () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      let all = all || atom_locs = [] in
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      if fixup then
-        if atom_locs <> [] || check then
-          `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
-        else
-          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-          OpamSwitchState.drop @@ OpamClient.fixup ~task_pool ~formula st;
-          `Ok ()
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    let all = all || atom_locs = [] in
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    if fixup then
+      if atom_locs <> [] || check then
+        `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        let atoms =
-          OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs
-        in
-        OpamSwitchState.drop @@
-        OpamClient.upgrade ~task_pool st ~check ~only_installed ~all ~formula atoms;
-        `Ok ())
-  in
+        OpamSwitchState.drop @@ OpamClient.fixup ~task_pool ~formula st;
+        `Ok ()
+    else
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let atoms =
+        OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs
+      in
+      OpamSwitchState.drop @@
+      OpamClient.upgrade ~task_pool st ~check ~only_installed ~all ~formula atoms;
+      `Ok ()
+in
   mk_command_ret  ~cli cli_original "upgrade" ~doc ~man
     Term.(const upgrade $global_options cli $build_options cli $fixup $check
           $installed $all $recurse cli $subpath cli $formula_flag cli
@@ -2805,336 +2805,336 @@ let switch cli =
       no_switch packages formula empty descr full freeze no_install deps_only repos
       force no_action
       d_alias_of d_no_autoinstall params () =
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      if d_alias_of <> None then
-        OpamConsole.warning
-          "Option %s is deprecated, ignoring it. \
-          Use instead 'opam switch <switch-name> <compiler>'"
-          (OpamConsole.colorise `bold "--alias-of");
-      if d_no_autoinstall then
-        OpamConsole.warning "Option %s is deprecated, ignoring it."
-          (OpamConsole.colorise `bold "--no-autoinstall");
-      apply_global_options cli global_options;
-      apply_build_options cli build_options;
-      let invariant_arg ?repos rt args =
-        match args, packages, formula, empty with
-        | [], None, None, false -> None
-        | _::_ as packages, None, None, false ->
-          Some (OpamSwitchCommand.guess_compiler_invariant ?repos rt packages)
-        | [], Some atoms, None, false ->
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    if d_alias_of <> None then
+      OpamConsole.warning
+        "Option %s is deprecated, ignoring it. \
+        Use instead 'opam switch <switch-name> <compiler>'"
+        (OpamConsole.colorise `bold "--alias-of");
+    if d_no_autoinstall then
+      OpamConsole.warning "Option %s is deprecated, ignoring it."
+        (OpamConsole.colorise `bold "--no-autoinstall");
+    apply_global_options cli global_options;
+    apply_build_options cli build_options;
+    let invariant_arg ?repos rt args =
+      match args, packages, formula, empty with
+      | [], None, None, false -> None
+      | _::_ as packages, None, None, false ->
+        Some (OpamSwitchCommand.guess_compiler_invariant ?repos rt packages)
+      | [], Some atoms, None, false ->
+        let atoms = List.map (fun p -> Atom p) atoms in
+        Some (OpamFormula.of_atom_formula (OpamFormula.ands atoms))
+      | [], None, (Some f), false -> Some f
+      | [], None, None, true -> Some OpamFormula.Empty
+      | _::_ as packages, Some atoms, None, false ->
+        if fst cli = cli2_0 then
           let atoms = List.map (fun p -> Atom p) atoms in
-          Some (OpamFormula.of_atom_formula (OpamFormula.ands atoms))
-        | [], None, (Some f), false -> Some f
-        | [], None, None, true -> Some OpamFormula.Empty
-        | _::_ as packages, Some atoms, None, false ->
-          if fst cli = cli2_0 then
-            let atoms = List.map (fun p -> Atom p) atoms in
-            let pkgs_formula =
-              OpamFormula.of_atom_formula (OpamFormula.ands atoms)
-            in
-            let args_formula =
-              OpamSwitchCommand.guess_compiler_invariant ?repos rt packages
-            in
-            Some (OpamFormula.And (args_formula, pkgs_formula))
-          else
-            OpamConsole.error_and_exit `Bad_arguments
-              "Individual package and option '--packages' can not be specified at \
-              the same time. Use just '--packages' instead, e.g.\n\
-              opam switch create flambda \
-              --packages=ocaml.4.12.0,ocaml-option-flambda\n\
-              or '--formula'\n\
-              opam switch create flambda \
-              --formula='[\"ocaml\" {=\"4.12.0\"} \"ocaml-option-flambda\"]'"
-        | _ ->
-          OpamConsole.error_and_exit `Bad_arguments
-            "Individual packages, options --packages, --formula and --empty may \
-            not be specified at the same time"
-      in
-      match command, params with
-      | None      , []
-      | Some `list, [] ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamSwitchCommand.list gt ~print_short;
-        `Ok ()
-      | Some `list_available, pattlist ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        with_repos_rt gt repos @@ fun (repos, rt) ->
-        let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
-        let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
-        OpamConsole.msg "# Listing available compilers from repositories: %s\n"
-          (OpamStd.List.concat_map ", " OpamRepositoryName.to_string
-            (OpamStd.Option.default (OpamGlobalState.repos_list gt) repos));
-        let filters =
-          List.map (fun patt ->
-              OpamListCommand.Pattern
-                ({ OpamListCommand.default_pattern_selector with
-                  OpamListCommand.fields = ["name"; "version"] },
-                patt))
-            pattlist
-        in
-        let compilers =
-          OpamListCommand.filter ~task_pool ~base:compilers st
-            (OpamFormula.ands (List.map (fun f -> OpamFormula.Atom f) filters))
-        in
-        let format =
-          if print_short then OpamListCommand.([ Package ])
-          else OpamListCommand.([ Name; Version; Synopsis; ])
-        in
-        let order nv1 nv2 =
-          if nv1.version = nv2.version
-          then OpamPackage.Name.compare nv1.name nv2.name
-          else OpamPackage.Version.compare nv1.version nv2.version
-        in
-        OpamListCommand.display ~task_pool st
-          {OpamListCommand.default_package_listing_format
-          with OpamListCommand.
-            short = print_short;
-            header = not print_short;
-            columns = format;
-            all_versions = true;
-            order = `Custom order;
-          }
-          compilers;
-        `Ok ()
-      | Some `install, switch_arg::params ->
-        OpamGlobalState.with_ `Lock_write @@ fun gt ->
-        with_repos_rt gt repos @@ fun (repos, rt) ->
-        let switch = OpamSwitch.of_string switch_arg in
-        let use_local =
-          not no_install && not empty && OpamSwitch.is_external switch
-        in
-        let is_implicit =
-          params = [] && packages = None && formula = None && not empty
-        in
-        let pkg_params =
-          if is_implicit && not (OpamSwitch.is_external switch) then [switch_arg]
-          else params
-        in
-        (match invariant_arg ?repos rt pkg_params with
-        | exception Failure e -> `Error (false, e)
-        | invariant_opt ->
-          let invariant =
-            OpamStd.Option.default
-              (OpamFile.Config.default_invariant rt.repos_global.config)
-              invariant_opt
+          let pkgs_formula =
+            OpamFormula.of_atom_formula (OpamFormula.ands atoms)
           in
-          let (), st =
+          let args_formula =
+            OpamSwitchCommand.guess_compiler_invariant ?repos rt packages
+          in
+          Some (OpamFormula.And (args_formula, pkgs_formula))
+        else
+          OpamConsole.error_and_exit `Bad_arguments
+            "Individual package and option '--packages' can not be specified at \
+            the same time. Use just '--packages' instead, e.g.\n\
+            opam switch create flambda \
+            --packages=ocaml.4.12.0,ocaml-option-flambda\n\
+            or '--formula'\n\
+            opam switch create flambda \
+            --formula='[\"ocaml\" {=\"4.12.0\"} \"ocaml-option-flambda\"]'"
+      | _ ->
+        OpamConsole.error_and_exit `Bad_arguments
+          "Individual packages, options --packages, --formula and --empty may \
+          not be specified at the same time"
+    in
+    match command, params with
+    | None      , []
+    | Some `list, [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchCommand.list gt ~print_short;
+      `Ok ()
+    | Some `list_available, pattlist ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      with_repos_rt gt repos @@ fun (repos, rt) ->
+      let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
+      let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
+      OpamConsole.msg "# Listing available compilers from repositories: %s\n"
+        (OpamStd.List.concat_map ", " OpamRepositoryName.to_string
+          (OpamStd.Option.default (OpamGlobalState.repos_list gt) repos));
+      let filters =
+        List.map (fun patt ->
+            OpamListCommand.Pattern
+              ({ OpamListCommand.default_pattern_selector with
+                OpamListCommand.fields = ["name"; "version"] },
+              patt))
+          pattlist
+      in
+      let compilers =
+        OpamListCommand.filter ~task_pool ~base:compilers st
+          (OpamFormula.ands (List.map (fun f -> OpamFormula.Atom f) filters))
+      in
+      let format =
+        if print_short then OpamListCommand.([ Package ])
+        else OpamListCommand.([ Name; Version; Synopsis; ])
+      in
+      let order nv1 nv2 =
+        if nv1.version = nv2.version
+        then OpamPackage.Name.compare nv1.name nv2.name
+        else OpamPackage.Version.compare nv1.version nv2.version
+      in
+      OpamListCommand.display ~task_pool st
+        {OpamListCommand.default_package_listing_format
+        with OpamListCommand.
+          short = print_short;
+          header = not print_short;
+          columns = format;
+          all_versions = true;
+          order = `Custom order;
+        }
+        compilers;
+      `Ok ()
+    | Some `install, switch_arg::params ->
+      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      with_repos_rt gt repos @@ fun (repos, rt) ->
+      let switch = OpamSwitch.of_string switch_arg in
+      let use_local =
+        not no_install && not empty && OpamSwitch.is_external switch
+      in
+      let is_implicit =
+        params = [] && packages = None && formula = None && not empty
+      in
+      let pkg_params =
+        if is_implicit && not (OpamSwitch.is_external switch) then [switch_arg]
+        else params
+      in
+      (match invariant_arg ?repos rt pkg_params with
+      | exception Failure e -> `Error (false, e)
+      | invariant_opt ->
+        let invariant =
+          OpamStd.Option.default
+            (OpamFile.Config.default_invariant rt.repos_global.config)
+            invariant_opt
+        in
+        let (), st =
+          OpamSwitchCommand.create gt ~rt
+            ?synopsis:descr ?repos
+            ~update_config:(not no_switch)
+            ~invariant
+            switch
+          @@ fun st ->
+          let st, additional_installs =
+            if use_local then
+              let st, atoms =
+                OpamAuxCommands.autopin st ~simulate:deps_only ~quiet:true
+                  ?locked:OpamStateConfig.(!r.locked)
+                  [`Dirname (OpamFilename.Dir.of_string switch_arg)]
+              in
+              let st =
+                if is_implicit then
+                  let local_compilers =
+                    OpamStd.List.filter_map
+                      (fun (name, _) ->
+                          (* The opam file for the local package might not be
+                            the current pinning (e.g. with deps-only), but it's
+                            guaranteed to be the only available version by
+                            autopin. *)
+                          match
+                            OpamSwitchState.opam st
+                              (OpamPackage.package_of_name
+                                (OpamLazy.force st.available_packages)
+                                name)
+                          with
+                          | opam ->
+                            if OpamFile.OPAM.has_flag Pkgflag_Compiler opam then
+                              Some (Atom (name, None))
+                            else None
+                          | exception Not_found -> None)
+                      atoms
+                  in
+                  if local_compilers <> [] then
+                    OpamSwitchCommand.set_invariant_raw st
+                      OpamFormula.(of_atom_formula (ands local_compilers))
+                  else st
+                else st
+              in
+              st, atoms
+            else st, []
+          in
+          (),
+          OpamSwitchCommand.install_compiler ~task_pool st
+            ~additional_installs
+            ~deps_only
+            ~ask:(additional_installs <> [])
+        in
+        OpamSwitchState.drop st;
+        `Ok ())
+    | Some `export, [filename] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      OpamSwitchCommand.export rt
+        ~full:(full || freeze) ~freeze
+        (if filename = "-" then None
+        else Some (OpamFile.make (OpamFilename.of_string filename)));
+      `Ok ()
+    | Some `import, [filename] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      let switch = OpamStateConfig.get_switch () in
+      let is_new_switch = not (OpamGlobalState.switch_exists gt switch) in
+      let import_source =
+        if filename = "-" then None
+        else Some (OpamFile.make (OpamFilename.of_string filename))
+      in
+      if is_new_switch then
+        with_repos_rt gt repos @@ fun (repos, rt) ->
+        let synopsis = "Import from " ^ Filename.basename filename in
+        let (), gt =
+          OpamGlobalState.with_write_lock gt @@ fun gt ->
+          let gt, st =
             OpamSwitchCommand.create gt ~rt
-              ?synopsis:descr ?repos
+              ~synopsis ?repos ~invariant:OpamFormula.Empty
               ~update_config:(not no_switch)
-              ~invariant
               switch
             @@ fun st ->
-            let st, additional_installs =
-              if use_local then
-                let st, atoms =
-                  OpamAuxCommands.autopin st ~simulate:deps_only ~quiet:true
-                    ?locked:OpamStateConfig.(!r.locked)
-                    [`Dirname (OpamFilename.Dir.of_string switch_arg)]
-                in
-                let st =
-                  if is_implicit then
-                    let local_compilers =
-                      OpamStd.List.filter_map
-                        (fun (name, _) ->
-                            (* The opam file for the local package might not be
-                              the current pinning (e.g. with deps-only), but it's
-                              guaranteed to be the only available version by
-                              autopin. *)
-                            match
-                              OpamSwitchState.opam st
-                                (OpamPackage.package_of_name
-                                  (OpamLazy.force st.available_packages)
-                                  name)
-                            with
-                            | opam ->
-                              if OpamFile.OPAM.has_flag Pkgflag_Compiler opam then
-                                Some (Atom (name, None))
-                              else None
-                            | exception Not_found -> None)
-                        atoms
-                    in
-                    if local_compilers <> [] then
-                      OpamSwitchCommand.set_invariant_raw st
-                        OpamFormula.(of_atom_formula (ands local_compilers))
-                    else st
-                  else st
-                in
-                st, atoms
-              else st, []
-            in
-            (),
-            OpamSwitchCommand.install_compiler ~task_pool st
-              ~additional_installs
-              ~deps_only
-              ~ask:(additional_installs <> [])
+            let st = OpamSwitchCommand.import ~task_pool st import_source in
+            let invariant = OpamSwitchState.infer_switch_invariant st in
+            let st = OpamSwitchCommand.set_invariant_raw st invariant in
+            st.switch_global, st
           in
           OpamSwitchState.drop st;
-          `Ok ())
-      | Some `export, [filename] ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-        OpamSwitchCommand.export rt
-          ~full:(full || freeze) ~freeze
-          (if filename = "-" then None
-          else Some (OpamFile.make (OpamFilename.of_string filename)));
-        `Ok ()
-      | Some `import, [filename] ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        let switch = OpamStateConfig.get_switch () in
-        let is_new_switch = not (OpamGlobalState.switch_exists gt switch) in
-        let import_source =
-          if filename = "-" then None
-          else Some (OpamFile.make (OpamFilename.of_string filename))
+          (), gt
         in
-        if is_new_switch then
-          with_repos_rt gt repos @@ fun (repos, rt) ->
-          let synopsis = "Import from " ^ Filename.basename filename in
-          let (), gt =
-            OpamGlobalState.with_write_lock gt @@ fun gt ->
-            let gt, st =
-              OpamSwitchCommand.create gt ~rt
-                ~synopsis ?repos ~invariant:OpamFormula.Empty
-                ~update_config:(not no_switch)
-                switch
-              @@ fun st ->
-              let st = OpamSwitchCommand.import ~task_pool st import_source in
-              let invariant = OpamSwitchState.infer_switch_invariant st in
-              let st = OpamSwitchCommand.set_invariant_raw st invariant in
-              st.switch_global, st
-            in
-            OpamSwitchState.drop st;
-            (), gt
-          in
-          OpamGlobalState.drop gt
-        else begin
-          if repos <> None then
-            OpamConsole.warning
-              "Switch exists, '--repositories' argument ignored";
-          OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
-          OpamSwitchState.drop @@ OpamSwitchCommand.import ~task_pool st import_source
-        end;
-        `Ok ()
-      | Some `remove, switches ->
-        OpamGlobalState.with_ `Lock_write @@ fun gt ->
-        let _gt =
-          List.fold_left
-            (fun gt switch ->
-              let opam_dir = OpamFilename.Op.(
-                  OpamFilename.Dir.of_string switch / OpamSwitch.external_dirname
-                ) in
-              if OpamFilename.is_symlink_dir opam_dir then
-                (OpamFilename.rmdir opam_dir;
-                  gt)
-              else OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
-            gt
-            switches
-        in
-        `Ok ()
-      | Some `reinstall, switch ->
-        let switch = match switch with
-          | [sw] -> OpamSwitch.of_string sw
-          | [] -> OpamStateConfig.get_switch ()
-          | _ ->
-            OpamConsole.error_and_exit `Bad_arguments
-              "Only one switch argument is supported"
-        in
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
+        OpamGlobalState.drop gt
+      else begin
+        if repos <> None then
+          OpamConsole.warning
+            "Switch exists, '--repositories' argument ignored";
         OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
-        OpamSwitchState.drop @@ OpamSwitchCommand.reinstall ~task_pool st;
-        `Ok ()
-      | Some `current, [] ->
-        OpamSwitchCommand.show ();
-        `Ok ()
-      | Some `default "-", [] when OpamCLIVersion.Op.(cli @>= cli2_2) ->
-        OpamGlobalState.with_ `Lock_write @@ fun gt ->
-        OpamSwitchCommand.switch_previous `Lock_none gt;
-        `Ok ()
-      | Some `set, [switch]
-      | Some `default switch, [] ->
-        OpamGlobalState.with_ `Lock_write @@ fun gt ->
-        let switch_name = OpamSwitch.of_string switch in
-        OpamSwitchCommand.switch `Lock_none gt switch_name;
-        `Ok ()
-      | Some `show_invariant, [] ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-        OpamConsole.msg "%s\n"
-          (OpamFileTools.dep_formula_to_string st.switch_invariant);
-        `Ok ()
-      | Some `set_invariant, params ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-        OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        let repos = OpamSwitchState.repos_list st in
-        (match invariant_arg ~repos rt params with
-        | exception Failure e -> `Error (false, e)
-        | invariant_opt ->
-          let invariant = match invariant_opt with
-            | Some i -> i
-            | None -> OpamSwitchState.infer_switch_invariant st
-          in
-          let st = OpamSwitchCommand.set_invariant ~force st invariant in
-          OpamConsole.msg "The switch invariant was set to %s\n"
-            (OpamFormula.to_string invariant);
-          let st =
-            if no_action || OpamFormula.satisfies_depends st.installed invariant
-            then OpamSwitchAction.update_switch_state ~task_pool st
-            else
-                OpamClient.install_t ~task_pool st ~ask:true [] None ~formula:invariant
-                ~deps_only:false ~assume_built:false
-          in
-          OpamSwitchState.drop st;
-          `Ok ())
-      | Some `link, args ->
-        (try
-          let switch, dir = match args with
-            | switch::dir::[] ->
-              OpamSwitch.of_string switch,
-              OpamFilename.Dir.of_string dir
-            | switch::[] ->
-              OpamSwitch.of_string switch,
-              OpamFilename.cwd ()
-            | [] -> failwith "Missing SWITCH argument"
-            | _::_::_::_ -> failwith "Extra argument"
-          in
-          let open OpamFilename.Op in
-          let linkname = dir / OpamSwitch.external_dirname in
-          OpamGlobalState.with_ `Lock_none @@ fun gt ->
-          if not (OpamGlobalState.switch_exists gt switch) then
-            OpamConsole.error_and_exit `Not_found
-              "The switch %s was not found"
-              (OpamSwitch.to_string switch);
-          if OpamFilename.is_symlink_dir linkname then
-            OpamFilename.rmdir linkname;
-          if OpamFilename.exists_dir linkname then
-            OpamConsole.error_and_exit `Bad_arguments
-              "There already is a local switch in %s. Remove it and try again."
-              (OpamFilename.Dir.to_string dir);
-          if OpamFilename.exists (dir // OpamSwitch.external_dirname) then
-            OpamConsole.error_and_exit `Bad_arguments
-              "There is a '%s' file in the way. Remove it and try again."
-              (OpamFilename.Dir.to_string linkname);
-          OpamFilename.link_dir ~link:linkname
-            ~target:(OpamPath.Switch.root gt.root switch);
-          OpamConsole.msg "Directory %s set to use switch %s.\n\
-                            Just remove %s to unlink.\n"
-            (OpamConsole.colorise `cyan (OpamFilename.Dir.to_string dir))
-            (OpamConsole.colorise `bold (OpamSwitch.to_string switch))
-            (OpamConsole.colorise `cyan (OpamFilename.Dir.to_string linkname));
-          `Ok ()
-        with Failure e -> `Error (true, e))
-      | Some `set_description, text ->
-        let synopsis = String.concat " " text in
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        let config =
-          { st.switch_config with OpamFile.Switch_config.synopsis }
+        OpamSwitchState.drop @@ OpamSwitchCommand.import ~task_pool st import_source
+      end;
+      `Ok ()
+    | Some `remove, switches ->
+      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      let _gt =
+        List.fold_left
+          (fun gt switch ->
+            let opam_dir = OpamFilename.Op.(
+                OpamFilename.Dir.of_string switch / OpamSwitch.external_dirname
+              ) in
+            if OpamFilename.is_symlink_dir opam_dir then
+              (OpamFilename.rmdir opam_dir;
+                gt)
+            else OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
+          gt
+          switches
+      in
+      `Ok ()
+    | Some `reinstall, switch ->
+      let switch = match switch with
+        | [sw] -> OpamSwitch.of_string sw
+        | [] -> OpamStateConfig.get_switch ()
+        | _ ->
+          OpamConsole.error_and_exit `Bad_arguments
+            "Only one switch argument is supported"
+      in
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt ~switch @@ fun st ->
+      OpamSwitchState.drop @@ OpamSwitchCommand.reinstall ~task_pool st;
+      `Ok ()
+    | Some `current, [] ->
+      OpamSwitchCommand.show ();
+      `Ok ()
+    | Some `default "-", [] when OpamCLIVersion.Op.(cli @>= cli2_2) ->
+      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      OpamSwitchCommand.switch_previous `Lock_none gt;
+      `Ok ()
+    | Some `set, [switch]
+    | Some `default switch, [] ->
+      OpamGlobalState.with_ `Lock_write @@ fun gt ->
+      let switch_name = OpamSwitch.of_string switch in
+      OpamSwitchCommand.switch `Lock_none gt switch_name;
+      `Ok ()
+    | Some `show_invariant, [] ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      OpamConsole.msg "%s\n"
+        (OpamFileTools.dep_formula_to_string st.switch_invariant);
+      `Ok ()
+    | Some `set_invariant, params ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let repos = OpamSwitchState.repos_list st in
+      (match invariant_arg ~repos rt params with
+      | exception Failure e -> `Error (false, e)
+      | invariant_opt ->
+        let invariant = match invariant_opt with
+          | Some i -> i
+          | None -> OpamSwitchState.infer_switch_invariant st
         in
-        OpamSwitchAction.install_switch_config gt.root st.switch config;
+        let st = OpamSwitchCommand.set_invariant ~force st invariant in
+        OpamConsole.msg "The switch invariant was set to %s\n"
+          (OpamFormula.to_string invariant);
+        let st =
+          if no_action || OpamFormula.satisfies_depends st.installed invariant
+          then OpamSwitchAction.update_switch_state ~task_pool st
+          else
+              OpamClient.install_t ~task_pool st ~ask:true [] None ~formula:invariant
+              ~deps_only:false ~assume_built:false
+        in
+        OpamSwitchState.drop st;
+        `Ok ())
+    | Some `link, args ->
+      (try
+        let switch, dir = match args with
+          | switch::dir::[] ->
+            OpamSwitch.of_string switch,
+            OpamFilename.Dir.of_string dir
+          | switch::[] ->
+            OpamSwitch.of_string switch,
+            OpamFilename.cwd ()
+          | [] -> failwith "Missing SWITCH argument"
+          | _::_::_::_ -> failwith "Extra argument"
+        in
+        let open OpamFilename.Op in
+        let linkname = dir / OpamSwitch.external_dirname in
+        OpamGlobalState.with_ `Lock_none @@ fun gt ->
+        if not (OpamGlobalState.switch_exists gt switch) then
+          OpamConsole.error_and_exit `Not_found
+            "The switch %s was not found"
+            (OpamSwitch.to_string switch);
+        if OpamFilename.is_symlink_dir linkname then
+          OpamFilename.rmdir linkname;
+        if OpamFilename.exists_dir linkname then
+          OpamConsole.error_and_exit `Bad_arguments
+            "There already is a local switch in %s. Remove it and try again."
+            (OpamFilename.Dir.to_string dir);
+        if OpamFilename.exists (dir // OpamSwitch.external_dirname) then
+          OpamConsole.error_and_exit `Bad_arguments
+            "There is a '%s' file in the way. Remove it and try again."
+            (OpamFilename.Dir.to_string linkname);
+        OpamFilename.link_dir ~link:linkname
+          ~target:(OpamPath.Switch.root gt.root switch);
+        OpamConsole.msg "Directory %s set to use switch %s.\n\
+                          Just remove %s to unlink.\n"
+          (OpamConsole.colorise `cyan (OpamFilename.Dir.to_string dir))
+          (OpamConsole.colorise `bold (OpamSwitch.to_string switch))
+          (OpamConsole.colorise `cyan (OpamFilename.Dir.to_string linkname));
         `Ok ()
-      | command, params -> bad_subcommand ~cli commands ("switch", command, params))
-  in
+      with Failure e -> `Error (true, e))
+    | Some `set_description, text ->
+      let synopsis = String.concat " " text in
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let config =
+        { st.switch_config with OpamFile.Switch_config.synopsis }
+      in
+      OpamSwitchAction.install_switch_config gt.root st.switch config;
+      `Ok ()
+    | command, params -> bad_subcommand ~cli commands ("switch", command, params)
+in
   mk_command_ret  ~cli cli_original "switch" ~doc ~man
     Term.(const switch
           $global_options cli $build_options cli $command
@@ -3404,227 +3404,227 @@ let pin ?(unpin_only=false) cli =
       kind edit no_act dev_repo print_short recurse subpath normalise
       with_version current all
       command params () =
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      apply_global_options cli global_options;
-      apply_build_options cli build_options;
-      let locked = OpamStateConfig.(!r.locked) in
-      let action = not no_act in
-      let main_command =
-        let is_add =
-          match command with Some (`add | `default _) -> true | _ -> false
-        in
-        if dev_repo && current || not is_add && (dev_repo || current)
-        then `incorrect else
-        match command, params with
-        | Some `list, [] | None, [] ->
-          `list
-        | Some `scan, [url] ->
-          `scan url
-        | Some `remove, [] when all ->
-          `remove_all
-        | _, _ when all ->
-          `incorrect
-        | Some `remove, (_::_ as arg) ->
-          `remove arg
-        | Some `edit, [nv]  ->
-          `edit nv
-        | Some `add, pins when OpamPinCommand.looks_like_normalised pins ->
-          `add_normalised pins
-        | Some `default p, pins when
-            OpamPinCommand.looks_like_normalised (p::pins) ->
-          `add_normalised (p::pins)
-        | Some `add, [nv] | Some `default nv, [] when dev_repo ->
-          `add_dev nv
-        | Some `add, [nv] | Some `default nv, [] when current ->
-          `add_current nv
-        | Some `add, [arg] | Some `default arg, [] ->
-          `add_url arg
-        | Some `add, [n; target] | Some `default n, [target]
-          when not (current || dev_repo) ->
-          `add_wtarget (n,target)
-        | _ -> `incorrect
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    apply_global_options cli global_options;
+    apply_build_options cli build_options;
+    let locked = OpamStateConfig.(!r.locked) in
+    let action = not no_act in
+    let main_command =
+      let is_add =
+        match command with Some (`add | `default _) -> true | _ -> false
       in
-      match main_command with
-      | `list ->
-        OpamGlobalState.with_ `Lock_none @@ fun gt ->
-        OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-        OpamClient.PIN.list st ~short:print_short;
-        `Ok ()
-      | `scan url ->
-        let backend, handle_suffix =
-          match kind with
-          | Some (#OpamUrl.backend as k) -> Some k, None
-          | Some `auto -> OpamUrl.guess_version_control url, Some true
-          | None when OpamClientConfig.(!r.pin_kind_auto) ->
-            OpamUrl.guess_version_control url, Some true
-          | _ -> None, None
-        in
-        OpamUrl.parse ?backend ?handle_suffix url
-        |> OpamAuxCommands.url_with_local_branch
-        |> OpamPinCommand.scan ~normalise ~recurse ?subpath;
-        `Ok ()
-      | `remove arg ->
+      if dev_repo && current || not is_add && (dev_repo || current)
+      then `incorrect else
+      match command, params with
+      | Some `list, [] | None, [] ->
+        `list
+      | Some `scan, [url] ->
+        `scan url
+      | Some `remove, [] when all ->
+        `remove_all
+      | _, _ when all ->
+        `incorrect
+      | Some `remove, (_::_ as arg) ->
+        `remove arg
+      | Some `edit, [nv]  ->
+        `edit nv
+      | Some `add, pins when OpamPinCommand.looks_like_normalised pins ->
+        `add_normalised pins
+      | Some `default p, pins when
+          OpamPinCommand.looks_like_normalised (p::pins) ->
+        `add_normalised (p::pins)
+      | Some `add, [nv] | Some `default nv, [] when dev_repo ->
+        `add_dev nv
+      | Some `add, [nv] | Some `default nv, [] when current ->
+        `add_current nv
+      | Some `add, [arg] | Some `default arg, [] ->
+        `add_url arg
+      | Some `add, [n; target] | Some `default n, [target]
+        when not (current || dev_repo) ->
+        `add_wtarget (n,target)
+      | _ -> `incorrect
+    in
+    match main_command with
+    | `list ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      OpamClient.PIN.list st ~short:print_short;
+      `Ok ()
+    | `scan url ->
+      let backend, handle_suffix =
+        match kind with
+        | Some (#OpamUrl.backend as k) -> Some k, None
+        | Some `auto -> OpamUrl.guess_version_control url, Some true
+        | None when OpamClientConfig.(!r.pin_kind_auto) ->
+          OpamUrl.guess_version_control url, Some true
+        | _ -> None, None
+      in
+      OpamUrl.parse ?backend ?handle_suffix url
+      |> OpamAuxCommands.url_with_local_branch
+      |> OpamPinCommand.scan ~normalise ~recurse ?subpath;
+      `Ok ()
+    | `remove arg ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let err, to_unpin =
+        let open OpamStd.Option.Op in
+        List.fold_left (fun (err, acc) arg ->
+            let as_url =
+              OpamUrl.parse_opt ~handle_suffix:false ~from_file:false arg
+              >>| fun url ->
+              OpamPackage.Set.filter
+                (fun nv ->
+                  match OpamSwitchState.url st nv with
+                  | Some u ->
+                    let spu = OpamFile.URL.subpath u in
+                    let u = OpamFile.URL.url u in
+                    let path_equality () =
+                      let open OpamUrl in
+                      match subpath, recurse with
+                      | Some sp, false ->
+                        u.path = url.path && spu = Some sp
+                      | Some sp, true ->
+                        (match spu with
+                          | Some spp ->
+                            let open OpamUrl.Op in
+                            OpamStd.String.starts_with
+                              ~prefix:(url / OpamFilename.SubPath.to_string sp).path
+                              (u / OpamFilename.SubPath.to_string spp).path
+                          | None -> false)
+                      | None, true ->
+                        u.path = url.path
+                      | None, false ->
+                        spu = None && u.path = url.path
+                    in
+                    OpamUrl.(u.transport = url.transport) && path_equality ()
+                  | None -> false)
+                st.pinned |>
+              OpamPackage.names_of_packages |>
+              OpamPackage.Name.Set.elements
+            in
+            match as_url with
+            | Some ((_::_) as url) -> err, url @ acc
+            | _->
+              match (fst package) arg with
+              | `Ok (name, None) -> err, name::acc
+              | `Ok (name, Some version) ->
+                (match OpamPinned.version_opt st name with
+                | Some v when not (OpamPackage.Version.equal v version) ->
+                  OpamConsole.error "%s is pinned but not to version %s. Skipping."
+                    (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string version);
+                  true, acc
+                | Some _ | None -> err, name::acc)
+              | `Error _ ->
+                OpamConsole.error
+                  "No package pinned to this target found, or invalid package \
+                  name/url: %s" arg;
+                true, acc)
+          (false,[]) arg
+      in
+      if err then OpamStd.Sys.exit_because `Bad_arguments
+      else
+        (OpamSwitchState.drop @@ OpamClient.PIN.unpin ~task_pool st ~action to_unpin;
+        `Ok ())
+    | `remove_all ->
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let to_unpin =
+        OpamPackage.Set.to_list_map OpamPackage.name (OpamPinned.packages st)
+      in
+      OpamSwitchState.drop @@ OpamClient.PIN.unpin ~task_pool st ~action to_unpin;
+      `Ok ()
+    | `edit nv  ->
+      (match (fst package) nv with
+      | `Ok (name, version) ->
         OpamGlobalState.with_ `Lock_none @@ fun gt ->
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        let err, to_unpin =
-          let open OpamStd.Option.Op in
-          List.fold_left (fun (err, acc) arg ->
-              let as_url =
-                OpamUrl.parse_opt ~handle_suffix:false ~from_file:false arg
-                >>| fun url ->
-                OpamPackage.Set.filter
-                  (fun nv ->
-                    match OpamSwitchState.url st nv with
-                    | Some u ->
-                      let spu = OpamFile.URL.subpath u in
-                      let u = OpamFile.URL.url u in
-                      let path_equality () =
-                        let open OpamUrl in
-                        match subpath, recurse with
-                        | Some sp, false ->
-                          u.path = url.path && spu = Some sp
-                        | Some sp, true ->
-                          (match spu with
-                            | Some spp ->
-                              let open OpamUrl.Op in
-                              OpamStd.String.starts_with
-                                ~prefix:(url / OpamFilename.SubPath.to_string sp).path
-                                (u / OpamFilename.SubPath.to_string spp).path
-                            | None -> false)
-                        | None, true ->
-                          u.path = url.path
-                        | None, false ->
-                          spu = None && u.path = url.path
-                      in
-                      OpamUrl.(u.transport = url.transport) && path_equality ()
-                    | None -> false)
-                  st.pinned |>
-                OpamPackage.names_of_packages |>
-                OpamPackage.Name.Set.elements
-              in
-              match as_url with
-              | Some ((_::_) as url) -> err, url @ acc
-              | _->
-                match (fst package) arg with
-                | `Ok (name, None) -> err, name::acc
-                | `Ok (name, Some version) ->
-                  (match OpamPinned.version_opt st name with
-                  | Some v when not (OpamPackage.Version.equal v version) ->
-                    OpamConsole.error "%s is pinned but not to version %s. Skipping."
-                      (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string version);
-                    true, acc
-                  | Some _ | None -> err, name::acc)
-                | `Error _ ->
-                  OpamConsole.error
-                    "No package pinned to this target found, or invalid package \
-                    name/url: %s" arg;
-                  true, acc)
-            (false,[]) arg
-        in
-        if err then OpamStd.Sys.exit_because `Bad_arguments
-        else
-          (OpamSwitchState.drop @@ OpamClient.PIN.unpin ~task_pool st ~action to_unpin;
-          `Ok ())
-      | `remove_all ->
+        let version = OpamStd.Option.Op.(with_version ++ version) in
+        OpamSwitchState.drop @@
+        OpamClient.PIN.edit ~task_pool st ?locked ~action ?version name;
+        `Ok ()
+      | `Error e -> `Error (false, e))
+    | `add_normalised pins ->
+      let pins = OpamPinCommand.parse_pins pins in
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      OpamSwitchState.drop @@
+      OpamClient.PIN.url_pins ~task_pool st ?locked ~edit ~action
+        (List.map (fun pin ->
+            { pin with
+              pinned_version =
+                OpamStd.Option.Op.(with_version ++ pin.pinned_version)})
+            pins);
+      `Ok ()
+    | `add_dev nv ->
+      (match (fst package) nv with
+      | `Ok (name,version) ->
         OpamGlobalState.with_ `Lock_none @@ fun gt ->
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-        let to_unpin =
-          OpamPackage.Set.to_list_map OpamPackage.name (OpamPinned.packages st)
-        in
-        OpamSwitchState.drop @@ OpamClient.PIN.unpin ~task_pool st ~action to_unpin;
+        let name = OpamSolution.fuzzy_name st name in
+        let version = OpamStd.Option.Op.(with_version ++ version) in
+        OpamSwitchState.drop @@
+        OpamClient.PIN.pin ~task_pool st name ?locked ~edit ?version ~action
+          `Dev_upstream;
         `Ok ()
-      | `edit nv  ->
-        (match (fst package) nv with
-        | `Ok (name, version) ->
-          OpamGlobalState.with_ `Lock_none @@ fun gt ->
-          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-          let version = OpamStd.Option.Op.(with_version ++ version) in
-          OpamSwitchState.drop @@
-          OpamClient.PIN.edit ~task_pool st ?locked ~action ?version name;
-          `Ok ()
-        | `Error e -> `Error (false, e))
-      | `add_normalised pins ->
-        let pins = OpamPinCommand.parse_pins pins in
+      | `Error e ->
+        if command = Some `add then `Error (false, e)
+        else bad_subcommand ~cli commands ("pin", command, params))
+    | `add_url arg ->
+      (match pin_target kind arg with
+      | `None | `Version _ ->
+        let msg =
+          Printf.sprintf "Ambiguous argument %S, if it is the pinning target, \
+                          you must specify a package name first" arg
+        in
+        `Error (true, msg)
+      | `Source url ->
+        guess_names kind ?locked ~recurse ?subpath url @@ fun names ->
         OpamGlobalState.with_ `Lock_none @@ fun gt ->
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
         OpamSwitchState.drop @@
         OpamClient.PIN.url_pins ~task_pool st ?locked ~edit ~action
           (List.map (fun pin ->
-              { pin with
-                pinned_version =
-                  OpamStd.Option.Op.(with_version ++ pin.pinned_version)})
-              pins);
-        `Ok ()
-      | `add_dev nv ->
-        (match (fst package) nv with
-        | `Ok (name,version) ->
-          OpamGlobalState.with_ `Lock_none @@ fun gt ->
-          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-          let name = OpamSolution.fuzzy_name st name in
-          let version = OpamStd.Option.Op.(with_version ++ version) in
+                { pin with pinned_version = with_version })
+              names);
+        `Ok ())
+    | `add_current n ->
+      (match (fst package) n with
+      | `Error e -> `Error (false, e)
+      | `Ok (name,version) ->
+        OpamGlobalState.with_ `Lock_none @@ fun gt ->
+        OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+        match OpamPackage.package_of_name_opt st.installed name, version with
+        | Some nv, Some v when nv.version <> v ->
+          OpamConsole.error_and_exit `Bad_arguments
+            "%s.%s is not installed (version %s is), invalid flag `--current'"
+            (OpamPackage.Name.to_string name)
+            (OpamPackage.Version.to_string v)
+            (OpamPackage.Version.to_string nv.version)
+        | None, _ ->
+          OpamConsole.error_and_exit `Bad_arguments
+            "%s is not installed, invalid flag `--current'"
+            (OpamPackage.Name.to_string name)
+        | Some nv, _ ->
           OpamSwitchState.drop @@
-          OpamClient.PIN.pin ~task_pool st name ?locked ~edit ?version ~action
-            `Dev_upstream;
-          `Ok ()
-        | `Error e ->
-          if command = Some `add then `Error (false, e)
-          else bad_subcommand ~cli commands ("pin", command, params))
-      | `add_url arg ->
-        (match pin_target kind arg with
-        | `None | `Version _ ->
-          let msg =
-            Printf.sprintf "Ambiguous argument %S, if it is the pinning target, \
-                            you must specify a package name first" arg
-          in
-          `Error (true, msg)
-        | `Source url ->
-          guess_names kind ?locked ~recurse ?subpath url @@ fun names ->
-          OpamGlobalState.with_ `Lock_none @@ fun gt ->
-          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-          OpamSwitchState.drop @@
-          OpamClient.PIN.url_pins ~task_pool st ?locked ~edit ~action
-            (List.map (fun pin ->
-                  { pin with pinned_version = with_version })
-                names);
+          OpamPinCommand.pin_current st nv;
           `Ok ())
-      | `add_current n ->
-        (match (fst package) n with
-        | `Error e -> `Error (false, e)
-        | `Ok (name,version) ->
-          OpamGlobalState.with_ `Lock_none @@ fun gt ->
-          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-          match OpamPackage.package_of_name_opt st.installed name, version with
-          | Some nv, Some v when nv.version <> v ->
-            OpamConsole.error_and_exit `Bad_arguments
-              "%s.%s is not installed (version %s is), invalid flag `--current'"
-              (OpamPackage.Name.to_string name)
-              (OpamPackage.Version.to_string v)
-              (OpamPackage.Version.to_string nv.version)
-          | None, _ ->
-            OpamConsole.error_and_exit `Bad_arguments
-              "%s is not installed, invalid flag `--current'"
-              (OpamPackage.Name.to_string name)
-          | Some nv, _ ->
-            OpamSwitchState.drop @@
-            OpamPinCommand.pin_current st nv;
-            `Ok ())
-      | `add_wtarget (n, target) ->
-        (match (fst package) n with
-        | `Ok (name,version) ->
-          let pin =
-            match pin_target kind target, with_version with
-            | `Version v, Some v' -> `Source_version (v, v')
-            | p, _ -> p
-          in
-          let version = OpamStd.Option.Op.(with_version ++ version) in
-          OpamGlobalState.with_ `Lock_none @@ fun gt ->
-          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
-          OpamSwitchState.drop @@
-          OpamClient.PIN.pin ~task_pool st name ?locked ?version ~edit ~action ?subpath pin;
-          `Ok ()
-        | `Error e -> `Error (false, e))
-      | `incorrect -> bad_subcommand ~cli commands ("pin", command, params))
-  in
+    | `add_wtarget (n, target) ->
+      (match (fst package) n with
+      | `Ok (name,version) ->
+        let pin =
+          match pin_target kind target, with_version with
+          | `Version v, Some v' -> `Source_version (v, v')
+          | p, _ -> p
+        in
+        let version = OpamStd.Option.Op.(with_version ++ version) in
+        OpamGlobalState.with_ `Lock_none @@ fun gt ->
+        OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+        OpamSwitchState.drop @@
+        OpamClient.PIN.pin ~task_pool st name ?locked ?version ~edit ~action ?subpath pin;
+        `Ok ()
+      | `Error e -> `Error (false, e))
+    | `incorrect -> bad_subcommand ~cli commands ("pin", command, params)
+in
   mk_command_ret  ~cli cli_original "pin" ~doc ~man
     Term.(const pin
           $global_options cli $build_options cli
@@ -3663,130 +3663,130 @@ let source cli =
   in
   let source global_options atom dev_repo pin no_switch dir () =
     apply_global_options cli global_options;
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      let get_package_dir t =
-        let nv =
-          try
-            OpamPackage.Set.max_elt
-              (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
-          with Not_found ->
-            OpamConsole.error_and_exit `Not_found
-              "No package matching %s found."
-              (OpamFormula.short_string_of_atom atom)
-        in
-        let dir = match dir with
-          | Some d -> d
-          | None ->
-            let dirname =
-              if dev_repo then OpamPackage.name_to_string nv
-              else OpamPackage.to_string nv in
-            OpamFilename.Op.(OpamFilename.cwd () / dirname)
-        in
-        nv, dir
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    let get_package_dir t =
+      let nv =
+        try
+          OpamPackage.Set.max_elt
+            (OpamPackage.Set.filter (OpamFormula.check atom) t.packages)
+        with Not_found ->
+          OpamConsole.error_and_exit `Not_found
+            "No package matching %s found."
+            (OpamFormula.short_string_of_atom atom)
       in
-      let get_source t nv dir =
-        let open OpamFilename in
-        if exists_dir dir then
-          OpamConsole.error_and_exit `Bad_arguments
-            "Directory %s already exists. Please remove it or use a different one \
-            (see option `--dir')"
-            (Dir.to_string dir);
-        let opam = OpamSwitchState.opam t nv in
-        let subpath =
-          OpamStd.Option.map_default OpamFile.URL.subpath
-            None (OpamFile.OPAM.url opam)
-        in
-        if dev_repo then
-          (match OpamFile.OPAM.dev_repo opam with
-          | None ->
-            OpamConsole.error_and_exit `Not_found
-              "Version-controlled repo for %s unknown \
-                (\"dev-repo\" field missing from metadata)"
-              (OpamPackage.to_string nv)
-          | Some url ->
-            mkdir dir;
-            match
-              OpamProcess.Job.run
-                (OpamRepository.pull_tree
-                    ~cache_dir:(OpamRepositoryPath.download_cache
-                                  OpamStateConfig.(!r.root_dir))
-                    ?subpath
-                    (OpamPackage.to_string nv) dir []
-                    [url])
-            with
-            | Not_available (_,u) ->
-              OpamConsole.error_and_exit `Sync_error "%s is not available" u
-            | Result _ | Up_to_date _ ->
-              OpamConsole.formatted_msg
-                "Successfully fetched %s development repo to %s\n"
-                (OpamPackage.name_to_string nv)
-                (OpamFilename.Dir.to_string dir))
-        else
-          (let job =
-            let open OpamProcess.Job.Op in
-            OpamUpdate.download_package_source t nv dir @@+ function
-            | Some (Not_available (_,s)), _ | _, (_, Not_available (_, s)) :: _ ->
-              OpamConsole.error_and_exit `Sync_error "Download failed: %s" s
-            | None, _ | Some (Result _ | Up_to_date _), _ ->
-              OpamAction.prepare_package_source t nv dir @@| function
-              | None ->
-                OpamConsole.formatted_msg "Successfully extracted to %s\n"
-                  (Dir.to_string dir)
-              | Some e ->
-                OpamConsole.warning "Some errors extracting to %s: %s\n"
-                  (Dir.to_string dir) (Printexc.to_string e)
-          in
-          OpamProcess.Job.run job;
-          if OpamPinned.find_opam_file_in_source nv.name
-              OpamFilename.SubPath.(dir /? subpath)
-              = None
-          then
-            let f =
-              if OpamFilename.exists_dir Op.(dir / "opam")
-              then OpamFile.make Op.(dir / "opam" // "opam")
-              else OpamFile.make Op.(dir // "opam")
-            in
-            OpamFile.OPAM.write f
-              (OpamFile.OPAM.with_substs [] @@
-                OpamFile.OPAM.with_patches [] @@
-                opam))
+      let dir = match dir with
+        | Some d -> d
+        | None ->
+          let dirname =
+            if dev_repo then OpamPackage.name_to_string nv
+            else OpamPackage.to_string nv in
+          OpamFilename.Op.(OpamFilename.cwd () / dirname)
       in
-      if no_switch || OpamGlobalState.switches gt = [] then
-        (if pin then
-          OpamConsole.error_and_exit `Bad_arguments
-            (if no_switch then
-                "Options '--pin' and '--no-switch' may not be specified at the \
-                same time"
-              else
-                "No switch is defined in current opam root, \
-                pinning is impossible");
-        OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-        let t = OpamSwitchState.load_virtual ?repos_list:None gt rt in
-        let nv, dir = get_package_dir t in
-        get_source t nv dir)
-      else if not pin then
-        OpamSwitchState.with_ `Lock_none gt @@ fun t ->
-        let nv, dir = get_package_dir t in
-        get_source t nv dir
+      nv, dir
+    in
+    let get_source t nv dir =
+      let open OpamFilename in
+      if exists_dir dir then
+        OpamConsole.error_and_exit `Bad_arguments
+          "Directory %s already exists. Please remove it or use a different one \
+          (see option `--dir')"
+          (Dir.to_string dir);
+      let opam = OpamSwitchState.opam t nv in
+      let subpath =
+        OpamStd.Option.map_default OpamFile.URL.subpath
+          None (OpamFile.OPAM.url opam)
+      in
+      if dev_repo then
+        (match OpamFile.OPAM.dev_repo opam with
+        | None ->
+          OpamConsole.error_and_exit `Not_found
+            "Version-controlled repo for %s unknown \
+              (\"dev-repo\" field missing from metadata)"
+            (OpamPackage.to_string nv)
+        | Some url ->
+          mkdir dir;
+          match
+            OpamProcess.Job.run
+              (OpamRepository.pull_tree
+                  ~cache_dir:(OpamRepositoryPath.download_cache
+                                OpamStateConfig.(!r.root_dir))
+                  ?subpath
+                  (OpamPackage.to_string nv) dir []
+                  [url])
+          with
+          | Not_available (_,u) ->
+            OpamConsole.error_and_exit `Sync_error "%s is not available" u
+          | Result _ | Up_to_date _ ->
+            OpamConsole.formatted_msg
+              "Successfully fetched %s development repo to %s\n"
+              (OpamPackage.name_to_string nv)
+              (OpamFilename.Dir.to_string dir))
       else
-        OpamSwitchState.with_ `Lock_write gt @@ fun t ->
-        let nv, dir = get_package_dir t in
-        get_source t nv dir;
-        let opam = OpamSwitchState.opam t nv in
-        let backend =
-          if dev_repo then match OpamFile.OPAM.dev_repo opam with
-            | Some {OpamUrl.backend = #OpamUrl.version_control as kind; _} -> kind
-            | _ -> `rsync
-          else `rsync
+        (let job =
+          let open OpamProcess.Job.Op in
+          OpamUpdate.download_package_source t nv dir @@+ function
+          | Some (Not_available (_,s)), _ | _, (_, Not_available (_, s)) :: _ ->
+            OpamConsole.error_and_exit `Sync_error "Download failed: %s" s
+          | None, _ | Some (Result _ | Up_to_date _), _ ->
+            OpamAction.prepare_package_source t nv dir @@| function
+            | None ->
+              OpamConsole.formatted_msg "Successfully extracted to %s\n"
+                (Dir.to_string dir)
+            | Some e ->
+              OpamConsole.warning "Some errors extracting to %s: %s\n"
+                (Dir.to_string dir) (Printexc.to_string e)
         in
-        let target =
-          `Source (OpamUrl.parse ~backend ~from_file:false
-                    ("file://"^OpamFilename.Dir.to_string dir))
-        in
-        OpamSwitchState.drop
-          (OpamClient.PIN.pin ~task_pool t nv.name ~version:nv.version target))
-  in
+        OpamProcess.Job.run job;
+        if OpamPinned.find_opam_file_in_source nv.name
+            OpamFilename.SubPath.(dir /? subpath)
+            = None
+        then
+          let f =
+            if OpamFilename.exists_dir Op.(dir / "opam")
+            then OpamFile.make Op.(dir / "opam" // "opam")
+            else OpamFile.make Op.(dir // "opam")
+          in
+          OpamFile.OPAM.write f
+            (OpamFile.OPAM.with_substs [] @@
+              OpamFile.OPAM.with_patches [] @@
+              opam))
+    in
+    if no_switch || OpamGlobalState.switches gt = [] then
+      (if pin then
+        OpamConsole.error_and_exit `Bad_arguments
+          (if no_switch then
+              "Options '--pin' and '--no-switch' may not be specified at the \
+              same time"
+            else
+              "No switch is defined in current opam root, \
+              pinning is impossible");
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      let t = OpamSwitchState.load_virtual ?repos_list:None gt rt in
+      let nv, dir = get_package_dir t in
+      get_source t nv dir)
+    else if not pin then
+      OpamSwitchState.with_ `Lock_none gt @@ fun t ->
+      let nv, dir = get_package_dir t in
+      get_source t nv dir
+    else
+      OpamSwitchState.with_ `Lock_write gt @@ fun t ->
+      let nv, dir = get_package_dir t in
+      get_source t nv dir;
+      let opam = OpamSwitchState.opam t nv in
+      let backend =
+        if dev_repo then match OpamFile.OPAM.dev_repo opam with
+          | Some {OpamUrl.backend = #OpamUrl.version_control as kind; _} -> kind
+          | _ -> `rsync
+        else `rsync
+      in
+      let target =
+        `Source (OpamUrl.parse ~backend ~from_file:false
+                  ("file://"^OpamFilename.Dir.to_string dir))
+      in
+      OpamSwitchState.drop
+        (OpamClient.PIN.pin ~task_pool t nv.name ~version:nv.version target)
+in
   mk_command  ~cli cli_original "source" ~doc ~man
     Term.(const source
           $global_options cli $atom $dev_repo $pin $no_switch $dir)
@@ -4319,41 +4319,41 @@ let lock cli =
   let lock_suffix = OpamArg.lock_suffix cli in
   let lock global_options only_direct lock_suffix atom_locs () =
     apply_global_options cli global_options;
-    OpamMulticore.run_with_task_pool (fun task_pool ->
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamSwitchState.with_ `Lock_none gt @@ fun st ->
-      let st, packages = OpamLockCommand.select_packages atom_locs st in
-      if OpamPackage.Set.is_empty packages then
-        OpamConsole.msg "No lock file generated\n"
-      else
-      let st =
-        (* Suppose the packages are installed to avoid errors on mutual
-          dependencies *)
-        { st with installed = OpamPackage.Set.union st.installed packages }
-      in
-      let pkg_done =
-        OpamPackage.Set.fold (fun nv msgs ->
-            let opam = OpamSwitchState.opam st nv in
-            let locked = OpamLockCommand.lock_opam ~task_pool ~only_direct st opam in
-            let locked_fname =
-              OpamFilename.add_extension
-                (OpamFilename.of_string (OpamPackage.name_to_string nv))
-                ("opam." ^ lock_suffix)
-            in
-            if not (OpamCoreConfig.(!r).OpamCoreConfig.safe_mode
-                    || OpamStateConfig.(!r.dryrun)) then
-              OpamFile.OPAM.write_with_preserved_format
-                (OpamFile.make locked_fname) locked;
-            (nv, locked_fname)::msgs)
-          packages []
-      in
-      OpamConsole.msg "Generated %slock files for:\n%s"
-        (if OpamCoreConfig.(!r).safe_mode || OpamStateConfig.(!r.dryrun) then
-          "(not saved) " else "")
-        (OpamStd.Format.itemize (fun (nv, file) ->
-            Printf.sprintf "%s: %s"
-              (OpamPackage.to_string nv)
-              (OpamFilename.to_string file)) pkg_done))
+    OpamMulticore.run_with_task_pool @@ fun task_pool ->
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+    let st, packages = OpamLockCommand.select_packages atom_locs st in
+    if OpamPackage.Set.is_empty packages then
+      OpamConsole.msg "No lock file generated\n"
+    else
+    let st =
+      (* Suppose the packages are installed to avoid errors on mutual
+        dependencies *)
+      { st with installed = OpamPackage.Set.union st.installed packages }
+    in
+    let pkg_done =
+      OpamPackage.Set.fold (fun nv msgs ->
+          let opam = OpamSwitchState.opam st nv in
+          let locked = OpamLockCommand.lock_opam ~task_pool ~only_direct st opam in
+          let locked_fname =
+            OpamFilename.add_extension
+              (OpamFilename.of_string (OpamPackage.name_to_string nv))
+              ("opam." ^ lock_suffix)
+          in
+          if not (OpamCoreConfig.(!r).OpamCoreConfig.safe_mode
+                  || OpamStateConfig.(!r.dryrun)) then
+            OpamFile.OPAM.write_with_preserved_format
+              (OpamFile.make locked_fname) locked;
+          (nv, locked_fname)::msgs)
+        packages []
+    in
+    OpamConsole.msg "Generated %slock files for:\n%s"
+      (if OpamCoreConfig.(!r).safe_mode || OpamStateConfig.(!r.dryrun) then
+        "(not saved) " else "")
+      (OpamStd.Format.itemize (fun (nv, file) ->
+          Printf.sprintf "%s: %s"
+            (OpamPackage.to_string nv)
+            (OpamFilename.to_string file)) pkg_done)
   in
   mk_command  ~cli (cli_from cli2_1) "lock" ~doc ~man
     Term.(const lock $global_options cli $only_direct_flag $lock_suffix

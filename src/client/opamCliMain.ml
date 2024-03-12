@@ -299,15 +299,15 @@ let check_and_run_external_commands () =
           OpamSolverConfig.init ();
           OpamClientConfig.init ();
           OpamSwitchState.with_ `Lock_write gt (fun st ->
-              OpamMulticore.run_with_task_pool (fun task_pool ->
-              OpamSwitchState.drop @@ (
-              if cmd = None then
-                OpamClient.install ~task_pool st [OpamSolution.eq_atom_of_package nv]
-              else if root_upgraded then
-                OpamClient.reinstall ~task_pool st [OpamSolution.eq_atom_of_package nv]
-              else
-                OpamClient.upgrade ~task_pool st ~all:false [OpamSolution.eq_atom_of_package nv])
-            ));
+            OpamMulticore.run_with_task_pool @@ fun task_pool ->
+            OpamSwitchState.drop @@ (
+            if cmd = None then
+              OpamClient.install ~task_pool st [OpamSolution.eq_atom_of_package nv]
+            else if root_upgraded then
+              OpamClient.reinstall ~task_pool st [OpamSolution.eq_atom_of_package nv]
+            else
+              OpamClient.upgrade ~task_pool st ~all:false [OpamSolution.eq_atom_of_package nv])
+          );
           match OpamSystem.resolve_command ~env command with
           | None ->
             OpamConsole.error_and_exit `Package_operation_error
