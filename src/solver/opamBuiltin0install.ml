@@ -108,7 +108,7 @@ let call ~criteria ?timeout:_ (preamble, universe, request) =
   let {drop_installed_packages; prefer_oldest} = parse_criteria criteria in
   let timer = OpamConsole.timer () in
   let pkgs, constraints = create_spec ~drop_installed_packages universe request in
-  let context = Opam_0install_cudf.create ~prefer_oldest ~constraints universe in
+  let context = Opam_0install_cudf.create ~handle_avoid_version:true ~prefer_oldest ~constraints universe in
   match Opam_0install_cudf.solve context pkgs with
   | Ok selections ->
     let universe = reconstruct_universe universe selections in
