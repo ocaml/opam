@@ -89,7 +89,7 @@ users)
   * Upgrade the vendored re to 1.11.0 [#5869 @dra27]
   * Upgrade the vendored ocamlgraph to 2.1.0 [#5869 @dra27]
   * Upgrade the vendored opam-file-format to 2.1.6 [#5869 @dra27]
-  * Allow to compile opam when the environment contains unicode characters on Windows [#5880 @kit-ty-kate]
+  * Allow to compile opam when the environment contains unicode characters on Windows [#5880 @kit-ty-kate - fix #5861]
   * Upgrade the vendored dune to 3.14.2 [#5880 @kit-ty-kate]
 
 ## Infrastructure
