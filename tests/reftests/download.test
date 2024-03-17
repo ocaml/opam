@@ -19,7 +19,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 curl-or-wget -- "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
-Processing  1/1:
+Processing  1/1: [foo.1: extract]
 + tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
 Done.
 ### opam clean -c
@@ -34,7 +34,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + wget "--content-disposition" "-t" "3" "-O" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
-Processing  1/1:
+Processing  1/1: [foo.1: extract]
 + tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
 Done.
 ### opam clean -c
@@ -49,7 +49,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + curl "--write-out" "%{http_code}\n" "--retry" "3" "--retry-delay" "2" "--user-agent" "opam/current" "-L" "-o" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
-Processing  1/1:
+Processing  1/1: [foo.1: extract]
 + tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
 Done.
 ### opam clean -c
@@ -148,7 +148,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + wget "--content-disposition" "-t" "3" "-O" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
-Processing  1/1:
+Processing  1/1: [foo.1: extract]
 + tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
 Done.
 ### opam clean -c
