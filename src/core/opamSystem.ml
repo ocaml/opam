@@ -538,7 +538,7 @@ let apply_cygpath name =
   | None ->
     OpamConsole.error_and_exit `Internal_error "Could not apply cygpath to %s" name
 
-let get_cygpath_function =
+let get_cygpath_function_gen get_command =
   if Sys.win32 then
     fun ~command ->
       lazy (
@@ -546,13 +546,19 @@ let get_cygpath_function =
             (OpamStd.Sys.is_cygwin_variant
                ~cygbin:(OpamCoreConfig.(!r.cygbin)))
                false
-               (resolve_command command) then
+               (resolve_command (get_command command)) then
           apply_cygpath
         else fun x -> x
       )
   else
     let f = Lazy.from_val (fun x -> x) in
     fun ~command:_ -> f
+
+let get_cygpath_function =
+  get_cygpath_function_gen Fun.id
+
+let get_cygpath_function_lazy =
+  get_cygpath_function_gen Lazy.force
 
 let apply_cygpath_path_transform ~pathlist cygpath path =
   let args = if pathlist then [ "--path" ] else [] in
@@ -990,30 +996,26 @@ module Tar = struct
     | _ -> "tar"
   )
 
-  let cygpath_tar = lazy (
-    Lazy.force (get_cygpath_function ~command:(Lazy.force tar_cmd))
-  )
+  let cygpath_tar = get_cygpath_function_lazy ~command:tar_cmd
 
-  let extract_command =
-    fun file ->
-      OpamStd.Option.Op.(
-        get_type file >>| fun typ ->
-        let f = Lazy.force cygpath_tar in
-        let tar_cmd = Lazy.force tar_cmd in
-        let command c dir =
-          make_command tar_cmd [ Printf.sprintf "xf%c" c ; f file; "-C" ; f dir ]
-        in
-        command (extract_option typ))
-
-  let compress_command =
-    fun file dir ->
+  let extract_command ?text file =
+    OpamStd.Option.Op.(
+      get_type file >>| fun typ ->
       let f = Lazy.force cygpath_tar in
       let tar_cmd = Lazy.force tar_cmd in
-      make_command tar_cmd [
-        "cfz"; f file;
-        "-C" ; f (Filename.dirname dir);
-        f (Filename.basename dir)
-      ]
+      let command c dir =
+        make_command ?text tar_cmd [ Printf.sprintf "xf%c" c ; f file; "-C" ; f dir ]
+      in
+      command (extract_option typ))
+
+  let compress_command file dir =
+    let f = Lazy.force cygpath_tar in
+    let tar_cmd = Lazy.force tar_cmd in
+    make_command tar_cmd [
+      "cfz"; f file;
+      "-C" ; f (Filename.dirname dir);
+      f (Filename.basename dir)
+    ]
 
 end
 
@@ -1035,16 +1037,16 @@ module Zip = struct
     else
       Filename.check_suffix f "zip"
 
-  let extract_command file =
-    Some (fun dir -> make_command "unzip" [ file; "-d"; dir ])
+  let extract_command ?text file =
+    Some (fun dir -> make_command ?text "unzip" [ file; "-d"; dir ])
 end
 
 let is_archive file =
   Tar.is_archive file || Zip.is_archive file
 
-let extract_command file =
-  if Zip.is_archive file then Zip.extract_command file
-  else Tar.extract_command file
+let extract_command ?text file =
+  if Zip.is_archive file then Zip.extract_command ?text file
+  else Tar.extract_command ?text file
 
 let make_tar_gz_job ~dir file =
   let tmpfile = file ^ ".tmp" in
