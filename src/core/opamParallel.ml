@@ -98,42 +98,80 @@ module Make (G : G) = struct
       raise (Cyclic sccs)
     );
 
+    let rec limit_width acc rem_cols = function
+      | [] -> List.rev acc
+      | t::ts ->
+        let len = OpamStd.Format.visual_length t in
+        if ts = [] && len < rem_cols then List.rev (t::acc)
+        else if len > rem_cols - 5 then
+          List.rev
+            (Printf.sprintf "%s+%2d"
+               (String.make (rem_cols - 4) ' ') (List.length ts + 1)
+             :: acc)
+        else
+          limit_width (t::acc) (rem_cols - len - 1) ts in
+
+    let abs_start = Unix.gettimeofday () in
+    let start = ref abs_start in (* XXX start is more "last_change" - i.e. when the status information naturally updated because a job was added/completed *)
+    let running_title = ref "" in
+    let disp_running = ref M.empty in
+    let last_status = ref "" in
+
+    let update_status () =
+      let running = !disp_running in
+      let texts =
+        let now = Unix.gettimeofday () in
+        (* Display the spinners after 5 seconds on the _current_ status bar *)
+        let with_status = now -. !start >= 5.0 in
+        (* XXX Needs fallback, re-coding to use \x format, moving to OpamConsole, etc. *)
+        let spinner_chars = [| "⠋"; "⠙"; "⠹"; "⠸"; "⠼"; "⠴"; "⠦"; "⠧"; "⠇"; "⠏" |] in
+        let f (p, last, _, t) =
+          let size_stdout = Option.map (fun f -> Unix.(try (stat f).st_size with Unix_error _ -> 0)) p.OpamProcess.p_stdout in
+          let size_stderr = Option.map (fun f -> Unix.(try (stat f).st_size with Unix_error _ -> 0)) p.OpamProcess.p_stderr in
+          let current = Option.value ~default:0 size_stdout + Option.value ~default:0 size_stderr in
+          let () =
+            if current <> !last then begin
+              last := current;
+              p.OpamProcess.p_cycle <- p.OpamProcess.p_cycle + 1;
+            end in
+          let stamp = p.OpamProcess.p_time in
+          let c = spinner_chars.(p.OpamProcess.p_cycle mod Array.length spinner_chars) in
+          (* Only display a job at all after 2 seconds *)
+          if now -. stamp < 2.0 then None else Option.map (fun s -> if !last = 0 || not with_status || s = "" then s else if s.[String.length s - 1] = ']' then String.sub s 0 (String.length s - 1) ^ Printf.sprintf " %s]" c else s) t  (* XXX This should be done with a richer type indicator that spinners can be used and where to put them *)
+        in
+        OpamStd.List.filter_map f (M.values running)
+      in
+      let texts =
+        limit_width [] (OpamStd.Sys.terminal_columns ()) (!running_title :: texts) in
+      let status = String.concat " " texts in
+      if status <> !last_status then begin
+        last_status := status;
+        OpamConsole.status_line "%s" status
+      end
+    in
+
     let print_status
         (finished: int)
-        (running: (OpamProcess.t * 'a * string option) M.t) =
+        (running: (OpamProcess.t * int ref * 'a * string option) M.t) =
+      disp_running := running;
       let texts =
-        OpamStd.List.filter_map (fun (_,_,t) -> t) (M.values running) in
-      let rec limit_width acc rem_cols = function
-        | [] -> List.rev acc
-        | t::ts ->
-          let len = OpamStd.Format.visual_length t in
-          if ts = [] && len < rem_cols then List.rev (t::acc)
-          else if len > rem_cols - 5 then
-            List.rev
-              (Printf.sprintf "%s+%2d"
-                 (String.make (rem_cols - 4) ' ') (List.length ts + 1)
-               :: acc)
-          else
-            limit_width (t::acc) (rem_cols - len - 1) ts
-      in
+        OpamStd.List.filter_map (fun (_,_,_,t) -> t) (M.values running) in
       let title =
         Printf.sprintf "Processing %2d/%d:"
           (finished + M.cardinal running) njobs
       in
-      let texts =
-        if OpamConsole.disp_status_line () then
-          limit_width [] (OpamStd.Sys.terminal_columns ()) (title::texts)
-        else if OpamConsole.verbose () then title::texts
-        else []
-      in
-      if texts <> [] then OpamConsole.status_line "%s" (String.concat " " texts)
+      if OpamConsole.disp_status_line () then begin
+        running_title := title;
+        update_status ()
+      end else if OpamConsole.verbose () then
+        OpamConsole.status_line "%s %s" title (String.concat " " texts)
     in
 
     (* nslots is the number of free slots *)
     let rec loop
         (nslots: (S.t * int) list) (* number of free slots *)
         (results: 'b M.t)
-        (running: (OpamProcess.t * 'a * string option) M.t)
+        (running: (OpamProcess.t * int ref * 'a * string option) M.t)
         (ready: S.t)
       =
       let get_slots nslots n =
@@ -151,7 +189,9 @@ module Make (G : G) = struct
             else pool, slots)
           nslots
       in
-      let run_seq_command nslots ready n = function
+      let run_seq_command nslots ready n status =
+        start := Unix.gettimeofday ();
+        match status with
         | Done r ->
           log "Job %a finished" (slog (string_of_int @* V.hash)) n;
           let results = M.add n r results in
@@ -181,7 +221,7 @@ module Make (G : G) = struct
             else OpamProcess.run_background cmd
           in
           let running =
-            M.add n (p, cont, OpamProcess.text_of_command cmd) running
+            M.add n (p, ref 0, cont, OpamProcess.text_of_command cmd) running
           in
           print_status (M.cardinal results) running;
           loop nslots results running ready
@@ -196,7 +236,7 @@ module Make (G : G) = struct
         (* Cleanup *)
         let errors,pend =
           if dry_run then [node,error],[] else
-          M.fold (fun n (p,cont,_text) (errors,pend) ->
+          M.fold (fun n (p,_start,cont,_text) (errors,pend) ->
               try
                 match OpamProcess.dontwait p with
                 | None -> (* process still running *)
@@ -267,7 +307,7 @@ module Make (G : G) = struct
       else
       (* Wait for a process to end *)
       let processes =
-        M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running []
+        M.fold (fun n (p,_,x,_) acc -> (p,(n,x)) :: acc) running []
       in
       let process, result =
         if dry_run then
@@ -292,8 +332,27 @@ module Make (G : G) = struct
         (fun n roots -> if G.in_degree g n = 0 then S.add n roots else roots)
         g S.empty
     in
+    let running = ref true in
+    let rec f () =
+      try
+        Unix.sleep 4;
+        while !running do
+          Unix.sleepf 0.1;
+          if !running then
+            update_status ()
+        done
+      with Sys.Break ->
+        f () (* XXX This __cannot__ be correct! *) in
+    let () =
+      if OpamConsole.disp_status_line () then
+        ignore (Thread.create f ())
+    in
     let r = loop pools M.empty M.empty roots in
+    running := false;
+    disp_running := M.empty;
+    running_title := "";
     OpamConsole.clear_status ();
+    last_status := "";
     r
 
   let iter ~jobs ~command ?dry_run ?pools g =

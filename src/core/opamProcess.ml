@@ -269,6 +269,7 @@ type t = {
   p_time   : float;
   p_stdout : string option;
   p_stderr : string option;
+  mutable p_cycle : int;
   p_env    : string option;
   p_info   : string option;
   p_metadata: (string * string) list;
@@ -492,6 +493,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
     p_time   = time;
     p_stdout = stdout_file;
     p_stderr = stderr_file;
+    p_cycle  = 0;
     p_env    = env_file;
     p_info   = info_file;
     p_metadata = metadata;
@@ -591,6 +593,7 @@ let dry_run_background c = {
   p_time   = Unix.gettimeofday ();
   p_stdout = None;
   p_stderr = None;
+  p_cycle  = 0;
   p_env    = None;
   p_info   = None;
   p_metadata = OpamStd.Option.default [] c.cmd_metadata;
