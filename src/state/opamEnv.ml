@@ -226,12 +226,11 @@ let unzip_to ~sepfmt var elt current =
     in
     aux [] current
 
-let rezip ?insert (l1, l2) =
-  List.rev_append l1 (match insert with None -> l2 | Some i -> i::l2)
+let rezip (l1, l2) =
+  List.rev_append l1 l2
 
-let rezip_to_string ~sepfmt var ?insert z =
-  join_var ~sepfmt var (rezip ?insert z)
-
+let rezip_to_string ~sepfmt var z =
+  join_var ~sepfmt var (rezip z)
 
 (* apply_zip take an already transformed arg *)
 let apply_op_zip ~sepfmt op arg (rl1,l2 as zip) =
@@ -546,9 +545,6 @@ let get_pure ?(updates=[]) () =
   let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
   add env updates
 
-let get_opam ~set_opamroot ~set_opamswitch ~force_path st =
-  add [] (updates ~set_opamroot ~set_opamswitch ~force_path st)
-
 let get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch =
   let env_file = OpamPath.Switch.environment root switch in
   let upd = OpamFile.Environment.safe_read env_file in
@@ -566,13 +562,6 @@ let get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch =
         | e -> e) upd
   in
   updates_common ~set_opamroot ~set_opamswitch root switch @ upd
-
-let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[]) ~force_path
-  root switch =
-  let upd =
-    get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch
-  in
-  add base upd
 
 let hash_env_updates upd =
   (* Should we use OpamFile.Environment.write_to_string ? cons: it contains
