@@ -365,7 +365,7 @@ module OPAM: sig
     conflict_class : name list;
     available  : filter;
     flags      : package_flag list;
-    env        : spf_unresolved env_update list;
+    env        : (spf_unresolved, euok_writeable) env_update list;
 
     (* Build instructions *)
     build      : command list;
@@ -376,7 +376,7 @@ module OPAM: sig
     (* Auxiliary data affecting the build *)
     substs     : basename list;
     patches    : (basename * filter option) list;
-    build_env  : spf_unresolved env_update list;
+    build_env  : (spf_unresolved, euok_writeable) env_update list;
     features   : (OpamVariable.t * filtered_formula * string) list;
     extra_sources: (basename * URL.t) list;
 
@@ -477,7 +477,7 @@ module OPAM: sig
   val substs: t -> basename list
 
   (** List of environment variables to set-up for the build *)
-  val build_env: t -> spf_unresolved env_update list
+  val build_env: t -> (spf_unresolved, [> euok_writeable]) env_update list
 
   (** List of command to run for building the package *)
   val build: t -> command list
@@ -567,7 +567,7 @@ module OPAM: sig
   val has_flag: package_flag -> t -> bool
 
   (** The environment variables that this package exports *)
-  val env: t -> spf_unresolved env_update list
+  val env: t -> (spf_unresolved, [> euok_writeable]) env_update list
 
   val descr: t -> Descr.t option
 
@@ -652,7 +652,7 @@ module OPAM: sig
   (** Construct as [substs] *)
   val with_substs: basename list -> t -> t
 
-  val with_build_env: spf_unresolved env_update list -> t -> t
+  val with_build_env: (spf_unresolved, euok_writeable) env_update list -> t -> t
 
   val with_available: filter -> t -> t
 
@@ -680,7 +680,7 @@ module OPAM: sig
 
   val with_tags: string list -> t -> t
 
-  val with_env: spf_unresolved env_update list -> t -> t
+  val with_env: (spf_unresolved, euok_writeable) env_update list -> t -> t
 
   val with_dev_repo: url -> t -> t
 
@@ -801,7 +801,15 @@ end
 module PkgList: IO_FILE with type t = package_set
 
 (** Cached environment updates (<switch>/environment) *)
-module Environment: IO_FILE with type t = spf_resolved env_update list
+module Environment : sig
+  include IO_FILE with type t = (spf_resolved, euok_writeable) env_update list
+
+  val read: t typed_file -> (spf_resolved, [> euok_writeable ]) env_update list
+  val read_opt: t typed_file -> (spf_resolved, [> euok_writeable ]) env_update list option
+  val safe_read: t typed_file -> (spf_resolved, [> euok_writeable ]) env_update list
+  val read_from_channel: ?filename:t typed_file -> in_channel -> (spf_resolved, [> euok_writeable ]) env_update list
+  val read_from_string: ?filename:t typed_file -> string -> (spf_resolved, [> euok_writeable ]) env_update list
+end
 
 (** Compiler version [$opam/compilers/]. Deprecated, only used to upgrade old
     data *)
@@ -814,7 +822,7 @@ module Comp: sig
 
   (** Create a pre-installed compiler description file *)
   val create_preinstalled:
-    compiler -> compiler_version -> name list -> spf_unresolved env_update list -> t
+    compiler -> compiler_version -> name list -> (spf_unresolved, euok_writeable) env_update list -> t
 
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool
@@ -849,7 +857,7 @@ module Comp: sig
 
   (** Environment variable to set-up before running commands in the
       subtree *)
-  val env: t -> spf_unresolved env_update list
+  val env: t -> (spf_unresolved, euok_writeable) env_update list
 
   val tags: t -> string list
 
@@ -1034,7 +1042,7 @@ module Switch_config: sig
     variables: (variable * variable_contents) list;
     opam_root: dirname option;
     wrappers: Wrappers.t;
-    env: spf_resolved env_update list;
+    env: (spf_resolved, euok_writeable) env_update list;
     invariant: OpamFormula.t option;
     depext_bypass: OpamSysPkg.Set.t;
   }
@@ -1046,9 +1054,11 @@ module Switch_config: sig
   val with_variables: (variable * variable_contents) list -> t -> t
   val with_opam_root: dirname option -> t -> t
   val with_wrappers: Wrappers.t -> t -> t
-  val with_env: spf_resolved env_update list -> t -> t
+  val with_env: (spf_resolved, euok_writeable) env_update list -> t -> t
   val with_invariant: OpamFormula.t option -> t -> t
   val with_depext_bypass: OpamSysPkg.Set.t -> t -> t
+
+  val env: t -> (spf_resolved, [> euok_writeable ]) env_update list
 
   val file_format_version: OpamVersion.t
   val variable: t -> variable -> variable_contents option

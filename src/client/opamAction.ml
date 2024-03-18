@@ -520,7 +520,6 @@ let prepare_package_source st nv dir =
       prepare_package_build (OpamPackageVar.resolve ~opam st) opam nv dir
 
 let compilation_env t opam =
-  let open OpamParserTypes in
   let build_env =
     List.map
       (fun env ->
