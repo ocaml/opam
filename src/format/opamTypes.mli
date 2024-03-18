@@ -453,6 +453,7 @@ type _ env_update_op_kind =
 | ColonEq : [> euok_writeable] env_update_op_kind
 | EqColon : [> euok_writeable] env_update_op_kind
 | EqPlusEq : [> euok_writeable] env_update_op_kind
+| Cygwin : [> euok_internal] env_update_op_kind
 
 (** Environment updates *)
 type ('a, 'b) env_update = {

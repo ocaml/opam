@@ -242,10 +242,30 @@ let apply_op_zip ~sepfmt op arg (rl1,l2 as zip) =
       if eqcol then l@[""], [arg] else l, [""; arg]
     | l -> l, [arg]
   in
+  let cygwin path =
+    let contains_in dir item =
+      Sys.file_exists (Filename.concat dir item)
+    in
+    let shadow_list =
+      List.filter (contains_in arg)
+                  ["bash.exe"; "sort.exe"; "tar.exe"; "git.exe"]
+    in
+      let rec loop acc = function
+      | [] -> acc, [arg]
+      | (d::rest) as suffix ->
+          if List.exists (contains_in d) shadow_list then
+            acc, arg::suffix
+          else
+            loop (d::acc) rest
+      in
+        loop [] path
+  in
   match op with
   | Eq -> [],[arg]
   | PlusEq -> [], arg :: rezip zip
   | EqPlus -> List.rev_append l2 rl1, [arg]
+  | Cygwin ->
+      cygwin (List.rev_append rl1 l2)
   | EqPlusEq -> rl1, arg::l2
   | ColonEq ->
     let l, add = colon_eq (rezip zip) in [], add @ l
@@ -271,7 +291,7 @@ let reverse_env_update ~sepfmt var op arg cur_value =
     if arg = join_var ~sepfmt var cur_value
     then Some ([],[]) else None
   | PlusEq | EqPlusEq -> unzip_to var ~sepfmt arg cur_value
-  | EqPlus ->
+  | EqPlus | Cygwin ->
     (match unzip_to ~sepfmt var arg (List.rev cur_value) with
      | None -> None
      | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1))

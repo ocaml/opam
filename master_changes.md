@@ -78,6 +78,7 @@ users)
   * Fix incorrect deduplication of environment variables on update. Effect was that FOO += "" would occlude the value of FOO in the environment [#5837 @dra27]
   * Fix regression from #5356 on the detection of out-of-date environment variables. As part of a refactoring, a filter predicate got inverted [#5837 @dra27]
   * Unixify Windows paths in init shells scripts (sh, bash, zsh, fish & tsh) [#5797 @rjbou]
+  * Internal Cygwin installation's bin directory is placed as far down PATH as is necessary not to shadow `bash`, `tar`, `sort` or `git` [#5832 @dra27]
 
 ## Opamfile
   * Hijack the `%{?val_if_true:val_if_false}%` syntax to support extending the variables of packages with + in their name [#5840 @kit-ty-kate]
@@ -187,6 +188,7 @@ users)
   * `OpamSysInteract.Cygwin.check_install`: look for `cygcheck.exe` in `usr/bin` also as MSYS2 doesn't have "bin" [#5843 @rjbou]
   * `OpamGlobalState.load_config`: load MSYS2 Cygwin binary path too at config file loading [#5843 @rjbou]
   * `OpamEnv`: add `sys_ocaml_eval_variables` value, moved `OpamInitDefaults` as it is also needed in `OpamFormatUpgrade` too [#5829 @rjbou @kit-ty-kate]
+  * `OpamEnv` supports an internal `Cygwin` environment operation which pushes the given directory as far down the list as can be done without shadowing. This mechanism replaces the opposite which was done in OpamProcess [#5832 @dra27]
 
 ## opam-solver
 

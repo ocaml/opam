@@ -210,6 +210,9 @@ let check_writeable l =
     match envu_op with
     | Eq | PlusEq | EqPlus | ColonEq | EqColon | EqPlusEq as envu_op ->
       {update with envu_op}
+    | Cygwin ->
+      OpamSystem.internal_error
+        "Attempt to write an internal environment change"
   in
   List.map map_writeable l
 
