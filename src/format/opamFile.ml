@@ -2032,6 +2032,17 @@ module Switch_configSyntax = struct
     depext_bypass = OpamSysPkg.Set.empty;
   }
 
+  let with_opam_version opam_version t = {t with opam_version}
+  let with_opam_root opam_root t = {t with opam_root}
+  let with_paths paths t = {t with paths}
+  let with_variables variables t = {t with variables}
+  let with_invariant invariant t = {t with invariant}
+  let with_synopsis synopsis t = {t with synopsis}
+  let with_repos repos t = {t with repos}
+  let with_depext_bypass depext_bypass t = {t with depext_bypass}
+  let with_env env t = {t with env}
+  let with_wrappers wrappers t = {t with wrappers}
+
   (* When adding a field or section, make sure to add it in
      [OpamConfigCommand.switch_allowed_fields] and
      [OpamConfigCommand.switch_allowed_sections] if it is a user modifiable

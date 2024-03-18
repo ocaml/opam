@@ -666,10 +666,9 @@ let switch_allowed_fields, switch_allowed_sections =
     lazy (
       OpamFile.Switch_config.(
         [
-          ("synopsis", Atomic,
-           fun t -> { t with synopsis = empty.synopsis });
+          ("synopsis", Atomic, with_synopsis empty.synopsis);
           ("setenv", Modifiable (
-              (fun nc c -> { c with env = nc.env @ c.env }),
+              (fun nc c -> with_env (nc.env @ c.env) c),
               (fun nc c ->
                  let open OpamTypes in
                  let env =
@@ -687,17 +686,17 @@ let switch_allowed_fields, switch_allowed_sections =
                            && String.equal value value')
                          nc.env) c.env
                  in
-                 { c with env })),
-           fun t -> { t with env = empty.env });
+                 with_env env c)),
+           with_env empty.env);
           "depext-bypass", OpamSysPkg.Set.Op.(Modifiable (
               (fun nc c ->
-                 { c with depext_bypass = nc.depext_bypass ++ c.depext_bypass }),
+                 with_depext_bypass (nc.depext_bypass ++ c.depext_bypass) c),
               (fun nc c ->
-                 { c with depext_bypass = c.depext_bypass -- nc.depext_bypass })
+                 with_depext_bypass (c.depext_bypass -- nc.depext_bypass) c)
             )),
-          (fun t -> { t with depext_bypass = empty.depext_bypass });
+          with_depext_bypass empty.depext_bypass;
         ] @ allwd_wrappers empty.wrappers wrappers
-          (fun wrappers t -> { t with wrappers })))
+          with_wrappers))
   in
   let allowed_sections =
     let rem_elem new_elems elems =
@@ -706,10 +705,10 @@ let switch_allowed_fields, switch_allowed_sections =
     lazy (
       OpamFile.Switch_config.([
           ("variables", InModifiable (
-              (fun nc c -> { c with variables = nc.variables @ c.variables }),
+              (fun nc c -> with_variables (nc.variables @ c.variables) c),
               (fun nc c ->
-                 { c with variables = rem_elem nc.variables c.variables })),
-           (fun c -> { c with variables = empty.variables }));
+                 with_variables (rem_elem nc.variables c.variables) c)),
+           (with_variables empty.variables));
         ]))
   in
   (fun () -> Lazy.force allowed_fields),
@@ -994,8 +993,7 @@ let set_var_switch gt ?st svar value =
                  nullify_pos @@ String v)]);
       stv_set_opt = (fun swc value ->
           set_opt_switch_t ~inner:true gt switch swc "variables" value);
-      stv_remove_elem = (fun rest switch_config ->
-          { switch_config with variables = rest });
+      stv_remove_elem = OpamFile.Switch_config.with_variables;
       stv_write = (fun swc ->
           OpamFile.Switch_config.write
             (OpamPath.Switch.switch_config gt.root switch) swc);

@@ -714,10 +714,10 @@ let list ?(force_search=false) cli =
     in
     let st =
       let open OpamFile.Switch_config in
-      let conf = st.switch_config in
-      { st with switch_config =
-        { conf with variables =
-          conf.variables @ List.map (fun (var, v) -> var, S v) vars } }
+      let vars = List.map (fun (var, v) -> var, S v) vars in
+      {st with switch_config =
+        st.switch_config
+        |> with_variables (st.switch_config.variables @ vars) }
     in
     if not depexts &&
        not format.OpamListCommand.short &&
@@ -3118,8 +3118,7 @@ let switch cli =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
       let config =
-        { st.switch_config with OpamFile.Switch_config.synopsis }
-      in
+        OpamFile.Switch_config.with_synopsis synopsis st.switch_config in
       OpamSwitchAction.install_switch_config gt.root st.switch config;
       `Ok ()
     | command, params -> bad_subcommand ~cli commands ("switch", command, params)

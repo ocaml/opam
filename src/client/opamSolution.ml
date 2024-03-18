@@ -432,8 +432,9 @@ let parallel_apply t
        bypass_ref := bypass;
        invariant_ref := invariant;
        let switch_config =
-         {!t_ref.switch_config with
-          invariant = Some invariant; depext_bypass = bypass }
+         !t_ref.switch_config
+         |> OpamFile.Switch_config.with_invariant (Some invariant)
+         |> OpamFile.Switch_config.with_depext_bypass bypass
        in
        t_ref := {!t_ref with switch_invariant = invariant; switch_config};
        if not OpamStateConfig.(!r.dryrun) then
@@ -864,7 +865,9 @@ let parallel_apply t
             | _ -> OpamFormula.Empty)
           t.switch_invariant
       in
-      let switch_config = {t.switch_config with invariant = Some invariant} in
+      let switch_config =
+        OpamFile.Switch_config.with_invariant (Some invariant) t.switch_config
+      in
       if not OpamStateConfig.(!r.dryrun) then
         OpamSwitchAction.install_switch_config t.switch_global.root t.switch
           switch_config;

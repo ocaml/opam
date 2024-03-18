@@ -938,15 +938,12 @@ let from_2_0_alpha2_to_2_0_alpha3 ~on_the_fly:_ root conf =
             (OpamFile.Dot_config.bindings oldconf)
         in
         let new_config =
-          { OpamFile.Switch_config.
-            opam_version = OpamVersion.nopatch v2_0_alpha3;
-            synopsis = "";
-            repos = None;
-            opam_root; paths; variables; wrappers = OpamFile.Wrappers.empty;
-            env = [];
-            invariant = None;
-            depext_bypass = OpamSysPkg.Set.empty;
-          }
+          let open OpamFile.Switch_config in
+            empty
+            |> with_opam_version (OpamVersion.nopatch v2_0_alpha3)
+            |> with_opam_root opam_root
+            |> with_paths paths
+            |> with_variables variables
         in
         OpamFile.Switch_config.write (OpamFile.make new_config_file) new_config;
         OpamFilename.remove old_global_config
@@ -1021,11 +1018,10 @@ let from_2_0_beta_to_2_0_beta5 ~on_the_fly:_ root conf =
       let config = C.BestEffort.safe_read switch_config in
       let rem_variables = List.map OpamVariable.of_string ["os"; "make"] in
       let config =
-        { config with
-          C.variables =
+        config
+        |> C.with_variables (
             List.filter (fun (var,_) -> not (List.mem var rem_variables))
-              config.C.variables;
-        }
+              config.C.variables)
       in
       OpamFile.Switch_config.write switch_config config;
       let opam_files_dirs =
