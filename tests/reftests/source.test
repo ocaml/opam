@@ -54,7 +54,7 @@ pandore2/src/src.ml
 ### opam source pandore --dev
 Successfully fetched pandore development repo to ${BASEDIR}/pandore
 ### git -C pandore rev-list --all --count
-1
+2
 ### find pandore | grep -v '.git/' | unordered
 pandore
 pandore/.git
@@ -64,7 +64,7 @@ pandore/src/src.ml
 ### opam source pandore --dev --dir pandore4
 Successfully fetched pandore development repo to ${BASEDIR}/pandore4
 ### git -C pandore4 rev-list --all --count
-1
+2
 ### find pandore4 | grep -v '.git/' | unordered
 pandore4
 pandore4/.git
