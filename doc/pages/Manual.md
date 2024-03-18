@@ -408,10 +408,10 @@ three scopes:
      `_:bar`, always refers to the version being defined.
 
 3. Some fields define their own local variables, like `success` and
-   [`with-dev-setup`](#pkgvar-with-dev-setup) in the field
+   [`with-dev-setup`](#pkgvar-with-dev-setup) (since opam 2.2) in the field
    [`post-messages`](#opamfield-post-messages). Other examples of this include
    the [`with-test`](#pkgvar-with-test), [`with-doc`](#pkgvar-with-doc) and
-   [`with-dev-setup`](#pkgvar-with-dev-setup) variables, available in the
+   [`with-dev-setup`](#pkgvar-with-dev-setup) (since opam 2.2) variables, available in the
    `depends:`, `depopts:`, `build:`, `install:` and `remove:` fields.
 
     Within package definition files, the variables `name` and `version`, as
@@ -521,8 +521,8 @@ Additionally, the following are limited to some package fields (`depends:`,
 - <a id="pkgvar-with-test">`with-test`</a>: only true if tests have been
   enabled for this specific package
 - <a id="pkgvar-with-doc">`with-doc`</a>: similarly for documentation
-- <a id="pkgvar-with-dev-setup">`with-dev-setup`</a>: similarly for developer
-  tools
+- <a id="pkgvar-with-dev-setup">`with-dev-setup`</a> (since opam 2.2):
+  similarly for developer tools
 
 
 The following are only available in the `depends:` and `depopts:` fields, and
@@ -920,7 +920,7 @@ files.
     the command's `$PWD`, during this step.
 
     The [`with-test`](#pkgvar-with-test), [`with-doc`](#pkgvar-with-doc), and
-    [`with-dev-setup`](#pkgvar-with-dev-setup) variables are available in the
+    [`with-dev-setup`](#pkgvar-with-dev-setup) (since opam 2.2) variables are available in the
     scope of this field: filter testing commands with _e.g._ `[make "test"]
     {with-test}`. The `dev` variable can also be useful here to detect that the
     package is not installed from a release tarball, and may need additional
@@ -948,7 +948,7 @@ files.
     `install:` field have been run, if any.
 
     Variables [`with-test`](#pkgvar-with-test), [`with-doc`](#pkgvar-with-doc),
-    and [`with-dev-setup`](#pkgvar-with-dev-setup) are also available to the
+    and [`with-dev-setup`](#pkgvar-with-dev-setup) (since opam 2.2) are also available to the
     filters used in this field, to run specific installation commands when
     tests or documentation have been requested.
 
@@ -992,7 +992,7 @@ files.
     not variables from other packages. Additionally, special boolean variables
     [`build`](#pkgvar-build), [`post`](#pkgvar-post),
     [`with-test`](#pkgvar-with-test), [`with-doc`](#pkgvar-with-doc), and
-    [`with-dev-setup`](#pkgvar-with-dev-setup) are defined to allow limiting
+    [`with-dev-setup`](#pkgvar-with-dev-setup) (since opam 2.2) are defined to allow limiting
     the scope of the dependency.
 
     * `build` dependencies are no longer needed at run-time: they won't trigger
@@ -1006,7 +1006,7 @@ files.
       package is explicitly installed with `--with-test`)
     * likewise, `with-doc` dependencies are only required when building the
       package documentation
-    * likewise, `with-dev-setup` dependencies are only required for a developer
+    * likewise, `with-dev-setup` (since opam 2.2) dependencies are only required for a developer
       tool
 
 - <a id="opamfield-depopts">
@@ -1081,7 +1081,7 @@ files.
   and can be used to print messages in case there was an error (typically, a
   hint on how it can be resolved, or a link to an open issue). `success` is also
   defined as syntactic sugar for `!failure`. The
-  [`with-dev-setup`](#pkgvar-with-dev-setup) variable is also available in the
+  [`with-dev-setup`](#pkgvar-with-dev-setup) (since opam 2.2) variable is also available in the
   scope of this field.
 
 - <a id="opamfield-available">`available: [ <filter> ]`</a>:
