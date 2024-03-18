@@ -60,6 +60,7 @@ users)
 ## Exec
 
 ## Source
+  * Using `opam source --dev` with git repositories doesn't fetch with `--depth 1` [#5888 @moyodiallo - fix #5061]
 
 ## Lint
  * Add warning 69: Warn for new syntax when package name in variable in string interpolation contains several '+' [#5840 @rjbou]
@@ -173,6 +174,7 @@ users)
   * `OpamArg.apply_global_options`: load MSYS2 Cygwin binary path too [#5843 @rjbou]
 
 ## opam-repository
+  * `OpamRepositoryBackend.S.pull_url`, `OpamVCS.fetch`, `OpamRepository.pull_tree`: add `full_fetch` optional argument to pull full history if url is a `VCS` [#5888 @moyodiallo - fix #5061]
 
 ## opam-state
   * `OpamEnv.env_expansion`: Fix detection of out-of-date environment variables, a filter predicate was inverted [#5837 @dra27]

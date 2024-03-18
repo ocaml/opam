@@ -45,6 +45,7 @@ module type S = sig
       [checksum] can be used for retrieval but is NOT checked by this
       function. *)
   val pull_url:
+    ?full_fetch:bool ->
     ?cache_dir:dirname -> ?subpath:subpath -> dirname -> OpamHash.t option ->
     url -> filename option download OpamProcess.job
 

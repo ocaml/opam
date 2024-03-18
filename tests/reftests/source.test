@@ -136,4 +136,4 @@ Successfully extracted to ${BASEDIR}/pandore5
 ### opam source pandore.4 --dev --dir pandore6
 Successfully fetched pandore development repo to ${BASEDIR}/pandore6
 ### git -C pandore6 rev-list --all --count
-1
+2
