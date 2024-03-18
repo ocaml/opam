@@ -73,6 +73,7 @@ users)
 ## Opamfile
 
 ## External dependencies
+ * Add support for Wolfi OS, treat it like Apline family as it uses apk too [#5878 @xnox]
 
 ## Format upgrade
 

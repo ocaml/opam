@@ -181,7 +181,7 @@ let family ~env () =
     Dummy { install; installed; available; }
   | Some family ->
     match family with
-    | "alpine" -> Alpine
+    | "alpine" | "wolfi" -> Alpine
     | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol"
     | "rhel" -> Centos
     | "archlinux" | "arch" -> Arch
