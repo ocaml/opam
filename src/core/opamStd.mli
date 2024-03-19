@@ -667,6 +667,8 @@ module Config : sig
 
   val env_int: env_var -> int option
 
+  val env_string_list : env_var -> string list option
+
   type level = int
   (* Like [env_int], but accept boolean values for 0 and 1 *)
   val env_level: env_var -> level option
