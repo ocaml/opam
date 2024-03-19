@@ -145,6 +145,8 @@ users)
   * Fix missing spaces in `opam --help` [#5850 @sorawee].
   * Manual: add missing 'since opam 2.2' annotation when mentionning with-dev-setup [#5885 @kit-ty-kate]
 
+  * Clarify documentation for `enable` pseudo-variable
+
 ## Security fixes
 
 # API updates
