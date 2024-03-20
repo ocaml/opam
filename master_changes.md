@@ -146,6 +146,7 @@ users)
   + Add a test testing showing the current behaviour of opam with variable expansion, in particular when the package contains pluses [#5840 @kit-ty-kate]
   * Update lint test: W41 [#5840 @rjbou]
   * Update lint test: W41 and W69 [#5840 @rjbou]
+  * Add test in `source` to show retrieval of full git repository history when retrieved with `opam source --dev` [#5888 @moyodiallo @rjbou @kit-ty-kate]
 
 ### Engine
 

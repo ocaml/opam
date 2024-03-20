@@ -584,3 +584,22 @@ first  --
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
  1 oper3 file://${BASEDIR}/OPER3
  2 oper  file://${BASEDIR}/OPER3
+### : Ensure that git repository is retrieved not with full history
+### OPAMREPOSITORYTARRING=0
+### <TMCS/repo>
+opam-version: "2.0"
+### <TMCS/packages/first/first.1/opam>
+opam-version: "2.0"
+### git -C ./TMCS init -q
+### git -C ./TMCS config core.autocrlf false
+### git -C ./TMCS add repo
+### git -C ./TMCS add packages/first
+### git -C ./TMCS commit -qm "init"
+### git -C ./TMCS commit --allow-empty -m "second empty commit" --quiet
+### git -C ./TMCS commit --allow-empty -m "thirs empty commit" --quiet
+### git -C ./TMCS rev-list --all --count
+3
+### opam repository add to-many-commits git+file://$BASEDIR/TMCS --this-switch
+[to-many-commits] Initialised
+### git -C ./OPAM/repo/to-many-commits rev-list --all --count
+1

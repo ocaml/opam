@@ -109,3 +109,31 @@ pandore.3/src/src.ml
 Switch phantom and all its packages will be wiped. Are you sure? [y/n] y
 ### opam source pandore
 Successfully extracted to ${BASEDIR}/pandore.3
+### : Full retrieval of git history when --dev is given :
+### git -C ./pandev commit --allow-empty -m "second empty commit" --quiet
+### git -C ./pandev rev-list --all --count
+2
+### <pkg:pandore.4>
+opam-version: "2.0"
+### <mkurl.sh>
+p=pandore.4
+file="REPO/packages/${p%.*}/$p/opam"
+basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+echo "url {" >> $file
+echo "git: \"$basedir/pandev\"" >> $file
+echo "}" >> $file
+echo "dev-repo: \"git+file://${basedir}/pandev\"" >> $file
+### sh mkurl.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam source pandore.4 --dir pandore5
+Successfully extracted to ${BASEDIR}/pandore5
+### git -C pandore5 rev-list --all --count
+1
+### opam source pandore.4 --dev --dir pandore6
+Successfully fetched pandore development repo to ${BASEDIR}/pandore6
+### git -C pandore6 rev-list --all --count
+1
