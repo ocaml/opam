@@ -888,11 +888,10 @@ files.
 - <a id="opamfield-patches">`patches: [ <string> { <filter> } ... ]`</a>: a list
   of files relative to the project source root (often added through the `files/`
   metadata subdirectory). The listed patch files will be applied sequentially to
-  the source using the `patch` command (before opam 2.2) or `git apply`
-  (since opam 2.2), stripping one level of leading directories (`-p1`) -- which
-  is what version control systems generally use. Variable interpolation is
-  available, so you can specify `patches: [ "file" ]` to have the patch
-  processed from `file.in`.
+  the source as with the `patch` command, stripping one level of leading
+  directories (`-p1`) -- which is what version control systems generally use .
+  Variable interpolation is available, so you can specify `patches: [ "file" ]`
+  to have the patch processed from `file.in`.
 
     Patches may be applied conditionally by adding _filters_.
 
@@ -1532,9 +1531,8 @@ them modified with [`opam option --global`](man/opam-option.html).
     - `quorum`: integer, the currently defined quorum
     - `repo`: directory containing the already-validated state of the repository
       (empty for an initial validation)
-    - `patch`: for incremental validation, filename of a patch applying to `repo`
-      (using `patch -p1` before opam 2.2, and using `git apply -p1` since opam 2.2)
-      and that needs verification
+    - `patch`: for incremental validation, filename of a patch applying to
+      `repo` (with `patch -p1`) and that needs verification
     - `dir`: for initial validation, the directory to verify
     - `incremental`: `false` if doing an initial validation based on `dir`,
       `true` for an incremental validation based on `repo` and `patch`.
