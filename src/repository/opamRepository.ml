@@ -458,7 +458,7 @@ let validate_repo_update repo repo_root update =
         | "anchors", _ -> Some (S (String.concat "," ta.fingerprints))
         | "quorum", _ -> Some (S (string_of_int ta.quorum))
         | "repo", _ -> Some (S (OpamFilename.Dir.to_string repo_root))
-        | "patch", Update_patch f -> Some (S (OpamFilename.to_string f))
+        | "patch", Update_patch (f, _diff) -> Some (S (OpamFilename.to_string f))
         | "incremental", Update_patch _ -> Some (B true)
         | "incremental", _ -> Some (B false)
         | "dir", Update_full d -> Some (S (OpamFilename.Dir.to_string d))
@@ -493,7 +493,7 @@ let apply_repo_update repo repo_root = function
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name));
     Done ()
-  | Update_patch f ->
+  | Update_patch (f, diff) ->
     OpamConsole.msg "[%s] synchronised from %s\n"
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name))
@@ -501,16 +501,13 @@ let apply_repo_update repo repo_root = function
     log "%a: applying patch update at %a"
       (slog OpamRepositoryName.to_string) repo.repo_name
       (slog OpamFilename.to_string) f;
-    let preprocess =
-      match repo.repo_url.OpamUrl.backend with
-      | `http | `rsync -> false
-      | _ -> true
-    in
-    (OpamFilename.patch ~preprocess ~internal:true f repo_root @@+ function
-      | Some e ->
-        if not (OpamConsole.debug ()) then OpamFilename.remove f;
-        raise e
-      | None -> OpamFilename.remove f; Done ())
+    (try
+       OpamFilename.internal_patch ~patch_filename:f diff repo_root;
+       OpamFilename.remove f; Done ()
+     with
+     | e ->
+       if not (OpamConsole.debug ()) then OpamFilename.remove f;
+       raise e)
   | Update_empty ->
     OpamConsole.msg "[%s] no changes from %s\n"
       (OpamConsole.colorise `green
@@ -525,7 +522,7 @@ let cleanup_repo_update upd =
   if not (OpamConsole.debug ()) then
     match upd with
     | Update_full d -> OpamFilename.rmdir d
-    | Update_patch f -> OpamFilename.remove f
+    | Update_patch (f, _diff) -> OpamFilename.remove f
     | _ -> ()
 
 let update repo repo_root =

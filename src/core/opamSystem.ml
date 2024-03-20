@@ -1635,13 +1635,21 @@ let translate_patch ~dir orig corrected =
 
 exception Internal_patch_error of string
 
-let internal_patch ~dir p =
+let internal_patch ~patch_filename ~dir diffs =
   let fmt = Printf.sprintf in
+  let get_filename ~p full =
+    (* Taken from my code from ocaml-patch *)
+    let rec iter idx = function
+      | 0 -> String.sub full idx (String.length full - idx)
+      | p -> iter (String.index_from full idx '/') (p - 1)
+    in
+    try iter 0 p with Not_found -> failwith "Malformed patch"
+  in
   let get_path file =
     let dir = real_path dir in
-    let file = real_path (Filename.concat dir file) in
+    let file = real_path (Filename.concat dir (get_filename ~p:1 file)) in
     if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
-      raise (Internal_patch_error (fmt "Patch %S tried to escape its scope." p));
+      raise (Internal_patch_error (fmt "Patch %S tried to escape its scope." patch_filename));
     file
   in
   let patch content diff =
@@ -1649,7 +1657,7 @@ let internal_patch ~dir p =
     | Some x -> x
     | None -> assert false
     | exception _ ->
-      raise (Internal_patch_error (fmt "Patch %S does not apply cleanly." p))
+      raise (Internal_patch_error (fmt "Patch %S does not apply cleanly." patch_filename))
   in
   let apply diff = match diff.Patch.operation with
     | Patch.Edit file ->
@@ -1684,13 +1692,9 @@ let internal_patch ~dir p =
       let dst = get_path dst in
       Unix.rename src dst
   in
-  let content = read p in
-  match Patch.to_diffs content with
-  | diffs -> List.iter apply diffs
-  | exception _ ->
-    raise (Internal_patch_error (fmt "Patch %S failed to parse." p))
+  List.iter apply diffs
 
-let patch ?(preprocess=true) ?(internal=false) ~dir p =
+let patch ?(preprocess=true) ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
@@ -1706,19 +1710,15 @@ let patch ?(preprocess=true) ?(internal=false) ~dir p =
     if not (OpamConsole.debug ()) then Sys.remove p';
   in
   Fun.protect ~finally:cleanup @@ fun () ->
-  if internal then begin
-    try internal_patch ~dir p; Done None
-    with exn -> Done (Some exn)
-  end else
-    let patch_cmd =
-      match OpamStd.Sys.os () with
-      | OpamStd.Sys.OpenBSD
-      | OpamStd.Sys.FreeBSD -> "gpatch"
-      | _ -> "patch"
-    in
-    make_command ~name:"patch" ~dir patch_cmd ["-p1"; "-i"; p'] @@> fun r ->
-    if OpamProcess.is_success r then Done None
-    else Done (Some (Process_error r))
+  let patch_cmd =
+    match OpamStd.Sys.os () with
+    | OpamStd.Sys.OpenBSD
+    | OpamStd.Sys.FreeBSD -> "gpatch"
+    | _ -> "patch"
+  in
+  make_command ~name:"patch" ~dir patch_cmd ["-p1"; "-i"; p'] @@> fun r ->
+  if OpamProcess.is_success r then Done None
+  else Done (Some (Process_error r))
 
 let register_printer () =
   Printexc.register_printer (function

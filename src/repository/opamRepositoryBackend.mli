@@ -18,7 +18,7 @@ type update =
   | Update_full of dirname
   (** No previous known state, the full contents have been put in the given
       temporary directory *)
-  | Update_patch of filename
+  | Update_patch of (filename * Patch.t list)
   (** The given patch file corresponds to the update, i.e. applying it to the
       local repository with 'patch -p1' would get it to the upstream state *)
   | Update_empty
@@ -108,4 +108,4 @@ val job_text:
     portable -- in particular, [-u], [-N] are not POSIX, and recursive diffs
     might not be completely reliable. It also assumes text files only, and fails
     otherwise. *)
-val get_diff: dirname -> basename -> basename -> filename option OpamProcess.job
+val get_diff: dirname -> basename -> basename -> (filename * Patch.t list) option

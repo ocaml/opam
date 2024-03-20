@@ -22,7 +22,7 @@ module type VCS = sig
     unit OpamProcess.job
   val reset_tree: dirname -> url -> unit OpamProcess.job
   val patch_applied: dirname -> url -> unit OpamProcess.job
-  val diff: dirname -> url -> filename option OpamProcess.job
+  val diff: dirname -> url -> (filename * Patch.t list) option OpamProcess.job
   val is_up_to_date: ?subpath:subpath -> dirname -> url -> bool OpamProcess.job
   val revision: dirname -> string option OpamProcess.job
   val versioned_files: dirname -> string list OpamProcess.job
