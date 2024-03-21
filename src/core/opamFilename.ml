@@ -429,8 +429,8 @@ let link ?(relative=false) ~target ~link =
   OpamSystem.link target (to_string link)
 [@@ocaml.warning "-16"]
 
-let patch ?preprocess filename dirname =
-  OpamSystem.patch ?preprocess ~dir:(Dir.to_string dirname) (to_string filename)
+let patch ?delete_stragglers filename dirname =
+  OpamSystem.patch ?delete_stragglers ~dir:(Dir.to_string dirname) (to_string filename)
 
 let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
 
