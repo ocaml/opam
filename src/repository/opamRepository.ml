@@ -530,6 +530,8 @@ let cleanup_repo_update upd =
 
 let update repo repo_root =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;
+  if not (OpamSystem.is_gpatch_available ()) then
+    OpamConsole.warning "Invalid patch utility. Please install GNU patch";
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
   B.fetch_repo_update repo.repo_name repo_root repo.repo_url @@+ function
   | Update_err e -> raise e

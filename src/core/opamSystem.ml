@@ -1633,6 +1633,23 @@ let translate_patch ~dir orig corrected =
   end;
   close_in ch
 
+let patch_cmd = lazy begin
+  match OpamStd.Sys.os () with
+  | OpamStd.Sys.OpenBSD
+  | OpamStd.Sys.FreeBSD -> "gpatch"
+  | _ -> "patch"
+end
+
+let is_gpatch_available () =
+  let patch_cmd = Lazy.force patch_cmd in
+  let r = OpamProcess.run (make_command ~name:"patch" patch_cmd ["--version"]) in
+  match OpamProcess.is_success r, r.OpamProcess.r_stdout with
+  | true, full::_ when
+      OpamStd.String.is_prefix_of ~from:0 ~full "GNU patch " ->
+    true
+  | _ ->
+    false
+
 let patch ?(preprocess=true) ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
@@ -1645,12 +1662,7 @@ let patch ?(preprocess=true) ~dir p =
     else
       p
   in
-  let patch_cmd =
-    match OpamStd.Sys.os () with
-    | OpamStd.Sys.OpenBSD
-    | OpamStd.Sys.FreeBSD -> "gpatch"
-    | _ -> "patch"
-  in
+  let patch_cmd = Lazy.force patch_cmd in
   make_command ~name:"patch" ~dir patch_cmd ["-p1"; "-i"; p'] @@> fun r ->
     if not (OpamConsole.debug ()) then Sys.remove p';
     if OpamProcess.is_success r then Done None
