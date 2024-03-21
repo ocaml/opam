@@ -621,6 +621,48 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:extrasource.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-init-ocaml-eval-variables.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff init-ocaml-eval-variables.unix.test init-ocaml-eval-variables.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-init-ocaml-eval-variables.unix)))
+
+(rule
+ (targets init-ocaml-eval-variables.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Unix"))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:init-ocaml-eval-variables.unix.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-init-ocaml-eval-variables.win32)
+ (enabled_if (= %{os_type} "Win32"))
+ (action
+  (diff init-ocaml-eval-variables.win32.test init-ocaml-eval-variables.win32.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Win32"))
+ (deps (alias reftest-init-ocaml-eval-variables.win32)))
+
+(rule
+ (targets init-ocaml-eval-variables.win32.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Win32"))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:init-ocaml-eval-variables.win32.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-init-scripts.unix)
  (enabled_if (= %{os_type} "Unix"))
  (action
