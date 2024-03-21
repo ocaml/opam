@@ -501,12 +501,7 @@ let apply_repo_update repo repo_root = function
     log "%a: applying patch update at %a"
       (slog OpamRepositoryName.to_string) repo.repo_name
       (slog OpamFilename.to_string) f;
-    let preprocess =
-      match repo.repo_url.OpamUrl.backend with
-      | `http | `rsync -> false
-      | _ -> true
-    in
-    (OpamFilename.patch ~preprocess f repo_root @@+ function
+    (OpamFilename.patch ~delete_stragglers:true f repo_root @@+ function
       | Some e ->
         if not (OpamConsole.debug ()) then OpamFilename.remove f;
         raise e

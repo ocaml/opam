@@ -133,7 +133,7 @@ let recommended_tools () =
 let required_tools ~sandboxing () =
   req_dl_tools () @
   [
-    ["diff"], None, None;
+    ["git"], None, None;
     ["patch"], None, Some patch_filter;
     ["gpatch"], None, Some gpatch_filter;
     ["tar"], None, Some tar_filter;

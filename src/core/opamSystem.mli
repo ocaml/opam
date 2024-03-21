@@ -304,10 +304,11 @@ val get_lock_fd: lock -> Unix.file_descr
 
 (** {2 Misc} *)
 
-(** Apply a patch file in the current directory. If [preprocess] is set to
-    false, there is no CRLF translation. Returns the error if the patch didn't
-    apply. *)
-val patch: ?preprocess:bool -> dir:string -> string -> exn option OpamProcess.job
+(** Apply a patch in a directory. The given patch file will be CRLF translated
+    and if [delete_stragglers] is true the undeleted files will be deleted
+    (e.g. when macOS patch is used).
+    Returns [None] on success, the process error otherwise *)
+val patch: ?delete_stragglers:bool -> dir:string -> string -> exn option OpamProcess.job
 
 (** Returns the end-of-line encoding style for the given file. [None] means that
     either the encoding of line endings is mixed, or the file contains no line
@@ -321,8 +322,9 @@ val get_eol_encoding : string -> bool option
     endings then the patch is transformed to patch using the encoding on disk.
     In particular, this means that patches generated against Unix checkouts of
     Git sources will correctly apply to Windows checkouts of the same sources.
+    It return a list of files to be deleted after the patch has been applied.
 *)
-val translate_patch: dir:string -> string -> string -> unit
+val translate_patch: dir:string -> string -> string -> string list
 
 (** Create a temporary file in {i ~/.opam/logs/<name>XXX}, if [dir] is not set.
     ?auto_clean controls whether the file is automatically deleted when opam
