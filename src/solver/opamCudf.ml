@@ -22,6 +22,7 @@ let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
 let s_pinned = "pinned"
 let s_version_lag = "version-lag"
+let s_avoid_version = "avoid-version"
 
 let opam_invariant_package_name =
   Dose_common.CudfAdd.encode "=opam-invariant"

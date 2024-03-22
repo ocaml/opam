@@ -167,15 +167,25 @@ let opam2cudf_map universe version_map packages =
     OpamPackage.Set.fold (fun nv -> OpamPackage.Map.add nv true)
       (packages %% set) OpamPackage.Map.empty
   in
+  let avoid_versions =
+    OpamStd.Option.default OpamPackage.Set.empty @@
+    OpamStd.List.assoc_opt String.equal "avoid-version" universe.u_attrs
+  in
   let base_map =
     OpamPackage.Set.fold (fun nv ->
+        let pkg_extra = [
+          OpamCudf.s_source, `String(OpamPackage.name_to_string nv);
+          OpamCudf.s_source_number, `String(OpamPackage.version_to_string nv);
+        ] in
+        let pkg_extra =
+          if OpamPackage.Set.mem nv avoid_versions then
+            (OpamCudf.s_avoid_version, `Bool true)::pkg_extra
+          else
+            pkg_extra in
         OpamPackage.Map.add nv
           { Cudf.default_package with
             Cudf.package = name_to_cudf nv.name;
-            pkg_extra = [
-              OpamCudf.s_source, `String(OpamPackage.name_to_string nv);
-              OpamCudf.s_source_number, `String(OpamPackage.version_to_string nv);
-            ];
+            pkg_extra;
           })
       packages OpamPackage.Map.empty
   in
@@ -188,10 +198,6 @@ let opam2cudf_map universe version_map packages =
   let reinstall_map = set_to_bool_map universe.u_reinstall in
   let installed_root_map = set_to_bool_map universe.u_installed_roots in
   let pinned_to_current_version_map = set_to_bool_map universe.u_pinned in
-  let avoid_versions =
-    OpamStd.Option.default OpamPackage.Set.empty @@
-    OpamStd.List.assoc_opt String.equal "avoid-version" universe.u_attrs
-  in
   let version_lag_map =
     OpamPackage.Name.Map.fold (fun name version_set acc ->
         let nvers, vs =
