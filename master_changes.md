@@ -29,6 +29,7 @@ users)
   * Properly test if "we're in interactive mode" instead of "in a tty" in fish script [#5866 @ElectreAAS]
 
 ## Config report
+  * add the list of all installed repositories to a new all-repositories field [#5799 @kit-ty-kate]
 
 ## Actions
 
