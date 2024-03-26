@@ -126,3 +126,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamSystem.read`: Speedup by using `Stdlib.In_channel.input_all` when available [#5896 @kit-ty-kate]
