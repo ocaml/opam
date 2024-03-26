@@ -121,3 +121,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamSystem.read`: Speedup by 8% [#5896 @kit-ty-kate]

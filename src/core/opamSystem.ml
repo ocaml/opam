@@ -217,18 +217,14 @@ let remove_file file =
   )
 
 let string_of_channel ic =
-  let n = 32768 in
-  let s = Bytes.create n in
-  let b = Buffer.create 1024 in
-  let rec iter ic b s =
-    let nread =
-      try input ic s 0 n
-      with End_of_file -> 0 in
-    if nread > 0 then (
-      Buffer.add_subbytes b s 0 nread;
-      iter ic b s
-    ) in
-  iter ic b s;
+  let n = 4096 in
+  let b = Buffer.create n in
+  let rec iter ic b =
+    match Buffer.add_channel b ic n with
+    | () -> iter ic b
+    | exception End_of_file -> ()
+  in
+  iter ic b;
   Buffer.contents b
 
 let read file =
