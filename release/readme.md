@@ -7,6 +7,37 @@
 * run `make tests`, `opam-rt` [checked by github actions]
 * update the CHANGE file: take `master_changes.md` content to fill it
 
+## Windows setup
+
+* Download Windows 10 English International 64bit from https://www.microsoft.com/en-gb/software-download/windows10ISO
+* Run qemu-img create -f qcow2 Windows-10-x86_64.qcow2 32G
+* Run qemu-system-x86_64 -cdrom <path-to-the-windows-iso> -drive file=Windows-10-x86_64.qcow2 -smp 2 -m 6G
+* Install Windows. Everything stays as default except:
+  * Click "I don’t have a product key"
+  * Click "Custom: ..." not "Upgrade: ..."
+* This will take a couple of hours
+* Upon restart:
+  * username: opam
+  * no password
+  * no location
+  * no find my device
+  * send required diagnostic data
+  * no improve inking & typing
+  * no tailored experiences
+  * no advertasing
+  * no cortana
+* Open Task Scheduler, go to "Task Scheduler Library -> Microsoft -> Windows -> WindowsUpdate", left click "Scheduled Start" and click "disable"
+* Open services.msc, go to the Windows Update service, right click to Properties and set "Startup type" to "Disabled", as well as click on Stop. Then click apply and OK.
+* Setup OpenSSH Server by following https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=gui
+* Open cmd.exe as administrator and run "notepad C:/ProgramData/ssh/sshd_config"
+  * Uncomment and set:
+    * PermitEmptyPasswords yes
+    * PermitRootLogin yes
+    * PasswordAuthentication yes
+  * Save and close both applications
+* Open regedit.exe and set HKey_Local_Machine\SYSTEM\CurrentControlSet\Control\Lsa\LimitBlankPasswordUse to 0
+* Shutdown the computer using the startmenu button
+
 ## Github release
 
 [ once bump version & changes PRs merged ]
@@ -47,6 +78,7 @@
 
 ## Device requirements
 * Mac M1
+* >=70GB of disk space free
 * installed: git, gpg, qemu>=8.1.0, docker>=24.0.0
 * opam repo with the tag fetched
 * Have the secret key available
