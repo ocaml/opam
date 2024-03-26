@@ -168,3 +168,4 @@ users)
 
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
+  * `OpamSystem.read`: Speedup by 8% [#5896 @kit-ty-kate]
