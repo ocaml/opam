@@ -1,5 +1,43 @@
 N0REP0
+### opam option opam-root-version --global | '"' -> '' >$ OPAMROOTVERSION
+### OPAMYES=1 OPAMDEBUG=-1 OPAMSTRICT=0 OPAMDEBUGSECTIONS="FMT_UPG FORMAT GSTATE RSTATE STATE"
+### <generate.ml>
+let opamroot = Sys.getenv "OPAMROOT"
+
+let opam_version = Printf.sprintf "opam-version: %S"
+let opam_version_2_0 = opam_version "2.0"
+let opam_version_2_1 = opam_version "2.1"
+let repo = {|repositories: "default"|}
+let depext = {|
+depext: true
+depext-run-installs: true
+depext-cannot-install: false
+|}
+let eval_2_0 = {|eval-variables: [sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"]|}
+let eval_2_1 = {|eval-variables: [
+  [sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"]
+  [sys-ocaml-arch ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"] "Target architecture of the OCaml compiler present on your system"]
+  [sys-ocaml-cc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"] "Host C Compiler type of the OCaml compiler present on your system"]
+  [sys-ocaml-libc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '\\r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"] "Host C Runtime Library type of the OCaml compiler present on your system"]
+]|}
+let root_version =  Printf.sprintf "opam-root-version: %S"
+let opam_20 = [ opam_version_2_0; repo; eval_2_0 ]
+let opam_21 = [ opam_version_2_0; root_version "2.1"; repo; eval_2_1; depext ]
+let _ =
+  let get_files = function
+    | "2.0" -> opam_20
+    | "2.1" -> opam_21
+    | v -> failwith (Printf.sprintf "No generator for %s version" v)
+  in
+  let name = Filename.concat opamroot "config" in
+  let content = get_files Sys.argv.(1) in
+  let fd = open_out name in
+  List.iter (fun l -> output_string fd (l^"\n")) content;
+  close_out fd
 ### rm -rf "$OPAMROOT"
+### ::::::::::::::::::::::::::
+### :I: Current root version :
+### ::::::::::::::::::::::::::
 ### opam init default ./REPO --bare --bypass-checks --no-opamrc --debug-level=0 --no-setup
 No configuration file found, using built-in defaults.
 
@@ -7,3 +45,43 @@ No configuration file found, using built-in defaults.
 [default] Initialised
 ### opam-cat $OPAMROOT/config | grep eval-variables
 eval-variables: [[sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"] [sys-ocaml-arch ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/i386/i686/;s/amd64/x86_64/;s/^architecture: //p'"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-cc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/^ccomp_type: //p'"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-libc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/^os_type: Win32/msvc/p;s/^os_type: .*/libc/p'"] "Host C Runtime Library type of the OCaml compiler present on your system"]]
+### rm "$OPAMROOT/config"
+### ::::::::::::::::::::
+### :II: From 2.0 root :
+### ::::::::::::::::::::
+### ocaml generate.ml 2.0
+### opam-cat $OPAMROOT/config | grep eval-variables
+eval-variables: [sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"]
+### # rw global state
+### opam option jobs=4 | " ${OPAMROOTVERSION}($|,)" -> " current"
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         Light config upgrade, from 2.0 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
+Format upgrade done.
+Set to '4' the field jobs in global configuration
+### opam-cat $OPAMROOT/config | grep eval-variables
+eval-variables: [sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"]
+### rm "$OPAMROOT/config"
+### :::::::::::::::::::::
+### :III: From 2.1 root :
+### :::::::::::::::::::::
+### ocaml generate.ml 2.1
+### opam-cat $OPAMROOT/config | grep eval-variables
+eval-variables: [[sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"] [sys-ocaml-arch ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-cc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-libc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"] "Host C Runtime Library type of the OCaml compiler present on your system"]]
+### # rw global state
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> " current"
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         Light config upgrade, from 2.1 to  current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1 to version  current which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [y/n] y
+Format upgrade done.
+Set to '4' the field jobs in global configuration
+### opam-cat $OPAMROOT/config | grep eval-variables
+eval-variables: [[sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"] [sys-ocaml-arch ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^architecture: ' | sed -e 's/.*: //' -e 's/i386/i686/' -e 's/amd64/x86_64/'"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-cc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^ccomp_type: ' | sed -e 's/.*: //'"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-libc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | grep '^os_type: ' | sed -e 's/.*: //' -e 's/Win32/msvc/' -e '/^msvc$/!s/.*/libc/'"] "Host C Runtime Library type of the OCaml compiler present on your system"]]

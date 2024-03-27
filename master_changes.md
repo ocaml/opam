@@ -132,7 +132,7 @@ users)
 ## Reftests
 ### Tests
   * Add init scripts tests [#5864 @rjbou]
-  * Add test for init OCaml predefined eval variables [#5829 @rjbou]
+  * Add test for init OCaml predefined eval variables and their format upgrade [#5829 @rjbou]
 
 ### Engine
 
