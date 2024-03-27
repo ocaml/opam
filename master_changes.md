@@ -78,6 +78,7 @@ users)
   * Fix incorrect deduplication of environment variables on update. Effect was that FOO += "" would occlude the value of FOO in the environment [#5837 @dra27]
   * Fix regression from #5356 on the detection of out-of-date environment variables. As part of a refactoring, a filter predicate got inverted [#5837 @dra27]
   * Unixify Windows paths in init shells scripts (sh, bash, zsh, fish & tsh) [#5797 @rjbou]
+  * `OpamProcess.cygwin_create_process_env` no longer adjusts PATH [#5832 @dra27]
   * Internal Cygwin installation's bin directory is placed as far down PATH as is necessary not to shadow `bash`, `tar`, `sort` or `git` [#5832 @dra27]
 
 ## Opamfile
