@@ -163,6 +163,7 @@ users)
   * `OpamSysInteract.Cygwin.check_install`: add `variant` argument to permit checking that it is an Cygwin-like install if it is set to true, keep checking that it is a strictly Cygwin install if false [#5843 @rjbou]
   * `OpamSysInteract.Cygwin.check_install`: look for `cygcheck.exe` in `usr/bin` also as MSYS2 doesn't have "bin" [#5843 @rjbou]
   * `OpamGlobalState.load_config`: load MSYS2 Cygwin binary path too at config file loading [#5843 @rjbou]
+  * `OpamEnv`: add `sys_ocaml_eval_variables` value, moved `OpamInitDefaults` as it is also needed in `OpamFormatUpgrade` too [#5829 @rjbou @kit-ty-kate]
 
 ## opam-solver
 

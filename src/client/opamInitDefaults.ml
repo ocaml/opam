@@ -36,34 +36,8 @@ let sys_ocaml_version =
   OpamVariable.of_string "sys-ocaml-version", ["ocamlc"; "-vnum"],
   "OCaml version present on your system independently of opam, if any"
 
-let sys_config_variables =
-  (* For Windows, these only return results for OCaml 4.08+ *)
-  List.map (fun (var, comment, unix, win32) ->
-      let var = OpamVariable.of_string var in
-      if Sys.win32 then var, win32, comment
-      else var, unix, comment)
-    [
-      "sys-ocaml-arch",
-      "Target architecture of the OCaml compiler present on your system",
-      ["sh"; "-c";
-       "ocamlc -config 2>/dev/null | tr -d '\\r' | sed -n -e 's/i386/i686/;s/amd64/x86_64/;s/^architecture: //p'"],
-      ["cmd"; "/d"; "/c";
-       "for /f %f in ('ocamlc -config-var architecture 2^>nul') do @if '%f' equ 'i386' (echo i686) else if '%f' equ 'amd64' (echo x86_64) else (echo %f)"];
-      "sys-ocaml-cc",
-      "Host C Compiler type of the OCaml compiler present on your system",
-      ["sh"; "-c";
-       "ocamlc -config 2>/dev/null | tr -d '\\r' | sed -n -e 's/^ccomp_type: //p'"],
-      ["cmd"; "/d"; "/c"; "ocamlc -config-var ccomp_type 2>nul"];
-      "sys-ocaml-libc",
-      "Host C Runtime Library type of the OCaml compiler present on your system",
-      ["sh"; "-c";
-       "ocamlc -config 2>/dev/null | tr -d '\\r' | sed -n -e 's/^os_type: Win32/msvc/p;s/^os_type: .*/libc/p'"],
-      ["cmd"; "/d"; "/c";
-       "for /f %f in ('ocamlc -config-var os_type 2^>nul') do @if '%f' equ 'Win32' (echo msvc) else (echo libc)"];
-    ]
-
 let eval_variables =
-  sys_ocaml_version :: sys_config_variables
+  sys_ocaml_version :: OpamEnv.sys_ocaml_eval_variables
 
 let os_filter os =
   FOp (FIdent ([], OpamVariable.of_string "os", None), `Eq, FString os)
