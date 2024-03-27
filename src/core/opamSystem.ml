@@ -1660,26 +1660,14 @@ let internal_patch ~patch_filename ~dir diffs =
       raise (Internal_patch_error (fmt "Patch %S does not apply cleanly." patch_filename))
   in
   let apply diff = match diff.Patch.operation with
-    | Patch.Edit file ->
-      let file, content =
-        let file = get_path file in
-        let content =
-          if Sys.file_exists file then
-            Some (read file)
-          else
-            None
-        in
-        (file, content)
-      in
-      let content = patch content diff in
-      write file content
-    | Patch.Rename (src, dst) ->
+    | Patch.Edit (src, dst) ->
       let src = get_path src in
       let dst = get_path dst in
       let content = read src in
       let content = patch (Some content) diff in
       write dst content;
-      Unix.unlink src
+      if not (String.equal src dst) then
+        Unix.unlink src;
     | Patch.Delete file ->
       let file = get_path file in
       Unix.unlink file

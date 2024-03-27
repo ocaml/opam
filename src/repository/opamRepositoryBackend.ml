@@ -70,11 +70,6 @@ let job_text name label =
        (OpamConsole.colorise `green (OpamRepositoryName.to_string name))
        label)
 
-type diff_state =
-  | Mine of string
-  | Theirs of string
-  | Both of string * string
-
 let getfiles parent_dir dir =
   let dir = Filename.concat (OpamFilename.Dir.to_string parent_dir) dir in
   OpamSystem.get_files dir
@@ -82,9 +77,9 @@ let getfiles parent_dir dir =
 let get_files_for_diff parent_dir dir1 dir2 = match dir1, dir2 with
   | None, None -> assert false
   | Some dir, None ->
-    List.map (fun file -> Mine (Filename.concat dir file)) (getfiles parent_dir dir)
+    List.map (fun file -> Patch.Delete (Filename.concat dir file)) (getfiles parent_dir dir)
   | None, Some dir ->
-    List.map (fun file -> Theirs (Filename.concat dir file)) (getfiles parent_dir dir)
+    List.map (fun file -> Patch.Create (Filename.concat dir file)) (getfiles parent_dir dir)
   | Some dir1, Some dir2 ->
     let files1 = List.fast_sort String.compare (getfiles parent_dir dir1) in
     let files2 = List.fast_sort String.compare (getfiles parent_dir dir2) in
@@ -92,15 +87,15 @@ let get_files_for_diff parent_dir dir1 dir2 = match dir1, dir2 with
       | (file1::files1 as orig1), (file2::files2 as orig2) ->
         let cmp = String.compare file1 file2 in
         if cmp = 0 then
-          aux (Both (Filename.concat dir1 file1, Filename.concat dir2 file2) :: acc) files1 files2
+          aux (Patch.Edit (Filename.concat dir1 file1, Filename.concat dir2 file2) :: acc) files1 files2
         else if cmp < 0 then
-          aux (Mine (Filename.concat dir1 file1) :: acc) files1 orig2
+          aux (Patch.Delete (Filename.concat dir1 file1) :: acc) files1 orig2
         else
-          aux (Theirs (Filename.concat dir2 file2) :: acc) orig1 files2
+          aux (Patch.Create (Filename.concat dir2 file2) :: acc) orig1 files2
       | file1::files1, [] ->
-        aux (Mine (Filename.concat dir1 file1) :: acc) files1 []
+        aux (Patch.Delete (Filename.concat dir1 file1) :: acc) files1 []
       | [], file2::files2 ->
-        aux (Theirs (Filename.concat dir2 file2) :: acc) [] files2
+        aux (Patch.Create (Filename.concat dir2 file2) :: acc) [] files2
       | [], [] ->
         acc
     in
@@ -123,15 +118,15 @@ let get_diff parent_dir dir1 dir2 =
   let rec aux diffs dir1 dir2 =
     let files = get_files_for_diff parent_dir dir1 dir2 in
     let diffs =
-      List.fold_left (fun diffs state ->
-          let filename, file1, file2 = match state with
-            | Mine filename -> (filename, Some filename, None)
-            | Theirs filename -> (filename, None, Some filename)
-            | Both (file1, file2) -> (file2, Some file1, Some file2)
-            (* TODO: not quite right here, maybe we want to change ocaml-patch to always have two files *)
+      List.fold_left (fun diffs operation ->
+          let file1, file2 = match operation with
+            | Patch.Delete filename -> (Some filename, None)
+            | Patch.Create filename -> (None, Some filename)
+            | Patch.Edit (file1, file2)
+            | Patch.Rename_only (file1, file2) -> (Some file1, Some file2)
           in
           let add_to_diffs content1 content2 diffs =
-            match Patch.diff ~filename content1 content2 with
+            match Patch.diff operation content1 content2 with
             | None -> diffs
             | Some diff -> diff :: diffs
           in
@@ -163,13 +158,13 @@ let get_diff parent_dir dir1 dir2 =
           | Some {Unix.st_kind = Unix.S_DIR; _}, Some {Unix.st_kind = Unix.S_LNK; _} ->
             assert false (* TODO *)
           | Some {Unix.st_kind = Unix.S_CHR; _}, _ | _, Some {Unix.st_kind = Unix.S_CHR; _} ->
-            failwith (Printf.sprintf "Character devices (%s) are unsupported" filename)
+            failwith "Character devices are unsupported"
           | Some {Unix.st_kind = Unix.S_BLK; _}, _ | _, Some {Unix.st_kind = Unix.S_BLK; _} ->
-            failwith (Printf.sprintf "Block devices (%s) are unsupported" filename)
+            failwith "Block devices are unsupported"
           | Some {Unix.st_kind = Unix.S_FIFO; _}, _ | _, Some {Unix.st_kind = Unix.S_FIFO; _} ->
-            failwith (Printf.sprintf "Named pipes (%s) are unsupported" filename)
+            failwith "Named pipes are unsupported"
           | Some {Unix.st_kind = Unix.S_SOCK; _}, _ | _, Some {Unix.st_kind = Unix.S_SOCK; _} ->
-            failwith (Printf.sprintf "Sockets (%s) are unsupported" filename)
+            failwith "Sockets are unsupported"
           | None, None -> assert false)
         diffs files
     in
