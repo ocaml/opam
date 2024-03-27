@@ -316,8 +316,13 @@ first  --
 ### git -C ./OPER add repo
 ### git -C ./OPER add packages/first
 ### git -C ./OPER commit -qm "third"
+### git -C ./OPER commit --allow-empty -m "second empty commit" --quiet
+### git -C ./OPER rev-list --all --count
+2
 ### opam repository set-url oper git+file://$BASEDIR/OPER
 [oper] Initialised
+### git -C ./OPAM/repo/oper rev-list --all --count
+1
 ### git -C ./OPER add packages/fantom
 ### git -C ./OPER commit -qm "fantom"
 ### opam list --available --repo=oper

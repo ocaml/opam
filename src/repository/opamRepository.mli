@@ -44,7 +44,7 @@ val pull_shared_tree:
 
 (* Same as [pull_shared_tree], but for a unique label/dirname. *)
 val pull_tree:
-  string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?working_dir:bool ->
+  string -> ?full_fetch:bool -> ?cache_dir:dirname -> ?cache_urls:url list -> ?working_dir:bool ->
   ?subpath:subpath -> dirname -> OpamHash.t list -> url list ->
   string download OpamProcess.job
 

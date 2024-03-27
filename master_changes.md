@@ -55,6 +55,7 @@ users)
 ## Exec
 
 ## Source
+  * Avoid fetching with `--depth 1` for `opam source` command [#5888 @moyodiallo - fix #5061]
 
 ## Lint
 

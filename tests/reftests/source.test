@@ -8,6 +8,9 @@ print_endline "i'm root"
 ### git -C ./pandev config core.autocrlf false
 ### git -C ./pandev add -A
 ### git -C ./pandev commit -qm "init"
+### git -C ./pandev commit --allow-empty -m "second empty commit" --quiet
+### git -C ./pandev rev-list --all --count
+2
 ### <pkg:pandore.3>
 opam-version: "2.0"
 ### <mkurl.sh>
@@ -50,6 +53,8 @@ pandore2/src/src.ml
 ### rm -rf pandore.3
 ### opam source pandore --dev
 Successfully fetched pandore development repo to ${BASEDIR}/pandore
+### git -C pandore rev-list --all --count
+2
 ### find pandore | grep -v '.git/' | unordered
 pandore
 pandore/.git
@@ -58,6 +63,8 @@ pandore/src
 pandore/src/src.ml
 ### opam source pandore --dev --dir pandore4
 Successfully fetched pandore development repo to ${BASEDIR}/pandore4
+### git -C pandore4 rev-list --all --count
+2
 ### find pandore4 | grep -v '.git/' | unordered
 pandore4
 pandore4/.git

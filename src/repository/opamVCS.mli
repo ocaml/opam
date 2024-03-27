@@ -29,7 +29,7 @@ module type VCS = sig
       Be aware that the remote URL might have been changed, so make sure
       to update accordingly. *)
   val fetch:
-    ?cache_dir:dirname -> ?subpath:subpath -> dirname -> url ->
+    ?full_fetch:bool -> ?cache_dir:dirname -> ?subpath:subpath -> dirname -> url ->
     unit OpamProcess.job
 
   (** Reset the master branch of the repository to match the remote repository
