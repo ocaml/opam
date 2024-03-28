@@ -33,6 +33,21 @@ let () =
     launch "opam switch set-invariant core -n --sw two";
     time_cmd ~exit:0 (fmt "%s install magic-trace -y --fake --sw two" bin)
   in
+  let time_OpamSystem_read_10 =
+    let time_OpamSystem_read () =
+      let ic = Stdlib.open_in_bin "/home/opam/all-opam-files" in
+      let before = Unix.gettimeofday () in
+      let rec loop () =
+        match Stdlib.input_line ic with
+        | file -> ignore (OpamSystem.read file); loop ()
+        | exception End_of_file -> Unix.gettimeofday () -. before
+      in
+      loop ()
+    in
+    let n = 10 in
+    let l = List.init n (fun _ -> time_OpamSystem_read ()) in
+    List.fold_left (+.) 0.0 l /. float_of_int n
+  in
   let json = fmt {|{
   "results": [
     {
@@ -50,6 +65,11 @@ let () =
         },
         {
           "name": "Fake install with invariant",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "OpamSystem.read amortised over 10 runs",
           "value": %f,
           "units": "secs"
         }
@@ -70,6 +90,7 @@ let () =
       time_misspelled_cmd
       time_install_cmd
       time_install_cmd_w_invariant
+      time_OpamSystem_read_10
       bin_size
   in
   print_endline json
