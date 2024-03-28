@@ -387,6 +387,19 @@ messages: "foo" { bar:innerenv }
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 41: Some packages are mentioned in package scripts or features, but there is no dependency or depopt toward them: "bar"
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+messages: "foo" { bar:installed }
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
 ### : E42: The 'dev-repo:' field doesn't use version control. You should use URLs of the form "git://", "git+https://", "hg+https://"...
 ### <lint.opam>
 opam-version: "2.0"
@@ -929,3 +942,23 @@ bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 68: Missing field 'license'
+### : W69: Package name in variable in string interpolation contains several '+'
+### <lint.opam>
+opam-version: "2.0"
+name: "conf-g++"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+messages: [
+  "foo" { "%{?conf-c++:installed:}%" }
+  "bar" { "%{conf-g++:installed}%" }
+  "baz" { "%{abc+xyz+jkl:installed}%" }
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 69: Package name in variable in string interpolation contains several '+', use: "'?conf-g++:installed:' instead of 'conf-g++:installed'"
