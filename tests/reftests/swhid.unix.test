@@ -58,7 +58,7 @@ url {
   mirrors: "https://swhid.opam.ocaml.org/swh:1:dir:9f2be900491e1dabfc027848204ae01aa88fc71d"
 }
 ### opam option swh-fallback=false
-Set to 'false' the field swh-fallback in global configuration
+No modification in global configuration
 ### opam install snappy-swhid-dir -v | '"/.*curl' -> '"curl' | "${OPAMVERSION}" -> "current"
 The following actions will be performed:
 === install 1 package

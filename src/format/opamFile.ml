@@ -1533,7 +1533,7 @@ module ConfigSyntax = struct
     depext_bypass = OpamSysPkg.Set.empty;
     sys_pkg_manager_cmd = OpamStd.String.Map.empty;
     git_location = None;
-    swh_fallback = true;
+    swh_fallback = false;
   }
 
   (* When adding a field, make sure to add it in
