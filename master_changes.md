@@ -47,6 +47,7 @@ users)
 ## Show
 
 ## Var/Option
+  * Disable Software Heritage fallbacks by default [#5899 @kit-ty-kate]
 
 ## Update / Upgrade
 
