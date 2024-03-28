@@ -54,6 +54,9 @@ val map_up: (filter -> filter) -> filter -> filter
     ["%{xxx"] if unclosed) *)
 val string_interp_regex : Re.re
 
+(* Extract string of variables appearing in interpolation in a string *)
+val extract_variables_from_string : string -> string list
+
 (** Returns all the variables appearing in a filter (including the ones within
     string interpolations *)
 val variables: filter -> full_variable list
