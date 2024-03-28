@@ -942,3 +942,23 @@ bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 68: Missing field 'license'
+### : W69: Package name in variable in string interpolation contains several '+'
+### <lint.opam>
+opam-version: "2.0"
+name: "conf-g++"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+messages: [
+  "foo" { "%{?conf-c++:installed:}%" }
+  "bar" { "%{conf-g++:installed}%" }
+  "baz" { "%{abc+xyz+jkl:installed}%" }
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 69: Package name in variable in string interpolation contains several '+', use: "'?conf-g++:installed:' instead of 'conf-g++:installed'"
