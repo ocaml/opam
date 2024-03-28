@@ -13,3 +13,4 @@ RUN git clone https://github.com/ocaml/opam-repository --depth 1
 RUN git -C opam-repository fetch origin $OPAMREPOSHA
 RUN git -C opam-repository checkout $OPAMREPOSHA
 RUN opam init -n --disable-sandboxing ./opam-repository
+RUN find "$(pwd)/opam-repository" -name opam -type f > /home/opam/all-opam-files
