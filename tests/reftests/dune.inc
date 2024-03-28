@@ -885,6 +885,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:lock.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-opam-pkgvar-with-plus)
+ (action
+  (diff opam-pkgvar-with-plus.test opam-pkgvar-with-plus.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-opam-pkgvar-with-plus)))
+
+(rule
+ (targets opam-pkgvar-with-plus.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opam-pkgvar-with-plus.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-opamroot-versions)
  (action
   (diff opamroot-versions.test opamroot-versions.out)))
@@ -1426,24 +1444,6 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:var-option.test} %{read-lines:testing-env}))))
-
-(rule
- (alias reftest-var-syntax)
- (action
-  (diff var-syntax.test var-syntax.out)))
-
-(alias
- (name reftest)
- (deps (alias reftest-var-syntax)))
-
-(rule
- (targets var-syntax.out)
- (deps root-N0REP0)
- (package opam)
- (action
-  (with-stdout-to
-   %{targets}
-   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:var-syntax.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-with-dev-setup)
