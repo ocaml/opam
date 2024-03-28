@@ -69,6 +69,8 @@ users)
   * Fix incorrect deduplication of environment variables on update. Effect was that FOO += "" would occlude the value of FOO in the environment [#5837 @dra27]
   * Fix regression from #5356 on the detection of out-of-date environment variables. As part of a refactoring, a filter predicate got inverted [#5837 @dra27]
   * Unixify Windows paths in init shells scripts (sh, bash, zsh, fish & tsh) [#5797 @rjbou]
+  * `OpamProcess.cygwin_create_process_env` no longer adjusts PATH [#5832 @dra27]
+  * Internal Cygwin installation's bin directory is placed as far down PATH as is necessary not to shadow `bash`, `tar` or `git` [#5832 @dra27]
 
 ## Opamfile
 
@@ -158,11 +160,15 @@ users)
   * `OpamSysInteract.Cygwin.check_install`: add `variant` argument to permit checking that it is an Cygwin-like install if it is set to true, keep checking that it is a strictly Cygwin install if false [#5843 @rjbou]
   * `OpamSysInteract.Cygwin.check_install`: look for `cygcheck.exe` in `usr/bin` also as MSYS2 doesn't have "bin" [#5843 @rjbou]
   * `OpamGlobalState.load_config`: load MSYS2 Cygwin binary path too at config file loading [#5843 @rjbou]
+  * Unused `OpamEnv.get_opam` and `OpamEnv.get_opam_raw` removed (`OpamEnv` is complicated enough!) [#5832 @dra27]
+  * `OpamEnv` supports an internal `Cygwin` environment operation which pushes the given directory as far down the list as can be done without shadowing. This mechanism replaces the opposite which was done in OpamProcess [#5832 @dra27]
 
 ## opam-solver
 
 ## opam-format
   * `OpamFile.InitConfig`: add `sys-pkg-manager-cmd` field [#5847 @rjbou]
+  * `OpamFile.Switch_config.t` is now a private record (like `OpamFile.OPAM.t`) [#5832 @dra27]
+  * `OpamTypes.env_update` now has an additional type parameter indicating whether the update is internal or writeable [#5832 @dra27]
 
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
