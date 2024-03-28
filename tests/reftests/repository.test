@@ -584,3 +584,91 @@ first  --
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
  1 oper3 file://${BASEDIR}/OPER3
  2 oper  file://${BASEDIR}/OPER3
+### :::: Test repository upgrade path (packages requiring newer version of opam) ::::
+### OPAMSTRICT=1
+### OPAMDEBUGSECTIONS="opam-file"
+### opam repository remove -a oper3
+### opam repository --this-switch add repo ./REPO
+[repo] Initialised
+### opam list -A --all-versions -s
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+third.3
+### <OPER3/packages/bad-opam-version/bad-opam-version.1/opam>
+opam-version: "3.0"
+some-field-that-do-not-exist: true
+### opam update -a --debug-level=-1
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[oper] synchronised from file://${BASEDIR}/OPER3
+opam-file                       opam-version unsupported on ${OPAMTMP}/oper/packages/bad-opam-version/bad-opam-version.1/opam. Add as dummy unavailable package.
+[repo] no changes from file://${BASEDIR}/REPO
+[repo2] no changes from file://${BASEDIR}/REPO2
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A --all-versions -s
+bad-opam-version.1
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+third.3
+### OPAMSTRICT=0
+### <REPO/packages/bad-opam-version/bad-opam-version.2/opam>
+opam-version: "3.0"
+some-field-that-do-not-exist: true
+### <OPER3/packages/a/a.1/opam>
+opam-version: "2.0"
+### opam update -a --debug-level=-1
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[oper] synchronised from file://${BASEDIR}/OPER3
+opam-file                       opam-version unsupported on ${OPAMTMP}/oper/packages/bad-opam-version/bad-opam-version.1/opam. Add as dummy unavailable package.
+[repo] synchronised from file://${BASEDIR}/REPO
+opam-file                       opam-version unsupported on ${OPAMTMP}/repo/packages/bad-opam-version/bad-opam-version.2/opam. Add as dummy unavailable package.
+[repo2] no changes from file://${BASEDIR}/REPO2
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A --all-versions -s
+a.1
+bad-opam-version.1
+bad-opam-version.2
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+third.3
+### opam repository remove -a oper
+### opam repository remove -a repo
+### opam list -A --all-versions -s
+### opam repository --this-switch add repo ./REPO
+[repo] Initialised
+### opam repository --this-switch add oper ./OPER3
+[oper] Initialised
+### opam list -A --all-versions -s
+a.1
+bad-opam-version.1
+bad-opam-version.2
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+third.3
+### opam show --raw bad-opam-version.1
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "1"
+available: false
+### opam show --raw bad-opam-version.2
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "2"
+available: false
