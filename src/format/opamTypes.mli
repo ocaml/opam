@@ -435,10 +435,23 @@ type _ separator_path_format =
       * (path_format * filter) generic_formula
       -> spf_unresolved separator_path_format
 
+type euok_writeable = [ `writeable ]
+type euok_internal = [ `internal | `writeable ]
+
+type _ env_update_op_kind =
+  (* Initial constructors _must_ match OpamParserTypes.env_update_op *)
+| Eq : [> euok_writeable] env_update_op_kind
+| PlusEq : [> euok_writeable] env_update_op_kind
+| EqPlus : [> euok_writeable] env_update_op_kind
+| ColonEq : [> euok_writeable] env_update_op_kind
+| EqColon : [> euok_writeable] env_update_op_kind
+| EqPlusEq : [> euok_writeable] env_update_op_kind
+| Cygwin : [> euok_internal] env_update_op_kind
+
 (** Environment updates *)
-type 'a env_update = {
+type ('a, 'b) env_update = {
   envu_var : string;
-  envu_op : OpamParserTypes.FullPos.env_update_op_kind;
+  envu_op : 'b env_update_op_kind;
   envu_value : string;
   envu_comment : string option;
   envu_rewrite: 'a separator_path_format option;

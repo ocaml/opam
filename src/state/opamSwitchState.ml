@@ -410,7 +410,10 @@ let load lock_kind gt rt switch =
         else switch_config.opam_version
       in
       let switch_config =
-        {switch_config with invariant = Some invariant; opam_version}
+        let open OpamFile.Switch_config in
+        switch_config
+        |> with_invariant (Some invariant)
+        |> with_opam_version opam_version
       in
       if lock_kind = `Lock_write then
         OpamFile.Switch_config.write
@@ -428,7 +431,9 @@ let load lock_kind gt rt switch =
         else
           OpamFormula.to_string switch_invariant
       in
-      let conf = { switch_config with synopsis } in
+      let conf =
+        OpamFile.Switch_config.with_synopsis synopsis switch_config
+      in
       if lock_kind = `Lock_write then (* auto-repair *)
         OpamFile.Switch_config.write
           (OpamPath.Switch.switch_config gt.root switch)
@@ -640,10 +645,8 @@ let load_virtual ?repos_list ?(avail_default=true) gt rt =
     switch = OpamSwitch.unset;
     switch_invariant = OpamFormula.Empty;
     compiler_packages = OpamPackage.Set.empty;
-    switch_config = {
-      OpamFile.Switch_config.empty
-      with OpamFile.Switch_config.repos = Some repos_list;
-    };
+    switch_config =
+      OpamFile.Switch_config.(with_repos (Some repos_list) empty);
     installed = OpamPackage.Set.empty;
     installed_opams = OpamPackage.Map.empty;
     pinned = OpamPackage.Set.empty;
@@ -1310,8 +1313,7 @@ let update_repositories gt update_fun switch =
     | Some repos -> repos
   in
   let conf =
-    { conf with
-      OpamFile.Switch_config.repos = Some (update_fun repos) }
+    OpamFile.Switch_config.with_repos (Some (update_fun repos)) conf
   in
   OpamFile.Switch_config.write
     (OpamPath.Switch.switch_config gt.root switch)

@@ -1,0 +1,10 @@
+(test
+  (name      patcher)
+  (modules   patcher)
+  (libraries opam-core))
+
+(test
+  (name TypeGymnastics)
+  (libraries opam-format)
+  (modules TypeGymnastics)
+  (action (run %{test})))

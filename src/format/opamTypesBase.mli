@@ -81,18 +81,21 @@ val iter_success: ('a -> unit) -> ('a, 'b) result -> unit
 (* Build an environment update *)
 val env_update:
   ?comment:string -> rewrite:'a separator_path_format option
-  -> string -> env_update_op_kind -> string
-  -> 'a env_update
+  -> string -> 'b env_update_op_kind -> string
+  -> ('a, 'b) env_update
 
 val env_update_resolved:
   ?comment:string -> ?rewrite:spf_resolved separator_path_format option
-  -> string -> env_update_op_kind -> string
-  -> spf_resolved env_update
+  -> string -> 'a env_update_op_kind -> string
+  -> (spf_resolved, 'a) env_update
 
 val env_update_unresolved:
   ?comment:string -> ?rewrite:spf_unresolved separator_path_format option
-  -> string -> env_update_op_kind -> string
-  -> spf_unresolved env_update
+  -> string -> 'a env_update_op_kind -> string
+  -> (spf_unresolved, 'a) env_update
+
+val op_of_raw: OpamParserTypes.FullPos.env_update_op_kind -> euok_writeable env_update_op_kind
+val raw_of_op: euok_writeable env_update_op_kind -> OpamParserTypes.FullPos.env_update_op_kind
 
 (* Path transformers & separator functions *)
 val string_of_path_format: path_format -> string

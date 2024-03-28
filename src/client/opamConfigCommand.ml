@@ -205,6 +205,17 @@ let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
   else
     print_env never_with_cr env
 
+let check_writeable l =
+  let map_writeable ({OpamTypes.envu_op; _} as update) =
+    match envu_op with
+    | Eq | PlusEq | EqPlus | ColonEq | EqColon | EqPlusEq as envu_op ->
+      {update with envu_op}
+    | _ ->
+      OpamSystem.internal_error
+        "Attempt to write an internal environment change"
+  in
+  List.map map_writeable l
+
 let regenerate_env ~set_opamroot ~set_opamswitch ~force_path
     gt switch env_file =
   OpamSwitchState.with_ `Lock_none ~switch gt @@ fun st ->
@@ -214,7 +225,7 @@ let regenerate_env ~set_opamroot ~set_opamswitch ~force_path
   if not (OpamCoreConfig.(!r.safe_mode)) then
     (let _, st =
        OpamSwitchState.with_write_lock st @@ fun st ->
-       (OpamFile.Environment.write env_file upd), st
+       (OpamFile.Environment.write env_file (check_writeable upd)), st
      in OpamSwitchState.drop st);
   upd
 
@@ -227,7 +238,7 @@ let load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
   let environment_opam_switch_prefix =
     OpamStd.List.find_map_opt (function
         | OpamTypes.{ envu_var = "OPAM_SWITCH_PREFIX";
-                      envu_op = OpamParserTypes.Eq;
+                      envu_op = Eq;
                       envu_value; _} ->
           Some envu_value
         | _ -> None)
@@ -249,6 +260,7 @@ let load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
    [OpamEnv.hash_env_updates updates] and [n] should initially be [0]. If for
    whatever reason the file cannot be created, returns [None]. *)
 let  write_last_env_file gt switch updates =
+  let updates = check_writeable updates in
   let temp_dir = OpamPath.Switch.last_env gt.root switch in
   let hash = OpamEnv.hash_env_updates updates in
   let rec aux  n =
@@ -666,10 +678,9 @@ let switch_allowed_fields, switch_allowed_sections =
     lazy (
       OpamFile.Switch_config.(
         [
-          ("synopsis", Atomic,
-           fun t -> { t with synopsis = empty.synopsis });
+          ("synopsis", Atomic, with_synopsis empty.synopsis);
           ("setenv", Modifiable (
-              (fun nc c -> { c with env = nc.env @ c.env }),
+              (fun nc c -> with_env (nc.env @ c.env) c),
               (fun nc c ->
                  let open OpamTypes in
                  let env =
@@ -683,21 +694,21 @@ let switch_allowed_fields, switch_allowed_sections =
                                 envu_value = value'; envu_comment = _;
                                 envu_rewrite = _ } ->
                            String.equal var var'
-                           && (op : OpamParserTypes.env_update_op) = op'
+                           && (op : [> euok_writeable ] env_update_op_kind) = op'
                            && String.equal value value')
                          nc.env) c.env
                  in
-                 { c with env })),
-           fun t -> { t with env = empty.env });
+                 with_env env c)),
+           with_env empty.env);
           "depext-bypass", OpamSysPkg.Set.Op.(Modifiable (
               (fun nc c ->
-                 { c with depext_bypass = nc.depext_bypass ++ c.depext_bypass }),
+                 with_depext_bypass (nc.depext_bypass ++ c.depext_bypass) c),
               (fun nc c ->
-                 { c with depext_bypass = c.depext_bypass -- nc.depext_bypass })
+                 with_depext_bypass (c.depext_bypass -- nc.depext_bypass) c)
             )),
-          (fun t -> { t with depext_bypass = empty.depext_bypass });
+          with_depext_bypass empty.depext_bypass;
         ] @ allwd_wrappers empty.wrappers wrappers
-          (fun wrappers t -> { t with wrappers })))
+          with_wrappers))
   in
   let allowed_sections =
     let rem_elem new_elems elems =
@@ -706,10 +717,10 @@ let switch_allowed_fields, switch_allowed_sections =
     lazy (
       OpamFile.Switch_config.([
           ("variables", InModifiable (
-              (fun nc c -> { c with variables = nc.variables @ c.variables }),
+              (fun nc c -> with_variables (nc.variables @ c.variables) c),
               (fun nc c ->
-                 { c with variables = rem_elem nc.variables c.variables })),
-           (fun c -> { c with variables = empty.variables }));
+                 with_variables (rem_elem nc.variables c.variables) c)),
+           (with_variables empty.variables));
         ]))
   in
   (fun () -> Lazy.force allowed_fields),
@@ -994,8 +1005,7 @@ let set_var_switch gt ?st svar value =
                  nullify_pos @@ String v)]);
       stv_set_opt = (fun swc value ->
           set_opt_switch_t ~inner:true gt switch swc "variables" value);
-      stv_remove_elem = (fun rest switch_config ->
-          { switch_config with variables = rest });
+      stv_remove_elem = OpamFile.Switch_config.with_variables;
       stv_write = (fun swc ->
           OpamFile.Switch_config.write
             (OpamPath.Switch.switch_config gt.root switch) swc);

@@ -185,7 +185,9 @@ let remove gt ?(confirm = true) switch =
   else gt
 
 let set_invariant_raw st invariant =
-  let switch_config = {st.switch_config with invariant = Some invariant} in
+  let switch_config =
+    OpamFile.Switch_config.with_invariant (Some invariant) st.switch_config
+  in
   let st = {st with switch_invariant = invariant; switch_config } in
   if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
     OpamSwitchAction.install_switch_config st.switch_global.root st.switch
@@ -250,7 +252,7 @@ let install_compiler
           OpamFormula.to_string invariant
       in
       let switch_config =
-        { t.switch_config with OpamFile.Switch_config.synopsis }
+        OpamFile.Switch_config.with_synopsis synopsis t.switch_config
       in
       if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
         OpamSwitchAction.install_switch_config t.switch_global.root t.switch

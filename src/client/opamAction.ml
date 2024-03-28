@@ -520,7 +520,6 @@ let prepare_package_source st nv dir =
       prepare_package_build (OpamPackageVar.resolve ~opam st) opam nv dir
 
 let compilation_env t opam =
-  let open OpamParserTypes in
   let build_env =
     List.map
       (fun env ->
@@ -532,7 +531,7 @@ let compilation_env t opam =
     match OpamSysInteract.Cygwin.cygbin_opt t.switch_global.config with
     | Some cygbin ->
       let cygbin = OpamFilename.Dir.to_string cygbin in
-      [ OpamTypesBase.env_update_resolved "PATH" EqPlus cygbin
+      [ OpamTypesBase.env_update_resolved "PATH" Cygwin cygbin
           ~comment:"Cygwin path"
       ] @ (match OpamCoreConfig.(!r.git_location) with
           | None -> []

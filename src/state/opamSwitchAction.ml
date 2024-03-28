@@ -28,18 +28,14 @@ let gen_switch_config
        with Not_found -> "group");
     ]
   in
-  { OpamFile.Switch_config.
-    opam_version = OpamFile.Switch_config.file_format_version;
-    synopsis;
-    variables = vars;
-    paths = [];
-    opam_root = Some root;
-    repos;
-    wrappers = OpamFile.Wrappers.empty;
-    env = [];
-    invariant;
-    depext_bypass = OpamSysPkg.Set.empty;
-  }
+  let open OpamFile.Switch_config in
+  empty
+  |> with_opam_version file_format_version
+  |> with_synopsis synopsis
+  |> with_variables vars
+  |> with_opam_root (Some root)
+  |> with_repos repos
+  |> with_invariant invariant
 
 let install_switch_config root switch config =
   log "install_switch_config switch=%a" (slog OpamSwitch.to_string) switch;
