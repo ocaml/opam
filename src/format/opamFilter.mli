@@ -53,6 +53,7 @@ val map_up: (filter -> filter) -> filter -> filter
 (** Regex matching string interpolation syntax (["%%"], ["%{xxx}%"], or
     ["%{xxx"] if unclosed) *)
 val string_interp_regex : Re.re
+val extract_variables_from_string : string -> string list
 
 (** Returns all the variables appearing in a filter (including the ones within
     string interpolations *)

@@ -118,8 +118,7 @@ let fident_variables = function
         | None -> OpamVariable.Full.self var) pkgs
 
 (* extracts variables appearing in interpolations in a string*)
-let string_variables s =
-  let matches =
+let extract_variables_from_string s =
     let rec aux acc pos =
       try
         let ss = Re.exec ~pos string_interp_regex s in
@@ -131,11 +130,12 @@ let string_variables s =
       with Not_found -> acc
     in
     aux [] 0
-  in
+
+let string_variables s =
   List.fold_left (fun acc s ->
-      try fident_variables (filter_ident_of_string s) @ acc
+      try fident_variables (filter_ident_of_string_interp s) @ acc
       with Failure _ -> acc)
-    [] matches
+    [] (extract_variables_from_string s)
 
 let variables filter =
   fold_down_left (fun acc -> function
