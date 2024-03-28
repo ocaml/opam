@@ -35,8 +35,8 @@ The switch invariant was set to baz = 1
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 [ERROR] Package conflict!
   * No agreement on the version of baz:
-    - (invariant) -> baz < 2
-    - baz >= 2
+    - (invariant) -> baz = 1
+    - baz = 2
     You can temporarily relax the switch invariant with `--update-invariant'
 
 No solution found, exiting
@@ -44,8 +44,8 @@ No solution found, exiting
 ### opam install baz.2
 [ERROR] Package conflict!
   * No agreement on the version of baz:
-    - (invariant) -> baz < 2
-    - baz >= 2
+    - (invariant) -> baz = 1
+    - baz = 2
     You can temporarily relax the switch invariant with `--update-invariant'
 
 No solution found, exiting

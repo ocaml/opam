@@ -21,7 +21,7 @@ Done.
     You can temporarily relax the switch invariant with `--update-invariant'
   * No agreement on the version of ocaml-base-compiler:
     - (invariant) -> ocaml-base-compiler = 4.06.1
-    - pgocaml < 2.0 -> extlib = 1.5.3 -> ocaml < 4.05.0 -> ocaml-base-compiler < 3.07+1
+    - pgocaml < 2.0 -> extlib = 1.5.3 -> ocaml < 4.05.0 -> ocaml-base-compiler = 3.07
   * Missing dependency:
     - pgocaml < 2.0 -> extlib = 1.5.3 -> ocaml < 4.05.0 -> ocaml-variants >= 3.09.3 -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'

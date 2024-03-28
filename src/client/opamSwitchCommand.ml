@@ -225,7 +225,7 @@ let install_compiler
       OpamConsole.error
         "Could not determine which packages to install for this switch:";
       OpamConsole.errmsg "%s\n"
-        (OpamCudf.string_of_conflicts t.packages
+        (OpamCudf.string_of_conflicts
            (OpamSwitchState.unavailable_reason t) cs);
       OpamStd.Sys.exit_because `No_solution
   in
