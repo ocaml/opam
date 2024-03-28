@@ -142,6 +142,8 @@ users)
   * Add init scripts tests [#5864 @rjbou]
   * Add test for init OCaml predefined eval variables and their format upgrade [#5829 @rjbou]
   + Add a test showing the current behaviour of opam with variable expansion, in particular when the package contains pluses [#5840 @kit-ty-kate]
+  + Add a test testing showing the current behaviour of opam with variable expansion, in particular when the package contains pluses [#5840 @kit-ty-kate]
+  * Update lint test: W41 [#5840 @rjbou]
 
 ### Engine
 
