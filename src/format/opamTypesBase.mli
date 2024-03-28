@@ -59,10 +59,14 @@ val string_of_user_action: user_action -> string
     preserve order *)
 val env_array: env -> string array
 
+exception Parse_error of string * string
+
 (** Parses the data suitable for a filter.FIdent from a string. May raise
     [Failure msg] on bad package names. A self-reference [_] parses to [None] *)
 val filter_ident_of_string:
   string -> name option list * variable * (string * string) option
+val filter_ident_of_string_interp:
+  ?accept:bool -> string -> name option list * variable * (string * string) option
 
 val string_of_filter_ident:
   name option list * variable * (string * string) option -> string
