@@ -455,8 +455,15 @@ module Env : sig
   val getopt_full: Name.t -> Name.t * string option
 
   val list: unit -> (Name.t * string) list
-  val raw_env: unit -> string Array.t
-  val cyg_env: cygbin:string -> git_location:string option -> string Array.t
+  val raw_env: unit -> string array
+
+  (** [cyg_env ~env ~cygbin ~git_location] returns [env] environment with its
+      PATH variable updated with [git_location] and [cygbin] at the beginning,
+      ie PATH=<git_location>:<cygbin>:$PATH. Usual `env` argument is
+      `OpamStd.Env.raw_env`. *)
+  val cyg_env:
+    env:string array -> cygbin:string -> git_location:string option
+    -> string array
 end
 
 (** {2 System query and exit handling} *)

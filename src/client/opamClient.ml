@@ -816,7 +816,7 @@ let windows_checks ?cygwin_setup ?git_location config =
       if is_msys2 cygcheck then
         let env =
           OpamStd.Env.cyg_env ~cygbin:(OpamFilename.Dir.to_string cygbin)
-            ~git_location:None
+            ~git_location:None ~env:(OpamStd.Env.raw_env ())
         in
         match OpamSystem.resolve_command ~env "pacman.exe" with
         | Some pacman ->

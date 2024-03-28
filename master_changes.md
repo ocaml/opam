@@ -27,6 +27,9 @@ users)
   * Test if file exists before sourcing in fish + powershell [#5864 @ElectreAAS]
   * Replace the dependency on GNU patch by a strict dependency on git [#5400 @kit-ty-kate - fix #3433 #3782 #3639]
   * Properly test if "we're in interactive mode" instead of "in a tty" in fish script [#5866 @ElectreAAS]
+  * Make the computation of the init default `sys-ocaml-*` eval variables on Windows faster, no more depending on Cygwin [#5829 @dra27 @rjbou]
+  * Simplify computation of OCaml init default `sys-ocaml-*` eval variables on Unix [#5829 @dra27]
+  * Add a init OCaml `sys-ocaml-system` eval variable [#5829 @dra27]
 
 ## Config report
 
@@ -76,6 +79,7 @@ users)
  * Add support for Wolfi OS, treat it like Apline family as it uses apk too [#5878 @xnox]
 
 ## Format upgrade
+  * Handle init OCaml `sys-ocaml-*` eval variables during format upgrade from 2.0 -> 2.1 -> 2.2 [#5829 @dra27]
 
 ## Sandbox
   * Mark the user temporary directory (as returned by `getconf DARWIN_USER_TEMP_DIR`) as writable when TMPDIR is not defined on macOS [#5780 @ElectreAAS]
@@ -130,6 +134,7 @@ users)
 ## Reftests
 ### Tests
   * Add init scripts tests [#5864 @rjbou]
+  * Add test for init OCaml predefined eval variables and their format upgrade [#5829 @rjbou]
 
 ### Engine
 
@@ -160,6 +165,7 @@ users)
   * `OpamSysInteract.Cygwin.check_install`: add `variant` argument to permit checking that it is an Cygwin-like install if it is set to true, keep checking that it is a strictly Cygwin install if false [#5843 @rjbou]
   * `OpamSysInteract.Cygwin.check_install`: look for `cygcheck.exe` in `usr/bin` also as MSYS2 doesn't have "bin" [#5843 @rjbou]
   * `OpamGlobalState.load_config`: load MSYS2 Cygwin binary path too at config file loading [#5843 @rjbou]
+  * `OpamEnv`: add `sys_ocaml_eval_variables` value, moved `OpamInitDefaults` as it is also needed in `OpamFormatUpgrade` too [#5829 @rjbou @kit-ty-kate]
 
 ## opam-solver
 
@@ -168,3 +174,4 @@ users)
 
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
+  * `OpamStd.Env.cyg_env`: takes the environment to cygify, usually `OpamStd.Env.raw_env` [#5829 @dra27]
