@@ -157,3 +157,8 @@ val check_and_print_env_warning: 'a switch_state -> unit
 (** Hook directory environment *)
 val hook_env:
   OpamPath.t -> OpamVariable.variable_contents option OpamVariable.Map.t
+
+(** {2 Misc} *)
+
+(** System OCaml eval variables for configuration. *)
+val sys_ocaml_eval_variables : (OpamVariable.t * string list * string) list

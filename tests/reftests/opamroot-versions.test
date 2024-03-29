@@ -744,13 +744,12 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Switch state loaded in 0.000s
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-comp" "sw-sys-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -823,13 +822,12 @@ Continue? [y/n] y
            opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 jobs: 4
 opam-root-version: current
@@ -904,13 +902,12 @@ Continue? [y/n] y
            opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 jobs: 4
 opam-root-version: current
@@ -1038,14 +1035,13 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -1113,14 +1109,13 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Switch state loaded in 0.000s
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-comp" "sw-sys-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -1185,14 +1180,13 @@ The following actions will be performed:
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -1260,14 +1254,13 @@ The following actions will be performed:
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -1399,14 +1392,13 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -1477,14 +1469,13 @@ RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
 STATE                           Switch state loaded in 0.000s
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-comp" "sw-sys-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -1551,14 +1542,13 @@ The following actions will be performed:
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -1628,14 +1618,13 @@ The following actions will be performed:
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -1767,14 +1756,13 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -1836,14 +1824,13 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 jobs: 4
 opam-root-version: current
@@ -1907,14 +1894,13 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 jobs: 4
 opam-root-version: current
@@ -1980,14 +1966,13 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 jobs: 4
 opam-root-version: current
@@ -2103,14 +2088,13 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
@@ -2183,14 +2167,13 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 jobs: 4
 opam-root-version: current
@@ -2253,14 +2236,13 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 jobs: 4
 opam-root-version: current
@@ -2325,14 +2307,13 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 jobs: 4
 opam-root-version: current
@@ -2397,14 +2378,13 @@ You may want to back it up before going further.
 Continue? [y/n] y
 Format upgrade done.
 Set to '4' the field jobs in global configuration
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 jobs: 4
 opam-root-version: current
@@ -2443,14 +2423,13 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
-### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
 installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
