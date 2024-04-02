@@ -131,6 +131,9 @@ users)
 
 ## Test
 
+## Benchmarks
+  * Benchmark OpamSystem.read [#5900 @kit-ty-kate]
+
 ## Reftests
 ### Tests
   * Add init scripts tests [#5864 @rjbou]
