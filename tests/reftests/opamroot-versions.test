@@ -1062,6 +1062,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1151,6 +1153,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1224,6 +1228,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1364,6 +1370,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1422,6 +1430,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1513,6 +1523,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1588,6 +1600,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1729,6 +1743,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1822,6 +1838,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -1892,6 +1910,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -1964,6 +1984,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2065,6 +2087,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
@@ -2165,6 +2189,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2234,6 +2260,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2305,6 +2333,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2376,6 +2406,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2416,6 +2448,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
@@ -2516,6 +2550,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
@@ -2587,6 +2623,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
@@ -2658,6 +2696,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
@@ -2730,6 +2770,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables

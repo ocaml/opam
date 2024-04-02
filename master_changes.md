@@ -66,6 +66,8 @@ users)
 ## External dependencies
 
 ## Format upgrade
+  * Handle init OCaml `sys-ocaml-*` eval variables during format upgrade from 2.0 -> 2.1 -> 2.2 [#5829 @dra27]
+  * Reset the "jobs" config variable when upgrading from opam 2.1 to 2.2, instead of 2.0 to 2.1 [#5904 @kit-ty-kate - fix #5816]
 
 ## Sandbox
 
