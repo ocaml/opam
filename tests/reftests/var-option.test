@@ -245,7 +245,7 @@ solver                         {}
 solver-criteria                {}
 solver-fixup-criteria          {}
 solver-upgrade-criteria        {}
-swh-fallback                   true
+swh-fallback                   false
 sys-pkg-manager-cmd            {}
 wrap-build-commands            {}
 wrap-install-commands          {}
@@ -629,7 +629,7 @@ solver                         {}
 solver-criteria                {}
 solver-fixup-criteria          {}
 solver-upgrade-criteria        {}
-swh-fallback                   true
+swh-fallback                   false
 sys-pkg-manager-cmd            {}
 wrap-build-commands            {}
 wrap-install-commands          {}
@@ -661,7 +661,7 @@ solver                         {}
 solver-criteria                {}
 solver-fixup-criteria          {}
 solver-upgrade-criteria        {}
-swh-fallback                   true
+swh-fallback                   false
 sys-pkg-manager-cmd            {}
 wrap-build-commands            {}
 wrap-install-commands          {}

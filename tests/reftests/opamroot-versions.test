@@ -754,7 +754,7 @@ installed-switches: ["sw-comp" "sw-sys-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -833,7 +833,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -913,7 +913,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -980,7 +980,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -1046,7 +1046,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -1120,7 +1120,7 @@ installed-switches: ["sw-comp" "sw-sys-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -1191,7 +1191,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -1265,7 +1265,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -1334,7 +1334,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -1403,7 +1403,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -1480,7 +1480,7 @@ installed-switches: ["sw-comp" "sw-sys-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -1553,7 +1553,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -1629,7 +1629,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -1698,7 +1698,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -1767,7 +1767,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -1836,7 +1836,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -1906,7 +1906,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -1978,7 +1978,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2039,7 +2039,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2099,7 +2099,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -2179,7 +2179,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2248,7 +2248,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2319,7 +2319,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2390,7 +2390,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2434,7 +2434,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
@@ -2516,7 +2516,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2576,7 +2576,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2636,7 +2636,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2697,7 +2697,7 @@ jobs: 4
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
@@ -2735,7 +2735,7 @@ installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-d
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
-swh-fallback: true
+swh-fallback: false
 switch: "sw-sys-comp"
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
