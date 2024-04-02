@@ -946,7 +946,7 @@ let windows_checks ?cygwin_setup ?git_location config =
           let options = [
             `Internal,
             "Automatically create an internal Cygwin installation \
-             that will be managed by opam";
+             that will be managed by opam (recommended)";
             `Specify, "Enter the location of an existing Cygwin installation";
             `Abort, "Abort initialisation";
           ] in

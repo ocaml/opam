@@ -30,6 +30,7 @@ users)
   * Make the computation of the init default `sys-ocaml-*` eval variables on Windows faster, no more depending on Cygwin [#5829 @dra27 @rjbou]
   * Simplify computation of OCaml init default `sys-ocaml-*` eval variables on Unix [#5829 @dra27]
   * Add a init OCaml `sys-ocaml-system` eval variable [#5829 @dra27]
+  * Mark the internal cygwin installation as recommended [#5903 @kit-ty-kate]
 
 ## Config report
 
