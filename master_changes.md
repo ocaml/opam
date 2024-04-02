@@ -31,6 +31,7 @@ users)
   * Simplify computation of OCaml init default `sys-ocaml-*` eval variables on Unix [#5829 @dra27]
   * Add a init OCaml `sys-ocaml-system` eval variable [#5829 @dra27]
   * Mark the internal cygwin installation as recommended [#5903 @kit-ty-kate]
+  * Check for gpatch instead of patch on NetBSD and DragonFlyBSD [#5893 @kit-ty-kate]
 
 ## Config report
 
@@ -65,6 +66,7 @@ users)
  * Add warning 69: Warn for new syntax when package name in variable in string interpolation contains several '+' [#5840 @rjbou]
 
 ## Repository
+  * Warn if `GNU patch` is not detected during a repository update [#5893 @kit-ty-kate]
 
 ## Lock
 
@@ -126,6 +128,9 @@ users)
   * Quote all the paths to OPAMROOT when creating the init scripts on Unix in case OPAMROOT contains spaces, backslashes or special characters [#5841 @kit-ty-kate - fix #5804]
 
 ## Internal
+  * Warn if `GNU patch` is not detected when a patch is applied [#5893 @kit-ty-kate]
+  * Use `gpatch` by default instead of `patch` on NetBSD and DragonFlyBSD [#5893 @kit-ty-kate]
+  * Use `gpatch` if it exists and is detected as GNU patch when `patch` is not `GNU patch` [#5893 @kit-ty-kate]
 
 ## Internal: Windows
   * Ensure that the system critical error dialog is disabled when opam starts [#5828 @dra27]
@@ -191,3 +196,4 @@ users)
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
   * `OpamStd.Env.cyg_env`: takes the environment to cygify, usually `OpamStd.Env.raw_env` [#5829 @dra27]
+  * `OpamSystem.patch` now displays a warning when GNU patch is not detected and looks for both patch and gpatch as a backup option depending on the OS [#5893 @kit-ty-kate]
