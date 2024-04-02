@@ -50,12 +50,16 @@ let linux_filter = os_filter "linux"
 let macos_filter = os_filter "macos"
 let openbsd_filter = os_filter "openbsd"
 let freebsd_filter = os_filter "freebsd"
+let netbsd_filter = os_filter "netbsd"
+let dragonflybsd_filter = os_filter "dragonfly"
 let not_open_free_bsd_filter =
   FNot (FOr (openbsd_filter,  freebsd_filter))
 let win32_filter = os_filter "win32"
 let sandbox_filter = FOr (linux_filter, macos_filter)
 
-let gpatch_filter = FOr (openbsd_filter, freebsd_filter)
+let gpatch_filter =
+  FOr (FOr (openbsd_filter, netbsd_filter),
+       FOr (freebsd_filter, dragonflybsd_filter))
 let patch_filter = FNot gpatch_filter
 
 let gtar_filter = openbsd_filter
