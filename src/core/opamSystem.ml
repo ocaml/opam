@@ -1649,9 +1649,16 @@ let gpatch = lazy begin
   in
   let default_cmd, other_cmds =
     match OpamStd.Sys.os () with
-    | OpamStd.Sys.OpenBSD
-    | OpamStd.Sys.FreeBSD -> ("gpatch", ["patch"])
-    | _ -> ("patch", ["gpatch"])
+    | DragonFly
+    | FreeBSD
+    | NetBSD
+    | OpenBSD -> ("gpatch", ["patch"])
+    | Cygwin
+    | Darwin
+    | Linux
+    | Unix
+    | Win32
+    | Other _ -> ("patch", ["gpatch"])
   in
   match search_gpatch (default_cmd :: other_cmds) with
   | Some gpatch -> gpatch
