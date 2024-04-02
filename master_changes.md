@@ -13,6 +13,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Init
+  * Check for gpatch instead of patch on NetBSD and DragonFlyBSD [#5893 @kit-ty-kate]
 
 ## Config report
   *
@@ -36,6 +37,9 @@ New option/command/subcommand are prefixed with ◈.
 
 ## Lint
   *
+
+## Repository
+  * Warn if `GNU patch` is not detected during a repository update [#5893 @kit-ty-kate]
 
 ## Lock
   *
@@ -76,7 +80,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Client
 
 ## Internal
-  *
+  * Warn if `GNU patch` is not detected when a patch is applied [#5893 @kit-ty-kate]
+  * Use `gpatch` by default instead of `patch` on NetBSD and DragonFlyBSD [#5893 @kit-ty-kate]
+  * Use `gpatch` if it exists and is detected as GNU patch when `patch` is not `GNU patch` [#5893 @kit-ty-kate]
 
 ## Test
   *
@@ -106,3 +112,4 @@ New option/command/subcommand are prefixed with ◈.
 ## opam-format
 
 ## opam-core
+  * `OpamSystem.patch` now displays a warning when GNU patch is not detected and looks for both patch and gpatch as a backup option depending on the OS [#5893 @kit-ty-kate]
