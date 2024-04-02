@@ -308,7 +308,7 @@ let init cli =
       mk_vflag ~cli `none [
         cli_from ~experimental:true cli2_2,
         `internal, ["cygwin-internal-install"],
-        "Let opam setup and manage an internal Cygwin install";
+        "Let opam setup and manage an internal Cygwin install (recommended)";
         cli_from ~experimental:true cli2_2,
         `default_location, ["cygwin-local-install"],
         "Use preexistent Cygwin install";
