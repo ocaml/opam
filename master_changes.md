@@ -181,6 +181,7 @@ users)
 ## opam-format
   * `OpamFile.InitConfig`: add `sys-pkg-manager-cmd` field [#5847 @rjbou]
   * `OpamTypesBase`: add `filter_ident_of_string_interp` that is used for parsing variables in string interpolation like `filter_ident_of_string` but permits the parsing of '%{?pkg+:var:}%' syntax [#5840 @rjbou]
+  * `OpamTypesBase.filter_ident_of_string_interp`: add `accept` optional argument to be able to raise an error when several pluses are in the package name without using the new syntax, like `%{pkg+++:var}%`
 
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]

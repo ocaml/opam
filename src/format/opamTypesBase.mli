@@ -59,15 +59,20 @@ val string_of_user_action: user_action -> string
     preserve order *)
 val env_array: env -> string array
 
+exception Parse_variable of string * string
+
 (** Parses the data suitable for a filter.FIdent from a string. May raise
     [Failure msg] on bad package names. A self-reference [_] parses to [None] *)
 val filter_ident_of_string:
   string -> name option list * variable * (string * string) option
 
 (** Like [Filter_ident_of_string] but parses also '%{?pkg+:var:}% syntax for
-    variables with package name that contains a '+' *)
+    variables with package name that contains a '+'. if [accept] is [false],
+    [Parse_variable (pkg,var)] is raised when several '+' are encountered in
+    package name, i.e. 'pkg++:var'. *)
 val filter_ident_of_string_interp:
-  string -> name option list * variable * (string * string) option
+  ?accept:bool -> string
+  -> name option list * variable * (string * string) option
 
 val string_of_filter_ident:
   name option list * variable * (string * string) option -> string
