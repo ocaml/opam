@@ -73,6 +73,7 @@ users)
 ## Release scripts
 
 ## Install script
+  * Provide a shell/install.ps1 PowerShell script to install opam on Windows [#5906 @kit-ty-kate @dra27]
 
 ## Admin
 
