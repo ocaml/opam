@@ -154,6 +154,7 @@ users)
   * Fix a dead link to SPDX license expressions spec [#5849 @kit-ty-kate - fix #5846]
   * Fix missing spaces in `opam --help` [#5850 @sorawee].
   * Manual: add missing 'since opam 2.2' annotation when mentionning with-dev-setup [#5885 @kit-ty-kate]
+  * Installation: update badges for Ubuntu and Fedora to newer versions [#5905 @AldanTanneo]
 
 ## Security fixes
 
