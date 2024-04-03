@@ -111,7 +111,7 @@ cave resolve -x repository/ocaml-unofficial
 
 #### [Fedora](http://fedoraproject.org), [CentOS](http://centos.org) and RHEL
 
-[![Fedora 32](https://repology.org/badge/version-for-repo/fedora_32/opam.svg)](https://repology.org/project/opam/versions)
+[![Fedora 39](https://repology.org/badge/version-for-repo/fedora_39/opam.svg)](https://repology.org/project/opam/versions)
 
 The opam package for Fedora can be installed with the command:
 
@@ -179,7 +179,7 @@ for Opam usage.
 
 #### Ubuntu
 
-[![badge](https://repology.org/badge/version-for-repo/ubuntu_20_04/opam.svg)](https://repology.org/project/opam/versions)
+[![badge](https://repology.org/badge/version-for-repo/ubuntu_22_04/opam.svg)](https://repology.org/project/opam/versions)
 
 ##### Versions 18.04 and newer
 There is a [ppa](https://launchpad.net/~avsm/+archive/ubuntu/ppa) available that contains the current stable version of `opam`.
