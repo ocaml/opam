@@ -1633,6 +1633,55 @@ let translate_patch ~dir orig corrected =
   end;
   close_in ch
 
+exception Internal_patch_error of string
+
+let internal_patch ~patch_filename ~dir diffs =
+  let fmt = Printf.sprintf in
+  let get_filename ~p full =
+    (* Taken from my code from ocaml-patch *)
+    let rec iter idx = function
+      | 0 -> String.sub full idx (String.length full - idx)
+      | p -> iter (String.index_from full idx '/') (p - 1)
+    in
+    try iter 0 p with Not_found -> failwith "Malformed patch"
+  in
+  let get_path file =
+    let dir = real_path dir in
+    let file = real_path (Filename.concat dir (get_filename ~p:1 file)) in
+    if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
+      raise (Internal_patch_error (fmt "Patch %S tried to escape its scope." patch_filename));
+    file
+  in
+  let patch content diff =
+    match Patch.patch content diff with
+    | Some x -> x
+    | None -> assert false
+    | exception _ ->
+      raise (Internal_patch_error (fmt "Patch %S does not apply cleanly." patch_filename))
+  in
+  let apply diff = match diff.Patch.operation with
+    | Patch.Edit (src, dst) ->
+      let src = get_path src in
+      let dst = get_path dst in
+      let content = read src in
+      let content = patch (Some content) diff in
+      write dst content;
+      if not (String.equal src dst) then
+        Unix.unlink src;
+    | Patch.Delete file ->
+      let file = get_path file in
+      Unix.unlink file
+    | Patch.Create file ->
+      let file = get_path file in
+      let content = patch None diff in
+      write file content
+    | Patch.Rename_only (src, dst) ->
+      let src = get_path src in
+      let dst = get_path dst in
+      Unix.rename src dst
+  in
+  List.iter apply diffs
+
 let patch ?(preprocess=true) ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
@@ -1645,6 +1694,10 @@ let patch ?(preprocess=true) ~dir p =
     else
       p
   in
+  let cleanup () =
+    if not (OpamConsole.debug ()) then Sys.remove p';
+  in
+  Fun.protect ~finally:cleanup @@ fun () ->
   let patch_cmd =
     match OpamStd.Sys.os () with
     | OpamStd.Sys.OpenBSD
@@ -1652,9 +1705,8 @@ let patch ?(preprocess=true) ~dir p =
     | _ -> "patch"
   in
   make_command ~name:"patch" ~dir patch_cmd ["-p1"; "-i"; p'] @@> fun r ->
-    if not (OpamConsole.debug ()) then Sys.remove p';
-    if OpamProcess.is_success r then Done None
-    else Done (Some (Process_error r))
+  if OpamProcess.is_success r then Done None
+  else Done (Some (Process_error r))
 
 let register_printer () =
   Printexc.register_printer (function

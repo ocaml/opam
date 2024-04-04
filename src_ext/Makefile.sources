@@ -105,3 +105,8 @@ URL_swhid_core = https://github.com/OCamlPro/swhid_core/archive/refs/tags/0.1.ta
 MD5_swhid_core = 77d88d4b1d96261c866f140c64d89af8
 
 $(call PKG_SAME,swhid_core)
+
+URL_patch = https://github.com/hannesm/patch/releases/download/v1.0.1/patch-1.0.1.tbz
+MD5_patch = 95fa7e25ae8de6a58b223efee2a769d0
+
+$(call PKG_SAME,patch)

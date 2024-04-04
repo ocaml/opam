@@ -36,6 +36,7 @@ depends: [
   "sha" {>= "1.13"}
   "jsonm"
   "swhid_core"
+  "patch" {>= "1.0.1"}
   "uutf"
 ]
 conflicts: "extlib-compat"

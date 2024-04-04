@@ -205,7 +205,7 @@ module VCS : OpamVCS.VCS = struct
     else if OpamSystem.file_is_empty patch_file then
       (finalise (); Done None)
     else
-      Done (Some (OpamFilename.of_string patch_file))
+      Done (Some (OpamFilename.of_string patch_file, Patch.to_diffs ~p:1 (String.concat "\n" r.r_stdout)))
 
   let is_up_to_date ?subpath repo_root repo_url =
     let rref = remote_ref repo_url in

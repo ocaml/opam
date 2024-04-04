@@ -151,7 +151,7 @@ module VCS = struct
       if OpamSystem.file_is_empty patch_file then
         (finalise (); Done None)
       else
-        Done (Some (OpamFilename.of_string patch_file))
+        Done (Some (OpamFilename.of_string patch_file, Patch.to_diffs ~p:1 (String.concat "\n" r.r_stdout)))
 
   let versioned_files repo_root =
     darcs repo_root [ "show" ; "files" ]

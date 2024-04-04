@@ -432,6 +432,10 @@ let link ?(relative=false) ~target ~link =
 let patch ?preprocess filename dirname =
   OpamSystem.patch ?preprocess ~dir:(Dir.to_string dirname) (to_string filename)
 
+let internal_patch ~patch_filename diffs dirname =
+  OpamSystem.internal_patch
+    ~patch_filename:(to_string patch_filename) ~dir:(Dir.to_string dirname) diffs
+
 let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
 
 let with_flock flag ?dontblock file f =
