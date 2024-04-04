@@ -27,7 +27,13 @@ module type VCS = sig
   (** Fetch changes from upstream. This is supposed to put the changes
       in a staging area.
       Be aware that the remote URL might have been changed, so make sure
-      to update accordingly. *)
+      to update accordingly.
+
+      If [full_fetch] is set to true, VCS repository is retrieved with full
+      history (by default, no history).
+      If [cache_dir] is given, the directory is used by VCS tool as a its cache
+      directory.
+      If [subpath] is given, only that [subpath] of the url is retrieved. *)
   val fetch:
     ?full_fetch:bool -> ?cache_dir:dirname -> ?subpath:subpath
     -> dirname -> url

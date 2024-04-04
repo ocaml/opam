@@ -31,8 +31,8 @@ module type S = sig
 
   val name: OpamUrl.backend
 
-  (** [pull_url local_dir checksum remote_url] pulls the contents of
-      [remote_url] into [local_dir].
+  (** [pull_url ?full_fetch ?cache_dir ?subpath local_dir checksum remote_url]
+      pulls the contents of [remote_url] into [local_dir].
 
       Two kinds of results are allowed:
 
@@ -43,7 +43,13 @@ module type S = sig
         been synchronised with its own, and [None] is returned
 
       [checksum] can be used for retrieval but is NOT checked by this
-      function. *)
+      function.
+
+      If [full_fetch] is set to true, VCS repository is retrieved with full
+      history (by default, no history).
+      If [cache_dir] is given, the directory is used by VCS tool as a its cache
+      directory.
+      If [subpath] is given, only that [subpath] of the url is retrieved. *)
   val pull_url:
     ?full_fetch:bool ->
     ?cache_dir:dirname -> ?subpath:subpath -> dirname -> OpamHash.t option ->
