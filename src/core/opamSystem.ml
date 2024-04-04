@@ -1330,6 +1330,7 @@ let translate_patch ~dir orig corrected =
      encoded and also the status of individual files, so accept scanning the
      file three times instead of two. *)
   let log ?level fmt = OpamConsole.log "PATCH" ?level fmt in
+  let to_delete = ref [] in
   let strip_cr = get_eol_encoding orig = Some true in
   let ch =
     try open_in_bin orig
@@ -1433,6 +1434,11 @@ let translate_patch ~dir orig corrected =
             line
         in
         let length = String.length line in
+        let get_file () =
+          let file = String.sub line 4 (length - 4) in
+          let open OpamStd in
+          Option.map_default fst file (String.cut_at file '\t')
+        in
         let next_state =
           match state with
           | `Header ->
@@ -1440,11 +1446,7 @@ let translate_patch ~dir orig corrected =
               match (if length > 4 then String.sub line 0 4 else "") with
               | "--- " ->
                   (* Start of a unified diff header. *)
-                  let file =
-                    let file = String.sub line 4 (length - 4) in
-                    let open OpamStd in
-                    Option.map_default fst file (String.cut_at file '\t')
-                  in
+                  let file = get_file () in
                   (* Weakness: new files are also marked with a time-stamp at
                                the start of the epoch, however it's localised,
                                making it a bit tricky to identify! New files are
@@ -1504,11 +1506,9 @@ let translate_patch ~dir orig corrected =
                 `NewChunk (neg, pos)
           | `Patching (orig, crlf) ->
               if (if length > 4 then String.sub line 0 4 else "") = "+++ " then
-                let file =
-                  let file = String.sub line 4 (length - 4) in
-                  let open OpamStd in
-                  Option.map_default fst file (String.cut_at file '\t')
-                in
+                let file = get_file () in
+                if file = "/dev/null" then
+                  to_delete := orig :: !to_delete;
                 `Processing (orig, file, crlf, None, [], `Head)
               else
                 `Header
@@ -1631,20 +1631,53 @@ let translate_patch ~dir orig corrected =
     in
     fold_lines 1 transforms
   end;
-  close_in ch
+  close_in ch;
+  !to_delete
 
-let patch ?(preprocess=true) ~dir p =
+let is_empty_directory dirname =
+  let dir = Unix.opendir dirname in
+  Fun.protect ~finally:(fun () -> Unix.closedir dir) @@ fun () ->
+  let rec aux () =
+    match Unix.readdir dir with
+    | "." | ".." -> aux ()
+    | _file -> false
+    | exception End_of_file -> true
+  in
+  aux ()
+
+let remove_if_empty ~dir file =
+  let get_path file =
+    (* NOTE: Important to keep this `concat dir ""` to ensure the
+       is_prefix_of doesn't match another directory *)
+    let dir = Filename.concat (real_path dir) "" in
+    let file = real_path (Filename.concat dir file) in
+    if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
+      OpamConsole.error_and_exit `Internal_error "Patch %S tried to escape its scope." file;
+    file
+  in
+  let file = get_path file in
+  let ic = Stdlib.open_in_bin file in
+  Fun.protect ~finally:(fun () -> Stdlib.close_in ic) @@ fun () ->
+  match Stdlib.input_char ic with
+  | _ ->
+    OpamConsole.warning "Patch %S was set for deletion but is not empty." file
+  | exception End_of_file ->
+    if Sys.file_exists file then begin
+      log "Deleting straggler patched file %S" file;
+      Unix.unlink file;
+      let dirname = Filename.dirname file in
+      if is_empty_directory dirname then begin
+        log "Deleting empty patched directory %S" dirname;
+        Unix.rmdir dirname;
+      end
+    end
+
+let patch ?(delete_stragglers=false) ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
-  let p' =
-    if preprocess then
-      let p' = temp_file ~auto_clean:false "processed-patch" in
-      translate_patch ~dir p p';
-      p'
-    else
-      p
-  in
+  let p' = temp_file ~auto_clean:false "processed-patch" in
+  let files_to_delete = translate_patch ~dir p p' in
   let patch_cmd =
     match OpamStd.Sys.os () with
     | OpamStd.Sys.OpenBSD
@@ -1653,8 +1686,14 @@ let patch ?(preprocess=true) ~dir p =
   in
   make_command ~name:"patch" ~dir patch_cmd ["-p1"; "-i"; p'] @@> fun r ->
     if not (OpamConsole.debug ()) then Sys.remove p';
-    if OpamProcess.is_success r then Done None
-    else Done (Some (Process_error r))
+    if OpamProcess.is_success r then begin
+      if delete_stragglers then begin
+        (* NOTE: Non-GNU patches do not support file deletion so we need to
+           do it manually afterwards *)
+        List.iter (remove_if_empty ~dir) files_to_delete;
+      end;
+      Done None
+    end else Done (Some (Process_error r))
 
 let register_printer () =
   Printexc.register_printer (function
