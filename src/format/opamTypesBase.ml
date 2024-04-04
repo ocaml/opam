@@ -122,18 +122,35 @@ let string_of_filter_ident (pkgs,var,converter) =
    | Some (it,ifu) -> "?"^it^":"^ifu
    | None -> "")
 
-let filter_ident_of_string s =
+exception Parse_variable of string * string
+
+let filter_ident_of_string_t ~interpolation ?(accept=true) s =
   match OpamStd.String.rcut_at s ':' with
   | None -> [], OpamVariable.of_string s, None
   | Some (p,last) ->
     let get_names s =
-      List.map
-        (function "_" -> None | s -> Some (OpamPackage.Name.of_string s))
-        (OpamStd.String.split s '+')
+      List.filter_map
+        (function
+          | "_" -> Some None
+          | "" -> if accept then None else raise (Parse_variable (s, last))
+          | s -> Some ( Some (OpamPackage.Name.of_string s)))
+        (OpamStd.String.split_delim s '+')
     in
     match OpamStd.String.rcut_at p '?' with
     | None ->
       get_names p, OpamVariable.of_string last, None
+    | Some ("",val_if_true) when interpolation ->
+      (* TODO: Remove in opam 3.0.
+         Hack added in opam 2.2. This is a compatible syntax with opam 2.0 and
+         2.1 but supports + in the package name.  See
+         https://github.com/ocaml/opam-file-format/issues/59 *)
+      (match OpamStd.String.rcut_at val_if_true ':' with
+       | None ->
+         (* behaviour from opam 2.0 and 2.1 *)
+         [], OpamVariable.of_string last, None
+       | Some (p, var) ->
+         [Some (OpamPackage.Name.of_string p)],
+         OpamVariable.of_string var, None)
     | Some (p,val_if_true) ->
       let converter = Some (val_if_true, last) in
       match OpamStd.String.rcut_at p ':' with
@@ -141,6 +158,12 @@ let filter_ident_of_string s =
         [], OpamVariable.of_string p, converter
       | Some (packages,var) ->
         get_names packages, OpamVariable.of_string var, converter
+
+let filter_ident_of_string s =
+  filter_ident_of_string_t ~interpolation:false ~accept:true s
+
+let filter_ident_of_string_interp ?accept s =
+  filter_ident_of_string_t ~interpolation:true ?accept s
 
 let all_package_flags = [
   Pkgflag_LightUninstall;

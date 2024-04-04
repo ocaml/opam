@@ -62,6 +62,7 @@ users)
 ## Source
 
 ## Lint
+ * Add warning 69: Warn for new syntax when package name in variable in string interpolation contains several '+' [#5840 @rjbou]
 
 ## Repository
 
@@ -76,6 +77,7 @@ users)
   * Unixify Windows paths in init shells scripts (sh, bash, zsh, fish & tsh) [#5797 @rjbou]
 
 ## Opamfile
+  * Hijack the `%{?val_if_true:val_if_false}%` syntax to support extending the variables of packages with + in their name [#5840 @kit-ty-kate]
 
 ## External dependencies
  * Add support for Wolfi OS, treat it like Apline family as it uses apk too [#5878 @xnox]
@@ -140,6 +142,10 @@ users)
 ### Tests
   * Add init scripts tests [#5864 @rjbou]
   * Add test for init OCaml predefined eval variables and their format upgrade [#5829 @rjbou]
+  + Add a test showing the current behaviour of opam with variable expansion, in particular when the package contains pluses [#5840 @kit-ty-kate]
+  + Add a test testing showing the current behaviour of opam with variable expansion, in particular when the package contains pluses [#5840 @kit-ty-kate]
+  * Update lint test: W41 [#5840 @rjbou]
+  * Update lint test: W41 and W69 [#5840 @rjbou]
 
 ### Engine
 
@@ -155,6 +161,7 @@ users)
   * Fix missing spaces in `opam --help` [#5850 @sorawee].
   * Manual: add missing 'since opam 2.2' annotation when mentionning with-dev-setup [#5885 @kit-ty-kate]
   * Installation: update badges for Ubuntu and Fedora to newer versions [#5905 @AldanTanneo]
+  * Manual: update regarding `pkg+` variables new syntax [#5840 @kit-ty-kate]
 
 ## Security fixes
 
@@ -177,6 +184,9 @@ users)
 
 ## opam-format
   * `OpamFile.InitConfig`: add `sys-pkg-manager-cmd` field [#5847 @rjbou]
+  * `OpamTypesBase`: add `filter_ident_of_string_interp` that is used for parsing variables in string interpolation like `filter_ident_of_string` but permits the parsing of '%{?pkg+:var:}%' syntax [#5840 @rjbou]
+  * `OpamTypesBase.filter_ident_of_string_interp`: add `accept` optional argument to be able to raise an error when several pluses are in the package name without using the new syntax, like `%{pkg+++:var}%`
+  * `OpamFilter`: add `extract_variables_from_string` to retrieve string of variables, and exposes it [#5840 @rjbou]
 
 ## opam-core
   * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]

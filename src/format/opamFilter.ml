@@ -117,9 +117,7 @@ let fident_variables = function
         | Some n -> OpamVariable.Full.create n var
         | None -> OpamVariable.Full.self var) pkgs
 
-(* extracts variables appearing in interpolations in a string*)
-let string_variables s =
-  let matches =
+let extract_variables_from_string s =
     let rec aux acc pos =
       try
         let ss = Re.exec ~pos string_interp_regex s in
@@ -131,11 +129,13 @@ let string_variables s =
       with Not_found -> acc
     in
     aux [] 0
-  in
+
+(* extracts variables appearing in interpolations in a string *)
+let string_variables s =
   List.fold_left (fun acc s ->
-      try fident_variables (filter_ident_of_string s) @ acc
+      try fident_variables (filter_ident_of_string_interp s) @ acc
       with Failure _ -> acc)
-    [] matches
+    [] (extract_variables_from_string s)
 
 let variables filter =
   fold_down_left (fun acc -> function
@@ -255,7 +255,8 @@ let expand_string_aux ?(partial=false) ?(escape_value=fun x -> x) ?default env t
        str)
     else
     let fident = String.sub str 2 (String.length str - 4) in
-    resolve_ident ~no_undef_expand:partial env (filter_ident_of_string fident)
+    resolve_ident ~no_undef_expand:partial env
+      (filter_ident_of_string_interp fident)
     |> value_string ?default:(default fident) |> escape_value
   in
   Re.replace string_interp_regex ~f text
@@ -307,7 +308,7 @@ let map_variables_in_string f =
     ~default:(fun fid_string ->
         try
           fid_string |>
-          filter_ident_of_string |>
+          filter_ident_of_string_interp |>
           map_variables_in_fident f |>
           string_of_filter_ident
         with Failure _ -> fid_string)

@@ -875,6 +875,31 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
     cond 68 `Warning
       "Missing field 'license'"
       (t.license = []);
+    (let vars =
+       List.flatten @@
+       List.map (fun s ->
+           List.filter_map
+             (fun f ->
+                try
+                  let _ =
+                    OpamTypesBase.filter_ident_of_string_interp
+                      ~accept:false f
+                  in
+                  None
+                with OpamTypesBase.Parse_variable (p,v) ->
+                  Some (p,v)
+             )
+             (OpamFilter.extract_variables_from_string s))
+         all_expanded_strings
+     in
+     cond 69 `Warning
+       "Package name in variable in string interpolation contains several \
+        '+', use"
+       ~detail:(List.map (fun (p,v) ->
+           Printf.sprintf "'?%s:%s:' instead of '%s:%s'"
+             p v p v)
+           vars)
+       (vars <> []));
   ]
   in
   format_errors @

@@ -1,0 +1,187 @@
+N0REP0
+### : Test the behaviour of %{?pkg+with+pluses:var:false}%
+### : See https://github.com/ocaml/opam/pull/5840
+### <pkg:pkg++.1>
+opam-version: "2.0"
+### <pkg:pkg+.1>
+opam-version: "2.0"
+### <pkg:pkg+a.1>
+opam-version: "2.0"
+### <pkg:pkg++a.1>
+opam-version: "2.0"
+### <pkg:pkg1.1>
+opam-version: "2.0"
+### <pkg:pkg2.1>
+opam-version: "2.0"
+### <pkg:var-with-plus.1>
+opam-version: "2.0"
+build: [
+  ["echo" "'?pkg+:installed:'"      "%{?pkg+:installed:}%"]
+  ["echo" "'?pkg++:installed:'"     "%{?pkg++:installed:}%"]
+  ["echo" "'?pkg+a:installed:'"     "%{?pkg+a:installed:}%"]
+  ["echo" "'?pkg++a:installed:'"    "%{?pkg++a:installed:}%"]
+  ["echo" "'?pkg1+pkg2:installed:'" "%{?pkg1+pkg2:installed:}%"]
+  ["echo" "'pkg1+pkg2:installed'"   "%{pkg1+pkg2:installed}%"]
+]
+depopts: [
+  "pkg++"
+  "pkg+"
+  "pkg+a"
+  "pkg++a"
+  "pkg1"
+  "pkg2"
+]
+### opam switch create test --empty
+### opam install --dry-run --verbose var-with-plus | sed-cmd echo | grep -v Processing
+The following actions will be simulated:
+=== install 1 package
+  - install var-with-plus 1
+
++ echo "'?pkg+:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+-> compiled  var-with-plus.1
+Installing var-with-plus.1.
+-> installed var-with-plus.1
+Done.
+### opam install pkg++
+The following actions will be performed:
+=== install 1 package
+  - install pkg++ 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg++.1
+Done.
+### opam install --dry-run --verbose var-with-plus | sed-cmd echo | grep -v Processing
+The following actions will be simulated:
+=== install 1 package
+  - install var-with-plus 1
+
++ echo "'?pkg+:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+-> compiled  var-with-plus.1
+Installing var-with-plus.1.
+-> installed var-with-plus.1
+Done.
+### opam install pkg+
+The following actions will be performed:
+=== install 1 package
+  - install pkg+ 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg+.1
+Done.
+### opam install --dry-run --verbose var-with-plus | sed-cmd echo | grep -v Processing
+The following actions will be simulated:
+=== install 1 package
+  - install var-with-plus 1
+
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+-> compiled  var-with-plus.1
+Installing var-with-plus.1.
+-> installed var-with-plus.1
+Done.
+### opam install pkg+a
+The following actions will be performed:
+=== install 1 package
+  - install pkg+a 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg+a.1
+Done.
+### opam install --dry-run --verbose var-with-plus | sed-cmd echo | grep -v Processing
+The following actions will be simulated:
+=== install 1 package
+  - install var-with-plus 1
+
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+-> compiled  var-with-plus.1
+Installing var-with-plus.1.
+-> installed var-with-plus.1
+Done.
+### opam install pkg++a
+The following actions will be performed:
+=== install 1 package
+  - install pkg++a 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg++a.1
+Done.
+### opam install --dry-run --verbose var-with-plus | sed-cmd echo | grep -v Processing
+The following actions will be simulated:
+=== install 1 package
+  - install var-with-plus 1
+
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+-> compiled  var-with-plus.1
+Installing var-with-plus.1.
+-> installed var-with-plus.1
+Done.
+### opam install pkg1
+The following actions will be performed:
+=== install 1 package
+  - install pkg1 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg1.1
+Done.
+### opam install --dry-run --verbose var-with-plus | sed-cmd echo | grep -v Processing
+The following actions will be simulated:
+=== install 1 package
+  - install var-with-plus 1
+
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'pkg1+pkg2:installed'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+-> compiled  var-with-plus.1
+Installing var-with-plus.1.
+-> installed var-with-plus.1
+Done.
+### opam install pkg2
+The following actions will be performed:
+=== install 1 package
+  - install pkg2 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg2.1
+Done.
+### opam install --dry-run --verbose var-with-plus | sed-cmd echo | grep -v Processing
+The following actions will be simulated:
+=== install 1 package
+  - install var-with-plus 1
+
++ echo "'?pkg+:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg+a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg++a:installed:'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'?pkg1+pkg2:installed:'" "false" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
++ echo "'pkg1+pkg2:installed'" "true" (CWD=${BASEDIR}/OPAM/test/.opam-switch/build/var-with-plus.1)
+-> compiled  var-with-plus.1
+Installing var-with-plus.1.
+-> installed var-with-plus.1
+Done.
