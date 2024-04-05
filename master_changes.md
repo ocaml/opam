@@ -24,6 +24,7 @@ users)
 ## Actions
 
 ## Install
+  * Fix performance regression when calling opam install --deps-only on an already installed package [#5908 @kit-ty-kate - fix #5817]
 
 ## Remove
 
