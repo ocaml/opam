@@ -517,7 +517,9 @@ let update
   let repo_changed =
     not
       (OpamRepositoryName.Map.equal
-         (OpamPackage.Map.equal (OpamFile.OPAM.effectively_equal))
+         (OpamPackage.Map.equal (OpamFile.OPAM.effectively_equal None)) (* TODO: We'd need OpamPackage.Map.equal_binding
+                                                                           (of type "(key -> 'a -> 'a -> bool) -> 'a t -> 'a t -> bool")
+                                                                           to do it effeciently to putting None for now *)
          rt_before.repo_opams rt.repo_opams)
   in
 

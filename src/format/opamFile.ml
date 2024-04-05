@@ -3548,7 +3548,7 @@ module OPAM = struct
 
   (** Extra stuff for opam files *)
 
-  let effective_part ?(modulo_state=false) (t:t) =
+  let effective_part ?(modulo_state=false) nv (t:t) =
     let t_modulo_state = if modulo_state then empty else t in
     let effective_url u =
       match URL.checksum u with
@@ -3560,8 +3560,8 @@ module OPAM = struct
     {
       opam_version = empty.opam_version;
 
-      name       = t.name;
-      version    = t.version;
+      name       = (match t.name, nv with Some _ as x, _ -> x | None, Some nv -> Some nv.OpamPackage.name | None, None -> None);
+      version    = (match t.version, nv with Some _ as x, _ -> x | None, Some nv -> Some nv.OpamPackage.version | None, None -> None);
 
       depends    = t_modulo_state.depends;
       depopts    = t_modulo_state.depopts;
@@ -3631,8 +3631,8 @@ module OPAM = struct
       deprecated_build_doc = t.deprecated_build_doc;
     }
 
-  let effectively_equal ?(modulo_state=false) o1 o2 =
-    effective_part ~modulo_state o1 = effective_part ~modulo_state o2
+  let effectively_equal ?(modulo_state=false) nv o1 o2 =
+    effective_part ~modulo_state nv o1 = effective_part ~modulo_state nv o2
 
   let equal o1 o2 =
     with_metadata_dir None o1 = with_metadata_dir None o2

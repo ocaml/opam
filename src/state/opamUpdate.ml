@@ -319,7 +319,7 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
         o |> OpamFile.OPAM.with_url_opt None
         |> OpamFile.OPAM.with_version v
       in
-      OpamFile.OPAM.effectively_equal
+      OpamFile.OPAM.effectively_equal (Some nv)
         (cleanup_opam (OpamFormatUpgrade.opam_file a))
         (cleanup_opam (OpamFormatUpgrade.opam_file b))
     in
