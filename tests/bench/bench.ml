@@ -34,6 +34,7 @@ let () =
     time_cmd ~exit:0 (fmt "%s install magic-trace -y --fake --sw two" bin)
   in
   let time_OpamSystem_read_10 =
+    (* NOTE: https://github.com/ocaml/opam/pull/5896 *)
     let time_OpamSystem_read () =
       let ic = Stdlib.open_in_bin "/home/opam/all-opam-files" in
       let before = Unix.gettimeofday () in
@@ -47,6 +48,12 @@ let () =
     let n = 10 in
     let l = List.init n (fun _ -> time_OpamSystem_read ()) in
     List.fold_left (+.) 0.0 l /. float_of_int n
+  in
+  let time_deps_only_installed_pkg =
+    (* NOTE: https://github.com/ocaml/opam/pull/5908 *)
+    launch (fmt "%s switch create three --fake ocaml-base-compiler.4.14.0" bin);
+    launch (fmt "%s install -y --fake core.v0.15.0" bin);
+    time_cmd ~exit:0 (fmt "%s install --show --deps-only core.v0.15.0" bin)
   in
   let json = fmt {|{
   "results": [
@@ -72,6 +79,11 @@ let () =
           "name": "OpamSystem.read amortised over 10 runs",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "Deps-only install of an already installed package",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -91,6 +103,7 @@ let () =
       time_install_cmd
       time_install_cmd_w_invariant
       time_OpamSystem_read_10
+      time_deps_only_installed_pkg
       bin_size
   in
   print_endline json
