@@ -1633,6 +1633,40 @@ let translate_patch ~dir orig corrected =
   end;
   close_in ch
 
+let gpatch = lazy begin
+  let rec search_gpatch = function
+    | [] -> None
+    | patch_cmd::patch_cmds ->
+      match OpamProcess.run (make_command ~name:"patch" patch_cmd ["--version"]) with
+      | r ->
+        (match OpamProcess.is_success r, r.OpamProcess.r_stdout with
+         | true, full::_ when
+             OpamStd.String.is_prefix_of ~from:0 ~full "GNU patch " ->
+           Some patch_cmd
+         | _ ->
+           search_gpatch patch_cmds)
+      | exception _ -> search_gpatch patch_cmds
+  in
+  let default_cmd, other_cmds =
+    match OpamStd.Sys.os () with
+    | DragonFly
+    | FreeBSD
+    | NetBSD
+    | OpenBSD -> ("gpatch", ["patch"])
+    | Cygwin
+    | Darwin
+    | Linux
+    | Unix
+    | Win32
+    | Other _ -> ("patch", ["gpatch"])
+  in
+  match search_gpatch (default_cmd :: other_cmds) with
+  | Some gpatch -> gpatch
+  | None ->
+    OpamConsole.warning "Invalid patch utility. Please install GNU patch";
+    default_cmd
+end
+
 let patch ?(preprocess=true) ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
@@ -1645,12 +1679,7 @@ let patch ?(preprocess=true) ~dir p =
     else
       p
   in
-  let patch_cmd =
-    match OpamStd.Sys.os () with
-    | OpamStd.Sys.OpenBSD
-    | OpamStd.Sys.FreeBSD -> "gpatch"
-    | _ -> "patch"
-  in
+  let patch_cmd = Lazy.force gpatch in
   make_command ~name:"patch" ~dir patch_cmd ["-p1"; "-i"; p'] @@> fun r ->
     if not (OpamConsole.debug ()) then Sys.remove p';
     if OpamProcess.is_success r then Done None
