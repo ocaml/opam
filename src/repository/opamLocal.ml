@@ -190,7 +190,7 @@ module B = struct
 
   let repo_update_complete _ _ = Done ()
 
-  let pull_url ?cache_dir:_ ?subpath local_dirname _checksum remote_url =
+  let pull_url ?full_fetch:_ ?cache_dir:_ ?subpath local_dirname _checksum remote_url =
     let local_dirname = OpamFilename.SubPath.(local_dirname /? subpath) in
     OpamFilename.mkdir local_dirname;
     let dir = OpamFilename.Dir.to_string local_dirname in

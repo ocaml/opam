@@ -164,7 +164,8 @@ let validate_and_add_to_cache label url cache_dir file checksums =
 
 (* [cache_dir] used to add to cache only *)
 let pull_from_upstream
-    label ?(working_dir=false) ?subpath cache_dir destdir checksums url =
+    label ?full_fetch ?(working_dir=false) ?subpath
+    cache_dir destdir checksums url =
   let module B = (val url_backend url: OpamRepositoryBackend.S) in
   let cksum = match checksums with [] -> None | c::_ -> Some c in
   let text =
@@ -206,7 +207,7 @@ let pull_from_upstream
        )
      else url, B.pull_url
    in
-   pull ?cache_dir ?subpath destdir cksum url
+   pull ?full_fetch ?cache_dir ?subpath destdir cksum url
   )
   @@| function
   | (Result (Some file) | Up_to_date (Some file)) as ret ->
@@ -219,14 +220,17 @@ let pull_from_upstream
   | (Result None | Up_to_date None) as ret -> ret
   | Not_available _ as na -> na
 
-let pull_from_mirrors label ?working_dir ?subpath cache_dir destdir checksums urls =
+let pull_from_mirrors label ?full_fetch ?working_dir ?subpath
+    cache_dir destdir checksums urls =
   let rec aux = function
     | [] -> invalid_arg "pull_from_mirrors: empty mirror list"
     | [url] ->
-      pull_from_upstream label ?working_dir ?subpath cache_dir destdir checksums url
+      pull_from_upstream label ?full_fetch ?working_dir ?subpath
+        cache_dir destdir checksums url
       @@| fun r -> url, r
     | url::mirrors ->
-      pull_from_upstream label ?working_dir ?subpath cache_dir destdir checksums url
+      pull_from_upstream label ?full_fetch ?working_dir ?subpath
+        cache_dir destdir checksums url
       @@+ function
       | Not_available (_,s) ->
         OpamConsole.warning "%s: download of %s failed (%s), trying mirror"
@@ -246,7 +250,7 @@ let pull_from_mirrors label ?working_dir ?subpath cache_dir destdir checksums ur
 
 (* handle subpathes *)
 let pull_tree_t
-    ?cache_dir ?(cache_urls=[]) ?working_dir
+    ?full_fetch ?cache_dir ?(cache_urls=[]) ?working_dir
     dirnames checksums remote_urls =
   let extract_archive =
     let fallback success = function
@@ -342,13 +346,13 @@ let pull_tree_t
       let pull label checksums remote_urls =
         match dirnames with
         | [ label, local_dirname, subpath ] ->
-          pull_from_mirrors label ?working_dir ?subpath cache_dir local_dirname
-            checksums remote_urls
+          pull_from_mirrors label ?full_fetch ?working_dir ?subpath
+            cache_dir local_dirname checksums remote_urls
           @@| fun (url, res) ->
           (OpamUrl.to_string_w_subpath subpath url),
           res
         | _ ->
-          pull_from_mirrors label ?working_dir cache_dir tmpdir
+          pull_from_mirrors label ?full_fetch ?working_dir cache_dir tmpdir
             checksums remote_urls
           @@| fun (url, res) -> OpamUrl.to_string url, res
       in
@@ -361,10 +365,11 @@ let pull_tree_t
       | _, (Not_available _ as na) -> Done na
 
 
-let pull_tree label ?cache_dir ?(cache_urls=[]) ?working_dir ?subpath
+let pull_tree label
+    ?full_fetch ?cache_dir ?(cache_urls=[]) ?working_dir ?subpath
     local_dirname  =
-  pull_tree_t ?cache_dir ~cache_urls ?working_dir
-  [label, local_dirname, subpath]
+  pull_tree_t ?full_fetch ?cache_dir ~cache_urls ?working_dir
+    [label, local_dirname, subpath]
 
 let pull_shared_tree ?cache_dir ?(cache_urls=[]) dirnames checksums remote_urls =
   pull_tree_t ?cache_dir ~cache_urls dirnames checksums remote_urls
