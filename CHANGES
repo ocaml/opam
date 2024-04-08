@@ -3,6 +3,144 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.2.0~beta2:
+* Changes necessary to be able to open the PR adding support for Windows in
+  opam-repository:
+  * Add a init OCaml `sys-ocaml-system` eval variable [#5829 @dra27]
+  * Add warning 69: Warn for new syntax when package name in variable in string
+    interpolation contains several '+' [#5840 @rjbou]
+  * Hijack the `%{?val_if_true:val_if_false}%` syntax to support extending the
+    variables of packages with + in their name [#5840 @kit-ty-kate]
+  * Handle init OCaml `sys-ocaml-*` eval variables during format upgrade from
+    2.0 -> 2.1 -> 2.2 [#5829 @dra27]
+  * Add `winsymlinks:native` to the Cygwin environment variable when installing
+    a package on Windows [#5793 @kit-ty-kate - fix #5782]
+  * Internal Cygwin installation's bin directory is placed as far down PATH as
+    is necessary not to shadow `bash`, `tar`, `sort` or `git` [#5832 @dra27]
+* Changes necessary for a smooth application of the plan to change
+  opam-repository devided in
+  https://github.com/ocaml/opam-repository/issues/23789
+  * Warn if `GNU patch` is not detected when a patch is applied
+    [#5893 @kit-ty-kate]
+  * Use `gpatch` by default instead of `patch` on NetBSD and DragonFlyBSD
+    [#5893 @kit-ty-kate]
+  * Use `gpatch` if it exists and is detected as GNU patch when `patch` is not
+    `GNU patch` [#5893 @kit-ty-kate]
+* Improve the opam init experience on Windows:
+  * Recommend enabling Developer Mode on Windows [#5831 @dra27]
+  * Fix MSYS2 support [#5843 @rjbou - fix #5683]
+    * Add `sys-pkg-manager-cmd` as an accepted field in opamrc files
+      [#5847 @rjbou - fix #5844]
+  * Fix `git-location` handling in init config file [#5848 @rjbou - fix #5845]
+  * Make the computation of the init default `sys-ocaml-*` eval variables on
+    Windows faster, no more depending on Cygwin [#5829 @dra27 @rjbou]
+  * Mark the internal cygwin installation as recommended [#5903 @kit-ty-kate]
+  * Quote all the paths to `OPAMROOT` when creating the init scripts on Unix in
+    case OPAMROOT contains spaces, backslashes or special characters
+    [#5841 @kit-ty-kate - fix #5804]
+* Improve the internal Cygwin installation during init on Windows:
+  * Disable ACL in Cygwin internal install to avoid permission mismatch errors
+    [#5796 @kit-ty-kate - fix #5781]
+  * Add rsync package to internal Cygwin packages list (enables local pinning
+    and is used by the VCS backends [#5808 @dra27]
+* Various improvements to the shell integration:
+  * Test if file exists before sourcing in fish + powershell
+    [#5864 @ElectreAAS]
+  * Properly test if "we're in interactive mode" instead of "in a tty" in fish
+    script [#5866 @ElectreAAS]
+  * Unixify Windows paths in init shells scripts (sh, bash, zsh, fish & tsh)
+    [#5797 @rjbou]
+* Various improvements to opam init:
+  * Simplify computation of OCaml init default `sys-ocaml-*` eval variables on
+    Unix [#5829 @dra27]
+  * Check for gpatch instead of patch on NetBSD and DragonFlyBSD
+    [#5893 @kit-ty-kate]
+* Various improvements on Windows:
+  * Ensure that the system critical error dialog is disabled when opam starts
+    [#5828 @dra27]
+  * Fix loading git location at init [#5843 @rjbou]
+  * Remove use of deprecated function `SHGetFolderPath` and use
+    `SHGetKnownFolderPath` instead [#5862 @kit-ty-kate]
+  * Improve performance by only calling `OpamStubs.getPathToSystem` once
+    [#5862 @dra27]
+* Various improvements to the environment handling:
+  * Fix shell detection on Windows when opam is called via Cygwin's
+    `/usr/bin/env `even though cmd/powershell is used [#5797 @kit-ty-kate]
+  * Fix incorrect deduplication of environment variables on update. Effect was
+    that `FOO += ""` would occlude the value of `FOO` in the environment
+    [#5837 @dra27]
+  * Fix regression from #5356 on the detection of out-of-date environment
+    variables. As part of a refactoring, a filter predicate got inverted
+    [#5837 @dra27]
+* Disable Software Heritage fallbacks by default [#5899 @kit-ty-kate]
+* Make sure `opam source --dev` with git sources, clones the whole repository
+  instead of using `--depth=1` [#5888 @moyodiallo - fix #5061]
+* Add support for Wolfi OS, treat it like Apline family as it uses apk too
+  [#5878 @xnox]
+* Add support for doas as an alternative to sudo to the installer
+  [#5820 @kit-ty-kate - fix #5792]
+* Do not check for cppo in the configure script (not used directly anymore
+  since #5498) [#5794 @kit-ty-kate]
+* Upgrade vendored packages (cmdliner 1.2.0, dune 3.14.2, re 1.11.0, ocamlgraph
+  2.1.0, opam-file-format 2.1.6) [#5797 #5869 #5880 #5869 @kit-ty-kate @dra27]
+  * Allow to compile opam when the environment contains unicode characters on
+    Windows [#5880 @kit-ty-kate - fix #5861]
+* Sandbox: Mark the user temporary directory (as returned by `getconf
+  DARWIN_USER_TEMP_DIR`) as writable when TMPDIR is not defined on macOS
+  [#5780 @ElectreAAS]
+* Improve the documentation [#5812 #5818 #5849 #5850 #5885 #5905 #5840 @sorawee
+  @AldanTanneo @Khady @kit-ty-kate]
+* Improve and extend the tests [#5864 #5829 #5840 #5888 @moyodiallo
+  @kit-ty-kate @rjbou]
+* Improve the benchmarks [#5900 @kit-ty-kate]
+* Improve the test infrastructure [#5851 #5869 #5788 @dra27 @rjbou]
+* API changes:
+  * `OpamClient.windows_checks`: On existing cygwin install, permit to detect
+    MSYS2 and store `os-distribution=msys2` in `global-variables` config file
+    field [#5843 @rjbou]
+  * `OpamClient.windows_checks`: When updating config file for MSYS2, resolve
+    `pacman` path and store it in `sys-pkg-manager-cmd` for MSYS2 [#5843 @rjbou]
+  * `OpamArg.apply_global_options`: load MSYS2 Cygwin binary path too
+    [#5843 @rjbou]
+  * `OpamRepositoryBackend.S.pull_url`, `OpamVCS.fetch`,
+    `OpamRepository.pull_tree`: add `full_fetch` optional argument to pull full
+    history if url is a `VCS` [#5888 @moyodiallo - fix #5061]
+  * `OpamEnv.env_expansion`: Fix detection of out-of-date environment
+    variables, a filter predicate was inverted [#5837 @dra27]
+  * `OpamSysInteract.Cygwin.check_install`: add `variant` argument to permit
+    checking that it is an Cygwin-like install if it is set to true, keep
+    checking that it is a strictly Cygwin install if false [#5843 @rjbou]
+  * `OpamSysInteract.Cygwin.check_install`: look for `cygcheck.exe` in
+    `usr/bin` also as MSYS2 doesn't have "bin" [#5843 @rjbou]
+  * `OpamGlobalState.load_config`: load MSYS2 Cygwin binary path too at config
+    file loading [#5843 @rjbou]
+  * `OpamEnv`: add `sys_ocaml_eval_variables` value, moved `OpamInitDefaults`
+    as it is also needed in `OpamFormatUpgrade` too [#5829 @rjbou @kit-ty-kate]
+  * `OpamEnv` supports an internal `Cygwin` environment operation which pushes
+    the given directory as far down the list as can be done without shadowing.
+    This mechanism replaces the opposite which was done in OpamProcess
+    [#5832 @dra27]
+  * `OpamFile.InitConfig`: add `sys-pkg-manager-cmd` field [#5847 @rjbou]
+  * `OpamTypesBase`: add `filter_ident_of_string_interp` that is used for
+    parsing variables in string interpolation like `filter_ident_of_string` but
+    permits the parsing of '%{?pkg+:var:}%' syntax [#5840 @rjbou]
+  * `OpamTypesBase.filter_ident_of_string_interp`: add `accept` optional
+    argument to be able to raise an error when several pluses are in the package
+    name without using the new syntax, like `%{pkg+++:var}%`
+  * `OpamFilter`: add `extract_variables_from_string` to retrieve string of
+    variables, and exposes it [#5840 @rjbou]
+  * `OpamTypes.env_update` now has an additional type parameter indicating
+    whether the update is internal or writeable [#5832 @dra27]
+  * `OpamStd.Sys`: add `is_cygwin_variant_cygcheck` that returns true if in
+    path `cygcheck` is from a Cygwin or MSYS2 installation [#5843 @rjbou]
+  * `OpamStd.Env.cyg_env`: takes the environment to cygify, usually
+  `OpamStd.Env.raw_env` [#5829 @dra27]
+  * `OpamSystem.patch` now displays a warning when GNU patch is not detected
+    and looks for both patch and gpatch as a backup option depending on the OS
+    [#5893 @kit-ty-kate]
+  * `OpamProcess.cygwin_create_process_env` no longer adjusts PATH
+    [#5832 @dra27]
+
 2.2.0~beta1:
 * Check and advertise to use Git for Windows [#5718 @rjbou - fix #5617]
   * (+) Add the `--git-location` and `--no-git-location` cli arguments
