@@ -542,16 +542,20 @@ module Pinned_legacy = struct
     end)
 end
 
+external open_env_updates:
+  ('a, euok_writeable) env_update list
+    -> ('a, [> euok_writeable]) env_update list = "%identity"
+(* cf. tests/lib/typeGymnastics.ml *)
 
 (** Cached environment updates (<switch>/.opam-switch/environment
     <switch>/.opam-switch/last-env/env-* last env files) *)
 
-module Environment = LineFile(struct
+module Environment = struct include LineFile(struct
 
     let internal = "environment"
     let atomic = true
 
-    type t = spf_resolved env_update list
+    type t = (spf_resolved, euok_writeable) env_update list
 
     let empty = []
 
@@ -582,7 +586,7 @@ module Environment = LineFile(struct
               | _ -> Pp.unexpected ()),
            (fun sep -> String.make 1 (char_of_separator sep)))
       in
-      let env : (string, env_update_op_kind) Pp.t =
+      let env : (string, OpamParserTypes.FullPos.env_update_op_kind) Pp.t =
         (Pp.of_pair "env_update_op"
            (OpamLexer.FullPos.env_update_op, OpamPrinter.env_update_op_kind))
       in
@@ -657,7 +661,7 @@ module Environment = LineFile(struct
         (Pp.pp
            (fun ~pos:_ (envu_var, (envu_op, (envu_value, optional_parts))) ->
               let envu = {
-                envu_var; envu_op; envu_value; envu_comment = None;
+                envu_var; envu_op = op_of_raw envu_op; envu_value; envu_comment = None;
                 envu_rewrite = Some (SPF_Resolved None);
               } in
               match optional_parts with
@@ -701,9 +705,21 @@ module Environment = LineFile(struct
                | Some comment, None ->
                  Some (`comment_norewrite comment)
              in
-             (envu_var, (envu_op, (envu_value, optional_parts)))))
+             (envu_var, (raw_of_op envu_op, (envu_value, optional_parts)))))
 
   end)
+
+  let read file =
+    open_env_updates (read file)
+  let read_opt file =
+    Option.map open_env_updates (read_opt file)
+  let safe_read file =
+    open_env_updates (safe_read file)
+  let read_from_channel ?filename ch =
+    open_env_updates (read_from_channel ?filename ch)
+  let read_from_string ?filename s =
+    open_env_updates (read_from_string ?filename s)
+end
 
 (** (2) Part of the public repository format *)
 
@@ -2014,7 +2030,7 @@ module Switch_configSyntax = struct
     variables: (variable * variable_contents) list;
     opam_root: dirname option;
     wrappers: Wrappers.t;
-    env: spf_resolved env_update list;
+    env: (spf_resolved, euok_writeable) env_update list;
     invariant: OpamFormula.t option;
     depext_bypass: OpamSysPkg.Set.t;
   }
@@ -2031,6 +2047,8 @@ module Switch_configSyntax = struct
     invariant = None;
     depext_bypass = OpamSysPkg.Set.empty;
   }
+
+  let env t = open_env_updates t.env
 
   (* When adding a field or section, make sure to add it in
      [OpamConfigCommand.switch_allowed_fields] and
@@ -2566,7 +2584,7 @@ module OPAMSyntax = struct
     conflict_class : name list;
     available  : filter;
     flags      : package_flag list;
-    env        : spf_unresolved env_update list;
+    env        : (spf_unresolved, euok_writeable) env_update list;
 
     (* Build instructions *)
     build      : command list;
@@ -2577,7 +2595,7 @@ module OPAMSyntax = struct
     (* Auxiliary data affecting the build *)
     substs     : basename list;
     patches    : (basename * filter option) list;
-    build_env  : spf_unresolved env_update list;
+    build_env  : (spf_unresolved, euok_writeable) env_update list;
     features   : (OpamVariable.t * filtered_formula * string) list;
     extra_sources: (basename * URL.t) list;
 
@@ -2733,7 +2751,7 @@ module OPAMSyntax = struct
              envu_comment =
                Some ("Updated by package " ^ OpamPackage.Name.to_string name) }
          | _, b -> b)
-      t.env
+      (open_env_updates t.env)
 
   let build t = t.build
   let run_test t = t.deprecated_build_test @ t.run_test
@@ -2744,7 +2762,7 @@ module OPAMSyntax = struct
 
   let substs t = t.substs
   let patches t = t.patches
-  let build_env t = t.build_env
+  let build_env t = open_env_updates t.build_env
   let features t = t.features
   let extra_sources t = t.extra_sources
 
@@ -4017,7 +4035,7 @@ module CompSyntax = struct
     make         : string list ;
     build        : command list ;
     packages     : formula ;
-    env          : spf_unresolved env_update list;
+    env          : (spf_unresolved, euok_writeable) env_update list;
     tags         : string list;
   }
 

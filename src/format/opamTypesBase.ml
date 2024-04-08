@@ -264,6 +264,14 @@ let env_update_unresolved ?comment:envu_comment ?rewrite
         rewrite;
   }
 
+external op_of_raw:
+  OpamParserTypes.FullPos.env_update_op_kind
+    -> euok_writeable env_update_op_kind = "%identity"
+external raw_of_op:
+  euok_writeable env_update_op_kind
+    -> OpamParserTypes.FullPos.env_update_op_kind = "%identity"
+(* cf. tests/lib/typeGymnastics.ml *)
+
 (** Environment update path transformers functions *)
 let string_of_path_format = function
   | Host -> "host"
