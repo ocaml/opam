@@ -402,6 +402,7 @@ type stats = {
 (** Environment variables: var name, value, optional comment *)
 type env = (OpamStd.Env.Name.t * string * string option) list
 
+(** Transformation format for environment variable containing paths *)
 type path_format =
   | Host
   (** use host interpretation of path format *)
@@ -417,6 +418,7 @@ type path_format =
   (** use the target interpretation of path format (opam file one) and quote
       path if it contains the separator character *)
 
+(** Separator for environment variables containing several paths *)
 type separator =
   | SColon
   (** Colon separator, i.e. ':' *)
@@ -426,6 +428,10 @@ type separator =
 
 type spf_resolved = [ `resolved ]
 type spf_unresolved = [ `unresolved ]
+
+(** Transformation for environment variables containing paths. They are either
+    unresolved at the beginning [SPF_Unresolved], then propagated as resolved
+    [SPF_Resolved]. *)
 type _ separator_path_format =
   | SPF_Resolved:
       (separator * path_format) option
