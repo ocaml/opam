@@ -532,7 +532,7 @@ let print_message =
 let timestamp () =
   let time = Unix.gettimeofday () -. global_start_time in
   Printf.ksprintf (colorise `blue) "%02.0f:%06.3f"
-    (time /. 60.)
+    (Float.floor (time /. 60.))
     (mod_float time 60.)
 
 let log_formatter, finalise_output =
