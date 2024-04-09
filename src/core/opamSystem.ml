@@ -1637,7 +1637,9 @@ let gpatch = lazy begin
   let rec search_gpatch = function
     | [] -> None
     | patch_cmd::patch_cmds ->
-      match OpamProcess.run (make_command ~name:"patch" patch_cmd ["--version"]) with
+      match OpamProcess.run
+              (make_command ~verbose:OpamCoreConfig.(!r.verbose_level >= 3)
+                 ~name:"patch" patch_cmd ["--version"]) with
       | r ->
         (match OpamProcess.is_success r, r.OpamProcess.r_stdout with
          | true, full::_ when
