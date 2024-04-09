@@ -23,7 +23,7 @@
 ## Publish the release
 
 * add hashes in `install.sh` (and check signatures)
-* publish opam packages in opam-repository
+* publish opam packages in opam-repository (and add `flags: avoid-version` and `available: opam-version >= "2.1.0"` to each packages if this is not a stable version)
 * update versions (and messages, if necessary) in https://github.com/ocaml/opam-repository/blob/master/repo
 
 ## Announce!
