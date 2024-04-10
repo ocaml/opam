@@ -378,19 +378,22 @@ let print_solution st new_st missing solution =
 
 (** Setting states for building *)
 
-let get_universe tog st =
+let get_universe tog requested st =
   let OpamListCommand.{doc; test; dev_setup; dev; _} = tog in
   OpamSwitchState.universe st ~doc ~test ~dev_setup ~force_dev_deps:dev
-    ~requested:st.installed
+    ~requested
     Query
 
-let simulate_new_state tog st universe install names =
+let dry_install tog st universe install =
   match OpamSolver.resolve universe
           (OpamSolver.request ~install ()) with
   | Success solution ->
     let new_st = OpamSolution.dry_run st solution in
-    print_solution st new_st names solution;
-    new_st, get_universe tog new_st
+    print_solution st new_st
+      (OpamPackage.Name.Set.of_list (List.map fst install))
+      solution;
+    let requested = OpamFormula.packages_of_atoms new_st.installed install in
+    new_st, get_universe tog requested new_st
   | Conflicts cs ->
     OpamConsole.error
       "Could not simulate installing the specified package(s) to this switch:";
@@ -398,10 +401,6 @@ let simulate_new_state tog st universe install names =
       (OpamCudf.string_of_conflicts st.packages
          (OpamSwitchState.unavailable_reason st) cs);
     OpamStd.Sys.exit_because `No_solution
-
-let dry_install tog st universe install =
-  simulate_new_state tog st universe install
-    (OpamPackage.Name.Set.of_list (List.map fst install))
 
 let run st tog ?no_constraint mode filter atoms =
   let open OpamPackage.Set.Op in
@@ -412,11 +411,12 @@ let run st tog ?no_constraint mode filter atoms =
         in
         if OpamPackage.Set.is_empty installed then
           (select, atom :: missing)
-        else (installed ++ select, missing))
+        else
+          (installed ++ select, missing))
       (OpamPackage.Set.empty, []) atoms
   in
   let st, universe =
-    let universe = get_universe tog st in
+    let universe = get_universe tog select st in
     match mode, filter, missing with
     | Deps, _, [] -> st, universe
     | Deps, Roots_from, _::_ ->

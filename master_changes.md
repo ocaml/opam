@@ -42,6 +42,7 @@ users)
 ## Update / Upgrade
 
 ## Tree
+  * [BUG] Fix `opam tree --with-*` assigning the `with-*` variables to unrequested packages [#5919 @kit-ty-kate @rjbou - fix #5755]
 
 ## Exec
 
