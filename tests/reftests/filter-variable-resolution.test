@@ -798,13 +798,14 @@ build: [
 ### <pkg:patches.1:patches.config>
 opam-version: "2.0"
 variables { smtg: "something" }
-### opam install patches -vv | 'patch-[^"]+' -> 'patch' | sed-cmd grep | unordered
+### opam install patches -vv | 'patch-[^"]+' -> 'patch-file' | sed-cmd grep | sed-cmd patch | unordered
 The following actions will be performed:
 === install 1 package
   - install patches 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [patches: patch] applying to-not-apply.patch
++ patch "-p1" "-i" "${BASEDIR}/OPAM/log/processed-patch-file" (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/patches.1)
 - Hunk #1 succeeded at 2 with fuzz 1.
 [ERROR] The compilation of patches.1 failed at "grep ploplop some-content".
 
@@ -818,7 +819,6 @@ The following actions will be performed:
 - No changes have been performed
 '${OPAM} install patches -vv' failed.
 Processing  2/3: [patches: patch]
-+ /usr/bin/patch "-p1" "-i" "${BASEDIR}/OPAM/log/processed-patch" (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/patches.1)
 - patching file some-content
 Processing  2/3: [patches: grep ploplop]
 + grep "ploplop" "some-content" (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/patches.1)
