@@ -1218,7 +1218,7 @@ let read_opam dir =
     None
   | None, None -> None
   | exception (OpamPp.Bad_version (_, version)) ->
-    TODO: here the version string is not a version but an error message
+    (* TODO: here the version string is not a version but an error message *)
     log "opam-version %S unsupported on %s. Added as dummy unavailable package." version
       (OpamFile.to_string opam_file);
     if OpamVersion.compare OpamVersion.current (OpamVersion.of_string version) >= 0 then begin
