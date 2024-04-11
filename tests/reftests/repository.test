@@ -629,7 +629,7 @@ some-field-that-do-not-exist: true
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [oper] synchronised from file://${BASEDIR}/OPER3
-opam-file                       opam-version "unsupported or missing file format version; should be 2.0 or older" unsupported on ${OPAMTMP}/oper/packages/bad-opam-version/bad-opam-version.1/opam. Added as dummy unavailable package.
+opam-file                       opam-version "3.0" unsupported on ${OPAMTMP}/oper/packages/bad-opam-version/bad-opam-version.1/opam. Added as dummy unavailable package.
 [repo] no changes from file://${BASEDIR}/REPO
 [repo2] no changes from file://${BASEDIR}/REPO2
 [to-many-commits] no changes from git+file://${BASEDIR}/TMCS
@@ -654,9 +654,9 @@ opam-version: "2.0"
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [oper] synchronised from file://${BASEDIR}/OPER3
-opam-file                       opam-version "unsupported or missing file format version; should be 2.0 or older" unsupported on ${BASEDIR}/OPAM/repo/oper/packages/bad-opam-version/bad-opam-version.1/opam. Added as dummy unavailable package.
+opam-file                       opam-version "3.0" unsupported on ${BASEDIR}/OPAM/repo/oper/packages/bad-opam-version/bad-opam-version.1/opam. Added as dummy unavailable package.
 [repo] synchronised from file://${BASEDIR}/REPO
-opam-file                       opam-version "unsupported or missing file format version; should be 2.0 or older" unsupported on ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.2/opam. Added as dummy unavailable package.
+opam-file                       opam-version "3.0" unsupported on ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.2/opam. Added as dummy unavailable package.
 [repo2] no changes from file://${BASEDIR}/REPO2
 [to-many-commits] no changes from git+file://${BASEDIR}/TMCS
 Now run 'opam upgrade' to apply any package updates.
@@ -700,9 +700,8 @@ synopsis: ""
 description: """\
 This package uses opam 3.0 file format which opam 2.2 cannot read.
 
-In order to install or view information on this package, please upgrade your opam installation to at least version unsupported or missing file format version; should be 2.0 or older."""
-available:
-  opam-version >= "unsupported or missing file format version; should be 2.0 or older"
+In order to install or view information on this package, please upgrade your opam installation to at least version 3.0."""
+available: opam-version >= "3.0"
 ### opam show --raw bad-opam-version.2
 opam-version: "2.0"
 name: "bad-opam-version"
@@ -711,6 +710,5 @@ synopsis: ""
 description: """\
 This package uses opam 3.0 file format which opam 2.2 cannot read.
 
-In order to install or view information on this package, please upgrade your opam installation to at least version unsupported or missing file format version; should be 2.0 or older."""
-available:
-  opam-version >= "unsupported or missing file format version; should be 2.0 or older"
+In order to install or view information on this package, please upgrade your opam installation to at least version 3.0."""
+available: opam-version >= "3.0"

@@ -912,6 +912,23 @@ module I = struct
         "unsupported or missing file format version; should be %s or older"
         (OpamVersion.to_string format_version)
     in
+    let _ :
+      (opamfile_item_kind with_pos list,
+       OpamVersion.t option * opamfile_item_kind with_pos list)
+        OpamPp.t
+      = field name (parse opam_v) in
+    let _ :
+      (OpamVersion.t option, OpamVersion.t option)
+        OpamPp.t
+      = (check ~name ~errmsg f)
+    in
+    let _ :
+      (opamfile_item_kind with_pos list,
+       OpamVersion.t option * opamfile_item_kind with_pos list)
+        OpamPp.t
+      =   field name (parse opam_v) -|
+          map_fst (check ~name ~errmsg f)
+    in
     field name (parse opam_v) -|
     map_fst (check ~name ~raise:OpamPp.bad_version ~errmsg f) -|
     pp ~name
