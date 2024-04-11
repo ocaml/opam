@@ -83,8 +83,7 @@ val warns_to_json:
   ?filename:string -> (int * [`Warning|`Error] * string) list -> OpamJson.t
 
 (** Read the opam metadata from a given directory (opam file, with possible
-    overrides from url and descr files). Also includes the names and hashes
-    of files below files/
+    overrides from url and descr files).
     Warning: use [read_repo_opam] instead for correctly reading files from
     repositories!*)
 val read_opam: dirname -> OpamFile.OPAM.t option
