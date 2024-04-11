@@ -532,6 +532,9 @@ module Sys : sig
       OS) *)
   val path_sep: char
 
+  (** [true] if a character may be used in a filename. *)
+  val is_valid_basename_char: char -> bool
+
   (** Splits a PATH-like variable separated with [path_sep]. More involved than
       it seems, because there may be quoting on Windows. By default, it returns
       the path cleaned (remove trailing, leading, contiguous delimiters).
