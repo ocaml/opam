@@ -819,7 +819,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
               ("file" | "path" | "local" | "rsync") -> true
             | _, _ -> false)
            && (Filename.is_relative u.path
-               || OpamFilename.might_escape u.path))
+               || OpamFilename.might_escape ~sep:`Unix u.path))
          (all_urls t)
      in
      cond 65 `Error
@@ -947,7 +947,8 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        | Some extra_files ->
          List.filter_map (fun (base, _) ->
              let path = OpamFilename.Base.to_string base in
-             if OpamFilename.might_escape path then Some path else None)
+             if OpamFilename.might_escape ~sep:`Unix path then
+               Some path else None)
            extra_files
      in
      cond 72 `Error
