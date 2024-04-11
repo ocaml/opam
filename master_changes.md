@@ -172,6 +172,7 @@ users)
 # API updates
 ## opam-client
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
+  * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
