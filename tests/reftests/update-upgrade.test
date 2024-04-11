@@ -506,3 +506,38 @@ The following actions will be performed:
 -> removed   ongoing.dev
 -> installed ongoing.dev
 Done.
+### <REPO/packages/d-foo/d-foo.6/opam>
+opam-version: "2.0"
+build: [ "false" ]
+### opam update
+[NOTE] ongoing.dev has previously been updated with --working-dir, not resetting unless explicitly selected
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[second] no changes from file://${BASEDIR}/REPO2
+[default] synchronised from file://${BASEDIR}/REPO
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[quux.dev5] synchronised (no changes)
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+=== recompile 1 package
+  - recompile d-foo 6 [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of d-foo.6 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build d-foo 6
++- 
+- No changes have been performed
+# Return code 31 #
+### : Running opam upgrade a second time should do the same thing - the same
+### : failure with the same return code 31.
+### opam upgrade
+Already up-to-date.
+Nothing to do.
