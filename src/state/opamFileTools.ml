@@ -1219,23 +1219,30 @@ let read_opam dir =
   | None, None -> None
   | exception (OpamPp.Bad_version (_, version)) ->
     (* TODO: here the version string is not a version but an error message *)
-    log "opam-version %S unsupported on %s. Added as dummy unavailable package." version
-      (OpamFile.to_string opam_file);
-    if OpamVersion.compare OpamVersion.current (OpamVersion.of_string version) >= 0 then begin
-      log "Unexpected failure: failed to parse version %S but is below the current version %S"
+    log "opam-version %S unsupported on %s. Added as dummy unavailable package."
+      version (OpamFile.to_string opam_file);
+    if OpamVersion.compare
+        OpamVersion.current (OpamVersion.of_string version) >= 0 then begin
+      log
+        "Unexpected failure: failed to parse version %S \
+         but is below the current version %S"
         version (OpamVersion.to_string OpamVersion.current);
-      Some (OpamFile.OPAM.with_available (FBool false) OpamFile.OPAM.empty)
+      Some
+        (OpamFile.OPAM.empty
+         |> OpamFile.OPAM.with_available (FBool false))
     end else
       Some
-        (OpamFile.OPAM.with_descr_body
+        (OpamFile.OPAM.empty
+         |> OpamFile.OPAM.with_available
+           (FOp (FIdent ([], OpamVariable.of_string "opam-version", None),
+                 `Geq, FString version))
+         |> OpamFile.OPAM.with_descr_body
            (Printf.sprintf
-              "This package uses opam 3.0 file format which opam 2.2 cannot read.\n\
-               \n\
-               In order to install or view information on this package, please upgrade your opam installation to at least version %s."
-              version)
-           (OpamFile.OPAM.with_available
-              (FOp (FIdent ([], OpamVariable.of_string "opam-version", None), `Geq, FString version))
-              OpamFile.OPAM.empty))
+              "This package uses opam 3.0 file format which opam 2.2 cannot \
+               read.\n\n\
+               In order to install or view information on this package, please \
+               upgrade your opam installation to at least version %s."
+              version))
 
 let read_repo_opam ~repo_name ~repo_root dir =
   let open OpamStd.Option.Op in
