@@ -536,6 +536,10 @@ The following actions will be performed:
 +- 
 - No changes have been performed
 # Return code 31 #
+### : Removing the installed packages cache from the switch corrects the
+### : behaviour - i.e. at present the packages are being marked as up-to-date
+### : even though recompilation failed.
+### rm OPAM/upgrading/.opam-switch/packages/cache
 ### : Running opam upgrade a second time should do the same thing - the same
 ### : failure with the same return code 31.
 ### opam upgrade
