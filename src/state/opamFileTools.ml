@@ -1229,7 +1229,11 @@ let read_opam dir =
         version (OpamVersion.to_string OpamVersion.current);
       Some
         (OpamFile.OPAM.empty
-         |> OpamFile.OPAM.with_available (FBool false))
+         |> OpamFile.OPAM.with_available (FBool false)
+         |> OpamFile.OPAM.with_descr_body
+           (Printf.sprintf
+              "Failed to parse version %S but is below the current version %S"
+              version (OpamVersion.to_string OpamVersion.current)))
     end else
       Some
         (OpamFile.OPAM.empty
