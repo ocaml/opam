@@ -133,17 +133,18 @@ echo "dev-repo: \"file://${basedir}/$n\"" >> $file
 ### sh mkurl.sh
 ### <pkg:waste-local.1>
 opam-version: "2.0"
-url { local: "file://./waste" }
 ### <mkurl.sh>
 n=waste-local
 v=1
 file="REPO/packages/$n/$n.$v/opam"
 basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
-echo "url { local: \"file://${basedir}/waste\"" >> $file
+echo "url { local: \"file://${basedir}/waste\" }" >> $file
+### sh mkurl.sh
 ### opam update
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] no changes from file://${BASEDIR}/REPO
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install waste
 The following actions will be performed:
 === install 1 package
@@ -275,7 +276,7 @@ The following actions will be performed:
   - install waste-local 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved waste-local.1  (file://./waste)
+-> retrieved waste-local.1  (file://${BASEDIR}/waste)
 -> installed waste-local.1
 Done.
 ### ls OPAM/clean/.opam-switch/sources
