@@ -1,0 +1,1996 @@
+N0REP0
+### ::: Setup
+### OPAMYES=1
+### OPAMDEBUGSECTIONS="SYSTEM FILE(config) FILE(repos-config) FILE(repo) FILE(switch-config) FILE(switch-state) FILE(opam) FILE(environment) FILE(package-ve"
+### rm -rf OPAM
+### <opamrc>
+default-invariant: ["foo"]
+default-compiler: ["foo"]
+### opam init --config opamrc --bypass-check -na --bare ./REPO
+Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### <pkg:foo.1>
+opam-version: "2.0"
+build: [ "touch" name ]
+install: [ "cp" name "%{lib}%/" ]
+remove: [ "rm" name  "%{lib}%/" ]
+### <pkg:bar.1>
+opam-version: "2.0"
+build: [ "touch" "bar" ]
+install: [ "cp" "bar" "%{lib}%/" ]
+remove: [ "true" ]
+### <add-url.sh>
+n=$1
+v=$2
+arch=$3
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat << EOF >> REPO/packages/$n/$n.$v/opam
+url {
+  src:"file://$basedir/$arch"
+  checksum: "md5=$(openssl md5 $arch | cut -f2 -d' ')"
+  }
+EOF
+### <initial.sh>
+case "$1" in
+  init)
+    cp -R OPAM initial
+    ;;
+  unpack)
+    rm -rf OPAM
+    cp -R initial OPAM
+    rm -rf nip
+    rm -rf REPO/packages/nip
+    ;;
+  *)
+    echo "init or unpack"
+    exit 2
+    ;;
+esac
+### <pre.sh>
+rm -rf previous
+cp -R OPAM previous
+rm -rf previous-local
+opamd="$1"/_opam
+if test -d $opamd; then
+  cp -R $opamd previous-local
+fi
+### <x-diff>
+.git
+log
+### <post-check.sh>
+set -u
+previous=$1
+current=$2
+drcode=0
+# If pathes are long, there is a diff between OSes
+for d in $previous $current; do
+  if test -f $d/config; then
+    sed -i.bak 's/: /:\n  /' $d/config
+    rm -f $d/config.bak
+  fi
+done
+diff --exclude-from="x-diff" -r $previous $current > diffy || drcode=$?
+# because of quoting style that differs between linux & mac,
+# we need to remove the quotes for all of them
+# >diff '--exclude-from=x-diff' -r pa/th/1 pa/th/2
+cat diffy | sed "s/'//g"
+find $previous -name .git | cut -f 2- -d '/' | sort > gitprevious
+find $current -name .git | cut -f 2- -d '/' | sort > gitcurrent
+gitDiff=$(diff gitprevious gitcurrent)
+gdrcode=$?
+if [ "$gdrcode" -ne 0 ]; then
+  echo "diff gitPrevious gitCurrent"
+  echo "$gitDiff"
+fi
+test "$(( $drcode + $gdrcode ))" -eq 0
+### <post.sh>
+sh post-check.sh previous OPAM
+### <post-local.sh>
+set -u
+opamd="$1"/_opam
+if test -d previous-local; then
+  if test -d $opamd; then
+    sh post-check.sh previous-local $opamd
+  else
+    echo "Local switch disappeared *woosh*"
+    find previous-local | sort
+    exit 3
+  fi
+else
+  if test -d $opamd; then
+    echo "No previous local switch, current contains:"
+    find $opamd | sort
+    exit 2
+  fi
+fi
+### sh initial.sh init
+### ::: Tests
+### :I: Switch
+### :I:1: Switch creation
+### :I:1:a: Global switch creation
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam switch create dr --dry-run foo | sed-cmd touch cp
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1
+Processing  2/3: [foo: touch foo]
++ touch "foo" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1)
+-> compiled  foo.1
+Processing  3/3: [foo: cp foo]
++ cp "foo" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1)
+Installing foo.1.
+-> installed foo.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/packages
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
+SYSTEM                          LOCK  (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM: dr
+# Return code 1 #
+### :I:1:b: Local switch creation
+### sh initial.sh unpack
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam switch create ./nip --dry-run | sed-cmd touch cp
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/nip/_opam/.opam-switch/build/foo.1
+SYSTEM                          mkdir ${BASEDIR}/nip
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build/foo.1
+Processing  2/3: [foo: touch foo]
++ touch "foo" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/foo.1)
+-> compiled  foo.1
+Processing  3/3: [foo: cp foo]
++ cp "foo" "${BASEDIR}/nip/_opam/lib/" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/foo.1)
+Installing foo.1.
+-> installed foo.1
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/packages
+SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
+SYSTEM                          LOCK  (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+### sh post-local.sh nip
+No previous local switch, current contains:
+nip/_opam
+nip/_opam/.opam-switch
+nip/_opam/.opam-switch/build
+nip/_opam/.opam-switch/build/foo.1
+nip/_opam/.opam-switch/packages
+nip/_opam/.opam-switch/packages/cache
+# Return code 2 #
+### :I:1:c: Local switch creation with package
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam switch create ./nip --dry-run
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+The following actions will be simulated:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/nip/_opam/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build/nip.dev
+Installing nip.dev.
+-> installed nip.dev
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/packages
+SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
+SYSTEM                          LOCK  (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+### sh post-local.sh nip
+No previous local switch, current contains:
+nip/_opam
+nip/_opam/.opam-switch
+nip/_opam/.opam-switch/build
+nip/_opam/.opam-switch/build/nip.dev
+nip/_opam/.opam-switch/packages
+nip/_opam/.opam-switch/packages/cache
+# Return code 2 #
+### :I:1:d: Local switch creation with deps only
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+depends: "bar"
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam switch create ./nip --deps-only --dry-run | sed-cmd touch cp
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+The following actions will be simulated:
+=== install 1 package
+  - install bar 1 [required by nip]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/nip/_opam/.opam-switch/build/bar.1
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build/bar.1
+Processing  2/3: [bar: touch bar]
++ touch "bar" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/bar.1)
+-> compiled  bar.1
+Processing  3/3: [bar: cp bar]
++ cp "bar" "${BASEDIR}/nip/_opam/lib/" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/bar.1)
+Installing bar.1.
+-> installed bar.1
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/packages
+SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
+SYSTEM                          LOCK  (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+### sh post-local.sh nip
+No previous local switch, current contains:
+nip/_opam
+nip/_opam/.opam-switch
+nip/_opam/.opam-switch/build
+nip/_opam/.opam-switch/build/bar.1
+nip/_opam/.opam-switch/packages
+nip/_opam/.opam-switch/packages/cache
+# Return code 2 #
+### :I:2: Switch removal
+### :I:2:a: Global switch removal
+### sh initial.sh unpack
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam switch remove dr --dry-run | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+Switch dr and all its packages will be wiped. Are you sure? [Y/n] y
+FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/lib/foo
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1/foo
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/install/foo.changes
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/lock
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/foo.1/opam
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/switch-config
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/switch-state
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/environment
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
+### sh post.sh
+diff --exclude-from=x-diff -r previous/config OPAM/config
+7,10d6
+< installed-switches:
+<   "dr"
+< switch:
+<   "dr"
+Only in previous: dr
+# Return code 1 #
+### :I:2:b: Local switch removal
+### sh initial.sh unpack
+### <nip/a-file>
+tauto
+### opam switch create ./nip
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh nip
+### OPAMVERBOSE=2 OPAMDEBUG=-5 OPAMDEBUGSECTIONS="" opam switch remove ./nip --dry-run | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+CLI                             Parsing CLI version 2.6
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SWITCH                          remove switch=${BASEDIR}/nip
+FILE(switch-config)             Read ${BASEDIR}/nip/_opam/.opam-switch/switch-config in 0.000s
+Switch ${BASEDIR}/nip and all its packages will be wiped. Are you sure? [Y/n] y
+FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+SYSTEM                          rmdir ${BASEDIR}/nip/_opam
+SYSTEM                          rm ${BASEDIR}/nip/_opam/lib/foo
+SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/build/foo.1/foo
+SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/install/foo.changes
+SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/lock
+SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/packages/foo.1/opam
+SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/packages/cache
+SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/switch-config
+SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/switch-state
+SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/environment
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
+### sh post.sh
+diff --exclude-from=x-diff -r previous/config OPAM/config
+7,8d6
+< installed-switches:
+<   "${BASEDIR}/nip"
+# Return code 1 #
+### sh post-local.sh nip
+Local switch disappeared *woosh*
+previous-local
+previous-local/.opam-switch
+previous-local/.opam-switch/build
+previous-local/.opam-switch/build/foo.1
+previous-local/.opam-switch/build/foo.1/foo
+previous-local/.opam-switch/config
+previous-local/.opam-switch/environment
+previous-local/.opam-switch/install
+previous-local/.opam-switch/install/foo.changes
+previous-local/.opam-switch/lock
+previous-local/.opam-switch/packages
+previous-local/.opam-switch/packages/cache
+previous-local/.opam-switch/packages/foo.1
+previous-local/.opam-switch/packages/foo.1/opam
+previous-local/.opam-switch/switch-config
+previous-local/.opam-switch/switch-state
+previous-local/bin
+previous-local/doc
+previous-local/lib
+previous-local/lib/foo
+previous-local/lib/stublibs
+previous-local/lib/toplevel
+previous-local/man
+previous-local/man/man1
+previous-local/man/man1M
+previous-local/man/man2
+previous-local/man/man3
+previous-local/man/man4
+previous-local/man/man5
+previous-local/man/man6
+previous-local/man/man7
+previous-local/man/man9
+previous-local/sbin
+# Return code 3 #
+### :II: Package installation
+### sh initial.sh unpack
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install bar --dry-run | sed-cmd touch cp
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+The following actions will be simulated:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+Processing  2/3: [bar: touch bar]
++ touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+-> compiled  bar.1
+Processing  3/3: [bar: cp bar]
++ cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+Installing bar.1.
+-> installed bar.1
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch: backup
+Only in OPAM/dr/.opam-switch/build: bar.1
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+# Return code 1 #
+### :III: Package removal
+### sh initial.sh unpack
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam install bar
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam remove bar --dry-run | sed-cmd true
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+The following actions will be simulated:
+=== remove 1 package
+  - remove bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+Processing  2/2: [bar: true]
++ true (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
+-> removed   bar.1
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1/opam
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/bar.1
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in previous/dr/.opam-switch/packages: bar.1
+Only in previous/dr/.opam-switch/packages: cache
+Only in OPAM/dr/.opam-switch: remove
+# Return code 1 #
+### :III:a: Package removal --force
+### sh initial.sh unpack
+### opam switch create dr --empty
+### opam install foo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam remove bar --force --dry-run | sed-cmd true
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/dr/.opam-switch/switch-config atomically in 0.000s
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+[NOTE] Forcing removal of (uninstalled) bar.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+[bar: true]
++ true (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
+-> removed   bar.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/bar.1
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in previous/dr/.opam-switch/packages: cache
+Only in OPAM/dr/.opam-switch: remove
+# Return code 1 #
+### :IV: Package reinstall
+### sh initial.sh unpack
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam install bar
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam reinstall bar --dry-run | sed-cmd touch true cp
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+The following actions will be simulated:
+=== recompile 1 package
+  - recompile bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1/bar
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+Processing  2/4: [bar: touch bar]
++ touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+-> compiled  bar.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+Processing  3/4: [bar: true]
++ true (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
+-> removed   bar.1
+Processing  4/4: [bar: cp bar]
++ cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+Installing bar.1.
+-> installed bar.1
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in previous/dr/.opam-switch/build/bar.1: bar
+Only in OPAM/dr/.opam-switch: remove
+# Return code 1 #
+### :V: Update
+### sh initial.sh unpack
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam update --dry-run
+opam: unknown option '--dry-run'.
+Usage: opam update [OPTION]… [NAMES]…
+Try 'opam update --help' or 'opam --help' for more information.
+# Return code 2 #
+### sh post.sh
+### :VI: Upgrade
+### sh initial.sh unpack
+### <pkg:bar.2>
+opam-version: "2.0"
+build: [ "touch" "bar" ]
+install: [ "cp" "bar" "%{lib}%/" ]
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam install bar.1
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam upgrade --dry-run | sed-cmd touch true cp
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+The following actions will be simulated:
+=== upgrade 1 package
+  - upgrade bar 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2
+Processing  3/5: [bar: touch bar]
++ touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2)
+-> compiled  bar.2
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+Processing  4/5: [bar: true]
++ true (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
+-> removed   bar.1
+Processing  5/5: [bar: cp bar]
++ cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2)
+Installing bar.2.
+-> installed bar.2
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1/opam
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/bar.1
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch/build: bar.2
+Only in previous/dr/.opam-switch/packages: bar.1
+Only in previous/dr/.opam-switch/packages: cache
+Only in OPAM/dr/.opam-switch: remove
+# Return code 1 #
+### :VII: Pinning
+### :VII:1: Pinning with no action
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam pin ./nip --no-action --dry-run | sed-cmd rsync | grep -v '- ./'
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+Processing  1/1: [nip: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
+- a-file
+- nip.opam
+- 
+SYSTEM                          rmdir ${OPAMTMP}
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          read ${BASEDIR}/nip/nip.opam
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch: backup
+Only in OPAM/dr/.opam-switch: overlay
+Only in OPAM/dr/.opam-switch: sources
+# Return code 1 #
+### :VII:2: Pinning directory with opam file
+### :VII:2:a: Pinning directory with opam file, no vcs
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam pin ./nip --dry-run | sed-cmd rsync | grep -v '- ./'
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+Processing  1/1: [nip: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
+- a-file
+- nip.opam
+- 
+SYSTEM                          rmdir ${OPAMTMP}
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          read ${BASEDIR}/nip/nip.opam
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be simulated:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+Installing nip.dev.
+-> installed nip.dev
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch: backup
+Only in OPAM/dr/.opam-switch/build: nip.dev
+Only in OPAM/dr/.opam-switch: overlay
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+Only in OPAM/dr/.opam-switch: sources
+# Return code 1 #
+### :VII:2:b: Pinning directory with opam file, vcs
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### git -C nip init -q --initial-branch=master
+### git -C nip config core.autocrlf false
+### git -C nip add -A
+### git -C nip commit -qm init'
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam pin ./nip --dry-run | sed-cmd git | grep -v "HEAD is now" | grep -v "(mkdir|copy|copydir|rm) .*\\.git."
++ git "symbolic-ref" "--quiet" "--short" "HEAD" (CWD=${BASEDIR}/nip)
+- master
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+Processing  1/1: [nip: git]
++ git "init" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
+- Initialized empty Git repository in ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/.git/
++ git "config" "--local" "fetch.prune" "false" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "config" "--local" "diff.noprefix" "false" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "config" "--local" "core.autocrlf" "false" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "config" "--local" "core.eol" "lf" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "config" "--local" "color.ui" "false" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "remote" "add" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "reset" "--hard" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
+SYSTEM                          rmdir ${OPAMTMP}
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          read ${BASEDIR}/nip/nip.opam
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
+nip is now pinned to git+file://${BASEDIR}/nip#master (version dev)
+
+The following actions will be simulated:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/.git
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+Installing nip.dev.
+-> installed nip.dev
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch: backup
+Only in OPAM/dr/.opam-switch/build: nip.dev
+Only in OPAM/dr/.opam-switch: overlay
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+Only in OPAM/dr/.opam-switch: sources
+diff gitPrevious gitCurrent
+0a1,2
+> dr/.opam-switch/build/nip.dev/.git
+> dr/.opam-switch/sources/nip/.git
+# Return code 1 #
+### :VII:3: Pinning directory with no opam file, no vcs
+### sh initial.sh unpack
+### <pkg:nip.1>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam pin nip ./nip --dry-run | sed-cmd rsync | grep -v '- ./'
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+[nip.1: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
+- a-file
+- 
+SYSTEM                          rmdir ${OPAMTMP}
+[nip.1] synchronised (file://${BASEDIR}/nip)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/nip/nip.1/opam
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
+nip is now pinned to file://${BASEDIR}/nip (version 1)
+
+The following actions will be simulated:
+=== install 1 package
+  - install nip 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
+SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1/a-file
+Installing nip.1.
+-> installed nip.1
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch: backup
+Only in OPAM/dr/.opam-switch/build: nip.1
+Only in OPAM/dr/.opam-switch: overlay
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+Only in OPAM/dr/.opam-switch: sources
+# Return code 1 #
+### :VII:4: Version pinning
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### tar czf nip.tgz -C nip nip.opam a-file
+### <pkg:nip.1>
+opam-version: "2.0"
+### sh add-url.sh nip 1 nip.tgz
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam pin nip 1 --dry-run | sed-cmd rsync
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+nip is now pinned to version 1
+
+The following actions will be simulated:
+=== install 1 package
+  - install nip 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
+Installing nip.1.
+-> installed nip.1
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch: backup
+Only in OPAM/dr/.opam-switch/build: nip.1
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+# Return code 1 #
+### :VII:5: Pinning with pin-depends
+### sh initial.sh unpack
+### <pin:nip-d/nip-d.opam>
+opam-version: "2.0"
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+depends: "nip-d"
+### <add-pin-depend.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat << EOF >> nip/nip.opam
+pin-depends: [ "nip-d.1" "file://${basedir}/nip-d" ]
+EOF
+### sh add-pin-depend.sh
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam pin ./nip --dry-run | sed-cmd rsync | grep -v '- ./'
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+Processing  1/1: [nip: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
+- a-file
+- nip.opam
+- 
+SYSTEM                          rmdir ${OPAMTMP}
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by nip.dev:
+  - nip-d.1 at file://${BASEDIR}/nip-d
+Pin and install them? [Y/n] y
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d
+Processing  1/1: [nip-d: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip-d/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d"
+- nip-d.opam
+- 
+SYSTEM                          rmdir ${OPAMTMP}
+[NOTE] Package nip-d does not exist in opam repositories registered in the current switch.
+SYSTEM                          mkdir ${OPAMTMP}
+[nip-d.1: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip-d/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d"
+- 
+SYSTEM                          rmdir ${OPAMTMP}
+[nip-d.1] synchronised (no changes)
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d/nip-d.opam in 0.000s
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip-d
+SYSTEM                          read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d/nip-d.opam
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip-d
+SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip-d/opam
+nip-d is now pinned to file://${BASEDIR}/nip-d (version 1)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          read ${BASEDIR}/nip/nip.opam
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be simulated:
+=== install 2 packages
+  - install nip   dev (pinned)
+  - install nip-d 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip-d.1
+SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip-d.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip-d.1
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d/nip-d.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip-d.1/nip-d.opam
+Installing nip-d.1.
+-> installed nip-d.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+Installing nip.dev.
+-> installed nip.dev
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch: backup
+Only in OPAM/dr/.opam-switch/build: nip-d.1
+Only in OPAM/dr/.opam-switch/build: nip.dev
+Only in OPAM/dr/.opam-switch: overlay
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+Only in OPAM/dr/.opam-switch: sources
+# Return code 1 #
+### :VII:6: Install a pinned package with working-dir that have changes
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### git -C nip init -q --initial-branch=master
+### git -C nip config core.autocrlf false
+### git -C nip add -A
+### git -C nip commit -qm init'
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam pin ./nip
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+nip is now pinned to git+file://${BASEDIR}/nip#master (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (no changes)
+-> installed nip.dev
+Done.
+### <nip/another-file>
+otuat
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --working-dir --dry-run | sed-cmd git rsync | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | 'rsync-files[^ "]*' -> 'rsync-files-xxx' | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam in 0.000s
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/1: [nip.dev: git]
++ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ rsync "-rLptgoDvc" "--files-from" "${BASEDIR}/OPAM/log/rsync-files-xxx" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
+- another-file
+- 
+SYSTEM                          rm ${BASEDIR}/OPAM/log/rsync-files-xxx
+SYSTEM                          rmdir ${OPAMTMP}
+[nip.dev] synchronised (git+file://${BASEDIR}/nip#master)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/files
+FILE(opam)                      Wrote ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam atomically in 0.000s
+
+The following actions will be simulated:
+=== recompile 1 package
+  - recompile nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/.git
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/another-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/another-file
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
+-> removed   nip.dev
+Installing nip.dev.
+-> installed nip.dev
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch/build/nip.dev: another-file
+diff --exclude-from=x-diff -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
+1a2,3
+> name: "nip"
+> version: "dev"
+4,5d5
+< authors: "the testing team"
+< homepage: "egapemoh"
+6a7
+> authors: "the testing team"
+8c9
+< dev-repo: "hg+https://pkg@op.am"
+---
+> homepage: "egapemoh"
+10,11c11
+< name: "nip"
+< version: "dev"
+---
+> dev-repo: "hg+https://pkg@op.am"
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+Only in OPAM/dr/.opam-switch: reinstall
+Only in OPAM/dr/.opam-switch: remove
+Only in OPAM/dr/.opam-switch/sources/nip: another-file
+# Return code 1 #
+### :VII:7: Pin removal
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam pin ./nip
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam pin remove ./nip --dry-run | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
+Ok, nip is no longer pinned to file://${BASEDIR}/nip (version dev)
+The following actions will be simulated:
+=== remove 1 package
+  - remove nip dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
+-> removed   nip.dev
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/packages/nip.dev
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/nip.dev/opam
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip.dev
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in previous/dr/.opam-switch/overlay: nip
+Only in previous/dr/.opam-switch/packages: cache
+Only in previous/dr/.opam-switch/packages: nip.dev
+Only in OPAM/dr/.opam-switch: remove
+Only in previous/dr/.opam-switch/sources: nip
+# Return code 1 #
+### :VII:8: Pin triggered by install
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install ./nip --dry-run
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
+The following actions will be simulated:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+Installing nip.dev.
+-> installed nip.dev
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch: backup
+Only in OPAM/dr/.opam-switch/build: nip.dev
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+# Return code 1 #
+### :VII:9: Install local package with deps-only
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+depends: "bar"
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install ./nip --deps-only --dry-run | sed-cmd touch cp
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
+The following actions will be simulated:
+=== install 1 package
+  - install bar 1 [required by nip]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+Processing  2/3: [bar: touch bar]
++ touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+-> compiled  bar.1
+Processing  3/3: [bar: cp bar]
++ cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+Installing bar.1.
+-> installed bar.1
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch: backup
+Only in OPAM/dr/.opam-switch/build: bar.1
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+# Return code 1 #
+### :VII:10: Update of pin source triggered by install command
+### :VII:10:a: Update of pin source triggered by install command, with changes
+### :VII:10:a:1: Update of path-pin source triggered by install command, with changes
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+build: [ "touch" "a-file" ]
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam pin ./nip
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+build: [ "touch" "a-file-snd" ]
+depends: "bar"
+### <nip/a-file-snd>
+tautond
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --dry-run | sed-cmd rsync touch cp | grep -v '- ./' | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam in 0.000s
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/1: [nip.dev: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
+- a-file-snd
+- nip.opam
+- 
+SYSTEM                          rmdir ${OPAMTMP}
+[nip.dev] synchronised (file://${BASEDIR}/nip)
+[nip] Installing new package description from upstream file://${BASEDIR}/nip
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/files
+FILE(opam)                      Wrote ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam atomically in 0.000s
+
+The following actions will be simulated:
+=== recompile 1 package
+  - recompile nip dev (pinned)
+=== install 1 package
+  - install   bar 1            [required by nip]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+Processing  3/7: [bar: touch bar]
++ touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+-> compiled  bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
+-> removed   nip.dev
+Processing  5/7: [bar: cp bar]
++ cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+Installing bar.1.
+-> installed bar.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file-snd -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file-snd
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+Processing  6/7: [nip: touch a-file-snd]
++ touch "a-file-snd" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev)
+-> compiled  nip.dev
+Installing nip.dev.
+-> installed nip.dev
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch/build: bar.1
+Only in OPAM/dr/.opam-switch/build/nip.dev: a-file-snd
+diff --exclude-from=x-diff -r previous/dr/.opam-switch/build/nip.dev/nip.opam OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+10c10,11
+< build: ["touch" "a-file"]
+---
+> build: ["touch" "a-file-snd"]
+> depends: "bar"
+diff --exclude-from=x-diff -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
+1a2,3
+> name: "nip"
+> version: "dev"
+4,5d5
+< authors: "the testing team"
+< homepage: "egapemoh"
+6a7
+> authors: "the testing team"
+8c9
+< dev-repo: "hg+https://pkg@op.am"
+---
+> homepage: "egapemoh"
+10,12c11,13
+< build: ["touch" "a-file"]
+< name: "nip"
+< version: "dev"
+---
+> depends: ["bar"]
+> build: ["touch" "a-file-snd"]
+> dev-repo: "hg+https://pkg@op.am"
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+Only in OPAM/dr/.opam-switch: reinstall
+Only in OPAM/dr/.opam-switch: remove
+Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
+diff --exclude-from=x-diff -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
+10c10,11
+< build: ["touch" "a-file"]
+---
+> build: ["touch" "a-file-snd"]
+> depends: "bar"
+# Return code 1 #
+### opam upgrade | unordered
+The following actions will be performed:
+=== recompile 1 package
+  - recompile nip dev (pinned) [upstream or system changes]
+=== install 1 package
+  - install   bar 1            [required by nip]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+-> retrieved nip.dev  (no changes)
+-> removed   nip.dev
+-> installed nip.dev
+Done.
+### :VII:10:a:2: Update of git-pin source triggered by install command, with changes
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+build: [ "touch" "a-file" ]
+### <nip/a-file>
+tauto
+### git -C nip init -q --initial-branch=master
+### git -C nip config core.autocrlf false
+### git -C nip add -A
+### git -C nip commit -qm init'
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam pin ./nip
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+nip is now pinned to git+file://${BASEDIR}/nip#master (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (no changes)
+-> installed nip.dev
+Done.
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+build: [ "touch" "a-file-snd" ]
+depends: "bar"
+### <nip/a-file-snd>
+tautond
+### git -C nip add -A
+### git -C nip commit -qm 'update'
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --dry-run | sed-cmd git touch cp | grep -v '- ./' | grep -v "HEAD is now" | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam in 0.000s
+Processing  1/1:
++ git "symbolic-ref" "--quiet" "--short" "HEAD" (CWD=${BASEDIR}/nip)
+- master
++ git "diff" "--no-ext-diff" "--quiet" "HEAD" (CWD=${BASEDIR}/nip)
++ git "ls-files" "--others" "--exclude-standard" (CWD=${BASEDIR}/nip)
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/1: [nip.dev: git]
++ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "reset" "--hard" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
+SYSTEM                          rmdir ${OPAMTMP}
+[nip.dev] synchronised (git+file://${BASEDIR}/nip#master)
+[nip] Installing new package description from upstream git+file://${BASEDIR}/nip#master
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/files
+FILE(opam)                      Wrote ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam atomically in 0.000s
+
+The following actions will be simulated:
+=== recompile 1 package
+  - recompile nip dev (pinned)
+=== install 1 package
+  - install   bar 1            [required by nip]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
+Processing  3/7: [bar: touch bar]
++ touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+-> compiled  bar.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
+-> removed   nip.dev
+Processing  5/7: [bar: cp bar]
++ cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
+Installing bar.1.
+-> installed bar.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/.git
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file-snd -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file-snd
+SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+Processing  6/7: [nip: touch a-file-snd]
++ touch "a-file-snd" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev)
+-> compiled  nip.dev
+Installing nip.dev.
+-> installed nip.dev
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+Only in OPAM/dr/.opam-switch/build: bar.1
+Only in OPAM/dr/.opam-switch/build/nip.dev: a-file-snd
+diff --exclude-from=x-diff -r previous/dr/.opam-switch/build/nip.dev/nip.opam OPAM/dr/.opam-switch/build/nip.dev/nip.opam
+10c10,11
+< build: ["touch" "a-file"]
+---
+> build: ["touch" "a-file-snd"]
+> depends: "bar"
+diff --exclude-from=x-diff -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
+1a2,3
+> name: "nip"
+> version: "dev"
+4,5d5
+< authors: "the testing team"
+< homepage: "egapemoh"
+6a7
+> authors: "the testing team"
+8c9
+< dev-repo: "hg+https://pkg@op.am"
+---
+> homepage: "egapemoh"
+10,12c11,13
+< build: ["touch" "a-file"]
+< name: "nip"
+< version: "dev"
+---
+> depends: ["bar"]
+> build: ["touch" "a-file-snd"]
+> dev-repo: "hg+https://pkg@op.am"
+Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
+Only in OPAM/dr/.opam-switch: reinstall
+Only in OPAM/dr/.opam-switch: remove
+Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
+diff --exclude-from=x-diff -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
+10c10,11
+< build: ["touch" "a-file"]
+---
+> build: ["touch" "a-file-snd"]
+> depends: "bar"
+# Return code 1 #
+### opam upgrade | unordered
+The following actions will be performed:
+=== recompile 1 package
+  - recompile nip dev (pinned) [upstream or system changes]
+=== install 1 package
+  - install   bar 1            [required by nip]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (no changes)
+-> removed   nip.dev
+-> installed bar.1
+-> installed nip.dev
+Done.
+### :VII:10:b: Update of pin source triggered by install command, with no changes
+### :VII:10:b:1: Update of path-pin source triggered by install command, with no changes
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+build: [ "touch" "a-file" ]
+### <nip/a-file>
+tauto
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam pin ./nip
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --dry-run | sed-cmd rsync | grep -v '- ./'
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam in 0.000s
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/1: [nip.dev: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
+- 
+SYSTEM                          rmdir ${OPAMTMP}
+[nip.dev] synchronised (no changes)
+
+[NOTE] Package nip is already installed (current version is dev).
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+### opam upgrade | unordered
+Already up-to-date.
+Nothing to do.
+### :VII:10:b:2: Update of git-pin source triggered by install command, with no changes
+### sh initial.sh unpack
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+build: [ "touch" "a-file" ]
+### <nip/a-file>
+tauto
+### git -C nip init -q --initial-branch=master
+### git -C nip config core.autocrlf false
+### git -C nip add -A
+### git -C nip commit -qm init'
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam pin ./nip
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+nip is now pinned to git+file://${BASEDIR}/nip#master (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (no changes)
+-> installed nip.dev
+Done.
+### sh pre.sh
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --dry-run | sed-cmd git | grep -v '- ./' | grep -v "HEAD is now"
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => write)
+FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-config in 0.000s
+FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam in 0.000s
+Processing  1/1:
++ git "symbolic-ref" "--quiet" "--short" "HEAD" (CWD=${BASEDIR}/nip)
+- master
++ git "diff" "--no-ext-diff" "--quiet" "HEAD" (CWD=${BASEDIR}/nip)
++ git "ls-files" "--others" "--exclude-standard" (CWD=${BASEDIR}/nip)
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/1: [nip.dev: git]
++ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
+SYSTEM                          rmdir ${OPAMTMP}
+[nip.dev] synchronised (no changes)
+
+[NOTE] Package nip is already installed (current version is dev).
+SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### sh post.sh
+### opam upgrade | unordered
+Already up-to-date.
+Nothing to do.
