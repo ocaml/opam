@@ -68,8 +68,6 @@ The following actions will be simulated:
 -> removed   bar.1
 Done.
 ### sh post.sh
-Only in previous/dr/.opam-switch/packages: bar.1
-Only in previous/dr/.opam-switch/packages: cache
 Only in OPAM/log: log-xxx.out
 # Return code 1 #
 ### :IV: pinning :
@@ -92,8 +90,6 @@ Installing nip.dev.
 Done.
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: overlay
-Only in OPAM/dr/.opam-switch/packages: bar.1
-Only in OPAM/dr/.opam-switch/packages: cache
 Only in OPAM/dr/.opam-switch: sources
 Only in OPAM/log: log-xxx.out
 # Return code 1 #
@@ -122,8 +118,6 @@ The following actions will be simulated:
 Done.
 ### sh post.sh
 Only in previous/dr/.opam-switch/overlay: nip
-Only in previous/dr/.opam-switch/packages: cache
-Only in previous/dr/.opam-switch/packages: nip.dev
 Only in previous/dr/.opam-switch/sources: nip
 Only in OPAM/log: log-xxx.out
 # Return code 1 #
