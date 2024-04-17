@@ -33,6 +33,7 @@ users)
 ## UI
 
 ## Switch
+  * No longer save switch-state cache in `dry-run` mode [#6788 @rjbou @hannesm - fix #5918]
 
 ## Config
 
