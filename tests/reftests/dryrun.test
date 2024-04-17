@@ -47,7 +47,6 @@ Installing bar.1.
 -> installed bar.1
 Done.
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
 Only in OPAM/log: log-xxx.out
 # Return code 1 #
 ### :III: package removal :
