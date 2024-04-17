@@ -661,10 +661,12 @@ let parallel_apply t
         OpamStateConfig.(!r.dev_setup) && found
       in
       let source_dir = source_dir nv in
-      (if OpamFilename.exists_dir source_dir
+      (if OpamStateConfig.(!r.dryrun) then () else
+       if OpamFilename.exists_dir source_dir
        then (if not is_inplace then
                OpamFilename.copy_dir ~src:source_dir ~dst:build_dir)
-       else OpamFilename.mkdir build_dir;
+       else
+         OpamFilename.mkdir build_dir;
        OpamAction.prepare_package_source t nv build_dir @@+ function
        | Some exn -> store_time (); Done (`Exception exn)
        | None ->
