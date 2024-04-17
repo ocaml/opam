@@ -825,31 +825,32 @@ let parallel_apply t
   (* 2/ Display errors and finalize *)
 
   let save_installed_cache failed =
-    OpamSwitchState.Installed_cache.save
-      (OpamPath.Switch.installed_opams_cache t.switch_global.root t.switch)
-      (OpamPackage.Set.fold (fun nv opams ->
-           (* NOTE: We need to know whether an action was successful
-              or not to know which version of the opam file to store
-              in the case: the previous one if it failed, or the new
-              one if it succeeded. *)
-           let pkg_failed =
-             List.exists (function
-                 | `Fetch ps -> List.for_all (OpamPackage.equal nv) ps
-                 | `Build p | `Change (_, _, p) | `Install p
-                 | `Reinstall p | `Remove p -> OpamPackage.equal nv p)
-               failed
-           in
-           let add_to_opams opam =
-             let opam = OpamFile.OPAM.with_metadata_dir None opam in
-             OpamPackage.Map.add nv opam opams
-           in
-           if pkg_failed then
-             match OpamPackage.Map.find_opt nv t.installed_opams with
-             | None -> opams
-             | Some opam -> add_to_opams opam
-           else
-             add_to_opams (OpamSwitchState.opam t nv))
-          t.installed OpamPackage.Map.empty);
+    if not OpamStateConfig.(!r.dryrun) then
+      OpamSwitchState.Installed_cache.save
+        (OpamPath.Switch.installed_opams_cache t.switch_global.root t.switch)
+        (OpamPackage.Set.fold (fun nv opams ->
+             (* NOTE: We need to know whether an action was successful
+                or not to know which version of the opam file to store
+                in the case: the previous one if it failed, or the new
+                one if it succeeded. *)
+             let pkg_failed =
+               List.exists (function
+                   | `Fetch ps -> List.for_all (OpamPackage.equal nv) ps
+                   | `Build p | `Change (_, _, p) | `Install p
+                   | `Reinstall p | `Remove p -> OpamPackage.equal nv p)
+                 failed
+             in
+             let add_to_opams opam =
+               let opam = OpamFile.OPAM.with_metadata_dir None opam in
+               OpamPackage.Map.add nv opam opams
+             in
+             if pkg_failed then
+               match OpamPackage.Map.find_opt nv t.installed_opams with
+               | None -> opams
+               | Some opam -> add_to_opams opam
+             else
+               add_to_opams (OpamSwitchState.opam t nv))
+            t.installed OpamPackage.Map.empty);
   in
   begin match action_results with
   | `Exception _ | `Error Aborted -> ()
