@@ -113,6 +113,7 @@ users)
 ## Reftests
 ### Tests
   *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
+  * Add test for dry-run mode [#6788 @rjbou]
 
 ### Engine
 
