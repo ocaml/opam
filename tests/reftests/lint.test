@@ -253,6 +253,25 @@ depopts: "foo"
 ${BASEDIR}/lint.opam: Errors.
              error 31: Fields 'depends' and 'depopts' refer to the same package names: "foo"
 # Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: "bar" {os = ""} & "foo"
+depopts: [
+  "foo"
+  "bar"
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 31: Fields 'depends' and 'depopts' refer to the same package names: "foo"
+# Return code 1 #
 ### : E32: Field 'ocaml-version:' and variable 'ocaml-version' are deprecated, use a dependency towards the 'ocaml' package instead for availability, and the 'ocaml:version' package variable for scripts
 ### <lint.opam>
 opam-version: "2.0"
