@@ -1514,7 +1514,8 @@ let build_options cli =
   in
   let verbose_on =
     mk_opt ~cli (cli_from cli2_2) ~section ["verbose-on"] "PACKAGES"
-      "Be more verbose on specific packages."
+      "Be more verbose on specific packages.\
+       This is equivalent to setting $(b,\\$OPAMVERBOSE)."
       Arg.(some (list package)) None ~vopt:(Some [])
   in
   Term.(const create_build_options
