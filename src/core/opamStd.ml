@@ -1678,7 +1678,7 @@ module Config = struct
 
   let env_int var = env int_of_string var
 
-  let env_string_list var = env (fun s -> OpamString.split s ';') var
+  let env_string_list var = env (fun s -> OpamString.split s ',') var
 
   type level = int
   let env_level var =
