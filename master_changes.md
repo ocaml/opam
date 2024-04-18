@@ -132,6 +132,7 @@ users)
   * env.win32: add regression test for reverting additions to PATH-like variables [#5935 @dra27]
   * env tests: add regression test for append/prepend operators to empty environment variables [#5925, #5935 @dra27]
   * env.win32: add regression test for handling the empty entry in PATH-like variables [#5926, #5935 @dra27]
+  * lint: add W41 examples [#5927 @dra27]
 
 ### Engine
   * Add `sort` command [#5935 @dra27]
