@@ -58,6 +58,7 @@ users)
   * Fix extraction of tarballs on Windows which contain symlinks both when those symlinks can't be created or if they point to files which don't exist [#5953 @dra27]
 
 ## Lint
+  * W41: Relax warning 41 not to trigger on uses of package variables which are guarded by a package:installed filter [#5927 @dra27]
 
 ## Repository
   * Fix download URLs containing invalid characters on Windows (e.g. the ? character in `?full_index=1`) [#5921 @dra27]
