@@ -850,15 +850,19 @@ let windows_checks ?cygwin_setup ?git_location config =
            OpamFilename.(Dir.to_string (dirname_dir (dirname_dir cygbin))));
     config
   in
-  let install_cygwin_tools () =
-    let packages =
+  let install_cygwin_tools packages =
+    let default_packages =
       match OpamSystem.resolve_command "git" with
       | None -> OpamInitDefaults.required_packages_for_cygwin
       | Some _ ->
         List.filter (fun c -> not OpamSysPkg.(equal (of_string "git") c))
           OpamInitDefaults.required_packages_for_cygwin
     in
-    OpamSysInteract.Cygwin.install ~packages
+    (* packages comes last so that the user can override any potential version
+       constraints in default_packages (although, with the current version of
+       setup, and with the list of default_packages in OpamInitDefaults, this at
+       present doesn't matter too much). *)
+    OpamSysInteract.Cygwin.install ~packages:(default_packages @ packages)
   in
   let header () = OpamConsole.header_msg "Unix support infrastructure" in
 
@@ -956,7 +960,7 @@ let windows_checks ?cygwin_setup ?git_location config =
         match prompt () with
         | `Abort -> OpamStd.Sys.exit_because `Aborted
         | `Internal ->
-          let cygcheck = install_cygwin_tools () in
+          let cygcheck = install_cygwin_tools [] in
           let config = success cygcheck in
           config
         | `Specify ->
@@ -975,7 +979,7 @@ let windows_checks ?cygwin_setup ?git_location config =
   let config =
     match cygwin_setup with
     | Some `no -> config
-    | (Some (`internal | `default_location | `location _) | None)
+    | (Some (`internal _ | `default_location | `location _) | None)
       as cygwin_setup ->
       if OpamSysPoll.os env = Some "win32" then
         match OpamSysPoll.os_distribution env with
@@ -995,7 +999,7 @@ let windows_checks ?cygwin_setup ?git_location config =
              header ();
              let cygcheck =
                match setup with
-               | `internal -> install_cygwin_tools ()
+               | `internal pkgs -> install_cygwin_tools pkgs
                | (`default_location | `location _ as setup) ->
                  let cygroot =
                    match setup with
