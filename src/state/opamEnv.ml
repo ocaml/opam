@@ -232,7 +232,6 @@ let rezip_to_string ~sepfmt var ?insert z =
   join_var ~sepfmt var (rezip ?insert z)
 
 
-(* apply_zip take an already transformed arg *)
 let apply_op_zip ~sepfmt op arg (rl1,l2 as zip) =
   let arg = transform_format ~sepfmt arg in
   let colon_eq ?(eqcol=false) = function (* prepend a, but keep ":"s *)
@@ -285,6 +284,7 @@ let apply_op_zip ~sepfmt op arg (rl1,l2 as zip) =
     or empty lists is returned if the variable should be unset or has an unknown
     previous value. *)
 let reverse_env_update ~sepfmt var op arg cur_value =
+  let arg = transform_format ~sepfmt arg in
   if String.equal arg  "" && op <> Eq then None else
   match op with
   | Eq ->

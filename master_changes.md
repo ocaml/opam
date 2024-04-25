@@ -64,6 +64,7 @@ users)
 ## Clean
 
 ## Env
+  * [BUG] Fix reverting of environment variables, principally on Windows [#5935 @dra27 fix #5838]
 
 ## Opamfile
 
