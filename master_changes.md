@@ -119,6 +119,7 @@ users)
   * tree: add test for `opam tree pkg --with-test --no-switch` [#5919 @rjbou]
   * Update opam root version test with root version bump [#5904 @rjbou]
   * env tests: use `sort` to increase stability of the `opam env` output [#5935 @dra27 @rjbou]
+  * env.win32: add mixed slashes test [#5935 @dra27]
 
 ### Engine
   * Add `sort` command [#5935 @dra27]
