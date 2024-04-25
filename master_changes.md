@@ -121,6 +121,7 @@ users)
   * env tests: use `sort` to increase stability of the `opam env` output [#5935 @dra27 @rjbou]
   * env.win32: add mixed slashes test [#5935 @dra27]
   * env.win32: add test for environment revert not working correctly for Unix-like variables on Windows [#5935 @dra27]
+  * env.win32: add regression test for reverting additions to PATH-like variables [#5935 @dra27]
 
 ### Engine
   * Add `sort` command [#5935 @dra27]
