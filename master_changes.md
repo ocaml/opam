@@ -70,6 +70,7 @@ users)
 ## Build
 
 ## Infrastructure
+  * Ensure GNU coreutils available on the macOS 14 CI runners [#5938 @dra27]
 
 ## Release scripts
 
