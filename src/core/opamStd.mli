@@ -314,6 +314,12 @@ module String : sig
       contiguous delimiters) *)
   val split_delim: string -> char -> string list
 
+  (** Splits a variable at the given character, but allowing double-quote
+      characters to protect the delimiter.
+
+      [split_quoted "foo\";\"bar;baz" ';' = ["foo;bar"; "baz"]] *)
+  val split_quoted: string -> char -> string list
+
   val fold_left: ('a -> char -> 'a) -> 'a -> string -> 'a
 
   val is_hex: string -> bool

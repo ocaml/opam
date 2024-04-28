@@ -148,3 +148,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamStd.String`: add `split_quoted` that preserves quoted separator [#5935 @dra27]
