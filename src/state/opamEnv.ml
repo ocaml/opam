@@ -153,36 +153,7 @@ let split_var ~(sepfmt:sep_path_format) var value =
     | Target | Host ->
       OpamStd.String.split value sep
     | Target_quoted | Host_quoted ->
-      (* we suppose that it is in the form:
-         - "quoted":unquoted
-         - unquoted:"quoted"
-         - "quoted":unquoted:"quoted"
-         - unquoted:"quoted":unquoted
-         - "quoted"
-         - unquoted
-      *)
-      let rec aux remaining acc =
-        match String.get remaining 0 with
-        | '"' ->
-          (let remaining =
-             String.sub remaining 1 (String.length remaining - 1)
-           in
-           match OpamStd.String.cut_at remaining '"' with
-           | Some (quoted, rest) ->
-             aux rest (("\""^quoted^"\"")::acc)
-           | None -> remaining::acc)
-        | _ ->
-          let remaining =
-            if Char.equal (String.get remaining 0) sep then
-              String.sub remaining 1 (String.length remaining - 1)
-            else remaining in
-          (match OpamStd.String.cut_at remaining sep with
-           | Some (unquoted, rest) ->
-             aux rest (unquoted::acc)
-           | None -> remaining::acc)
-        | exception Invalid_argument _ -> acc
-      in
-      List.rev @@ aux value []
+      OpamStd.String.split_quoted value sep
 
 let join_var ~(sepfmt:sep_path_format) var values =
   let separator =
