@@ -67,6 +67,7 @@ users)
   * [BUG] Fix reverting of environment variables, principally on Windows [#5935 @dra27 fix #5838]
   * [BUG] Fix splitting environment variables [#5935 @dra27]
   * [BUG] When opam creates an empty variable then appends/prepends a value, ensure no additional separator is added [#5935 @dra27 - fix #5925]
+  * [BUG] Fix `x-env-path-rewrite` splitting of values when reverting [#5935 @dra27 - fix #5838]
 
 ## Opamfile
 

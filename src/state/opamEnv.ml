@@ -262,7 +262,29 @@ let unzip_to ~sepfmt var elt current =
     if String.equal elt "" then
       [{ tr_entry = ""; tr_raw = "";
          tr_sep = separator_char_for ~sepfmt var }]
-    else split_var ~sepfmt var elt
+    else
+    match sepfmt with
+    | `norewrite ->
+      (* Given FOO += "<value1><sep><value2>", then even with
+         `norewrite it is necessary to split the value as FOO itself
+         will have been split - i.e. if we don't split elt here then
+         it cannot be reverted if it contains multiple directories
+         (which would regression #4861) *)
+      let sepfmt = `rewrite_default (var :> string) in
+      split_var ~sepfmt var elt
+    | `rewrite_default _ ->
+      (* If no rewrite has been specified at all, then split elt as,
+         again, #4861 would be regressed otherwise. *)
+      split_var ~sepfmt var elt
+    | `rewrite _ ->
+      (* If a rewrite rule _is_ in effect, then opam 2.2's limited
+         (but compatible) semantics for setenv and build-env mean that
+         we're _assuming_ that elt only contains a single path. This
+         should be addressed in opam 3.0 by having a somewhat richer
+         syntax for environment changes to make clear the "type" of
+         the value in FOO += "bar". *)
+      [{ tr_entry = elt; tr_raw = elt;
+         tr_sep = separator_char_for ~sepfmt var }]
   in
   match elts with
   | [] -> invalid_arg "OpamEnv.unzip_to"
@@ -566,6 +588,14 @@ let env_expansion ?opam st upd =
   in
   { upd with envu_value = s }
 
+(* [env_update_resolved_with_default] creates an environment update with a fully
+   evaluated rewrite rule. It's used internally because the updates in question
+   are single directories only, which means that the update will then never be
+   subject to splitting in [unzip_to] *)
+let env_update_resolved_with_default ?comment var =
+  let rewrite = Some (SPF_Resolved (Some (default_sep_fmt_str var))) in
+  env_update_resolved ?comment ~rewrite var
+
 let compute_updates ?(force_path=false) st =
   (* Todo: put these back into their packages!
   let perl5 = OpamPackage.Name.of_string "perl5" in
@@ -576,18 +606,18 @@ let compute_updates ?(force_path=false) st =
     OpamPath.Switch.bin st.switch_global.root st.switch st.switch_config
   in
   let path =
-    env_update_resolved "PATH"
+    env_update_resolved_with_default "PATH"
       (if force_path then PlusEq else EqPlusEq)
       (OpamFilename.Dir.to_string bindir)
       ~comment:("Binary dir for opam switch "^OpamSwitch.to_string st.switch)
- in
+  in
   let man_path =
     let open OpamStd.Sys in
     match os () with
     | OpenBSD | NetBSD | FreeBSD | Darwin | DragonFly ->
       [] (* MANPATH is a global override on those, so disabled for now *)
     | _ ->
-      [ env_update_resolved "MANPATH" EqColon
+      [ env_update_resolved_with_default "MANPATH" EqColon
           (OpamFilename.Dir.to_string
              (OpamPath.Switch.man_dir st.switch_global.root
                 st.switch st.switch_config))
@@ -595,7 +625,7 @@ let compute_updates ?(force_path=false) st =
       ]
  in
  let switch_env =
-   (env_update_resolved "OPAM_SWITCH_PREFIX" Eq
+   (env_update_resolved_with_default "OPAM_SWITCH_PREFIX" Eq
       (OpamFilename.Dir.to_string
          (OpamPath.Switch.root st.switch_global.root st.switch))
       ~comment:"Prefix of the current opam switch")
@@ -618,14 +648,14 @@ let compute_updates ?(force_path=false) st =
 let updates_common ~set_opamroot ~set_opamswitch root switch =
   let root =
     if set_opamroot then
-      [ env_update_resolved "OPAMROOT" Eq
+      [ env_update_resolved_with_default "OPAMROOT" Eq
           (OpamFilename.Dir.to_string root)
           ~comment:"Opam root in use" ]
     else []
   in
   let switch =
     if set_opamswitch then
-      [ env_update_resolved "OPAMSWITCH" Eq
+      [ env_update_resolved_with_default "OPAMSWITCH" Eq
           (OpamSwitch.to_string switch) ]
     else [] in
   root @ switch
@@ -745,7 +775,7 @@ let switch_path_update ~force_path root switch =
       (OpamStateConfig.Switch.safe_load_t
          ~lock_kind:`Lock_read root switch)
   in
-  [ env_update_resolved "PATH"
+  [ env_update_resolved_with_default "PATH"
       (if force_path then PlusEq else EqPlusEq)
       (OpamFilename.Dir.to_string bindir)
       ~comment:"Current opam switch binary dir" ]
