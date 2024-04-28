@@ -150,9 +150,9 @@ let split_var ~(sepfmt:sep_path_format) var value =
     in
     let sep = OpamTypesBase.char_of_separator separator in
     match format with
-    | Target_quoted | Host_quoted ->
-      OpamStd.String.split value sep
     | Target | Host ->
+      OpamStd.String.split value sep
+    | Target_quoted | Host_quoted ->
       (* we suppose that it is in the form:
          - "quoted":unquoted
          - unquoted:"quoted"

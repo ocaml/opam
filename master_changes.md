@@ -65,6 +65,7 @@ users)
 
 ## Env
   * [BUG] Fix reverting of environment variables, principally on Windows [#5935 @dra27 fix #5838]
+  * [BUG] Fix splitting environment variables [#5935 @dra27]
 
 ## Opamfile
 
@@ -78,7 +79,6 @@ users)
   * Reset the "jobs" config variable when upgrading from opam 2.1 to 2.2, instead of 2.0 to 2.1 [#5904 @kit-ty-kate - fix #5816]
 
 ## Sandbox
-
 ## VCS
 
 ## Build
