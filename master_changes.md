@@ -120,6 +120,7 @@ users)
   * Update opam root version test with root version bump [#5904 @rjbou]
 
 ### Engine
+  * Add `sort` command [#5935 @dra27]
 
 ## Github Actions
 

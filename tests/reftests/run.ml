@@ -192,7 +192,7 @@ let filters_of_var =
       Sed x)
 
 let command
-    ?(allowed_codes = [0]) ?(vars=[]) ?(silent=false) ?(filter=[])
+    ?(allowed_codes = [0]) ?(vars=[]) ?(silent=false) ?(filter=[]) ?(sort=false)
     cmd args =
   let env =
     Array.of_list @@
@@ -225,23 +225,30 @@ let command
       Unix.stdin stdout stdout
   in
   Unix.close stdout;
-  let out_buf = Buffer.create 273 in
-  let rec filter_output ?(first=true) ic =
+  let rec filter_output out_buf ic =
     match input_line ic with
     | s ->
-      let s = str_replace_path ~escape:`Unescape OpamSystem.back_to_forward filter s in
-      if s = "\\c" then filter_output ~first ic
+      let s =
+        str_replace_path ~escape:`Unescape OpamSystem.back_to_forward filter s
+      in
+      if s = "\\c" then filter_output out_buf ic
       else
-        (if not first then Buffer.add_char out_buf '\n';
-         Buffer.add_string out_buf s;
-         if not silent then print_endline s;
-         filter_output ~first:false ic)
-    | exception End_of_file -> ()
+        (let out_buf = s::out_buf in
+         if not silent && not sort then
+           print_endline s;
+         filter_output out_buf ic)
+    | exception End_of_file -> out_buf
   in
-  filter_output ic;
+  let out_buf = filter_output [] ic in
   let ret = waitpid pid in
   close_in ic;
-  let out = Buffer.contents out_buf in
+  let out =
+    if sort then List.sort String.compare out_buf
+    else List.rev out_buf
+  in
+  if not silent && sort then
+    List.iter print_endline out;
+  let out = String.concat "\n" out in
   if not (List.mem ret allowed_codes) then
     raise (Command_failure (ret, String.concat " " (cmd :: args), out))
   else
@@ -309,7 +316,8 @@ type command =
              args: string list; (* still escaped *)
              filter: (Re.t * filt_sort) list;
              output: string option;
-             unordered: bool; }
+             unordered: bool;
+             sort: bool;}
   | Export of (string * [`eq | `pluseq | `eqplus] * string) list
   | Comment of string
 
@@ -420,17 +428,21 @@ module Parse = struct
         failwith (Printf.sprintf "Bad POSIX regexp: %s" re)
     in
     let rec get_args_rewr acc = function
-      | [] -> List.rev acc, false, [], None
+      | [] -> List.rev acc, false, false, [], None
       | ("|"|">$") :: _ as rewr ->
-        let rec get_rewr (unordered, acc) = function
+        let rec get_rewr (unordered, sort, acc) = function
           | "|" :: re :: "->" :: str :: r ->
-            get_rewr (unordered, (posix_re re, Sed (get_str str)) :: acc) r
+            get_rewr (unordered, sort, (posix_re re, Sed (get_str str)) :: acc) r
           | "|" :: "grep" :: "-v" :: re :: r ->
-            get_rewr (unordered, (posix_re re, GrepV) :: acc) r
+            get_rewr (unordered, sort, (posix_re re, GrepV) :: acc) r
           | "|" :: "grep" :: re :: r ->
-            get_rewr (unordered, (posix_re re, Grep) :: acc) r
+            get_rewr (unordered, sort, (posix_re re, Grep) :: acc) r
+          | "|" :: "sort" :: r ->
+            if acc <> [] then
+              Printf.printf "Warning: sort should appear _before_ any filters\n%!";
+            get_rewr (unordered, true, acc) r
           | "|" :: "unordered" :: r ->
-            get_rewr (true, acc) r
+            get_rewr (true, sort, acc) r
           | "|" :: "sed-cmd" :: cmd :: r ->
             let sandbox =
               (* Sandbox prefix
@@ -487,22 +499,22 @@ module Parse = struct
               ] in
             let re = alt @@ sandbox :: unix_prefix @ win_prefix in
             let str = Printf.sprintf "%s " cmd in
-            get_rewr (unordered, (re, Sed str) :: acc) r
+            get_rewr (unordered, sort, (re, Sed str) :: acc) r
           | ">$" :: output :: [] ->
-            unordered, List.rev acc, Some (get_str output)
+            unordered, sort, List.rev acc, Some (get_str output)
           | [] ->
-            unordered, List.rev acc, None
+            unordered, sort, List.rev acc, None
           | r ->
             Printf.printf
               "Bad rewrite %S, expecting '| RE -> STR' or '>$ VAR'\n%!"
               (String.concat " " r);
-            unordered, List.rev acc, None
+            unordered, sort, List.rev acc, None
         in
-        let unordered, rewr, out = get_rewr (false, []) rewr in
-        List.rev acc, unordered, rewr, out
+        let unordered, sort, rewr, out = get_rewr (false, false, []) rewr in
+        List.rev acc, unordered, sort, rewr, out
       | arg :: r -> get_args_rewr (arg :: acc) r
     in
-    let args, unordered, rewr, output = get_args_rewr [] args in
+    let args, unordered, sort, rewr, output = get_args_rewr [] args in
     match cmd with
     | Some "opam-cat" ->
       Cat { files = args; filter = rewr; }
@@ -531,6 +543,7 @@ module Parse = struct
         filter = rewr;
         output;
         unordered;
+        sort;
       }
     | None ->
       Export varbinds
@@ -572,7 +585,7 @@ let common_filters ?opam dir =
     | None -> []
     | Some opam -> [ str opam.as_seen_in_opam, Sed "${OPAM}" ])
 
-let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
+let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) ?(sort=false) cmd args =
   let filter = filter @ common_filters ~opam dir in
   let var_filters = filters_of_var vars in
   let cmd = if cmd = "opam" then opam.as_called else cmd in
@@ -587,7 +600,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) cmd args =
         Parse.get_str expanded)
       args
   in
-  try command ~vars ~filter ~silent cmd args, None
+  try command ~vars ~filter ~silent ~sort cmd args, None
   with Command_failure (n,_, out) -> out, Some n
 
 let write_file ~path ~contents =
@@ -843,10 +856,10 @@ let run_test ?(vars=[]) ~opam t =
           print_file ~filters:(filter @ common_filters ~opam dir @ json_filters)
             to_string files;
           vars
-        | Run {env; cmd; args; filter; output; unordered} ->
+        | Run {env; cmd; args; filter; output; unordered; sort} ->
           let silent = output <> None || unordered in
           let r, errcode =
-            run_cmd ~opam ~dir ~vars:(vars @ env) ~filter ~silent cmd args
+            run_cmd ~opam ~dir ~vars:(vars @ env) ~filter ~silent ~sort cmd args
           in
           (if unordered then
              (* print lines from Result, but respecting order from Expect *)
