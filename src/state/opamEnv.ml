@@ -335,7 +335,9 @@ let apply_op_zip ~sepfmt var op arg (rl1,l2 as zip) =
     loop [] path
   in
   match op with
-  | Eq -> [],[arg]
+  | Eq ->
+      (* Existing zip discarded - new value to l2; no prefix *)
+      [], [arg]
   | PlusEq ->
     (* New value goes at head of existing list; no prefix *)
     begin match rezip zip with
@@ -359,8 +361,11 @@ let apply_op_zip ~sepfmt var op arg (rl1,l2 as zip) =
       | zip -> zip, [arg]
     end
   | Cygwin ->
-      cygwin (List.rev_append rl1 l2)
-  | EqPlusEq -> rl1, arg::l2
+    cygwin (rezip zip)
+  | EqPlusEq ->
+    (* Add the value where the last value was reverted (i.e. as PlusEq but
+       without the rezip) *)
+    rl1, arg::l2
   | ColonEq ->
     let l, add = colon_eq (rezip zip) in [], add @ l
   | EqColon ->
