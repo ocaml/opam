@@ -309,13 +309,6 @@ let rezip_to_string ?insert z =
 let apply_op_zip ~sepfmt var op arg (rl1,l2 as zip) =
   let arg = transform_format ~sepfmt var arg in
   let empty_tr = { tr_entry = ""; tr_raw = ""; tr_sep = arg.tr_sep } in
-  let colon_eq ?(eqcol=false) = function (* prepend a, but keep ":"s *)
-    | [] | [{ tr_entry = ""; _}] -> [], [arg; empty_tr]
-    | { tr_entry = ""; _} :: l ->
-      (* keep surrounding colons *)
-      if eqcol then l@[empty_tr], [arg] else l, [empty_tr; arg]
-    | l -> l, [arg]
-  in
   let cygwin path =
     let contains_in {tr_entry = dir; _} item =
       Sys.file_exists (Filename.concat dir item)
@@ -367,10 +360,25 @@ let apply_op_zip ~sepfmt var op arg (rl1,l2 as zip) =
        without the rezip) *)
     rl1, arg::l2
   | ColonEq ->
-    let l, add = colon_eq (rezip zip) in [], add @ l
+    begin match rezip zip with
+      | [{ tr_entry = ""; _}] | [] -> (* empty or unset *)
+        [], [arg; empty_tr]
+      | ({ tr_entry = ""; _} as lead)::{ tr_entry = ""; _}::([] as zip) ->
+        (* VAR=':' *)
+        [], lead::arg::zip
+      | zip ->
+        [], arg::zip
+    end
   | EqColon ->
-    let l, add = colon_eq ~eqcol:true (List.rev_append l2 rl1) in
-    l, List.rev add
+    begin match List.rev_append l2 rl1 with
+      | [{ tr_entry = ""; _}] | [] -> (* empty or unset *)
+        [], [empty_tr; arg]
+      | ({ tr_entry = ""; _} as lead)::{ tr_entry = ""; _}::([] as zip) ->
+        (* VAR=':' *)
+        [], List.rev (lead::arg::zip)
+      | zip ->
+        [], List.rev (arg::zip)
+    end
 
 (** Undoes previous updates done by opam, useful for not duplicating already
     done updates; this is obviously not perfect, as all operators are not
