@@ -1179,24 +1179,32 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
       manual_install t sys_packages
   and menu t sys_packages =
     let answer =
-      let pkgman =
-        OpamConsole.colorise `yellow
-          (OpamSysInteract.package_manager_name ~env config)
-      in
-      OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
-        "opam believes some required external dependencies are missing. opam \
-         can:"
-        ~options:[
-          `Yes, Printf.sprintf
-            "Run %s to install them (may need root/sudo access)" pkgman;
-          `No, Printf.sprintf
-            "Display the recommended %s command and wait while you run it \
-             manually (e.g. in another terminal)" pkgman;
-          `Ignore, "Continue anyway, and, upon success, permanently register \
-                    that this external dependency is present, but not \
-                    detectable";
-          `Quit, "Abort the installation";
-        ]
+      let pkgman = OpamSysInteract.package_manager_name ~env config in
+      let pkgman_colourised = OpamConsole.colorise `yellow pkgman in
+      match pkgman with
+      | "nix" ->
+        OpamConsole.menu ~unsafe_yes:`Ignore ~default:`Quit ~no:`Quit
+          "opam supports external dependencies with %s by creating a shell.nix file. opam \
+           can:" pkgman_colourised
+          ~options:[
+            `Quit, "Abort the installation if you haven't configured an evironment with your depexts.";
+            `Ignore, "Continue the installation if you've called nix-shell or an alternative.";
+          ]
+      | _ ->
+        OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
+          "opam believes some required external dependencies are missing. opam \
+           can:"
+          ~options:[
+            `Yes, Printf.sprintf
+              "Run %s to install them (may need root/sudo access)" pkgman_colourised;
+            `No, Printf.sprintf
+              "Display the recommended %s command and wait while you run it \
+               manually (e.g. in another terminal)" pkgman_colourised;
+            `Ignore, "Continue anyway, and, upon success, permanently register \
+                      that this external dependency is present, but not \
+                      detectable";
+            `Quit, "Abort the installation";
+          ]
     in
     OpamConsole.msg "\n";
     match answer with

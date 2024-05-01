@@ -134,6 +134,7 @@ type families =
   | Macports
   | Msys2
   | Netbsd
+  | Nixos
   | Openbsd
   | Suse
 
@@ -198,6 +199,7 @@ let family ~env () =
     | "gentoo" -> Gentoo
     | "homebrew" -> Homebrew
     | "macports" -> Macports
+    | "nixos" -> Nixos
     | "macos" ->
       failwith
         "External dependency handling for macOS requires either \
@@ -896,6 +898,18 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> package_set_of_pkgpath
     in
     compute_sets sys_installed
+  | Nixos ->
+      (* TODO should we rely on being in the cwd? *)
+      let open OpamFilename in
+      let file = create (cwd ()) (basename (raw "shell.nix")) in
+      (* TODO create the correct format *)
+      Printf.printf "%s\n\n" (OpamSysPkg.Set.to_string packages);
+      let contents = String.concat " " (List.rev (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l) packages [])) in
+      (* TODO don't override if already there *)
+      (* TODO this write doesn't work *)
+      write file contents;
+      Printf.printf "\n\nCONTENTS %s\n\n" contents;
+      packages, OpamSysPkg.Set.empty
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-mqP"]
@@ -1009,6 +1023,8 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
     [`AsUser (Commands.msys2 config),
      "-Su"::"--noconfirm"::packages], None
   | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
+  (* shim command to communicate that we're using Nix *)
+  | Nixos -> [`AsUser "nix", [] ], None
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
@@ -1069,6 +1085,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Macports -> Some (`AsAdmin "port", ["sync"])
     | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])
     | Netbsd -> None
+    | Nixos -> None
     | Openbsd -> None
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
   in
