@@ -1614,7 +1614,7 @@ let check_for_sys_packages config system_packages =
       in
       (*Lazy.force header;*)
       OpamSolution.print_depext_msg set;
-      OpamSolution.install_sys_packages ~confirm:true env config missing ()
+      ignore @@ OpamSolution.install_sys_packages ~confirm:true env config missing None
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
