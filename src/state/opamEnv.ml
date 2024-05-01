@@ -232,8 +232,20 @@ let apply_op_zip ~sepfmt op arg (rl1,l2 as zip) =
   in
   match op with
   | Eq -> [],[arg]
-  | PlusEq -> [], arg :: rezip zip
-  | EqPlus -> List.rev_append l2 rl1, [arg]
+  | PlusEq ->
+    (* New value goes at head of existing list; no prefix *)
+    begin match rezip zip with
+      | [""] -> [], [arg]
+      | zip -> [], arg::zip
+    end
+  | EqPlus ->
+    (* NB List.rev_append l2 rl1 is equivalent to
+          List.rev (List.rev_append rl1 l2)
+       Place new value at the end *)
+    begin match List.rev_append l2 rl1 with
+      | [""] -> [], [arg]
+      | zip -> zip, [arg]
+    end
   | Cygwin ->
       cygwin (List.rev_append rl1 l2)
   | EqPlusEq -> rl1, arg::l2
