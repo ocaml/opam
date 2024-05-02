@@ -336,7 +336,7 @@ The following actions will be performed:
 Done.
 ### opam switch export extra-files.xp
 ### opam-cat ./extra-files.xp
-extra-files: ["md5=d8e8fca2dc0f896fd7cb4cb0031ba249" "dGVzdAo="]
+extra-files: ["md5=d8e8fca2dc0f896fd7cb4cb0031ba249" "dGVzdAo"]
 installed: ["test.1"]
 opam-version: "2.0"
 pinned: "test.1"
