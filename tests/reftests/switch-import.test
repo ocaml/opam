@@ -308,12 +308,15 @@ package "test" {
   install: ["cp" "test" "%{prefix}%/test"]
 }
 ### opam switch import unpadded-base64-extra-files.xp
-Fatal error:
-Invalid_argument("Wrong padding")
-# Return code 99 #
+The following actions will be performed:
+=== install 1 package
+  - install test dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed test.dev
+Done.
 ### cat OPAM/unpadded-base64-extra-files/test
-cat: OPAM/unpadded-base64-extra-files/test: No such file or directory
-# Return code 1 #
+test
 ### <export-extra-files/test.opam>
 opam-version: "2.0"
 extra-files: ["test" "md5=d8e8fca2dc0f896fd7cb4cb0031ba249"]

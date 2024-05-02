@@ -28,6 +28,7 @@ users)
 ## Remove
 
 ## Switch
+  * Allow to parse opam 2.1 switch import files containing extra-files [#5943 @kit-ty-kate - fix #5941]
 
 ## Config
 

@@ -398,7 +398,7 @@ let import_t ?ask importfile t =
     OpamPath.Switch.extra_files_dir t.switch_global.root t.switch
   in
   OpamHash.Map.iter (fun hash content ->
-      let value = Base64.decode_exn content in
+      let value = Base64.decode_exn ~pad:false content in
       let my = OpamHash.compute_from_string ~kind:(OpamHash.kind hash) value in
       if OpamHash.contents my = OpamHash.contents hash then
         let dst =
