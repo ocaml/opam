@@ -402,7 +402,7 @@ let reverse_env_update ~sepfmt var op arg cur_value =
   | EqPlus | Cygwin ->
     (match unzip_to ~sepfmt var arg (List.rev cur_value) with
      | None -> None
-     | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1))
+     | Some (rl1, l2) -> Some (l2, List.rev rl1))
   | ColonEq ->
     (match unzip_to var ~sepfmt arg cur_value with
      | Some ([], [{ tr_entry = ""; _}]) -> Some ([], [])
@@ -410,7 +410,7 @@ let reverse_env_update ~sepfmt var op arg cur_value =
   | EqColon ->
     (match unzip_to ~sepfmt var arg (List.rev cur_value) with
      | Some ([], [{ tr_entry = ""; _}]) -> Some ([], [])
-     | Some (rl1, l2) -> Some (List.rev l2, List.rev rl1)
+     | Some (rl1, l2) -> Some (l2, List.rev rl1)
      | None -> None)
 
 let map_update_names env_keys updates =
