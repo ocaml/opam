@@ -270,3 +270,79 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed c.1
 Done.
+### # Test that 2.1 unpadded export files are well imported
+### opam switch create padded-base64-extra-files --empty
+### <padded-base64-extra-files.xp>
+extra-files: ["md5=d8e8fca2dc0f896fd7cb4cb0031ba249" "dGVzdAo="]
+opam-version: "2.0"
+roots: ["test.dev"]
+installed: ["test.dev"]
+pinned: "test.dev"
+package "test" {
+  opam-version: "2.0"
+  version: "dev"
+  extra-files: ["test" "md5=d8e8fca2dc0f896fd7cb4cb0031ba249"]
+  install: ["cp" "test" "%{prefix}%/test"]
+}
+### opam switch import padded-base64-extra-files.xp
+The following actions will be performed:
+=== install 1 package
+  - install test dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed test.dev
+Done.
+### cat OPAM/padded-base64-extra-files/test
+test
+### opam switch create unpadded-base64-extra-files --empty
+### <unpadded-base64-extra-files.xp>
+extra-files: ["md5=d8e8fca2dc0f896fd7cb4cb0031ba249" "dGVzdAo"]
+opam-version: "2.0"
+roots: ["test.dev"]
+installed: ["test.dev"]
+pinned: "test.dev"
+package "test" {
+  opam-version: "2.0"
+  version: "dev"
+  extra-files: ["test" "md5=d8e8fca2dc0f896fd7cb4cb0031ba249"]
+  install: ["cp" "test" "%{prefix}%/test"]
+}
+### opam switch import unpadded-base64-extra-files.xp
+Fatal error:
+Invalid_argument("Wrong padding")
+# Return code 99 #
+### cat OPAM/unpadded-base64-extra-files/test
+cat: OPAM/unpadded-base64-extra-files/test: No such file or directory
+# Return code 1 #
+### <export-extra-files/test.opam>
+opam-version: "2.0"
+extra-files: ["test" "md5=d8e8fca2dc0f896fd7cb4cb0031ba249"]
+### <export-extra-files/files/test>
+test
+### opam switch create export-extra-files --empty
+### opam pin ./export-extra-files
+test is now pinned to file://${BASEDIR}/export-extra-files (version 1)
+
+The following actions will be performed:
+=== install 1 package
+  - install test 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test.1  (file://${BASEDIR}/export-extra-files)
+-> installed test.1
+Done.
+### opam switch export extra-files.xp
+### opam-cat ./extra-files.xp
+extra-files: ["md5=d8e8fca2dc0f896fd7cb4cb0031ba249" "dGVzdAo="]
+installed: ["test.1"]
+opam-version: "2.0"
+pinned: "test.1"
+roots: ["test.1"]
+package "test" {
+opam-version: "2.0"
+version: "1"
+extra-files: ["test" "md5=d8e8fca2dc0f896fd7cb4cb0031ba249"]
+url {
+src: "file://${BASEDIR}/export-extra-files"
+}
+}
