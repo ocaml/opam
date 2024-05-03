@@ -12,6 +12,8 @@ users)
 
 ## Version
   * Bump version to 2.2.0~beta3~dev [#5917 @kit-ty-kate]
+  * Bump the version number after the release of 2.2.0~beta1 [#5785 @kit-ty-kate]
+  * Upgrade the opam-root-version to 2.2~beta [#5904 @kit-ty-kate]
 
 ## Global CLI
 
@@ -106,6 +108,7 @@ users)
 ### Tests
   * tree: add a test for packages that have variables in their transitive dependencies [#5919 @rjbou]
   * tree: add test for `opam tree pkg --with-test --no-switch` [#5919 @rjbou]
+  * Update opam root version test with root version bump [#5904 @rjbou]
 
 ### Engine
 
