@@ -87,6 +87,7 @@ users)
 ## Solver
 
 ## Client
+  * Fix rounding error when displaying the timestamp in debug mode [#5912 @kit-ty-kate - fix #5910]
 
 ## Shell
 
