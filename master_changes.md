@@ -103,6 +103,7 @@ users)
 ## Reftests
 ### Tests
   * tree: add a test for packages that have variables in their transitive dependencies [#5919 @rjbou]
+  * tree: add test for `opam tree pkg --with-test --no-switch` [#5919 @rjbou]
 
 ### Engine
 

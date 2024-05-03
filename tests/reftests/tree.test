@@ -388,7 +388,7 @@ e.1
 [ERROR] No package to display
 # Return code 5 #
 ### ::::::::::::::::
-### : --not-switch :
+### : --no-switch :
 ### ::::::::::::::::
 ### opam tree --no-switch | '…' -> '...' | '`' -> "'"
 opam: --no-switch can't be used without specifying a package or a path
@@ -477,6 +477,26 @@ The following actions are simulated:
   - install j 1
 
 j.1
+### # e depend on d with-test
+### opam tree e --no-switch
+The following actions are simulated:
+=== install 3 packages
+  - install a 1 [required by e]
+  - install b 1
+  - install e 1
+
+e.1
+'-- a.1
+### opam tree e --with-test --no-switch
+The following actions are simulated:
+=== install 3 packages
+  - install a 1 [required by e]
+  - install b 1
+  - install e 1
+
+e.1
+'-- a.1
+### : invariant
 ### <pkg:h.1>
 opam-version: "2.0"
 flags: compiler
