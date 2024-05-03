@@ -102,6 +102,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add test for `opam tree pkg --with-test --no-switch` [#XXX @rjbou]
 
 ### Engine
 
