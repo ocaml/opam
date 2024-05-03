@@ -636,7 +636,7 @@ let init_checks ?(hard_fail_exn=true) init_config =
   else not (soft_fail || hard_fail)
 
 let git_for_windows_check =
-  if not Sys.win32 && not Sys.cygwin then fun ?git_location:_ () -> None else
+  if not Sys.win32 then fun ?git_location:_ () -> None else
   fun ?git_location () ->
     let header () = OpamConsole.header_msg "Git" in
     let contains_git p =
