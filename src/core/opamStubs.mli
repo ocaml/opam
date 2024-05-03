@@ -156,3 +156,6 @@ val setConsoleToUTF8 : unit -> unit
 val getVersionInfo : string -> win32_version_info option
 (** Windows only. Returns the version info block for a file or [None] if the
     file either doesn't exist or doesn't have one. *)
+
+val get_initial_environment : unit -> string list
+(** Windows only. Returns the environment which new processes would receive. *)

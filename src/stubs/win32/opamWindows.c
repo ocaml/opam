@@ -28,6 +28,7 @@
 #include <TlHelp32.h>
 #include <Knownfolders.h>
 #include <Objbase.h>
+#include <userenv.h>
 #define STRSAFE_NO_DEPRECATE
 #include <strsafe.h>
 
@@ -999,4 +1000,45 @@ CAMLprim value OPAMW_GetVersionInfo(value file)
   free(this);
 
   CAMLreturn(result);
+}
+
+CAMLprim value OPAMW_CreateEnvironmentBlock(value unit)
+{
+  CAMLparam0();
+  CAMLlocal3(result, tail, str);
+  value cell;
+
+  LPWSTR lpEnvironment;
+
+  result = caml_alloc_small(2, 0);
+  Field(result, 0) = Val_int(0);    /* Unused */
+  Field(result, 1) = Val_emptylist; /* The actual result */
+  tail = result;
+
+  if (CreateEnvironmentBlock((LPVOID*)&lpEnvironment, GetCurrentProcessToken(), FALSE)) {
+    LPWSTR cur = lpEnvironment;
+    LPWSTR end;
+    while (*cur != '\0') {
+      int len;
+
+      /* Convert the next UCS-2 null-terminated string to an OCaml UTF-8 string */
+      end = wcschr(cur, '\0');
+      len = win_wide_char_to_multi_byte(cur, (end - cur), NULL, 0);
+      str = caml_alloc_string(len);
+      win_wide_char_to_multi_byte(cur, (end - cur), (char *)String_val(str), len);
+
+      cell = caml_alloc_small(2, 0);
+      Field(cell, 0) = str;
+      Field(cell, 1) = Val_emptylist;
+      Store_field(tail, 1, cell);
+      tail = Field(tail, 1);
+
+      cur = end + 1;
+    }
+    DestroyEnvironmentBlock(lpEnvironment);
+  } else {
+    caml_raise_not_found();
+  }
+
+  CAMLreturn(Field(result, 1));
 }

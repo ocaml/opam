@@ -342,7 +342,7 @@ default_static=no
 AS_CASE([$TARGET],
   [*-linux-musl*],[
     support_static=yes
-    platform_dependant_stuff="-cclib -lstdc++ -cclib -static-libgcc -cclib -static"
+    platform_dependent_stuff="-cclib -lstdc++ -cclib -static-libgcc -cclib -static"
   ],
   [*-*-mingw32*],[
     support_static=yes
@@ -350,13 +350,14 @@ AS_CASE([$TARGET],
     # NOTE: On Windows, the Windows specific dlls should stay dynamic for security reasons
     # NOTE: -l:libstdc++.a is necessary (vs. -lstdc++) as flexlink will use libstdc++.dll.a
     # which still depends on the DLL at runtime instead of libstdc++.a (that looks like a bug in flexlink)
-    platform_dependant_stuff="-cclib -lopam_stubs_win32_stubs -cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid -cclib -lwindowsapp"
+    platform_dependent_stuff="-cclib -lopam_stubs_win32_stubs -cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid -cclib -luserenv"
+    AS_IF([test "x${SYSTEM}" = "xmingw"], [platform_dependent_stuff="${platform_dependent_stuff} -cclib -lwindowsapp"])
   ])
 AS_CASE([${support_static},${enable_static}],
   [no,yes],[AC_MSG_ERROR([--enable-static is not available on this platform (${TARGET}).])],
   [*,auto],[enable_static=${default_static}])
 AS_IF([test "${enable_static}" = yes],[
-  echo "(-noautolink -cclib -lunix -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs ${platform_dependant_stuff})" > src/client/linking.sexp
+  echo "(-noautolink -cclib -lunix -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs ${platform_dependent_stuff})" > src/client/linking.sexp
   AC_MSG_RESULT([static])
 ],[
   AC_MSG_RESULT([shared])

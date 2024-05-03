@@ -16,7 +16,7 @@ match Sys.argv.(1) with
 | "clibs" ->
     if Sys.win32 then
       let common =
-        "-ladvapi32 -lgdi32 -luser32 -lshell32 -lole32 -luuid"
+        "-ladvapi32 -lgdi32 -luser32 -lshell32 -lole32 -luuid -luserenv"
       in
       if Config.system = "mingw" then
         (* This appears to be a packaging bug in i686-w64-mingw32, as

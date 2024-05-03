@@ -166,3 +166,4 @@ users)
   * `OpamSystem.copy_dir` and `OpamSystem.mv` may display a warning on Windows if an invalid symlink (e.g. an LXSS Junction) is found [#5953 @dra27]
   * `OpamStubs.getVersionInfo`: on Windows, retrives the version information block of an executable/library [#5963 @dra27]
   * `OpamStubs.readRegistry`: on Windows, complements `OpamStubs.writeRegistry` [#5963 @dra27]
+  * `OpamStubs.get_initial_environment`: on Windows, returns the pristine environment for new shells [#5963 @dra27]

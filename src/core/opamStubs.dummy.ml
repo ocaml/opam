@@ -44,3 +44,4 @@ let setErrorMode = that's_a_no_no
 let getErrorMode = that's_a_no_no
 let setConsoleToUTF8 = that's_a_no_no
 let getVersionInfo = that's_a_no_no
+let get_initial_environment = that's_a_no_no
