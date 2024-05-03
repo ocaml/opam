@@ -378,10 +378,10 @@ let print_solution st new_st missing solution =
 
 (** Setting states for building *)
 
-let get_universe tog st =
+let get_universe ~all tog st =
   let OpamListCommand.{doc; test; dev_setup; dev; _} = tog in
   OpamSwitchState.universe st ~doc ~test ~dev_setup ~force_dev_deps:dev
-    ~requested:st.installed
+    ~requested:(if all then st.packages else st.installed)
     Query
 
 let simulate_new_state tog st universe install names =
@@ -390,7 +390,7 @@ let simulate_new_state tog st universe install names =
   | Success solution ->
     let new_st = OpamSolution.dry_run st solution in
     print_solution st new_st names solution;
-    new_st, get_universe tog new_st
+    new_st, get_universe tog new_st ~all:true
   | Conflicts cs ->
     OpamConsole.error
       "Could not simulate installing the specified package(s) to this switch:";
@@ -416,7 +416,7 @@ let run st tog ?no_constraint mode filter atoms =
       (OpamPackage.Set.empty, []) atoms
   in
   let st, universe =
-    let universe = get_universe tog st in
+    let universe = get_universe tog st ~all:(missing <> []) in
     match mode, filter, missing with
     | Deps, _, [] -> st, universe
     | Deps, Roots_from, _::_ ->

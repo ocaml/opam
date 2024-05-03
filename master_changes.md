@@ -42,6 +42,7 @@ users)
 ## Update / Upgrade
 
 ## Tree
+  * Fix `--with-test` selection when a new state need to be simulated [#XXX @rjbou - fix #5920]
 
 ## Exec
 
