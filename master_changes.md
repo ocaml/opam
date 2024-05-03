@@ -98,6 +98,7 @@ users)
 ## Test
 
 ## Benchmarks
+  * Benchmark opam install --deps-only of an already installed package [#5909 @kit-ty-kate]
 
 ## Reftests
 ### Tests
