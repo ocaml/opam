@@ -416,7 +416,13 @@ let run st tog ?no_constraint mode filter atoms =
       (OpamPackage.Set.empty, []) atoms
   in
   let st, universe =
-    let universe = get_universe tog select st in
+    let universe =
+      let requested =
+        OpamFormula.packages_of_atoms
+          (if missing = [] then st.installed else st.packages) atoms
+      in
+      get_universe tog requested st
+    in
     match mode, filter, missing with
     | Deps, _, [] -> st, universe
     | Deps, Roots_from, _::_ ->
