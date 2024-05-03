@@ -102,6 +102,7 @@ users)
 
 ## Reftests
 ### Tests
+  * tree: add a test for packages that have variables in their transitive dependencies [#5919 @rjbou]
 
 ### Engine
 

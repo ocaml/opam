@@ -320,6 +320,31 @@ The following actions are simulated:
 l.1
 |-- a.1
 '-- l-dev.1 (dev)
+### : dependency have variables in their dependencies
+### <pkg:m.1>
+opam-version: "2.0"
+depends: [ "j" "d" {with-doc} ]
+# j depends on k with-test
+### opam install m k --with-doc
+The following actions will be performed:
+=== install 2 packages
+  - install k 1
+  - install m 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed k.1
+-> installed m.1
+Done.
+### opam tree m
+m.1
+'-- j.1
+    '-- a.1
+### opam tree m --with-test --with-doc
+m.1
+|-- d.1 (with-doc)
+'-- j.1
+    |-- a.1
+    '-- k.1 (with-test)
 ### ::::::::::::::::
 ### : Empty switch :
 ### ::::::::::::::::
