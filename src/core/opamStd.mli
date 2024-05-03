@@ -532,7 +532,8 @@ module Sys : sig
       OS) *)
   val path_sep: char
 
-  (** [true] if a character may be used in a filename. *)
+  (** [true] if a character may be used in a filename, depending on the OS.
+      For example, on Windows, `:` and `?` can't be in the name. *)
   val is_valid_basename_char: char -> bool
 
   (** Splits a PATH-like variable separated with [path_sep]. More involved than
