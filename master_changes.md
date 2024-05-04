@@ -177,6 +177,7 @@ users)
   * `OpamDownload.download_command`: separate output from stdout and stderr [#5984 @kit-ty-kate]
 
 ## opam-state
+  * `OpamEnv.cygwin_non_shadowed_programs`: exposes the list of executables (not including git) which should always come from Cygwin [#6000 @dra27]
 
 ## opam-solver
 

@@ -61,6 +61,12 @@ val hash_env_updates: ('a, euok_writeable) env_update list -> string
     and optionally the given updates *)
 val get_pure: ?updates:(spf_resolved, euok_internal) env_update list -> unit -> env
 
+(** The list of executables from Cygwin which must not be allowed to be shadowed
+    by other directories of PATH. This list must not contain git.exe - it is
+    added only if Cygwin's git is installed. The list is used to determine the
+    furthest point in PATH that Cygwin's bin directory can be placed. *)
+val cygwin_non_shadowed_programs : string list
+
 (** Update an environment, including reverting opam changes that could have been
     previously applied (therefore, don't apply to an already updated env as
     returned by e.g. [get_full]!) *)

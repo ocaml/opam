@@ -306,6 +306,9 @@ let rezip ?insert (l1, l2) =
 let rezip_to_string ?insert z =
   join_var (rezip ?insert z)
 
+let cygwin_non_shadowed_programs =
+  ["bash.exe"; "make.exe"; "sort.exe"; "tar.exe"]
+
 let apply_op_zip ~sepfmt var op arg (rl1,l2 as zip) =
   let arg = transform_format ~sepfmt var arg in
   let empty_tr = { tr_entry = ""; tr_raw = ""; tr_sep = arg.tr_sep } in
@@ -314,8 +317,7 @@ let apply_op_zip ~sepfmt var op arg (rl1,l2 as zip) =
       Sys.file_exists (Filename.concat dir item)
     in
     let shadow_list =
-      List.filter (contains_in arg)
-        ["bash.exe"; "make.exe"; "sort.exe"; "tar.exe"; "git.exe"]
+      List.filter (contains_in arg) ("git.exe" :: cygwin_non_shadowed_programs)
     in
     let rec loop acc = function
       | [] -> acc, [arg]
