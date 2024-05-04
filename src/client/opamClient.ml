@@ -840,16 +840,14 @@ let windows_checks ?cygwin_setup ?git_location config =
     | Some (Right ()), None -> Some (Right ())
     | Some (Right ()), Some _ ->
       OpamConsole.note
-        "As '--no-git-location' is given in argument, ignoring field \
-         'git-location' in opamrc";
+        "'--no-git-location' specified; field 'git-location' in opamrc \
+        has been ignored";
       Some (Right ())
     | Some (Left gl), None | None, Some gl -> Some (Left gl)
-    | Some (Left gl_cli), Some gl_config ->
+    | Some (Left gl_cli), Some _ ->
       OpamConsole.note
-        "Git location defined in opamrc '%s' and via CLI \
-         ('--git-location' option, %s). Keeping last one."
-        (OpamFilename.Dir.to_string gl_config)
-        (OpamFilename.Dir.to_string gl_cli) ;
+        "'--git-location' specified; field 'git-location' in opamrc \
+         has been ignored";
       Some (Left gl_cli)
   in
   let git_location =
