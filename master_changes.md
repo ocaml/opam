@@ -147,6 +147,7 @@ users)
 
 ## Doc
   * Remove the ppa from the installation instructions on Ubuntu [#5988 @kit-ty-kate - fix #5987]
+  * Fix pinning instructions in readme [#5946 @rjbou - fix #5945]
 
 ## Security fixes
 
