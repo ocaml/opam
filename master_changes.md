@@ -108,7 +108,7 @@ users)
 ## Github Actions
 
 ## Doc
-
+  * Fix pinning instructions in readme [#5946 @rjbou - fix #5945]
 ## Security fixes
 
 # API updates
