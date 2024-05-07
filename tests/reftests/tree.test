@@ -320,6 +320,30 @@ The following actions are simulated:
 l.1
 |-- a.1
 '-- l-dev.1 (dev)
+### : dependency have variables in their dependencies
+### <pkg:m.1>
+opam-version: "2.0"
+depends: [ "j" "d" {with-doc} ]
+# j depends on k with-test
+### opam install m k --with-doc
+The following actions will be performed:
+=== install 2 packages
+  - install k 1
+  - install m 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed k.1
+-> installed m.1
+Done.
+### opam tree m
+m.1
+'-- j.1
+    '-- a.1
+### opam tree m --with-test --with-doc
+m.1
+|-- d.1 (with-doc)
+'-- j.1
+    '-- a.1
 ### ::::::::::::::::
 ### : Empty switch :
 ### ::::::::::::::::
@@ -343,12 +367,14 @@ h.1
     '-- b.1 (>= 1 & < 3) [*]
 ### opam tree j --with-test
 The following actions are simulated:
-=== install 2 packages
+=== install 3 packages
   - install a 1 [required by j]
   - install j 1
+  - install k 1 [required by j]
 
 j.1
-'-- a.1
+|-- a.1
+'-- k.1 (with-test)
 ### opam tree e
 The following actions are simulated:
 === install 3 packages
@@ -363,7 +389,7 @@ e.1
 [ERROR] No package to display
 # Return code 5 #
 ### ::::::::::::::::
-### : --not-switch :
+### : --no-switch :
 ### ::::::::::::::::
 ### opam tree --no-switch | '…' -> '...' | '`' -> "'"
 opam: --no-switch can't be used without specifying a package or a path
@@ -452,6 +478,28 @@ The following actions are simulated:
   - install j 1
 
 j.1
+### # e depend on d with-test
+### opam tree e --no-switch
+The following actions are simulated:
+=== install 3 packages
+  - install a 1 [required by e]
+  - install b 1
+  - install e 1
+
+e.1
+'-- a.1
+### opam tree e --with-test --no-switch
+The following actions are simulated:
+=== install 4 packages
+  - install a 1 [required by e]
+  - install b 1
+  - install d 1 [required by e]
+  - install e 1
+
+e.1
+|-- a.1
+'-- d.1 (< 2 & with-test)
+### : invariant
 ### <pkg:h.1>
 opam-version: "2.0"
 flags: compiler

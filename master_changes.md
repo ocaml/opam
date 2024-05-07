@@ -42,6 +42,8 @@ users)
 ## Update / Upgrade
 
 ## Tree
+  * [BUG] Fix `opam tree --with-*` assigning the `with-*` variables to unrequested packages [#5919 @kit-ty-kate @rjbou - fix #5755]
+  * [BUG] Fix combinations of `opam tree --with-*` and `--no-switch` [#5919 @kit-ty-kate @rjbou - fix #5920]
 
 ## Exec
 
@@ -102,6 +104,8 @@ users)
 
 ## Reftests
 ### Tests
+  * tree: add a test for packages that have variables in their transitive dependencies [#5919 @rjbou]
+  * tree: add test for `opam tree pkg --with-test --no-switch` [#5919 @rjbou]
 
 ### Engine
 
