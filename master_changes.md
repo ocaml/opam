@@ -12,6 +12,8 @@ users)
 
 ## Version
   * Bump version to 2.2.0~beta3~dev [#5917 @kit-ty-kate]
+  * Bump the version number after the release of 2.2.0~beta1 [#5785 @kit-ty-kate]
+  * Upgrade the opam-root-version to 2.2~beta [#5904 @kit-ty-kate]
 
 ## Global CLI
 
@@ -65,6 +67,8 @@ users)
 ## External dependencies
 
 ## Format upgrade
+  * Handle init OCaml `sys-ocaml-*` eval variables during format upgrade from 2.0 -> 2.1 -> 2.2 [#5829 @dra27]
+  * Reset the "jobs" config variable when upgrading from opam 2.1 to 2.2, instead of 2.0 to 2.1 [#5904 @kit-ty-kate - fix #5816]
 
 ## Sandbox
 
@@ -107,6 +111,7 @@ users)
 ### Tests
   * tree: add a test for packages that have variables in their transitive dependencies [#5919 @rjbou]
   * tree: add test for `opam tree pkg --with-test --no-switch` [#5919 @rjbou]
+  * Update opam root version test with root version bump [#5904 @rjbou]
 
 ### Engine
 

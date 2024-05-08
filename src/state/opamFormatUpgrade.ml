@@ -1110,7 +1110,18 @@ let sys_config_variables_unix_2_1 = [
   "Host C Runtime Library type of the OCaml compiler present on your system";
 ]
 
-let from_2_0_to_2_1 ~on_the_fly _ conf =
+let from_2_0_to_2_1 ~on_the_fly:_ _ conf =
+  apply_eval_variables conf [] sys_config_variables_unix_2_1, gtc_none
+
+let v2_2_alpha = OpamVersion.of_string "2.2~alpha"
+
+let from_2_1_to_2_2_alpha ~on_the_fly:_ _ conf =
+  apply_eval_variables conf sys_config_variables_unix_2_1
+    OpamEnv.sys_ocaml_eval_variables, gtc_none
+
+let v2_2_beta = OpamVersion.of_string "2.2~beta"
+
+let from_2_2_alpha_to_2_2_beta ~on_the_fly _ conf =
   (* In opam < 2.1 "jobs" was set during initialisation
      This creates problems when upgrading from opam 2.0 as it
      sets the job count for good even if the CPU is replaced.
@@ -1130,14 +1141,7 @@ let from_2_0_to_2_1 ~on_the_fly _ conf =
    | Some prev_jobs when prev_jobs = max 1 (OpamSysPoll.cores () - 1) -> ()
    | Some prev_jobs -> info_jobs_changed ~prev_jobs
    | None -> info_jobs_changed ~prev_jobs:1);
-  let conf = apply_eval_variables conf [] sys_config_variables_unix_2_1 in
   OpamFile.Config.with_jobs_opt None conf, gtc_none
-
-let v2_2_alpha = OpamVersion.of_string "2.2~alpha"
-
-let from_2_1_to_2_2_alpha ~on_the_fly:_ _ conf =
-  apply_eval_variables conf sys_config_variables_unix_2_1
-    OpamEnv.sys_ocaml_eval_variables, gtc_none
 
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
@@ -1234,6 +1238,7 @@ let as_necessary ?reinit requested_lock global_lock root config =
        v2_1,        from_2_0_to_2_1;
      ]) @ [
       v2_2_alpha,  from_2_1_to_2_2_alpha;
+      v2_2_beta,   from_2_2_alpha_to_2_2_beta;
     ]
     |> List.filter (fun (v,_) ->
         OpamVersion.compare root_version v < 0)

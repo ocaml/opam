@@ -1062,6 +1062,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1151,6 +1153,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1224,6 +1228,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1364,6 +1370,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1422,6 +1430,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1513,6 +1523,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1588,6 +1600,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1729,6 +1743,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Perform the update and continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 
 <><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -1822,6 +1838,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -1892,6 +1910,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -1964,6 +1984,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2065,6 +2087,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
@@ -2148,7 +2172,7 @@ Done.
 ### # ro global state, rw repo state
 ### opam repo add root-config ./root-config
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         On-the-fly config upgrade, from 2.1 to 2.2~alpha
+FMT_UPG                         On-the-fly config upgrade, from 2.1 to 2.2~beta
 FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
@@ -2165,6 +2189,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2234,6 +2260,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2305,6 +2333,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2376,6 +2406,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2416,6 +2448,8 @@ This version of opam requires an update to the layout of ${BASEDIR}/OPAM from ve
 You may want to back it up before going further.
 
 Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
 Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
@@ -2457,6 +2491,364 @@ i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### rm -rf _opam
 ### :V:6:a: From 2.2~alpha root, global
+### ocaml generate.ml 2.2~alpha
+### # ro global state
+### opam option jobs
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to 2.2~beta
+FMT_UPG                         Format upgrade done
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to 2.2~beta
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+RSTATE                          loaded opam files from repo default in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name               # Installed # Synopsis
+i-am-another-package 2           One-line description
+i-am-package         2           One-line description
+i-am-sys-compiler    1           One-line description
+### # ro global state, ro repo state, rw switch state
+### opam install i-am-another-package --switch sw-comp
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to 2.2~beta
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+The following actions will be performed:
+=== install 1 package
+  - install i-am-another-package 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-another-package.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2 }
+Done.
+### # ro global state, rw repo state
+### opam repo add root-config ./root-config
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to 2.2~beta
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+[root-config] Initialised
+[NOTE] Repository root-config has been added to the selections of switch sw-sys-comp only.
+       Run `opam repository add root-config --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### # rw global state
+### opam option jobs=4
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.2~alpha to 2.2~beta
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~alpha to version 2.2~beta, which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
+Format upgrade done.
+Set to '4' the field jobs in global configuration
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["i-am-sys-compiler"]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+jobs: 4
+opam-root-version: current
+opam-version: "2.0"
+repositories: "default"
+swh-fallback: false
+switch: "sw-sys-comp"
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: ["default" {"file://${BASEDIR}/default"} "root-config" {"file://${BASEDIR}/root-config"}]
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-config
+invariant: ["i-am-compiler"]
+opam-version: "2.0"
+synopsis: "switch with compiler"
+### opam-cat $OPAMROOT/sw-comp/.opam-switch/switch-state
+compiler: ["i-am-compiler.2"]
+installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+opam-version: "2.0"
+roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
+### :V:6:b: From 2.2~alpha root, local
+### ocaml generate.ml 2.2~alpha local
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+RSTATE                          loaded opam files from repo default in 0.000s
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name            # Installed # Synopsis
+i-am-sys-compiler 2           One-line description
+### # ro global state, ro repo state, rw switch state
+### opam install i-am-package
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to 2.2~beta
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+The following actions will be performed:
+=== install 1 package
+  - install i-am-package 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+Done.
+### # rw global state
+### opam option jobs=4
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.2~alpha to 2.2~beta
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~alpha to version 2.2~beta, which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
+Format upgrade done.
+Set to '4' the field jobs in global configuration
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["i-am-sys-compiler"]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+jobs: 4
+opam-root-version: current
+opam-version: "2.0"
+repositories: "default"
+swh-fallback: false
+switch: "sw-sys-comp"
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: "default" {"file://${BASEDIR}/default"}
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler" | "i-am-compiler"]
+opam-root: "${BASEDIR}/OPAM"
+opam-version: "2.0"
+synopsis: "local switch"
+### opam-cat _opam/.opam-switch/switch-state
+compiler: ["i-am-sys-compiler.2"]
+installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
+### :V:6:c: From 2.2~alpha root, local unknown from config
+### ocaml generate.ml 2.2~alpha local
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+RSTATE                          loaded opam files from repo default in 0.000s
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name            # Installed # Synopsis
+i-am-sys-compiler 2           One-line description
+### # ro global state, ro repo state, rw switch state
+### opam install i-am-package | "${OPAMROOTVERSION}($|,)" -> "current"
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+The following actions will be performed:
+=== install 1 package
+  - install i-am-package 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+Done.
+### # rw global state
+### opam option jobs=4
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.2~alpha to 2.2~beta
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~alpha to version 2.2~beta, which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
+Format upgrade done.
+Set to '4' the field jobs in global configuration
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["i-am-sys-compiler"]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
+jobs: 4
+opam-root-version: current
+opam-version: "2.0"
+repositories: "default"
+swh-fallback: false
+switch: "sw-sys-comp"
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: "default" {"file://${BASEDIR}/default"}
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler" | "i-am-compiler"]
+opam-root: "${BASEDIR}/OPAM"
+opam-version: "2.0"
+synopsis: "local switch"
+### opam-cat _opam/.opam-switch/switch-state
+compiler: ["i-am-sys-compiler.2"]
+installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
+### :V:6:d: Upgraded root and local 2.2~alpha switch not recorded
+### ocaml generate.ml 2.2~alpha orphaned 2.2~alpha
+### # ro global state, ro repo state, ro switch state
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to 2.2~beta
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+RSTATE                          loaded opam files from repo default in 0.000s
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name            # Installed # Synopsis
+i-am-sys-compiler 2           One-line description
+### # ro global state, ro repo state, rw switch state
+### opam install i-am-package
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to 2.2~beta
+FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           Detected changed packages (marked for reinstall): {}
+The following actions will be performed:
+=== install 1 package
+  - install i-am-package 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-package.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+Done.
+### # rw global state
+### opam option jobs=4
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.2~alpha to 2.2~beta
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~alpha to version 2.2~beta, which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [y/n] y
+[NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
+           opam option jobs=1 --global
+Format upgrade done.
+Set to '4' the field jobs in global configuration
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["i-am-sys-compiler"]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 1
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+jobs: 4
+opam-root-version: current
+opam-version: "2.0"
+repositories: "default"
+swh-fallback: false
+switch: "sw-sys-comp"
+### opam-cat $OPAMROOT/repo/repos-config
+opam-version: "2.0"
+repositories: "default" {"file://${BASEDIR}/default"}
+### opam-cat _opam/.opam-switch/switch-config
+invariant: ["i-am-sys-compiler" | "i-am-compiler"]
+opam-root: "${BASEDIR}/OPAM"
+opam-version: "2.0"
+synopsis: "local switch"
+### opam-cat _opam/.opam-switch/switch-state
+compiler: ["i-am-sys-compiler.2"]
+installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+opam-version: "2.0"
+roots: ["i-am-package.2" "i-am-sys-compiler.2"]
+### :V:6:e: reinit from 2.2~beta
+### ocaml generate.ml 2.2~beta
+### opam init --reinit --bypass-checks --no-setup | grep -v Cygwin
+No configuration file found, using built-in defaults.
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+RSTATE                          loaded opam files from repo default in 0.000s
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/default
+### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
+default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
+default-invariant: ["i-am-sys-compiler"]
+depext: true
+depext-cannot-install: false
+depext-run-installs: true
+download-jobs: 3
+eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+opam-root-version: current
+opam-version: "2.0"
+repositories: "default"
+swh-fallback: false
+switch: "sw-sys-comp"
+wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
+### opam switch --short
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+${BASEDIR}
+default
+sw-comp
+sw-sys-comp
+this-internal-error
+### opam list
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+# Packages matching: installed
+# Name            # Installed # Synopsis
+i-am-package      2           One-line description
+i-am-sys-compiler 2           One-line description
+### rm -rf _opam
+### :V:7:a: From 2.2~beta root, global
 ### ocaml generate.ml $OPAMROOTVERSION
 ### # ro global state
 ### opam option jobs
@@ -2530,7 +2922,7 @@ compiler: ["i-am-compiler.2"]
 installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 opam-version: "2.0"
 roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
-### :V:6:b: From 2.2~alpha root, local
+### :V:7:b: From 2.2~beta root, local
 ### ocaml generate.ml $OPAMROOTVERSION local
 ### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
@@ -2591,7 +2983,7 @@ compiler: ["i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
-### :V:6:c: From 2.2~alpha root, local unknown from config
+### :V:7:c: From 2.2~beta root, local unknown from config
 ### ocaml generate.ml $OPAMROOTVERSION local
 ### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
@@ -2651,8 +3043,8 @@ compiler: ["i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
-### :V:6:d: Upgraded root and local 2.2~alpha switch not recorded
-### ocaml generate.ml $OPAMROOTVERSION orphaned 2.2~alpha
+### :V:7:d: Upgraded root and local 2.2~beta switch not recorded
+### ocaml generate.ml $OPAMROOTVERSION orphaned 2.2~beta
 ### # ro global state, ro repo state, ro switch state
 ### opam list
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
@@ -2712,8 +3104,8 @@ compiler: ["i-am-sys-compiler.2"]
 installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
-### :V:6:e: reinit from 2.2~alpha
-### ocaml generate.ml 2.2~alpha
+### :V:7:e: reinit from 2.2~beta
+### ocaml generate.ml 2.2~beta
 ### opam init --reinit --bypass-checks --no-setup | grep -v Cygwin
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
