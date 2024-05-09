@@ -48,7 +48,6 @@ module E = struct
   let withdevsetup = value (function WITHDEVSETUP b -> b | _ -> None)
   let withdoc = value (function WITHDOC b -> b | _ -> None)
   let withtest = value (function WITHTEST b -> b | _ -> None)
-
 end
 
 type t = {
@@ -194,7 +193,6 @@ let initk k =
     ?no_env_notice:(E.noenvnotice ())
     ?locked:(E.locked () >>| function "" -> None | s -> Some s)
     ?no_depexts:(E.nodepexts ())
-
 let init ?noop:_ = initk (fun () -> ())
 
 let opamroot ?root_dir () =
