@@ -118,6 +118,7 @@ users)
   * tree: add a test for packages that have variables in their transitive dependencies [#5919 @rjbou]
   * tree: add test for `opam tree pkg --with-test --no-switch` [#5919 @rjbou]
   * Update opam root version test with root version bump [#5904 @rjbou]
+  * env tests: use `sort` to increase stability of the `opam env` output [#5935 @dra27 @rjbou]
 
 ### Engine
   * Add `sort` command [#5935 @dra27]
