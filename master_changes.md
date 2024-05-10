@@ -41,6 +41,7 @@ users)
 ## Show
 
 ## Var/Option
+  * Fix the value of the 'arch' variable when the current OS is 32bit on a 64bit machine [#5950 @kit-ty-kate - fix #5949]
 
 ## Update / Upgrade
 
@@ -133,3 +134,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * Add `OpamStd.Sys.getconf` [#5950 @kit-ty-kate]
