@@ -47,9 +47,23 @@ let poll_arch () =
       end
     | _ -> None
   in
-  match raw with
-  | None | Some "" -> None
-  | Some a -> Some (normalise_arch a)
+  let normalised =
+    match raw with
+    | None | Some "" -> None
+    | Some a -> Some (normalise_arch a)
+  in
+  match Sys.os_type with
+  | "Unix" | "Cygwin" ->
+    (match normalised with
+     | Some ("x86_64" | "arm64" | "ppc64" as arch) ->
+       (match OpamStd.Sys.getconf "LONG_BIT", arch with
+        | Some "32", "x86_64" -> Some "x86_32"
+        | Some "32", "arm64" -> Some "arm32"
+        | Some "32", "ppc64" -> Some "ppc32"
+        | _ -> normalised
+        | exception (Unix.Unix_error _ | Sys_error _ | Not_found) -> normalised)
+     | _ -> normalised)
+  | _ -> normalised
 let arch = Lazy.from_fun poll_arch
 
 let normalise_os raw =
