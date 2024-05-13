@@ -317,13 +317,20 @@ module Cygwin = struct
          "--no-shortcuts";
          "--no-startmenu";
          "--no-write-registry";
-         "--quiet-mode";
+         "--no-version-check";
+         "--quiet-mode"; "noinput";
        ] @
          match packages with
          | [] -> []
          | spkgs ->
            [ "--packages";
              OpamStd.List.concat_map "," OpamSysPkg.to_string spkgs ]
+       in
+       let args =
+         if Unix.has_symlink () then
+           "--symlink-type" :: "native" :: args
+         else
+           args
        in
        OpamSystem.make_command
          (OpamFilename.to_string local_cygwin_setupexe)
@@ -966,7 +973,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        stored in `sys-pkg-manager-cmd` field *)
     [`AsUser (OpamFilename.to_string (Cygwin.cygsetup ())),
      [ "--root"; (OpamFilename.Dir.to_string (Cygwin.cygroot config));
-       "--quiet-mode";
+       "--quiet-mode"; "noinput";
        "--no-shortcuts";
        "--no-startmenu";
        "--no-desktop";
@@ -974,12 +981,20 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        "--packages";
        String.concat "," packages;
      ] @ (if Cygwin.is_internal config then
-            [ "--upgrade-also";
-              "--only-site";
-              "--site"; Cygwin.mirror;
-              "--local-package-dir";
-              OpamFilename.Dir.to_string (Cygwin.internal_cygcache ());
-            ] else [])
+            let common =
+              [ "--upgrade-also";
+                "--only-site";
+                "--no-version-check";
+                "--site"; Cygwin.mirror;
+                "--local-package-dir";
+                OpamFilename.Dir.to_string (Cygwin.internal_cygcache ());
+              ]
+            in
+            if Unix.has_symlink () then
+              "--symlink-type" :: "native" :: common
+            else
+              common
+          else [])
     ],
     None
   | Debian ->
