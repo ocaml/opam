@@ -119,9 +119,12 @@ jobs:
       OPAM_TEST: 1
     steps:
     - uses: actions/checkout@v2
-    - name: install deps
+    - name: install deps - Linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: sudo apt install bubblewrap
+    - name: install deps - macOS
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: brew install gpatch
     - name: ocaml ${{ matrix.ocamlv }} cache - test
       id: ocaml-cache-test
       uses: actions/cache@v2
@@ -204,9 +207,12 @@ jobs:
       OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
     steps:
     - uses: actions/checkout@v2
-    - name: install deps
+    - name: install deps - Linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: sudo apt install bubblewrap
+    - name: install deps - macOS
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: brew install gpatch
     - name: ocaml ${{ matrix.ocamlv }} cache - test
       id: ocaml-cache-test
       uses: actions/cache@v2
@@ -248,9 +254,12 @@ jobs:
         ocamlv: [ 4.12.0 ]
       fail-fast: false
     steps:
-    - name: install deps
+    - name: install deps - Linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: sudo apt install bubblewrap
+    - name: install deps - macOS
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: brew install gpatch
     - uses: actions/checkout@v2
     - name: opam 1.2 root cache
       uses: actions/cache@v2
