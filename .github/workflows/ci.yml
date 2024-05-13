@@ -203,7 +203,6 @@ jobs:
       fail-fast: false
     env:
       SOLVER: ${{ matrix.solver }}
-      OPAM_REPO_SHA: 3d6779beedc761067596bf5c3f5c25ab57a7e3e7
       OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
     steps:
     - uses: actions/checkout@v2
