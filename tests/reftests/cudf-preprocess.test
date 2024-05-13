@@ -1,6 +1,7 @@
 ad4dd344
 ### : Github issue #4624
 ### OPAMFAKE=1
+### OPAMVAR_arch=x86_64
 ### opam switch create 4.11.0
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
