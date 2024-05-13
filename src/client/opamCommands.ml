@@ -319,6 +319,16 @@ let init cli =
     else
       Term.const `none
   in
+  let cygwin_extra_packages =
+    if Sys.win32 then
+      mk_opt ~cli (cli_from ~experimental:true cli2_2)
+        ["cygwin-extra-packages"] "CYGWIN_PACKAGES"
+        "Specify additional packages to install \
+         with $(b,--cygwin-internal-install)"
+        Arg.(some (list string)) None
+    else
+      Term.const None
+  in
   let cygwin_location =
     if Sys.win32 then
       mk_opt ~cli (cli_from ~experimental:true cli2_2)
@@ -351,7 +361,8 @@ let init cli =
       interactive update_config completion env_hook no_sandboxing shell
       dot_profile_o compiler no_compiler config_file no_config_file reinit
       show_opamrc bypass_checks
-      cygwin_internal cygwin_location git_location no_git_location
+      cygwin_internal cygwin_location cygwin_extra_packages
+      git_location no_git_location
       () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
@@ -408,17 +419,28 @@ let init cli =
         OpamStd.Sys.guess_dot_profile shell >>| OpamFilename.of_string)
     in
     let cygwin_setup =
-      match cygwin_internal, cygwin_location with
-      | `internal, Some _ ->
+      let bad_arg arg1 arg2 =
         OpamConsole.error_and_exit `Bad_arguments
-          "Options --cygwin-internal-install and \
-           --cygwin-location are incompatible";
-      | `no, Some _ ->
-        OpamConsole.note "Ignoring argument --cygwin-location";
-        Some `no
-      | `none, None -> None
-      | (`default_location | `none), Some dir -> Some (`location dir)
-      | (`internal | `default_location | `no) as setup, None -> Some setup
+          "Options --%s and --%s are incompatible"
+          arg1 arg2
+      in
+      match cygwin_internal, cygwin_location, cygwin_extra_packages with
+      | `internal, Some _, _ ->
+        bad_arg "cygwin-internal-install" "cygwin-location"
+      | `default_location, _, Some _ ->
+        bad_arg "cygwin-local-install" "cygwin-extra-packages"
+      | `no, Some _, _ ->
+        bad_arg "no-cygwin-setup" "cygwin-location"
+      | `no,  _, Some _ ->
+        bad_arg "no-cygwin-setup" "cygwin-extra-packages"
+      | `none, Some _, Some _ ->
+        bad_arg "cygwin-location" "cygwin-extra-packages"
+      | (`internal | `none), None, pkgs ->
+        Some (`internal
+                (OpamStd.Option.default [] pkgs
+                 |> List.map OpamSysPkg.of_string))
+      | (`default_location | `none), Some dir, None -> Some (`location dir)
+      | (`default_location | `no) as setup, None, None -> Some setup
     in
     let git_location =
       match git_location, no_git_location with
@@ -527,7 +549,8 @@ let init cli =
           $setup_completion $env_hook $no_sandboxing $shell_opt cli
           cli_original $dot_profile_flag cli cli_original $compiler
           $no_compiler $config_file $no_config_file $reinit $show_default_opamrc
-          $bypass_checks $cygwin_internal $cygwin_location $git_location $no_git_location)
+          $bypass_checks $cygwin_internal $cygwin_location $cygwin_extra_packages
+          $git_location $no_git_location)
 
 (* LIST *)
 let list_doc = "Display the list of available packages."

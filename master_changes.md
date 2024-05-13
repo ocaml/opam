@@ -20,6 +20,7 @@ users)
 ## Plugins
 
 ## Init
+  * ◈ New option `opam init --cygwin-extra-packages=CYGWIN_PKGS --cygwin-internal-install`, to specify additional packages for internal Cygwin [#5930 @moyodiallo - fix #5834]
 
 ## Config report
 
@@ -124,6 +125,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamClient.init` and `OpamClient.reinit`: now can have additional cygwin packages to install [#5930 @moyodiallo]
 
 ## opam-repository
 

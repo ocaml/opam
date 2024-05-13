@@ -28,7 +28,7 @@ val init:
   ?env_hook:bool ->
   ?completion:bool ->
   ?check_sandbox:bool ->
-  ?cygwin_setup: [ `internal | `default_location | `location of dirname | `no ] ->
+  ?cygwin_setup: [ `internal of OpamSysPkg.t list | `default_location | `location of dirname | `no ] ->
   ?git_location:(dirname, unit) either ->
   shell ->
   rw global_state * unlocked repos_state * atom list
@@ -46,7 +46,7 @@ val reinit:
   ?init_config:OpamFile.InitConfig.t -> interactive:bool -> ?dot_profile:filename ->
   ?update_config:bool -> ?env_hook:bool -> ?completion:bool -> ?inplace:bool ->
   ?check_sandbox:bool -> ?bypass_checks:bool ->
-  ?cygwin_setup: [ `internal | `default_location | `location of dirname | `no ] ->
+  ?cygwin_setup: [ `internal of OpamSysPkg.t list | `default_location | `location of dirname | `no ] ->
   ?git_location:(dirname, unit) either ->
   OpamFile.Config.t -> shell -> unit
 
