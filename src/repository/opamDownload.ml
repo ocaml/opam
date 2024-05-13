@@ -188,8 +188,18 @@ let download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst =
       ()
 
 let download ?quiet ?validate ~overwrite ?compress ?checksum url dstdir =
+  let base =
+    let base = OpamUrl.basename url in
+    if Sys.win32 then
+      let f c =
+        if OpamStd.Sys.is_valid_basename_char c then c else '_'
+      in
+      String.map f base
+    else
+      base
+  in
   let dst =
-    OpamFilename.(create dstdir (Base.of_string (OpamUrl.basename url)))
+    OpamFilename.(create dstdir (Base.of_string base))
   in
   download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst @@|
   fun () -> dst

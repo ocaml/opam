@@ -1329,6 +1329,15 @@ module OpamSys = struct
       if !called then invalid_arg "Just what do you think you're doing, Dave?";
       called := true;
       console := printer
+
+  let is_valid_basename_char =
+    if Sys.win32 then
+      function
+      | '\000'..'\031'
+      | '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*' -> false
+      | _ -> true
+    else
+      fun c -> c <> '\000' && c <> '/'
 end
 
 

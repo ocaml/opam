@@ -55,6 +55,7 @@ users)
 ## Lint
 
 ## Repository
+  * Fix download URLs containing invalid characters on Windows (e.g. the ? character in `?full_index=1`) [#5921 @dra27]
 
 ## Lock
 
