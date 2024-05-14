@@ -1,11 +1,76 @@
-009e00fa
+N0REP0
 ### OPAMYES=1
-### cp -R ${OPAMROOT}/repo/default .
 ### opam option opam-root-version --global | '"' -> '' >$ OPAMROOTVERSION
+### : Init with invariant :
+### :---:
+### <pkg:ocaml.4.02.3>
+opam-version: "2.0"
+depends: [ "ocaml-system" {= "4.02.3"} | "ocaml-base-compiler" {= "4.02.3"} ]
+flags: conf
+### <pkg:ocaml-system.4.02.3>
+opam-version: "2.0"
+depends: [ "ocaml" {post} ]
+available: sys-ocaml-version = "4.02.3"
+flags: compiler
+conflict-class: "ocaml-core-compiler"
+### <pkg:ocaml-base-compiler.4.02.3>
+opam-version: "2.0"
+depends: [ "ocaml" {= "4.02.3" & post} ]
+flags: compiler
+conflict-class: "ocaml-core-compiler"
+### :---:
+### <pkg:ocaml.4.05.0>
+opam-version: "2.0"
+depends: [ "ocaml-system" {= "4.05.0"} | "ocaml-base-compiler" {= "4.05.0"} ]
+flags: conf
+### <pkg:ocaml-system.4.05.0>
+opam-version: "2.0"
+depends: [ "ocaml" {post} ]
+available: sys-ocaml-version = "4.05.0"
+flags: compiler
+conflict-class: "ocaml-core-compiler"
+### <pkg:ocaml-base-compiler.4.05.0>
+opam-version: "2.0"
+depends: [ "ocaml" {= "4.05.0" & post} ]
+flags: compiler
+conflict-class: "ocaml-core-compiler"
+### :---:
+### <pkg:ocaml.4.07.0>
+opam-version: "2.0"
+depends: [ "ocaml-system" {= "4.07.0"} | "ocaml-base-compiler" {= "4.07.0"} ]
+flags: conf
+### <pkg:ocaml-system.4.07.0>
+opam-version: "2.0"
+depends: [ "ocaml" {post} ]
+available: sys-ocaml-version = "4.07.0"
+flags: compiler
+conflict-class: "ocaml-core-compiler"
+### <pkg:ocaml-base-compiler.4.07.0>
+opam-version: "2.0"
+depends: [ "ocaml" {= "4.07.0" & post} ]
+flags: compiler
+conflict-class: "ocaml-core-compiler"
+### :---:
+### <pkg:ocaml.4.10.0>
+opam-version: "2.0"
+depends: [ "ocaml-system" {= "4.10.0"} | "ocaml-base-compiler" {= "4.10.0"} ]
+flags: conf
+### <pkg:ocaml-system.4.10.0>
+depends: [ "ocaml" {post} ]
+opam-version: "2.0"
+available: sys-ocaml-version = "4.10.0"
+flags: compiler
+conflict-class: "ocaml-core-compiler"
+### <pkg:ocaml-base-compiler.4.10.0>
+opam-version: "2.0"
+depends: [ "ocaml" {= "4.10.0" & post} ]
+flags: compiler
+conflict-class: "ocaml-core-compiler"
+### :---:
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["false"] "no system compiler" ]
-### opam init --no-setup --bypass-checks default default/ --fake --config opamrc | grep -v Cygwin
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc | grep -v Cygwin
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
@@ -17,19 +82,15 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 Switch invariant: ["ocaml" {>= "4.05.0"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Faking installation of base-bigarray.base
-Faking installation of base-threads.base
-Faking installation of base-unix.base
-Faking installation of ocaml-base-compiler.4.10.0
-Faking installation of ocaml-config.1
-Faking installation of ocaml.4.10.0
+-> installed ocaml-base-compiler.4.10.0
+-> installed ocaml.4.10.0
 Done.
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.02.3"] "old system compiler" ]
-### opam init --no-setup --bypass-checks default default/ --fake --config opamrc | grep -v Cygwin
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc | grep -v Cygwin
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
@@ -41,19 +102,15 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 Switch invariant: ["ocaml" {>= "4.05.0"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Faking installation of base-bigarray.base
-Faking installation of base-threads.base
-Faking installation of base-unix.base
-Faking installation of ocaml-base-compiler.4.10.0
-Faking installation of ocaml-config.1
-Faking installation of ocaml.4.10.0
+-> installed ocaml-base-compiler.4.10.0
+-> installed ocaml.4.10.0
 Done.
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.07.0"] "new system compiler" ]
-### opam init --no-setup --bypass-checks default default/ --fake --config opamrc | grep -v Cygwin
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc | grep -v Cygwin
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
@@ -65,40 +122,31 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 Switch invariant: ["ocaml" {>= "4.05.0"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Faking installation of base-bigarray.base
-Faking installation of base-threads.base
-Faking installation of base-unix.base
-Faking installation of ocaml-system.4.07.0
-Faking installation of ocaml-config.1
-Faking installation of ocaml.4.07.0
+-> installed ocaml-system.4.07.0
+-> installed ocaml.4.07.0
 Done.
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
-### opam upgrade --fake
+### opam upgrade
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
 However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
-### opam upgrade ocaml --fake
-The following actions will be faked:
+### opam upgrade ocaml
+The following actions will be performed:
 === remove 1 package
-  - remove    ocaml-system        4.07.0           [conflicts with ocaml-base-compiler]
-=== recompile 1 package
-  - recompile ocaml-config        1                [uses ocaml-base-compiler]
+  - remove  ocaml-system        4.07.0           [conflicts with ocaml-base-compiler]
 === upgrade 1 package
-  - upgrade   ocaml               4.07.0 to 4.10.0
+  - upgrade ocaml               4.07.0 to 4.10.0
 === install 1 package
-  - install   ocaml-base-compiler 4.10.0           [required by ocaml]
+  - install ocaml-base-compiler 4.10.0           [required by ocaml]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Faking installation of ocaml-base-compiler.4.10.0
-Faking installation of ocaml-config.1
-Faking installation of ocaml.4.10.0
+-> removed   ocaml.4.07.0
+-> removed   ocaml-system.4.07.0
+-> installed ocaml-base-compiler.4.10.0
+-> installed ocaml.4.10.0
 Done.
 ### : Init with config file :
-### <REPO/repo>
-opam-version: "2.0"
-### <pkg:comp.1>
-opam-version: "2.0"
 ### :: default setup ::
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup default REPO/ | grep -v Cygwin
@@ -120,13 +168,13 @@ swh-fallback: false
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### :: full configred opamrc ::
+### :: full configured opamrc ::
 ### rm -rf $OPAMROOT
 ### <opamrc>
 opam-version: "2.0"
 repositories: "norepo" {"REPO/"}
-default-compiler: "comp"
-default-invariant: "comp" { = "1"}
+default-compiler: "ocaml"
+default-invariant: "ocaml" { = "4.10.0"}
 jobs: 9
 download-command: "dl-tool"
 download-jobs: 8
@@ -163,8 +211,8 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 [norepo] Initialised
 ### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current' | grep -v sys-pkg-manager-cmd | '\[\[os-distribution "cygwin" "Set by opam init"] ' -> '' | ']]' -> ']'
 archive-mirrors: "file://${BASEDIR}/REPO/cache"
-default-compiler: ["comp"]
-default-invariant: ["comp" {= "1"}]
+default-compiler: ["ocaml"]
+default-invariant: ["ocaml" {= "4.10.0"}]
 depext: true
 depext-cannot-install: false
 depext-run-installs: true
@@ -202,7 +250,7 @@ script test launched STOP i repeat STOP script test launched
 ### <opamrc>
 opam-version: "2.0"
 repositories: "norepo" {"REPO/"}
-default-compiler: "comp"
+default-compiler: "ocaml"
 download-jobs: 8
 archive-mirrors: "REPO/cache"
 eval-variables: [ var-to-eval ["true"] "tautology" ]
@@ -230,7 +278,7 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 [norepo] Initialised
 ### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current' | grep -v sys-pkg-manager-cmd | grep -v global-variables
 archive-mirrors: "file://${BASEDIR}/REPO/cache"
-default-compiler: ["comp"]
+default-compiler: ["ocaml"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
