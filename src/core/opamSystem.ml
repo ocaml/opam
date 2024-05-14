@@ -129,19 +129,15 @@ let win32_unlink fn =
     with _ -> raise e)
 
 let remove_file_t ?(with_log=true) file =
-  if
-    try ignore (Unix.lstat file); true with Unix.Unix_error _ -> false
-  then (
-    try
-      if with_log || log_for_file_management () then
-        log "rm %s" file;
-      if Sys.win32 then
-        win32_unlink file
-      else
-        Unix.unlink file
-    with Unix.Unix_error _ as e ->
-      internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
-  )
+  try
+    if with_log || log_for_file_management () then
+      log "rm %s" file;
+    if Sys.win32 then
+      win32_unlink file
+    else
+      Unix.unlink file
+  with Unix.Unix_error _ as e ->
+    internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
 
 let rec remove_dir_t dir =
   let files = get_files dir in
@@ -152,10 +148,12 @@ let rec remove_dir_t dir =
         remove_dir_t file
       | {Unix.st_kind = Unix.(S_REG | S_LNK | S_CHR | S_BLK | S_FIFO | S_SOCK); _} ->
         remove_file_t ~with_log:false file
+      | exception Unix.(Unix_error (ENOENT, _, _)) when Sys.win32 ->
+        (* This is usually caused by invalid symlinks extracted by a
+           Cygwin/MSYS2 tar. *)
+        remove_file_t ~with_log:false file
     ) files;
   Unix.rmdir dir
-
-let remove_file = remove_file_t ~with_log:true
 
 let remove_dir dir =
   log "rmdir %s" dir;
@@ -163,7 +161,7 @@ let remove_dir dir =
     if Sys.is_directory dir then
       remove_dir_t dir
     else
-      remove_file dir
+      remove_file_t ~with_log:true dir
   end
 
 let temp_files = Hashtbl.create 1024
@@ -711,15 +709,15 @@ let rec link_t ?(with_log=true) src dst =
     else
       copy_file_t src dst
 
-and copy_dir_t ?(with_log=true) src dst =
+and copy_dir_t ?(with_log=true) src dst_dir =
   if with_log || log_for_file_management () then
-    log "copydir %s -> %s" src dst;
+    log "copydir %s -> %s" src dst_dir;
   let files = get_files src in
-  mkdir dst;
+  mkdir dst_dir;
   let with_log = false in
   List.iter (fun file ->
       let src = Filename.concat src file in
-      let dst = Filename.concat dst file in
+      let dst = Filename.concat dst_dir file in
       match Unix.lstat src with
       | {Unix.st_kind = Unix.S_REG; _} ->
         copy_file_t ~with_log src dst
@@ -736,6 +734,10 @@ and copy_dir_t ?(with_log=true) src dst =
         failwith (Printf.sprintf "Copying named pipes (%s) is unsupported" src)
       | {Unix.st_kind = Unix.S_SOCK; _} ->
         failwith (Printf.sprintf "Copying sockets (%s) is unsupported" src)
+      | exception Unix.(Unix_error (ENOENT, _, _)) when Sys.win32 ->
+        (* This is usually caused by invalid symlinks extracted by a
+           Cygwin/MSYS2 tar. *)
+        OpamConsole.warning "Warning: cannot copy %s to %s" src dst_dir
     ) files
 
 let copy_dir = copy_dir_t ~with_log:true
