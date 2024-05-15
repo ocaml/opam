@@ -710,6 +710,26 @@ module OpamString = struct
       |_ -> []
     in List.rev (aux acc0 tokens)
 
+  let split_quoted path sep =
+    let length = String.length path in
+    let rec f acc index current last normal =
+      if (index : int) = length then
+        let current = current ^ String.sub path last (index - last) in
+        List.rev (if current <> "" then current::acc else acc)
+      else
+      let c = path.[index]
+      and next = succ index in
+      if (c : char) = sep && normal || c = '"' then
+        let current = current ^ String.sub path last (index - last) in
+        if c = '"' then
+          f acc next current next (not normal)
+        else
+        let acc = if current = "" then acc else current::acc in
+        f acc next "" next true
+      else
+        f acc next current last normal in
+    f [] 0 "" 0 true
+
   let fold_left f acc s =
     let acc = ref acc in
     for i = 0 to String.length s - 1 do acc := f !acc s.[i] done;
@@ -877,24 +897,8 @@ module OpamSys = struct
   let path_sep = if Sys.win32 then ';' else ':'
 
   let split_path_variable ?(clean=true) =
-    if Sys.win32 then fun path ->
-      let length = String.length path in
-      let rec f acc index current last normal =
-        if index = length then
-          let current = current ^ String.sub path last (index - last) in
-          List.rev (if current <> "" then current::acc else acc)
-        else let c = path.[index]
-          and next = succ index in
-          if c = ';' && normal || c = '"' then
-            let current = current ^ String.sub path last (index - last) in
-            if c = '"' then
-              f acc next current next (not normal)
-            else
-            let acc = if current = "" then acc else current::acc in
-            f acc next "" next true
-          else
-            f acc next current last normal in
-      f [] 0 "" 0 true
+    if Sys.win32 then
+      fun path -> OpamString.split_quoted path ';'
     else fun path ->
       let split = if clean then OpamString.split else OpamString.split_delim in
       split path path_sep

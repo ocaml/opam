@@ -64,6 +64,12 @@ users)
 ## Clean
 
 ## Env
+  * [BUG] Fix reverting of environment variables, principally on Windows [#5935 @dra27 fix #5838]
+  * [BUG] Fix splitting environment variables [#5935 @dra27]
+  * [BUG] When opam creates an empty variable then appends/prepends a value, ensure no additional separator is added [#5935 @dra27 - fix #5925]
+  * [BUG] Fix `x-env-path-rewrite` splitting of values when reverting [#5935 @dra27 - fix #5838]
+  * [BUG] Rework the logic of := and =: so that an empty entry is correctly preserved on multiple updates [#5935 @dra27 - fix #5926]
+  * [BUG] Fix incorrect reverting of `=+` and `=:` [#5935 @dra27 - fix #5926]
 
 ## Opamfile
 
@@ -77,7 +83,6 @@ users)
   * Reset the "jobs" config variable when upgrading from opam 2.1 to 2.2, instead of 2.0 to 2.1 [#5904 @kit-ty-kate - fix #5816]
 
 ## Sandbox
-
 ## VCS
 
 ## Build
@@ -118,8 +123,15 @@ users)
   * tree: add a test for packages that have variables in their transitive dependencies [#5919 @rjbou]
   * tree: add test for `opam tree pkg --with-test --no-switch` [#5919 @rjbou]
   * Update opam root version test with root version bump [#5904 @rjbou]
+  * env tests: use `sort` to increase stability of the `opam env` output [#5935 @dra27 @rjbou]
+  * env.win32: add mixed slashes test [#5935 @dra27]
+  * env.win32: add test for environment revert not working correctly for Unix-like variables on Windows [#5935 @dra27]
+  * env.win32: add regression test for reverting additions to PATH-like variables [#5935 @dra27]
+  * env tests: add regression test for append/prepend operators to empty environment variables [#5925, #5935 @dra27]
+  * env.win32: add regression test for handling the empty entry in PATH-like variables [#5926, #5935 @dra27]
 
 ### Engine
+  * Add `sort` command [#5935 @dra27]
 
 ## Github Actions
 
@@ -140,3 +152,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamStd.String`: add `split_quoted` that preserves quoted separator [#5935 @dra27]
