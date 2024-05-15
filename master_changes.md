@@ -13,13 +13,13 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Init
-  * Check for gpatch instead of patch on NetBSD and DragonFlyBSD [#5893 @kit-ty-kate]
+  *
 
 ## Config report
   *
 
 ## Install
-  * Better recognize depexts on Gentoo, NetBSD, OpenBSD [#5065 @mndrix]
+  *
 
 ## Remove
   *
@@ -39,7 +39,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Repository
-  * Warn if `GNU patch` is not detected during a repository update [#5893 @kit-ty-kate]
+  *
 
 ## Lock
   *
@@ -58,9 +58,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Build
-  * Upgrade the vendored dune to 3.14.0 [#5869 @kit-ty-kate]
-  * Vendor mccs.1.1+17 [#5769 @kit-ty-kate]
-  * Require mccs >= 1.1+17 [#5769 @kit-ty-kate]
+  *
 
 ## Infrastructure
   *
@@ -77,14 +75,12 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Solver
-  * Fix debug logs showing up regardless of verbosity on macOS 12.7.1 / 13.6.3 / 14.2 and FreeBSD [#5769 @kit-ty-kate]
+  *
 
 ## Client
 
 ## Internal
-  * Warn if `GNU patch` is not detected when a patch is applied [#5893 @kit-ty-kate]
-  * Use `gpatch` by default instead of `patch` on NetBSD and DragonFlyBSD [#5893 @kit-ty-kate]
-  * Use `gpatch` if it exists and is detected as GNU patch when `patch` is not `GNU patch` [#5893 @kit-ty-kate]
+  *
 
 ## Test
   *
@@ -114,4 +110,3 @@ New option/command/subcommand are prefixed with ◈.
 ## opam-format
 
 ## opam-core
-  * `OpamSystem.patch` now displays a warning when GNU patch is not detected and looks for both patch and gpatch as a backup option depending on the OS [#5893 @kit-ty-kate]
