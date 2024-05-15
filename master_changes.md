@@ -53,6 +53,7 @@ users)
 ## Exec
 
 ## Source
+  * Fix extraction of tarballs on Windows which contain symlinks both when those symlinks can't be created or if they point to files which don't exist [#5953 @dra27]
 
 ## Lint
 
@@ -153,3 +154,4 @@ users)
 
 ## opam-core
   * `OpamStd.String`: add `split_quoted` that preserves quoted separator [#5935 @dra27]
+  * `OpamSystem.copy_dir` and `OpamSystem.mv` may display a warning on Windows if an invalid symlink (e.g. an LXSS Junction) is found [#5953 @dra27]
