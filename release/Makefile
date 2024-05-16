@@ -110,7 +110,8 @@ host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	    MAKE=$(MAKE) \
 	    $(EXPORTS_$(HOST_OS)); \
 	  cd build/opam-full-$(VERSION) && \
-	  { ./configure --with-vendored-deps || { ./configure && $(MAKE) lib-ext; }; } && \
+	  { { ./configure --with-mccs >&2 && $(MAKE) lib-ext >&2 ; } || \
+	    ./configure --with-vendored-deps >&2 ; } && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
 	  $(MAKE) opam; \
 	)
