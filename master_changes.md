@@ -13,6 +13,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Init
+  *
 
 ## Config report
   *
@@ -37,6 +38,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Lint
   *
 
+## Repository
+  *
+
 ## Lock
   *
 
@@ -54,6 +58,7 @@ New option/command/subcommand are prefixed with ◈.
   *
 
 ## Build
+  *
 
 ## Infrastructure
   *

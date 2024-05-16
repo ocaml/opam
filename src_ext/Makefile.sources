@@ -38,8 +38,8 @@ MD5_dose3 = bc99cbcea8fca29dca3ebbee54be45e1
 
 $(call PKG_SAME,dose3)
 
-URL_mccs = https://github.com/AltGr/ocaml-mccs/archive/1.1+13.tar.gz
-MD5_mccs = 13504d3b5dcbf0bdc6d95a62de20af4a
+URL_mccs = https://github.com/ocaml-opam/ocaml-mccs/archive/refs/tags/1.1+17.tar.gz
+MD5_mccs = 844d99bc531e0713238fe4b6b8511ed1
 
 $(call PKG_SAME,mccs)
 
@@ -64,9 +64,8 @@ MD5_result = 1b82dec78849680b49ae9a8a365b831b
 $(call PKG_SAME,result)
 
 # NB If minimum OCaml version for Dune changes, update DUNE_SECONDARY in configure.ac
-URL_dune-local = https://github.com/ocaml/dune/releases/download/3.5.0/dune-3.5.0.tbz
-MD5_dune-local = 46d1bde258ef60f60f053e88fe9d937b
-
+URL_dune-local = https://github.com/ocaml/dune/releases/download/3.14.0/dune-3.14.0.tbz
+MD5_dune-local = bff778fff4996b890e5af3da7ecf5baa
 $(call PKG_SAME,dune-local)
 
 URL_PKG_findlib = http://download.camlcity.org/download/findlib-1.9.1.tar.gz

@@ -12,7 +12,7 @@ DUNE_PROMOTE_ARG =
 DUNE_PROMOTE_ARG += --promote-install-files
 
 ifeq ($(DUNE),)
-  DUNE_EXE = src_ext/dune-local/dune.exe
+  DUNE_EXE = src_ext/dune-local/_boot/dune.exe
   ifeq ($(shell command -v cygpath 2>/dev/null),)
     DUNE := $(DUNE_EXE)
   else
@@ -22,7 +22,7 @@ else
   DUNE_EXE=
   # NB make does not export the PATH update in Makefile.config to $(shell ...)
   ifeq ($(shell PATH='$(PATH)' $(DUNE) build --root . --help=plain 2>/dev/null \
-                  | grep -F -- '$(DUNE_PROMOTE_ARG) '),)
+                  | grep -F -- '$(DUNE_PROMOTE_ARG)'),)
     DUNE_PROMOTE_ARG =
   endif
 endif
@@ -44,11 +44,11 @@ else
   DUNE_PROFILE_ARG = --profile=$(DUNE_PROFILE)
 endif
 
-src_ext/dune-local/dune.exe: src_ext/dune-local.stamp $(DUNE_SECONDARY)
+src_ext/dune-local/_boot/dune.exe: src_ext/dune-local.stamp $(DUNE_SECONDARY)
 ifeq ($(DUNE_SECONDARY),)
-	cd src_ext/dune-local && ocaml bootstrap.ml
+	cd src_ext/dune-local && ocaml boot/bootstrap.ml
 else
-	cd src_ext/dune-local && ( unset OCAMLLIB ; unset CAML_LD_LIBRARY_PATH ; PATH="$(dir $(realpath $(DUNE_SECONDARY))):$$PATH" ../../$(DUNE_SECONDARY) bootstrap.ml )
+	cd src_ext/dune-local && ( unset OCAMLLIB ; unset CAML_LD_LIBRARY_PATH ; PATH="$(dir $(realpath $(DUNE_SECONDARY))):$$PATH" ../../$(DUNE_SECONDARY) boot/bootstrap.ml )
 endif
 
 src_ext/dune-local.stamp:
