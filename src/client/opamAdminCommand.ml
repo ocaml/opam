@@ -422,6 +422,121 @@ let update_extrafiles_command cli =
     Term.(const cmd $ global_options cli
           $ hash_type_arg $ packages)
 
+let migrate_extrafiles_command_doc =
+  "Move extra-files to extra-source."
+let migrate_extrafiles_command cli =
+  let command = "migrate-extrafiles" in
+  let doc = migrate_extrafiles_command_doc in
+  let man = [
+    `S Manpage.s_description;
+    `P "This command scans through package definitions, and migrates all \
+        $(i,extra-files) fields to $(i,extra-source) as requested."
+  ] in
+  let hash_type_arg =
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["hash"]
+      "HASH_ALGO" "The hash, or hashes to be added"
+      OpamArg.hash_kinds `SHA256
+  in
+  let packages =
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["p";"packages"]
+      "PACKAGES" "Only add extra files for the given packages"
+      Arg.(list OpamArg.package) []
+  in
+  let local_dir_arg =
+    let doc =
+      Arg.info ~docv:"DIR"
+        ~doc:"Name of the local directory where to put the extra-files. \
+              They will be put into \
+              DIR/patches/<pkgname>/<pkgname.version>/filenameYY" []
+    in
+    Arg.(required & pos 0 (some OpamArg.dirname) None & doc)
+  and url_prefix_arg =
+    let doc =
+      Arg.info ~docv:"URL"
+        ~doc:"Prefix of the URL to emit into extra-sources." []
+    in
+    Arg.(required & pos 1 (some OpamArg.url) None & doc)
+  in
+  let cmd global_options kind packages local_dir url_prefix () =
+    OpamArg.apply_global_options cli global_options;
+    let repo_root = checked_repo_root () in
+    let pkg_prefixes = packages_with_prefixes repo_root packages in
+    let compute ?kind file =
+      OpamHash.compute ?kind (OpamFilename.to_string file)
+    in
+    let has_error =
+      OpamPackage.Map.fold (fun nv prefix has_error ->
+          let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+          let opam = OpamFile.OPAM.read opam_file in
+          let has_error =
+            let urlfile = OpamRepositoryPath.url repo_root prefix nv in
+            if OpamFile.exists urlfile then
+              (OpamConsole.warning
+                 "Not updating external URL file at %s, \
+                  consider upgrading your repository with 'opam admin upgrade'"
+                 (OpamFile.to_string urlfile);
+               true)
+            else has_error
+          in
+          let files_dir = OpamRepositoryPath.files repo_root prefix nv in
+          if OpamFilename.exists_dir files_dir then
+            (let files =
+               OpamFilename.rec_files files_dir
+               |> List.map (fun file ->
+                   file,
+                   OpamFilename.Base.of_string
+                     (OpamFilename.remove_prefix files_dir file))
+             in
+             match files with
+             | [] -> has_error
+             | _ ->
+               let hashes =
+                 List.map (fun (file, base) ->
+                     let xhash = compute ~kind file in
+                     file, base, xhash)
+                   files
+               in
+               let patch_prefix = "patches" in
+               let extra_sources =
+                 List.map (fun (src, base, hash) ->
+                     let name = OpamPackage.name_to_string nv in
+                     let name_version = OpamPackage.to_string nv in
+                     let dst_dir = OpamFilename.Op.(
+                         local_dir / patch_prefix / name / name_version
+                       ) in
+                     let dst = OpamFilename.create dst_dir base in
+                     (* copy file to dst, remove from files *)
+                     OpamFilename.mkdir dst_dir;
+                     OpamFilename.copy ~src ~dst;
+                     let url =
+                       let file = OpamFilename.Base.to_string base in
+                       OpamFile.URL.create ~checksum:[hash]
+                         OpamUrl.Op.(url_prefix / patch_prefix
+                                     / name / name_version/ file)
+                     in
+                     base, url)
+                   hashes
+               in
+               OpamFilename.cleandir files_dir;
+               OpamFilename.rmdir_cleanup files_dir;
+               let my_extra_sources = OpamFile.OPAM.extra_sources opam in
+               let opam1 =
+                 OpamFile.OPAM.with_extra_sources
+                   (my_extra_sources @ extra_sources) opam
+               in
+               let opam1 = OpamFile.OPAM.with_extra_files_opt None opam1 in
+               OpamFile.OPAM.write_with_preserved_format opam_file opam1;
+               has_error)
+          else
+            has_error)
+        pkg_prefixes false
+    in
+    if has_error then OpamStd.Sys.exit_because `Sync_error
+    else OpamStd.Sys.exit_because `Success
+  in
+  OpamArg.mk_command ~cli OpamArg.(cli_from cli2_4) command ~doc ~man
+    Term.(const cmd $ global_options cli $ hash_type_arg $ packages
+          $ local_dir_arg $ url_prefix_arg)
 
 let add_hashes_command_doc =
   "Add archive hashes to an opam repository."
@@ -1287,6 +1402,7 @@ let admin_subcommands cli =
     add_constraint_command cli;
     add_hashes_command cli;
     update_extrafiles_command cli;
+    migrate_extrafiles_command cli;
     help;
   ]
 
