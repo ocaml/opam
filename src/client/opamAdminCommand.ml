@@ -457,7 +457,7 @@ let migrate_extrafiles_command cli =
   and url_prefix_arg =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["url-prefix"] "URL"
       "Prefix of the URL to emit into extra-sources."
-      Arg.string "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches"
+      Arg.string "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/"
   in
   let cmd global_options hash_type packages local_dir url_prefix () =
     let kind = OpamStd.Option.default `SHA256 hash_type in
