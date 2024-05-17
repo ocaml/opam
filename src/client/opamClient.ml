@@ -670,6 +670,23 @@ let git_for_windows_check =
             Some (git, OpamSystem.bin_contains_bash p)
           | None -> None)
     in
+    let abort_action = "install Git for Windows." in
+    let gfw_message, abort_action =
+      if gits = [] then
+        (* Git has not been found in PATH. See if it instead can be found in the
+           initial environment. This deals with the possibility that the user
+           has installed Git for Windows, but not restarted the terminal (so
+           PATH has not been updated) *)
+        let env = Array.of_list (OpamStubs.get_initial_environment ()) in
+        match OpamSystem.resolve_command ~env "git" with
+        | Some git when is_git_for_windows git ->
+          Some "It looks as though Git for Windows has been installed but the \
+                shell needs to be restarted. You may wish to abort and re-run \
+                opam init from a fresh session.", "restart your shell."
+        | _ -> None, abort_action
+      else
+        None, abort_action
+    in
     let get_git_location ?git_location () =
       let bin =
         match git_location with
@@ -709,9 +726,10 @@ let git_for_windows_check =
               gits)
           @ [
             `Specify, "Enter the location of installed Git";
-            `Abort, "Abort initialisation to install recommended Git.";
+            `Abort, ("Abort initialisation to " ^ abort_action);
           ]
         in
+        OpamStd.Option.iter (OpamConsole.warning "%s\n") gfw_message;
         OpamConsole.menu "Which Git should opam use?"
           ~default:`Default ~no:`Default ~options
       in
