@@ -635,6 +635,25 @@ let init_checks ?(hard_fail_exn=true) init_config =
   if hard_fail && hard_fail_exn then OpamStd.Sys.exit_because `Configuration_error
   else not (soft_fail || hard_fail)
 
+let is_git_for_windows git =
+  (* The resource file compiled for Git for Windows sets the ProductVersion
+     string to M.m.r.windows.b where M.m.r is the git version and b is the
+     revision number of Git for Windows. This differentiates it from very old
+     pre-GfW builds and also from Cygwin/MSYS2 builds of Git (which don't have
+     version blocks at all). The resource file is not localised cf.:
+     - https://github.com/git/git/blob/master/git.rc#L7
+     - https://github.com/git-for-windows/git/blob/main/SECURITY.md#L45
+     - https://github.com/git/git/blob/master/GIT-VERSION-GEN#L15
+  *)
+  match OpamStubs.getVersionInfo git with
+  | Some {OpamStubsTypes.strings =
+            [(_, {productVersionString = Some version; _})]; _} ->
+    begin
+      try Scanf.sscanf version "%u.%u.%u.windows.%u%!" (fun _ _ _ _ -> true)
+      with Scanf.Scan_failure _ | Failure _ | End_of_file ->  false
+    end
+  | _ -> false
+
 let git_for_windows_check =
   if not Sys.win32 then fun ?git_location:_ () -> None else
   fun ?git_location () ->
@@ -711,7 +730,12 @@ let git_for_windows_check =
         header ();
         get_git_location ~git_location:(OpamFilename.Dir.to_string git_location) ()
       | None ->
-        if OpamStd.Sys.tty_out then
+        let git_found =
+          match OpamSystem.resolve_command "git" with
+          | None -> false
+          | Some git -> is_git_for_windows git
+        in
+        if not git_found && OpamStd.Sys.tty_out then
           (header ();
            OpamConsole.msg
              "Cygwin Git is functional but can have credentials issues for private repositories, \

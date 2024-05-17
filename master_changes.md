@@ -23,6 +23,7 @@ users)
 
 ## Init
   * ◈ New option `opam init --cygwin-extra-packages=CYGWIN_PKGS --cygwin-internal-install`, to specify additional packages for internal Cygwin [#5930, #5964 @moyodiallo - fix #5834]
+  * Skip Git-for-Windows menu if the Git binary resolved in PATH is Git-for-Windows [#5963 @dra27 - fix #5835]
 
 ## Config report
 
