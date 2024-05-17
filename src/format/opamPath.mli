@@ -78,6 +78,9 @@ val plugin_bin: t -> name -> filename
     forbidden. *)
 val plugin: t -> name -> dirname
 
+(** The last environment used regardless the switch *)
+val last_env: t -> dirname
+
 module type LAYOUT = sig
   type ctx
   val root : dirname -> ctx -> dirname
@@ -173,8 +176,6 @@ module Switch: sig
 
   (** Cached environment updates. *)
   val environment: t -> switch -> OpamFile.Environment.t OpamFile.t
-
-  val last_env: t -> switch -> dirname
 
   (** Like [environment], but from the switch prefix dir *)
   val env_relative_to_prefix: dirname -> OpamFile.Environment.t OpamFile.t

@@ -79,6 +79,8 @@ let plugin t name =
   assert (sname <> "bin");
   plugins t / sname
 
+let last_env t = t / ".last-env"
+
 module type LAYOUT = sig
   type ctx
   val root : dirname -> ctx -> dirname
@@ -139,8 +141,6 @@ module Switch = struct
   let env_filename = "environment"
 
   let environment t a = meta t a /- env_filename
-
-  let last_env t a = meta t a / "last-env"
 
   let env_relative_to_prefix pfx = pfx / meta_dirname /- env_filename
 
