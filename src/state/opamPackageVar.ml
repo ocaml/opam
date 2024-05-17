@@ -46,7 +46,7 @@ let package_variable_names = [
   "dev",       "True if this is a development package";
   "build-id",  "A hash identifying the precise package version with all its \
                 dependencies";
-  "opamfile", "Path of the curent opam file";
+  "opamfile", "Path of the current opam file";
 ]
 
 let predefined_depends_variables =
