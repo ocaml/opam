@@ -14,6 +14,7 @@
 * /!\ Once the tag pushed, it can be updated [different commit] only in case of severe issue
 * create a release (or prerelease if intermediate release) draft on github based on your tag (https://github.com/ocaml/opam/releases/new)
 * fetch locally the tag
+* launch docker using the Docker GUI macOS app
 * generate opam artifacts, using `release/release.sh <tag>` from a macOS/arm64 machine, it requires to have Docker and QEMU installed (see below device requirements)
 * generate the signatures using `release/sign.sh <tag>`
 * add releases notes (content of `master_changes.md`) in the release draft
@@ -46,8 +47,7 @@
 ---
 
 ## Device requirements
-* Mac M1
-* installed: git, gpg, qemu>=8.1.0, docker>=24.0.0
+* Mac M1 or above with Rosetta2
+* brew dependencies: git, gpg, qemu>=8.1.0, docker>=24.0.0, md5sha1sum (only when releasing on the 2.1 branch)
 * opam repo with the tag fetched
 * Have the secret key available
-* Launch docker using the Docker GUI macOS app
