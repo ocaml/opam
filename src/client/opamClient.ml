@@ -671,21 +671,65 @@ let git_for_windows_check =
           | None -> None)
     in
     let abort_action = "install Git for Windows." in
-    let gfw_message, abort_action =
+    let gits, gfw_message, abort_action =
       if gits = [] then
         (* Git has not been found in PATH. See if it instead can be found in the
            initial environment. This deals with the possibility that the user
            has installed Git for Windows, but not restarted the terminal (so
            PATH has not been updated) *)
-        let env = Array.of_list (OpamStubs.get_initial_environment ()) in
-        match OpamSystem.resolve_command ~env "git" with
+        let env = OpamStubs.get_initial_environment () in
+        match OpamSystem.resolve_command ~env:(Array.of_list env) "git" with
         | Some git when is_git_for_windows git ->
-          Some "It looks as though Git for Windows has been installed but the \
-                shell needs to be restarted. You may wish to abort and re-run \
-                opam init from a fresh session.", "restart your shell."
-        | _ -> None, abort_action
+          [], Some "It looks as though Git for Windows has been installed but \
+                    the shell needs to be restarted. You may wish to abort and \
+                    re-run opam init from a fresh session.",
+              "restart your shell."
+        | _ ->
+          (* Git is neither in the current nor the initial PATH. There is one
+             further possibility: the user may have installed Git for Windows
+             but selected the option not to update the environment. The final
+             hint given searches the Windows Registry for both a system-wide
+             and user-specific installation and, if found, both displays a
+             warning suggesting that the machine be reconfigured to enable them
+             in PATH, but also gives the opportunity to use the git-location
+             mechanism to select it for opam's internal use. *)
+          let test_for_installation ((gits, gfw_message, abort_action) as acc) (hive, key) =
+            let process root =
+              let git_location = Filename.concat root "cmd" in
+              let git = Filename.concat git_location "git.exe" in
+              if OpamSystem.resolve_command ~env:[||] git <> None
+              && is_git_for_windows git then
+                let gits =
+                  (git, OpamSystem.bin_contains_bash git_location)::gits
+                and message, action =
+                  Some "It looks as though Git for Windows has been installed, \
+                        but configured not to put the git binary in your PATH. \
+                        You can either abort and reconfigure your environment \
+                        (or re-run the Git for Windows installer) to enable \
+                        this, or you can use the menu below to have opam use \
+                        this Git installation internally.",
+                  "reconfigure Git for Windows."
+                in
+                if message = None then
+                  gits, gfw_message, action
+                else
+                  gits, message, abort_action
+              else
+                acc
+            in
+            let key = Filename.concat key "GitForWindows" in
+            OpamStubs.readRegistry hive key "InstallPath" OpamStubsTypes.REG_SZ
+            |> OpamStd.Option.map_default process acc
+          in
+          let installations = [
+            (* Machine-wide installation *)
+            (OpamStubsTypes.HKEY_LOCAL_MACHINE, "SOFTWARE");
+            (* User-specific installation *)
+            (OpamStubsTypes.HKEY_CURRENT_USER, "Software");
+          ] in
+          List.fold_left test_for_installation (gits, None, abort_action) installations
       else
-        None, abort_action
+        gits, None, abort_action
     in
     let get_git_location ?git_location () =
       let bin =
