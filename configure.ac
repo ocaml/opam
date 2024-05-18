@@ -346,7 +346,7 @@ AS_CASE([$TARGET],
   ],
   [*-*-mingw32*],[
     support_static=yes
-    default_static=yes
+    AS_IF([test "x${with_private_runtime}" = "xno"],[default_static=yes])
     # NOTE: On Windows, the Windows specific dlls should stay dynamic for security reasons
     # NOTE: -l:libstdc++.a is necessary (vs. -lstdc++) as flexlink will use libstdc++.dll.a
     # which still depends on the DLL at runtime instead of libstdc++.a (that looks like a bug in flexlink)
