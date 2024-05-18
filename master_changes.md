@@ -16,6 +16,7 @@ users)
   * Upgrade the opam-root-version to 2.2~beta [#5904 @kit-ty-kate]
 
 ## Global CLI
+  * Fix a typo in the variable description returned by "opam var" [#5961 @jmid]
 
 ## Plugins
 

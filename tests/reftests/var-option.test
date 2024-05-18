@@ -101,7 +101,7 @@ PKG:build # Directory where the package was built
 PKG:hash # Hash of the package archive
 PKG:dev # True if this is a development package
 PKG:build-id # A hash identifying the precise package version with all its dependencies
-PKG:opamfile # Path of the curent opam file
+PKG:opamfile # Path of the current opam file
 ### opam var --switch var-option
 prefix   ${BASEDIR}/OPAM/var-option
 lib      ${BASEDIR}/OPAM/var-option/lib
