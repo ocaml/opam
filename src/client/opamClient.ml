@@ -817,6 +817,15 @@ let git_for_windows ?git_location () =
     git_location;
   git_location
 
+let check_git_location_or_exit git_location source =
+  let git =
+    Filename.concat (OpamFilename.Dir.to_string git_location) "git.exe"
+  in
+  if OpamSystem.resolve_command ~env:[||] git = None then
+    OpamConsole.error_and_exit `Not_found
+      "The location specified with %s does not appear to contain a Git \
+       executable!" source
+
 let windows_checks ?cygwin_setup ?git_location config =
   if (not (Unix.has_symlink ())) then begin
     OpamConsole.header_msg "Windows Developer Mode";
@@ -837,18 +846,23 @@ let windows_checks ?cygwin_setup ?git_location config =
   let git_location =
     match git_location, OpamFile.Config.git_location config with
     | None, None -> None
-    | Some (Right ()), None -> Some (Right ())
-    | Some (Right ()), Some _ ->
-      OpamConsole.note
-        "'--no-git-location' specified; field 'git-location' in opamrc \
-        has been ignored";
-      Some (Right ())
-    | Some (Left gl), None | None, Some gl -> Some (Left gl)
-    | Some (Left gl_cli), Some _ ->
-      OpamConsole.note
-        "'--git-location' specified; field 'git-location' in opamrc \
-         has been ignored";
-      Some (Left gl_cli)
+    | Some (Right ()), git_location_opamrc ->
+      if git_location_opamrc <> None then
+        OpamConsole.note
+          "'--no-git-location' specified; field 'git-location' in opamrc has \
+           been ignored";
+      git_location
+    | None, Some git_location ->
+      check_git_location_or_exit git_location
+        "the 'git-location' field in opamrc";
+      Some (Left git_location)
+    | (Some (Left git_location)) as result, git_location_opamrc ->
+      if git_location_opamrc <> None then
+        OpamConsole.note
+          "'--git-location' specified; field 'git-location' in opamrc has been \
+           ignored";
+      check_git_location_or_exit git_location "--git-location";
+      result
   in
   let git_location =
     if Sys.win32 then
