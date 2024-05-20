@@ -77,12 +77,64 @@ module Cache = struct
 
 end
 
+module Thread_pool : sig
+  type t
+  val create : unit -> t
+  val async : t -> (unit -> (OpamPackage.t * OpamFile.OPAM.t) option) -> unit
+  val value : t -> OpamFile.OPAM.t OpamPackage.Map.t
+end = struct
+  type t = {
+    kill : bool ref;
+    threads : unit Domain.t list;
+    tasks_mutex : Mutex.t;
+    tasks : (unit -> (OpamPackage.t * OpamFile.OPAM.t) option) Queue.t;
+    value : OpamFile.OPAM.t OpamPackage.Map.t ref;
+  }
+
+  let create () =
+    let kill = ref false in
+    let tasks_mutex = Mutex.create () in
+    let tasks = Queue.create () in
+    let value_mutex = Mutex.create () in
+    let value = ref OpamPackage.Map.empty in
+    let aux () =
+      Domain.spawn (fun () ->
+          while not !kill do
+            Mutex.protect tasks_mutex (fun () ->
+                Queue.take_opt tasks
+              ) |>
+            Option.iter (fun task ->
+                Option.iter (fun (k, v) ->
+                    Mutex.protect value_mutex (fun () ->
+                        value := OpamPackage.Map.add k v !value;
+                      )
+                  ) (task ())
+              )
+          done
+        )
+    in
+    let threads = List.init 3 (fun _ -> aux ()) in (* optimized for 4core CPUs *)
+    {kill; threads; tasks_mutex; tasks; value}
+
+  let async {tasks_mutex; tasks; _} f =
+    Mutex.protect tasks_mutex (fun () ->
+        Queue.add f tasks;
+      )
+
+  let value {kill; threads; value; _} =
+    kill := true;
+    List.iter Domain.join threads;
+    !value
+end
+
 let load_opams_from_dir repo_name repo_root =
+  let thread_pool = Thread_pool.create () in
   (* FIXME: why is this different from OpamPackage.list ? *)
-  let rec aux r dir =
+  let rec aux dir =
     if OpamFilename.exists_dir dir then
       let fnames = Sys.readdir (OpamFilename.Dir.to_string dir) in
       if Array.exists (fun f -> f = "opam") fnames then
+        Thread_pool.async thread_pool @@ fun () ->
         match OpamFileTools.read_repo_opam ~repo_name ~repo_root dir with
         | Some opam ->
           (try
@@ -90,21 +142,21 @@ let load_opams_from_dir repo_name repo_root =
                OpamPackage.of_string
                  OpamFilename.(Base.to_string (basename_dir dir))
              in
-             OpamPackage.Map.add nv opam r
+             Some (nv, opam)
            with Failure _ ->
              log "ERR: directory name not a valid package: ignored %s"
                OpamFilename.(to_string Op.(dir // "opam"));
-             r)
+             None)
         | None ->
           log "ERR: Could not load %s, ignored"
             OpamFilename.(to_string Op.(dir // "opam"));
-          r
+          None
       else
-        Array.fold_left (fun r name -> aux r OpamFilename.Op.(dir / name))
-          r fnames
-    else r
+        Array.iter (fun name -> aux OpamFilename.Op.(dir / name)) fnames
+    else ()
   in
-  aux OpamPackage.Map.empty (OpamRepositoryPath.packages_dir repo_root)
+  aux (OpamRepositoryPath.packages_dir repo_root);
+  Thread_pool.value thread_pool
 
 let load_repo repo repo_root =
   let t = OpamConsole.timer () in
@@ -307,4 +359,3 @@ let check_last_update () =
     OpamConsole.note "It seems you have not updated your repositories \
                       for a while. Consider updating them with:\n%s\n"
       (OpamConsole.colorise `bold "opam update");
-
