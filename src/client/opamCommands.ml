@@ -435,6 +435,8 @@ let init cli =
         bad_arg "no-cygwin-setup" "cygwin-extra-packages"
       | `none, Some _, Some _ ->
         bad_arg "cygwin-location" "cygwin-extra-packages"
+      | `none, None, None ->
+        None
       | (`internal | `none), None, pkgs ->
         Some (`internal
                 (OpamStd.Option.default [] pkgs

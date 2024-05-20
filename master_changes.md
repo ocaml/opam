@@ -21,7 +21,7 @@ users)
 ## Plugins
 
 ## Init
-  * ◈ New option `opam init --cygwin-extra-packages=CYGWIN_PKGS --cygwin-internal-install`, to specify additional packages for internal Cygwin [#5930 @moyodiallo - fix #5834]
+  * ◈ New option `opam init --cygwin-extra-packages=CYGWIN_PKGS --cygwin-internal-install`, to specify additional packages for internal Cygwin [#5930, #5964 @moyodiallo - fix #5834]
 
 ## Config report
 
