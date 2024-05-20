@@ -174,19 +174,35 @@ let unguarded_commands_variables commands =
     let guarded_packages, filter_variables =
       unguarded_packages_from_filter guarded_packages filter
     in
-    (filter_guarded (OpamFilter.simple_arg_variables argument) guarded_packages)
-    @ filter_variables
+    let variables_from_arguments =
+      filter_guarded (OpamFilter.simple_arg_variables argument) guarded_packages
+    in
+    guarded_packages, variables_from_arguments @ filter_variables
   in
-  let unguarded_command_variables (command, filter) =
-    let guarded_packages, filter_variables =
+  let unguarded_command_variables guarded_packages (command, filter) =
+    let filter_guarded_packages, filter_variables =
       unguarded_packages_from_filter OpamPackage.Name.Set.empty filter
     in
-    let add_argument acc argument =
-      unguarded_argument_variables guarded_packages argument @ acc
+    let add_argument (guarded_packages, acc) argument =
+      let guarded_packages, unguarded_variables =
+        unguarded_argument_variables guarded_packages argument
+      in
+      guarded_packages, unguarded_variables @ acc
     in
-    List.fold_left add_argument filter_variables command
+    let command_guarded_packages, unguarded_variables =
+      List.fold_left add_argument (filter_guarded_packages, filter_variables)
+        command
+    in
+    OpamPackage.Name.Set.union guarded_packages command_guarded_packages,
+    unguarded_variables
   in
-  List.fold_left (fun acc c -> unguarded_command_variables c @ acc) [] commands
+  let f (guarded_packages, acc) c =
+    let guarded_packages, unguarded_variables =
+      unguarded_command_variables guarded_packages c
+    in
+    guarded_packages, (unguarded_variables @ acc)
+  in
+  List.fold_left f (OpamPackage.Name.Set.empty, []) commands
 
 (* Returns all variables from all commands (or on given [command]) and all filters *)
 let all_variables ?exclude_post ?command t =
@@ -203,7 +219,11 @@ let all_variables ?exclude_post ?command t =
    package:installed are excluded; used for Warning 41 so that
    ["%{foo:share}%" {foo:installed}] doesn't trigger a warning on foo *)
 let all_unguarded_variables ?exclude_post t =
-  unguarded_commands_variables (all_commands t) @
+  let guarded_packages, unguarded_commands_variables =
+    unguarded_commands_variables (all_commands t)
+  in
+  guarded_packages,
+  unguarded_commands_variables @
   List.fold_left (fun acc f -> OpamFilter.variables f @ acc)
     [] (all_filters ?exclude_post t)
 
@@ -533,18 +553,32 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        ~detail:alpha_flags
        (alpha_flags <> []));
 *)
-    (let undep_pkgs =
-       List.fold_left
-         (fun acc v ->
-            match OpamVariable.Full.package v with
-            | Some n when
-                t.OpamFile.OPAM.name <> Some n &&
-                not (OpamPackage.Name.Set.mem n all_depends) &&
-                OpamVariable.(Full.variable v <> of_string "installed")
-              ->
-              OpamPackage.Name.Set.add n acc
-            | _ -> acc)
-         OpamPackage.Name.Set.empty (all_unguarded_variables ~exclude_post:true t)
+    (let all_mentioned_packages =
+       OpamPackage.Name.Set.union
+         (OpamFormula.all_names t.depends)
+         (OpamFormula.all_names t.depopts)
+     in
+     let undep_pkgs =
+       let guarded_packages, all_unguarded_variables =
+         all_unguarded_variables ~exclude_post:true t
+       in
+       let first_lot =
+         List.fold_left
+           (fun acc v ->
+              match OpamVariable.Full.package v with
+              | Some n when
+                  t.OpamFile.OPAM.name <> Some n &&
+                  not (OpamPackage.Name.Set.mem n all_depends) &&
+                  OpamVariable.(Full.variable v <> of_string "installed")
+                ->
+                OpamPackage.Name.Set.add n acc
+              | _ -> acc)
+           OpamPackage.Name.Set.empty all_unguarded_variables
+       in
+       let second_lot =
+         OpamPackage.Name.Set.diff guarded_packages all_mentioned_packages
+       in
+       OpamPackage.Name.Set.union first_lot second_lot
      in
      cond 41 `Warning
        "Some packages are mentioned in package scripts or features, but \

@@ -426,7 +426,7 @@ build: [
 ]
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
-           warning 41: Some packages are mentioned in package scripts or features, but there is no dependency or depopt toward them: "no-dependency-unguarded"
+           warning 41: Some packages are mentioned in package scripts or features, but there is no dependency or depopt toward them: "no-dependency-guarded", "no-dependency-installed-only", "no-dependency-unguarded"
 ### : E42: The 'dev-repo:' field doesn't use version control. You should use URLs of the form "git://", "git+https://", "hg+https://"...
 ### <lint.opam>
 opam-version: "2.0"

@@ -59,6 +59,7 @@ users)
 
 ## Lint
   * W41: Relax warning 41 not to trigger on uses of package variables which are guarded by a package:installed filter [#5927 @dra27]
+  * W41: Tighten w.r.t depends & depopts [#5927 @dra27]
 
 ## Repository
   * Fix download URLs containing invalid characters on Windows (e.g. the ? character in `?full_index=1`) [#5921 @dra27]
