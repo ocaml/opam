@@ -31,8 +31,8 @@ MD5_opam-0install-cudf = 75419722aa839f518a25cae1b3c6efd4
 URL_0install-solver = https://github.com/0install/0install/releases/download/v2.18/0install-2.18.tbz
 MD5_0install-solver = 030edc9b1d3676c06d51397ffb5a737d
 
-URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/refs/tags/2.1.6.tar.gz
-MD5_opam-file-format = 706ce5fc3e77db746a4c8b11d79cefef
+URL_opam-file-format = https://github.com/ocaml/opam-file-format/releases/download/2.2.0-alpha1/opam-file-format-2.2.0-alpha1.tar.gz
+MD5_opam-file-format = e7454160b5f3982016ddaac2dfd5bf52
 
 include Makefile.dune
 
@@ -56,3 +56,6 @@ MD5_sha = 08bc953d9a26380bc220b05d680791fb
 
 URL_swhid_core = https://github.com/OCamlPro/swhid_core/archive/refs/tags/0.1.tar.gz
 MD5_swhid_core = 77d88d4b1d96261c866f140c64d89af8
+
+URL_menhir = https://gitlab.inria.fr/fpottier/menhir/-/archive/20240715/archive.tar.gz
+MD5_menhir = d39a8943fe1be28199e5ec1f4133504c
