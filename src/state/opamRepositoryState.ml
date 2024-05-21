@@ -84,7 +84,7 @@ module Thread_pool : sig
   val value : t -> OpamFile.OPAM.t OpamPackage.Map.t
 end = struct
   type t = {
-    kill : bool ref;
+    kill : bool Atomic.t;
     threads : unit Domain.t list;
     tasks_mutex : Mutex.t;
     tasks : (unit -> (OpamPackage.t * OpamFile.OPAM.t) option) Queue.t;
@@ -93,14 +93,14 @@ end = struct
   }
 
   let create () =
-    let kill = ref false in
+    let kill = Atomic.make false in
     let tasks_mutex = Mutex.create () in
     let tasks = Queue.create () in
     let value_mutex = Mutex.create () in
     let value = ref OpamPackage.Map.empty in
     let aux () =
       Domain.spawn (fun () ->
-          while not !kill do
+          while Atomic.get kill do
             Mutex.protect tasks_mutex (fun () ->
                 Queue.take_opt tasks
               ) |>
@@ -123,7 +123,7 @@ end = struct
       )
 
   let value {kill; threads; value_mutex; value; _} =
-    kill := true;
+    Atomic.set kill true;
     List.iter Domain.join threads;
     Mutex.protect value_mutex (fun () -> !value)
 end
