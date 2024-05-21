@@ -120,7 +120,6 @@ end = struct
     {kill; threads; tasks_mutex; tasks; value_mutex; value}
 
   let async {tasks_mutex; tasks; _} f =
-    log "Async";
     Mutex.protect tasks_mutex (fun () ->
         Queue.add f tasks;
       )
