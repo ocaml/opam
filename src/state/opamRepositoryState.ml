@@ -114,7 +114,7 @@ end = struct
           done
         )
     in
-    let max_jobs = Domain.recommended_domain_count () - 1 in
+    let max_jobs = Domain.recommended_domain_count () in
     log "Spawning %d threads" max_jobs;
     let threads = List.init max_jobs (fun _ -> aux ()) in
     {kill; threads; tasks_mutex; tasks; value_mutex; value}
