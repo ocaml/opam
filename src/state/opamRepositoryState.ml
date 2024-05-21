@@ -120,14 +120,19 @@ end = struct
     {kill; threads; tasks_mutex; tasks; value_mutex; value}
 
   let async {tasks_mutex; tasks; _} f =
+    log "Async";
     Mutex.protect tasks_mutex (fun () ->
         Queue.add f tasks;
       )
 
   let value {kill; threads; value_mutex; value; _} =
+    log "Getting all the values...";
     Atomic.set kill true;
     List.iter Domain.join threads;
-    Mutex.protect value_mutex (fun () -> !value)
+    Mutex.protect value_mutex (fun () ->
+        log "Got %d values" (OpamPackage.Map.cardinal !value);
+        !value
+      )
 end
 
 let load_opams_from_dir repo_name repo_root =
