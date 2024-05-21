@@ -43,7 +43,7 @@ let equal u v = compare u v = 0
 exception Parse_error of string
 let parse_error s = raise (Parse_error s)
 
-let split_url =
+let split_url u =
   let re =
     Re.(compile @@ whole_string @@ seq [
         (* Parse the scheme, which is either backend+protocol or just a protocol *)
@@ -66,7 +66,6 @@ let split_url =
         opt @@ seq [ char '#'; group @@ rep any ];
       ])
   in
-  fun u ->
     match Re.Group.all (Re.exec re u) with
     | [| _; vc; transport; path; suffix; hash |] ->
       let opt = function "" -> None | s -> Some s in
@@ -103,7 +102,7 @@ let backend_of_string = function
                 (OpamConsole.colorise `underline p))
 
 
-let looks_like_ssh_path =
+let looks_like_ssh_path path =
   (* ':' before any '/' : assume ssh, like git does. Exception for 'x:' with
      single char, because Windows *)
   let re =
@@ -121,7 +120,6 @@ let looks_like_ssh_path =
         eos;
       ])
   in
-  fun path ->
     try
       let sub = Re.exec re path in
       Some (Re.Group.get sub 1 ^

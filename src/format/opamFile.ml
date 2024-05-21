@@ -127,7 +127,7 @@ module MakeIO (F : IO_Arg) = struct
       let ic = OpamFilename.open_in f in
       try
         Unix.lockf (Unix.descr_of_in_channel ic) Unix.F_RLOCK 0;
-        Stats.read_files := filename :: !Stats.read_files;
+        (*Stats.read_files := filename :: !Stats.read_files;*)
         let r = F.of_channel f ic in
         close_in ic;
         log ~level:3 "Read %s in %.3fs" filename (chrono ());
