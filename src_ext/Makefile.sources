@@ -53,8 +53,8 @@ MD5_0install-solver = 030edc9b1d3676c06d51397ffb5a737d
 
 $(call PKG_SAME,0install-solver)
 
-URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/refs/tags/2.1.6.tar.gz
-MD5_opam-file-format = 706ce5fc3e77db746a4c8b11d79cefef
+URL_opam-file-format = https://github.com/kit-ty-kate/opam-file-format/archive/menhir.tar.gz
+MD5_opam-file-format = 1d905cc8d0c2185fd408b69d7753cf1f
 
 $(call PKG_SAME,opam-file-format)
 
