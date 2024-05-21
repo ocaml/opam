@@ -88,6 +88,7 @@ end = struct
     threads : unit Domain.t list;
     tasks_mutex : Mutex.t;
     tasks : (unit -> (OpamPackage.t * OpamFile.OPAM.t) option) Queue.t;
+    value_mutex : Mutex.t;
     value : OpamFile.OPAM.t OpamPackage.Map.t ref;
   }
 
@@ -114,17 +115,17 @@ end = struct
         )
     in
     let threads = List.init 3 (fun _ -> aux ()) in (* optimized for 4core CPUs *)
-    {kill; threads; tasks_mutex; tasks; value}
+    {kill; threads; tasks_mutex; tasks; value_mutex; value}
 
   let async {tasks_mutex; tasks; _} f =
     Mutex.protect tasks_mutex (fun () ->
         Queue.add f tasks;
       )
 
-  let value {kill; threads; value; _} =
+  let value {kill; threads; value_mutex; value; _} =
     kill := true;
     List.iter Domain.join threads;
-    !value
+    Mutex.protect value_mutex (fun () -> !value)
 end
 
 let load_opams_from_dir repo_name repo_root =
