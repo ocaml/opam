@@ -6104,7 +6104,7 @@ esac
 if test "${enable_static}" = yes
 then :
 
-  echo "(-noautolink -cclib -lunix -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs ${platform_dependant_stuff})" > src/client/linking.sexp
+  echo "(-noautolink -cclib -lunixnat -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs ${platform_dependant_stuff})" > src/client/linking.sexp
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: static" >&5
 printf "%s\n" "static" >&6; }
 
