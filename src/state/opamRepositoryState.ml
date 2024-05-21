@@ -100,7 +100,7 @@ end = struct
     let value = ref OpamPackage.Map.empty in
     let aux () =
       Domain.spawn (fun () ->
-          while Atomic.get kill do
+          while not (Atomic.get kill && Mutex.protect tasks_mutex (fun () -> Queue.is_empty tasks)) do
             Mutex.protect tasks_mutex (fun () ->
                 Queue.take_opt tasks
               ) |>
