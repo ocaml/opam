@@ -399,20 +399,6 @@ let remove file =
 
 type command = string list
 
-let env_var env var =
-  let len = Array.length env in
-  let f = if Sys.win32 then String.uppercase_ascii else fun x -> x in
-  let prefix = f var^"=" in
-  let pfxlen = String.length prefix in
-  let rec aux i =
-    if i >= len then "" else
-    let s = env.(i) in
-    if OpamStd.String.starts_with ~prefix (f s) then
-      String.sub s pfxlen (String.length s - pfxlen)
-    else aux (i+1)
-  in
-  aux 0
-
 let forward_to_back =
   if Sys.win32 then
     String.map (function '/' -> '\\' | c -> c)
@@ -425,91 +411,7 @@ let back_to_forward =
   else
     fun x -> x
 
-(* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
-   makes unqualified commands absolute as a workaround. *)
-let t_resolve_command =
-  let is_external_cmd name =
-    let name = forward_to_back name in
-    OpamStd.String.contains_char name Filename.dir_sep.[0]
-  in
-  let check_perms =
-    if Sys.win32 then fun f ->
-      try (Unix.stat f).Unix.st_kind = Unix.S_REG
-      with e -> OpamStd.Exn.fatal e; false
-    else fun f ->
-      try
-        let open Unix in
-        let {st_uid; st_gid; st_perm; st_kind; _} = stat f in
-        if st_kind <> Unix.S_REG then false else
-        let groups = OpamStd.IntSet.of_list (getegid () :: Array.to_list (getgroups ())) in
-        let mask =
-          if geteuid () = st_uid then
-            0o100
-          else if OpamStd.IntSet.mem st_gid groups then
-            0o010
-          else
-            0o001
-        in
-        if (st_perm land mask) <> 0 then
-          true
-        else
-          match OpamACL.get_acl_executable_info f st_uid with
-          | None -> false
-          | Some [] -> true
-          | Some gids -> OpamStd.IntSet.(not (is_empty (inter (of_list gids) groups)))
-      with e -> OpamStd.Exn.fatal e; false
-  in
-  let resolve ?dir env name =
-    if not (Filename.is_relative name) then begin
-      (* absolute path *)
-      if not (Sys.file_exists name) then `Not_found
-      else if not (check_perms name) then `Denied
-      else `Cmd name
-    end else if is_external_cmd name then begin
-      (* relative path *)
-      let cmd = match dir with
-        | None -> name
-        | Some d -> Filename.concat d name
-      in
-      if not (Sys.file_exists cmd) then `Not_found
-      else if not (check_perms cmd) then `Denied
-      else `Cmd cmd
-    end else
-    (* bare command, lookup in PATH *)
-    (* Following the shell sematics for looking up PATH, programs with the
-       expected name but not the right permissions are skipped silently.
-       Therefore, only two outcomes are possible in that case, [`Cmd ..] or
-       [`Not_found]. *)
-    let path = OpamStd.Sys.split_path_variable (env_var env "PATH") in
-    let name =
-      if Sys.win32 && not (Filename.check_suffix name ".exe") then
-        name ^ ".exe"
-      else name
-    in
-    let possibles =
-      OpamStd.List.filter_map (fun path ->
-          let candidate = Filename.concat path name in
-          match Sys.is_directory candidate with
-          | false -> Some candidate
-          | true | exception (Sys_error _) -> None)
-        path
-    in
-    match List.find check_perms possibles with
-    | cmdname -> `Cmd cmdname
-    | exception Not_found ->
-      if possibles = [] then
-        `Not_found
-      else
-        `Denied
-  in
-  fun ?env ?dir name ->
-    let env = match env with None -> OpamProcess.default_env () | Some e -> e in
-    resolve env ?dir name
-
-let resolve_command ?env ?dir name =
-  match t_resolve_command ?env ?dir name with
-  | `Cmd cmd -> Some cmd
-  | `Denied | `Not_found -> None
+let resolve_command = OpamProcess.resolve_command
 
 let bin_contains_bash =
   if not Sys.win32 && not Sys.cygwin then fun _ -> false else
@@ -596,7 +498,7 @@ let make_command
     OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
   in
   let full_cmd =
-    if resolve_path then t_resolve_command ~env ?dir cmd
+    if resolve_path then OpamStd.Sys.resolve_command ~env ?dir cmd
     else `Cmd cmd
   in
   match full_cmd with
@@ -615,7 +517,7 @@ let run_process
   match command with
   | []          -> invalid_arg "run_process"
   | cmd :: args ->
-    match t_resolve_command ~env cmd with
+    match OpamStd.Sys.resolve_command ~env cmd with
     | `Cmd full_cmd ->
       let verbose = match verbose with
         | None   -> OpamCoreConfig.(!r.verbose_level) >= 2
@@ -1707,6 +1609,3 @@ let init () =
   Sys.catch_break true;
   try Sys.set_signal Sys.sigpipe (Sys.Signal_handle (fun _ -> ()))
   with Invalid_argument _ -> ()
-
-let () =
-  OpamProcess.set_resolve_command resolve_command

@@ -302,14 +302,11 @@ let string_of_info ?(color=`yellow) info =
         (OpamConsole.colorise color k) v) info;
   Buffer.contents b
 
-let resolve_command_fn = ref (fun ?env:_ ?dir:_ _ -> None)
-let set_resolve_command =
-  let called = ref false in
-  fun resolve_command ->
-    if !called then invalid_arg "Just what do you think you're doing, Dave?";
-    called := true;
-    resolve_command_fn := resolve_command
-let resolve_command cmd = !resolve_command_fn cmd
+let resolve_command ?env ?dir name =
+  let env = match env with None -> default_env () | Some e -> e in
+  match OpamStd.Sys.resolve_command ~env ?dir name with
+  | `Cmd cmd -> Some cmd
+  | `Denied | `Not_found -> None
 
 let create_process_env =
   if Sys.win32 then

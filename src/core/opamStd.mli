@@ -548,6 +548,11 @@ module Sys : sig
       Optional argument [clean] permits to keep those empty strings. *)
   val split_path_variable: ?clean:bool -> string -> string list
 
+  (** Test whether a command exists in the environment, and returns it (resolved
+      if found in PATH). [~env] defaults to {!Env.raw_env}. *)
+  val resolve_command: ?env:string array -> ?dir:string -> string ->
+    [ `Cmd of string | `Denied | `Not_found ]
+
   (** For native Windows builds, returns [`Cygwin] if the command is a Cygwin-
       compiled executable, [`Msys2] if the command is a MSYS2-compiled
       executable, and [`Tainted of [ `Msys2 | `Cygwin ]] if the command links

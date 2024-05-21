@@ -1206,6 +1206,108 @@ module OpamSys = struct
       (fun f -> try f () with _ -> ())
       !registered_at_exit
 
+  let env_var env var =
+    let len = Array.length env in
+    let f = if Sys.win32 then String.uppercase_ascii else fun x -> x in
+    let prefix = f var^"=" in
+    let pfxlen = String.length prefix in
+    let rec aux i =
+      if (i : int) >= len then "" else
+      let s = env.(i) in
+      if OpamString.starts_with ~prefix (f s) then
+        String.sub s pfxlen (String.length s - pfxlen)
+      else aux (i+1)
+    in
+    aux 0
+
+  (* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
+     makes unqualified commands absolute as a workaround. *)
+  let resolve_command =
+    let is_external_cmd name =
+      let forward_to_back =
+        if Sys.win32 then
+          String.map (function '/' -> '\\' | c -> c)
+        else fun x -> x
+      in
+      let name = forward_to_back name in
+      OpamString.contains_char name Filename.dir_sep.[0]
+    in
+    let check_perms =
+      if Sys.win32 then fun f ->
+        try (Unix.stat f).Unix.st_kind = Unix.S_REG
+        with e -> fatal e; false
+      else fun f ->
+        try
+          let {Unix.st_uid; st_gid; st_perm; st_kind; _} = Unix.stat f in
+          if st_kind <> Unix.S_REG then false else
+          let groups =
+            IntSet.of_list (Unix.getegid () :: Array.to_list (Unix.getgroups ()))
+          in
+          let mask =
+            if Unix.geteuid () = (st_uid : int) then
+              0o100
+            else if IntSet.mem st_gid groups then
+              0o010
+            else
+              0o001
+          in
+          if (st_perm land mask) <> 0 then
+            true
+          else
+          match OpamACL.get_acl_executable_info f st_uid with
+          | None -> false
+          | Some [] -> true
+          | Some gids ->
+            not (IntSet.is_empty (IntSet.inter (IntSet.of_list gids) groups))
+        with e -> fatal e; false
+    in
+    let resolve ?dir env name =
+      if not (Filename.is_relative name) then begin
+        (* absolute path *)
+        if not (Sys.file_exists name) then `Not_found
+        else if not (check_perms name) then `Denied
+        else `Cmd name
+      end else if is_external_cmd name then begin
+        (* relative path *)
+        let cmd = match dir with
+          | None -> name
+          | Some d -> Filename.concat d name
+        in
+        if not (Sys.file_exists cmd) then `Not_found
+        else if not (check_perms cmd) then `Denied
+        else `Cmd cmd
+      end else
+      (* bare command, lookup in PATH *)
+      (* Following the shell sematics for looking up PATH, programs with the
+         expected name but not the right permissions are skipped silently.
+         Therefore, only two outcomes are possible in that case, [`Cmd ..] or
+         [`Not_found]. *)
+      let path = split_path_variable (env_var env "PATH") in
+      let name =
+        if Sys.win32 && not (Filename.check_suffix name ".exe") then
+          name ^ ".exe"
+        else name
+      in
+      let possibles =
+        List.filter_map (fun path ->
+            let candidate = Filename.concat path name in
+            match Sys.is_directory candidate with
+            | false -> Some candidate
+            | true | exception (Sys_error _) -> None)
+          path
+      in
+      match List.find check_perms possibles with
+      | cmdname -> `Cmd cmdname
+      | exception Not_found ->
+        if possibles = [] then
+          `Not_found
+        else
+          `Denied
+    in
+    fun ?env ?dir name ->
+      let env = match env with None -> Env.raw_env () | Some e -> e in
+      resolve env ?dir name
+
   let get_windows_executable_variant =
     if Sys.win32 then
       let results = Hashtbl.create 17 in

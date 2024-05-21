@@ -223,8 +223,9 @@ end
 type 'a job = 'a Job.Op.job
 
 (**/**)
-val set_resolve_command :
-  (?env:string array -> ?dir:string -> string -> string option) -> unit
+(** As {!OpamStd.Sys.resolve_command}, except the default for [~env] is
+    {!default_env}. *)
+val resolve_command: ?env:string array -> ?dir:string -> string -> string option
 
 (** Like Unix.create_process_env, but with correct escaping of arguments when
     invoking a cygwin executable from a native Windows executable. *)
