@@ -114,7 +114,9 @@ end = struct
           done
         )
     in
-    let threads = List.init 3 (fun _ -> aux ()) in (* optimized for 4core CPUs *)
+    let max_jobs = Domain.recommended_domain_count () - 1 in
+    log "Spawning %d threads" max_jobs;
+    let threads = List.init max_jobs (fun _ -> aux ()) in
     {kill; threads; tasks_mutex; tasks; value_mutex; value}
 
   let async {tasks_mutex; tasks; _} f =
