@@ -306,9 +306,12 @@ let copy_file_aux ?chmod ~src ~dst () =
 let list kind dir =
   try
     let d = Sys.readdir dir in
-    let d = Array.to_list d in
-    let l = List.filter kind d in
-    List.map (Filename.concat dir) (List.sort compare l)
+    let l = Array.fold_left (fun acc d ->
+        let d = dir / d in
+        if kind d then d :: acc else acc
+      ) [] d
+    in
+    List.sort String.compare l
   with File_not_found _ -> []
 
 let ls dir = list (fun _ -> true) dir
