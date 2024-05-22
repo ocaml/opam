@@ -52,9 +52,6 @@ val dir_is_empty: Dir.t -> bool
 (** List the sub-directory (do not recurse) *)
 val dirs: Dir.t -> Dir.t list
 
-(** Evaluate a function in a given directory *)
-val in_dir: Dir.t -> (unit -> 'a) -> 'a
-
 (** Turns an assoc list into an array suitable to be provided as environment *)
 val env_of_list: (string * string) list -> string array
 

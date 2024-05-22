@@ -535,8 +535,8 @@ let check_and_revert_sandboxing root config =
       in
       try
         (* Don't assume that we can mount the CWD *)
-        OpamSystem.in_tmp_dir @@ fun () ->
-          OpamSystem.read_command_output ~env ~allow_stdin:false (cmd @ test_cmd)
+        OpamSystem.with_tmp_dir @@ fun dir ->
+          OpamSystem.read_command_output ~env ~dir ~allow_stdin:false (cmd @ test_cmd)
         = ["SUCCESS"]
       with e ->
         (OpamConsole.error "Sandboxing is not working on your platform%s:\n%s"

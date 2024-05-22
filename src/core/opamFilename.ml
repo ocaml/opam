@@ -98,16 +98,13 @@ let dirs d =
 let dir_is_empty d =
   OpamSystem.dir_is_empty (Dir.to_string d)
 
-let in_dir dirname fn = OpamSystem.in_dir dirname fn
-
 let env_of_list l = Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) l)
 
-let exec dirname ?env ?name ?metadata ?keep_going cmds =
+let exec dir ?env ?name ?metadata ?keep_going cmds =
   let env = match env with
     | None   -> None
     | Some l -> Some (env_of_list l) in
-  in_dir dirname
-    (fun () -> OpamSystem.commands ?env ?name ?metadata ?keep_going cmds)
+  OpamSystem.commands ?env ?name ?metadata ~dir ?keep_going cmds
 
 let move_dir ~src ~dst =
   OpamSystem.mv (Dir.to_string src) (Dir.to_string dst)

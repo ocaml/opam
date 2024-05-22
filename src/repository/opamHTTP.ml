@@ -101,9 +101,9 @@ end
 (* Helper functions used by opam-admin *)
 
 let make_index_tar_gz repo_root =
-  OpamFilename.in_dir repo_root (fun () ->
-    let to_include = [ "version"; "packages"; "repo" ] in
-    match List.filter Sys.file_exists to_include with
-    | [] -> ()
-    | d  -> OpamSystem.command ("tar" :: "czhf" :: "index.tar.gz" :: "--exclude=.git*" :: d)
-  )
+  let repo_root = OpamFilename.Dir.to_string repo_root in
+  let ( / ) = Filename.concat in
+  let to_include = [ repo_root / "version"; repo_root / "packages"; repo_root / "repo" ] in
+  match List.filter Sys.file_exists to_include with
+  | [] -> ()
+  | d  -> OpamSystem.command ~dir:repo_root ("tar" :: "czhf" :: "index.tar.gz" :: "--exclude=.git*" :: d)

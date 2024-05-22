@@ -212,7 +212,6 @@ let preprocess_dot_install st nv build_dir =
         else
           (OpamSystem.default_install_warning, (fun () -> false))
       in
-      OpamFilename.in_dir build_dir @@ fun () ->
       log (fun fmt -> fmt "Installing %s.\n" (OpamPackage.to_string nv));
       let warnings =
         OpamStd.List.filter_map (fun install -> install warning) installs
@@ -397,7 +396,6 @@ let prepare_package_build env opam nv dir =
      apply_patches ~dryrun:true ()) @@| fun _ -> None
   else
   let subst_errs =
-    OpamFilename.in_dir dir  @@ fun () ->
     List.fold_left (fun errs f ->
         try
           print_subst f;
@@ -419,7 +417,6 @@ let prepare_package_build env opam nv dir =
      substitution files (see [OpamFilter.expand_interpolations_in_file] and
      [OpamFilename.of_basename]. *)
   let subst_errs =
-    OpamFilename.in_dir dir @@ fun () ->
     List.fold_left (fun errs f ->
         try
           print_subst f;
