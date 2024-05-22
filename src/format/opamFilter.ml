@@ -251,7 +251,7 @@ let expand_string_aux ?(partial=false) ?(escape_value=fun x -> x) ?default env t
     let str = Re.Group.get g 0 in
     if str = "%%" then (if partial then "%%" else "%")
     else if not (OpamStd.String.ends_with ~suffix:"}%" str) then
-      (log "ERR: Unclosed variable replacement in %S\n" str;
+      (log (fun fmt -> fmt "ERR: Unclosed variable replacement in %S\n" str);
        str)
     else
     let fident = String.sub str 2 (String.length str - 4) in
@@ -341,7 +341,7 @@ let logop1 cstr op = function
   | FUndef f -> FUndef (cstr f)
   | e ->
     try FBool (op (value_bool e))
-    with Invalid_argument s -> log "ERR: %s" s; FUndef (cstr e)
+    with Invalid_argument s -> log (fun fmt -> fmt "ERR: %s" s); FUndef (cstr e)
 
 let logop2 cstr op absorb e f = match e, f with
   | _, FBool x when x = absorb -> FBool x
@@ -349,7 +349,7 @@ let logop2 cstr op absorb e f = match e, f with
   | FUndef x, FUndef y | FUndef x, y | x, FUndef y -> FUndef (cstr x y)
   | f, g ->
     try FBool (op (value_bool f) (value_bool g))
-    with Invalid_argument s -> log "ERR: %s" s; FUndef (cstr f g)
+    with Invalid_argument s -> log (fun fmt -> fmt "ERR: %s" s); FUndef (cstr f g)
 
 (* Reduce expressions to values *)
 
@@ -472,7 +472,7 @@ let arguments env (a,f) =
       | Some (S s) -> [s]
       | Some (B b) -> [string_of_bool b]
       | Some (L sl) -> sl
-      | None -> log "ERR in replacement: undefined ident %S" i; [""]
+      | None -> log (fun fmt -> fmt "ERR in replacement: undefined ident %S" i); [""]
   else
     []
 
@@ -523,8 +523,9 @@ let filter_constraints ?default_version ?default env filtered_constraint =
           `Formula (Atom (relop, OpamPackage.Version.of_string v))
         with Failure msg -> match default_version with
           | None ->
-            log "Warn: ignoring version constraint %a: %s"
-              (slog to_string) v msg;
+            log (fun fmt ->
+                fmt "Warn: ignoring version constraint %a: %s"
+                  (slog to_string) v msg);
             `Formula (Empty)
           | Some v -> `Formula (Atom (relop, v)))
     filtered_constraint

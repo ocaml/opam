@@ -124,8 +124,9 @@ let track_t to_track ?(except=OpamFilename.Base.Set.empty) job_f =
     let files =
       try Sys.readdir (Filename.concat prefix dir)
       with Sys_error _ as e ->
-        log "Error at dir %s: %a" (Filename.concat prefix dir)
-          (slog Printexc.to_string) e;
+        log (fun fmt ->
+            fmt "Error at dir %s: %a" (Filename.concat prefix dir)
+              (slog Printexc.to_string) e);
         [||]
     in
     Array.fold_left
@@ -140,7 +141,7 @@ let track_t to_track ?(except=OpamFilename.Base.Set.empty) job_f =
            | _, Dir -> make_index_topdir acc prefix rel
            | _ -> acc
          with Unix.Unix_error _ as e ->
-           log "Error at %s: %a" f (slog Printexc.to_string) e;
+           log (fun fmt -> fmt "Error at %s: %a" f (slog Printexc.to_string) e);
            acc)
       acc files
   in
@@ -175,8 +176,9 @@ let track_t to_track ?(except=OpamFilename.Base.Set.empty) job_f =
   in
   let scan_timer = OpamConsole.timer () in
   let before = make_index () in
-  log ~level:2 "before install: %a elements scanned in %.3fs"
-    (slog @@ string_of_int @* SM.cardinal) before (scan_timer ());
+  log ~level:2 (fun fmt ->
+      fmt "before install: %a elements scanned in %.3fs"
+        (slog @@ string_of_int @* SM.cardinal) before (scan_timer ()));
   job_f () @@| fun result ->
   let scan_timer = OpamConsole.timer () in
   let after = make_index () in
@@ -198,11 +200,12 @@ let track_t to_track ?(except=OpamFilename.Base.Set.empty) job_f =
           | _ -> Some (Kind_changed (item_digest item)))
       before after
   in
-  log "after install: %a elements, %a added, scanned in %.3fs"
-    (slog @@ string_of_int @* SM.cardinal) after
-    (slog @@ string_of_int @* SM.cardinal @*
-             SM.filter (fun _ -> function Added _ -> true | _ -> false))
-    diff (scan_timer ());
+  log (fun fmt ->
+      fmt "after install: %a elements, %a added, scanned in %.3fs"
+        (slog @@ string_of_int @* SM.cardinal) after
+        (slog @@ string_of_int @* SM.cardinal @*
+                 SM.filter (fun _ -> function Added _ -> true | _ -> false))
+        diff (scan_timer ()));
   result, diff
 
 let track_files ~prefix files ?except job_f =
@@ -280,8 +283,9 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
       ([], [], [], []) changes
   in
   if already <> [] then
-    log ~level:2 "%sfiles %s were already removed" title
-      (String.concat ", " (List.rev already));
+    log ~level:2 (fun fmt ->
+        fmt "%sfiles %s were already removed" title
+          (String.concat ", " (List.rev already)));
   if modified <> [] then
     if OpamConsole.confirm ~default:false
         "%sthese files have been modified since installation:\n%s\

@@ -581,7 +581,7 @@ module Graph = struct
          PG.add_vertex g p;
          iter_deps (PG.add_edge g p) p.Cudf.depends)
       u;
-    log ~level:3 "Graph generation: %.3f" (t ());
+    log ~level:3 (fun fmt -> fmt "Graph generation: %.3f" (t ()));
     g
 
   let output g filename =
@@ -830,11 +830,11 @@ module Pp_explanation = struct
 end
 
 let extract_explanations packages cudfnv2opam reasons : explanation list =
-  log "Conflict reporting";
+  log (fun fmt -> fmt "Conflict reporting");
   let open Dose_algo.Diagnostic in
   let module CS = ChainSet in
   (* Definitions and printers *)
-  log ~level:3 "Reasons: %a" (Pp_explanation.pp_reasonlist cudfnv2opam) reasons;
+  log ~level:3 (fun fmt -> fmt "Reasons: %a" (Pp_explanation.pp_reasonlist cudfnv2opam) reasons);
   let all_opam =
     let add p set =
       if is_artefact p then set
@@ -1057,7 +1057,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
         | `Missing (_, sdeps', fdeps') -> sdeps = sdeps' && fdeps = fdeps'
         | _ -> false)
   in
-  log ~level:3 "Explanations: %a" Pp_explanation.pp_explanationlist explanations;
+  log ~level:3 (fun fmt -> fmt "Explanations: %a" Pp_explanation.pp_explanationlist explanations);
   match explanations with
   | [] ->
     OpamConsole.error_and_exit `Internal_error
@@ -1424,17 +1424,19 @@ let preprocess_cudf_request (props, univ, creq) criteria =
           interesting_set
     in
     let conflicts = compute_conflicts univ to_install in
-    log "Conflicts: %a (%a) pkgs to remove"
-      (slog OpamStd.Op.(string_of_int @* Set.cardinal)) conflicts
-      (slog OpamStd.Op.(string_of_int @* Set.cardinal)) (conflicts %% packages);
+    log (fun fmt ->
+        fmt "Conflicts: %a (%a) pkgs to remove"
+          (slog OpamStd.Op.(string_of_int @* Set.cardinal)) conflicts
+          (slog OpamStd.Op.(string_of_int @* Set.cardinal)) (conflicts %% packages));
     Cudf.load_universe (Set.elements (packages -- conflicts))
   in
-  log "Preprocess cudf request (trimming: %s): from %d to %d packages in %.2fs"
-    (match do_trimming with
-       None -> "none" | Some false -> "simple" | Some true -> "full")
-    (Cudf.universe_size univ0)
-    (Cudf.universe_size univ)
-    (chrono ());
+  log (fun fmt ->
+      fmt "Preprocess cudf request (trimming: %s): from %d to %d packages in %.2fs"
+        (match do_trimming with
+           None -> "none" | Some false -> "simple" | Some true -> "full")
+        (Cudf.universe_size univ0)
+        (Cudf.universe_size univ)
+        (chrono ()));
   props, univ, creq
 
 let trim_universe univ packages =
@@ -1445,9 +1447,10 @@ let trim_universe univ packages =
     Cudf.load_universe
       (Cudf.get_packages ~filter:(fun p -> not (Set.mem p conflicts)) univ)
   in
-  log "Pre-remove conflicts (%s): from %d - %d to %d packages in %.2fs"
-    (Set.to_string packages)
-    n (Set.cardinal conflicts) (Cudf.universe_size univ) (chrono ());
+  log (fun fmt ->
+      fmt "Pre-remove conflicts (%s): from %d - %d to %d packages in %.2fs"
+        (Set.to_string packages)
+        n (Set.cardinal conflicts) (Cudf.universe_size univ) (chrono ()));
   univ
 
 exception Timeout of Dose_algo.Depsolver.solver_result option
@@ -1482,11 +1485,11 @@ let call_external_solver ~version_map univ req =
           ~call_solver:(OpamSolverConfig.call_solver ~criteria)
           ~explain:true cudf_request
       in
-      log "Solver call done in %.3fs" (chrono ());
+      log (fun fmt -> fmt "Solver call done in %.3fs" (chrono ()));
       r
     with
     | Timeout (Some sol) ->
-      log "Solver call TIMED OUT with solution after %.3fs" (chrono ());
+      log (fun fmt -> fmt "Solver call TIMED OUT with solution after %.3fs" (chrono ()));
       OpamConsole.warning
         "Resolution of the installation set timed out, so the following \
          solution might not be optimal.\n\
@@ -1525,9 +1528,9 @@ let call_external_solver ~version_map univ req =
 
 let check_request ?(explain=true) ~version_map univ req =
   let chrono = OpamConsole.timer () in
-  log "Checking request...";
+  log (fun fmt -> fmt "Checking request...");
   let result = Dose_algo.Depsolver.check_request ~explain (to_cudf univ req) in
-  log "Request checked in %.3fs" (chrono ());
+  log (fun fmt -> fmt "Request checked in %.3fs" (chrono ()));
   match result with
   | Dose_algo.Depsolver.Unsat
       (Some ({Dose_algo.Diagnostic.result = Dose_algo.Diagnostic.Failure _; _} as r)) ->
@@ -1593,7 +1596,7 @@ let actions_of_diff (install, remove) =
   actions
 
 let resolve ~extern ~version_map universe request =
-  log "resolve request=%a" (slog string_of_request) request;
+  log (fun fmt -> fmt "resolve request=%a" (slog string_of_request) request);
   let resp =
     let check () = check_request ~version_map universe request in
     let solve () = get_final_universe ~version_map universe request in
@@ -1835,8 +1838,9 @@ let compute_root_causes g requested reinstall available =
    required reinstallations and computing the graph of dependency of required
    actions *)
 let atomic_actions ~simple_universe ~complete_universe root_actions =
-  log ~level:2 "graph_of_actions root_actions=%a"
-    (slog string_of_actions) root_actions;
+  log ~level:2 (fun fmt ->
+      fmt "graph_of_actions root_actions=%a"
+        (slog string_of_actions) root_actions);
 
   let to_remove, to_install =
     List.fold_left (fun (rm,inst) a -> match a with
@@ -1950,7 +1954,7 @@ let trim_actions univ req g =
       root_actions
   in
   let discard_actions = Action.Set.diff other_actions connex_actions in
-  log "Removed unrelated actions: %s" (Action.Set.to_string discard_actions);
+  log (fun fmt -> fmt "Removed unrelated actions: %s" (Action.Set.to_string discard_actions));
   Action.Set.iter (ActionGraph.remove_vertex g) discard_actions
 
 let packages u = Cudf.get_packages u

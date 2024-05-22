@@ -118,7 +118,7 @@ module MakeIO (F : IO_Arg) = struct
     in
     write f (fun oc -> F.to_channel f oc v);
     Stats.write_files := filename :: !Stats.write_files;
-    log "Wrote %s%s in %.3fs" filename (if F.atomic then " atomically" else "") (chrono ())
+    log (fun fmt -> fmt "Wrote %s%s in %.3fs" filename (if F.atomic then " atomically" else "") (chrono ()))
 
   let read_opt f =
     let filename = OpamFilename.prettify f in
@@ -130,7 +130,7 @@ module MakeIO (F : IO_Arg) = struct
         (*Stats.read_files := filename :: !Stats.read_files;*)
         let r = F.of_channel f ic in
         close_in ic;
-        log ~level:3 "Read %s in %.3fs" filename (chrono ());
+        log ~level:3 (fun fmt -> fmt "Read %s in %.3fs" filename (chrono ()));
         Some r
       with e -> OpamStd.Exn.finalise e (fun () -> close_in ic)
     with
@@ -156,7 +156,7 @@ module MakeIO (F : IO_Arg) = struct
       match read_opt f with
       | Some f -> f
       | None ->
-        log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
+        log ~level:2 (fun fmt -> fmt "Cannot find %a" (slog OpamFilename.to_string) f);
         F.empty
     with
     | (Pp.Bad_version _ | Pp.Bad_format _) as e->
@@ -3501,9 +3501,9 @@ module OPAMSyntax = struct
          | Some _, None, None -> t
          | None, Some _, Some _ -> t
          | None, _, _ ->
-           OpamConsole.log "FILE(opam)"
-             "Outputting opam file %s with unspecified name or version"
-             (OpamFilename.to_string filename);
+           OpamConsole.log "FILE(opam)" (fun fmt ->
+               fmt "Outputting opam file %s with unspecified name or version"
+                 (OpamFilename.to_string filename));
            t
          | Some nv, _, _ ->
            if t.name <> None && t.name <> Some (nv.OpamPackage.name) ||

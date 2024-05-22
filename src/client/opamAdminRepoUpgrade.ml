@@ -206,10 +206,10 @@ let do_upgrade repo_root =
          url_md5 [] |> fun lines ->
        try OpamFile.Lines.write cache_file lines with e ->
          OpamStd.Exn.fatal e;
-         OpamConsole.log "REPO_UPGRADE"
-           "Could not write archive hash cache to %s, skipping (%s)"
-           (OpamFile.to_string cache_file)
-           (Printexc.to_string e))
+         OpamConsole.log "REPO_UPGRADE" (fun fmt ->
+             fmt "Could not write archive hash cache to %s, skipping (%s)"
+               (OpamFile.to_string cache_file)
+               (Printexc.to_string e)))
   in
   let ocaml_versions =
     OpamStd.String.Map.fold (fun c comp_file ocaml_versions ->
@@ -411,9 +411,9 @@ let do_upgrade repo_root =
 
   let packages = OpamRepository.packages_with_prefixes repo_root in
 
-  OpamConsole.log "REPO_UPGRADE"
-    "Will not update base packages: %s\n"
-    (OpamPackage.Name.Set.to_string all_base_packages);
+  OpamConsole.log "REPO_UPGRADE" (fun fmt ->
+      fmt "Will not update base packages: %s\n"
+        (OpamPackage.Name.Set.to_string all_base_packages));
 
   OpamPackage.Map.iter (fun package prefix ->
       let opam_file = OpamRepositoryPath.opam repo_root prefix package in

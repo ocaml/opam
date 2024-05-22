@@ -69,10 +69,11 @@ let repos_list_raw rt switch_config =
       repos
   in
   List.iter (fun r ->
-      log "Ignoring %s-selected repository %S, no configured repository by \
-           this name found"
-        (if global then "globally" else "switch")
-        (OpamRepositoryName.to_string r))
+      log (fun fmt ->
+          fmt "Ignoring %s-selected repository %S, no configured repository by \
+               this name found"
+            (if global then "globally" else "switch")
+            (OpamRepositoryName.to_string r)))
     notfound;
   found
 
@@ -219,7 +220,7 @@ let depexts_status_of_packages_raw
         msg;
       OpamPackage.Map.empty
   in
-  log "depexts loaded in %.3fs" (chronos());
+  log (fun fmt -> fmt "depexts loaded in %.3fs" (chronos()));
   ret
 
 let depexts_unavailable_raw sys_packages nv =
@@ -232,11 +233,12 @@ let depexts_unavailable_raw sys_packages nv =
 let load lock_kind gt rt switch =
   OpamFormatUpgrade.as_necessary_repo_switch_light_upgrade lock_kind `Switch gt;
   let chrono = OpamConsole.timer () in
-  log "LOAD-SWITCH-STATE %@ %a" (slog OpamSwitch.to_string) switch;
+  log (fun fmt -> fmt "LOAD-SWITCH-STATE %@ %a" (slog OpamSwitch.to_string) switch);
   if not (OpamGlobalState.switch_exists gt switch) then
-    (log "The switch %a does not appear to be installed according to %a"
-       (slog OpamSwitch.to_string) switch
-       (slog @@ OpamFile.to_string @* OpamPath.config) gt.root;
+    (log (fun fmt ->
+         fmt "The switch %a does not appear to be installed according to %a"
+           (slog OpamSwitch.to_string) switch
+           (slog @@ OpamFile.to_string @* OpamPath.config) gt.root);
 
      OpamConsole.error_and_exit
        (if OpamStateConfig.(!r.switch_from = `Command_line) then `Bad_arguments
@@ -258,10 +260,11 @@ let load lock_kind gt rt switch =
   in
   let switch_config = load_switch_config ~lock_kind gt switch in
   if OpamStateConfig.is_newer_than_self gt then
-    log "root version (%s) is greater than running binary's (%s); \
-         load with best-effort (read-only)"
-      (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
-      (OpamVersion.to_string (OpamFile.Config.root_version));
+    log (fun fmt ->
+        fmt "root version (%s) is greater than running binary's (%s); \
+             load with best-effort (read-only)"
+          (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
+          (OpamVersion.to_string (OpamFile.Config.root_version)));
   if OpamVersion.compare
       switch_config.opam_version
       OpamFile.Switch_config.oldest_compatible_format_version
@@ -289,12 +292,13 @@ let load lock_kind gt rt switch =
           let version =
             match OpamFile.OPAM.version_opt o with
             | Some v when v <> nv.version ->
-              log "warn: %s has conflicting pinning versions between \
-                   switch-state (%s) and overlay (%s). Using %s."
-                (OpamPackage.Name.to_string nv.name)
-                (OpamPackage.Version.to_string nv.version)
-                (OpamPackage.Version.to_string v)
-                (OpamPackage.Version.to_string v);
+              log (fun fmt ->
+                  fmt "warn: %s has conflicting pinning versions between \
+                       switch-state (%s) and overlay (%s). Using %s."
+                    (OpamPackage.Name.to_string nv.name)
+                    (OpamPackage.Version.to_string nv.version)
+                    (OpamPackage.Version.to_string v)
+                    (OpamPackage.Version.to_string v));
               v
             | _ -> nv.version
           in
@@ -353,9 +357,10 @@ let load lock_kind gt rt switch =
         try
           let o = OpamPackage.Map.find nv opams in
           if lock_kind = `Lock_write then (* auto-repair *)
-            (log "Definition missing for installed package %s, \
-                  copying from repo"
-               (OpamPackage.to_string nv);
+            (log (fun fmt ->
+                 fmt "Definition missing for installed package %s, \
+                      copying from repo"
+                   (OpamPackage.to_string nv));
              OpamFile.OPAM.write
                (OpamPath.Switch.installed_opam gt.root switch nv) o);
           nodef
@@ -380,8 +385,9 @@ let load lock_kind gt rt switch =
         opams installed_opams
       |> OpamPackage.keys
     in
-    log "Detected changed packages (marked for reinstall): %a"
-      (slog OpamPackage.Set.to_string) changed;
+    log (fun fmt ->
+        fmt "Detected changed packages (marked for reinstall): %a"
+          (slog OpamPackage.Set.to_string) changed);
     changed
   ) in
   let switch_config, switch_invariant =
@@ -398,11 +404,12 @@ let load lock_kind gt rt switch =
           gt switch switch_config opams
           packages compiler_packages installed_roots available_packages
       in
-      log "Inferred invariant: from base packages %a, (roots %a) => %a"
-        (slog OpamPackage.Set.to_string) compiler_packages
-        (slog @@ fun () ->
-         OpamPackage.Set.to_string (compiler_packages %% installed_roots)) ()
-        (slog OpamFileTools.dep_formula_to_string) invariant;
+      log (fun fmt ->
+          fmt "Inferred invariant: from base packages %a, (roots %a) => %a"
+            (slog OpamPackage.Set.to_string) compiler_packages
+            (slog @@ fun () ->
+             OpamPackage.Set.to_string (compiler_packages %% installed_roots)) ()
+            (slog OpamFileTools.dep_formula_to_string) invariant);
       let min_opam_version = OpamVersion.of_string "2.0" in
       let opam_version =
         if OpamVersion.compare switch_config.opam_version min_opam_version < 0
@@ -588,7 +595,7 @@ let load lock_kind gt rt switch =
   let available_packages = lazy (
     let chrono = OpamConsole.timer () in
     let r = Lazy.force available_packages in
-    log ~level:2 "Availability of packages computed in %.3fs." (chrono ());
+    log ~level:2 (fun fmt -> fmt "Availability of packages computed in %.3fs." (chrono ()));
     r
   ) in
   let reinstall = lazy (
@@ -613,7 +620,7 @@ let load lock_kind gt rt switch =
     opams; conf_files;
     packages; available_packages; sys_packages; reinstall; invalidated;
   } in
-  log "Switch state loaded in %.3fs" (chrono ());
+  log (fun fmt -> fmt "Switch state loaded in %.3fs" (chrono ()));
   st
 
 let load_virtual ?repos_list ?(avail_default=true) gt rt =
@@ -903,10 +910,11 @@ let package_env_t st ~force_dev_deps ~test ~doc ~dev_setup
     (if OpamFormatConfig.(!r.strict) then
        OpamConsole.error_and_exit `File_error
          "Undefined filter variable %s in dependencies of %s"
+         (OpamVariable.Full.to_string v) (OpamPackage.to_string nv)
      else
-       log
-         "ERR: Undefined filter variable %s in dependencies of %s")
-      (OpamVariable.Full.to_string v) (OpamPackage.to_string nv);
+       log (fun fmt ->
+           fmt "ERR: Undefined filter variable %s in dependencies of %s"
+             (OpamVariable.Full.to_string v) (OpamPackage.to_string nv)));
   r
 
 let get_dependencies_t st ~force_dev_deps ~test ~doc ~dev_setup
@@ -1037,7 +1045,7 @@ let universe st
                  "avoid-version", avoid_versions];
 }
   in
-  log ~level:2 "Universe load: %.3fs" (chrono ());
+  log ~level:2 (fun fmt -> fmt "Universe load: %.3fs" (chrono ()));
   u
 
 let dump_pef_state st oc =
@@ -1341,8 +1349,9 @@ let dependencies_t st base_deps_compute deps_compute
     else if unavailable then st.packages
     else Lazy.force st.available_packages
   in
-  log ~level:3 "dependencies packages=%a"
-    (slog OpamPackage.Set.to_string) packages;
+  log ~level:3 (fun fmt ->
+      fmt "dependencies packages=%a"
+        (slog OpamPackage.Set.to_string) packages);
   let timer = OpamConsole.timer () in
   let base_depends =
     let filter = base_deps_compute base in
@@ -1371,8 +1380,9 @@ let dependencies_t st base_deps_compute deps_compute
       depends
   in
   let result = deps_compute base base_depends packages in
-  log "dependencies (%.3f) result=%a" (timer ())
-    (slog OpamPackage.Set.to_string) result;
+  log (fun fmt ->
+      fmt "dependencies (%.3f) result=%a" (timer ())
+        (slog OpamPackage.Set.to_string) result);
   result
 
 let dependencies st ~build ~post =

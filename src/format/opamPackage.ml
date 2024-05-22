@@ -224,7 +224,7 @@ let of_archive f =
   | Some (s,_) -> of_string_opt s
 
 let list dir =
-  log "list %a" (slog OpamFilename.Dir.to_string) dir;
+  log (fun fmt -> fmt "list %a" (slog OpamFilename.Dir.to_string) dir);
   if OpamFilename.exists_dir dir then (
     let files = OpamFilename.rec_files dir in
     List.fold_left (fun set f ->
@@ -244,7 +244,7 @@ let list dir =
     Set.empty
 
 let prefixes repodir =
-  log "prefixes %a" (slog OpamFilename.Dir.to_string) repodir;
+  log (fun fmt -> fmt "prefixes %a" (slog OpamFilename.Dir.to_string) repodir);
   if OpamFilename.exists_dir repodir then (
     let files = OpamFilename.rec_files repodir in
     List.fold_left (fun map f ->

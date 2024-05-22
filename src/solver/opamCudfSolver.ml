@@ -112,8 +112,8 @@ module Aspcud_def = struct
       | s::_ ->
         match OpamStd.String.split s ' ' with
         | "aspcud"::_::v::_ when OpamVersionCompare.compare v "1.9" >= 0 ->
-          OpamConsole.log "SOLVER"
-            "Solver is aspcud >= 1.9: using latest version criteria";
+          OpamConsole.log "SOLVER" (fun fmt ->
+              fmt "Solver is aspcud >= 1.9: using latest version criteria");
           true
         | _ -> false
     with OpamSystem.Process_error _ -> false

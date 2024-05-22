@@ -42,13 +42,13 @@ let gen_switch_config
   }
 
 let install_switch_config root switch config =
-  log "install_switch_config switch=%a" (slog OpamSwitch.to_string) switch;
+  log (fun fmt -> fmt "install_switch_config switch=%a" (slog OpamSwitch.to_string) switch);
   OpamFile.Switch_config.write
     (OpamPath.Switch.switch_config root switch)
     config
 
 let create_empty_switch gt ?synopsis ?repos ?invariant switch =
-  log "create_empty_switch at %a" (slog OpamSwitch.to_string) switch;
+  log (fun fmt -> fmt "create_empty_switch at %a" (slog OpamSwitch.to_string) switch);
   let root = gt.root in
   let switch_dir = OpamPath.Switch.root root switch in
 
@@ -98,8 +98,9 @@ let write_selections st =
     OpamFile.Environment.write env (OpamEnv.compute_updates st)
 
 let add_to_reinstall st ~unpinned_only packages =
-  log "add-to-reinstall unpinned_only:%b packages:%a" unpinned_only
-    (slog OpamPackage.Set.to_string) packages;
+  log (fun fmt ->
+      fmt "add-to-reinstall unpinned_only:%b packages:%a" unpinned_only
+        (slog OpamPackage.Set.to_string) packages);
   let root = st.switch_global.root in
   let packages =
     if unpinned_only then

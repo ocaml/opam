@@ -264,13 +264,14 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
         | _ -> None)
       atom_or_local_list
   in
-  log "autopin: %a"
-    (slog @@ OpamStd.List.to_string (fun pin ->
-         Printf.sprintf "%s%s => %s"
-           (OpamPackage.Name.to_string pin.pin_name)
-           (if pin.pin.pin_locked = None then "" else "[locked]")
-           (OpamUrl.to_string_w_subpath pin.pin.pin_subpath pin.pin.pin_url)))
-    to_pin;
+  log (fun fmt ->
+      fmt "autopin: %a"
+        (slog @@ OpamStd.List.to_string (fun pin ->
+             Printf.sprintf "%s%s => %s"
+               (OpamPackage.Name.to_string pin.pin_name)
+               (if pin.pin.pin_locked = None then "" else "[locked]")
+               (OpamUrl.to_string_w_subpath pin.pin.pin_subpath pin.pin.pin_url)))
+        to_pin);
   let obsolete_pins =
     (* Packages not current but pinned to the same dirs *)
     OpamPackage.Set.filter (fun nv ->

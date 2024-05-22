@@ -25,7 +25,7 @@ let slog = OpamConsole.slog
 
 let internal_error fmt =
   Printf.ksprintf (fun str ->
-    log "error: %s" str;
+    log (fun fmt -> fmt "error: %s" str);
     raise (Internal_error str)
   ) fmt
 
@@ -90,7 +90,7 @@ let rec mk_temp_dir ?(prefix="opam") () =
 
 let safe_mkdir dir =
   try
-    log "mkdir %s" dir;
+    log (fun fmt -> fmt "mkdir %s" dir);
     Unix.mkdir dir 0o755
   with
     Unix.Unix_error(Unix.EEXIST,_,_) -> ()
@@ -131,7 +131,7 @@ let win32_unlink fn =
 let remove_file_t ?(with_log=true) file =
   try
     if with_log || log_for_file_management () then
-      log "rm %s" file;
+      log (fun fmt -> fmt "rm %s" file);
     if Sys.win32 then
       win32_unlink file
     else
@@ -156,7 +156,7 @@ let rec remove_dir_t dir =
   Unix.rmdir dir
 
 let remove_dir dir =
-  log "rmdir %s" dir;
+  log (fun fmt -> fmt "rmdir %s" dir);
   if Sys.file_exists dir then begin
     if Sys.is_directory dir then
       remove_dir_t dir
@@ -173,7 +173,7 @@ let logs_cleaner =
            try
              Unix.unlink f;
              (* Only log the item if unlink succeeded *)
-             log "logs_cleaner: rm: %s" f
+             log (fun fmt -> fmt "logs_cleaner: rm: %s" f)
            with Unix.Unix_error _ -> ())
          !to_clean;
        if OpamCoreConfig.(!r.log_dir = default.log_dir) then
@@ -203,7 +203,7 @@ let remove_file file =
   if
     try ignore (Unix.lstat file); true with Unix.Unix_error _ -> false
   then (
-    log "rm %s" file;
+    log (fun fmt -> fmt "rm %s" file);
     try
       try Unix.unlink file
       with Unix.Unix_error(EACCES, _, _) when Sys.win32 ->
@@ -628,9 +628,10 @@ let run_process
              full_cmd args)
       in
       let str = String.concat " " (cmd :: args) in
-      log ~level:2 "[%a] (in %.3fs) %s"
-        (OpamConsole.slog Filename.basename) name
-        (chrono ()) str;
+      log ~level:2 (fun fmt ->
+          fmt "[%a] (in %.3fs) %s"
+            (OpamConsole.slog Filename.basename) name
+            (chrono ()) str);
       r
     | `Not_found -> command_not_found cmd
     | `Denied -> permission_denied cmd
@@ -687,7 +688,7 @@ let copy_file_t ?(with_log=true) src dst =
   then remove_file dst;
   mkdir (Filename.dirname dst);
   if with_log || log_for_file_management () then
-    log "copy %s -> %s" src dst;
+    log (fun fmt -> fmt "copy %s -> %s" src dst);
   copy_file_aux ~src ~dst ()
 
 let rec link_t ?(with_log=true) src dst =
@@ -696,7 +697,7 @@ let rec link_t ?(with_log=true) src dst =
     remove_file dst;
   try
     if with_log || log_for_file_management () then
-      log "ln -s %s %s" src dst;
+      log (fun fmt -> fmt "ln -s %s %s" src dst);
     Unix.symlink src dst
   with Unix.Unix_error (Unix.EXDEV, _, _) ->
     (* Fall back to copy if symlinks are not supported *)
@@ -711,7 +712,7 @@ let rec link_t ?(with_log=true) src dst =
 
 and copy_dir_t ?(with_log=true) src dst_dir =
   if with_log || log_for_file_management () then
-    log "copydir %s -> %s" src dst_dir;
+    log (fun fmt -> fmt "copydir %s -> %s" src dst_dir);
   let files = get_files src in
   mkdir dst_dir;
   let with_log = false in
@@ -746,7 +747,7 @@ let copy_file = copy_file_t ~with_log:true
 let mv src dst =
   if file_or_symlink_exists dst then remove_file dst;
   mkdir (Filename.dirname dst);
-  log "mv %s -> %s" src dst;
+  log (fun fmt -> fmt "mv %s -> %s" src dst);
   try
     Unix.rename src dst
   with
@@ -868,7 +869,7 @@ let install ?(warning=default_install_warning) ?exec src dst =
     | Some e -> e
     | None -> is_exec src in
   let perm = if exec then 0o755 else 0o644 in
-  log "install %s -> %s (%o)" src dst perm;
+  log (fun fmt -> fmt "install %s -> %s (%o)" src dst perm);
   if Sys.win32 then
     if exec then begin
       let (dst, cygcheck) =
@@ -1148,12 +1149,12 @@ let link src dst =
   );
   if Unix.has_symlink () then
     try
-      log "ln -s %s %s" src dst;
+      log (fun fmt -> fmt "ln -s %s %s" src dst);
       Unix.symlink src dst
     with Unix.Unix_error (Unix.EXDEV, _, _) ->
       fallback ()
   else (
-    log "copy %s -> %s" src dst;
+    log (fun fmt -> fmt "copy %s -> %s" src dst);
     fallback ()
   )
 
@@ -1190,9 +1191,10 @@ let release_all_locks () =
 let rec flock_update
   : 'a. ([< lock_flag ] as 'a) -> ?dontblock:bool -> lock -> unit
   = fun flag ?(dontblock=OpamCoreConfig.(!r.safe_mode)) lock ->
-  log "LOCK %s (%a => %a)" ~level:2 lock.file
-    (slog string_of_lock_kind) (lock.kind)
-    (slog string_of_lock_kind) flag;
+  log ~level:2 (fun fmt ->
+        fmt "LOCK %s (%a => %a)" lock.file
+          (slog string_of_lock_kind) (lock.kind)
+          (slog string_of_lock_kind) flag);
   if lock.kind = (flag :> lock_flag) then ()
   else
   match flag, lock with
@@ -1399,17 +1401,17 @@ let translate_patch ~dir orig corrected =
             match (crlf, patch_crlf) with
             | (None, _)
             | (_, None) ->
-                log ~level:3 "CRLF adaptation skipped for %s" target;
+                log ~level:3 (fun fmt -> fmt "CRLF adaptation skipped for %s" target);
                 None
             | (Some crlf, Some patch_crlf) ->
                 if crlf = patch_crlf then begin
-                  log ~level:3 "No CRLF adaptation necessary for %s" target;
+                  log ~level:3 (fun fmt -> fmt "No CRLF adaptation necessary for %s" target);
                   None
                 end else if crlf then begin
-                  log ~level:3 "Adding \\r to patch chunks for %s" target;
+                  log ~level:3 (fun fmt -> fmt "Adding \\r to patch chunks for %s" target);
                   Some true
                 end else begin
-                  log ~level:3 "Stripping \\r to patch chunks for %s" target;
+                  log ~level:3 (fun fmt -> fmt "Stripping \\r to patch chunks for %s" target);
                   Some false
                 end
           in
@@ -1552,8 +1554,9 @@ let translate_patch ~dir orig corrected =
                 | None ->
                     Some (Some has_cr)
                 | Some (Some think_cr) when think_cr <> has_cr ->
-                    log ~level:2 "Patch adaptation disabled for %s: \
-                                  mixed endings or binary file" target;
+                    log ~level:2 (fun fmt ->
+                      fmt "Patch adaptation disabled for %s: \
+                           mixed endings or binary file" target);
                     Some None
                 | _ ->
                     patch_crlf
@@ -1597,7 +1600,7 @@ let translate_patch ~dir orig corrected =
     if OpamConsole.debug () then
       let log_transform (first_line, last_line, add_cr) =
          let indicator = if add_cr then '+' else '-' in
-         log ~level:3 "Transform %d-%d %c\\r" first_line last_line indicator
+         log ~level:3 (fun fmt -> fmt "Transform %d-%d %c\\r" first_line last_line indicator)
       in
       List.iter log_transform transforms;
     let rec fold_lines n transforms =

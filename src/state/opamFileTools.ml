@@ -1113,8 +1113,9 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
       | None, (Some url, None) -> OpamFile.OPAM.with_url url opam
       | Some opam_url, (Some url, errs) ->
         if url = opam_url && errs = None then
-          log "Duplicate definition of url in '%s' and opam file"
-            (OpamFile.to_string url_file)
+          log (fun fmt ->
+              fmt "Duplicate definition of url in '%s' and opam file"
+                (OpamFile.to_string url_file))
         else
           OpamConsole.warning
             "File '%s' ignored (conflicting url already specified in the \
@@ -1130,8 +1131,9 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
             try_read OpamFile.Descr.read_opt descr_file with
       | None, (Some descr, None) -> OpamFile.OPAM.with_descr descr opam
       | Some _, (Some _, _) ->
-        log "Duplicate descr in '%s' and opam file"
-          (OpamFile.to_string descr_file);
+        log (fun fmt ->
+            fmt "Duplicate descr in '%s' and opam file"
+              (OpamFile.to_string descr_file));
         opam
       | _, (_, Some err) ->
         OpamFile.OPAM.with_format_errors (err :: opam.format_errors) opam
@@ -1149,12 +1151,12 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
       match OpamFile.OPAM.extra_files opam, extra_files with
       | None, None -> opam
       | None, Some ef ->
-        log ~level:2
-          "Missing extra-files field for %a for %a, adding them."
-          (slog @@ OpamStd.List.concat_map ", "
-             (fun (_,f) -> OpamFilename.Base.to_string f)) ef
-          OpamStd.Op.(slog @@ OpamPackage.to_string @* OpamFile.OPAM.package)
-          opam;
+        log ~level:2 (fun fmt ->
+            fmt "Missing extra-files field for %a for %a, adding them."
+              (slog @@ OpamStd.List.concat_map ", "
+                 (fun (_,f) -> OpamFilename.Base.to_string f)) ef
+              OpamStd.Op.(slog @@ OpamPackage.to_string @* OpamFile.OPAM.package)
+              opam);
         let ef =
           List.map
             (fun (file, basename) ->
@@ -1164,10 +1166,11 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
         in
         OpamFile.OPAM.with_extra_files ef opam
       | Some ef, None ->
-        log "Missing expected extra files %s at %s/files"
-          (OpamStd.List.concat_map ", "
-             (fun (f,_) -> OpamFilename.Base.to_string f) ef)
-          (OpamFilename.Dir.to_string dir);
+        log (fun fmt ->
+            fmt "Missing expected extra files %s at %s/files"
+              (OpamStd.List.concat_map ", "
+                 (fun (f,_) -> OpamFilename.Base.to_string f) ef)
+              (OpamFilename.Dir.to_string dir));
         opam
       | Some oef, Some ef ->
         let wr_check, nf_opam, rest =
@@ -1186,20 +1189,21 @@ let add_aux_files ?dir ~files_subdir_hashes opam =
         in
         let nf_file = List.map fst rest in
         if nf_file <> [] || wr_check <> [] || nf_opam <> [] then
-          log "Mismatching extra-files at %s: %s"
-            (OpamFilename.Dir.to_string dir)
-            ((if nf_file = [] then None else
-                Some (Printf.sprintf "missing from 'files' directory (%d)"
-                        (List.length nf_file)))
-             :: (if nf_opam = [] then None else
-                   Some (Printf.sprintf "missing from opam file (%d)"
-                           (List.length nf_opam)))
-             :: (if wr_check = [] then None else
-                   Some (Printf.sprintf "wrong checksum (%d)"
-                           (List.length wr_check)))
-             :: []
-             |> OpamStd.List.filter_some
-             |> OpamStd.Format.pretty_list);
+          log (fun fmt ->
+              fmt "Mismatching extra-files at %s: %s"
+                (OpamFilename.Dir.to_string dir)
+                ((if nf_file = [] then None else
+                    Some (Printf.sprintf "missing from 'files' directory (%d)"
+                            (List.length nf_file)))
+                 :: (if nf_opam = [] then None else
+                       Some (Printf.sprintf "missing from opam file (%d)"
+                               (List.length nf_opam)))
+                 :: (if wr_check = [] then None else
+                       Some (Printf.sprintf "wrong checksum (%d)"
+                               (List.length wr_check)))
+                 :: []
+                 |> OpamStd.List.filter_some
+                 |> OpamStd.Format.pretty_list));
         opam
     in
     opam
@@ -1231,7 +1235,7 @@ let dep_formula_to_string f =
   OpamPrinter.FullPos.value (OpamPp.print pp f)
 
 let sort_opam opam =
-  log "sorting %s" (OpamPackage.to_string (package opam));
+  log (fun fmt -> fmt "sorting %s" (OpamPackage.to_string (package opam)));
   let sort_ff =
     let compare_filters filter filter' =
       let get_vars = function

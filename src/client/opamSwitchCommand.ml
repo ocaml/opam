@@ -20,7 +20,7 @@ let log fmt = OpamConsole.log "SWITCH" fmt
 let slog = OpamConsole.slog
 
 let list gt ~print_short =
-  log "list";
+  log (fun fmt -> fmt "list");
   let gt = OpamGlobalState.fix_switch_list gt in
   if print_short then
     List.iter (OpamConsole.msg "%s\n" @* OpamSwitch.to_string)
@@ -170,7 +170,7 @@ let clear_switch ?(keep_debug=false) (gt: rw global_state) switch =
   with OpamSystem.Internal_error _ -> gt
 
 let remove gt ?(confirm = true) switch =
-  log "remove switch=%a" (slog OpamSwitch.to_string) switch;
+  log (fun fmt -> fmt "remove switch=%a" (slog OpamSwitch.to_string) switch);
   if not (OpamGlobalState.switch_exists gt switch) then (
     OpamConsole.msg "The compiler switch %s does not exist.\n"
       (OpamSwitch.to_string switch);
@@ -359,7 +359,7 @@ let create
     OpamGlobalState.drop gt
 
 let switch lock gt switch =
-  log "switch switch=%a" (slog OpamSwitch.to_string) switch;
+  log (fun fmt -> fmt "switch switch=%a" (slog OpamSwitch.to_string) switch);
   if OpamGlobalState.switch_exists gt switch then
     OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
     let st = OpamSwitchState.load lock gt rt switch in
@@ -391,7 +391,7 @@ let switch_previous lock gt =
       "No previously used switch could be found"
 
 let import_t ?ask importfile t =
-  log "import switch";
+  log (fun fmt -> fmt "import switch");
 
   let extra_files = importfile.OpamFile.SwitchExport.extra_files in
   let xfiles_dir =
@@ -655,7 +655,7 @@ let show () =
 
 let reinstall init_st =
   let switch = init_st.switch in
-  log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
+  log (fun fmt -> fmt "reinstall switch=%a" (slog OpamSwitch.to_string) switch);
   let gt = init_st.switch_global in
 
   let switch_root = OpamPath.Switch.root gt.root switch in
@@ -687,7 +687,7 @@ let import st filename =
   let importfile =
     try OpamFile.SwitchExport.read_from_string ?filename import_str
     with OpamPp.Bad_format _ as e ->
-      log "Error loading export file, trying the old file format";
+      log (fun fmt -> fmt "Error loading export file, trying the old file format");
       try
         let selections = OpamFile.LegacyState.read_from_string import_str in
         { OpamFile.SwitchExport.selections;

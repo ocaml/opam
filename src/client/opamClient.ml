@@ -145,15 +145,16 @@ let upgrade_t
     ?strict_upgrade ?auto_install ?ask ?(check=false) ?(terse=false)
     ?only_installed ~all atoms ?(formula=OpamFormula.Empty) t
   =
-  log "UPGRADE %a"
-    (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
-    atoms;
+  log (fun fmt ->
+      fmt "UPGRADE %a"
+        (slog @@ function [] -> "<all>" | a -> OpamFormula.string_of_atoms a)
+        atoms);
   match
     compute_upgrade_t ?strict_upgrade ?auto_install ?only_installed ~all
       ~formula atoms t
   with
   | requested, Conflicts cs ->
-    log "conflict!";
+    log (fun fmt -> fmt "conflict!");
     if not (OpamPackage.Name.Set.is_empty requested) then
       (OpamConsole.error "Package conflict!";
        OpamConsole.errmsg "%s"
@@ -347,7 +348,7 @@ let upgrade t ?formula ?check ?only_installed ~all names =
 
 let fixup ?(formula=OpamFormula.Empty) t =
   (* @LG reimplement as an alias for 'opam upgrade --criteria=fixup --best-effort --update-invariant *)
-  log "FIXUP";
+  log (fun fmt -> fmt "FIXUP");
   let resolve pkgs =
     pkgs,
     OpamSolution.resolve t Upgrade
@@ -362,21 +363,22 @@ let fixup ?(formula=OpamFormula.Empty) t =
   let is_success = function
     | _, Success _ -> true
     | _, Conflicts cs ->
-      log "conflict: %a"
-        (slog (OpamCudf.string_of_conflicts t.packages @@
-               OpamSwitchState.unavailable_reason t))
-        cs;
+      log (fun fmt ->
+          fmt "conflict: %a"
+            (slog (OpamCudf.string_of_conflicts t.packages @@
+                   OpamSwitchState.unavailable_reason t))
+            cs);
       false
   in
   let requested, solution =
     let s =
-      log "fixup-1/ keep installed packages with orphaned versions and roots";
+      log (fun fmt -> fmt "fixup-1/ keep installed packages with orphaned versions and roots");
       resolve (t.installed_roots %% t.installed
                %% Lazy.force t.available_packages)
     in
     if is_success s then s else
     let s =
-      log "fixup-2/ last resort: no constraints. This should never fail";
+      log (fun fmt -> fmt "fixup-2/ last resort: no constraints. This should never fail");
       resolve OpamPackage.Set.empty
     in
     s
@@ -409,7 +411,7 @@ let fixup ?(formula=OpamFormula.Empty) t =
 
 let update
     gt ~repos_only ~dev_only ?(all=false) names =
-  log "UPDATE %a" (slog @@ String.concat ", ") names;
+  log (fun fmt -> fmt "UPDATE %a" (slog @@ String.concat ", ") names);
   let rt = OpamRepositoryState.load `Lock_none gt in
   let st, repos_only =
     match OpamStateConfig.get_switch_opt () with
@@ -478,7 +480,7 @@ let update
                  OpamProcess.Job.run @@
                  OpamRepository.is_dirty { cache_url with OpamUrl.backend = vc }
                 with OpamSystem.Process_error _ ->
-                  log "Skipping %s, not a git repo" (OpamPackage.to_string nv);
+                  log (fun fmt -> fmt "Skipping %s, not a git repo" (OpamPackage.to_string nv));
                   false)
              | _ -> false)
           dev_packages
@@ -1141,8 +1143,9 @@ let init
     ?(check_sandbox=true)
     ?cygwin_setup ?git_location
     shell =
-  log "INIT %a"
-    (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
+  log (fun fmt ->
+      fmt "INIT %a"
+        (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo);
   let root = OpamStateConfig.(!r.root_dir) in
   let config_f = OpamPath.config root in
   let root_empty =
@@ -1212,7 +1215,7 @@ let init
         OpamFile.Repos_config.write (OpamPath.repos_config root)
           repos_config;
 
-        log "updating repository state";
+        log (fun fmt -> fmt "updating repository state");
         let gt = OpamGlobalState.load `Lock_write in
         let rt = OpamRepositoryState.load `Lock_write gt in
         OpamConsole.header_msg "Fetching repository information";
@@ -1247,9 +1250,10 @@ let init
             alternatives
             |> OpamStd.Option.default []
           in
-          log "Selected default compiler %s in %0.3fs"
-            (OpamFormula.string_of_atoms default_compiler)
-            (chrono ());
+          log (fun fmt ->
+              fmt "Selected default compiler %s in %0.3fs"
+                (OpamFormula.string_of_atoms default_compiler)
+                (chrono ()));
           default_compiler
         in
         gt, OpamRepositoryState.unlock ~cleanup:false rt, default_compiler
@@ -1394,7 +1398,7 @@ let filter_unpinned_locally t atoms f =
 let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
     ?(download_only=false) atoms ?(formula=OpamFormula.Empty)
     add_to_roots ~deps_only ~assume_built =
-  log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
+  log (fun fmt -> fmt "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms);
   let available_packages = Lazy.force t.available_packages in
 
   let atoms =
@@ -1576,7 +1580,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   let t = {t with installed = t.installed -- deps_of_packages} in
   let t, solution = match solution with
     | Conflicts cs ->
-      log "conflict!";
+      log (fun fmt -> fmt "conflict!");
       OpamConsole.error "Package conflict!";
       let (conflicts, _cycles) as explanations =
         OpamCudf.conflict_explanations_raw t.packages cs
@@ -1653,8 +1657,9 @@ let install t ?formula ?autoupdate ?add_to_roots
     ~ignore_conflicts ~depext_only ~deps_only ~download_only ~assume_built
 
 let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
-  log "REMOVE autoremove:%b %a" autoremove
-    (slog OpamFormula.string_of_atoms) atoms;
+  log (fun fmt ->
+      fmt "REMOVE autoremove:%b %a" autoremove
+        (slog OpamFormula.string_of_atoms) atoms);
 
   let nothing_to_do = ref true in
   let packages, not_installed =
@@ -1741,7 +1746,7 @@ let remove t ~autoremove ~force ?formula names =
   remove_t ~autoremove ~force ?formula atoms t
 
 let reinstall_t t ?ask ?(force=false) ~assume_built atoms =
-  log "reinstall %a" (slog OpamFormula.string_of_atoms) atoms;
+  log (fun fmt -> fmt "reinstall %a" (slog OpamFormula.string_of_atoms) atoms);
 
   let packages = OpamFormula.packages_of_atoms t.packages atoms in
 

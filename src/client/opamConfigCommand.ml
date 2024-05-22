@@ -18,7 +18,7 @@ open OpamStateTypes
 
 (* List all the available variables *)
 let list t ns =
-  log "config-list";
+  log (fun fmt -> fmt "config-list");
   if ns = [] then () else
   let list_vars name =
     try
@@ -249,9 +249,10 @@ let load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
     OpamFilename.Dir.to_string (OpamPath.Switch.root gt.root switch)
   in
   if environment_opam_switch_prefix <> actual_opam_switch_prefix then
-    (log "Switch has moved from %s to %s"
-       environment_opam_switch_prefix actual_opam_switch_prefix;
-     log "Regenerating environment file";
+    (log (fun fmt ->
+         fmt "Switch has moved from %s to %s"
+           environment_opam_switch_prefix actual_opam_switch_prefix);
+     log (fun fmt -> fmt "Regenerating environment file");
      regenerate_env ~set_opamroot ~set_opamswitch ~force_path
        gt switch env_file)
   else upd
@@ -298,7 +299,7 @@ let ensure_env_aux ?(base=[]) ?(set_opamroot=false) ?(set_opamswitch=false)
       load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
         gt switch env_file
     else begin
-      log "Missing environment file, regenerate it";
+      log (fun fmt -> fmt "Missing environment file, regenerate it");
       regenerate_env ~set_opamroot ~set_opamswitch ~force_path
         gt switch env_file
     end
@@ -332,7 +333,7 @@ let ensure_env gt switch =
 
 let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
     ~csh ~sexp ~fish ~pwsh ~cmd ~inplace_path =
-  log "config-env";
+  log (fun fmt -> fmt "config-env");
   let opamroot_not_current =
     let current = gt.root in
     let default = OpamStateConfig.(default.root_dir) in
@@ -375,21 +376,21 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
 [@@ocaml.warning "-16"]
 
 let subst gt fs =
-  log "config-substitute";
+  log (fun fmt -> fmt "config-substitute");
   OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   List.iter
     (OpamFilter.expand_interpolations_in_file (OpamPackageVar.resolve st))
     fs
 
 let expand gt str =
-  log "config-expand";
+  log (fun fmt -> fmt "config-expand");
   OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   OpamConsole.msg "%s\n"
     (OpamFilter.expand_string ~default:(fun _ -> "")
        (OpamPackageVar.resolve st) str)
 
 let exec gt ~set_opamroot ~set_opamswitch ~inplace_path ~no_switch command =
-  log "config-exec command=%a" (slog (String.concat " ")) command;
+  log (fun fmt -> fmt "config-exec command=%a" (slog (String.concat " ")) command);
   let switch = OpamStateConfig.get_switch () in
   let st_lazy = lazy (
     let rt = OpamRepositoryState.load `Lock_none gt in

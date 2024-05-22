@@ -370,7 +370,7 @@ let from_1_0_to_1_1 ~on_the_fly:_ root _config =
 let v1_2 = OpamVersion.of_string "1.2"
 
 let from_1_1_to_1_2 ~on_the_fly:_ root config =
-  log "Upgrade pinned packages format to 1.2";
+  log (fun fmt -> fmt "Upgrade pinned packages format to 1.2");
   let aliases = OpamFile.Aliases.safe_read (OpamFile.make (root // "aliases")) in
   let remove_pinned_suffix d =
     let s = OpamFilename.Dir.to_string d in
@@ -441,7 +441,7 @@ let from_1_1_to_1_2 ~on_the_fly:_ root config =
 let v1_3_dev2 = OpamVersion.of_string "1.3~dev2"
 
 let from_1_2_to_1_3_dev2 ~on_the_fly:_ root config =
-  log "Upgrade switch state files format to 1.3";
+  log (fun fmt -> fmt "Upgrade switch state files format to 1.3");
   let aliases =
     OpamFile.Aliases.safe_read (OpamFile.make (root // "aliases"))
   in
@@ -533,7 +533,7 @@ let from_1_2_to_1_3_dev2 ~on_the_fly:_ root config =
 let v1_3_dev5 = OpamVersion.of_string "1.3~dev5"
 
 let from_1_3_dev2_to_1_3_dev5 ~on_the_fly:_ root conf =
-  log "Upgrade switch state files format to 1.3 step 2";
+  log (fun fmt -> fmt "Upgrade switch state files format to 1.3 step 2");
   let aliases_f = OpamFile.make (root // "aliases") in
   let aliases = OpamFile.Aliases.safe_read aliases_f in
   OpamSwitch.Map.iter (fun switch comp_name ->
@@ -681,7 +681,7 @@ let from_1_3_dev2_to_1_3_dev5 ~on_the_fly:_ root conf =
 let v1_3_dev6 = OpamVersion.of_string "1.3~dev6"
 
 let from_1_3_dev5_to_1_3_dev6 ~on_the_fly:_ root conf =
-  log "Upgrade switch state files format to 1.3 step 3";
+  log (fun fmt -> fmt "Upgrade switch state files format to 1.3 step 3");
   (* Move switch internals to [switch/.opam-switch] *)
   List.iter (fun switch ->
       let switch_dir = root / OpamSwitch.to_string switch in
@@ -704,7 +704,7 @@ let from_1_3_dev5_to_1_3_dev6 ~on_the_fly:_ root conf =
 let v1_3_dev7 = OpamVersion.of_string "1.3~dev7"
 
 let from_1_3_dev6_to_1_3_dev7 ~on_the_fly:_ root conf =
-  log "Upgrade switch state files format to 1.3 step 4";
+  log (fun fmt -> fmt "Upgrade switch state files format to 1.3 step 4");
   (* Get mirrors of the metadata of all installed packages into
      switch_meta_dir/packages *)
   List.iter (fun switch ->
@@ -749,7 +749,7 @@ let from_1_3_dev6_to_1_3_dev7 ~on_the_fly:_ root conf =
 let v2_0_alpha = OpamVersion.of_string "2.0~alpha"
 
 let from_1_3_dev7_to_2_0_alpha ~on_the_fly:_ root conf =
-  log "Upgrade switch state files format to 2.0~alpha";
+  log (fun fmt -> fmt "Upgrade switch state files format to 2.0~alpha");
   (* leftovers from previous upgrades *)
   OpamFilename.rmdir (root / "compilers");
   OpamFilename.remove (root / "repo" // "package-index");
@@ -1299,11 +1299,12 @@ let as_necessary ?reinit requested_lock global_lock root config =
   in
   if hard_upg = [] && light_upg = [] then config, gtc_none (* no upgrade to do *) else
   let is_dev = OpamVersion.is_dev_version () in
-  log "%s config upgrade, from %s to %s"
-    (if on_the_fly then "On-the-fly" else
-     if need_hard_upg then "Hard" else "Light")
-    (OpamVersion.to_string root_version)
-    (OpamVersion.to_string latest_version);
+  log (fun fmt ->
+      fmt "%s config upgrade, from %s to %s"
+        (if on_the_fly then "On-the-fly" else
+         if need_hard_upg then "Hard" else "Light")
+        (OpamVersion.to_string root_version)
+        (OpamVersion.to_string latest_version));
   if not on_the_fly then
     OpamConsole.errmsg "%s\n" @@
     OpamStd.Format.reformat @@
@@ -1339,7 +1340,7 @@ let as_necessary ?reinit requested_lock global_lock root config =
       OpamStd.Sys.exit_because `Aborted
   else
     (let config, changes = light config in
-     log "Format upgrade done";
+     log (fun fmt -> fmt "Format upgrade done");
      config, changes)
 
 let as_necessary_repo_switch_light_upgrade lock_kind kind gt =
@@ -1383,10 +1384,11 @@ let hard_upgrade_from_2_1_intermediates ?reinit ?global_lock root =
              || OpamVersion.compare v2_1 v <= 0 ->
     () (* do nothing, need to reraise parsing exception *)
   | _ ->
-    log "Intermediate opam root detected%s, launch hard upgrade"
-      (match opam_root_version with
-         None -> ""
-       | Some v -> "("^(OpamVersion.to_string v)^")");
+    log (fun fmt ->
+        fmt "Intermediate opam root detected%s, launch hard upgrade"
+          (match opam_root_version with
+             None -> ""
+           | Some v -> "("^(OpamVersion.to_string v)^")"));
     let filename = OpamFile.filename config_f in
     let opamfile = OpamParser.FullPos.file (OpamFilename.to_string filename) in
     let opamfile' =
@@ -1402,7 +1404,7 @@ let hard_upgrade_from_2_1_intermediates ?reinit ?global_lock root =
                                     {v with pelem = String "2.0"})}
               | _ -> item) opamfile.file_contents}
     in
-    log "Downgrade config opam-version to fix up";
+    log (fun fmt -> fmt "Downgrade config opam-version to fix up");
     OpamFilename.write filename (OpamPrinter.FullPos.opamfile opamfile');
     let config = OpamFile.Config.read config_f in
     let global_lock = match global_lock with
@@ -1419,10 +1421,11 @@ let opam_file ?(quiet=false) ?filename opam =
   then
     ((match filename with
         | Some f when not quiet ->
-          log "Internally converting format of %a from %a to %a"
-            (slog OpamFile.to_string) f
-            (slog OpamVersion.to_string) v
-            (slog OpamVersion.to_string) latest_version
+          log (fun fmt ->
+              fmt "Internally converting format of %a from %a to %a"
+                (slog OpamFile.to_string) f
+                (slog OpamVersion.to_string) v
+                (slog OpamVersion.to_string) latest_version)
         | _ -> ());
      opam_file_from_1_2_to_2_0 ?filename opam)
   else opam

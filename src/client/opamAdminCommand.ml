@@ -488,10 +488,10 @@ let add_hashes_command cli =
           tbl [] |> fun lines ->
         try OpamFile.Lines.write file lines with e ->
           OpamStd.Exn.fatal e;
-          OpamConsole.log "ADMIN"
-            "Could not write hash cache to %s, skipping (%s)"
-            (OpamFile.to_string file)
-            (Printexc.to_string e))
+          OpamConsole.log "ADMIN" (fun fmt ->
+              fmt "Could not write hash cache to %s, skipping (%s)"
+                (OpamFile.to_string file)
+                (Printexc.to_string e)))
       hash_tables
   in
   let additions_count = ref 0 in

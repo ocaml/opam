@@ -250,9 +250,10 @@ let criteria kind =
 
 let call_solver ~criteria cudf =
   let module S = (val Lazy.force (!r.solver)) in
-  OpamConsole.log "SOLVER" "Calling solver %s with criteria %s"
-    (OpamCudfSolver.get_name (module S)) criteria;
+  OpamConsole.log "SOLVER" (fun fmt ->
+      fmt "Calling solver %s with criteria %s"
+        (OpamCudfSolver.get_name (module S)) criteria);
   let chrono = OpamConsole.timer () in
   let r = S.call ~criteria ?timeout:(!r.solver_timeout) cudf in
-  OpamConsole.log "SOLVER" "External solver took %.3fs" (chrono ());
+  OpamConsole.log "SOLVER" (fun fmt -> fmt "External solver took %.3fs" (chrono ()));
   r

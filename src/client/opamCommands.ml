@@ -107,8 +107,9 @@ let global_options cli =
 
 let apply_global_options cli (options,self_upgrade) =
   apply_global_options cli options;
-  OpamConsole.log "CLI" "Parsing CLI version %s"
-    (OpamCLIVersion.to_string options.cli);
+  OpamConsole.log "CLI" (fun fmt ->
+      fmt "Parsing CLI version %s"
+        (OpamCLIVersion.to_string options.cli));
   try
     let argv0 = OpamFilename.of_string Sys.executable_name in
     if self_upgrade <> `Running &&

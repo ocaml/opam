@@ -560,7 +560,10 @@ let clear_pending debug_level =
   Queue.iter f pending;
   Queue.clear pending
 
-let log section ?(level=1) fmt =
+let log_mutex = Mutex.create ()
+let log section ?(level=1) k =
+  k @@ fun fmt ->
+  Mutex.protect log_mutex @@ fun () ->
   let debug_level =
     let debug_level = OpamCoreConfig.(!r.debug_level) in
     let sections = OpamCoreConfig.(!r.debug_sections) in

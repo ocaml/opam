@@ -56,7 +56,7 @@ let call_rsync check args =
   | _ -> OpamSystem.process_error r
 
 let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
-  log "rsync: src=%s dst=%s" src dst;
+  log (fun fmt -> fmt "rsync: src=%s dst=%s" src dst);
   let remote = String.contains src ':' in
   let overlap src dst =
     let norm d = Filename.concat d "" in
@@ -116,7 +116,7 @@ let rsync_dirs ?args ?exclude_vcdirs url dst =
 let rsync_file ?(args=[]) url dst =
   let src_s = url.OpamUrl.path in
   let dst_s = OpamFilename.to_string dst in
-  log "rsync_file src=%s dst=%s" src_s dst_s;
+  log (fun fmt -> fmt "rsync_file src=%s dst=%s" src_s dst_s);
   if not (is_remote url || OpamFilename.(exists (of_string src_s))) then
     Done (Not_available (None, src_s))
   else if src_s = dst_s then
@@ -145,7 +145,7 @@ module B = struct
     rsync_dirs url local_dirname
 
   let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
-    log "pull-repo-update";
+    log (fun fmt -> fmt "pull-repo-update");
     let quarantine =
       OpamFilename.Dir.(of_string (to_string repo_root ^ ".new"))
     in
