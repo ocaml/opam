@@ -17,6 +17,7 @@ users)
 
 ## Global CLI
   * Fix a typo in the variable description returned by "opam var" [#5961 @jmid]
+  * Out-of-the-box UTF-8 paged --help on Windows [#5970 @kit-ty-kate]
 
 ## Plugins
 
@@ -115,6 +116,7 @@ users)
 ## Internal
 
 ## Internal: Windows
+  * Set the console to use UTF-8 on Windows using SetConsoleCP and SetConsoleOutputCP [#5970 @kit-ty-kate]
 
 ## Test
 

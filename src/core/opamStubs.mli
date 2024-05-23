@@ -142,3 +142,6 @@ val setErrorMode : int -> int
 
 val getErrorMode : unit -> int
 (** Windows only. Directly wraps GetErrorMode. *)
+
+val setConsoleToUTF8 : unit -> unit
+(** Windows only. Directly wraps SetConsoleOutputCP(CP_UTF8). *)
