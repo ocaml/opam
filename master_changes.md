@@ -88,6 +88,7 @@ users)
 ## VCS
 
 ## Build
+  * Upgrade vendored cmdliner to 1.3.0 [#5970 @kit-ty-kate]
 
 ## Infrastructure
   * Ensure GNU coreutils available on the macOS 14 CI runners [#5938 @dra27]
