@@ -521,7 +521,8 @@ let migrate_extrafiles_command cli =
                in
                OpamFilename.cleandir files_dir;
                OpamFilename.rmdir_cleanup files_dir;
-               let opam1 = OpamFile.OPAM.with_extra_sources extra_sources opam in
+               let my_extra_sources = OpamFile.OPAM.extra_sources opam in
+               let opam1 = OpamFile.OPAM.with_extra_sources (my_extra_sources @ extra_sources) opam in
                let opam1 = OpamFile.OPAM.with_extra_files_opt None opam1 in
                OpamFile.OPAM.write_with_preserved_format opam_file opam1;
                has_error)
