@@ -1602,7 +1602,7 @@ let update_with_init_config ?(overwrite=false) config init_config =
 
 let check_for_sys_packages config system_packages =
   if system_packages <> [] then
-    let ((missing, _) as set) =
+    let (missing, required, available) =
       OpamSysInteract.packages_status config
         (OpamSysPkg.Set.of_list system_packages)
     in
@@ -1613,8 +1613,8 @@ let check_for_sys_packages config system_packages =
         |> OpamVariable.Map.of_list
       in
       (*Lazy.force header;*)
-      OpamSolution.print_depext_msg set;
-      ignore @@ OpamSolution.install_sys_packages ~confirm:true env config missing None
+      OpamSolution.print_depext_msg (missing, available);
+      ignore @@ OpamSolution.install_sys_packages ~confirm:true ~sys_packages:missing ~required env config None
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
