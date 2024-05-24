@@ -29,7 +29,7 @@ let default_sep_fmt_str var =
   | "PATH" when Sys.win32 ->
     SSemiColon, Target_quoted
   | "PKG_CONFIG_PATH" | "MANPATH" ->
-    SColon, Target_quoted
+    SColon, Host
   | _ -> default_separator, default_format
 
 let default_sep_fmt var = default_sep_fmt_str (OpamStd.Env.Name.to_string var)
