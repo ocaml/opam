@@ -259,9 +259,9 @@ let load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
 (* Returns [Some file] where [file] contains [updates]. [hash] should be
    [OpamEnv.hash_env_updates updates] and [n] should initially be [0]. If for
    whatever reason the file cannot be created, returns [None]. *)
-let  write_last_env_file gt switch updates =
+let  write_last_env_file gt updates =
   let updates = check_writeable updates in
-  let temp_dir = OpamPath.Switch.last_env gt.root switch in
+  let temp_dir = OpamPath.last_env gt.root in
   let hash = OpamEnv.hash_env_updates updates in
   let rec aux  n =
     (* The principal aim here is not to spam /tmp with gazillions of files, but
@@ -310,7 +310,7 @@ let ensure_env_aux ?(base=[]) ?(set_opamroot=false) ?(set_opamswitch=false)
       updates
   in
   let last_env_file =
-    write_last_env_file gt switch
+    write_last_env_file gt
       (* We remove OPAMSWITCH & OPAMROOT as they are not supposed
          to be reverted *)
       (List.filter (fun upd ->

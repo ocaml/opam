@@ -36,6 +36,7 @@ users)
   * Allow to parse opam 2.1 switch import files containing extra-files [#5943 @kit-ty-kate - fix #5941]
 
 ## Config
+  * Move last-env `OPAM_LAST_ENV` files outside the switch to be in the `opam root` [#5962 @moyodiallo - fix #5823]
 
 ## Pin
 
@@ -152,6 +153,7 @@ users)
 ## opam-solver
 
 ## opam-format
+  * `OpamPath`: remove `OpamPath.Switch.last_env` function in favor to `OpamPath.last_env` as the files are no more stored in switch directory [#5962 @moyodiallo - fix #5823]
 
 ## opam-core
   * `OpamStd.String`: add `split_quoted` that preserves quoted separator [#5935 @dra27]

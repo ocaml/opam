@@ -548,7 +548,7 @@ external open_env_updates:
 (* cf. tests/lib/typeGymnastics.ml *)
 
 (** Cached environment updates (<switch>/.opam-switch/environment
-    <switch>/.opam-switch/last-env/env-* last env files) *)
+    <opam-root>/.last-env/env-* last env files) *)
 
 module Environment = struct include LineFile(struct
 
