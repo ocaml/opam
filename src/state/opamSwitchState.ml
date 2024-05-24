@@ -198,7 +198,7 @@ let depexts_status_of_packages_raw
   let syspkg_set = syspkg_set -- bypass in
   let ret =
     match OpamSysInteract.packages_status ?env global_config syspkg_set with
-    | avail, not_found ->
+    | avail, required, not_found ->
       let avail, not_found =
         if OpamStateConfig.(!r.no_depexts) then
           (* Mark all as available. This is necessary to store the exceptions
@@ -211,6 +211,7 @@ let depexts_status_of_packages_raw
       in
       OpamPackage.Map.map (fun set ->
           { OpamSysPkg.s_available = set %% avail;
+            OpamSysPkg.s_required = set %% required;
             OpamSysPkg.s_not_found = set %% not_found}
         ) syspkg_map
     | exception (Failure msg) ->

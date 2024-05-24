@@ -480,17 +480,17 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
   let open OpamSysPkg.Set.Op in
   let compute_sets ?sys_available sys_installed =
     let installed = packages %% sys_installed in
-    let available, not_found =
+    let available, required, not_found =
       match sys_available with
       | Some sys_available ->
         let available = (packages -- installed) %% sys_available in
         let not_found = packages -- installed -- available in
-        available, not_found
+        available, OpamSysPkg.Set.empty, not_found
       | None ->
         let available = packages -- installed in
-        available, OpamSysPkg.Set.empty
+        available, OpamSysPkg.Set.empty, OpamSysPkg.Set.empty
     in
-    available, not_found
+    available, required, not_found
   in
   let to_string_list pkgs =
     OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) pkgs [])
@@ -988,7 +988,8 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
          be found.' But omitting them will mean that they won't be
          added to the Nix derivation.
       *)
-      packages, OpamSysPkg.Set.empty;
+      (* TODO *)
+      packages, OpamSysPkg.Set.empty, OpamSysPkg.Set.empty
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-qP"]
@@ -1232,7 +1233,7 @@ let update ?(env=OpamVariable.Map.empty) config =
 
 let repo_enablers ?(env=OpamVariable.Map.empty) config =
   if family ~env () <> Centos then None else
-  let (needed, _) =
+  let (needed, _, _) =
     packages_status ~env config (OpamSysPkg.raw_set
                        (OpamStd.String.Set.singleton "epel-release"))
   in
