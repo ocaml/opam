@@ -55,6 +55,7 @@ users)
 ## Update / Upgrade
   * [BUG] Stop triggering "Undefined filter variable variable" warning for `?variable` [#5983 @dra27]
   * Display extractions in the status bar [#5977 @dra27]
+  * Display a note when reloading a repository [#5977 @kit-ty-kate]
 
 ## Tree
   * [BUG] Fix `opam tree --with-*` assigning the `with-*` variables to unrequested packages [#5919 @kit-ty-kate @rjbou - fix #5755]
