@@ -251,7 +251,7 @@ opam-version: "2.0"
 repositories: "norepo" {"file://${BASEDIR}/REPO"}
 ### sh $OPAMROOT/opam-init/hooks/a-script.sh test
 script test launched STOP i repeat STOP script test launched
-### :: partially configured opamrc ::
+### :II:c: partially configured opamrc ::
 ### rm -rf $OPAMROOT
 ### <opamrc>
 opam-version: "2.0"
@@ -303,3 +303,71 @@ wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "ma
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
 repositories: "norepo" {"file://${BASEDIR}/REPO"}
+### :II:d: Show a reasonable error message when the file given to --config does not exist ::
+### :II:d:1: Non existing local file
+### rm -rf $OPAMROOT
+### opam init --bypass-checks --bare --no-setup --config some-non-existant-file
+Fatal error:
+File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
+# Return code 99 #
+### :II:d:2: Non existant vcs local file
+### rm -rf $OPAMROOT
+### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config
+Fatal error:
+File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
+# Return code 99 #
+### :II:d:3: Existing VCS local file
+### mkdir config-files
+### <config-files/config>
+opam-version: "2.0"
+default-invariant : "foo"
+repositories: "norepo" {"REPO/"}
+### git -C config-files init -q --initial-branch=master
+### git -C config-files config core.autocrlf false
+### git -C config-files commit -qm 'init' --allow-empty
+### git -C config-files add config
+### git -C config-files commit -qm 'config'
+### test -f config-files/config
+### rm -rf $OPAMROOT
+### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config
+Configuring from ${BASEDIR}/config-files/config and then from built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[norepo] Initialised
+### opam option default-invariant
+["foo"]
+### :II:d:4: Existing VCS local file, url not specifyin VCS
+### rm -rf $OPAMROOT
+### opam init --bypass-checks --bare --no-setup --config $BASEDIR/config-files/config
+Configuring from ${BASEDIR}/config-files/config and then from built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[norepo] Initialised
+### opam option default-invariant
+["foo"]
+### :II:d:5: Existing VCS file but the branch is not the one on disk
+### git -C config-files checkout -b no-config
+Switched to a new branch 'no-config'
+### git -C config-files rm config
+rm 'config'
+### git -C config-files commit -qm 'no-config'
+### test -f config-files/config
+# Return code 1 #
+### rm -rf $OPAMROOT
+### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config#config
+Fatal error:
+File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
+# Return code 99 #
+### :III:d:5: Non existant distant VCS file
+### rm -rf $OPAMROOT
+### opam init --bypass-checks --bare --no-setup --config git+file://som.e/distant/config
+Fatal error:
+File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
+# Return code 99 #
+### :II:d:1: Non existant http file
+### rm -rf $OPAMROOT
+### opam --version >$ OPAMVERSION
+### opam init --bypass-checks --bare --no-setup --config http://som.e/url/to/config | sed-cmd curl | "${OPAMVERSION}" -> "current" | "[^ ]*build_[^ ]*\.part" -> file.part
+Fatal error:
+OpamDownload.Download_fail(_, "curl failed: \"curl --write-out %{http_code}\\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o file.part -- http://som.e/url/to/config\" exited with code 6")
+# Return code 99 #
