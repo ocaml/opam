@@ -127,6 +127,7 @@ users)
 ### Tests
   *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
   * Fix a failure when two hashes start with the same two characters [#6793 @kit-ty-kate]
+  * Add a test showing the behaviour of `opam init --config` when the file given does not exist [#5979 @kit-ty-kate @rjbou]
 
 ### Engine
 
