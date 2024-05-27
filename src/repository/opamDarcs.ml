@@ -54,8 +54,8 @@ module VCS = struct
        patches otherwise. *)
     let repo_str =
       match OpamUrl.local_dir repo_url with
-      | Some path -> OpamFilename.Dir.to_string path
-      | None -> OpamUrl.base_url repo_url
+      | Exists path -> OpamFilename.Dir.to_string path
+      | DoesNotExist _ | NotLocal -> OpamUrl.base_url repo_url
     in
     OpamFilename.with_tmp_dir_job @@ fun d ->
     let repodir = d / "repo" in

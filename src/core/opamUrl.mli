@@ -71,11 +71,16 @@ val root: t -> t
 
 val has_trailing_slash: t -> bool
 
+type 'a local_file_detect =
+  | Exists of 'a
+  | DoesNotExist of 'a
+  | NotLocal
+
 (** Check if the URL matches an existing local directory, and return it *)
-val local_dir: t -> OpamFilename.Dir.t option
+val local_dir: t -> OpamFilename.Dir.t local_file_detect
 
 (** Check if the URL matches an existing local file, and return it *)
-val local_file: t -> OpamFilename.t option
+val local_file: t -> OpamFilename.t local_file_detect
 
 (** If the given url-string has no 'transport://' specification and corresponds
     to an existing local path, check for version-control clues at that path *)

@@ -172,15 +172,18 @@ let really_download
 
 let download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst =
   match OpamUrl.local_file url with
-  | Some src ->
-    if src = dst then Done () else
+  | Exists src ->
+    if OpamFilename.equal src dst then Done () else
       (if OpamFilename.exists dst then
          if overwrite then OpamFilename.remove dst else
            OpamSystem.internal_error "The downloaded file will overwrite %s."
              (OpamFilename.to_string dst);
        OpamFilename.copy ~src ~dst;
        Done ())
-  | None ->
+  | DoesNotExist file ->
+    OpamConsole.error_and_exit `Not_found "File %S could not be found."
+      (OpamFilename.to_string file)
+  | NotLocal ->
     OpamFilename.(mkdir (dirname dst));
     really_download ?quiet ~overwrite ?compress ?checksum ?validate
       ~url

@@ -156,13 +156,13 @@ module B = struct
     @@ fun () ->
     OpamRepositoryBackend.job_text repo_name "sync"
       (match OpamUrl.local_dir url with
-       | Some dir ->
+       | Exists dir ->
          OpamFilename.copy_dir ~src:dir ~dst:quarantine;
          (* fixme: Would be best to symlink, but at the moment our filename api
             isn't able to cope properly with the symlinks afterwards
             OpamFilename.link_dir ~target:dir ~link:quarantine; *)
          Done (Result quarantine)
-       | None ->
+       | DoesNotExist _ | NotLocal ->
          if OpamFilename.exists_dir repo_root then
            OpamFilename.copy_dir ~src:repo_root ~dst:quarantine
          else
@@ -200,10 +200,10 @@ module B = struct
     in
     let remote_url =
       match OpamUrl.local_dir remote_url with
-      | Some _ ->
+      | Exists _ ->
         (* ensure that rsync doesn't recreate a subdir: add trailing '/' *)
         OpamUrl.Op.(remote_url / "")
-      | None -> remote_url
+      | DoesNotExist _ | NotLocal -> remote_url
     in
     rsync remote_url.OpamUrl.path dir
     @@| function

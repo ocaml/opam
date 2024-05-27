@@ -132,8 +132,11 @@ let get_init_config ~no_sandboxing ~no_default_config_file ~add_config_file =
      else List.filter OpamFile.exists (OpamPath.init_config_files ()))
     @ List.map (fun url ->
         match OpamUrl.local_file url with
-        | Some f -> OpamFile.make f
-        | None ->
+        | Exists f -> OpamFile.make f
+        | DoesNotExist f ->
+          OpamConsole.error_and_exit `Not_found "File %S could not be found."
+            (OpamFilename.to_string f)
+        | NotLocal ->
           let f = OpamFilename.of_string (OpamSystem.temp_file "conf") in
           OpamProcess.Job.run (OpamDownload.download_as ~overwrite:false url f);
           let hash = OpamHash.compute ~kind:`SHA256 (OpamFilename.to_string f) in
@@ -3303,7 +3306,7 @@ let pin ?(unpin_only=false) cli =
   let guess_names kind ?locked ~recurse ?subpath url k =
     let found, cleanup =
       match OpamUrl.local_dir url with
-      | Some d ->
+      | Exists d ->
         let same_kind url =
           match kind, url.OpamUrl.backend with
           | (None | Some `auto), _
@@ -3329,7 +3332,7 @@ let pin ?(unpin_only=false) cli =
               })
         in
         pkgs, None
-      | None ->
+      | DoesNotExist _ | NotLocal ->
         let pin_cache_dir = OpamRepositoryPath.pin_cache url in
         let cleanup = fun () ->
           OpamFilename.rmdir @@ OpamRepositoryPath.pin_cache_dir ()

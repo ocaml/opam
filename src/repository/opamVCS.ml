@@ -119,8 +119,8 @@ module Make (VCS: VCS) = struct
     in
     pull_url ?subpath repo_root None repo_url @@+ fun result ->
     match OpamUrl.local_dir repo_url with
-    | None -> Done (result)
-    | Some dir ->
+    | DoesNotExist _ | NotLocal -> Done result
+    | Exists dir ->
       VCS.versioned_files dir @@+ fun vc_files ->
       VCS.modified_files dir @@+ fun vc_dirty_files ->
       let files =

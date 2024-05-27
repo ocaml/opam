@@ -218,19 +218,26 @@ let local_path = function
     Some path
   | _ -> None
 
+type 'a local_file_detect =
+  | Exists of 'a
+  | DoesNotExist of 'a
+  | NotLocal
+
 let local_dir url =
-  let open OpamStd.Option.Op in
-  local_path url >>|
-  OpamFilename.Dir.of_string >>= fun d ->
-  if OpamFilename.exists_dir d then Some d
-  else None
+  match local_path url with
+  | Some path ->
+    let dir = OpamFilename.Dir.of_string path in
+    if OpamFilename.exists_dir dir then Exists dir
+    else DoesNotExist dir
+  | None -> NotLocal
 
 let local_file url =
-  let open OpamStd.Option.Op in
-  local_path url >>|
-  OpamFilename.of_string >>= fun f ->
-  if OpamFilename.exists f then Some f
-  else None
+  match local_path url with
+  | Some path ->
+    let file = OpamFilename.of_string path in
+    if OpamFilename.exists file then Exists file
+    else DoesNotExist file
+  | None -> NotLocal
 
 let guess_version_control s =
   let vc,transport,path,_,_ = split_url s in

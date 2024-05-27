@@ -449,11 +449,11 @@ let parallel_apply t
     if OpamClientConfig.(!r.inplace_build) || assume_built then
       OpamPackage.Set.fold (fun nv acc ->
           match
-            OpamStd.Option.Op.(OpamSwitchState.url t nv >>| OpamFile.URL.url >>=
+            OpamStd.Option.Op.(OpamSwitchState.url t nv >>| OpamFile.URL.url >>|
                                OpamUrl.local_dir)
           with
-          | None -> acc
-          | Some path -> OpamPackage.Map.add nv path acc)
+          | None | Some (DoesNotExist _ | NotLocal) -> acc
+          | Some (Exists path) -> OpamPackage.Map.add nv path acc)
         requested
         OpamPackage.Map.empty
     else OpamPackage.Map.empty
@@ -465,8 +465,10 @@ let parallel_apply t
     let no_sources = OpamPackage.Set.Op.(requested %% t.pinned) in
     let no_sources =
       OpamPackage.Set.filter (fun nv ->
-          OpamStd.Option.Op.(OpamSwitchState.primary_url t nv
-                             >>= OpamUrl.local_dir) <> None)
+          let open OpamStd.Option.Op in
+          match OpamSwitchState.primary_url t nv >>| OpamUrl.local_dir with
+          | Some (Exists _) -> true
+          | Some (DoesNotExist _ | NotLocal) | None -> false)
         no_sources
     in
     if OpamPackage.Set.is_empty no_sources then

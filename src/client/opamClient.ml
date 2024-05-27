@@ -1379,8 +1379,11 @@ let filter_unpinned_locally t atoms f =
       let n,_ = at in
       if OpamSwitchState.is_pinned t n &&
          OpamStd.Option.Op.(OpamPinned.package_opt t n >>=
-                            OpamSwitchState.primary_url t >>=
-                            OpamUrl.local_dir) <> None
+                            OpamSwitchState.primary_url t >>|
+                            (fun x ->
+                               match OpamUrl.local_dir x with
+                               | Exists _ -> Some ()
+                               | DoesNotExist _ | NotLocal -> None)) <> None
       then
         Some (f at)
       else

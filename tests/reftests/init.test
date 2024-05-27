@@ -252,6 +252,5 @@ repositories: "norepo" {"file://${BASEDIR}/REPO"}
 ### :: Show a reasonable error message when the file given to --config does not exist ::
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config some-non-existant-file
-Fatal error:
-File "src/repository/opamDownload.ml", line 140, characters 2-8: Assertion failed
-# Return code 99 #
+[ERROR] File "${BASEDIR}/some-non-existant-file" could not be found.
+# Return code 5 #

@@ -62,7 +62,10 @@ let select_packages atom_locs st =
                  OpamSwitchState.opam st nv
                  |> OpamFile.OPAM.url
                  >>| OpamFile.URL.url
-                 >>= OpamUrl.local_dir
+                 >>= (fun x ->
+                     match OpamUrl.local_dir x with
+                     | Exists dir -> Some dir
+                     | DoesNotExist _ | NotLocal -> None)
                  >>= OpamPinned.find_opam_file_in_source name
                  >>| fst
                  >>| OpamFile.OPAM.read
@@ -280,7 +283,7 @@ let lock_opam ?(only_direct=false) st opam =
         | None -> acc
         | Some u ->
           match OpamUrl.local_dir u with
-          | Some d ->
+          | Exists d ->
             let local_warn () =
               OpamConsole.warning "Dependency %s is pinned to local target %s"
                 (OpamPackage.to_string nv) (OpamUrl.to_string u);
@@ -295,7 +298,7 @@ let lock_opam ?(only_direct=false) st opam =
                   (nv, resolved_u) :: acc
                 | None -> local_warn ())
              | _ -> local_warn ())
-          | None -> (nv, u) :: acc)
+          | DoesNotExist _ | NotLocal -> (nv, u) :: acc)
       all_depends []
     |> List.rev
   in

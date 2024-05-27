@@ -146,20 +146,22 @@ let resolve_locals_pinned st ?(recurse=false) ?subpath atom_or_local_list =
          match subpath with
          | Some sp ->
            let dir_sp = OpamFilename.SubPath.(dir / sp) in
-           let url_sp_dir =
-             OpamSwitchState.primary_url_with_subpath st nv >>= OpamUrl.local_dir
-           in
-           if recurse then
-             (url_sp_dir >>| OpamFilename.dir_starts_with dir_sp) +! false
-           else
-             url_sp_dir = Some dir_sp
+           (match OpamSwitchState.primary_url_with_subpath st nv >>| OpamUrl.local_dir with
+            | Some (Exists url_sp_dir) ->
+              if recurse then
+                OpamFilename.dir_starts_with dir_sp url_sp_dir
+              else
+                OpamFilename.Dir.equal url_sp_dir dir_sp
+            | Some (DoesNotExist _ | NotLocal) | None -> false)
          | None ->
-           if recurse then
-             (OpamSwitchState.primary_url st nv >>= OpamUrl.local_dir)
-             = Some dir
-           else
-             (OpamSwitchState.primary_url_with_subpath st nv >>= OpamUrl.local_dir)
-             = Some dir
+           let primary_url =
+             if recurse
+             then OpamSwitchState.primary_url
+             else OpamSwitchState.primary_url_with_subpath
+           in
+           match primary_url st nv >>| OpamUrl.local_dir with
+           | Some (Exists dir') -> OpamFilename.Dir.equal dir dir'
+           | Some (DoesNotExist _ | NotLocal) | None -> false
       )
       st.pinned
   in
@@ -281,10 +283,10 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
           else
             OpamSwitchState.primary_url_with_subpath
         in
-        match OpamStd.Option.Op.( primary_url st nv >>= OpamUrl.local_dir) with
-        | Some d ->
-          List.mem d pinning_dirs
-        | None -> false)
+        match OpamStd.Option.Op.(primary_url st nv >>| OpamUrl.local_dir) with
+        | Some (Exists d) ->
+          List.exists (OpamFilename.Dir.equal d) pinning_dirs
+        | Some (DoesNotExist _ | NotLocal) | None -> false)
       st.pinned
   in
   let already_pinned, to_pin =

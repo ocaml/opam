@@ -73,14 +73,17 @@ module VCS : OpamVCS.VCS = struct
      | None -> Done())
     @@+ fun _ ->
     (match cache_dir with
-     | Some c when OpamUrl.local_dir repo_url = None ->
-       let dir = c / "git" in
-       if not (OpamFilename.exists_dir dir) then
-         (OpamFilename.mkdir dir;
-          git dir [ "init"; "--bare" ] @@> fun r ->
-          OpamSystem.raise_on_process_error r;
-          Done (Some dir))
-       else Done (Some dir)
+     | Some c ->
+       (match OpamUrl.local_dir repo_url with
+        | DoesNotExist _ | NotLocal ->
+          let dir = c / "git" in
+          if not (OpamFilename.exists_dir dir) then
+            (OpamFilename.mkdir dir;
+             git dir [ "init"; "--bare" ] @@> fun r ->
+             OpamSystem.raise_on_process_error r;
+             Done (Some dir))
+          else Done (Some dir)
+        | Exists _ -> Done None)
      | _ -> Done None)
     @@+ fun global_cache ->
     let repo_url = OpamUrl.map_file_url (Lazy.force cygpath) repo_url in
@@ -317,20 +320,22 @@ module VCS : OpamVCS.VCS = struct
     @@> function
     | { OpamProcess.r_code = 0; OpamProcess.r_stdout = [url]; _ } ->
       (let u = OpamUrl.parse ~backend:`git url in
-       if OpamUrl.local_dir u <> None then Done None else
-       let hash_in_remote =
-         match hash with
+       match OpamUrl.local_dir u with
+       | DoesNotExist _ | NotLocal -> Done None
+       | Exists _ ->
+         let hash_in_remote =
+           match hash with
+           | None ->
+             (current_branch repo_root @@+ function
+               | None | Some "HEAD" -> Done None
+               | Some hash -> check_remote repo_root hash)
+           | Some hash -> check_remote repo_root hash
+         in
+         hash_in_remote @@+ function
+         | Some _ as hash ->
+           Done (Some { u with OpamUrl.hash = hash })
          | None ->
-           (current_branch repo_root @@+ function
-             | None | Some "HEAD" -> Done None
-             | Some hash -> check_remote repo_root hash)
-         | Some hash -> check_remote repo_root hash
-       in
-       hash_in_remote @@+ function
-       | Some _ as hash ->
-         Done (Some { u with OpamUrl.hash = hash })
-       | None ->
-         Done (Some { u with OpamUrl.hash = None })
+           Done (Some { u with OpamUrl.hash = None })
       )
     | { OpamProcess.r_code = 0; _ }
     | { OpamProcess.r_code = 1; _ } -> Done None

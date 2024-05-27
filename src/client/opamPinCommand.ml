@@ -37,7 +37,11 @@ let read_opam_file_for_pinning ?locked ?(quiet=false) name f url =
   let opam0 =
     let dir = OpamFilename.dirname (OpamFile.filename f) in
     (* don't add aux files for [project/opam] *)
-    let add_files = OpamUrl.local_dir url = Some dir in
+    let add_files =
+      match OpamUrl.local_dir url with
+      | Exists dir' -> OpamFilename.Dir.equal dir dir'
+      | DoesNotExist _ | NotLocal -> false
+    in
     let opam =
       (OpamFormatUpgrade.opam_file_with_aux ~quiet ~dir ~files:add_files
          ~filename:f) (OpamFile.OPAM.safe_read f)
@@ -79,12 +83,15 @@ let get_source_definition ?version ?subpath ?locked st nv url =
   let open OpamProcess.Job.Op in
   let url =
     let u = OpamFile.URL.url url in
-    match OpamUrl.local_dir u, u.OpamUrl.backend with
-    | Some dir, #OpamUrl.version_control ->
-      OpamFile.URL.with_url
-        (OpamUrl.of_string (OpamFilename.Dir.to_string dir))
-        url
-    | _, _ -> url
+    match u.OpamUrl.backend with
+    | #OpamUrl.version_control ->
+      (match OpamUrl.local_dir u with
+       | Exists dir ->
+         OpamFile.URL.with_url
+           (OpamUrl.of_string (OpamFilename.Dir.to_string dir))
+           url
+       | DoesNotExist _ | NotLocal -> url)
+    | `http | `rsync -> url
   in
   OpamUpdate.fetch_dev_package url srcdir ?subpath nv @@| function
   | Not_available (_,s) -> raise (Fetch_Fail s)
@@ -292,24 +299,25 @@ let edit st ?version name =
       OpamFilename.remove (OpamFile.filename temp_file);
 
       (* Save back to source *)
-      ignore (
-          OpamFile.OPAM.get_url opam >>= OpamUrl.local_dir >>| fun dir ->
-          let src_opam =
-              (OpamPinned.find_opam_file_in_source name dir >>| fst)
-              +! (OpamFile.make OpamFilename.Op.(dir // "opam"))
-          in
-          let clean_opam =
-            OpamFile.OPAM.with_url_opt None @*
-            OpamFile.OPAM.with_extra_files []
-          in
-          if (current_opam >>| fun o ->
-              OpamFile.OPAM.equal (clean_opam opam) (clean_opam o))
-             <> Some true &&
-             OpamConsole.confirm "Save the new opam file back to %S?"
-               (OpamFile.to_string src_opam) then
-            OpamFile.OPAM.write_with_preserved_format src_opam
-              (clean_opam opam)
-        );
+      (match OpamFile.OPAM.get_url opam >>| OpamUrl.local_dir with
+       | Some (Exists dir) ->
+         let src_opam =
+           (OpamPinned.find_opam_file_in_source name dir >>| fst)
+           +! (OpamFile.make OpamFilename.Op.(dir // "opam"))
+         in
+         let clean_opam =
+           OpamFile.OPAM.with_url_opt None @*
+           OpamFile.OPAM.with_extra_files []
+         in
+         if (current_opam >>| fun o ->
+             OpamFile.OPAM.equal (clean_opam opam) (clean_opam o))
+            <> Some true &&
+            OpamConsole.confirm "Save the new opam file back to %S?"
+              (OpamFile.to_string src_opam) then
+           OpamFile.OPAM.write_with_preserved_format src_opam
+             (clean_opam opam)
+       | Some (DoesNotExist _) | Some NotLocal | None -> ()
+      );
 
       let nv = OpamPackage.create name (OpamFile.OPAM.version opam) in
       let st = OpamSwitchState.update_pin nv opam st in
@@ -807,8 +815,8 @@ let scan ~normalise ~recurse ?subpath url =
   in
   let pins, cleanup =
     match OpamUrl.local_dir url with
-    | Some dir -> pins_of_dir dir, None
-    | None ->
+    | Exists dir -> pins_of_dir dir, None
+    | DoesNotExist _ | NotLocal ->
       let pin_cache_dir = OpamRepositoryPath.pin_cache url in
       let cleanup = fun () ->
         OpamFilename.rmdir @@ OpamRepositoryPath.pin_cache_dir ()
