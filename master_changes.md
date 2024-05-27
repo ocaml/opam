@@ -215,6 +215,7 @@ users)
   * Add tests showing behaviour of `opam pin` when confronted with a missing opam description [#6319 @kit-ty-kate]
   * Make the reftests more reliable by not downloading Cygwin's setup.exe on Windows [#6467 @kit-ty-kate]
   * Add test for variables resolution in filters, for all fields [#5643 @rjbou]
+  * Add a test showing the behaviour of opam init --config when the file given does not exist [#5979 @kit-ty-kate]
 
 ### Engine
 
