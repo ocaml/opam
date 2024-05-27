@@ -119,6 +119,91 @@ let map_all_filters f t =
   with_deprecated_build_test (map_commands t.deprecated_build_test) |>
   with_deprecated_build_doc (map_commands t.deprecated_build_doc)
 
+(* unguarded_commands_variables is an alternative implementation of
+   OpamFilter.commands_variables which excludes package variables which are
+   guarded by an unambiguous {package:installed} filter. That is, at each level,
+   if assuming !package:installed reduces the filter to false, then the uses of
+   package:variable are not returned. This allows expressions like:
+   ["--with-foo=%{foo:share}%" {foo:installed}] or even
+   ["--with-foo"] {foo:installed & foo:bar != "baz"} not to trigger warning 41
+   if the package is not explicitly depended on. *)
+
+let unguarded_commands_variables commands =
+  let is_installed_variable filter guarded_packages v =
+    match OpamVariable.Full.package v with
+    | None -> guarded_packages
+    | (Some name) as package ->
+      let is_installed var =
+        String.equal "installed"
+          (OpamVariable.to_string (OpamVariable.Full.variable var))
+      in
+      let env var =
+        if Option.equal OpamPackage.Name.equal
+            (OpamVariable.Full.package var) package &&
+           is_installed var then
+          Some (B false)
+        else
+          None
+      in
+      if is_installed v &&
+         OpamFilter.partial_eval env filter = FBool false then
+        OpamPackage.Name.Set.add name guarded_packages
+      else
+        guarded_packages
+  in
+  let filter_guarded variables guarded_packages =
+    let is_unguarded v =
+      match OpamVariable.Full.package v with
+      | Some package ->
+        not (OpamPackage.Name.Set.mem package guarded_packages)
+      | None -> true
+    in
+    List.filter is_unguarded variables
+  in
+  let unguarded_packages_from_filter guarded_packages = function
+    | None -> guarded_packages, []
+    | Some f ->
+      let filter_variables = OpamFilter.variables f in
+      let guarded_packages =
+        List.fold_left (is_installed_variable f)
+          guarded_packages filter_variables
+      in
+      guarded_packages, filter_guarded filter_variables guarded_packages
+  in
+  let unguarded_argument_variables guarded_packages (argument, filter) =
+    let guarded_packages, filter_variables =
+      unguarded_packages_from_filter guarded_packages filter
+    in
+    let variables_from_arguments =
+      filter_guarded (OpamFilter.simple_arg_variables argument) guarded_packages
+    in
+    guarded_packages, variables_from_arguments @ filter_variables
+  in
+  let unguarded_command_variables guarded_packages (command, filter) =
+    let filter_guarded_packages, filter_variables =
+      unguarded_packages_from_filter OpamPackage.Name.Set.empty filter
+    in
+    let add_argument (guarded_packages, acc) argument =
+      let guarded_packages, unguarded_variables =
+        unguarded_argument_variables guarded_packages argument
+      in
+      guarded_packages, unguarded_variables @ acc
+    in
+    let command_guarded_packages, unguarded_variables =
+      List.fold_left add_argument (filter_guarded_packages, filter_variables)
+        command
+    in
+    OpamPackage.Name.Set.union guarded_packages command_guarded_packages,
+    unguarded_variables
+  in
+  let f (guarded_packages, acc) c =
+    let guarded_packages, unguarded_variables =
+      unguarded_command_variables guarded_packages c
+    in
+    guarded_packages, (unguarded_variables @ acc)
+  in
+  List.fold_left f (OpamPackage.Name.Set.empty, []) commands
+
 (* Returns all variables from all commands (or on given [command]) and all filters *)
 let all_variables ?exclude_post ?command t =
   let commands =
@@ -127,6 +212,18 @@ let all_variables ?exclude_post ?command t =
     | None -> all_commands t
   in
   OpamFilter.commands_variables commands @
+  List.fold_left (fun acc f -> OpamFilter.variables f @ acc)
+    [] (all_filters ?exclude_post t)
+
+(* As all_variables, but any commands or arguments which are fully guarded by
+   package:installed are excluded; used for Warning 41 so that
+   ["%{foo:share}%" {foo:installed}] doesn't trigger a warning on foo *)
+let all_unguarded_variables ?exclude_post t =
+  let guarded_packages, unguarded_commands_variables =
+    unguarded_commands_variables (all_commands t)
+  in
+  guarded_packages,
+  unguarded_commands_variables @
   List.fold_left (fun acc f -> OpamFilter.variables f @ acc)
     [] (all_filters ?exclude_post t)
 
@@ -456,18 +553,32 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        ~detail:alpha_flags
        (alpha_flags <> []));
 *)
-    (let undep_pkgs =
-       List.fold_left
-         (fun acc v ->
-            match OpamVariable.Full.package v with
-            | Some n when
-                t.OpamFile.OPAM.name <> Some n &&
-                not (OpamPackage.Name.Set.mem n all_depends) &&
-                OpamVariable.(Full.variable v <> of_string "installed")
-              ->
-              OpamPackage.Name.Set.add n acc
-            | _ -> acc)
-         OpamPackage.Name.Set.empty (all_variables ~exclude_post:true t)
+    (let all_mentioned_packages =
+       OpamPackage.Name.Set.union
+         (OpamFormula.all_names t.depends)
+         (OpamFormula.all_names t.depopts)
+     in
+     let undep_pkgs =
+       let guarded_packages, all_unguarded_variables =
+         all_unguarded_variables ~exclude_post:true t
+       in
+       let first_lot =
+         List.fold_left
+           (fun acc v ->
+              match OpamVariable.Full.package v with
+              | Some n when
+                  t.OpamFile.OPAM.name <> Some n &&
+                  not (OpamPackage.Name.Set.mem n all_depends) &&
+                  OpamVariable.(Full.variable v <> of_string "installed")
+                ->
+                OpamPackage.Name.Set.add n acc
+              | _ -> acc)
+           OpamPackage.Name.Set.empty all_unguarded_variables
+       in
+       let second_lot =
+         OpamPackage.Name.Set.diff guarded_packages all_mentioned_packages
+       in
+       OpamPackage.Name.Set.union first_lot second_lot
      in
      cond 41 `Warning
        "Some packages are mentioned in package scripts or features, but \

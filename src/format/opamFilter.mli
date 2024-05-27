@@ -155,6 +155,9 @@ val commands: env -> command list -> string list list
 (** Process a simpler command, without filters *)
 val single_command: env -> arg list -> string list
 
+(** Extracts the list of variables from an argument *)
+val simple_arg_variables: simple_arg -> full_variable list
+
 (** Extracts variables appearing in a list of commands *)
 val commands_variables: command list -> full_variable list
 

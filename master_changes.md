@@ -59,6 +59,8 @@ users)
   * Fix extraction of tarballs on Windows which contain symlinks both when those symlinks can't be created or if they point to files which don't exist [#5953 @dra27]
 
 ## Lint
+  * W41: Relax warning 41 not to trigger on uses of package variables which are guarded by a package:installed filter [#5927 @dra27]
+  * W41: Tighten w.r.t depends & depopts [#5927 @dra27]
 
 ## Repository
   * Fix download URLs containing invalid characters on Windows (e.g. the ? character in `?full_index=1`) [#5921 @dra27]
@@ -135,6 +137,7 @@ users)
   * env.win32: add regression test for reverting additions to PATH-like variables [#5935 @dra27]
   * env tests: add regression test for append/prepend operators to empty environment variables [#5925, #5935 @dra27]
   * env.win32: add regression test for handling the empty entry in PATH-like variables [#5926, #5935 @dra27]
+  * lint: add W41 examples [#5927 @dra27]
 
 ### Engine
   * Add `sort` command [#5935 @dra27]

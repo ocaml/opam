@@ -379,12 +379,13 @@ let verifies f nv =
       check_version_formula cstr (OpamPackage.version nv))
     name_formula
 
+let all_names f =
+  fold_left (fun acc (name, _) ->
+      OpamPackage.Name.Set.add name acc)
+    OpamPackage.Name.Set.empty f
+
 let packages pkgset f =
-  let names =
-    fold_left (fun acc (name, _) ->
-        OpamPackage.Name.Set.add name acc)
-      OpamPackage.Name.Set.empty f
-  in
+  let names = all_names f in
   (* dnf allows us to transform the formula into a union of intervals, where
      ignoring atoms for different package names works. *)
   let dnf = dnf_of_formula f in
