@@ -97,11 +97,13 @@ users)
 ## Build
   * Upgrade vendored cmdliner to 1.3.0 [#5970 @kit-ty-kate]
   * Remove unused/untested Makefile targets lib-pkg [#5494 @kit-ty-kate]
+  * Upgrade vendored OCaml compiler to 4.14.2 [#5976 @kit-ty-kate]
 
 ## Infrastructure
   * Ensure GNU coreutils available on the macOS 14 CI runners [#5938 @dra27]
 
 ## Release scripts
+  * Upgrade the OCaml compiler used for releases to 4.14.2 [#5976 @kit-ty-kate]
 
 ## Install script
 
