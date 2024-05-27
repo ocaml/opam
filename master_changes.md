@@ -138,6 +138,7 @@ users)
   * env tests: add regression test for append/prepend operators to empty environment variables [#5925, #5935 @dra27]
   * env.win32: add regression test for handling the empty entry in PATH-like variables [#5926, #5935 @dra27]
   * lint: add W41 examples [#5927 @dra27]
+  * Add a test showing the behaviour of opam init --config when the file given does not exist [#5979 @kit-ty-kate]
 
 ### Engine
   * Add `sort` command [#5935 @dra27]

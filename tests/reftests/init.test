@@ -249,3 +249,9 @@ wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "ma
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
 repositories: "norepo" {"file://${BASEDIR}/REPO"}
+### :: Show a reasonable error message when the file given to --config does not exist ::
+### rm -rf $OPAMROOT
+### opam init --bypass-checks --bare --no-setup --config some-non-existant-file
+Fatal error:
+File "src/repository/opamDownload.ml", line 140, characters 2-8: Assertion failed
+# Return code 99 #
