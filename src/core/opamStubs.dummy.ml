@@ -41,3 +41,4 @@ let win_create_process _ _ _ _ _ = that's_a_no_no
 let getConsoleWindowClass = that's_a_no_no
 let setErrorMode = that's_a_no_no
 let getErrorMode = that's_a_no_no
+let setConsoleToUTF8 = that's_a_no_no

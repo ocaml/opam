@@ -17,6 +17,7 @@ users)
 
 ## Global CLI
   * Fix a typo in the variable description returned by "opam var" [#5961 @jmid]
+  * Out-of-the-box UTF-8 paged --help on Windows [#5970 @kit-ty-kate]
 
 ## Plugins
 
@@ -89,6 +90,7 @@ users)
 ## VCS
 
 ## Build
+  * Upgrade vendored cmdliner to 1.3.0 [#5970 @kit-ty-kate]
 
 ## Infrastructure
   * Ensure GNU coreutils available on the macOS 14 CI runners [#5938 @dra27]
@@ -115,6 +117,7 @@ users)
 ## Internal
 
 ## Internal: Windows
+  * Set the console to use UTF-8 on Windows using SetConsoleCP and SetConsoleOutputCP [#5970 @kit-ty-kate]
 
 ## Test
 

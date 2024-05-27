@@ -28,6 +28,7 @@
 #include <TlHelp32.h>
 #include <Knownfolders.h>
 #include <Objbase.h>
+#include <WinCon.h>
 
 #include <stdio.h>
 
@@ -794,4 +795,12 @@ CAMLprim value OPAMW_SetErrorMode(value mode)
 CAMLprim value OPAMW_GetErrorMode(value mode)
 {
   return Val_int(GetErrorMode());
+}
+
+CAMLprim value OPAMW_SetConsoleToUTF8(value _unit) {
+  /* NOTE: Setting Input (SetConsoleCP) is necessary for more.com
+   * called by cmdliner to correctly output UTF-8 characters */
+  SetConsoleCP(CP_UTF8);
+  SetConsoleOutputCP(CP_UTF8);
+  return Val_unit;
 }
