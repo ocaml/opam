@@ -313,3 +313,4 @@ users)
   * `OpamParallel.*.{map,reduce,iter}`: Run `Gc.compact` when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
   * `OpamSystem`, `OpamFilename`: add `with_tmp_file` and `with_tmp_file_job` function, that create a file name in temporary directory and removes it at the end of the call [#6036 @rjbou]
   * Add `OpamUrl.kind` as an alternative for OpamUrl.local_{file,dir} [#5979 @kit-ty-kate]
+  * Expose `OpamUrl.string_of_vc` [#5979 @kit-ty-kate]

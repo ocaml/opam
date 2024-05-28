@@ -15,6 +15,7 @@ type version_control = [ `git | `darcs | `hg ]
 
 type backend = [ `http | `rsync | version_control ]
 
+val string_of_vc : version_control -> string
 val string_of_backend: backend -> string
 
 exception Parse_error of string
