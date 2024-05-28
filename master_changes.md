@@ -221,3 +221,4 @@ users)
   * `OpamStd.String.{starts_with,ends_with,for_all,fold_left}`: were moved to `OpamCompat.String` [#6442 @kit-ty-kate]
   * `OpamFilename.create`: deduplicate the directory separator character when the basename starts with one [#6703 @rjbou]
   * `OpamUrl.kind`: was added as an alternative to `OpamUrl.local_{file,dir}` [#5979 @kit-ty-kate]
+  * `OpamUrl`: Expose `string_of_vc` [#5979 @kit-ty-kate]
