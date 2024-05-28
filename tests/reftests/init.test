@@ -253,5 +253,5 @@ repositories: "norepo" {"file://${BASEDIR}/REPO"}
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config some-non-existant-file
 Fatal error:
-File "src/repository/opamDownload.ml", line 140, characters 2-8: Assertion failed
+OpamSystem.File_not_found("${BASEDIR}/some-non-existant-file")
 # Return code 99 #

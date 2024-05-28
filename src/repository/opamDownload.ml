@@ -171,16 +171,25 @@ let really_download
   Done ()
 
 let download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst =
-  match OpamUrl.local_file url with
-  | Some src ->
-    if src = dst then Done () else
+  match OpamUrl.kind url with
+  | LocalPath ->
+    let src = OpamFilename.of_string url.OpamUrl.path in
+    if OpamFilename.equal src dst then Done () else
       (if OpamFilename.exists dst then
          if overwrite then OpamFilename.remove dst else
            OpamSystem.internal_error "The downloaded file will overwrite %s."
              (OpamFilename.to_string dst);
        OpamFilename.copy ~src ~dst;
        Done ())
-  | None ->
+  | VersionControl vcs ->
+    OpamConsole.error_and_exit `Internal_error
+      "Downloading via version %s not supported for %S"
+      (OpamUrl.string_of_vc vcs) (OpamUrl.to_string url);
+  | Ssh ->
+    OpamConsole.error_and_exit `Internal_error
+      "Downloading via ssh not supported for %S"
+      (OpamUrl.to_string url);
+  | Http ->
     OpamFilename.(mkdir (dirname dst));
     really_download ?quiet ~overwrite ?compress ?checksum ?validate
       ~url
