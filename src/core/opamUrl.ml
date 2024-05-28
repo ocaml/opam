@@ -211,6 +211,8 @@ let base_url url =
   | "" -> url.path
   | tr -> Printf.sprintf "%s://%s" tr url.path
 
+(* TODO: integrate this function inside "kind" when both "local_dir"
+   and "local_file" have been removed *)
 let local_path = function
   | { transport = ("file"|"path"|"local"|"rsync"); path;
       hash = _; backend = (#version_control | `rsync); }
@@ -218,6 +220,24 @@ let local_path = function
     Some path
   | _ -> None
 
+type kind =
+  | LocalPath
+  | VersionControl of version_control
+  | Http
+  | Ssh
+
+let kind = function
+  | {backend = (#version_control as vcs); _} -> VersionControl vcs
+  | url ->
+    match local_path url, url with
+    | Some _, {backend = `rsync; _} -> LocalPath
+    | None, {backend = `http; _} -> Http
+    | None, {backend = `rsync; _} -> Ssh
+    | Some _, {backend = `http; _} -> assert false
+    | _, {backend = #version_control; _} -> assert false
+
+(* TODO: Remove this function and use "kind" instead.
+   See https://github.com/ocaml/opam/pull/5975 *)
 let local_dir url =
   let open OpamStd.Option.Op in
   local_path url >>|
@@ -225,6 +245,8 @@ let local_dir url =
   if OpamFilename.exists_dir d then Some d
   else None
 
+(* TODO: Remove this function and use "kind" instead.
+   See https://github.com/ocaml/opam/pull/5975 *)
 let local_file url =
   let open OpamStd.Option.Op in
   local_path url >>|

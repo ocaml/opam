@@ -164,3 +164,4 @@ users)
 ## opam-core
   * `OpamStd.String`: add `split_quoted` that preserves quoted separator [#5935 @dra27]
   * `OpamSystem.copy_dir` and `OpamSystem.mv` may display a warning on Windows if an invalid symlink (e.g. an LXSS Junction) is found [#5953 @dra27]
+  * Add `OpamUrl.kind` as an alternative for OpamUrl.local_{file,dir} [#5979 @kit-ty-kate]
