@@ -308,13 +308,12 @@ repositories: "norepo" {"file://${BASEDIR}/REPO"}
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config some-non-existant-file
 Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
+OpamSystem.File_not_found("${BASEDIR}/some-non-existant-file")
 # Return code 99 #
 ### :II:d:2: Non existant vcs local file
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config
-Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
+[ERROR] Downloading via version git not supported for "git+file://${BASEDIR}/config-files/config"
 # Return code 99 #
 ### :II:d:3: Existing VCS local file
 ### mkdir config-files
@@ -354,14 +353,12 @@ rm 'config'
 # Return code 1 #
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config#config
-Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
+[ERROR] Downloading via version git not supported for "git+file://${BASEDIR}/config-files/config#config"
 # Return code 99 #
 ### :III:d:5: Non existant distant VCS file
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://som.e/distant/config
-Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
+[ERROR] Downloading via version git not supported for "git+file://som.e/distant/config"
 # Return code 99 #
 ### :II:d:1: Non existant http file
 ### rm -rf $OPAMROOT
