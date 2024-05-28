@@ -20,6 +20,7 @@ users)
 
 ## Init
   * Remove `getconf` from the list of required runtime tools, which allows `opam init` to work out-of-the-box on Haiku [#6634 @kit-ty-kate - fix #6632]
+  * Display an appropriate error message when the file given to `opam init --config` does not exist or is in a VCS [#5979 @kit-ty-kate - fix #5971]
 
 ## Config report
 
