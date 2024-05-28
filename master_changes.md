@@ -21,6 +21,7 @@ users)
 ## Init
   * [BUG] Fix the detection of `ZDOTDIR` when using `zsh` [#6299 @acasta-yhliu - fix #6281]
   * Remove `ocaml-system` from the list of default compilers [#6307 @kit-ty-kate - fix #3509]
+  * Display an appropriate error message when the file given to `opam init --config` does not exist or is in a VCS [#5979 @kit-ty-kate]
 
 ## Config report
 

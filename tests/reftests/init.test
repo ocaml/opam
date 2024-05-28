@@ -307,14 +307,15 @@ repositories: "norepo" {"file://${BASEDIR}/REPO"}
 ### :II:d:1: Non existing local file
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config some-non-existant-file
-Fatal error:
-OpamSystem.File_not_found("${BASEDIR}/some-non-existant-file")
-# Return code 99 #
+Configuring from ${BASEDIR}/some-non-existant-file and then from built-in defaults.
+[ERROR] Error in configuration file, fix it, use '--no-opamrc', or check your '--config FILE' arguments:
+File ${BASEDIR}/some-non-existant-file does not exist or can't be read
+# Return code 50 #
 ### :II:d:2: Non existant vcs local file
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config
-[ERROR] Downloading via version git not supported for "git+file://${BASEDIR}/config-files/config"
-# Return code 99 #
+[ERROR] Version control url not supported for "git+file://${BASEDIR}/config-files/config"
+# Return code 2 #
 ### :II:d:3: Existing VCS local file
 ### mkdir config-files
 ### <config-files/config>
@@ -328,12 +329,11 @@ default-invariant : "foo"
 ### test -f config-files/config
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config
-Configuring from ${BASEDIR}/config-files/config and then from built-in defaults.
-
-<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
-[default] Initialised
+[ERROR] Version control url not supported for "git+file://${BASEDIR}/config-files/config"
+# Return code 2 #
 ### opam option default-invariant
-["foo"]
+[ERROR] Opam has not been initialised, please run `opam init'
+# Return code 50 #
 ### :II:d:4: Existing VCS local file, url not specifyin VCS
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config $BASEDIR/config-files/config
@@ -353,13 +353,13 @@ rm 'config'
 # Return code 1 #
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config#config
-[ERROR] Downloading via version git not supported for "git+file://${BASEDIR}/config-files/config#config"
-# Return code 99 #
+[ERROR] Version control url not supported for "git+file://${BASEDIR}/config-files/config#config"
+# Return code 2 #
 ### :III:d:5: Non existant distant VCS file
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://som.e/distant/config
-[ERROR] Downloading via version git not supported for "git+file://som.e/distant/config"
-# Return code 99 #
+[ERROR] Version control url not supported for "git+file://som.e/distant/config"
+# Return code 2 #
 ### :II:d:1: Non existant http file
 ### rm -rf $OPAMROOT
 ### opam --version >$ OPAMVERSION
