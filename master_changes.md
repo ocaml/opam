@@ -23,6 +23,7 @@ users)
 
 ## Init
   * ◈ New option `opam init --cygwin-extra-packages=CYGWIN_PKGS --cygwin-internal-install`, to specify additional packages for internal Cygwin [#5930, #5964 @moyodiallo - fix #5834]
+  * Display an appropriate error message when the file given to opam init --config does not exist [#5979 @kit-ty-kate]
 
 ## Config report
 
