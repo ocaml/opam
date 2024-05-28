@@ -328,15 +328,13 @@ Parse error
 ### :II:e:1: Non existing local file
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config some-non-existant-file
-Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
-# Return code 99 #
+[ERROR] File does not exist: ${BASEDIR}/some-non-existant-file
+# Return code 2 #
 ### :II:e:2: Non existant vcs local file
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config
-Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
-# Return code 99 #
+[ERROR] Version control url not supported for "git+file://${BASEDIR}/config-files/config"
+# Return code 2 #
 ### :II:e:3: Existing VCS local file
 ### mkdir config-files
 ### <config-files/config>
@@ -351,12 +349,11 @@ repositories: "norepo" {"REPO/"}
 ### test -f config-files/config
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config
-Configuring from ${BASEDIR}/config-files/config and then from built-in defaults.
-
-<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
-[norepo] Initialised
+[ERROR] Version control url not supported for "git+file://${BASEDIR}/config-files/config"
+# Return code 2 #
 ### opam option default-invariant
-["foo"]
+[ERROR] Opam has not been initialised, please run `opam init'
+# Return code 50 #
 ### :II:e:4: Existing VCS local file, url not specifyin VCS
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config $BASEDIR/config-files/config
@@ -376,15 +373,13 @@ rm 'config'
 # Return code 1 #
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://$BASEDIR/config-files/config#config
-Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
-# Return code 99 #
+[ERROR] Version control url not supported for "git+file://${BASEDIR}/config-files/config#config"
+# Return code 2 #
 ### :II:e:6: Non existant distant VCS file
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup --config git+file://som.e/distant/config
-Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
-# Return code 99 #
+[ERROR] Version control url not supported for "git+file://som.e/distant/config"
+# Return code 2 #
 ### :II:e:7: Non existant http file
 ### rm -rf $OPAMROOT
 ### opam --version >$ OPAMVERSION
@@ -399,13 +394,11 @@ this is not the content of a config file
 ### rm -rf $OPAMROOT
 ### opam --version >$ OPAMVERSION
 ### opam init --bypass-checks --bare --no-setup --config wrong-config --config non-existant
-Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
-# Return code 99 #
+[ERROR] File does not exist: ${BASEDIR}/non-existant
+# Return code 2 #
 ### :II:f:2: 1 parse error, 1 non existant, 1 good
 ### rm -rf $OPAMROOT
 ### opam --version >$ OPAMVERSION
 ### opam init --bypass-checks --bare --no-setup --config wrong-config --config non-existant --config $BASEDIR/config-files/config
-Fatal error:
-File "src/repository/opamDownload.ml", line 198, characters 2-8: Assertion failed
-# Return code 99 #
+[ERROR] File does not exist: ${BASEDIR}/non-existant
+# Return code 2 #

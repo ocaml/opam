@@ -19,6 +19,7 @@ users)
 ## Plugins
 
 ## Init
+  * ✘ Display an appropriate error message when the file given to `opam init --config` does not exist or is in a VCS. This changes the behaviour for VCS local urls that was previously retrieved. [#5979 @kit-ty-kate - fix #5971]
 
 ## Config report
 
