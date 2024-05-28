@@ -71,6 +71,15 @@ val root: t -> t
 
 val has_trailing_slash: t -> bool
 
+type kind =
+  | LocalPath
+  | VersionControl of version_control
+  | Http
+  | Ssh
+
+(** Tells what kind of URL it is. This function does not query the file-system *)
+val kind : t -> kind
+
 (** Check if the URL matches an existing local directory, and return it *)
 val local_dir: t -> OpamFilename.Dir.t option
 
