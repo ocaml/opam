@@ -1416,6 +1416,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:update-upgrade.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-update)
+ (action
+  (diff update.test update.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-update)))
+
+(rule
+ (targets update.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:update.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-upgrade-format)
  (action
   (diff upgrade-format.test upgrade-format.out)))
