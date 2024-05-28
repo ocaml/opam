@@ -23,6 +23,7 @@ users)
 
 ## Init
   * ◈ New option `opam init --cygwin-extra-packages=CYGWIN_PKGS --cygwin-internal-install`, to specify additional packages for internal Cygwin [#5930, #5964 @moyodiallo - fix #5834]
+  * Display an appropriate error message when the file given to opam init --config does not exist [#5979 @kit-ty-kate]
 
 ## Config report
 
@@ -138,6 +139,7 @@ users)
   * env tests: add regression test for append/prepend operators to empty environment variables [#5925, #5935 @dra27]
   * env.win32: add regression test for handling the empty entry in PATH-like variables [#5926, #5935 @dra27]
   * lint: add W41 examples [#5927 @dra27]
+  * Add a test showing the behaviour of opam init --config when the file given does not exist [#5979 @kit-ty-kate]
 
 ### Engine
   * Add `sort` command [#5935 @dra27]
@@ -164,3 +166,5 @@ users)
 ## opam-core
   * `OpamStd.String`: add `split_quoted` that preserves quoted separator [#5935 @dra27]
   * `OpamSystem.copy_dir` and `OpamSystem.mv` may display a warning on Windows if an invalid symlink (e.g. an LXSS Junction) is found [#5953 @dra27]
+  * Add `OpamUrl.kind` as an alternative for OpamUrl.local_{file,dir} [#5979 @kit-ty-kate]
+  * Expose `OpamUrl.string_of_vc` [#5979 @kit-ty-kate]

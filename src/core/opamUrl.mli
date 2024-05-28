@@ -15,6 +15,7 @@ type version_control = [ `git | `darcs | `hg ]
 
 type backend = [ `http | `rsync | version_control ]
 
+val string_of_vc : version_control -> string
 val string_of_backend: backend -> string
 
 exception Parse_error of string
@@ -70,6 +71,15 @@ val basename: t -> string
 val root: t -> t
 
 val has_trailing_slash: t -> bool
+
+type kind =
+  | LocalPath
+  | VersionControl of version_control
+  | Http
+  | Ssh
+
+(** Tells what kind of URL it is. This function does not query the file-system *)
+val kind : t -> kind
 
 (** Check if the URL matches an existing local directory, and return it *)
 val local_dir: t -> OpamFilename.Dir.t option

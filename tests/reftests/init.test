@@ -249,3 +249,10 @@ wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "ma
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
 repositories: "norepo" {"file://${BASEDIR}/REPO"}
+### :: Show a reasonable error message when the file given to --config does not exist ::
+### rm -rf $OPAMROOT
+### opam init --bypass-checks --bare --no-setup --config some-non-existant-file
+Configuring from ${BASEDIR}/some-non-existant-file and then from built-in defaults.
+[ERROR] Error in configuration file, fix it, use '--no-opamrc', or check your '--config FILE' arguments:
+File ${BASEDIR}/some-non-existant-file does not exist or can't be read
+# Return code 50 #
