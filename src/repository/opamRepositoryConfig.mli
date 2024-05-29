@@ -20,6 +20,7 @@ module E : sig
     | REQUIRECHECKSUMS of bool option
     | RETRIES of int option
     | VALIDATIONHOOK of string option
+    | TRUSTCACHE of bool option
 
   val curl: unit -> string option
   val fetch: unit -> string option
@@ -36,6 +37,7 @@ type dl_tool_kind = [ `Curl | `Default ]
 type t = {
   download_tool: (OpamTypes.arg list * dl_tool_kind) Lazy.t;
   validation_hook: OpamTypes.arg list option;
+  trust_cache: bool;
   retries: int;
   force_checksums: bool option;
   repo_tarring : bool;
@@ -44,6 +46,7 @@ type t = {
 type 'a options_fun =
   ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t ->
   ?validation_hook:OpamTypes.arg list option ->
+  ?trust_cache:bool ->
   ?retries:int ->
   ?force_checksums:bool option ->
   ?repo_tarring:bool ->
