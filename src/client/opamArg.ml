@@ -224,6 +224,10 @@ let environment_variables =
       "VALIDATIONHOOK", cli_original, (fun v -> VALIDATIONHOOK (env_string v)),
       "if set, uses the `%{hook%}' command to validate \
        an opam repository update.";
+      "TRUSTCACHE", cli_from cli2_2, (fun v -> TRUSTCACHE (env_bool v)),
+      "If this is set, the local opam cache is trusted and no double-checking \
+       is done. This is for specific purposes, normally you want to detect \
+       corruptions, typically due to truncated files.";
     ] in
   let state =
     let open OpamStateConfig.E in [

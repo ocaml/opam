@@ -153,6 +153,7 @@ val opam_init:
   ?version_lag_power:int ->
   ?download_tool:(OpamTypes.arg list * OpamRepositoryConfig.dl_tool_kind) Lazy.t ->
   ?validation_hook:OpamTypes.arg list option ->
+  ?trust_cache:bool ->
   ?retries:int ->
   ?force_checksums:bool option ->
   ?repo_tarring:bool ->
