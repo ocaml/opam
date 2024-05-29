@@ -24,6 +24,7 @@ let getWindowsVersion = that's_a_no_no
 let getArchitecture = that's_a_no_no
 let waitpids _ = that's_a_no_no
 let readRegistry _ _ _ = that's_a_no_no
+let enumRegistry _ _ = that's_a_no_no
 let writeRegistry _ _ _ = that's_a_no_no
 let getConsoleOutputCP = that's_a_no_no
 let getCurrentConsoleFontEx _ = that's_a_no_no

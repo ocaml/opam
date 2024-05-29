@@ -23,6 +23,7 @@ external getWindowsVersion : unit -> int * int * int * int = "OPAMW_GetWindowsVe
 external getArchitecture : unit -> 'a = "OPAMW_GetArchitecture"
 external waitpids : int list -> int -> int * Unix.process_status = "OPAMW_waitpids"
 external readRegistry : 'a -> string -> string -> 'b -> 'c option = "OPAMW_ReadRegistry"
+external enumRegistry : 'a -> string -> 'b -> (string * 'c) list = "OPAMW_RegEnumValue"
 external writeRegistry : 'a -> string -> string -> 'b -> 'c -> unit = "OPAMW_WriteRegistry"
 external getConsoleOutputCP : unit -> int = "OPAMW_GetConsoleOutputCP"
 external getCurrentConsoleFontEx : 'a -> bool -> 'b = "OPAMW_GetCurrentConsoleFontEx"

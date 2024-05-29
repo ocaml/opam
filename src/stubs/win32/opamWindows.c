@@ -423,6 +423,111 @@ CAMLprim value OPAMW_ReadRegistry(value hKey, value sub_key,
   CAMLreturn(result);
 }
 
+CAMLprim value OPAMW_RegEnumValue(value hKey, value sub_key, value value_type)
+{
+  CAMLparam0();
+  CAMLlocal5(result, tail, v, v_name, v_data);
+  value cell;
+
+  LPWSTR lpEnvironment;
+
+  result = caml_alloc_small(2, 0);
+  Field(result, 0) = Val_int(0);    /* Unused */
+  Field(result, 1) = Val_emptylist; /* The actual result */
+  tail = result;
+
+  HKEY key;
+  DWORD type;
+  LSTATUS ret;
+  DWORD index = 0;
+  LPWSTR lpValueName = NULL;
+  DWORD cbValueName;
+  LPBYTE lpData = NULL;
+  DWORD cbData;
+  LPWSTR lpSubKey;
+
+  if (!caml_string_is_c_safe(sub_key))
+    caml_invalid_argument("OPAMW_RegEnumValue");
+
+  if (!(lpSubKey = caml_stat_strdup_to_utf16(String_val(sub_key)))) {
+    caml_raise_out_of_memory();
+  }
+
+  ret = RegOpenKey(roots[Int_val(hKey)], lpSubKey, &key);
+  if (ret == ERROR_SUCCESS)
+    ret = RegQueryInfoKey(key, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &cbValueName, &cbData, NULL, NULL);
+
+  if (ret == ERROR_SUCCESS) {
+    caml_stat_free(lpSubKey);
+    /* Cases match OpamStubsTypes.registry_value */
+    switch (Int_val(value_type)) {
+      case 0:
+        type = REG_SZ;
+        break;
+      default:
+        RegCloseKey(key);
+        caml_failwith("OPAMW_RegEnumValue: value not implemented");
+        break;
+    }
+
+    if (ret == ERROR_SUCCESS) {
+      cbValueName++;
+      if ((lpData = malloc(cbData)) == NULL) {
+        caml_raise_out_of_memory();
+      } else if ((lpValueName = malloc(cbValueName * sizeof(WCHAR))) == NULL) {
+        free(lpData);
+        caml_raise_out_of_memory();
+      }
+
+      DWORD valuename_len = cbValueName;
+      DWORD value_len = cbData;
+      DWORD value_type;
+
+      while (ret == ERROR_SUCCESS) {
+        valuename_len = cbValueName;
+        value_len = cbData;
+        ret = RegEnumValue(key, index++, lpValueName, &valuename_len, NULL, &value_type, lpData, &value_len);
+        if (ret == ERROR_SUCCESS) {
+          if (type == value_type) {
+            value_len /= 2; /* bytes -> characters */
+            if (((wchar_t *)lpData)[value_len - 1] == 0)
+              value_len--; /* remove NULL terminator */
+            int len = win_wide_char_to_multi_byte((wchar_t *)lpData, value_len, NULL, 0);
+            v_data = caml_alloc_string(len);
+            win_wide_char_to_multi_byte((wchar_t *)lpData, value_len, (char *)String_val(v_data), len);
+            len = win_wide_char_to_multi_byte(lpValueName, valuename_len, NULL, 0);
+            v_name = caml_alloc_string(len);
+            win_wide_char_to_multi_byte(lpValueName, valuename_len, (char *)String_val(v_name), len);
+            v = caml_alloc_small(2, 0);
+            Field(v, 0) = v_name;
+            Field(v, 1) = v_data;
+            cell = caml_alloc_small(2, 0);
+            Field(cell, 0) = v;
+            Field(cell, 1) = Val_emptylist;
+            Store_field(tail, 1, cell);
+            tail = Field(tail, 1);
+          }
+        }
+      }
+      if (ret == ERROR_NO_MORE_ITEMS)
+        ret = ERROR_SUCCESS;
+
+      free(lpData);
+      free(lpValueName);
+    }
+
+    RegCloseKey(key);
+  } else {
+    caml_stat_free(lpSubKey);
+  }
+
+  if (ret != ERROR_SUCCESS && ret != ERROR_FILE_NOT_FOUND) {
+    caml_failwith("OPAMW_RegEnumValue");
+  }
+
+  CAMLreturn(Field(result, 1));
+}
+
 CAMLprim value OPAMW_WriteRegistry(value hKey,
                                    value sub_key,
                                    value value_name,
