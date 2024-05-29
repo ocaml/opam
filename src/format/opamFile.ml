@@ -1395,7 +1395,7 @@ module ConfigSyntax = struct
   let atomic = false
   let format_version = OpamVersion.of_string "2.1"
   let file_format_version = OpamVersion.of_string "2.0"
-  let root_version = OpamVersion.of_string "2.2~beta"
+  let root_version = OpamVersion.of_string "2.2"
 
   let default_old_root_version = OpamVersion.of_string "2.1~~previous"
 
