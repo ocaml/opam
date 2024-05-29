@@ -182,3 +182,4 @@ users)
   * `OpamStubs.readRegistry`: on Windows, complements `OpamStubs.writeRegistry` [#5963 @dra27]
   * `OpamStubs.get_initial_environment`: on Windows, returns the pristine environment for new shells [#5963 @dra27]
   * `OpamConsole`: Add `formatted_errmsg` [#5999 @kit-ty-kate]
+  * `OpamConsole.menu` now supports up to 35 menu items [#5992 @dra27]
