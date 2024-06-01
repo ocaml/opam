@@ -74,8 +74,14 @@ let to_string ?custom t =
 let rec fold_down_left f acc filter = match filter with
   | FOp(l,_,r) | FAnd(l,r) | FOr(l,r) ->
     fold_down_left f (fold_down_left f (f acc filter) l) r
-  | FNot(x) -> fold_down_left f (f acc filter) x
-  | x -> f acc x
+  | FNot x
+  | FUndef x
+  | FDefined x ->
+    fold_down_left f (f acc filter) x
+  | FBool _
+  | FString _
+  | FIdent _ ->
+    f acc filter
 
 let rec map_up f = function
   | FOp (l, op, r) -> f (FOp (map_up f l, op, map_up f r))
@@ -83,7 +89,8 @@ let rec map_up f = function
   | FOr (l, r) -> f (FOr (map_up f l, map_up f r))
   | FNot x -> f (FNot (map_up f x))
   | FUndef x -> f (FUndef (map_up f x))
-  | (FBool _ | FString _ | FIdent _ | FDefined _) as flt -> f flt
+  | FDefined x -> f (FDefined (map_up f x))
+  | (FBool _ | FString _ | FIdent _) as flt -> f flt
 
 (* ["%%"], ["%{xxx}%"], or ["%{xxx"] if unclosed *)
 let string_interp_regex =
