@@ -92,5 +92,10 @@ opam-version: "2.0"
 [second] Initialised
 ### opam repo remove default --this-switch
 ### opam install undef
-[ERROR] Undefined filter variable undefined-global in dependencies of undef.1
-# Return code 30 #
+The following actions will be performed:
+=== install 1 package
+  - install undef 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed undef.1
+Done.
