@@ -81,3 +81,16 @@ The following actions will be performed:
 -> installed d.4
 -> installed foo.1
 Done.
+### OPAMYES=1 OPAMSTRICT=1
+### <REPO2/packages/undef/undef.1/opam>
+opam-version: "2.0"
+depends: "d" {?undefined-global & undefined-global != ""}
+### <REPO2/repo>
+opam-version: "2.0"
+### opam switch create undefined-globals --empty
+### opam repository add second ./REPO2 --this-switch
+[second] Initialised
+### opam repo remove default --this-switch
+### opam install undef
+[ERROR] Undefined filter variable undefined-global in dependencies of undef.1
+# Return code 30 #
