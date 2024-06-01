@@ -81,10 +81,11 @@ let exists_dir dirname =
   with Unix.Unix_error _ -> false
 
 let cleandir dirname =
-  if exists_dir dirname then
-    (log "cleandir %a" (slog Dir.to_string) dirname;
-     OpamSystem.remove (Dir.to_string dirname);
-     mkdir dirname)
+  if exists_dir dirname then begin
+    log (fun fmt -> fmt "cleandir %a" (slog Dir.to_string) dirname);
+    OpamSystem.remove (Dir.to_string dirname);
+    mkdir dirname
+  end
 
 let rec_dirs d =
   let fs = OpamSystem.rec_dirs (Dir.to_string d) in
@@ -97,16 +98,13 @@ let dirs d =
 let dir_is_empty d =
   OpamSystem.dir_is_empty (Dir.to_string d)
 
-let in_dir dirname fn = OpamSystem.in_dir dirname fn
-
 let env_of_list l = Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) l)
 
-let exec dirname ?env ?name ?metadata ?keep_going cmds =
+let exec dir ?env ?name ?metadata ?keep_going cmds =
   let env = match env with
     | None   -> None
     | Some l -> Some (env_of_list l) in
-  in_dir dirname
-    (fun () -> OpamSystem.commands ?env ?name ?metadata ?keep_going cmds)
+  OpamSystem.commands ?env ?name ?metadata ~dir ?keep_going cmds
 
 let move_dir ~src ~dst =
   OpamSystem.mv (Dir.to_string src) (Dir.to_string dst)
@@ -379,15 +377,17 @@ type generic_file =
 let extract_generic_file filename dirname =
   match filename with
   | F f ->
-    log "extracting %a to %a"
-      (slog to_string) f
-      (slog Dir.to_string) dirname;
+    log (fun fmt ->
+        fmt "extracting %a to %a"
+          (slog to_string) f
+          (slog Dir.to_string) dirname);
     extract f dirname
   | D d ->
     if d <> dirname then (
-      log "copying %a to %a"
-        (slog Dir.to_string) d
-        (slog Dir.to_string) dirname;
+      log (fun fmt ->
+          fmt "copying %a to %a"
+            (slog Dir.to_string) d
+            (slog Dir.to_string) dirname);
       copy_dir ~src:d ~dst:dirname
     )
 

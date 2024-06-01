@@ -53,8 +53,8 @@ MD5_0install-solver = 030edc9b1d3676c06d51397ffb5a737d
 
 $(call PKG_SAME,0install-solver)
 
-URL_opam-file-format = https://github.com/ocaml/opam-file-format/archive/refs/tags/2.1.6.tar.gz
-MD5_opam-file-format = 706ce5fc3e77db746a4c8b11d79cefef
+URL_opam-file-format = https://github.com/kit-ty-kate/opam-file-format/archive/menhir.tar.gz
+MD5_opam-file-format = ee0ae73225e3f96d1dd39b18fb1c1730
 
 $(call PKG_SAME,opam-file-format)
 
@@ -105,3 +105,6 @@ URL_swhid_core = https://github.com/OCamlPro/swhid_core/archive/refs/tags/0.1.ta
 MD5_swhid_core = 77d88d4b1d96261c866f140c64d89af8
 
 $(call PKG_SAME,swhid_core)
+
+URL_menhir = https://gitlab.inria.fr/fpottier/menhir/-/archive/20231231/archive.tar.gz
+MD5_menhir = 799748bc3b7a542798a85956c7863865

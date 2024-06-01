@@ -11,8 +11,8 @@ endif
 
 PATCH ?= patch
 
-URL_ocaml = https://caml.inria.fr/pub/distrib/ocaml-4.14/ocaml-4.14.1.tar.gz
-MD5_ocaml = c45b013a233c9a4b80c3930d723d19dd
+URL_ocaml = https://caml.inria.fr/pub/distrib/ocaml-5.2/ocaml-5.2.0.tar.gz
+MD5_ocaml = 17b0e3d4eec32c8960fd0e1e6a7ec672
 
 URL_flexdll = https://github.com/ocaml/flexdll/archive/0.43.tar.gz
 MD5_flexdll = 6ce706f6c65b2c5adf5791fac678f090
@@ -32,7 +32,7 @@ URL_PKG_$(1) = $(URL_$(1))
 MD5_PKG_$(1) = $(MD5_$(1))
 endef
 
-SRC_EXTS = cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format seq stdlib-shims spdx_licenses opam-0install-cudf 0install-solver uutf jsonm sha swhid_core
+SRC_EXTS = cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format seq stdlib-shims spdx_licenses opam-0install-cudf 0install-solver uutf jsonm sha swhid_core menhir
 PKG_EXTS = $(SRC_EXTS) dune-local findlib ocamlbuild topkg mccs
 
 ifeq ($(MCCS_ENABLED),true)

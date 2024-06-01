@@ -73,8 +73,9 @@ module Make (G : G) = struct
 
   (* Returns a map (node -> return value) *)
   let aux_map ~jobs ~command ?(dry_run=false) ?(pools=[]) g =
-    log "Iterate over %a task(s) with %d process(es)"
-      (slog @@ G.nb_vertex @> string_of_int) g jobs;
+    log (fun fmt ->
+        fmt "Iterate over %a task(s) with %d process(es)"
+          (slog @@ G.nb_vertex @> string_of_int) g jobs);
 
     let njobs = G.nb_vertex g in
 
@@ -153,7 +154,7 @@ module Make (G : G) = struct
       in
       let run_seq_command nslots ready n = function
         | Done r ->
-          log "Job %a finished" (slog (string_of_int @* V.hash)) n;
+          log (fun fmt -> fmt "Job %a finished" (slog (string_of_int @* V.hash)) n);
           let results = M.add n r results in
           let running = M.remove n running in
           if not (M.is_empty running) then
@@ -174,8 +175,9 @@ module Make (G : G) = struct
           in
           loop nslots results running (ready ++ new_ready)
         | Run (cmd, cont) ->
-          log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
-            (slog OpamProcess.string_of_command) cmd;
+          log (fun fmt ->
+              fmt "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
+                (slog OpamProcess.string_of_command) cmd);
           let p =
             if dry_run then OpamProcess.dry_run_background cmd
             else OpamProcess.run_background cmd
@@ -188,9 +190,10 @@ module Make (G : G) = struct
       in
 
       let fail node error =
-        log "Exception while computing job %a: %a"
-          (slog (string_of_int @* V.hash)) node
-          (slog V.to_string) node;
+        log (fun fmt ->
+            fmt "Exception while computing job %a: %a"
+              (slog (string_of_int @* V.hash)) node
+              (slog V.to_string) node);
         if error = Sys.Break then OpamConsole.error "User interruption";
         let running = M.remove node running in
         (* Cleanup *)
@@ -215,7 +218,7 @@ module Make (G : G) = struct
             running ([node,error],[])
         in
         (try List.iter (fun _ -> ignore (OpamProcess.wait_one pend)) pend
-         with e -> log "%a in sub-process cleanup" (slog Printexc.to_string) e);
+         with e -> log (fun fmt -> fmt "%a in sub-process cleanup" (slog Printexc.to_string) e));
         (* Generate the remaining nodes in topological order *)
         let remaining =
           G.Topological.fold (fun n remaining ->
@@ -235,23 +238,24 @@ module Make (G : G) = struct
       then
         (* Start a new process *)
         let n = S.choose ready in
-        log "Starting job %a (worker %a): %a"
-          (slog (string_of_int @* V.hash)) n
-          (slog
-             (fun pools ->
-                let slots = get_slots nslots n in
-                OpamStd.List.concat_map " " (fun (pool, jobs) ->
-                    let nslots =
-                      OpamStd.List.assoc_opt S.equal pool slots
-                    in
-                  Printf.sprintf "%s/%d"
-                    (match nslots with
-                     | None -> "-"
-                     | Some n -> string_of_int (jobs - n + 1))
-                    jobs)
-                  pools))
-          pools
-          (slog V.to_string) n;
+        log (fun fmt ->
+            fmt "Starting job %a (worker %a): %a"
+              (slog (string_of_int @* V.hash)) n
+              (slog
+                 (fun pools ->
+                    let slots = get_slots nslots n in
+                    OpamStd.List.concat_map " " (fun (pool, jobs) ->
+                        let nslots =
+                          OpamStd.List.assoc_opt S.equal pool slots
+                        in
+                        Printf.sprintf "%s/%d"
+                          (match nslots with
+                           | None -> "-"
+                           | Some n -> string_of_int (jobs - n + 1))
+                          jobs)
+                      pools))
+              pools
+              (slog V.to_string) n);
         let pred = G.pred g n in
         let pred = List.map (fun n -> n, M.find n results) pred in
         let cmd = try command ~pred n with e -> fail n e in
@@ -278,8 +282,9 @@ module Make (G : G) = struct
         with e -> fail (fst (snd (List.hd processes))) e
       in
       let n,cont = OpamStd.(List.assoc Compare.equal process processes) in
-      log "Collected task for job %a (ret:%d)"
-        (slog (string_of_int @* V.hash)) n result.OpamProcess.r_code;
+      log (fun fmt ->
+          fmt "Collected task for job %a (ret:%d)"
+            (slog (string_of_int @* V.hash)) n result.OpamProcess.r_code);
       let next =
         try cont result with e ->
           OpamProcess.cleanup result;

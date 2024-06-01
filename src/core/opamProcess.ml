@@ -69,7 +69,7 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
   let make_args argv =
     let b = Buffer.create 128 in
     let gen_quote ~quote ~pre ?(post = pre) s =
-      log ~level:3 "gen_quote: %S" s;
+      log ~level:3 (fun fmt -> fmt "gen_quote: %S" s);
       Buffer.clear b;
       let l = String.length s in
       let rec f i =
@@ -101,7 +101,7 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
         else
           f 0
       in
-      log ~level:3 "result: %S" r; r in
+      log ~level:3 (fun fmt -> fmt "result: %S" r); r in
     (* Setting noglob is causing some problems for ocamlbuild invoking Cygwin's
        find. The reason for using it is to try to keep command line lengths
        below the maximum, but for now disable the use of noglob. *)
@@ -110,7 +110,7 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
     else
       (String.concat " " (List.map (gen_quote ~quote:"\b\r\n " ~pre:"\"") argv), true) in
   let (command_line, no_glob) = make_args (Array.to_list args) in
-  log "cygvoke(%sglob): %s" (if no_glob then "no" else "") command_line;
+  log (fun fmt -> fmt "cygvoke(%sglob): %s" (if no_glob then "no" else "") command_line);
   let env = Array.to_list env in
   let cygwin_set = ref false in
   let f item =
@@ -135,26 +135,26 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
           match setting with
           | "glob" ->
               if no_glob then begin
-                log ~level:2 "Removing glob from %s" key;
+                log ~level:2 (fun fmt -> fmt "Removing glob from %s" key);
                 false
               end else begin
-                log ~level:2 "Leaving glob in %s" key;
+                log ~level:2 (fun fmt -> fmt "Leaving glob in %s" key);
                 noglob_set := true;
                 true
               end
           | "noglob" ->
               if no_glob then begin
-                log ~level:2 "Leaving noglob in %s" key;
+                log ~level:2 (fun fmt -> fmt "Leaving noglob in %s" key);
                 noglob_set := true;
                 true
               end else begin
-                log ~level:2 "Removing noglob from %s" key;
+                log ~level:2 (fun fmt -> fmt "Removing noglob from %s" key);
                 false
               end
           | "winsymlinks" ->
               begin match value with
               | Some ("nativestrict" as value) | Some ("native" as value) ->
-                  log ~level:2 "Leaving %s:%s in %s" setting value key;
+                  log ~level:2 (fun fmt -> fmt "Leaving %s:%s in %s" setting value key);
                   winsymlinks_set := true;
                   true
               | Some _ | None -> false
@@ -164,18 +164,18 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
         let settings = List.filter f settings in
         let settings =
           if not !noglob_set && no_glob then begin
-            log ~level:2 "Setting noglob in %s" key;
+            log ~level:2 (fun fmt -> fmt "Setting noglob in %s" key);
             "noglob"::settings
           end else
             settings in
         let settings =
           if not !winsymlinks_set then begin
-            log ~level:2 "Setting winsymlinks:native in %s" key;
+            log ~level:2 (fun fmt -> fmt "Setting winsymlinks:native in %s" key);
             settings @ ["winsymlinks:native"]
           end else
             settings in
         if settings = [] then begin
-          log ~level:2 "Removing %s completely" key;
+          log ~level:2 (fun fmt -> fmt "Removing %s completely" key);
           None
         end else
           Some (key ^ "=" ^ String.concat " " settings)
@@ -187,10 +187,10 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
       env
     else
       if no_glob then begin
-        log ~level:2 "Adding CYGWIN=winsymlinks:native noglob";
+        log ~level:2 (fun fmt -> fmt "Adding CYGWIN=winsymlinks:native noglob");
         "CYGWIN=winsymlinks:native noglob"::env
       end else begin
-        log ~level:2 "Adding CYGWIN=winsymlinks:native";
+        log ~level:2 (fun fmt -> fmt "Adding CYGWIN=winsymlinks:native");
         "CYGWIN=winsymlinks:native"::env
       end in
   OpamStubs.win_create_process prog command_line
@@ -683,7 +683,7 @@ let safe_wait fallback_pid f x =
       try f x with
       | Unix.Unix_error (Unix.EINTR,_,_) -> aux () (* handled signal *)
       | Unix.Unix_error (Unix.ECHILD,_,_) ->
-        log "Warn: no child to wait for %d" fallback_pid;
+        log (fun fmt -> fmt "Warn: no child to wait for %d" fallback_pid);
         fallback_pid, Unix.WEXITED 256
       with
       | _, Unix.WSTOPPED _ ->
@@ -765,10 +765,10 @@ let is_success r = not (is_failure r)
 
 let safe_unlink f =
   try
-    log ~level:2 "safe_unlink: %s" f;
+    log ~level:2 (fun fmt -> fmt "safe_unlink: %s" f);
     Unix.unlink f
   with Unix.Unix_error _ ->
-    log ~level:2 "safe_unlink: %s (FAILED)" f
+    log ~level:2 (fun fmt -> fmt "safe_unlink: %s (FAILED)" f)
 
 let cleanup ?(force=false) r =
   if force || (not (OpamConsole.debug ()) && is_success r) then

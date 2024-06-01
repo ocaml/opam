@@ -363,8 +363,9 @@ let apply_selector ~base st = function
            with Not_found -> acc)
          OpamPackage.Set.empty matching_change_files
      with Not_found ->
-       log "%a doesn't belong to a known opam switch"
-         (slog OpamFilename.to_string) file;
+       log (fun fmt ->
+           fmt "%a doesn't belong to a known opam switch"
+             (slog OpamFilename.to_string) file);
        OpamPackage.Set.empty)
 
 

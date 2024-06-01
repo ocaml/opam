@@ -149,7 +149,7 @@ let really_download
       | e ->
         OpamSystem.remove tmp_dst;
         OpamStd.Exn.fatal e;
-        log "Could not download file at %s." (OpamUrl.to_string url);
+        log (fun fmt -> fmt "Could not download file at %s." (OpamUrl.to_string url));
         raise e)
   @@ fun () ->
   download_command ~compress ?checksum ~url ~dst:tmp_dst ()
@@ -328,8 +328,9 @@ module SWHID = struct
                It may take few minutes."
               (OpamConsole.colorise `underline
                  (OpamUrl.to_string (OpamFile.URL.url urlf))) then
-            (log "SWH fallback for %s"
-               (OpamUrl.to_string (OpamFile.URL.url urlf));
+            (log (fun fmt ->
+                 fmt "SWH fallback for %s"
+                   (OpamUrl.to_string (OpamFile.URL.url urlf)));
              get_url ?max_tries swhid @@+ function
              | Not_available _ as error -> Done error
              | Up_to_date _ -> assert false

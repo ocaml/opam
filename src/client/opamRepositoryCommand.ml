@@ -52,7 +52,7 @@ let update_repos_config rt repositories =
   rt
 
 let add rt name url trust_anchors =
-  log "repository-add";
+  log (fun fmt -> fmt "repository-add");
   let root = rt.repos_global.root in
   let repo_exists =
     OpamStd.Option.of_Not_found
@@ -101,7 +101,7 @@ let add rt name url trust_anchors =
       (OpamRepositoryName.Map.add name repo rt.repositories)
 
 let remove rt name =
-  log "repository-remove";
+  log (fun fmt -> fmt "repository-remove");
   let rt =
     update_repos_config rt (OpamRepositoryName.Map.remove name rt.repositories)
   in
@@ -111,7 +111,7 @@ let remove rt name =
   rt
 
 let set_url rt name url trust_anchors =
-  log "repository-set-url";
+  log (fun fmt -> fmt "repository-set-url");
   let repo =
     try OpamRepositoryName.Map.find name rt.repositories
     with Not_found ->
@@ -167,7 +167,7 @@ let list rt ~global ~switches ~short =
     switches
 
 let list_all rt ~short =
-  log "repository-list";
+  log (fun fmt -> fmt "repository-list");
   if short then
     OpamRepositoryName.Map.iter
       (fun r _ ->

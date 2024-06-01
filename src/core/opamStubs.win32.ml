@@ -14,4 +14,4 @@ let getpid () = Int32.to_int (getCurrentProcessID ())
 
 external win_create_process : string -> string -> string option ->
                               Unix.file_descr -> Unix.file_descr -> Unix.file_descr -> int
-                            = "win_create_process" "win_create_process_native"
+                            = "caml_unix_create_process" "caml_unix_create_process_native"

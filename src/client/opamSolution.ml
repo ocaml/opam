@@ -312,7 +312,7 @@ end
 let parallel_apply t
     ~requested ?add_roots ~assume_built ~download_only ?(force_remove=false)
     action_graph =
-  log "parallel_apply";
+  log (fun fmt -> fmt "parallel_apply");
 
   let remove_action_packages =
     PackageActionGraph.fold_vertex
@@ -506,8 +506,9 @@ let parallel_apply t
         |> OpamUrl.Map.values
         |> List.filter (fun s -> not @@ OpamPackage.Set.is_singleton s)
       in
-      log "Regroup shared source packages: %s"
-        (OpamStd.List.to_string OpamPackage.Set.to_string shared_source);
+      log (fun fmt ->
+          fmt "Regroup shared source packages: %s"
+            (OpamStd.List.to_string OpamPackage.Set.to_string shared_source));
       fun p ->
         try
           List.find (OpamPackage.Set.mem p) shared_source
@@ -614,8 +615,9 @@ let parallel_apply t
     else
     match action with
     | `Fetch nvs ->
-      log "Fetching sources for %s"
-        (OpamStd.Format.pretty_list (List.map OpamPackage.to_string nvs));
+      log (fun fmt ->
+          fmt "Fetching sources for %s"
+            (OpamStd.Format.pretty_list (List.map OpamPackage.to_string nvs)));
       ((match nvs with
           | [nv] ->
             OpamAction.download_package t nv
@@ -639,11 +641,12 @@ let parallel_apply t
 
     | `Build nv ->
       if assume_built && OpamPackage.Set.mem nv requested then
-        (log "Skipping build for %s, just install%s"
-           (OpamPackage.to_string nv)
-           (OpamStd.Option.map_default
-              (fun p -> " from " ^ OpamFilename.Dir.to_string p)
-              "" (OpamPackage.Map.find_opt nv inplace));
+        (log (fun fmt ->
+             fmt "Skipping build for %s, just install%s"
+               (OpamPackage.to_string nv)
+               (OpamStd.Option.map_default
+                  (fun p -> " from " ^ OpamFilename.Dir.to_string p)
+                  "" (OpamPackage.Map.find_opt nv inplace)));
          Done (`Successful (installed, removed)))
       else
       let is_inplace, build_dir =
@@ -1304,7 +1307,7 @@ let apply ?ask t ~requested ?print_requested ?add_roots
     ?(download_only=false) ?force_remove solution0 =
   let names = OpamPackage.names_of_packages requested in
   let print_requested = OpamStd.Option.default names print_requested in
-  log "apply";
+  log (fun fmt -> fmt "apply");
   let solution =
     OpamSolver.filter_solution ~recursive:false
       (fun nv -> not (OpamPackage.Map.mem nv skip))
@@ -1469,7 +1472,7 @@ let resolve_and_apply ?ask t action ?reinstall ~requested ?print_requested
     ?add_roots ?(assume_built=false) ?download_only ?force_remove request =
   match resolve t action ?reinstall ~requested request with
   | Conflicts cs ->
-    log "conflict!";
+    log (fun fmt -> fmt "conflict!");
     OpamConsole.msg "%s"
       (OpamCudf.string_of_conflicts t.packages
          (OpamSwitchState.unavailable_reason t) cs);

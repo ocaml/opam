@@ -79,7 +79,7 @@ val timer : unit -> unit -> float
 
 (** [log section ~level fmt args]. Used for debug messages, default
     level is 1 *)
-val log : string -> ?level:int -> ('a, Format.formatter, unit) format -> 'a
+val log : string -> ?level:int -> ((('a, Format.formatter, unit) format -> 'a) -> unit) -> unit
 
 (** Helper to pass stringifiers to log (use [log "%a" (slog to_string) x]
     rather than [log "%s" (to_string x)] to avoid costly unneeded

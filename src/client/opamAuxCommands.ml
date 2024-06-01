@@ -264,13 +264,14 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
         | _ -> None)
       atom_or_local_list
   in
-  log "autopin: %a"
-    (slog @@ OpamStd.List.to_string (fun pin ->
-         Printf.sprintf "%s%s => %s"
-           (OpamPackage.Name.to_string pin.pin_name)
-           (if pin.pin.pin_locked = None then "" else "[locked]")
-           (OpamUrl.to_string_w_subpath pin.pin.pin_subpath pin.pin.pin_url)))
-    to_pin;
+  log (fun fmt ->
+      fmt "autopin: %a"
+        (slog @@ OpamStd.List.to_string (fun pin ->
+             Printf.sprintf "%s%s => %s"
+               (OpamPackage.Name.to_string pin.pin_name)
+               (if pin.pin.pin_locked = None then "" else "[locked]")
+               (OpamUrl.to_string_w_subpath pin.pin.pin_subpath pin.pin.pin_url)))
+        to_pin);
   let obsolete_pins =
     (* Packages not current but pinned to the same dirs *)
     OpamPackage.Set.filter (fun nv ->
@@ -534,8 +535,8 @@ let check_and_revert_sandboxing root config =
       in
       try
         (* Don't assume that we can mount the CWD *)
-        OpamSystem.in_tmp_dir @@ fun () ->
-          OpamSystem.read_command_output ~env ~allow_stdin:false (cmd @ test_cmd)
+        OpamSystem.with_tmp_dir @@ fun dir ->
+          OpamSystem.read_command_output ~env ~dir ~allow_stdin:false (cmd @ test_cmd)
         = ["SUCCESS"]
       with e ->
         (OpamConsole.error "Sandboxing is not working on your platform%s:\n%s"

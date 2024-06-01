@@ -45,7 +45,7 @@ let check_locked ?locked default =
   | None -> default, None
   | Some (locked, ext) ->
     if not (OpamFilename.exists locked) then default, None else
-      (log "Lock file found %s" (OpamFilename.to_string default);
+      (log (fun fmt -> fmt "Lock file found %s" (OpamFilename.to_string default));
        let base_depends =
          OpamFile.make default
          |> OpamFile.OPAM.read

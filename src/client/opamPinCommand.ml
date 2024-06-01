@@ -229,7 +229,7 @@ let edit_raw name temp_file =
     Some new_opam
 
 let edit st ?version name =
-  log "pin-edit %a" (slog OpamPackage.Name.to_string) name;
+  log (fun fmt -> fmt "pin-edit %a" (slog OpamPackage.Name.to_string) name);
   let nv =
     try OpamPinned.package st name
     with Not_found ->
@@ -455,11 +455,12 @@ and source_pin
     ?subpath ?locked
     target_url
   =
-  log "pin %a to %a %a"
-    (slog OpamPackage.Name.to_string) name
-    (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
-    (slog (OpamStd.Option.to_string ~none:"none"
-             (OpamUrl.to_string_w_subpath subpath))) target_url;
+  log (fun fmt ->
+      fmt "pin %a to %a %a"
+        (slog OpamPackage.Name.to_string) name
+        (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
+        (slog (OpamStd.Option.to_string ~none:"none"
+                 (OpamUrl.to_string_w_subpath subpath))) target_url);
  (* let installed_version =
     try
       Some (OpamPackage.version
@@ -705,8 +706,9 @@ let unpin_one st nv =
     { st with available_packages }
 
 let unpin st names =
-  log "unpin %a"
-    (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
+  log (fun fmt ->
+      fmt "unpin %a"
+        (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names);
   List.fold_left (fun st name ->
       OpamFilename.rmdir
         (OpamPath.Switch.pinned_package st.switch_global.root st.switch name);
@@ -735,7 +737,7 @@ let unpin st names =
     st names
 
 let list st ~short =
-  log "pin_list";
+  log (fun fmt -> fmt "pin_list");
   if short then
     OpamPackage.Set.iter
       (fun nv -> OpamConsole.msg "%s\n" (OpamPackage.name_to_string nv))

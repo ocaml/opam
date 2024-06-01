@@ -179,8 +179,9 @@ let pull_from_upstream
    let url, pull =
      if OpamUrl.(match url.backend with | #version_control -> false | _ -> true)
      && OpamFilename.exists_dir pin_cache_dir then
-       (log "Pin cache existing for %s : %s\n"
-          (OpamUrl.to_string url) @@ OpamFilename.Dir.to_string pin_cache_dir;
+       (log (fun fmt ->
+            fmt "Pin cache existing for %s : %s\n"
+              (OpamUrl.to_string url) @@ OpamFilename.Dir.to_string pin_cache_dir);
         let rsync =
           OpamUrl.parse ~backend:`rsync ~from_file:false
           @@ OpamFilename.Dir.to_string pin_cache_dir
@@ -193,8 +194,9 @@ let pull_from_upstream
        )
      else if OpamUrl.(match url.backend with | `git -> true | _ -> false)
           && OpamFilename.exists_dir pin_cache_dir then
-       (log "Pin cache (git) existing for %s : %s\n"
-          (OpamUrl.to_string url) @@ OpamFilename.Dir.to_string pin_cache_dir;
+       (log (fun fmt ->
+            fmt "Pin cache (git) existing for %s : %s\n"
+              (OpamUrl.to_string url) @@ OpamFilename.Dir.to_string pin_cache_dir);
         let git_cached =
           OpamUrl.parse ~backend:`git
           @@ OpamFilename.Dir.to_string pin_cache_dir
@@ -478,16 +480,17 @@ let validate_repo_update repo repo_root update =
       | [] -> failwith "Empty validation hook"
     in
     cmd @@> fun r ->
-    log "validation: %s" (OpamProcess.result_summary r);
+    log (fun fmt -> fmt "validation: %s" (OpamProcess.result_summary r));
     Done (OpamProcess.check_success_and_cleanup r)
 
 open OpamRepositoryBackend
 
 let apply_repo_update repo repo_root = function
   | Update_full d ->
-    log "%a: applying update from scratch at %a"
-      (slog OpamRepositoryName.to_string) repo.repo_name
-      (slog OpamFilename.Dir.to_string) d;
+    log (fun fmt ->
+        fmt "%a: applying update from scratch at %a"
+          (slog OpamRepositoryName.to_string) repo.repo_name
+          (slog OpamFilename.Dir.to_string) d);
     OpamFilename.rmdir repo_root;
     if OpamFilename.is_symlink_dir d then
       (OpamFilename.copy_dir ~src:d ~dst:repo_root;
@@ -503,9 +506,10 @@ let apply_repo_update repo repo_root = function
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name))
       (OpamUrl.to_string repo.repo_url);
-    log "%a: applying patch update at %a"
-      (slog OpamRepositoryName.to_string) repo.repo_name
-      (slog OpamFilename.to_string) f;
+    log (fun fmt ->
+        fmt "%a: applying patch update at %a"
+          (slog OpamRepositoryName.to_string) repo.repo_name
+          (slog OpamFilename.to_string) f);
     let preprocess =
       match repo.repo_url.OpamUrl.backend with
       | `http | `rsync -> false
@@ -521,8 +525,9 @@ let apply_repo_update repo repo_root = function
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name))
       (OpamUrl.to_string repo.repo_url);
-    log "%a: applying empty update"
-      (slog OpamRepositoryName.to_string) repo.repo_name;
+    log (fun fmt ->
+        fmt "%a: applying empty update"
+          (slog OpamRepositoryName.to_string) repo.repo_name);
     Done ()
   | Update_err _ -> assert false
 
@@ -534,12 +539,12 @@ let cleanup_repo_update upd =
     | _ -> ()
 
 let update repo repo_root =
-  log "update %a" (slog OpamRepositoryBackend.to_string) repo;
+  log (fun fmt -> fmt "update %a" (slog OpamRepositoryBackend.to_string) repo);
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
   B.fetch_repo_update repo.repo_name repo_root repo.repo_url @@+ function
   | Update_err e -> raise e
   | Update_empty ->
-    log "update empty, no validation performed";
+    log (fun fmt -> fmt "update empty, no validation performed");
     apply_repo_update repo repo_root Update_empty @@+ fun () ->
     B.repo_update_complete repo_root repo.repo_url @@+ fun () ->
     Done `No_changes

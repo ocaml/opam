@@ -42,7 +42,7 @@ let solution_of_json json =
   OpamCudf.ActionGraph.of_json json
 
 let cudf_versions_map universe =
-  log ~level:3 "cudf_versions_map";
+  log ~level:3 (fun fmt -> fmt "cudf_versions_map");
   let add_packages_from_formula acc formula =
     List.fold_left (fun acc -> function
         | n, Some (_, v) -> OpamPackage.Set.add (OpamPackage.create n v) acc
@@ -94,8 +94,9 @@ let constraint_to_cudf version_map name (op,v) =
        (this shouldn't happen for any constraint in the universe, now that we
        compute a full version map, but may still happen for user-provided
        constraints) *)
-    log "Warn: fallback constraint for %s"
-      (OpamFormula.string_of_atom (name, Some (op,v)));
+    log (fun fmt ->
+        fmt "Warn: fallback constraint for %s"
+          (OpamFormula.string_of_atom (name, Some (op,v))));
     let all_versions =
       OpamPackage.Map.filter (fun nv _ -> nv.name = name)
         version_map in
@@ -335,19 +336,20 @@ let load_cudf_packages opam_universe ?version_map opam_packages =
   let version_map = match version_map with
     | Some vm -> vm
     | None -> cudf_versions_map opam_universe in
-  log ~level:3 "Load cudf universe: opam2cudf";
+  log ~level:3 (fun fmt -> fmt "Load cudf universe: opam2cudf");
   let univ_gen =
     opam2cudf_map opam_universe version_map opam_packages
   in
-  log ~level:3 "Preload of cudf universe: done in %.3fs" (chrono ());
+  log ~level:3 (fun fmt -> fmt "Preload of cudf universe: done in %.3fs" (chrono ()));
   fun ?(add_invariant=false) ?(depopts=false) ~build ~post () ->
-    log "Load cudf universe (depopts:%a, build:%b, post:%b)"
-      (slog string_of_bool) depopts
-      build
-      post;
+    log (fun fmt ->
+        fmt "Load cudf universe (depopts:%a, build:%b, post:%b)"
+          (slog string_of_bool) depopts
+          build
+          post);
     let chrono = OpamConsole.timer () in
     let cudf_packages_map = univ_gen ~depopts ~build ~post in
-    log ~level:3 "opam2cudf: done in %.3fs" (chrono ());
+    log ~level:3 (fun fmt -> fmt "opam2cudf: done in %.3fs" (chrono ()));
     if add_invariant then
       let rec mk_key s =
         let k = OpamPackage.of_string (s^".~") in
@@ -369,14 +371,15 @@ let map_to_cudf_universe cudf_packages_map =
 let load_cudf_universe opam_universe ?version_map opam_packages =
   let load_f = load_cudf_packages opam_universe ?version_map opam_packages in
   fun ?add_invariant ?depopts ~build ~post () ->
-    log "Load cudf universe (depopts:%a, build:%b, post:%b)"
-      (slog string_of_bool) OpamStd.Option.Op.(depopts +! false)
-      build
-      post;
+    log (fun fmt ->
+        fmt "Load cudf universe (depopts:%a, build:%b, post:%b)"
+          (slog string_of_bool) OpamStd.Option.Op.(depopts +! false)
+          build
+          post);
     let chrono = OpamConsole.timer () in
     let cudf_packages_map = load_f ?add_invariant ?depopts ~build ~post () in
     let cudf_universe = map_to_cudf_universe cudf_packages_map in
-    log ~level:3 "Secondary load of cudf universe: done in %.3fs" (chrono ());
+    log ~level:3 (fun fmt -> fmt "Secondary load of cudf universe: done in %.3fs" (chrono ()));
     cudf_universe
 
 let load_cudf_universe_with_packages
@@ -436,7 +439,7 @@ let cycle_conflict ~version_map univ cycles =
   OpamCudf.cycle_conflict ~version_map univ cycles
 
 let resolve universe request =
-  log "resolve request=%a" (slog string_of_request) request;
+  log (fun fmt -> fmt "resolve request=%a" (slog string_of_request) request);
   let all_packages = universe.u_available ++ universe.u_installed in
   let version_map = cudf_versions_map universe in
   let univ_gen = load_cudf_universe universe ~version_map all_packages in
@@ -511,9 +514,10 @@ let dosetrim f =
   !trimmed_pkgs
 
 let coinstallable_subset universe ?(add_invariant=true) set packages =
-  log "subset of coinstallable with %a within %a"
-    (slog OpamPackage.Set.to_string) set
-    (slog OpamPackage.Set.to_string) packages;
+  log (fun fmt ->
+      fmt "subset of coinstallable with %a within %a"
+        (slog OpamPackage.Set.to_string) set
+        (slog OpamPackage.Set.to_string) packages);
   let cudf_packages_map =
     load_cudf_packages ~add_invariant ~build:true ~post:true universe
       (universe.u_available ++ set ++ packages) ()

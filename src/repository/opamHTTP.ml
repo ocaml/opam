@@ -40,7 +40,7 @@ module B = struct
   let name = `http
 
   let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
-    log "pull-repo-update";
+    log (fun fmt -> fmt "pull-repo-update");
     let quarantine =
       OpamFilename.Dir.(of_string (to_string repo_root ^ ".new"))
     in
@@ -69,9 +69,10 @@ module B = struct
   let repo_update_complete _ _ = Done ()
 
   let pull_url ?full_fetch:_ ?cache_dir:_ ?subpath:_ dirname checksum remote_url =
-    log "pull-file into %a: %a"
-      (slog OpamFilename.Dir.to_string) dirname
-      (slog OpamUrl.to_string) remote_url;
+    log (fun fmt ->
+        fmt "pull-file into %a: %a"
+          (slog OpamFilename.Dir.to_string) dirname
+          (slog OpamUrl.to_string) remote_url);
     OpamProcess.Job.catch
       (fun e ->
          OpamStd.Exn.fatal e;
@@ -100,9 +101,9 @@ end
 (* Helper functions used by opam-admin *)
 
 let make_index_tar_gz repo_root =
-  OpamFilename.in_dir repo_root (fun () ->
-    let to_include = [ "version"; "packages"; "repo" ] in
-    match List.filter Sys.file_exists to_include with
-    | [] -> ()
-    | d  -> OpamSystem.command ("tar" :: "czhf" :: "index.tar.gz" :: "--exclude=.git*" :: d)
-  )
+  let repo_root = OpamFilename.Dir.to_string repo_root in
+  let ( / ) = Filename.concat in
+  let to_include = [ repo_root / "version"; repo_root / "packages"; repo_root / "repo" ] in
+  match List.filter Sys.file_exists to_include with
+  | [] -> ()
+  | d  -> OpamSystem.command ~dir:repo_root ("tar" :: "czhf" :: "index.tar.gz" :: "--exclude=.git*" :: d)

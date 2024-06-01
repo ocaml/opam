@@ -52,12 +52,14 @@ let run_command
       let str_var (v,c) = Printf.sprintf "%s=%s" v c in
       if set_vars = [] then
         ((if kept_vars <> [] then
-            log "Won't override %s"
-              (OpamStd.List.to_string str_var (kept_vars :> (string * string) list)));
+            log (fun fmt ->
+                fmt "Won't override %s"
+                  (OpamStd.List.to_string str_var (kept_vars :> (string * string) list))));
          None)
       else
-        (log "Adding to env %s"
-           (OpamStd.List.to_string str_var (set_vars :> (string * string) list));
+        (log (fun fmt ->
+             fmt "Adding to env %s"
+               (OpamStd.List.to_string str_var (set_vars :> (string * string) list)));
          Some ((set_vars @ env :> (string * string) list)
                |> List.rev_map str_var
                |> Array.of_list))
@@ -396,12 +398,13 @@ module Cygwin = struct
     if OpamFilename.exists dst then () else
       (match setup with
        | Some setup ->
-         log "Copying %s into %s"
-           (OpamFilename.to_string setup)
-           (OpamFilename.to_string dst);
+         log (fun fmt ->
+             fmt "Copying %s into %s"
+               (OpamFilename.to_string setup)
+               (OpamFilename.to_string dst));
          OpamFilename.copy ~src:setup ~dst
        | None ->
-         log "Donwloading setup exe";
+         log (fun fmt -> fmt "Donwloading setup exe");
          OpamProcess.Job.run @@ download_setupexe dst)
 end
 
@@ -1058,7 +1061,7 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
 
 let install ?env config packages =
   if OpamSysPkg.Set.is_empty packages then
-    log "Nothing to install"
+    log (fun fmt -> fmt "Nothing to install")
   else
     let commands, vars = install_packages_commands_t ?env config packages in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in

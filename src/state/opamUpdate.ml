@@ -97,10 +97,10 @@ let repository rt repo =
       (OpamUrl.to_string repo.repo_url);
   match has_changes with
   | `No_changes ->
-    log "Repository did not change: nothing to do.";
+    log (fun fmt -> fmt "Repository did not change: nothing to do.");
     Done None
   | `Changes ->
-    log "Repository has new changes";
+    log (fun fmt -> fmt "Repository has new changes");
     let repo_file = OpamFile.Repo.safe_read repo_file_path in
     let repo_file = OpamFile.Repo.with_root_url repo.repo_url repo_file in
     let repo_vers =
@@ -201,7 +201,7 @@ let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
-  log "updating %a" (slog (OpamUrl.to_string_w_subpath subpath)) remote_url;
+  log (fun fmt -> fmt "updating %a" (slog (OpamUrl.to_string_w_subpath subpath)) remote_url);
 (*
     (slog (OpamStd.Option.to_string OpamFilename.SubPath.pretty_string))
     subpath;
@@ -212,8 +212,9 @@ let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
   @@| OpamRepository.report_fetch_result nv
 
 let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
-  log "update-pinned-package %s%a" (OpamPackage.Name.to_string name)
-    (slog @@ function true -> " (working dir)" | false -> "") working_dir;
+  log (fun fmt ->
+      fmt "update-pinned-package %s%a" (OpamPackage.Name.to_string name)
+        (slog @@ function true -> " (working dir)" | false -> "") working_dir);
   let open OpamStd.Option.Op in
   let root = st.switch_global.root in
   let overlay_dir = OpamPath.Switch.Overlay.package root st.switch name in
@@ -367,8 +368,9 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
     | Result _, Some new_opam
       when changed_opam old_source_opam new_source_opam &&
            changed_opam overlay_opam new_source_opam ->
-      log "Metadata from the package source of %s changed"
-        (OpamPackage.to_string nv);
+      log (fun fmt ->
+          fmt "Metadata from the package source of %s changed"
+            (OpamPackage.to_string nv));
       let interactive_part st =
         if not (changed_opam old_source_opam overlay_opam) ||
            not (changed_opam repo_opam overlay_opam)
@@ -416,7 +418,7 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
       Done ((fun st -> st), true)
 
 let dev_package st ?autolock ?working_dir nv =
-  log "update-dev-package %a" (slog OpamPackage.to_string) nv;
+  log (fun fmt -> fmt "update-dev-package %a" (slog OpamPackage.to_string) nv);
   if OpamSwitchState.is_pinned st nv.name &&
      not (OpamSwitchState.is_version_pinned st nv.name) then
     pinned_package st ?autolock ~version:nv.version ?working_dir nv.name
@@ -433,7 +435,7 @@ let dev_package st ?autolock ?working_dir nv =
       (fun st -> st), match result with Result () -> true | _ -> false
 
 let dev_packages st ?autolock ?(working_dir=OpamPackage.Set.empty) packages =
-  log "update-dev-packages";
+  log (fun fmt -> fmt "update-dev-packages");
   let command nv =
     let working_dir = OpamPackage.Set.mem nv working_dir in
     OpamProcess.Job.ignore_errors
@@ -471,7 +473,7 @@ let dev_packages st ?autolock ?(working_dir=OpamPackage.Set.empty) packages =
   success, st, updated_set
 
 let pinned_packages st ?autolock ?(working_dir=OpamPackage.Name.Set.empty) names =
-  log "update-pinned-packages";
+  log (fun fmt -> fmt "update-pinned-packages");
   let command name =
     let working_dir = OpamPackage.Name.Set.mem name working_dir in
     OpamProcess.Job.ignore_errors

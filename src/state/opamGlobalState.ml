@@ -60,7 +60,7 @@ let inferred_from_system = "Inferred from system"
 
 let load lock_kind =
   let root = OpamStateConfig.(!r.root_dir) in
-  log "LOAD-GLOBAL-STATE %@ %a" (slog OpamFilename.Dir.to_string) root;
+  log (fun fmt -> fmt "LOAD-GLOBAL-STATE %@ %a" (slog OpamFilename.Dir.to_string) root);
   (* Always take a global read lock, this is only used to prevent concurrent
      ~/.opam format changes *)
   let has_root = OpamFilename.exists_dir root in
@@ -83,10 +83,11 @@ let load lock_kind =
       raise e
   in
   if OpamStateConfig.is_newer config && lock_kind <> `Lock_write then
-    log "root version (%s) is greater than running binary's (%s); \
-         load with best-effort (read-only)"
-      (OpamVersion.to_string (OpamFile.Config.opam_root_version config))
-      (OpamVersion.to_string (OpamFile.Config.root_version));
+    log (fun fmt ->
+        fmt "root version (%s) is greater than running binary's (%s); \
+             load with best-effort (read-only)"
+          (OpamVersion.to_string (OpamFile.Config.opam_root_version config))
+          (OpamVersion.to_string (OpamFile.Config.root_version)));
   let switches =
     List.filter
       (fun sw -> not (OpamSwitch.is_external sw) ||
@@ -134,9 +135,10 @@ let load lock_kind =
                   Some (S (OpamStd.String.strip (String.concat "\n" ret)))
                 with e ->
                   OpamStd.Exn.fatal e;
-                  log "Failed to evaluate global variable %a: %a"
-                    (slog OpamVariable.to_string) v
-                    (slog Printexc.to_string) e;
+                  log (fun fmt ->
+                      fmt "Failed to evaluate global variable %a: %a"
+                        (slog OpamVariable.to_string) v
+                        (slog Printexc.to_string) e);
                   Lazy.force (fst previous_value))),
              doc)
           (lazy None, "")

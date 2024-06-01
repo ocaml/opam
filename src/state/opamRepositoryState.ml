@@ -77,12 +77,71 @@ module Cache = struct
 
 end
 
+module Thread_pool : sig
+  type t
+  val create : unit -> t
+  val async : t -> (unit -> (OpamPackage.t * OpamFile.OPAM.t) option) -> unit
+  val value : t -> OpamFile.OPAM.t OpamPackage.Map.t
+end = struct
+  type t = {
+    kill : bool Atomic.t;
+    threads : unit Domain.t list;
+    tasks_mutex : Mutex.t;
+    tasks : (unit -> (OpamPackage.t * OpamFile.OPAM.t) option) Queue.t;
+    value_mutex : Mutex.t;
+    value : OpamFile.OPAM.t OpamPackage.Map.t ref;
+  }
+
+  let create () =
+    let kill = Atomic.make false in
+    let tasks_mutex = Mutex.create () in
+    let tasks = Queue.create () in
+    let value_mutex = Mutex.create () in
+    let value = ref OpamPackage.Map.empty in
+    let aux () =
+      Domain.spawn (fun () ->
+          while not (Atomic.get kill && Mutex.protect tasks_mutex (fun () -> Queue.is_empty tasks)) do
+            Mutex.protect tasks_mutex (fun () ->
+                Queue.take_opt tasks
+              ) |>
+            Option.iter (fun task ->
+                Option.iter (fun (k, v) ->
+                    Mutex.protect value_mutex (fun () ->
+                        value := OpamPackage.Map.add k v !value;
+                      )
+                  ) (task ())
+              )
+          done
+        )
+    in
+    let max_jobs = Int.max (Domain.recommended_domain_count () - 1) 1 in
+    log (fun fmt -> fmt "Spawning %d threads" max_jobs);
+    let threads = List.init max_jobs (fun _ -> aux ()) in
+    {kill; threads; tasks_mutex; tasks; value_mutex; value}
+
+  let async {tasks_mutex; tasks; _} f =
+    Mutex.protect tasks_mutex (fun () ->
+        Queue.add f tasks;
+      )
+
+  let value {kill; threads; value_mutex; value; _} =
+    log (fun fmt -> fmt "Getting all the values...");
+    Atomic.set kill true;
+    List.iter Domain.join threads;
+    Mutex.protect value_mutex (fun () ->
+        log (fun fmt -> fmt "Got %d values" (OpamPackage.Map.cardinal !value));
+        !value
+      )
+end
+
 let load_opams_from_dir repo_name repo_root =
+  let thread_pool = Thread_pool.create () in
   (* FIXME: why is this different from OpamPackage.list ? *)
-  let rec aux r dir =
+  let rec aux dir =
     if OpamFilename.exists_dir dir then
       let fnames = Sys.readdir (OpamFilename.Dir.to_string dir) in
       if Array.exists (fun f -> f = "opam") fnames then
+        Thread_pool.async thread_pool @@ fun () ->
         match OpamFileTools.read_repo_opam ~repo_name ~repo_root dir with
         | Some opam ->
           (try
@@ -90,21 +149,23 @@ let load_opams_from_dir repo_name repo_root =
                OpamPackage.of_string
                  OpamFilename.(Base.to_string (basename_dir dir))
              in
-             OpamPackage.Map.add nv opam r
+             Some (nv, opam)
            with Failure _ ->
-             log "ERR: directory name not a valid package: ignored %s"
-               OpamFilename.(to_string Op.(dir // "opam"));
-             r)
+             log (fun fmt ->
+                 fmt "ERR: directory name not a valid package: ignored %s"
+                   OpamFilename.(to_string Op.(dir // "opam")));
+             None)
         | None ->
-          log "ERR: Could not load %s, ignored"
-            OpamFilename.(to_string Op.(dir // "opam"));
-          r
+          log (fun fmt ->
+              fmt "ERR: Could not load %s, ignored"
+                OpamFilename.(to_string Op.(dir // "opam")));
+          None
       else
-        Array.fold_left (fun r name -> aux r OpamFilename.Op.(dir / name))
-          r fnames
-    else r
+        Array.iter (fun name -> aux OpamFilename.Op.(dir / name)) fnames
+    else ()
   in
-  aux OpamPackage.Map.empty (OpamRepositoryPath.packages_dir repo_root)
+  aux (OpamRepositoryPath.packages_dir repo_root);
+  Thread_pool.value thread_pool
 
 let load_repo repo repo_root =
   let t = OpamConsole.timer () in
@@ -113,9 +174,10 @@ let load_repo repo repo_root =
     |> OpamFile.Repo.with_root_url repo.repo_url
   in
   let opams = load_opams_from_dir repo.repo_name repo_root in
-  log "loaded opam files from repo %s in %.3fs"
-    (OpamRepositoryName.to_string repo.repo_name)
-    (t ());
+  log (fun fmt ->
+      fmt "loaded opam files from repo %s in %.3fs"
+        (OpamRepositoryName.to_string repo.repo_name)
+        (t ()));
   repo_def, opams
 
 (* Cleaning directories follows the repo path pattern:
@@ -151,14 +213,15 @@ let get_repo_root rt repo =
 
 let load lock_kind gt =
   OpamFormatUpgrade.as_necessary_repo_switch_light_upgrade lock_kind `Repo gt;
-  log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
+  log (fun fmt -> fmt "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root);
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
   let repos_map = OpamStateConfig.Repos.safe_read ~lock_kind gt in
   if OpamStateConfig.is_newer_than_self gt then
-    log "root version (%s) is greater than running binary's (%s); \
-         load with best-effort (read-only)"
-      (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
-      (OpamVersion.to_string (OpamFile.Config.root_version));
+    log (fun fmt ->
+        fmt "root version (%s) is greater than running binary's (%s); \
+             load with best-effort (read-only)"
+          (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
+          (OpamVersion.to_string (OpamFile.Config.root_version)));
   let mk_repo name url_opt = {
     repo_name = name;
     repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
@@ -207,10 +270,10 @@ let load lock_kind gt =
   in
   match Cache.load gt.root with
   | Some (repofiles, opams) when OpamRepositoryName.Map.is_empty uncached ->
-    log "Cache found";
+    log (fun fmt -> fmt "Cache found");
     make_rt repofiles opams
   | Some (repofiles, opams) ->
-    log "Cache found, loading repositories without remote only";
+    log (fun fmt -> fmt "Cache found, loading repositories without remote only");
     OpamFilename.with_flock_upgrade `Lock_read lock @@ fun _ ->
     let repofiles, opams =
       OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
@@ -224,7 +287,7 @@ let load lock_kind gt =
     in
     make_rt repofiles opams
   | None ->
-    log "No cache found";
+    log (fun fmt -> fmt "No cache found");
     OpamFilename.with_flock_upgrade `Lock_read lock @@ fun _ ->
     let repofiles, opams =
       OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
@@ -307,4 +370,3 @@ let check_last_update () =
     OpamConsole.note "It seems you have not updated your repositories \
                       for a while. Consider updating them with:\n%s\n"
       (OpamConsole.colorise `bold "opam update");
-

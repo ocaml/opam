@@ -593,7 +593,7 @@ let env_expansion ?opam st upd =
   let fenv v =
     try OpamPackageVar.resolve st ?opam v
     with Not_found ->
-      log "Undefined variable: %s" (OpamVariable.Full.to_string v);
+      log (fun fmt -> fmt "Undefined variable: %s" (OpamVariable.Full.to_string v));
       None
   in
   let s =
@@ -769,9 +769,10 @@ let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
   in
   let r = not_utd = [] in
   if not r then
-    log "Not up-to-date env variables: [%a]"
-      (slog @@ String.concat " " @* List.map (fun upd -> upd.envu_var)) not_utd
-  else log "Environment is up-to-date";
+    log (fun fmt ->
+        fmt "Not up-to-date env variables: [%a]"
+          (slog @@ String.concat " " @* List.map (fun upd -> upd.envu_var)) not_utd)
+  else log (fun fmt -> fmt "Environment is up-to-date");
   r
 
 let is_up_to_date_switch root switch =

@@ -112,9 +112,9 @@ let call ~criteria ?timeout:_ (preamble, universe, request) =
   match Opam_0install_cudf.solve context pkgs with
   | Ok selections ->
     let universe = reconstruct_universe universe selections in
-    log "Solution found. Solve took %.2f s" (timer ());
+    log (fun fmt -> fmt "Solution found. Solve took %.2f s" (timer ()));
     (Some preamble, universe)
   | Error problem ->
-    log "No solution. Solve took %.2f s" (timer ());
-    log ~level:3 "%a" (OpamConsole.slog Opam_0install_cudf.diagnostics) problem;
+    log (fun fmt -> fmt "No solution. Solve took %.2f s" (timer ()));
+    log ~level:3 (fun fmt -> fmt "%a" (OpamConsole.slog Opam_0install_cudf.diagnostics) problem);
     raise Dose_common.CudfSolver.Unsat

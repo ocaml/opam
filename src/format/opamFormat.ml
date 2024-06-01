@@ -844,11 +844,12 @@ module I = struct
                 (fun e -> OpamPp.string_of_bad_format (Bad_format e))
                 (List.rev_map snd errs))
          else
-           OpamConsole.log "FORMAT" "File errors in %s, ignored fields: %s"
-             file
-             (OpamStd.List.concat_map "; "
-                (fun e -> OpamPp.string_of_bad_format (Bad_format e))
-                (List.rev_map snd errs));
+           OpamConsole.log "FORMAT" (fun fmt ->
+               fmt "File errors in %s, ignored fields: %s"
+                 file
+                 (OpamStd.List.concat_map "; "
+                    (fun e -> OpamPp.string_of_bad_format (Bad_format e))
+                    (List.rev_map snd errs)));
          t)
     in
     let print t = t, [] in
