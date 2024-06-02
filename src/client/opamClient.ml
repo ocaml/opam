@@ -635,7 +635,7 @@ let init_checks ?(hard_fail_exn=true) init_config =
   if hard_fail && hard_fail_exn then OpamStd.Sys.exit_because `Configuration_error
   else not (soft_fail || hard_fail)
 
-let is_git_for_windows git =
+let rec is_git_for_windows git =
   (* The resource file compiled for Git for Windows sets the ProductVersion
      string to M.m.r.windows.b where M.m.r is the git version and b is the
      revision number of Git for Windows. This differentiates it from very old
@@ -652,21 +652,60 @@ let is_git_for_windows git =
       try Scanf.sscanf version "%u.%u.%u.windows.%u%!" (fun _ _ _ _ -> true)
       with Scanf.Scan_failure _ | Failure _ | End_of_file ->  false
     end
-  | _ -> false
+  | _ ->
+    (* The Scoop package manager installs a shim git.exe (see
+       https://github.com/ScoopInstaller/Shim) which will fail our test of the
+       version information block, while actually being Git for Windows.
+       If git.shim and scoop.cmd are found with git.exe and we can parse the
+       path line from git.shim, then we test the executable pointed to instead.
+    *)
+    let dir = Filename.dirname git in
+    let git_shim = Filename.concat dir "git.shim" in
+    let scoop = Filename.concat dir "scoop.cmd" in
+    let find_path_value (key, value) =
+      if String.trim key = "path" then
+        Some (String.trim value)
+      else
+        None
+    in
+    let test_scoop_shim s =
+      let new_git =
+        let last = String.length s - 1 in
+        if last > 0 && s.[0] = '"' && s.[last] = '"' then
+          String.sub s 1 (last - 1)
+        else s
+      in
+      log "%s appears to be a Scoop shim; trying %s" git new_git;
+      is_git_for_windows new_git
+    in
+    if Sys.file_exists git_shim && Sys.file_exists scoop then
+      OpamSystem.read git_shim
+      |> String.split_on_char '\n'
+      |> List.filter_map (Fun.flip OpamStd.String.cut_at '=')
+      |> OpamStd.List.find_map_opt find_path_value
+      |> OpamStd.Option.map_default test_scoop_shim false
+    else
+      false
 
-let git_for_windows ?git_location () =
-  let header () = OpamConsole.header_msg "Git" in
-  let contains_git p =
+let string_of_kind = function
+  | `Msys2 -> "MSYS2"
+  | `Cygwin -> "Cygwin"
+
+let git_for_windows kind mechanism cygwin_is_tweakable =
+  let resolve_git_in p =
     OpamSystem.resolve_command ~env:[||] (Filename.concat p "git.exe")
   in
   let gits =
     OpamStd.Env.get "PATH"
     |> OpamStd.Sys.split_path_variable
-    |> OpamStd.List.filter_map (fun p ->
-        match contains_git p with
-        | Some git ->
+    |> OpamStd.List.fold_left_map (fun gits p ->
+        match resolve_git_in p with
+        | Some git when not (OpamStd.String.Set.mem git gits) ->
+          OpamStd.String.Set.add git gits,
           Some (git, OpamSystem.bin_contains_bash p)
-        | None -> None)
+        | _ -> gits, None) OpamStd.String.Set.empty
+    |> snd
+    |> List.filter_map Fun.id
   in
   let abort_action = "install Git for Windows." in
   let gits, gfw_message, abort_action =
@@ -681,7 +720,7 @@ let git_for_windows ?git_location () =
         [], Some "It looks as though Git for Windows has been installed but \
                   the shell needs to be restarted. You may wish to abort and \
                   re-run opam init from a fresh session.",
-            "restart your shell."
+        "restart your shell."
       | _ ->
         (* Git is neither in the current nor the initial PATH. There is one
            further possibility: the user may have installed Git for Windows
@@ -692,7 +731,7 @@ let git_for_windows ?git_location () =
            in PATH, but also gives the opportunity to use the git-location
            mechanism to select it for opam's internal use. *)
         let test_for_installation ((gits, gfw_message, abort_action) as acc)
-                                  (hive, key) =
+            (hive, key) =
           let process root =
             let git_location = Filename.concat root "cmd" in
             let git = Filename.concat git_location "git.exe" in
@@ -726,7 +765,8 @@ let git_for_windows ?git_location () =
           (* User-specific installation *)
           (OpamStubsTypes.HKEY_CURRENT_USER, "Software");
         ] in
-        List.fold_left test_for_installation (gits, None, abort_action) installations
+        List.fold_left test_for_installation
+          (gits, None, abort_action) installations
     else
       gits, None, abort_action
   in
@@ -735,12 +775,15 @@ let git_for_windows ?git_location () =
       match git_location with
       | Some _ -> git_location
       | None ->
-        OpamConsole.read "Please enter the path containing git.exe (e.g. C:\\Program Files\\Git\\cmd):"
+        OpamConsole.read
+          "Please enter the path containing git.exe (e.g. \
+           C:\\Program Files\\Git\\cmd):"
     in
     match bin with
     | None -> None
     | Some git_location ->
-      match contains_git git_location, OpamSystem.bin_contains_bash git_location with
+      match resolve_git_in git_location,
+            OpamSystem.bin_contains_bash git_location with
       | Some _, false ->
         OpamConsole.msg "Using Git from %s" git_location;
         Some git_location
@@ -754,68 +797,118 @@ let git_for_windows ?git_location () =
         OpamConsole.error "No Git executable found in %s." git_location;
         None
   in
+  let options =
+    (List.filter_map (fun (git, bash) ->
+         if bash then
+           None
+         else
+         let bin = Filename.dirname git in
+         Some (`Location bin, "Use found git in "^bin))
+        gits)
+    @ [
+      `Specify, "Enter the location of your Git installation";
+      `Abort, ("Abort initialisation to " ^ abort_action);
+    ]
+  in
+  let add_or_use_git root =
+    let bindir = OpamSysInteract.Cygwin.bindir_for_root kind root in
+    if resolve_git_in (OpamFilename.Dir.to_string bindir) = None then
+      "Add Git to"
+    else
+      "Use Git from"
+  in
+  let default, options =
+    match mechanism with
+    | `Internal ->
+      assert cygwin_is_tweakable;
+      let internal =
+        `Default, Printf.sprintf
+          "Install Git with along with %s internally" (string_of_kind kind)
+      in
+      `Default, internal::options
+    | `Root root ->
+      assert cygwin_is_tweakable;
+      let root =
+        `Default, Printf.sprintf
+          "%s the %s installation in %s"
+          (add_or_use_git root)
+          (string_of_kind kind)
+          (OpamFilename.Dir.to_string root)
+      in
+      `Default, root::options
+    | `Path root ->
+      match OpamSystem.resolve_command "git.exe" with
+      | Some git ->
+        let options =
+          if Filename.dirname git = root then
+            let option =
+              `Default, Printf.sprintf
+                "Use %s Git from the installation at %s in PATH"
+                (string_of_kind kind) root
+            in
+            option::options
+          else
+            (`Default, Printf.sprintf "Use Git from PATH")::options
+        in
+        `Default, options
+      | None ->
+        if cygwin_is_tweakable then
+          let option =
+            `Default, Printf.sprintf
+              "%s %s installation in %s (from PATH)"
+              (add_or_use_git (OpamFilename.Dir.of_string root))
+              (string_of_kind kind)
+              root
+          in
+          `Default, option::options
+        else
+          (fst (List.hd options)), options
+  in
   let rec loop ?git_location () =
     match get_git_location ?git_location () with
-    | Some _ as git_location -> git_location
+    | Some _ as git_location -> git_location, false
     | None -> menu ()
   and menu () =
     let prompt () =
-      let options =
-        (`Default, "Use default Cygwin Git")
-        :: (List.filter_map (fun (git, bash) ->
-            if bash then
-              None
-            else
-              let bin = Filename.dirname git in
-              Some (`Location bin, "Use found git in "^bin))
-            gits)
-        @ [
-          `Specify, "Enter the location of installed Git";
-          `Abort, ("Abort initialisation to " ^ abort_action);
-        ]
-      in
       OpamStd.Option.iter (OpamConsole.warning "%s\n") gfw_message;
       OpamConsole.menu "Which Git should opam use?"
-        ~default:`Default ~no:`Default ~options
+        ~default ~no:default ~options
     in
     match prompt () with
-    | `Default -> None
+    | `Default -> None, cygwin_is_tweakable
     | `Specify -> loop ()
     | `Location git_location -> loop ~git_location ()
     | `Abort ->
-      OpamConsole.note "Once your choosen Git installed, open a new PowerShell or Command Prompt window, and relaunch opam init.";
+      OpamConsole.note
+        "Once your chosen Git is installed, open a new PowerShell or Command \
+         Prompt window, and relaunch opam init.";
       OpamStd.Sys.exit_because `Aborted
   in
-  let git_location =
-    match git_location with
-    | Some (Right ()) -> None
-    | Some (Left git_location) ->
-      header ();
-      get_git_location ~git_location:(OpamFilename.Dir.to_string git_location) ()
-    | None ->
-      let git_found =
-        match OpamSystem.resolve_command "git" with
-        | None -> false
-        | Some git -> is_git_for_windows git
-      in
-      if not git_found && OpamStd.Sys.tty_out then
-        (header ();
-         OpamConsole.msg
-           "Cygwin Git is functional but can have credentials issues for private repositories, \
-            we recommend using:\n%s\n"
-           (OpamStd.Format.itemize (fun s -> s)
-              [ "Install via 'winget install Git.Git'";
-                "Git for Windows can be downloaded and installed from https://gitforwindows.org" ]);
-         menu ())
-      else
-        None
+  let git_location, use_cygwin =
+    let git_found =
+      match OpamSystem.resolve_command "git" with
+      | None -> false
+      | Some git -> is_git_for_windows git
+    in
+    if not git_found && OpamStd.Sys.tty_out then
+      (OpamConsole.header_msg "Git";
+       OpamConsole.msg
+         "Cygwin Git is functional but can have credentials issues for private \
+          repositories, we recommend using:\n%s\n"
+         (OpamStd.Format.itemize (fun s -> s)
+            [ "Install via 'winget install Git.Git'";
+              "Git for Windows can be downloaded and installed from \
+               https://gitforwindows.org" ]);
+       menu ())
+    else
+      None, not git_found && cygwin_is_tweakable
   in
   OpamStd.Option.iter (fun _ ->
       OpamConsole.msg
         "You can change that later with \
          'opam option \"git-location=C:\\A\\Path\\bin\"'")
     git_location;
-  git_location
+  Option.map OpamFilename.Dir.of_string git_location, use_cygwin
 
 let check_git_location_or_exit git_location source =
   let git =
@@ -826,23 +919,370 @@ let check_git_location_or_exit git_location source =
       "The location specified with %s does not appear to contain a Git \
        executable!" source
 
-let windows_checks ?cygwin_setup ?git_location config =
+(* Default search mechanisms for Cygwin/MSYS2 *)
+let cygwin_searches = [
+  `Cygwins
+    (OpamStubsTypes.HKEY_LOCAL_MACHINE, "SOFTWARE\\Cygwin\\Installations");
+  `Cygwins
+    (OpamStubsTypes.HKEY_CURRENT_USER, "Software\\Cygwin\\Installations");
+  `Test "C:\\cygwin64";
+  `Test "C:\\msys64";
+  `Msys2_generic;
+  `ScoopMsys2;
+]
+
+(* cygwin_searches is a sequence of `Path and `Test mechanisms based on the
+   cygwin_searches list above. If specified, the ~first parameter allows a
+   different first mechanism to be returned. *)
+let cygwin_searches ?first () =
+  let cygwin_searches =
+    match first with
+    | Some first -> first::cygwin_searches
+    | None -> cygwin_searches
+  in
+  let rec seq searches () =
+    match searches with
+    | ((`Path | `Test _) as search)::searches ->
+      (* Return the next mechanism *)
+      Seq.Cons(search, seq searches)
+    | (`Cygwins (hive, key))::searches ->
+      (* Search the given registry hive key for Cygwin locations *)
+      let possibles = OpamStubs.enumRegistry hive key OpamStubsTypes.REG_SZ in
+      let map (_, path) =
+        let path =
+          if OpamStd.String.starts_with ~prefix:"\\??\\" path then
+            String.sub path 4 (String.length path - 4)
+          else
+            path
+        in
+        `Test path
+      in
+      seq (List.map map possibles @ searches) ()
+    | `ScoopMsys2::searches ->
+      (* Scoop installs an msys2.cmd shim in PATH. If this is encountered, parse
+         it. *)
+      begin match OpamStd.Sys.resolve_in_path "msys2.cmd" with
+        | None ->
+          seq searches ()
+        | Some msys2 ->
+          let re =
+            Re.(compile @@ seq [
+                bos;
+                str "@\"";
+                group @@ rep @@ diff any (char '"');
+                char '"';
+                rep any;
+                str " -msys2";
+                alt [char ' '; eos]
+              ])
+          in
+          let parse_line s =
+            Stdlib.Option.bind (Re.exec_opt re s) (Fun.flip Re.Group.get_opt 1)
+          in
+          let msys2_shell =
+            OpamSystem.read msys2
+            |> String.split_on_char '\n'
+            |> OpamStd.List.find_map_opt parse_line
+          in
+          match msys2_shell with
+          | None ->
+            seq searches ()
+          | Some msys2_shell ->
+            Seq.Cons(`Test (Filename.dirname msys2_shell), seq searches)
+      end
+    | `Msys2_generic::searches ->
+      (* Some package managers put the root msys64 directory into PATH, in which
+         case there will be msys2.exe - if that can be resolved in PATH, try
+         that. *)
+      begin match OpamSystem.resolve_command "msys2.exe" with
+        | None ->
+          seq searches ()
+        | Some msys2 ->
+          Seq.Cons(`Test (Filename.dirname msys2), seq searches)
+      end
+    | [] -> Seq.Nil
+  in
+  seq cygwin_searches
+
+let rec cygwin_menu header =
+  let start = Unix.gettimeofday () in
+  let test_mechanism (roots, count, mechanisms) search =
+    match test_mechanism header search with
+    | Some ((kind, `Root root) as mechanism) ->
+      if OpamFilename.Dir.Set.mem root roots then
+        roots, count, mechanisms
+      else
+      let roots = OpamFilename.Dir.Set.add root roots in
+      let mechanisms =
+        (`Chosen mechanism,
+         Printf.sprintf
+           "Use %s installation found in %s"
+           (string_of_kind kind)
+           (OpamFilename.Dir.to_string root))::mechanisms
+      in
+      let count = succ count in
+      if OpamConsole.disp_status_line ()
+      && Unix.gettimeofday () -. start >= 0.5 then
+        OpamConsole.status_line
+          "Searching for Cygwin/MSYS2 installations: %d found so far" count;
+      roots, count, mechanisms
+    | _ -> roots, count, mechanisms
+  in
+  let detected =
+    let _, _, mechanisms =
+      Seq.fold_left test_mechanism
+        (OpamFilename.Dir.Set.empty, 0, []) (cygwin_searches ())
+    in
+    List.rev mechanisms
+  in
+  OpamConsole.clear_status ();
+  let internal_option = `Chosen (`Cygwin, `Internal) in
+  let options =
+    (internal_option,
+     "Automatically create an internal Cygwin installation that will be \
+      managed by opam (recommended)") ::
+    (detected @
+     [`Specify, "Use an" ^ (if detected = [] then "" else "other") ^
+                " existing Cygwin/MSYS2 installation";
+      `Abort, "Abort initialisation"])
+  in
+  let options, default, warn_path =
+    (* First of all see if cygcheck can be found in PATH *)
+    let cygcheck =
+      OpamSystem.resolve_command "cygcheck.exe"
+      |> Option.map OpamSysInteract.Cygwin.analyse_install
+    in
+    begin match cygcheck with
+      | Some (Error _) | None ->
+        (* cygcheck wasn't in PATH, so default to the internal installation *)
+        options, `Chosen (`Cygwin, `Internal), None
+      | Some (Ok (kind, root)) ->
+        let pacman =
+          OpamFilename.Op.(OpamSysInteract.Cygwin.bindir_for_root `Msys2 root // "pacman.exe")
+          |> OpamFilename.to_string
+        in
+        let root = OpamFilename.Dir.to_string root in
+        let path_option = `Chosen (kind, `Path root) in
+        let options =
+          (path_option, Printf.sprintf
+             "Use tools found in PATH (%s installation at %s)"
+             (string_of_kind kind) root)::options
+        in
+        (* Check whether cygcheck is still available in the initial environment.
+           This allows a warning to be displayed reminding the user to continue
+           running opam from a Cygwin/MSYS2 shell that has been manually started,
+           but is not displayed if they have permanently configured their PATH to
+           include Cygwin/MSYS2. *)
+        let env = OpamStubs.get_initial_environment () in
+        let cygcheck =
+          OpamSystem.resolve_command ~env:(Array.of_list env) "cygcheck.exe"
+          |> Option.map OpamSysInteract.Cygwin.analyse_install
+        in
+        begin match cygcheck with
+          | Some (Ok (kind2, root2)) ->
+            let root2 = OpamFilename.Dir.to_string root2 in
+            if (kind : [`Cygwin | `Msys2]) = kind2 && String.equal root root2 then
+              let default, warning =
+                if kind = `Msys2 && OpamSystem.resolve_command pacman = None then
+                  internal_option, Some
+                    (Printf.sprintf
+                       "The current PATH gives an installation of MSYS2 at %s, \
+                        but it does not include the package manager, \
+                        pacman.exe (this is expected behaviour for the Git \
+                        Bash shell from Git for Windows). It's recommended \
+                        you use a full MSYS2 installation, rather than one \
+                        without its package manager." root)
+                else
+                  path_option, None
+              in
+              options, default, warning
+            else
+            let warning = Printf.sprintf
+                "The current PATH gives an installation of %s at %s, but your \
+                 system appears to default to an installation of %s at %s for \
+                 new terminal sessions. You will need to ensure that the \
+                 correct installation is available in PATH when you run opam \
+                 in future."
+                (string_of_kind kind) root (string_of_kind kind2) root2
+            in
+            options, internal_option, Some warning
+          | Some (Error _) ->
+            let warning = Printf.sprintf
+                "The current PATH gives an installation of %s at %s, but it \
+                 doesn't appear to be correctly available for new terminal \
+                 sessions. You will need to ensure that the correct \
+                 installation is available in PATH when you run opam in \
+                 future." (string_of_kind kind) root
+            in
+            options, internal_option, Some warning
+          | None ->
+            match OpamStd.Sys.guess_shell_compat () with
+            | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish ->
+              let default, warning =
+                if kind = `Msys2 && OpamSystem.resolve_command pacman = None then
+                  internal_option, Printf.sprintf
+                    "The current PATH gives an installation of MSYS2 at %s, \
+                     but it does not include the package manager, pacman.exe \
+                     (this is expected behaviour for the Git Bash shell from \
+                     Git for Windows). It's recommended you use a full MSYS2 \
+                     installation, rather than one without its package \
+                     manager.\n You will need to run opam from a terminal \
+                     session in future."
+                    root
+                else
+                  path_option, Printf.sprintf
+                    "You will need to run opam from a terminal session for %s \
+                     in future." root
+              in
+              options, default, Some warning
+            | SH_pwsh _ | SH_cmd ->
+              let warning = Printf.sprintf
+                  "You appear to have added %s to PATH for this session only. \
+                   You will need to do this again before running opam in future."
+                  root
+              in
+              options, internal_option, Some warning
+        end
+    end
+  in
+  Lazy.force header;
+  OpamConsole.msg
+    "\n\
+     opam and the OCaml ecosystem in general require various Unix tools in \
+     order to operate correctly. At present, this requires the installation \
+     of Cygwin to provide these tools.\n\n";
+  match OpamConsole.menu "How should opam obtain Unix tools?"
+          ~default ~no:default ~options with
+  | `Chosen (kind, `Internal) ->
+    assert (kind = `Cygwin);
+    Some (kind, `Internal OpamInitDefaults.required_packages_for_cygwin)
+  | `Chosen (kind, ((`Root _) as mechanism)) ->
+    Some (kind, mechanism)
+  | `Chosen ((_, `Path _) as mechanism) ->
+    OpamStd.Option.iter (OpamConsole.warning "%s") warn_path;
+    Some mechanism
+  | `Specify ->
+    begin
+      match OpamConsole.read
+              "Enter the prefix of an existing Cygwin installation \
+               (e.g. C:\\cygwin64)" with
+      | None -> None
+      | Some entry ->
+        match OpamSysInteract.Cygwin.analyse_install entry with
+        | Ok (kind, root) ->
+          Some (kind, `Root root)
+        | Error msg ->
+          OpamConsole.error "%s" msg;
+          cygwin_menu header
+    end
+  | `Abort -> OpamStd.Sys.exit_because `Aborted
+
+and test_mechanism header = function
+  | (`Internal _) as mechanism -> Some (`Cygwin, mechanism)
+  | `Path ->
+    let cygcheck =
+      OpamSystem.resolve_command "cygcheck.exe"
+      |> Option.map OpamSysInteract.Cygwin.analyse_install
+    in
+    begin match cygcheck with
+      | Some (Ok (kind, root)) ->
+        Some (kind, `Path (OpamFilename.Dir.to_string root))
+      | Some (Error _) | None ->
+        None
+    end
+  | `Test dir ->
+    begin match OpamSysInteract.Cygwin.analyse_install dir with
+      | Ok (kind, root) -> Some (kind, `Root root)
+      | Error _ -> None
+    end
+  | `Location dir ->
+    begin match OpamSysInteract.Cygwin.analyse_install dir with
+      | Ok (kind, root) -> Some (kind, `Root root)
+      | Error msg ->
+        OpamConsole.error_and_exit `Not_found "%s" msg
+    end
+  | `Menu -> cygwin_menu header
+
+let string_of_cygwin_setup = function
+  | `internal pkgs ->
+    let pkgs =
+      if pkgs = [] then ""
+      else
+        " with " ^ String.concat ", " (List.map OpamSysPkg.to_string pkgs)
+    in
+    "Internal" ^ pkgs
+  | `default_location -> "Search"
+  | `location dir -> "External from " ^ OpamFilename.Dir.to_string dir
+  | `no -> "Path-only (and no tweaking)"
+
+let string_of_git_location_cli = function
+  | Left location -> "Using git-location=" ^ OpamFilename.Dir.to_string location
+  | Right () -> "git-location disabled via CLI"
+
+let initialise_msys2 root =
+  let bindir = OpamSysInteract.Cygwin.bindir_for_root `Msys2 root in
+  let pacman = OpamFilename.Op.(bindir // "pacman.exe") in
+  let gnupg_dir = OpamFilename.Op.(root / "etc" / "pacman.d" / "gnupg") in
+  if OpamFilename.exists pacman && not (OpamFilename.exists_dir gnupg_dir) then
+    let cmd =
+      OpamFilename.Op.(bindir // "bash.exe")
+      |> OpamFilename.to_string
+    in
+    let answer =
+      let cmd = OpamConsole.colorise `yellow (cmd ^ " -lc \"uname -a\"") in
+      OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
+        "MSYS2 appears not to have been initialised. opam can:"
+        ~options:[
+          `Yes, Printf.sprintf
+            "Run %s to initialise it" cmd;
+          `No, Printf.sprintf
+            "Wait while you %s manually (e.g. in another terminal)" cmd;
+          `Ignore, "Continue anyway (but note that external dependency \
+                    may not work correctly until MSYS2 is initialised)";
+          `Quit, "Abort initialisation";
+        ]
+    in
+    OpamConsole.msg "\n";
+    match answer with
+    | `Yes ->
+      if OpamConsole.disp_status_line () then
+        OpamConsole.status_line "Initialising MSYS2 (this may take a minute)";
+      let r =
+        OpamProcess.run
+          (OpamProcess.command ~name:(OpamSystem.temp_file "command")
+             ~allow_stdin:false cmd ["-lc"; "uname -a"])
+      in
+      OpamProcess.cleanup ~force:true r;
+      OpamConsole.clear_status ();
+      if not (OpamProcess.is_success r) then
+        OpamConsole.error_and_exit `Aborted "MSYS2 failed to initialise"
+    | `No ->
+      OpamConsole.pause "Standing by, press enter to continue when done.";
+      OpamConsole.msg "\n"
+    | `Ignore ->
+      ()
+    | `Quit ->
+      OpamStd.Sys.exit_because `Aborted
+
+let determine_windows_configuration ?cygwin_setup ?git_location config =
+  OpamStd.Option.iter
+    (log "Cygwin (from CLI): %a" (slog string_of_cygwin_setup)) cygwin_setup;
+  (* Check whether symlinks can be created. Developer Mode is not the only way
+     to do this, but it's the easiest. *)
   if (not (Unix.has_symlink ())) then begin
     OpamConsole.header_msg "Windows Developer Mode";
-    OpamConsole.msg "opam does not require Developer Mode to be enabled on Windows, but it is\n\
-                     recommended, in particular because it enables support for symlinks without\n\
-                     requiring opam to be run elevated (which we do %s recommend doing).\n\
-                     \n\
-                     More information on enabling Developer Mode may be obtained from\n\
-                       https://learn.microsoft.com/en-gb/windows/apps/get-started/enable-your-device-for-development\n"
-                     (OpamConsole.colorise `bold "not")
+    OpamConsole.msg
+      "opam does not require Developer Mode to be enabled on Windows, but it is\n\
+       recommended, in particular because it enables support for symlinks without\n\
+       requiring opam to be run elevated (which we do %s recommend doing).\n\
+       \n\
+       More information on enabling Developer Mode may be obtained from\n\
+       https://learn.microsoft.com/en-gb/windows/apps/get-started/enable-your-device-for-development\n"
+      (OpamConsole.colorise `bold "not")
   end;
-  let vars = OpamFile.Config.global_variables config in
-  let env =
-    List.map (fun (v, c, s) -> v, (lazy (Some c), s)) vars
-    |> OpamVariable.Map.of_list
-  in
-  (* Git handling *)
+
+  (* Augment ~git_location (from the CLI) with information from opamrc and
+     validate --git-location/git-location *)
   let git_location =
     match git_location, OpamFile.Config.git_location config with
     | None, None -> None
@@ -864,304 +1304,230 @@ let windows_checks ?cygwin_setup ?git_location config =
       check_git_location_or_exit git_location "--git-location";
       result
   in
-  let git_location =
-    if Sys.win32 then
-      git_for_windows ?git_location ()
-    else
-      None
-  in
-  OpamCoreConfig.update ?git_location ();
-  let config =
-    match git_location with
-    | Some git_location ->
-      OpamFile.Config.with_git_location
-        (OpamFilename.Dir.of_string git_location) config
-    | None -> config
-  in
-  (* Cygwin handling *)
-  let is_cygwin cygcheck =
-      OpamStd.Sys.is_cygwin_cygcheck
-        ~cygbin:(Some OpamFilename.(Dir.to_string (dirname cygcheck)))
-  in
-  let is_variant cygcheck =
-      OpamStd.Sys.is_cygwin_variant_cygcheck
-        ~cygbin:(Some OpamFilename.(Dir.to_string (dirname cygcheck)))
-  in
-  let is_msys2 cygcheck = is_variant cygcheck && not (is_cygwin cygcheck) in
-  let success cygcheck =
-    let cygbin = OpamFilename.dirname cygcheck in
-    let distrib = if is_cygwin cygcheck then "cygwin" else "msys2" in
-    let config =
-      let os_distribution = OpamVariable.of_string "os-distribution" in
-      let update vars =
-        OpamFile.Config.with_global_variables
-          ((os_distribution, S distrib, "Set by opam init")::vars)
-          config
-      in
-      match OpamStd.List.pick (fun (v,_,_) ->
-          OpamVariable.equal v os_distribution)
-          vars with
-      | Some (_, S d, _), _ when String.equal d distrib -> config
-      | None, vars ->  update vars
-      | Some (_, vc, _), vars ->
-        OpamConsole.warning
-          "'os-distribution' already set to another value %s"
-          (OpamVariable.string_of_variable_contents vc);
-        if OpamConsole.confirm ~default:false "Override?" then
-          (OpamConsole.msg
-             "You can revert this setting using \
-              'opam var --global os-distribution=%s'"
-             (OpamVariable.string_of_variable_contents vc);
-           update vars)
-        else
-          OpamStd.Sys.exit_because `Aborted
-    in
-    let config =
-      if is_msys2 cygcheck then
-        let env =
-          OpamStd.Env.cyg_env ~cygbin:(OpamFilename.Dir.to_string cygbin)
-            ~git_location:None ~env:(OpamStd.Env.raw_env ())
-        in
-        match OpamSystem.resolve_command ~env "pacman.exe" with
-        | Some pacman ->
-          if OpamConsole.confirm
-              "Found package manager pacman binary at %s.\n\
-               Do you want to use it for depexts?"
-              pacman then
-            OpamFile.Config.with_sys_pkg_manager_cmd
-              (OpamStd.String.Map.add distrib (OpamFilename.of_string pacman)
-                 (OpamFile.Config.sys_pkg_manager_cmd config))
-              config
-          else config
-        | None -> config
-      else
-        OpamFile.Config.with_sys_pkg_manager_cmd
-          (OpamStd.String.Map.add distrib cygcheck
-             (OpamFile.Config.sys_pkg_manager_cmd config))
-          config
-    in
-    OpamConsole.note "Configured with %s for depexts"
-      (if is_cygwin cygcheck then
-         if OpamSysInteract.Cygwin.is_internal config then
-           "internal Cygwin install"
-         else
-           (* cygcheck is in CYGWINROOT/bin *)
-           Printf.sprintf "Cygwin at %s"
-             OpamFilename.(Dir.to_string (dirname_dir cygbin))
-       else
-         (* cygcheck is in MSYS2ROOT/usr/bin *)
-         Printf.sprintf "MSYS2 at %s"
-           OpamFilename.(Dir.to_string (dirname_dir (dirname_dir cygbin))));
+  OpamStd.Option.iter (log "%a" (slog string_of_git_location_cli)) git_location;
+
+  (* Checks and initialisation for both Cygwin/MSYS2 and Git (which is made
+     mandatory on Windows)
+
+     The aim of this process is to determine four things:
+     - An optional directory containing git.exe but not shadowing any of
+       the executables in OpamEnv.cygwin_non_shadowed_programs. This is written
+       to git-location in ~/.opam/config and the resulting directory appears
+       as the first entry for Path on opam process calls
+       (see OpamStd.Env.cyg_env)
+     - Whether sys-pkg-manager-cmd should contain entries for either "cygwin"
+       or "msys2". The presence of one of those values also causes opam to add
+       the directory containing the package manager to Path
+       (see OpamCoreConfig.cygbin)
+     - Whether an internal installation of Cygwin is required, and if it needs
+       the git package
+
+     The process is affected by various CLI options:
+     - --no-git-location causes git-location in opamrc to be ignored
+     - --git-location overrides git-location in opamrc and short-circuits
+       searching PATH for git.exe
+     - --no-cygwin-setup specifies that Cygwin/MSYS2 should be found in PATH
+       and no additional handling should be done
+     - --cygwin-internal-install specifies that opam should maintain its own
+       internal installation of Cygwin and make that fully available on Path
+       when building packages and executing commands internally. If
+       --git-location is not in use, and git.exe is not already installed, this
+       installation may include Cygwin's git package
+     - --cygwin-local-install specifies that opam should either search for
+       Cygwin/MSYS2 installations or, if --cygwin-location is specified, use
+       the Cygwin/MSYS2 installation specified.
+  *)
+
+  let apply_git_location config git_location =
+    let config = OpamFile.Config.with_git_location git_location config in
+    let git_location = OpamFilename.Dir.to_string git_location in
+    OpamCoreConfig.update ~git_location ();
     config
   in
-  let install_cygwin_tools packages =
-    let default_packages = OpamInitDefaults.required_packages_for_cygwin in
-    let default_packages =
-      if OpamSystem.resolve_command "git" = None then
-        OpamSysPkg.of_string "git" :: default_packages
-      else
-        default_packages
-    in
-    (* packages comes last so that the user can override any potential version
-       constraints in default_packages (although, with the current version of
-       setup, and with the list of default_packages in OpamInitDefaults, this at
-       present doesn't matter too much). *)
-    OpamSysInteract.Cygwin.install (default_packages @ packages)
-  in
-  let header () = OpamConsole.header_msg "Unix support infrastructure" in
 
-  let get_cygwin = function
-    | Some cygcheck when OpamFilename.exists cygcheck && is_variant cygcheck ->
-        success cygcheck
-    | Some _ | None ->
-      let rec menu () =
-        let enter_paths () =
-          let prompt_setup () =
-            let options = [
-              `download, "Let opam downloads it";
-              `manual, "Manually enter its location on disk";
-              `abort, "Abort initialisation";
-            ]
-            in
-            OpamConsole.menu
-              "Opam needs Cygwin setup executable 'setup-x86_64.exe'"
-              ~default:`download ~no:`download ~options
-          in
-          let rec enter_setup () =
-            match prompt_setup () with
-            | `abort -> OpamStd.Sys.exit_because `Aborted
-            | `download -> None
-            | `manual ->
-              match OpamConsole.read "Enter path of Cygwin setup executable:" with
-              | None -> None
-              | Some setup ->
-                let setup = OpamFilename.of_string setup in
-                if OpamFilename.exists setup then Some setup else
-                  (OpamConsole.msg "Cygwin setup executable doesn't exist at %s\n"
-                     (OpamFilename.to_string setup);
-                   enter_setup ())
-          in
-          (* Check for default cygwin installation path *)
-          let default =
-            match OpamSysInteract.Cygwin.(analyse_install default_cygroot) with
-            | Ok (_, cygcheck) ->
-              let prompt_cygroot () =
-                let options = [
-                  `manual,
-                  "Manually enter prefix of an existing Cygwin installation \
-                   (e.g. D:\\cygwin64)";
-                  `default,
-                  (Printf.sprintf "Use default Cygwin installation at %s"
-                     OpamSysInteract.Cygwin.default_cygroot);
-                  `abort, "Abort initialisation";
-                ] in
-                OpamConsole.menu "Cygwin location"
-                  ~default:`default ~no:`default ~options
-              in
-              (match prompt_cygroot () with
-               | `abort -> OpamStd.Sys.exit_because `Aborted
-               | `manual -> None
-               | `default -> Some cygcheck)
-            | Error _ -> None
-          in
-          (* Otherwise, ask for prefix *)
-          let cygcheck =
-            match default with
-            | Some cygcheck -> Some cygcheck
-            | None ->
-              match OpamConsole.read
-                      "Enter the prefix of an existing Cygwin installation \
-                       (e.g. C:\\cygwin64)" with
-              | None -> None
-              | Some entry ->
-                let cygcheck =
-                  OpamSysInteract.Cygwin.analyse_install entry
-                in
-                match cygcheck with
-                | Ok (_, cygcheck) -> Some cygcheck
-                | Error msg -> OpamConsole.error "%s" msg; None
-          in
-          (* And finally ask for setup.exe *)
-          match cygcheck with
-          | Some cygcheck ->
-            if is_cygwin cygcheck then
-              OpamSysInteract.Cygwin.check_setup (enter_setup ());
-            Some (success cygcheck)
-          | None -> None
-        in
-        let prompt () =
-          let options = [
-            `Internal,
-            "Automatically create an internal Cygwin installation \
-             that will be managed by opam (recommended)";
-            `Specify, "Enter the location of an existing Cygwin installation";
-            `Abort, "Abort initialisation";
-          ] in
-          OpamConsole.menu "How should opam handle Cygwin?"
-            ~no:`Internal ~options
-        in
-        match prompt () with
-        | `Abort -> OpamStd.Sys.exit_because `Aborted
-        | `Internal ->
-          let cygcheck = install_cygwin_tools [] in
-          let config = success cygcheck in
-          config
-        | `Specify ->
-          match enter_paths () with
-          | Some config -> config
-          | None -> menu ()
-      in
-      header ();
-      OpamConsole.msg
-        "\n\
-         opam and the OCaml ecosystem in general require various Unix tools \
-         in order to operate correctly. At present, this requires the \
-         installation of Cygwin to provide these tools.\n\n";
-      menu ()
-  in
-  let config =
-    match cygwin_setup with
-    | Some `no -> config
-    | (Some (`internal _ | `default_location | `location _) | None)
-      as cygwin_setup ->
-      if OpamSysPoll.os env = Some "win32" then
-        match OpamSysPoll.os_distribution env with
-        | Some "win32" ->
-          (* If there's a "cygwin" entry in sys-pkg-manager-cmd, but
-             os-distribution hasn't (yet) been set to "cygwin", then that'll be
-             done here.  Otherwise, the user must either allow opam to install
-             Cygwin or must provide the path to it.
-             Note that a depext solution is _mandatory_ on Windows for now,
-             because there are commands opam requires which are only provided
-             using it (patch, etc.). MSYS2 avoids this by requiring
-             os-distribution to be set. *)
-          let cygcheck =
-            OpamStd.String.Map.find_opt "cygwin"
-                    (OpamFile.Config.sys_pkg_manager_cmd config)
-          in
-          (match cygwin_setup with
-           | None -> get_cygwin cygcheck
-           | Some setup  ->
-             header ();
-             let cygcheck =
-               match setup with
-               | `internal pkgs -> install_cygwin_tools pkgs
-               | (`default_location | `location _ as setup) ->
-                 let cygroot =
-                   match setup with
-                   | `default_location -> OpamSysInteract.Cygwin.default_cygroot
-                   | `location dir -> OpamFilename.Dir.to_string dir
-                 in
-                 (match OpamSysInteract.Cygwin.analyse_install cygroot with
-                 | Ok (_, cygcheck) -> cygcheck
-                 | Error msg ->
-                   OpamConsole.error_and_exit `Not_found
-                     "Error while checking %sCygwin install (%s): %s"
-                     (match setup with
-                      | `default_location -> " default"
-                      | `location _ -> "")
-                     (OpamSysInteract.Cygwin.default_cygroot) msg)
-             in
-             if is_cygwin cygcheck then
-               OpamSysInteract.Cygwin.check_setup None;
-             success cygcheck)
-        | Some "cygwin" | Some "msys2" ->
-          (* We check that current install is good *)
-          (match OpamSysInteract.Cygwin.cygroot_opt config with
-           | Some cygroot ->
-             (match OpamSysInteract.Cygwin.analyse_install
-                      (OpamFilename.Dir.to_string cygroot) with
-             | Ok (_, cygcheck) ->
-               OpamSysInteract.Cygwin.check_setup None;
-               success cygcheck
-             | Error err -> OpamConsole.error "%s" err; get_cygwin None)
-           | None ->
-             (* A Cygwin install (Cygwin or MSYS2) is detected from environment
-               (path), we check the install in that case and stores it in
-               config *)
-             OpamSystem.resolve_command "cygcheck"
-             |> OpamStd.Option.map OpamFilename.of_string
-             |> get_cygwin
-          )
-        | _ -> config
-      else
-        config
-  in
-  let cygbin =
-    match OpamSysInteract.Cygwin.cygbin_opt config with
-    | Some cygbin -> Some (OpamFilename.Dir.to_string cygbin)
+  (* If --git-location has been specified, apply it now *)
+  let config, git_location, git_determined, git_required_from_cygwin =
+    match git_location with
+    | Some (Left git_location) ->
+      apply_git_location config git_location, Some git_location, true, false
+    | Some (Right ()) ->
+      config, None, true, (OpamSystem.resolve_command "git.exe" = None)
     | None ->
-      if List.exists (function
-          | (v, S "msys2", _) ->
-            String.equal (OpamVariable.to_string v) "os-distribution"
-          | _ -> false) (OpamFile.Config.global_variables config)
-      then
-        OpamStd.Option.map Filename.dirname
-          (OpamSystem.resolve_command "cygcheck")
-      else None
+      config, None, false, false
   in
-  OpamCoreConfig.update ?cygbin ();
-  config
+
+  (* Based on the supplied command line options, determine which mechanisms can
+     be tried to acquire a Unix environment.
+     mechanisms - list of things to try from:
+       `Path - search for cygcheck.exe in PATH and test from there
+       `Test - search given root directory for cygcheck.exe (either in bin
+               or usr\bin)
+       `Location - as `Test, but _must_ succeed (--cygwin-location)
+       `Internal - create a Cygwin internal with the given packages
+       `Menu - interactive mode permitted
+     tweakable - can pacman / Cygwin setup be used to adjust setup
+                 (--no-cygwin-setup disables this)
+  *)
+  let mechanisms, cygwin_tweakable =
+    match cygwin_setup with
+    | Some (`internal packages) ->
+      (* git, if needed, will be added later *)
+      let packages = OpamInitDefaults.required_packages_for_cygwin @ packages in
+      Seq.return (`Internal packages), true
+    | Some `no ->
+      if git_required_from_cygwin then
+        OpamConsole.error_and_exit `Not_found
+          "Both --no-cygwin-setup and --no-git-location have been specified, \
+           but Git was not found in PATH. opam requires Git - please either \
+           install Git for Windows and make it available in PATH or re-run \
+           opam init with less restrictive command line options."
+      else
+        Seq.return `Path, false
+    | Some `default_location ->
+      cygwin_searches ~first:`Path (), true
+    | Some (`location dir) ->
+      Seq.return (`Location (OpamFilename.Dir.to_string dir)), true
+    | None ->
+      Seq.return `Menu, true
+  in
+
+  let header = lazy (OpamConsole.header_msg "Unix support infrastructure") in
+
+  (* Reduce mechanisms to a single mechanism (which may therefore display a
+     menu). *)
+  let kind, mechanism =
+    match OpamCompat.Seq.find_map (test_mechanism header) mechanisms with
+    | Some result -> result
+    | None ->
+      Lazy.force header;
+      OpamConsole.error_and_exit `Not_found
+        "A solution for Unix infrastructure is required, but the options \
+         given to opam have not yielded one!"
+  in
+
+  (* If --git-location is in use, then there's no further checking required on
+     the Git executable. If not, then before cygbin is potentially applied
+     through --cygwin-location, determine if we need to check that Git for
+     Windows is not going to be shadowed. *)
+  let have_git_for_windows_in_path, git_in_path_dir =
+    if git_location = None then
+      match OpamSystem.resolve_command "git.exe" with
+      | Some git ->
+        is_git_for_windows git, Filename.dirname git
+      | None ->
+        false, ""
+    else
+      false, ""
+  in
+
+  (* Apply cygbin, if necessary *)
+  let config, msys2_check_root =
+    let apply cygcheck =
+      let cygbin = OpamFilename.Dir.to_string (OpamFilename.dirname cygcheck) in
+      OpamCoreConfig.update ~cygbin ();
+      let family = match kind with `Msys2 -> "msys2" | `Cygwin -> "cygwin" in
+      OpamFile.Config.with_sys_pkg_manager_cmd
+        (OpamStd.String.Map.add family cygcheck
+           (OpamFile.Config.sys_pkg_manager_cmd config))
+        config
+    in
+    let open OpamFilename.Op in
+    let config, msys2_check_root =
+      match mechanism with
+      | `Path root ->
+        let msys2_check_root =
+          if kind = `Msys2 then
+            Some (OpamFilename.Dir.of_string root)
+          else
+            None
+        in
+        (* For opam init --reinit, it may be necessary to remove
+           sys-pkg-manager-path *)
+        OpamFile.Config.with_sys_pkg_manager_cmd
+          OpamStd.String.Map.empty config, msys2_check_root
+      | `Internal _ ->
+        (* The directory gets applied, but obviously it's not yet been
+           installed *)
+        let cygcheck =
+          OpamSysInteract.Cygwin.internal_cygroot () / "bin" // "cygcheck.exe"
+        in
+        apply cygcheck, None
+      | `Root root ->
+        let bindir = OpamSysInteract.Cygwin.bindir_for_root kind root in
+        (* If the user has specified --no-git-location and Git for Windows was
+           in PATH and the given location occludes it, then this is our last
+           chance to warn about it. *)
+        if git_determined && have_git_for_windows_in_path &&
+           OpamFilename.exists (bindir // "git.exe") then
+          OpamConsole.warning
+            "Git for Windows is in PATH (from %s), but it will be shadowed \
+             when opam builds packages and executes commands internally. It is \
+             recommended that only Git for Windows is used, and this could be \
+             ensured by uninstalling the Git package from %s"
+            git_in_path_dir (OpamFilename.Dir.to_string bindir);
+        if kind = `Msys2 then
+          apply (bindir // "pacman.exe"), Some root
+        else
+          apply (bindir // "cygcheck.exe"), None
+    in
+    config, msys2_check_root
+  in
+
+  (* Display the menu for Git configuration, if possible and required *)
+  let config, mechanism, cygwin_packages, git_location =
+    let mechanism, cygwin_packages =
+      match mechanism with
+      | `Internal pkgs ->
+        `Internal, pkgs
+      | (`Root _ | `Path _) as mechanism ->
+        let cygwin_packages =
+          if cygwin_tweakable && not OpamStateConfig.(!r.no_depexts) then
+            OpamInitDefaults.required_packages_for_cygwin
+          else
+            []
+        in
+        mechanism, cygwin_packages
+    in
+    if git_location = None && not git_determined
+       && not have_git_for_windows_in_path then
+      let git_location, from_cygwin =
+        git_for_windows kind mechanism cygwin_tweakable
+      in
+      let config =
+        OpamStd.Option.map_default (apply_git_location config)
+          config git_location
+      in
+      let cygwin_packages =
+        if cygwin_tweakable && from_cygwin then
+          OpamSysPkg.of_string "git" :: cygwin_packages
+        else
+          cygwin_packages
+      in
+      config, mechanism, cygwin_packages, git_location
+    else
+      config, mechanism, cygwin_packages, git_location
+  in
+
+  log "Unix support mechanism: %s %s" (string_of_kind kind)
+    (match mechanism with
+     | `Path root -> Printf.sprintf "from PATH (%s)" root
+     | `Internal -> "internal installation"
+     | `Root root ->
+       "local installation at " ^ OpamFilename.Dir.to_string root);
+  if cygwin_packages <> [] then
+    log "Systems packages to check for: %s"
+      (String.concat ", " (List.map OpamSysPkg.to_string cygwin_packages));
+  log "git-location %s"
+    (OpamStd.Option.map_default
+       (fun d -> Printf.sprintf "= %s" (OpamFilename.Dir.to_string d))
+       "is not in use" git_location);
+
+  let mechanism, cygwin_packages =
+    match mechanism with
+    | `Path _ | `Root _ -> None, cygwin_packages
+    | `Internal -> Some cygwin_packages, []
+  in
+  config, mechanism, cygwin_packages, msys2_check_root
 
 let update_with_init_config ?(overwrite=false) config init_config =
   let module I = OpamFile.InitConfig in
@@ -1196,14 +1562,41 @@ let update_with_init_config ?(overwrite=false) config init_config =
   setifnew C.git_location C.with_git_location_opt
     (I.git_location init_config)
 
+let check_for_sys_packages config system_packages =
+  if system_packages <> [] then
+    let ((missing, _) as set) =
+      OpamSysInteract.packages_status config
+        (OpamSysPkg.Set.of_list system_packages)
+    in
+    if not (OpamSysPkg.Set.is_empty missing) then
+      let vars = OpamFile.Config.global_variables config in
+      let env =
+        List.map (fun (v, c, s) -> v, (lazy (Some c), s)) vars
+        |> OpamVariable.Map.of_list
+      in
+      (*Lazy.force header;*)
+      OpamSolution.print_depext_msg set;
+      OpamSolution.install_sys_packages ~confirm:true env config missing ()
+
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
     ?(check_sandbox=true) ?(bypass_checks=false)
     ?cygwin_setup ?git_location
     config shell =
+  log "RE-INIT";
   let root = OpamStateConfig.(!r.root_dir) in
   let config = update_with_init_config config init_config in
-  let config = windows_checks ?cygwin_setup ?git_location config in
+  let config, mechanism, system_packages, msys2_check_root =
+    if Sys.win32 then
+      determine_windows_configuration ?cygwin_setup ?git_location config
+    else
+      config, None, [], None
+  in
+
+  OpamStd.Option.iter initialise_msys2 msys2_check_root;
+  OpamStd.Option.iter OpamSysInteract.Cygwin.install mechanism;
+  check_for_sys_packages config system_packages;
+
   let _all_ok =
     if bypass_checks then false else
       init_checks ~hard_fail_exn:false init_config
@@ -1280,7 +1673,16 @@ let init
             init_config |>
           OpamFile.Config.with_repositories (List.map fst repos)
         in
-        let config = windows_checks ?cygwin_setup ?git_location config in
+        let config, mechanism, system_packages, msys2_check_root =
+          if Sys.win32 then
+            determine_windows_configuration ?cygwin_setup ?git_location config
+          else
+            config, None, [], None
+        in
+
+        OpamStd.Option.iter initialise_msys2 msys2_check_root;
+        OpamStd.Option.iter OpamSysInteract.Cygwin.install mechanism;
+        check_for_sys_packages config system_packages;
 
         let dontswitch =
           if bypass_checks then false else

@@ -43,11 +43,11 @@ val repo_enablers: ?env:gt_variables -> OpamFile.Config.t -> string option
 
 module Cygwin : sig
 
-  (* Default Cygwin installation prefix C:\cygwin64 *)
-  val default_cygroot: string
+  (* Location of the internal Cygwin installation *)
+  val internal_cygroot: unit -> OpamFilename.Dir.t
 
   (* Install an internal Cygwin install, in <root>/.cygwin *)
-  val install: OpamSysPkg.t list -> OpamFilename.t
+  val install: OpamSysPkg.t list -> unit
 
   (* [analyse_install path] searches for and identifies Cygwin/MSYS2
      installations. [path] may be able the location of cygcheck.exe itself
@@ -61,10 +61,15 @@ module Cygwin : sig
      pacman.exe in the same directory as cygcheck.exe and cygpath.exe.
 
      On success, the result is the kind of installation (Cygwin/MSYS2) along
-     with the full path to cygcheck.exe, otherwise a description of the problem
-     encountered is returned. *)
+     with the root directory (e.g. {v C:\cygwin64 v} or {v C:\msys64 v}),
+     otherwise a description of the problem encountered is returned. *)
   val analyse_install:
-    string -> ([ `Cygwin | `Msys2 ] * OpamFilename.t, string) result
+    string -> ([ `Cygwin | `Msys2 ] * OpamFilename.Dir.t, string) result
+
+  (* [bindir_for_root kind root] returns the bin directory for the given
+     installation root and [kind], as returned by {!analyse_install}. *)
+  val bindir_for_root:
+    [ `Cygwin | `Msys2 ] -> OpamFilename.Dir.t -> OpamFilename.Dir.t
 
   (* Returns true if Cygwin install is internal *)
   val is_internal: OpamFile.Config.t -> bool
@@ -76,9 +81,6 @@ module Cygwin : sig
 
   (* Return Cygwin binary path *)
   val cygbin_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
-
-  (* Return Cygwin installation prefix *)
-  val cygroot_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
 
   (* Return MSYS2 binary path *)
   val msys2bin_opt: OpamFile.Config.t -> OpamFilename.Dir.t option

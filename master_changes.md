@@ -133,6 +133,7 @@ users)
 
 ## Client
   * Fix rounding error when displaying the timestamp in debug mode [#5912 @kit-ty-kate - fix #5910]
+  * Overhaul Windows `opam init` to determine Unix and Git configuration simultaneously, and to detect from Cygwin, Git and MSYS2 from all the known package managers and shells [#6000 @dra27]
 
 ## Shell
 

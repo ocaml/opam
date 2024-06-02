@@ -576,15 +576,6 @@ module Sys : sig
   val get_windows_executable_variant: ?search_in_first:string ->
     string -> [ `Native | `Cygwin | `Tainted of [ `Msys2 | `Cygwin] | `Msys2 ]
 
-  (** Determines if cygcheck in given cygwin binary directory comes from a
-      Cygwin installation. Determined by analysing the cygpath command
-      found with it. *)
-  val is_cygwin_cygcheck : cygbin:string option -> bool
-
-  (** As [is_cygwin_cygcheck], but returns true if it is a Cygwin variant
-      (Cygwin, Msys2). *)
-  val is_cygwin_variant_cygcheck : cygbin:string option -> bool
-
   (** Behaviour is largely as {!get_windows_executable_variant} but where MSYS2
       and Cygwin are seen as equivalent.
 

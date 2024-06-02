@@ -1402,20 +1402,6 @@ module OpamSys = struct
   let is_cygwin_variant ?search_in_first cmd =
     get_cygwin_variant ?search_in_first cmd = `Cygwin
 
-  let is_cygwin_cygcheck_t ~variant ~cygbin =
-    match cygbin with
-    | Some cygbin ->
-      let cygpath = Filename.concat cygbin "cygpath.exe" in
-      Sys.file_exists cygpath
-      && (variant ?search_in_first:(Some cygbin) cygpath = `Cygwin)
-    | None -> false
-
-  let is_cygwin_variant_cygcheck ~cygbin =
-    is_cygwin_cygcheck_t ~variant:get_cygwin_variant ~cygbin
-
-  let is_cygwin_cygcheck ~cygbin =
-    is_cygwin_cygcheck_t ~variant:get_windows_executable_variant ~cygbin
-
   exception Exit of int
   exception Exec of string * string array * string array
 
