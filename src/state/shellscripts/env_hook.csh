@@ -1,1 +1,1 @@
-alias precmd 'eval `opam env --shell=csh --readonly`'
+alias precmd 'eval `opam env --shell=csh`'

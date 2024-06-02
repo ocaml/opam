@@ -145,3 +145,7 @@ val getErrorMode : unit -> int
 
 val setConsoleToUTF8 : unit -> unit
 (** Windows only. Directly wraps SetConsoleOutputCP(CP_UTF8). *)
+
+val uptime : unit -> float
+(** Returns the number of seconds the system has been running on, or [0.0] if
+    this cannot be determined. *)
