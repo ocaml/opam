@@ -22,15 +22,15 @@ let user_agent =
 
 let curl_args = [
   CString "--write-out", None;
-  CString "%%{http_code}\\n", None;
-  CString "--retry", None; CIdent "retry", None;
-  CString "--retry-delay", None; CString "2", None;
+  CString "%%{http_code}\\n", None; (* 6.5 13-Mar-2000 *)
+  CString "--retry", None; CIdent "retry", None; (* 7.12.3 20-Dec-2004 *)
+  CString "--retry-delay", None; CString "2", None; (* 7.12.3 20-Dec-2004 *)
   CString "--compressed",
-  Some (FIdent (OpamFilter.ident_of_string "compress"));
-  CString "--user-agent", None; user_agent, None;
-  CString "-L", None;
-  CString "-o", None; CIdent "out", None;
-  CString "--", None; (* End list of options *)
+  Some (FIdent (OpamFilter.ident_of_string "compress")); (* 7.10 1-Oct-2002 *)
+  CString "--user-agent", None; user_agent, None; (* 4.5.1 12-Jun-1998 *)
+  CString "-L", None; (* 4.9 7-Oct-1998 *)
+  CString "-o", None; CIdent "out", None; (* 2.3 21-Aug-1997 *)
+  CString "--", None; (* End list of options; 5.0 1-Dec-1998 *)
   CIdent "url", None;
 ]
 
