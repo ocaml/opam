@@ -201,3 +201,4 @@ users)
   * `OpamProcess.run_background`: name the stderr output file have the .err extension when cmd_stdout is given [#5984 @kit-ty-kate]
   * [BUG]: fix incorrect recursion case in `OpamSystem.mk_temp_dir` [#6005 @dra27]
   * `OpamStubs.enumRegistry`: on Windows, retrieves all the values of a given type from a registry key, with their names [#6000 @dra27]
+  * `OpamCompat`: add `Seq.find_map` from OCaml 4.14 [#6000 @dra27]

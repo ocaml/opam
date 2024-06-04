@@ -13,6 +13,11 @@ module String : sig
   val exists: (char -> bool) -> string -> bool
 end
 
+module Seq : sig
+  (* NOTE: OCaml >= 4.14 *)
+  val find_map: ('a -> 'b option) -> 'a Seq.t -> 'b option
+end
+
 module Either : sig
   (* NOTE: OCaml >= 4.12 *)
   type ('a, 'b) t =
