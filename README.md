@@ -116,17 +116,9 @@ The `OCAML_PORT` variable determines which flavour of Windows OCaml is compiled;
 (i.e., the native C compiler *for Cygwin*), `OCAML_PORT` does not need to be
 specified and `auto` will be assumed. Once the compiler is built, you may run:
 ```
-make lib-pkg
+./configure --with-vendored-deps
 ```
-to install the dependencies as `findlib` packages to the compiler. Building `lib-pkg`
-requires the ability to create native symbolic links (and the `CYGWIN` variable
-*must* include `winsymlinks:native`). This means that either Cygwin must be run
-elevated from an account with administrative privileges, or your user account must be
-granted the _SeCreateSymbolicLinkPrivilege_ either by enabling Developer mode on
-Windows 10 or using Local Security Policy on earlier versions of Windows.
-Alternatively, you may run `configure` and use vendored deps, as advised.
-
-You can then `configure` and build opam as above.
+and build opam as above.
 
 ## Compiling Without OCaml
 

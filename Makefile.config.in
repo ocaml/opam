@@ -4,8 +4,6 @@ mandir = @mandir@
 version = @PACKAGE_VERSION@
 FETCH = @fetch@
 
-PACKS = $(filter-out no,@OCAML_PKG_unix@ @OCAML_PKG_extlib@ @OCAML_PKG_re@ @OCAML_PKG_re_glob@ @OCAML_PKG_cmdliner@ @OCAML_PKG_ocamlgraph@ @OCAML_PKG_cudf@ @OCAML_PKG_dose3_common@ @OCAML_PKG_dose3_algo@ @OCAML_PKG_opam_file_format@ @OCAML_PKG_mccs@)
-
 CONF_OCAMLFLAGS = @CONF_OCAMLFLAGS@
 
 MCCS_ENABLED = @MCCS_ENABLED@
