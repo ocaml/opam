@@ -201,7 +201,6 @@ let depexts_status_of_packages_raw
   in
   let syspkg_set = syspkg_set -- bypass in
   let ret =
-    Printf.printf "here\n\r";
     match OpamSysInteract.packages_status ?env global_config syspkg_set ~old_packages:old_syspkg_set with
     | avail, required, not_found ->
       let avail, not_found =
