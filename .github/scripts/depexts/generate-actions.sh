@@ -163,8 +163,8 @@ cd /github/workspace
 #git clone https://github.com/ocaml/opam --single-branch --branch branch-name --depth 1 local-opam
 #cd local-opam
 
-opam install . --deps
-eval \$(opam env)
+/usr/bin/opam install . --deps
+eval \$(/usr/bin/opam env)
 ./configure
 make
 
