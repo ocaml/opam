@@ -100,6 +100,8 @@ users)
   * Relax lookup on OpenBSD to consider all installed packages [#6362 @semarie]
   * Speedup the detection of available system packages with pacman and brew [#6324 @kit-ty-kate]
 
+[NEW] Support providing external dependencies with Nix
+
 ## Format upgrade
 
 ## Sandbox
