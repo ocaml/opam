@@ -145,6 +145,7 @@ users)
 ## Github Actions
 
 ## Doc
+  * Remove the ppa from the installation instructions on Ubuntu [#5988 @kit-ty-kate - fix #5987]
 
 ## Security fixes
 

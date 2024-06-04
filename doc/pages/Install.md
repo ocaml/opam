@@ -179,18 +179,11 @@ for Opam usage.
 
 #### Ubuntu
 
-[![badge](https://repology.org/badge/version-for-repo/ubuntu_22_04/opam.svg)](https://repology.org/project/opam/versions)
+[![badge](https://repology.org/badge/version-for-repo/ubuntu_24_04/opam.svg)](https://repology.org/project/opam/versions)
 
-##### Versions 18.04 and newer
-There is a [ppa](https://launchpad.net/~avsm/+archive/ubuntu/ppa) available that contains the current stable version of `opam`.
 ```
-add-apt-repository ppa:avsm/ppa
-apt update
 apt install opam
 ```
-
-##### Versions older than 18.04
-Use the binary distribution. Instructions provided at https://opam.ocaml.org/doc/Install.html#Binary-distribution
 
 #### Windows
 
