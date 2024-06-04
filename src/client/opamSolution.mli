@@ -80,12 +80,17 @@ val dry_run: 'a switch_state -> OpamSolver.solution -> 'a switch_state
     non-empty. *)
 val print_depext_msg : OpamSysPkg.Set.t * OpamSysPkg.Set.t -> unit
 
+(** As {!install_depexts}, but supplied with a set of system packages to be
+    installed. *)
+val install_sys_packages: confirm:bool -> OpamStateTypes.gt_variables ->
+  OpamFile.Config.t -> OpamSysPkg.Set.t -> unit -> unit
+
 (* Install external dependencies of the given package set, according the depext
    configuration. If [confirm] is false, install commands are directly
    launched, without asking user (used by the `--depext-only` option). If
    [force_depext] is true, it overrides [OpamFile.Config.depext] value. *)
-val install_depexts:
-  ?force_depext:bool -> ?confirm:bool -> rw switch_state -> package_set -> rw switch_state
+val install_depexts: ?force_depext:bool -> ?confirm:bool -> rw switch_state ->
+  package_set -> rw switch_state
 
 (** {2 Atoms} *)
 
