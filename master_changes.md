@@ -158,6 +158,7 @@ users)
 # API updates
 ## opam-client
   * `OpamClient.init` and `OpamClient.reinit`: now can have additional cygwin packages to install [#5930 @moyodiallo]
+  * Expose `OpamSolution.print_depext_msg` [#5994 @dra27]
 
 ## opam-repository
 
