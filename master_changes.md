@@ -110,6 +110,8 @@ users)
   * Speedup the detection of available system packages with pacman and brew [#6324 @kit-ty-kate]
   * The system GNU Patch and diff are no longer runtime dependencies of opam [#5892 @kit-ty-kate - fix #6052]
 
+[NEW] Support providing external dependencies with Nix
+
 ## Format upgrade
 
 ## Sandbox
