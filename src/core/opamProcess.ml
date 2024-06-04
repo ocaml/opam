@@ -313,7 +313,7 @@ let create_process_env =
     fun cmd ->
       if OpamStd.Option.map_default
           (OpamStd.Sys.is_cygwin_variant
-             ~cygbin:(OpamCoreConfig.(!r.cygbin)))
+             ?search_in_first:(OpamCoreConfig.(!r.cygbin)))
              false
              (resolve_command cmd) then
         cygwin_create_process_env cmd

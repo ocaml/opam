@@ -1358,40 +1358,56 @@ module OpamSys = struct
         in
         check_dll `Native
       in
-      fun ~cygbin name ->
-        match cygbin with
-        | Some cygbin ->
-          (let cygcheck = Filename.concat cygbin "cygcheck.exe" in
-           if Filename.is_relative name then
-             requires_cygwin cygcheck name
-           else
-           try Hashtbl.find results (cygcheck, name)
-           with Not_found ->
-             let result = requires_cygwin cygcheck name in
-             Hashtbl.add results (cygcheck, name) result;
-             result)
+      fun ?search_in_first name ->
+        let cygcheck =
+          let open Option.Op in
+          let contains_cygcheck dir =
+            let cygcheck = Filename.concat dir "cygcheck.exe" in
+            if Sys.file_exists cygcheck then
+              Some cygcheck
+            else
+              None
+          in
+          search_in_first >>= contains_cygcheck
+          >>+ fun () ->
+            (* ~search_in_first not supplied, or cygcheck.exe not found in it;
+               now try general PATH-resolution. *)
+            match resolve_command "cygcheck.exe" with
+            | `Cmd cmd -> Some cmd
+            | `Not_found | `Denied -> None
+        in
+        match cygcheck with
         | None -> `Native
+        | Some cygcheck ->
+          if Filename.is_relative name then
+            requires_cygwin cygcheck name
+          else
+            try Hashtbl.find results (cygcheck, name)
+            with Not_found ->
+              let result = requires_cygwin cygcheck name in
+              Hashtbl.add results (cygcheck, name) result;
+              result
     else
-    fun ~cygbin:_ _ -> `Native
+    fun ?search_in_first:_ _ -> `Native
 
-  let get_cygwin_variant ~cygbin cmd =
+  let get_cygwin_variant ?search_in_first cmd =
     (* Treat MSYS2's variant of `cygwin1.dll` called `msys-2.0.dll` equivalently.
        Confer https://www.msys2.org/wiki/How-does-MSYS2-differ-from-Cygwin/ *)
-    match get_windows_executable_variant ~cygbin cmd with
+    match get_windows_executable_variant ?search_in_first cmd with
     | `Native -> `Native
     | `Cygwin
     | `Msys2 -> `Cygwin
     | `Tainted _ -> `CygLinked
 
-  let is_cygwin_variant ~cygbin cmd =
-    get_cygwin_variant ~cygbin cmd = `Cygwin
+  let is_cygwin_variant ?search_in_first cmd =
+    get_cygwin_variant ?search_in_first cmd = `Cygwin
 
   let is_cygwin_cygcheck_t ~variant ~cygbin =
     match cygbin with
     | Some cygbin ->
       let cygpath = Filename.concat cygbin "cygpath.exe" in
       Sys.file_exists cygpath
-      && (variant ~cygbin:(Some cygbin) cygpath = `Cygwin)
+      && (variant ?search_in_first:(Some cygbin) cygpath = `Cygwin)
     | None -> false
 
   let is_cygwin_variant_cygcheck ~cygbin =

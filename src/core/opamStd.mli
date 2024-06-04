@@ -565,11 +565,15 @@ module Sys : sig
       to a library which is itself Cygwin- or MSYS2-compiled, or [`Native]
       otherwise.
 
-      Note that this returns [`Native] on a Cygwin-build of opam!
+      If supplied, [~search_in_first] specifies a directory which should be
+      searched for cygcheck prior to searching the current PATH.
 
-      Both cygcheck and an unqualified command will be resolved if necessary
-      using the current PATH. *)
-  val get_windows_executable_variant: cygbin:string option ->
+      If the command given is not an absolute path, it too is resolved in the
+      current PATH.
+
+      If cygcheck cannot be resolved in PATH, or when running the Cygwin build
+      of opam, the function returns `Native. *)
+  val get_windows_executable_variant: ?search_in_first:string ->
     string -> [ `Native | `Cygwin | `Tainted of [ `Msys2 | `Cygwin] | `Msys2 ]
 
   (** Determines if cygcheck in given cygwin binary directory comes from a
@@ -581,18 +585,17 @@ module Sys : sig
       (Cygwin, Msys2). *)
   val is_cygwin_variant_cygcheck : cygbin:string option -> bool
 
-  (** For native Windows builds, returns [`Cygwin] if the command is a Cygwin-
+  (** Behaviour is largely as {!get_windows_executable_variant} but where MSYS2
+      and Cygwin are seen as equivalent.
+
+      For native Windows builds, returns [`Cygwin] if the command is a Cygwin-
       or Msys2- compiled executable, and [`CygLinked] if the command links to a
-      library which is itself Cygwin/Msys2-compiled, or [`Native] otherwise.
-
-      Note that this returns [`Native] on a Cygwin-build of opam!
-
-      Both cygcheck and an unqualified command will be resolved using the
-      current PATH. *)
-  val get_cygwin_variant: cygbin:string option -> string -> [ `Native | `Cygwin | `CygLinked ]
+      library which is itself Cygwin/Msys2-compiled, or [`Native] otherwise. *)
+  val get_cygwin_variant:
+    ?search_in_first:string -> string -> [ `Native | `Cygwin | `CygLinked ]
 
   (** Returns true if [get_cygwin_variant] is [`Cygwin] *)
-  val is_cygwin_variant: cygbin:string option -> string -> bool
+  val is_cygwin_variant: ?search_in_first:string -> string -> bool
 
   (** {3 Exit handling} *)
 

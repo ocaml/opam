@@ -202,3 +202,4 @@ users)
   * [BUG]: fix incorrect recursion case in `OpamSystem.mk_temp_dir` [#6005 @dra27]
   * `OpamStubs.enumRegistry`: on Windows, retrieves all the values of a given type from a registry key, with their names [#6000 @dra27]
   * `OpamCompat`: add `Seq.find_map` from OCaml 4.14 [#6000 @dra27]
+  * `OpamStd.Sys.{get_windows_executable_variant,get_cygwin_variant,is_cygwin_variant}`: renamed `~cygbin` to `?search_in_path` with a change in semantics so that it acts as though the directory was simply the first entry in PATH [#6000 @dra27]
