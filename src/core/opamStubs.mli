@@ -63,6 +63,13 @@ val waitpids : int list -> int -> int * Unix.process_status
       [waitpids pids length] behaves like [Unix.wait], returning the pid and
       exit status of the first process to terminate. *)
 
+val readRegistry : registry_root -> string -> string -> 'a registry_value -> 'a option
+  (** Windows only. [readRegistry root key name value_type] reads the value
+      [name] from registry key [key] of [root]. As per Windows Registry
+      convention, the default value can be read by passing [""] for [name].
+
+      @raise Failure If the value in the registry does not have [value_type] *)
+
 val writeRegistry :
   registry_root -> string -> string -> 'a registry_value -> 'a -> unit
   (** Windows only. [writeRegistry root key name value_type value] sets the
@@ -145,3 +152,10 @@ val getErrorMode : unit -> int
 
 val setConsoleToUTF8 : unit -> unit
 (** Windows only. Directly wraps SetConsoleOutputCP(CP_UTF8). *)
+
+val getVersionInfo : string -> win32_version_info option
+(** Windows only. Returns the version info block for a file or [None] if the
+    file either doesn't exist or doesn't have one. *)
+
+val get_initial_environment : unit -> string list
+(** Windows only. Returns the environment which new processes would receive. *)
