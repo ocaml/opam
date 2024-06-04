@@ -127,6 +127,7 @@ users)
 
 ## Internal: Windows
   * Set the console to use UTF-8 on Windows using SetConsoleCP and SetConsoleOutputCP [#5970 @kit-ty-kate]
+  * Harden the CRLF stripping when using cygcheck [#5993 @dra27]
 
 ## Test
 
