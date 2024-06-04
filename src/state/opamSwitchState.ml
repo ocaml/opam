@@ -884,8 +884,17 @@ let avoid_version st nv =
            has_avoid_flag)
           +! false)
 
+let undefined_filter_variable nv v =
+  (if OpamFormatConfig.(!r.strict) then
+     OpamConsole.error_and_exit `File_error
+       "Undefined filter variable %s in dependencies of %s"
+   else
+     log
+       "ERR: Undefined filter variable %s in dependencies of %s")
+    (OpamVariable.Full.to_string v) (OpamPackage.to_string nv)
+
 let package_env_t st ~force_dev_deps ~test ~doc ~dev_setup
-    ~requested_allpkgs nv v =
+    ~requested_allpkgs ?(err_undefined=true) nv v =
   if List.mem v OpamPackageVar.predefined_depends_variables then
     match OpamVariable.Full.to_string v with
     | "dev" ->
@@ -899,19 +908,17 @@ let package_env_t st ~force_dev_deps ~test ~doc ~dev_setup
     | _ -> None (* Computation delayed to the solver *)
   else
   let r = OpamPackageVar.resolve_switch ~package:nv st v in
-  if r = None then
-    (if OpamFormatConfig.(!r.strict) then
-       OpamConsole.error_and_exit `File_error
-         "Undefined filter variable %s in dependencies of %s"
-     else
-       log
-         "ERR: Undefined filter variable %s in dependencies of %s")
-      (OpamVariable.Full.to_string v) (OpamPackage.to_string nv);
+  if err_undefined && r = None then
+    undefined_filter_variable nv v;
   r
 
 let get_dependencies_t st ~force_dev_deps ~test ~doc ~dev_setup
     ~requested_allpkgs deps opams =
   let filter_undefined nv =
+    let warn_undefined v =
+      if not (List.mem v OpamPackageVar.predefined_depends_variables) then
+        undefined_filter_variable nv v
+    in
     OpamFormula.map (fun (name, fc) ->
         let fc =
           OpamFormula.map (function
@@ -923,6 +930,9 @@ let get_dependencies_t st ~force_dev_deps ~test ~doc ~dev_setup
                   "Undefined filter variable %s in dependencies of %s"
                   (OpamVariable.to_string v) (OpamPackage.to_string nv);
                 Atom (Filter (FBool false))
+              | (Filter filter) as f ->
+                List.iter warn_undefined (OpamFilter.variables filter);
+                Atom f
               | f -> Atom f)
             fc
         in
@@ -931,7 +941,7 @@ let get_dependencies_t st ~force_dev_deps ~test ~doc ~dev_setup
   OpamPackage.Map.mapi (fun nv opam ->
       OpamFilter.partial_filter_formula
         (package_env_t st ~force_dev_deps ~test ~doc
-           ~dev_setup ~requested_allpkgs nv)
+           ~dev_setup ~requested_allpkgs ~err_undefined:false nv)
         (deps opam)
       |> filter_undefined nv) opams
 
