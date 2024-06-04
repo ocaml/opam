@@ -132,7 +132,9 @@ let download_command ~compress ?checksum ~url ~dst () =
       OpamConsole.error_and_exit `Configuration_error
         "Empty custom download command"
   in
-  OpamSystem.make_command ~allow_stdin:false cmd args @@> tool_return url
+  let stdout = OpamSystem.temp_file ~auto_clean:false "dl" in
+  OpamProcess.Job.finally (fun () -> OpamSystem.remove_file stdout) @@ fun () ->
+  OpamSystem.make_command ~allow_stdin:false ~stdout cmd args @@> tool_return url
 
 let really_download
     ?(quiet=false) ~overwrite ?(compress=false) ?checksum ?(validate=true)
