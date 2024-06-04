@@ -955,12 +955,12 @@ let windows_checks ?cygwin_setup ?git_location config =
     config
   in
   let install_cygwin_tools packages =
+    let default_packages = OpamInitDefaults.required_packages_for_cygwin in
     let default_packages =
-      match OpamSystem.resolve_command "git" with
-      | None -> OpamInitDefaults.required_packages_for_cygwin
-      | Some _ ->
-        List.filter (fun c -> not OpamSysPkg.(equal (of_string "git") c))
-          OpamInitDefaults.required_packages_for_cygwin
+      if OpamSystem.resolve_command "git" = None then
+        OpamSysPkg.of_string "git" :: default_packages
+      else
+        default_packages
     in
     (* packages comes last so that the user can override any potential version
        constraints in default_packages (although, with the current version of

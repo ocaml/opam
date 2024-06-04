@@ -149,7 +149,6 @@ let required_tools ~sandboxing () =
 let required_packages_for_cygwin =
   [
     "diffutils";
-    "git"; (* XXX hg & mercurial ? *)
     "make";
     "patch";
     "tar";

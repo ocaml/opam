@@ -173,6 +173,7 @@ users)
   * `OpamClient.init` and `OpamClient.reinit`: now can have additional cygwin packages to install [#5930 @moyodiallo]
   * Expose `OpamSolution.print_depext_msg` [#5994 @dra27]
   * Extracted `OpamSolution.install_sys_packages` from `OpamSolution.install_depexts` [#5994 @dra27]
+  * `OpamInitDefaults.required_packages_for_cygwin`: no longer includes git; as the need to add that is computed in `OpamClient` [#6000 @dra27]
 
 ## opam-repository
   * `OpamDownload.download_command`: separate output from stdout and stderr [#5984 @kit-ty-kate]
