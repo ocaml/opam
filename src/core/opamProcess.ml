@@ -538,11 +538,17 @@ let run_background command =
       in
       Some (Filename.concat d (Printf.sprintf "%s.%s" n ext))
   in
-  let stdout_file =
-    OpamStd.Option.Op.(cmd_stdout >>+ fun () -> file "out")
-  in
-  let stderr_file =
-    if OpamCoreConfig.(!r.merged_output) then file "out" else file "err"
+  let stdout_file, stderr_file =
+    let err () = file "err" in
+    match cmd_stdout with
+    | None ->
+      let out = file "out" in
+      if OpamCoreConfig.(!r.merged_output) then
+        (out, out)
+      else
+        (out, err ())
+    | Some _ as out ->
+      (out, err ())
   in
   let env_file    = file "env" in
   let info_file   = file "info" in
