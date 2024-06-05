@@ -101,22 +101,16 @@ module Commands = struct
     OpamStd.String.Map.find_opt family
             (OpamFile.Config.sys_pkg_manager_cmd config)
 
-  let get_cmd config family =
-    match get_cmd_opt config family with
-    | Some cmd -> cmd
-    | None ->
-      let field = "sys-pkg-manager-cmd" in
-      Printf.ksprintf failwith
-        "Config field '%s' must be set for '%s'. \
-         Use opam option --global '%s+=[\"%s\" \"<path-to-%s-system-package-manager>\"]'"
-        field family field family family
-
-  let msys2 config = OpamFilename.to_string (get_cmd config "msys2")
-
   let cygwin_t = "cygwin"
-  let cygcheck_opt config = get_cmd_opt config cygwin_t
-  let cygcheck config = OpamFilename.to_string (get_cmd config cygwin_t)
+  let msys2_t = "msys2"
 
+  let msys2 config =
+    let override = get_cmd_opt config msys2_t in
+    OpamStd.Option.map_default OpamFilename.to_string "pacman.exe" override
+
+  let cygcheck config =
+    let override = get_cmd_opt config cygwin_t in
+    OpamStd.Option.map_default OpamFilename.to_string "cygcheck.exe" override
 end
 
 (* Please keep this alphabetically ordered, in the type definition, and in
@@ -228,10 +222,12 @@ module Cygwin = struct
   let setupexe = "setup-x86_64.exe"
   let cygcheckexe = "cygcheck.exe"
 
-  let cygcheck_opt = Commands.cygcheck_opt
   open OpamStd.Option.Op
   let cygbin_opt config =
-    cygcheck_opt config
+    Commands.(get_cmd_opt config cygwin_t)
+    >>| OpamFilename.dirname
+  let msys2bin_opt config =
+    Commands.(get_cmd_opt config msys2_t)
     >>| OpamFilename.dirname
   let cygroot_opt config =
     cygbin_opt config

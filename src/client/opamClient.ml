@@ -1096,7 +1096,10 @@ let windows_checks ?cygwin_setup ?git_location config =
              because there are commands opam requires which are only provided
              using it (patch, etc.). MSYS2 avoids this by requiring
              os-distribution to be set. *)
-          let cygcheck = OpamSysInteract.Cygwin.cygcheck_opt config in
+          let cygcheck =
+            OpamStd.String.Map.find_opt "cygwin"
+                    (OpamFile.Config.sys_pkg_manager_cmd config)
+          in
           (match cygwin_setup with
            | None -> get_cygwin cygcheck
            | Some setup  ->

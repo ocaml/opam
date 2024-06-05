@@ -114,14 +114,15 @@ let poll_os_distribution () =
        try Scanf.sscanf s " %s " norm
        with Scanf.Scan_failure _ -> linux)
   | Some "win32" ->
-    (* If the user provides a Cygwin installation in PATH, by default we'll use
-       it. Note that this is _not_ done for MSYS2. *)
-    let cygwin =
-      OpamSystem.resolve_command "cygcheck"
-      >>| Filename.dirname
-      |> (fun cygbin -> OpamStd.Sys.is_cygwin_cygcheck ~cygbin)
+    let kind =
+      OpamStd.Sys.get_windows_executable_variant
+        ?search_in_first:(OpamCoreConfig.(!r.cygbin)) "cygpath.exe" 
     in
-    if cygwin then Some "cygwin" else os
+    begin match kind with
+    | `Msys2 -> Some "msys2"
+    | `Cygwin -> Some "cygwin"
+    | `Native | `Tainted _ -> os
+    end
   | os -> os
 let os_distribution = Lazy.from_fun poll_os_distribution
 

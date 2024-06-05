@@ -69,10 +69,9 @@ module Cygwin : sig
   (* Return Cygwin binary path *)
   val cygbin_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
 
-  (* Return Cygwin cygcheck.exe path *)
-  val cygcheck_opt: OpamFile.Config.t -> OpamFilename.t option
-
   (* Return Cygwin installation prefix *)
   val cygroot_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
 
+  (* Return MSYS2 binary path *)
+  val msys2bin_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
 end
