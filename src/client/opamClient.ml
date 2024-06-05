@@ -1003,9 +1003,8 @@ let windows_checks ?cygwin_setup ?git_location config =
           in
           (* Check for default cygwin installation path *)
           let default =
-            match OpamSysInteract.Cygwin.(check_install
-                                            ~variant:true default_cygroot) with
-            | Ok cygcheck ->
+            match OpamSysInteract.Cygwin.(analyse_install default_cygroot) with
+            | Ok (_, cygcheck) ->
               let prompt_cygroot () =
                 let options = [
                   `manual,
@@ -1036,10 +1035,10 @@ let windows_checks ?cygwin_setup ?git_location config =
               | None -> None
               | Some entry ->
                 let cygcheck =
-                  OpamSysInteract.Cygwin.check_install ~variant:true entry
+                  OpamSysInteract.Cygwin.analyse_install entry
                 in
                 match cygcheck with
-                | Ok cygcheck -> Some cygcheck
+                | Ok (_, cygcheck) -> Some cygcheck
                 | Error msg -> OpamConsole.error "%s" msg; None
           in
           (* And finally ask for setup.exe *)
@@ -1113,9 +1112,8 @@ let windows_checks ?cygwin_setup ?git_location config =
                    | `default_location -> OpamSysInteract.Cygwin.default_cygroot
                    | `location dir -> OpamFilename.Dir.to_string dir
                  in
-                 (match OpamSysInteract.Cygwin.check_install ~variant:true
-                          cygroot with
-                 | Ok cygcheck -> cygcheck
+                 (match OpamSysInteract.Cygwin.analyse_install cygroot with
+                 | Ok (_, cygcheck) -> cygcheck
                  | Error msg ->
                    OpamConsole.error_and_exit `Not_found
                      "Error while checking %sCygwin install (%s): %s"
@@ -1131,9 +1129,9 @@ let windows_checks ?cygwin_setup ?git_location config =
           (* We check that current install is good *)
           (match OpamSysInteract.Cygwin.cygroot_opt config with
            | Some cygroot ->
-             (match OpamSysInteract.Cygwin.check_install ~variant:true
+             (match OpamSysInteract.Cygwin.analyse_install
                       (OpamFilename.Dir.to_string cygroot) with
-             | Ok cygcheck ->
+             | Ok (_, cygcheck) ->
                OpamSysInteract.Cygwin.check_setup None;
                success cygcheck
              | Error err -> OpamConsole.error "%s" err; get_cygwin None)

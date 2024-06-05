@@ -183,6 +183,7 @@ users)
 ## opam-state
   * `OpamEnv.cygwin_non_shadowed_programs`: exposes the list of executables (not including git) which should always come from Cygwin [#6000 @dra27]
   * `opamSysInteract.Cygwin.install`: de-label `packages` argument [#6000 @dra27]
+  * `OpamSysInteract.Cygwin.check_install` renamed to `analyse_install` which now also returns whether the installation found was MSYS2 or Cygwin [#6000 @dra27]
 
 ## opam-solver
 

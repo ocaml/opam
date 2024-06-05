@@ -8,8 +8,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypes
-
 let log fmt = OpamConsole.log "XSYS" fmt
 
 (* Run commands *)
@@ -232,10 +230,15 @@ module Cygwin = struct
   let cygroot_opt config =
     cygbin_opt config
     >>| OpamFilename.dirname_dir
-  let get_opt = function
+  let cygroot config =
+    match cygroot_opt config with
     | Some c -> c
-    | None -> failwith "Cygwin install not found"
-  let cygroot config = get_opt (cygroot_opt config)
+    | None ->
+      match OpamSystem.resolve_command "cygcheck.exe" with
+      | Some cygcheck ->
+        OpamFilename.dirname_dir (OpamFilename.Dir.of_string (Filename.dirname cygcheck))
+      | None ->
+        failwith "Cygwin install not found"
 
   let internal_cygwin =
     let internal =
@@ -252,10 +255,10 @@ module Cygwin = struct
 
   let download_setupexe dst =
     let overwrite = true in
-    let checksum_file = OpamFilename.add_extension dst "sha512" in
+    let kind = `SHA512 in
     let current_checksum =
-      if OpamFilename.exists checksum_file then
-        Some (OpamHash.sha512 (OpamFilename.read checksum_file))
+      if OpamFilename.exists dst then
+        Some (OpamHash.compute ~kind (OpamFilename.to_string dst))
       else
         None
     in
@@ -285,7 +288,6 @@ module Cygwin = struct
       try Some (OpamHash.sha512 Re.(Group.get (exec re content) 1))
       with Not_found -> None
     in
-    let kind = `SHA512 in
     if OpamStd.Option.equal OpamHash.equal current_checksum checksum &&
        OpamFilename.exists dst &&
        OpamStd.Option.equal OpamHash.equal current_checksum
@@ -299,14 +301,6 @@ module Cygwin = struct
         OpamConsole.status_line "Downloading Cygwin setup from cygwin.com";
       OpamDownload.download_as ~overwrite ?checksum url_setupexe dst @@+
         fun () ->
-          OpamFilename.remove checksum_file;
-          let checksum =
-            match checksum with
-            | None -> OpamHash.compute ~kind (OpamFilename.to_string dst)
-            | Some sha512 -> sha512
-          in
-          OpamFilename.with_open_out_bin checksum_file (fun c ->
-            output_string c (OpamHash.contents checksum));
           OpamConsole.clear_status ();
           Done ()
     end
@@ -375,53 +369,89 @@ module Cygwin = struct
 
   let default_cygroot = "C:\\cygwin64"
 
-  let check_install ~variant path =
-    let is_cygwin =
-      if variant then OpamStd.Sys.is_cygwin_variant_cygcheck
-      else OpamStd.Sys.is_cygwin_cygcheck
-    in
-    if not (Sys.file_exists path) then
-      Error (Printf.sprintf "%s not found!" path)
-    else if Filename.basename path = "cygcheck.exe" then
-      (* We have cygcheck.exe path *)
-      let cygbin = Some (Filename.dirname path) in
-      if is_cygwin ~cygbin then
-        Ok (OpamFilename.of_string path)
+  let analysis_cache = Hashtbl.create 17
+
+  let analyse_install path =
+    let cygbin =
+      if not (Sys.file_exists path) then
+        Error (path ^ " not found!")
+      else if Filename.remove_extension (Filename.basename path)
+              = "cygcheck" then
+        (* path refers to cygcheck directly *)
+        Ok (Filename.dirname path)
+      else if not (Sys.is_directory path) then
+        Error (Printf.sprintf "%s neither a directory nor cygcheck.exe" path)
       else
-        Error
-          (Printf.sprintf
-             "%s found, but it is not from a Cygwin installation"
-             path)
-    else if not (Sys.is_directory path) then
-      Error (Printf.sprintf "%s is not a directory" path)
-    else
-    (* We have cygroot alike path *)
-    let bin = Filename.concat path "bin" in
-    let usr_bin = Filename.concat (Filename.concat path "usr") "bin" in
-    let check cygbin =
-      if Sys.file_exists cygbin then
-        if is_cygwin ~cygbin:(Some cygbin) then
-          Some (Left (OpamFilename.of_string
-                        (Filename.concat cygbin "cygcheck.exe")))
-        else
-          Some (Right cygbin)
-      else
-        None
+      (* path is a directory - search path, path\bin and path\usr\bin *)
+      let contains_cygcheck dir =
+        Sys.file_exists (Filename.concat dir "cygcheck.exe")
+      in
+      let tests = [
+        path;                     (* e.g. C:\cygwin64\bin / C:\msys64\usr\bin *)
+        Filename.concat path "bin";                       (* e.g. C:\cygwin64 *)
+        Filename.concat (Filename.concat path "usr") "bin"  (* e.g. C:\msys64 *)
+      ] in
+      match List.filter contains_cygcheck tests with
+      | [] ->
+        Error (Printf.sprintf
+                 "cygcheck.exe not found in %s, or subdirectories \
+                  bin and usr\\bin" path)
+      | _::_::_ ->
+        Error (Printf.sprintf
+                 "cygcheck.exe found in multiple places in %s which suggests \
+                  it is not a Cygwin/MSYS2 installation" path)
+      | [path] ->
+        Ok path
     in
-    (* We need to keep that order, to have a better error message *)
-    match check bin, check usr_bin with
-    | Some (Left cygcheck), _ | _, Some (Left cygcheck) ->
-      Ok cygcheck
-    | Some (Right cygbin), _ | _, Some (Right cygbin) ->
-      Error
-        (Printf.sprintf
-           "%s found, but it does not appear to be a Cygwin installation"
-           cygbin)
-    | _, None ->
-      Error
-        (Printf.sprintf
-           "cygcheck.exe not found in %s subdirectories bin or usr\bin"
-           path)
+    let identify dir =
+      try Hashtbl.find analysis_cache dir
+      with Not_found ->
+        let result =
+          let cygpath = Filename.concat dir "cygpath.exe" in
+          if not (Sys.file_exists cygpath) then
+            Error (Printf.sprintf
+                     "cygcheck.exe found in %s, but cygpath.exe was not" dir)
+          else
+          match OpamStd.Sys.get_windows_executable_variant
+                  ~search_in_first:dir cygpath with
+          | `Native | `Tainted _ ->
+            Error (Printf.sprintf
+                     "cygcheck.exe found in %s; but it does not appear \
+                      to be part of a Cygwin or MSYS2 installation" dir)
+          | (`Msys2 | `Cygwin) as kind ->
+            (* Check that pacman.exe is present with MSYS2: it is typically
+               not present with a Git-for-Windows Git Bash session, and as
+               these are basically unusable (they don't have all the required
+               tools, and we have no package manager with which to add them),
+               it's better to exclude them). *)
+            if kind = `Msys2
+            && not (Sys.file_exists (Filename.concat dir "pacman.exe")) then
+              Error (Printf.sprintf
+                       "cygcheck.exe found in %s, which appears to be from \
+                        an MSYS2 installation, but pacman.exe was not" dir)
+            else
+            let r =
+              OpamProcess.run
+                (OpamProcess.command ~name:(OpamSystem.temp_file "command")
+                   ~allow_stdin:false cygpath ["-w"; "--"; "/"])
+            in
+            OpamProcess.cleanup ~force:true r;
+            if OpamProcess.is_success r then
+              match r.OpamProcess.r_stdout with
+              | [] ->
+                Error ("Unexpected error translating \"/\" with " ^ cygpath)
+              | _::_ ->
+                let cygcheck =
+                  OpamFilename.of_string (Filename.concat dir "cygpath.exe")
+                in
+                Ok (kind, cygcheck)
+            else
+              Error ("Could not determine the root for " ^ cygpath)
+        in
+        Hashtbl.add analysis_cache dir result;
+        result
+    in
+    Result.bind cygbin identify
 
   (* Set setup.exe in the good place, ie in .opam/.cygwin/ *)
   let check_setup setup =
