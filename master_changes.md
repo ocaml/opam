@@ -98,6 +98,7 @@ users)
   * Pass --quiet-mode noinput to stop the user interrupting the setup GUI [#5830 @dra27]
   * Always pass --no-write-registry to the Cygwin installer, not just on first installation [#5995 @dra27]
   * os-distribution is now by default calculated from cygpath for Cygwin and MSYS2, instead of needing to be set by opam init [#6000 @dra27]
+  * Cygwin setup is now always downloaded and updated both for internal and external Cygwin installations [#6000 @dra27]
 
 ## Format upgrade
   * Handle init OCaml `sys-ocaml-*` eval variables during format upgrade from 2.0 -> 2.1 -> 2.2 [#5829 @dra27]

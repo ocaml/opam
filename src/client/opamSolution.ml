@@ -1189,6 +1189,8 @@ let install_sys_packages ~map_sysmap ~confirm env config sys_packages t =
     | `Ignore -> bypass t
     | `Quit -> give_up_msg (); OpamStd.Sys.exit_because `Aborted
   and print_command sys_packages =
+    if OpamSysPoll.os_distribution env = Some "cygwin" then
+      OpamSysInteract.Cygwin.check_setup None;
     let commands =
       OpamSysInteract.install_packages_commands ~env config sys_packages
       |> List.map (fun ((`AsAdmin c | `AsUser c), a) -> c::a)
@@ -1219,6 +1221,8 @@ let install_sys_packages ~map_sysmap ~confirm env config sys_packages t =
     | `Quit -> give_up ()
   and auto_install t sys_packages =
     try
+      if OpamSysPoll.os_distribution env = Some "cygwin" then
+        OpamSysInteract.Cygwin.check_setup None;
       OpamSysInteract.install ~env config sys_packages; (* handles dry_run *)
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->

@@ -252,7 +252,20 @@ module Cygwin = struct
 
   let download_setupexe dst =
     let overwrite = true in
+    let checksum_file = OpamFilename.add_extension dst "sha512" in
+    let current_checksum =
+      if OpamFilename.exists checksum_file then
+        Some (OpamHash.sha512 (OpamFilename.read checksum_file))
+      else
+        None
+    in
     let open OpamProcess.Job.Op in
+    log "Downloading Cygwin setup checksums";
+    if OpamConsole.disp_status_line () then
+      if OpamFilename.exists dst then
+        OpamConsole.status_line "Checking if Cygwin setup is up-to-date"
+      else
+        OpamConsole.status_line "Downloading Cygwin setup from cygwin.com";
     OpamFilename.with_tmp_dir_job @@ fun dir ->
     OpamDownload.download ~overwrite url_setupexe_sha512 dir @@+ fun file ->
     let checksum =
@@ -272,7 +285,31 @@ module Cygwin = struct
       try Some (OpamHash.sha512 Re.(Group.get (exec re content) 1))
       with Not_found -> None
     in
-    OpamDownload.download_as ~overwrite ?checksum url_setupexe dst
+    let kind = `SHA512 in
+    if OpamStd.Option.equal OpamHash.equal current_checksum checksum &&
+       OpamFilename.exists dst &&
+       OpamStd.Option.equal OpamHash.equal current_checksum
+         (Some (OpamHash.compute ~kind (OpamFilename.to_string dst))) then begin
+      log "Up-to-date";
+      OpamConsole.clear_status ();
+      Done ()
+    end else begin
+      log "Downloading setup-x86_64.exe";
+      if OpamConsole.disp_status_line () then
+        OpamConsole.status_line "Downloading Cygwin setup from cygwin.com";
+      OpamDownload.download_as ~overwrite ?checksum url_setupexe dst @@+
+        fun () ->
+          OpamFilename.remove checksum_file;
+          let checksum =
+            match checksum with
+            | None -> OpamHash.compute ~kind (OpamFilename.to_string dst)
+            | Some sha512 -> sha512
+          in
+          OpamFilename.with_open_out_bin checksum_file (fun c ->
+            output_string c (OpamHash.contents checksum));
+          OpamConsole.clear_status ();
+          Done ()
+    end
 
   let set_fstab_noacl =
     let orig = "binary," in
@@ -389,16 +426,21 @@ module Cygwin = struct
   (* Set setup.exe in the good place, ie in .opam/.cygwin/ *)
   let check_setup setup =
     let dst = cygsetup () in
-    if OpamFilename.exists dst then () else
-      (match setup with
-       | Some setup ->
-         log "Copying %s into %s"
-           (OpamFilename.to_string setup)
-           (OpamFilename.to_string dst);
-         OpamFilename.copy ~src:setup ~dst
-       | None ->
-         log "Donwloading setup exe";
-         OpamProcess.Job.run @@ download_setupexe dst)
+    match setup with
+    | Some setup ->
+      log "Copying %s into %s"
+          (OpamFilename.to_string setup)
+          (OpamFilename.to_string dst);
+      let sha512 =
+        OpamHash.compute ~kind:`SHA512 (OpamFilename.to_string setup)
+      in
+      OpamFilename.copy ~src:setup ~dst;
+      let checksum_file = OpamFilename.add_extension dst "sha512" in
+      OpamFilename.remove checksum_file;
+      OpamFilename.with_open_out_bin checksum_file @@ fun c ->
+        output_string c (OpamHash.contents sha512)
+    | None ->
+      OpamProcess.Job.run @@ download_setupexe dst
 end
 
 let yum_cmd = lazy begin
@@ -1066,8 +1108,9 @@ let install ?env config packages =
       commands
 
 let update ?(env=OpamVariable.Map.empty) config =
+  let family = family ~env () in
   let cmd =
-    match family ~env () with
+    match family with
     | Alpine -> Some (`AsAdmin "apk", ["update"])
     | Arch -> Some (`AsAdmin "pacman", ["-Sy"])
     | Centos -> Some (`AsAdmin (Lazy.force yum_cmd), ["makecache"])
@@ -1086,9 +1129,12 @@ let update ?(env=OpamVariable.Map.empty) config =
   in
   match cmd with
   | None ->
-    OpamConsole.warning
-      "Unknown update command for %s, skipping system update"
-      OpamStd.Option.Op.(OpamSysPoll.os_family env +! "unknown")
+    if family = Cygwin then
+      Cygwin.check_setup None
+    else
+      OpamConsole.warning
+        "Unknown update command for %s, skipping system update"
+        OpamStd.Option.Op.(OpamSysPoll.os_family env +! "unknown")
   | Some (cmd, args) ->
     try sudo_run_command ~env cmd args
     with Failure msg -> failwith ("System package update " ^ msg)
