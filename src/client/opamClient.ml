@@ -654,167 +654,168 @@ let is_git_for_windows git =
     end
   | _ -> false
 
-let git_for_windows_check =
-  if not Sys.win32 then fun ?git_location:_ () -> None else
-  fun ?git_location () ->
-    let header () = OpamConsole.header_msg "Git" in
-    let contains_git p =
-      OpamSystem.resolve_command ~env:[||] (Filename.concat p "git.exe")
-    in
-    let gits =
-      OpamStd.Env.get "PATH"
-      |> OpamStd.Sys.split_path_variable
-      |> OpamStd.List.filter_map (fun p ->
-          match contains_git p with
-          | Some git ->
-            Some (git, OpamSystem.bin_contains_bash p)
-          | None -> None)
-    in
-    let abort_action = "install Git for Windows." in
-    let gits, gfw_message, abort_action =
-      if gits = [] then
-        (* Git has not been found in PATH. See if it instead can be found in the
-           initial environment. This deals with the possibility that the user
-           has installed Git for Windows, but not restarted the terminal (so
-           PATH has not been updated) *)
-        let env = OpamStubs.get_initial_environment () in
-        match OpamSystem.resolve_command ~env:(Array.of_list env) "git" with
-        | Some git when is_git_for_windows git ->
-          [], Some "It looks as though Git for Windows has been installed but \
-                    the shell needs to be restarted. You may wish to abort and \
-                    re-run opam init from a fresh session.",
-              "restart your shell."
-        | _ ->
-          (* Git is neither in the current nor the initial PATH. There is one
-             further possibility: the user may have installed Git for Windows
-             but selected the option not to update the environment. The final
-             hint given searches the Windows Registry for both a system-wide
-             and user-specific installation and, if found, both displays a
-             warning suggesting that the machine be reconfigured to enable them
-             in PATH, but also gives the opportunity to use the git-location
-             mechanism to select it for opam's internal use. *)
-          let test_for_installation ((gits, gfw_message, abort_action) as acc) (hive, key) =
-            let process root =
-              let git_location = Filename.concat root "cmd" in
-              let git = Filename.concat git_location "git.exe" in
-              if OpamSystem.resolve_command ~env:[||] git <> None
-              && is_git_for_windows git then
-                let gits =
-                  (git, OpamSystem.bin_contains_bash git_location)::gits
-                and message, action =
-                  Some "It looks as though Git for Windows has been installed, \
-                        but configured not to put the git binary in your PATH. \
-                        You can either abort and reconfigure your environment \
-                        (or re-run the Git for Windows installer) to enable \
-                        this, or you can use the menu below to have opam use \
-                        this Git installation internally.",
-                  "reconfigure Git for Windows."
-                in
-                if message = None then
-                  gits, gfw_message, action
-                else
-                  gits, message, abort_action
+let git_for_windows ?git_location () =
+  let header () = OpamConsole.header_msg "Git" in
+  let contains_git p =
+    OpamSystem.resolve_command ~env:[||] (Filename.concat p "git.exe")
+  in
+  let gits =
+    OpamStd.Env.get "PATH"
+    |> OpamStd.Sys.split_path_variable
+    |> OpamStd.List.filter_map (fun p ->
+        match contains_git p with
+        | Some git ->
+          Some (git, OpamSystem.bin_contains_bash p)
+        | None -> None)
+  in
+  let abort_action = "install Git for Windows." in
+  let gits, gfw_message, abort_action =
+    if gits = [] then
+      (* Git has not been found in PATH. See if it instead can be found in the
+         initial environment. This deals with the possibility that the user
+         has installed Git for Windows, but not restarted the terminal (so
+         PATH has not been updated) *)
+      let env = OpamStubs.get_initial_environment () in
+      match OpamSystem.resolve_command ~env:(Array.of_list env) "git" with
+      | Some git when is_git_for_windows git ->
+        [], Some "It looks as though Git for Windows has been installed but \
+                  the shell needs to be restarted. You may wish to abort and \
+                  re-run opam init from a fresh session.",
+            "restart your shell."
+      | _ ->
+        (* Git is neither in the current nor the initial PATH. There is one
+           further possibility: the user may have installed Git for Windows
+           but selected the option not to update the environment. The final
+           hint given searches the Windows Registry for both a system-wide
+           and user-specific installation and, if found, both displays a
+           warning suggesting that the machine be reconfigured to enable them
+           in PATH, but also gives the opportunity to use the git-location
+           mechanism to select it for opam's internal use. *)
+        let test_for_installation ((gits, gfw_message, abort_action) as acc)
+                                  (hive, key) =
+          let process root =
+            let git_location = Filename.concat root "cmd" in
+            let git = Filename.concat git_location "git.exe" in
+            if OpamSystem.resolve_command ~env:[||] git <> None
+            && is_git_for_windows git then
+              let gits =
+                (git, OpamSystem.bin_contains_bash git_location)::gits
+              and message, action =
+                Some "It looks as though Git for Windows has been installed, \
+                      but configured not to put the git binary in your PATH. \
+                      You can either abort and reconfigure your environment \
+                      (or re-run the Git for Windows installer) to enable \
+                      this, or you can use the menu below to have opam use \
+                      this Git installation internally.",
+                "reconfigure Git for Windows."
+              in
+              if message = None then
+                gits, gfw_message, action
               else
-                acc
-            in
-            let key = Filename.concat key "GitForWindows" in
-            OpamStubs.readRegistry hive key "InstallPath" OpamStubsTypes.REG_SZ
-            |> OpamStd.Option.map_default process acc
+                gits, message, abort_action
+            else
+              acc
           in
-          let installations = [
-            (* Machine-wide installation *)
-            (OpamStubsTypes.HKEY_LOCAL_MACHINE, "SOFTWARE");
-            (* User-specific installation *)
-            (OpamStubsTypes.HKEY_CURRENT_USER, "Software");
-          ] in
-          List.fold_left test_for_installation (gits, None, abort_action) installations
-      else
-        gits, None, abort_action
+          let key = Filename.concat key "GitForWindows" in
+          OpamStubs.readRegistry hive key "InstallPath" OpamStubsTypes.REG_SZ
+          |> OpamStd.Option.map_default process acc
+        in
+        let installations = [
+          (* Machine-wide installation *)
+          (OpamStubsTypes.HKEY_LOCAL_MACHINE, "SOFTWARE");
+          (* User-specific installation *)
+          (OpamStubsTypes.HKEY_CURRENT_USER, "Software");
+        ] in
+        List.fold_left test_for_installation (gits, None, abort_action) installations
+    else
+      gits, None, abort_action
+  in
+  let get_git_location ?git_location () =
+    let bin =
+      match git_location with
+      | Some _ -> git_location
+      | None ->
+        OpamConsole.read "Please enter the path containing git.exe (e.g. C:\\Program Files\\Git\\cmd):"
     in
-    let get_git_location ?git_location () =
-      let bin =
-        match git_location with
-        | Some _ -> git_location
-        | None ->
-          OpamConsole.read "Please enter the path containing git.exe (e.g. C:\\Program Files\\Git\\cmd):"
-      in
-      match bin with
-      | None -> None
-      | Some git_location ->
-        match contains_git git_location, OpamSystem.bin_contains_bash git_location with
-        | Some _, false ->
-          OpamConsole.msg "Using Git from %s" git_location;
-          Some git_location
-        | Some _, true ->
-          OpamConsole.error
-            "A bash executable was found in %s, which will override \
-             Cygwin's bash. Please check your binary path."
-            git_location;
-          None
-        | None, _ ->
-          OpamConsole.error "No Git executable found in %s." git_location;
-          None
-    in
-    let rec loop ?git_location () =
-      match get_git_location ?git_location () with
-      | Some _ as git_location -> git_location
-      | None -> menu ()
-    and menu () =
-      let prompt () =
-        let options =
-          (`Default, "Use default Cygwin Git")
-          :: (List.filter_map (fun (git, bash) ->
-              if bash then None else
+    match bin with
+    | None -> None
+    | Some git_location ->
+      match contains_git git_location, OpamSystem.bin_contains_bash git_location with
+      | Some _, false ->
+        OpamConsole.msg "Using Git from %s" git_location;
+        Some git_location
+      | Some _, true ->
+        OpamConsole.error
+          "A bash executable was found in %s, which will override \
+           Cygwin's bash. Please check your binary path."
+          git_location;
+        None
+      | None, _ ->
+        OpamConsole.error "No Git executable found in %s." git_location;
+        None
+  in
+  let rec loop ?git_location () =
+    match get_git_location ?git_location () with
+    | Some _ as git_location -> git_location
+    | None -> menu ()
+  and menu () =
+    let prompt () =
+      let options =
+        (`Default, "Use default Cygwin Git")
+        :: (List.filter_map (fun (git, bash) ->
+            if bash then
+              None
+            else
               let bin = Filename.dirname git in
               Some (`Location bin, "Use found git in "^bin))
-              gits)
-          @ [
-            `Specify, "Enter the location of installed Git";
-            `Abort, ("Abort initialisation to " ^ abort_action);
-          ]
-        in
-        OpamStd.Option.iter (OpamConsole.warning "%s\n") gfw_message;
-        OpamConsole.menu "Which Git should opam use?"
-          ~default:`Default ~no:`Default ~options
+            gits)
+        @ [
+          `Specify, "Enter the location of installed Git";
+          `Abort, ("Abort initialisation to " ^ abort_action);
+        ]
       in
-      match prompt () with
-      | `Default -> None
-      | `Specify -> loop ()
-      | `Location git_location -> loop ~git_location ()
-      | `Abort ->
-        OpamConsole.note "Once your choosen Git installed, open a new PowerShell or Command Prompt window, and relaunch opam init.";
-        OpamStd.Sys.exit_because `Aborted
+      OpamStd.Option.iter (OpamConsole.warning "%s\n") gfw_message;
+      OpamConsole.menu "Which Git should opam use?"
+        ~default:`Default ~no:`Default ~options
     in
-    let git_location =
-      match git_location with
-      | Some (Right ()) -> None
-      | Some (Left git_location) ->
-        header ();
-        get_git_location ~git_location:(OpamFilename.Dir.to_string git_location) ()
-      | None ->
-        let git_found =
-          match OpamSystem.resolve_command "git" with
-          | None -> false
-          | Some git -> is_git_for_windows git
-        in
-        if not git_found && OpamStd.Sys.tty_out then
-          (header ();
-           OpamConsole.msg
-             "Cygwin Git is functional but can have credentials issues for private repositories, \
-              we recommend using:\n%s\n"
-             (OpamStd.Format.itemize (fun s -> s)
-                [ "Install via 'winget install Git.Git'";
-                  "Git for Windows can be downloaded and installed from https://gitforwindows.org" ]);
-           menu ())
-        else
-          None
-    in
-    OpamStd.Option.iter (fun _ ->
-        OpamConsole.msg
-          "You can change that later with \
-           'opam option \"git-location=C:\\A\\Path\\bin\"'")
-      git_location;
-    git_location
+    match prompt () with
+    | `Default -> None
+    | `Specify -> loop ()
+    | `Location git_location -> loop ~git_location ()
+    | `Abort ->
+      OpamConsole.note "Once your choosen Git installed, open a new PowerShell or Command Prompt window, and relaunch opam init.";
+      OpamStd.Sys.exit_because `Aborted
+  in
+  let git_location =
+    match git_location with
+    | Some (Right ()) -> None
+    | Some (Left git_location) ->
+      header ();
+      get_git_location ~git_location:(OpamFilename.Dir.to_string git_location) ()
+    | None ->
+      let git_found =
+        match OpamSystem.resolve_command "git" with
+        | None -> false
+        | Some git -> is_git_for_windows git
+      in
+      if not git_found && OpamStd.Sys.tty_out then
+        (header ();
+         OpamConsole.msg
+           "Cygwin Git is functional but can have credentials issues for private repositories, \
+            we recommend using:\n%s\n"
+           (OpamStd.Format.itemize (fun s -> s)
+              [ "Install via 'winget install Git.Git'";
+                "Git for Windows can be downloaded and installed from https://gitforwindows.org" ]);
+         menu ())
+      else
+        None
+  in
+  OpamStd.Option.iter (fun _ ->
+      OpamConsole.msg
+        "You can change that later with \
+         'opam option \"git-location=C:\\A\\Path\\bin\"'")
+    git_location;
+  git_location
 
 let windows_checks ?cygwin_setup ?git_location config =
   if (not (Unix.has_symlink ())) then begin
@@ -851,7 +852,12 @@ let windows_checks ?cygwin_setup ?git_location config =
         (OpamFilename.Dir.to_string gl_cli) ;
       Some (Left gl_cli)
   in
-  let git_location = git_for_windows_check ?git_location () in
+  let git_location =
+    if Sys.win32 then
+      git_for_windows ?git_location ()
+    else
+      None
+  in
   OpamCoreConfig.update ?git_location ();
   let config =
     match git_location with
