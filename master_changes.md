@@ -182,6 +182,7 @@ users)
 
 ## opam-state
   * `OpamEnv.cygwin_non_shadowed_programs`: exposes the list of executables (not including git) which should always come from Cygwin [#6000 @dra27]
+  * `opamSysInteract.Cygwin.install`: de-label `packages` argument [#6000 @dra27]
 
 ## opam-solver
 

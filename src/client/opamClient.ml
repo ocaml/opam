@@ -966,7 +966,7 @@ let windows_checks ?cygwin_setup ?git_location config =
        constraints in default_packages (although, with the current version of
        setup, and with the list of default_packages in OpamInitDefaults, this at
        present doesn't matter too much). *)
-    OpamSysInteract.Cygwin.install ~packages:(default_packages @ packages)
+    OpamSysInteract.Cygwin.install (default_packages @ packages)
   in
   let header () = OpamConsole.header_msg "Unix support infrastructure" in
 

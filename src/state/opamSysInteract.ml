@@ -320,7 +320,7 @@ module Cygwin = struct
       OpamFilename.with_open_out_bin_atomic fstab
         (fun oc -> Stdlib.output_string oc content)
 
-  let install ~packages =
+  let install packages =
     let open OpamProcess.Job.Op in
     let cygwin_root = internal_cygroot () in
     let cygwin_bin = cygwin_root / "bin" in

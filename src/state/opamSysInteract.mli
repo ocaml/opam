@@ -47,7 +47,7 @@ module Cygwin : sig
   val default_cygroot: string
 
   (* Install an internal Cygwin install, in <root>/.cygwin *)
-  val install: packages:OpamSysPkg.t list -> OpamFilename.t
+  val install: OpamSysPkg.t list -> OpamFilename.t
 
   (* [check_install ~variant path] checks a Cygwin install at [path]. It checks
      that 'path\cygcheck.exe', 'path\bin\cygcheck.exe', or
