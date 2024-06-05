@@ -1220,18 +1220,32 @@ module OpamSys = struct
     in
     aux 0
 
+  let is_external_cmd name =
+    let forward_to_back =
+      if Sys.win32 then
+        String.map (function '/' -> '\\' | c -> c)
+      else
+        fun x -> x
+    in
+    let name = forward_to_back name in
+    OpamString.contains_char name Filename.dir_sep.[0]
+
+  let resolve_in_path_t env name =
+    if not (Filename.is_relative name) || is_external_cmd name then
+      invalid_arg "OpamStd.Sys.resolve_in_path: bare command expected"
+    else
+    let path = split_path_variable (env_var env "PATH") in
+    List.filter_map (fun path ->
+        let candidate = Filename.concat path name in
+        (* TODO: use Sys.is_regular_file once opam requires OCaml >= 5.1 *)
+        match Sys.is_directory candidate with
+        | false -> Some candidate
+        | true | exception (Sys_error _) -> None)
+      path
+
   (* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
      makes unqualified commands absolute as a workaround. *)
   let resolve_command =
-    let is_external_cmd name =
-      let forward_to_back =
-        if Sys.win32 then
-          String.map (function '/' -> '\\' | c -> c)
-        else fun x -> x
-      in
-      let name = forward_to_back name in
-      OpamString.contains_char name Filename.dir_sep.[0]
-    in
     let check_perms =
       if Sys.win32 then fun f ->
         try (Unix.stat f).Unix.st_kind = Unix.S_REG
@@ -1278,24 +1292,16 @@ module OpamSys = struct
         else `Cmd cmd
       end else
       (* bare command, lookup in PATH *)
-      (* Following the shell sematics for looking up PATH, programs with the
-         expected name but not the right permissions are skipped silently.
-         Therefore, only two outcomes are possible in that case, [`Cmd ..] or
-         [`Not_found]. *)
-      let path = split_path_variable (env_var env "PATH") in
       let name =
         if Sys.win32 && not (Filename.check_suffix name ".exe") then
           name ^ ".exe"
         else name
       in
-      let possibles =
-        List.filter_map (fun path ->
-            let candidate = Filename.concat path name in
-            match Sys.is_directory candidate with
-            | false -> Some candidate
-            | true | exception (Sys_error _) -> None)
-          path
-      in
+      let possibles = resolve_in_path_t env name in
+      (* Following the shell sematics for looking up PATH, programs with the
+         expected name but not the right permissions are skipped silently.
+         Therefore, only two outcomes are possible in that case, [`Cmd ..] or
+         [`Not_found]. *)
       match List.find check_perms possibles with
       | cmdname -> `Cmd cmdname
       | exception Not_found ->
@@ -1307,6 +1313,12 @@ module OpamSys = struct
     fun ?env ?dir name ->
       let env = match env with None -> Env.raw_env () | Some e -> e in
       resolve env ?dir name
+
+  let resolve_in_path ?env name =
+    let env = match env with None -> Env.raw_env () | Some e -> e in
+    match resolve_in_path_t env name with
+    | result::_ -> Some result
+    | [] -> None
 
   let get_windows_executable_variant =
     if Sys.win32 then

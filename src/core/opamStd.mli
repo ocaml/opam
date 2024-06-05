@@ -553,6 +553,12 @@ module Sys : sig
   val resolve_command: ?env:string array -> ?dir:string -> string ->
     [ `Cmd of string | `Denied | `Not_found ]
 
+  (** Search for an arbitrary file in PATH. Unlike {!resolve_command}, no
+      transformations take place on the name in Windows (i.e. .exe, etc. is
+      never appended) and no executable check takes place. The name passed
+      must be a basename (no directory component). *)
+  val resolve_in_path: ?env:string array -> string -> string option
+
   (** For native Windows builds, returns [`Cygwin] if the command is a Cygwin-
       compiled executable, [`Msys2] if the command is a MSYS2-compiled
       executable, and [`Tainted of [ `Msys2 | `Cygwin ]] if the command links
