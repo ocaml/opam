@@ -133,7 +133,7 @@ val confirm:
     options are set.
     [no] is the option to choose otherwise, when non interactive, on [escape].
     [default] is the option to choose on an active empty input ("\n").
-    Max 9 options. *)
+    Max 35 options. *)
 val menu:
   ?default:'a -> ?unsafe_yes:'a -> ?yes:'a -> no:'a ->
   options:('a * string) list ->

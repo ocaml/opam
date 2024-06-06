@@ -964,9 +964,13 @@ let print_table ?cut oc ~sep table =
   List.iter (fun l -> print_line (cleanup_trailing l)) table
 
 let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
-  assert (List.length options < 10);
+  assert (List.length options < 36);
   let options_nums =
-    List.mapi (fun n (ans, _) -> ans, string_of_int (n+1)) options
+    let option_of_index n =
+      (* NOTE: 1..9 (starts at ASCII 49) & a..z (starts at ASCII 97) *)
+      (String.make 1 (char_of_int (if n < 9 then n+49 else n+97)))
+    in
+    List.mapi (fun n (ans, _) -> ans, option_of_index n) options
   in
   let nums_options = List.map (fun (a, n) -> n, a) options_nums in
   let rec prev_option a0 = function
