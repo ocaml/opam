@@ -93,6 +93,7 @@ val note : ('a, unit, string, unit) format4 -> 'a
 (** Message without prefix, reformat or newline, to stderr (useful to continue
     error messages without repeating "[ERROR]") *)
 val errmsg : ('a, unit, string, unit) format4 -> 'a
+val formatted_errmsg : ?indent:int -> ('a, unit, string, unit) format4 -> 'a
 
 val error_and_exit :
   OpamStd.Sys.exit_reason -> ('a, unit, string, 'b) format4 -> 'a

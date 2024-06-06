@@ -18,6 +18,7 @@ users)
 ## Global CLI
   * Fix a typo in the variable description returned by "opam var" [#5961 @jmid]
   * Out-of-the-box UTF-8 paged --help on Windows [#5970 @kit-ty-kate]
+  * ✘ Display lock hold/release messages on stderr instead of stdout [#5999 @kit-ty-kate - fix #5990]
 
 ## Plugins
 
@@ -180,3 +181,4 @@ users)
   * `OpamStubs.getVersionInfo`: on Windows, retrives the version information block of an executable/library [#5963 @dra27]
   * `OpamStubs.readRegistry`: on Windows, complements `OpamStubs.writeRegistry` [#5963 @dra27]
   * `OpamStubs.get_initial_environment`: on Windows, returns the pristine environment for new shells [#5963 @dra27]
+  * `OpamConsole`: Add `formatted_errmsg` [#5999 @kit-ty-kate]
