@@ -1219,7 +1219,8 @@ module OpamSys = struct
         let rec check_dll platform =
           match input_line c with
           | dll ->
-            let tdll = (*String.trim*) dll in
+            (* Guard against any risk of stray \r characters *)
+            let tdll = String.trim dll in
             if OpamString.ends_with ~suffix:"cygwin1.dll" tdll then
               if OpamString.starts_with ~prefix:"  " dll then
                 check_dll `Cygwin
