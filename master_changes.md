@@ -82,6 +82,7 @@ users)
   * [BUG] Rework the logic of := and =: so that an empty entry is correctly preserved on multiple updates [#5935 @dra27 - fix #5926]
   * [BUG] Fix incorrect reverting of `=+` and `=:` [#5935 @dra27 - fix #5926]
   * For the `Cygwin` internal operator, don't allow `make.exe` to become shadowed [#5996 @dra27]
+  * [BUG] Fix incorrect quoting rule for `PKG_CONFIG_PATH` [#5972 @dra27 - partial fix for #5923]
 
 ## Opamfile
 
