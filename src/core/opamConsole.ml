@@ -610,7 +610,13 @@ let note fmt =
       (OpamStd.Format.reformat ~start_column:7 ~indent:7 str)
   ) fmt
 
+let formatted_msg_aux ~indent out fmt =
+  Printf.ksprintf
+    (fun s -> print_message out "%s" (OpamStd.Format.reformat ?indent s))
+    fmt
+
 let errmsg fmt = print_message `stderr fmt
+let formatted_errmsg ?indent fmt = formatted_msg_aux ~indent `stderr fmt
 
 let error_and_exit reason fmt =
   Printf.ksprintf (fun str ->
@@ -619,11 +625,7 @@ let error_and_exit reason fmt =
   ) fmt
 
 let msg fmt = print_message `stdout fmt
-
-let formatted_msg ?indent fmt =
-  Printf.ksprintf
-    (fun s -> print_message `stdout "%s" (OpamStd.Format.reformat ?indent s))
-    fmt
+let formatted_msg ?indent fmt = formatted_msg_aux ~indent `stdout fmt
 
 let last_status = ref ""
 

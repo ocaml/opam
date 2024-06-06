@@ -1224,15 +1224,15 @@ let rec flock_update
            OpamConsole.error_and_exit `Locked
              "Another process has locked %s and non blocking mode enabled"
              file;
-         OpamConsole.formatted_msg
+         OpamConsole.formatted_errmsg
            "Another process has locked %s, waiting (%s to abort)... "
            file (if Sys.win32 then "CTRL+C" else "C-c");
          let rec lock_w_ignore_sig () =
            try Unix.lockf fd (unix_lock_op ~dontblock:false flag) 0;
-           with Sys.Break as e -> (OpamConsole.msg "\n"; raise e)
+           with Sys.Break as e -> (OpamConsole.errmsg "\n"; raise e)
               | Unix.Unix_error (Unix.EINTR,_,_) -> lock_w_ignore_sig ()
          in lock_w_ignore_sig ();
-         OpamConsole.msg "lock acquired.\n");
+         OpamConsole.errmsg "lock acquired.\n");
     lock.kind <- (flag :> lock_flag)
   | _ -> assert false
 
