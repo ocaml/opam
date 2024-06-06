@@ -984,6 +984,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
             let common =
               [ "--upgrade-also";
                 "--only-site";
+                "--no-write-registry";
                 "--no-version-check";
                 "--site"; Cygwin.mirror;
                 "--local-package-dir";
