@@ -80,6 +80,7 @@ users)
   * [BUG] Fix `x-env-path-rewrite` splitting of values when reverting [#5935 @dra27 - fix #5838]
   * [BUG] Rework the logic of := and =: so that an empty entry is correctly preserved on multiple updates [#5935 @dra27 - fix #5926]
   * [BUG] Fix incorrect reverting of `=+` and `=:` [#5935 @dra27 - fix #5926]
+  * For the `Cygwin` internal operator, don't allow `make.exe` to become shadowed [#5996 @dra27]
 
 ## Opamfile
 

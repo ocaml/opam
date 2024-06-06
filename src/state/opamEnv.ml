@@ -315,7 +315,7 @@ let apply_op_zip ~sepfmt var op arg (rl1,l2 as zip) =
     in
     let shadow_list =
       List.filter (contains_in arg)
-        ["bash.exe"; "sort.exe"; "tar.exe"; "git.exe"]
+        ["bash.exe"; "make.exe"; "sort.exe"; "tar.exe"; "git.exe"]
     in
     let rec loop acc = function
       | [] -> acc, [arg]
