@@ -104,6 +104,7 @@ users)
 
 ## Infrastructure
   * Ensure GNU coreutils available on the macOS 14 CI runners [#5938 @dra27]
+  * Update the opam-repository testing sha to include the new compiler packages in opam-repository [#5998 @dra27]
 
 ## Release scripts
   * Upgrade the OCaml compiler used for releases to 4.14.2 [#5976 @kit-ty-kate]
