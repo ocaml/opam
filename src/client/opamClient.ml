@@ -1004,10 +1004,10 @@ let cygwin_searches ?first () =
   in
   seq cygwin_searches
 
-let rec cygwin_menu header =
+let rec cygwin_menu ~bypass_checks header =
   let start = Unix.gettimeofday () in
   let test_mechanism (roots, count, mechanisms) search =
-    match test_mechanism header search with
+    match test_mechanism ~bypass_checks header search with
     | Some ((kind, `Root root) as mechanism) ->
       if OpamFilename.Dir.Set.mem root roots then
         roots, count, mechanisms
@@ -1068,6 +1068,9 @@ let rec cygwin_menu header =
              "Use tools found in PATH (%s installation at %s)"
              (string_of_kind kind) root)::options
         in
+        if bypass_checks then
+          options, path_option, None
+        else
         (* Check whether cygcheck is still available in the initial environment.
            This allows a warning to be displayed reminding the user to continue
            running opam from a Cygwin/MSYS2 shell that has been manually started,
@@ -1173,11 +1176,11 @@ let rec cygwin_menu header =
           Some (kind, `Root root)
         | Error msg ->
           OpamConsole.error "%s" msg;
-          cygwin_menu header
+          cygwin_menu ~bypass_checks header
     end
   | `Abort -> OpamStd.Sys.exit_because `Aborted
 
-and test_mechanism header = function
+and test_mechanism ~bypass_checks header = function
   | (`Internal _) as mechanism -> Some (`Cygwin, mechanism)
   | `Path ->
     let cygcheck =
@@ -1201,7 +1204,7 @@ and test_mechanism header = function
       | Error msg ->
         OpamConsole.error_and_exit `Not_found "%s" msg
     end
-  | `Menu -> cygwin_menu header
+  | `Menu -> cygwin_menu ~bypass_checks header
 
 let string_of_cygwin_setup = function
   | `internal pkgs ->
@@ -1264,7 +1267,8 @@ let initialise_msys2 root =
     | `Quit ->
       OpamStd.Sys.exit_because `Aborted
 
-let determine_windows_configuration ?cygwin_setup ?git_location config =
+let determine_windows_configuration ?cygwin_setup ?git_location
+                                    ~bypass_checks config =
   OpamStd.Option.iter
     (log "Cygwin (from CLI): %a" (slog string_of_cygwin_setup)) cygwin_setup;
   (* Check whether symlinks can be created. Developer Mode is not the only way
@@ -1368,6 +1372,13 @@ let determine_windows_configuration ?cygwin_setup ?git_location config =
      tweakable - can pacman / Cygwin setup be used to adjust setup
                  (--no-cygwin-setup disables this)
   *)
+  (* --bypass-checks => --no-cygwin-setup if nothing else was specified *)
+  let cygwin_setup =
+    if bypass_checks && cygwin_setup = None then
+      Some `no
+    else
+      cygwin_setup
+  in
   let mechanisms, cygwin_tweakable =
     match cygwin_setup with
     | Some (`internal packages) ->
@@ -1396,7 +1407,8 @@ let determine_windows_configuration ?cygwin_setup ?git_location config =
   (* Reduce mechanisms to a single mechanism (which may therefore display a
      menu). *)
   let kind, mechanism =
-    match OpamCompat.Seq.find_map (test_mechanism header) mechanisms with
+    let test_mechanism = test_mechanism ~bypass_checks header in
+    match OpamCompat.Seq.find_map test_mechanism mechanisms with
     | Some result -> result
     | None ->
       Lazy.force header;
@@ -1588,7 +1600,8 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
   let config = update_with_init_config config init_config in
   let config, mechanism, system_packages, msys2_check_root =
     if Sys.win32 then
-      determine_windows_configuration ?cygwin_setup ?git_location config
+      determine_windows_configuration ?cygwin_setup ?git_location
+                                      ~bypass_checks config
     else
       config, None, [], None
   in
@@ -1675,7 +1688,8 @@ let init
         in
         let config, mechanism, system_packages, msys2_check_root =
           if Sys.win32 then
-            determine_windows_configuration ?cygwin_setup ?git_location config
+            determine_windows_configuration ?cygwin_setup ?git_location
+                                            ~bypass_checks config
           else
             config, None, [], None
         in
