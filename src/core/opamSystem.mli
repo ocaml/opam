@@ -181,8 +181,8 @@ val make_command:
 (** a command is a list of words *)
 type command = string list
 
-(** Test whether a command exists in the environment, and returns it (resolved
-    if found in PATH) *)
+(** As {!OpamStd.Sys.resolve_command}, except the default for [~env] is
+    {!OpamProcess.default_env}. *)
 val resolve_command: ?env:string array -> ?dir:string -> string -> string option
 
 val bin_contains_bash: string -> bool
