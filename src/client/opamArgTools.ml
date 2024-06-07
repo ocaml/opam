@@ -89,14 +89,31 @@ let string_of_cli_option cli =
     Printf.sprintf "use --cli=%s"
       (bold @@ OpamCLIVersion.to_string cli)
 
+let string_of_subplatform (subplatform : subplatform) =
+  match subplatform with
+  | `windows -> "Windows"
+  | `unix -> "Unix"
+
 let update_doc_w_cli doc ~cli validity =
-  Printf.sprintf "%s%s"
-    (if validity.experimental then "$(b,Experimental). " else "")
-  @@ Printf.sprintf "%s%s"
-    (match validity.platform with
-     | `all -> ""
-     | `windows -> "$(b,Windows only). "
-     | `unix -> "$(b,Unix only). ")
+  let this_platform = if Sys.win32 then `windows else `unix in
+  let prefix =
+    match validity with
+    | {experimental = true; platform = `all; _} ->
+      "$(b,Experimental). "
+    | {experimental = true; platform = #subplatform as subplatform; _} ->
+      if (subplatform : subplatform) = this_platform then
+        "$(b,Experimental \\(" ^ string_of_subplatform subplatform ^ " only\\)). "
+      else
+        "$(b," ^ string_of_subplatform subplatform ^ " only \\(Experimental\\)). "
+    | {experimental = false; platform = #subplatform as subplatform; _} ->
+      if (subplatform : subplatform) = this_platform then
+        "(" ^ string_of_subplatform subplatform ^ " only). "
+      else
+        "$(b," ^ string_of_subplatform subplatform ^ " only). "
+    | {platform = `all; _} ->
+      ""
+  in
+  Printf.sprintf "%s%s" prefix
   @@ match validity with
   | { valid = c ; removed = None; _} ->
     if cli @< c then
@@ -200,24 +217,24 @@ let experimental_warning ?single = function
       (if single then "it" else "they")
       (if single then "it" else "them")
 
-let platform_error target platform =
+let platform_error target subplatform =
   let target = string_of_target target in
   let msg =
     Printf.sprintf "%s is available only on %s"
-      target (match platform with `windows -> "Windows" | `unix -> "Unix")
+      target (string_of_subplatform subplatform)
   in
   `Error (false, msg)
 
 let platform_msg ~string_of_options = function
   | [] -> None
-  | ((_,platform)::_) as errs ->
+  | ((_,subplatform)::_) as errs ->
     (* we can't have windows and unix error *)
     let states, _ = List.split errs in
     Some (Printf.sprintf
             "%s %s available only on %s."
             (string_of_options states)
             (match errs with [_] -> "is" | _ -> "are")
-            (match platform with `windows -> "Windows" | `unix -> "Unix"))
+            (string_of_subplatform subplatform))
 
 let platform_msg2 ~string_of_options x next =
   match platform_msg ~string_of_options x with
