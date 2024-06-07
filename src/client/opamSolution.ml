@@ -1146,34 +1146,11 @@ let get_depexts ?(force=false) ?(recover=false) t packages =
   print_depext_msg (avail, nf);
   avail
 
-let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
-  let confirm =
-    confirm && not (OpamSysInteract.Cygwin.is_internal t.switch_global.config)
-  in
-  let sys_packages =
-    get_depexts ~force:force_depext ~recover:force_depext t packages
-  in
-  let env = t.switch_global.global_variables in
-  let config = t.switch_global.config in
-  let map_sysmap f t =
-    let sys_packages =
-      OpamPackage.Set.fold (fun nv sys_map ->
-          match OpamPackage.Map.find_opt nv sys_map with
-          | Some status ->
-            OpamPackage.Map.add
-              nv { status with OpamSysPkg.s_available =
-                                 f status.OpamSysPkg.s_available }
-              sys_map
-          | None -> sys_map)
-        packages
-        (Lazy.force t.sys_packages)
-    in
-    { t with sys_packages = lazy sys_packages }
-  in
+let install_sys_packages ~map_sysmap ~confirm env config sys_packages t =
   let rec entry_point t sys_packages =
     if OpamClientConfig.(!r.fake) then
       (print_command sys_packages; t)
-    else if OpamFile.Config.depext_run_installs t.switch_global.config then
+    else if OpamFile.Config.depext_run_installs config then
       if confirm then menu t sys_packages else auto_install t sys_packages
     else
       manual_install t sys_packages
@@ -1296,6 +1273,35 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     OpamConsole.msg "\n";
     entry_point t sys_packages
   with Sys.Break as e -> OpamStd.Exn.finalise e give_up_msg
+
+let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
+  let map_sysmap f t =
+    let sys_packages =
+      OpamPackage.Set.fold (fun nv sys_map ->
+          match OpamPackage.Map.find_opt nv sys_map with
+          | Some status ->
+            OpamPackage.Map.add
+              nv { status with OpamSysPkg.s_available =
+                                 f status.OpamSysPkg.s_available }
+              sys_map
+          | None -> sys_map)
+        packages
+        (Lazy.force t.sys_packages)
+    in
+    { t with sys_packages = lazy sys_packages }
+  in
+  let confirm =
+    confirm && not (OpamSysInteract.Cygwin.is_internal t.switch_global.config)
+  in
+  let sys_packages =
+    get_depexts ~force:force_depext ~recover:force_depext t packages
+  in
+  let env = t.switch_global.global_variables in
+  let config = t.switch_global.config in
+  install_sys_packages ~map_sysmap ~confirm env config sys_packages t
+
+let install_sys_packages ~confirm =
+  install_sys_packages ~map_sysmap:(fun _ () -> ()) ~confirm
 
 (* Apply a solution *)
 let apply ?ask t ~requested ?print_requested ?add_roots
