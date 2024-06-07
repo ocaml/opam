@@ -3,6 +3,164 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.2.0~beta3:
+* (+) New option `opam init --cygwin-extra-packages=CYGWIN_PKGS
+  --cygwin-internal-install`, to specify additional packages for internal Cygwin
+  [#5930, #5964 @moyodiallo - fix #5834]
+* Overhaul Windows `opam init` to determine Unix and Git configuration
+  simultaneously, and to detect from Cygwin, Git and MSYS2 from all the known
+  package managers and shells [#6000 @dra27]
+* Redirect the opam root to `C:\opamroot\opam-xxx` when the opam root contains
+  spaces on Windows [#5457 @rjbou @dra27]
+* Out-of-the-box UTF-8 paged `--help` on Windows [#5970 @kit-ty-kate]
+* Sereval fixes were done related to environment reverting:
+  * Fix reverting of environment variables, principally on Windows
+    [#5935 @dra27 fix #5838]
+  * Fix splitting environment variables [#5935 @dra27]
+  * When opam creates an empty variable then appends/prepends a value, ensure
+    no additional separator is added [#5935 @dra27 - fix #5925]
+  * Fix `x-env-path-rewrite` splitting of values when reverting
+    [#5935 @dra27 - fix #5838]
+  * Rework the logic of := and =: so that an empty entry is correctly preserved
+    on multiple updates [#5935 @dra27 - fix #5926]
+  * Fix incorrect reverting of `=+` and `=:` [#5935 @dra27 - fix #5926]
+* Fix a performance regression when calling `opam install --deps-only` on an
+  already installed package [#5908 @kit-ty-kate - fix #5817]
+* Fixed some issues that could appear when upgrading from previous versions of
+  opam:
+  * Handle init OCaml `sys-ocaml-*` eval variables during format upgrade from
+    2.0 -> 2.1 -> 2.2 [#5829 @dra27]
+  * Reset the "jobs" config variable when upgrading from opam 2.1 to 2.2,
+    instead of 2.0 to 2.1 [#5904 @kit-ty-kate - fix #5816]
+* Fixes various issues with opam tree and opam why:
+  * Fix `opam tree --with-*` assigning the `with-*` variables to unrequested
+    packages [#5919 @kit-ty-kate @rjbou - fix #5755]
+  * Fix combinations of `opam tree --with-*` and `--no-switch`
+    [#5919 @kit-ty-kate @rjbou - fix #5920]
+* Allow to parse opam 2.1 switch import files containing extra-files
+  [#5943 @kit-ty-kate - fix #5941]
+* Fix download URLs containing invalid characters on Windows
+  (e.g. the ? character in `?full_index=1`) [#5921 @dra27]
+* Fix extraction of tarballs on Windows which contain symlinks both when those
+  symlinks can't be created or if they point to files which don't exist
+  [#5953 @dra27]
+* Stop hiding the Windows specific arguments of opam init on non-Windows
+  platforms [#6003 @rjbou @kit-ty-kate @dra27]
+* Various fixes for Windows:
+  * Harden the CRLF stripping when using cygcheck [#5993 @dra27]
+  * Fix curl failures - the progress meter can become interleaved with the
+    status code on Windows [#5984 @dra27 @kit-ty-kate @rjbou]
+  * Improve the Git-for-Windows menu shown during opam init
+    [#5963 @dra27 - fix #5835]
+  * For the `Cygwin` internal operator, don't allow `make.exe` to become
+    shadowed [#5996 @dra27]
+  * Fix incorrect quoting rule for `MANPATH` [#5972 @dra27]
+  * Do not special case the rewriting rule for the PKG_CONFIG_PATH environment
+    variable [#6002 @kit-ty-kate - fix #5923]
+  * Pass --symlink-type native to Cygwin setup if symlinks are available
+    [#5830 @dra27]
+  * Pass --no-version-check to Cygwin setup (suppresses a message box if setup
+    needs updating) [#5830 @dra27]
+  * Pass --quiet-mode noinput to stop the user interrupting the setup GUI
+    [#5830 @dra27]
+  * Always pass --no-write-registry to the Cygwin installer, not just on first
+    installation [#5995 @dra27]
+  * Fail if `--git-location` points to a directory not containing git
+    [#6000 @dra27]
+  * os-distribution is now by default calculated from cygpath for Cygwin and
+    MSYS2, instead of needing to be set by opam init [#6000 @dra27]
+  * Cygwin setup is now always downloaded and updated both for internal and
+    external Cygwin installations [#6000 @dra27]
+* Display extractions in the status bar [#5977 @dra27]
+* Display a note when reloading a repository [#5977 @kit-ty-kate]
+* Various other fixes:
+  * Fix rounding error when displaying the timestamp in debug mode
+    [#5912 @kit-ty-kate - fix #5910]
+  * Relaxed warning 41 in opam lint to not trigger on uses of package variables
+    which are guarded by a package:installed filter [#5927 @dra27]
+  * Move last-env `OPAM_LAST_ENV` files outside the switch to be in `$OPAMROOT`
+    [#5962 @moyodiallo - fix #5823]
+  * Fix a typo in the variable description returned by "opam var" [#5961 @jmid]
+  * (*) Display lock hold/release messages on stderr instead of stdout
+    [#5999 @kit-ty-kate - fix #5990]
+  * Stop triggering "Undefined filter variable variable" debug warning for
+    `?variable` [#5983 @dra27]
+* Remove unused/untested Makefile targets lib-pkg [#5494 @kit-ty-kate]
+* Upgrade vendored packages (cmdliner 1.3.0, ocaml 4.14.2)
+  [#5970 #5976 @kit-ty-kate]
+* Upgrade the opam-root-version to 2.2~beta [#5904 @kit-ty-kate]
+* Improve and extend the tests
+  [#5919 #5919 #5904 #5925 #5935 #5926 #5935 #5927 @rjbou @dra27]
+* Improve the benchmarks [#5909 @kit-ty-kate]
+* Improve the test infrastructure [#5935 #5938 #5998 @dra27]
+* API changes:
+
+
+  * `OpamClient.init` and `OpamClient.reinit`: now can have additional cygwin
+    packages to install [#5930 @moyodiallo]
+  * `OpamClientConfig.opam_init`: add `original_root_dir` argument that
+     contains the original root directory before redirection [#5457 @rjbou]
+  * `OpamClientConfig.opam_init`: add `root_from` argument that contains the
+     origin of used root[#5457 @dra27]
+  * `OpamInitDefaults.required_packages_for_cygwin`: no longer includes git; as
+    the need to add that is computed in `OpamClient` [#6000 @dra27]
+  * `OpamSolution`: expose `print_depext_msg` [#5994 @dra27]
+  * `OpamSolution`: extract `install_sys_packages` from
+    `OpamSolution.install_depexts` [#5994 @dra27]
+  * `OpamDownload.download_command`: separate output from stdout and stderr
+    [#5984 @kit-ty-kate]
+  * `OpamEnv.cygwin_non_shadowed_programs`: exposes the list of executables
+    (not including git) which should always come from Cygwin [#6000 @dra27]
+  * `OpamStateConfig.r`, `OpamStateConfig.init`: add `original_root_dir` field
+    to config record and argument that contains the original root directory
+    before redirection [#5457 @rjbou]
+  * `OpamStateConfig.r`, `OpamStateConfig.init`: add `root_from` field to
+    config record and argument that contains the origin of used root
+    [#5457 @dra27]
+  * `OpamSysInteract.Cygwin.check_install` renamed to `analyse_install` which
+    now also returns whether the installation found was MSYS2 or Cygwin
+    [#6000 @dra27]
+  * `OpamSysInteract.Cygwin.install`: de-label `packages` argument
+    [#6000 @dra27]
+  * `OpamFilter.fold_down_left`: correct handling of `FDefined` and `FUndef`
+    [#5983 @dra27]
+  * `OpamFilter.map_up`: correct handling of `FDefined` [#5983 @dra27]
+  * `OpamPath`: add `redirected` the file name of redirected opam root
+    [#5457 @rjbou]
+  * `OpamPath`: remove `OpamPath.Switch.last_env` function in favor to
+    `OpamPath.last_env` as the files are no more stored in switch directory
+    [#5962 @moyodiallo - fix #5823]
+  * `OpamCompat`: add `Seq.find_map` from OCaml 4.14 [#6000 @dra27]
+  * `OpamConsole.menu` now supports up to 35 menu items [#5992 @dra27]
+  * `OpamConsole`: Add `formatted_errmsg` [#5999 @kit-ty-kate]
+  * `OpamConsole.Symbols`: add `collision` symbol [#5457 @dra27]
+  * `OpamProcess.run_background`: name the stderr output file have the .err
+    extension when cmd_stdout is given [#5984 @kit-ty-kate]
+  * `OpamStd.String`: add `split_quoted` that preserves quoted separator
+    [#5935 @dra27]
+  * `OpamStd.Sys.resolve_command`: extracted the logic from
+    `OpamSystem.resolve_command`, without the default environment handling from
+    OpamProcess. [#5991 @dra27]
+  * `OpamStd.Sys.resolve_in_path`: split the logic of
+    `OpamStd.Sys.resolve_command` to allow searching for an arbitrary file in the
+    search path [#5991 @dra27]
+  * `OpamStd.Sys.{get_windows_executable_variant,get_cygwin_variant,
+    is_cygwin_variant}`: renamed `~cygbin` to `?search_in_path` with a change in
+    semantics so that it acts as though the directory was simply the first entry
+    in PATH [#6000 @dra27]
+  * `OpamStubs.enumRegistry`: on Windows, retrieves all the values of a given
+    type from a registry key, with their names [#6000 @dra27]
+  * `OpamStubs.getVersionInfo`: on Windows, retrieves the version information
+    block of an executable/library [#5963 @dra27]
+  * `OpamStubs.get_initial_environment`: on Windows, returns the pristine
+    environment for new shells [#5963 @dra27]
+  * `OpamStubs.readRegistry`: on Windows, complements `OpamStubs.writeRegistry`
+    [#5963 @dra27]
+  * `OpamSystem.copy_dir` and `OpamSystem.mv` may display a warning on Windows
+    if an invalid symlink (e.g. an LXSS Junction) is found [#5953 @dra27]
+  * `OpamSystem`: add `mk_unique_dir` that returns an unique directory name
+    as `mk_temp_dir` but not in temporary directory [#5457 @dra27]
+
 2.2.0~beta2:
 * Changes necessary to be able to open the PR adding support for Windows in
   opam-repository:
