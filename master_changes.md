@@ -19,6 +19,7 @@ users)
   * Fix a typo in the variable description returned by "opam var" [#5961 @jmid]
   * Out-of-the-box UTF-8 paged --help on Windows [#5970 @kit-ty-kate]
   * ✘ Display lock hold/release messages on stderr instead of stdout [#5999 @kit-ty-kate - fix #5990]
+  * stop hiding the Windows specific arguments of opam init on non-Windows platforms [#6003 @rjbou @kit-ty-kate]
 
 ## Plugins
 
