@@ -16,12 +16,16 @@ let cli2_0 = OpamCLIVersion.of_string "2.0"
 let cli2_1 = OpamCLIVersion.of_string "2.1"
 let cli2_2 = OpamCLIVersion.of_string "2.2"
 
+type subplatform = [ `windows | `unix ]
+type platform = [ `all | subplatform ]
+
 type 'b validity_and_content = {
   valid: OpamCLIVersion.t;
   removed: (OpamCLIVersion.t * string option) option;
   content: 'b;
   default: bool;
   experimental: bool;
+  platform: platform;
 }
 
 type 'a content = Valid of 'a | Removed of 'a
@@ -34,6 +38,7 @@ let default_validity =
     content = ();
     default = false;
     experimental = false;
+    platform = `all;
   }
 
 
@@ -47,10 +52,11 @@ let contented_validity (validity:validity) content : 'a contented_validity =
 let is_original_cli validity =
   OpamCLIVersion.compare validity.valid cli2_0 = 0
 
-let cli_from ?(experimental=false) valid =
+let cli_from ?(platform=`all) ?(experimental=false) valid =
   { default_validity with
     valid;
     experimental;
+    platform;
   }
 let cli_between ?option since ?replaced
     removal =
@@ -83,9 +89,31 @@ let string_of_cli_option cli =
     Printf.sprintf "use --cli=%s"
       (bold @@ OpamCLIVersion.to_string cli)
 
+let string_of_subplatform (subplatform : subplatform) =
+  match subplatform with
+  | `windows -> "Windows"
+  | `unix -> "Unix"
+
 let update_doc_w_cli doc ~cli validity =
-  Printf.sprintf "%s%s"
-    (if validity.experimental then "$(b,Experimental). " else "")
+  let this_platform = if Sys.win32 then `windows else `unix in
+  let prefix =
+    match validity with
+    | {experimental = true; platform = `all; _} ->
+      "$(b,Experimental). "
+    | {experimental = true; platform = #subplatform as subplatform; _} ->
+      if (subplatform : subplatform) = this_platform then
+        "$(b,Experimental \\(" ^ string_of_subplatform subplatform ^ " only\\)). "
+      else
+        "$(b," ^ string_of_subplatform subplatform ^ " only \\(Experimental\\)). "
+    | {experimental = false; platform = #subplatform as subplatform; _} ->
+      if (subplatform : subplatform) = this_platform then
+        "(" ^ string_of_subplatform subplatform ^ " only). "
+      else
+        "$(b," ^ string_of_subplatform subplatform ^ " only). "
+    | {platform = `all; _} ->
+      ""
+  in
+  Printf.sprintf "%s%s" prefix
   @@ match validity with
   | { valid = c ; removed = None; _} ->
     if cli @< c then
@@ -189,28 +217,62 @@ let experimental_warning ?single = function
       (if single then "it" else "they")
       (if single then "it" else "them")
 
+let platform_error target subplatform =
+  let target = string_of_target target in
+  let msg =
+    Printf.sprintf "%s is available only on %s"
+      target (string_of_subplatform subplatform)
+  in
+  `Error (false, msg)
+
+let platform_msg ~string_of_options = function
+  | [] -> None
+  | ((_,subplatform)::_) as errs ->
+    (* we can't have windows and unix error *)
+    let states, _ = List.split errs in
+    Some (Printf.sprintf
+            "%s %s available only on %s."
+            (string_of_options states)
+            (match errs with [_] -> "is" | _ -> "are")
+            (string_of_subplatform subplatform))
+
+let platform_msg2 ~string_of_options x next =
+  match platform_msg ~string_of_options x with
+  | None -> next
+  | Some x -> x ^ "\n" ^ next
+
 (* Cli version check *)
 let cond_new cli c = cli @< c
 let cond_removed cli removal = cli @>= removal
 
-let check_cli_validity_t ~newer ~default_cli ~older ~valid
+let platform_validity validity =
+  match validity.platform with
+  | `windows when not Sys.win32 -> Some `windows
+  | `unix when Sys.win32 -> Some `unix
+  | `all | #subplatform -> None
+
+let check_cli_validity_t ~platform ~newer ~default_cli ~older ~valid
     ?(cond=fun x -> x) cli validity =
   let exp = cond validity.experimental in
-  match validity with
-  | { removed = None ; valid = c; _ } when cond (cond_new cli c) ->
-    newer c
-  | { removed = Some (removal, instead); default = true; _ }
-    when (snd cli = `Default)
-      && OpamCLIVersion.default < removal
-      && cond true ->
-    default_cli removal instead
-  | { removed = Some (removal, instead); _ }
-    when cond (cond_removed cli removal) ->
-    older ~exp removal instead
-  | _ -> valid ~exp ()
+  match platform_validity validity with
+  | Some err when cond true -> platform err
+  | None | Some _ ->
+    match validity with
+    | { removed = None ; valid = c; _ } when cond (cond_new cli c) ->
+      newer c
+    | { removed = Some (removal, instead); default = true; _ }
+      when (snd cli = `Default)
+        && OpamCLIVersion.default < removal
+        && cond true ->
+      default_cli removal instead
+    | { removed = Some (removal, instead); _ }
+      when cond (cond_removed cli removal) ->
+      older ~exp removal instead
+    | _ -> valid ~exp ()
 
 let check_cli_validity cli validity ?cond elem targets =
   check_cli_validity_t cli validity ?cond
+    ~platform:(platform_error targets)
     ~newer:(fun c ->
         newer_flag_error cli c targets)
     ~default_cli:(fun removal instead ->
@@ -228,19 +290,22 @@ let term_cli_check ~check arg =
 
 (** Helpers for mk_vflag_all & mk_enum_opt_all *)
 let preprocess_validity_for_all cli find flags elems =
-  List.fold_left (fun (newer_cli,older_cli,valid) elem ->
+  List.fold_left (fun (newer_cli,older_cli,platform,valid) elem ->
       match OpamStd.List.find_opt (find elem) flags with
       | Some (validity, flags, _) ->
         check_cli_validity_t cli validity
-          ~newer:(fun c -> (flags, c)::newer_cli, older_cli, valid)
+          ~platform:(fun err ->
+              newer_cli, older_cli, (flags, err)::platform, valid)
+          ~newer:(fun c -> (flags, c)::newer_cli, older_cli, platform, valid)
           ~default_cli:(fun _ _ ->
-              newer_cli, older_cli, (elem, flags, false)::valid)
+              newer_cli, older_cli, platform, (elem, flags, false)::valid)
           ~older:(fun ~exp removal instead ->
-              newer_cli, (flags, (removal, instead), exp)::older_cli, valid)
+              newer_cli, (flags, (removal, instead), exp)::older_cli,
+              platform, valid)
           ~valid:(fun ~exp () ->
-              newer_cli, older_cli, (elem, flags, exp)::valid)
-      | None -> newer_cli, older_cli, valid)
-    ([],[],[]) elems
+              newer_cli, older_cli, platform, (elem, flags, exp)::valid)
+      | None -> newer_cli, older_cli, platform, valid)
+    ([],[],[],[]) elems
 
 let split_clis_all l =
   List.fold_left (fun (strs, clis, exps) (s,c,e) ->
@@ -311,7 +376,7 @@ let mk_vflag_all ~cli ~section ?(default=[]) flags =
       flags
   in
   let check selected =
-    let newer_cli, older_cli, valid =
+    let newer_cli, older_cli, platform, valid =
       preprocess_validity_for_all cli (fun elem (validity, _, _) ->
           validity.content = elem) flags selected
     in
@@ -339,15 +404,21 @@ let mk_vflag_all ~cli ~section ?(default=[]) flags =
       experimental_warning experimentals;
       `Ok elems
     in
-    match newer_cli, older_cli with
-    | [], [] -> valid_elems valid
-    | [flags, c], [] ->
+    match newer_cli, older_cli, platform with
+    | [], [], [] -> valid_elems valid
+    | [flags, c], [], [] ->
       newer_flag_error cli c (Flags flags)
-    | [], [flags, (c, instead), exp] ->
+    | [], [flags, (c, instead), exp], [] ->
       older_flag_error ~exp cli c instead (Flags flags)
-    | _::_, []->
+    | [], [], [flags, platform_err] ->
+      platform_error (Flags flags) platform_err
+    | [], [], platform ->
+      let msg =  platform_msg2 ~string_of_options platform "" in
+      `Error (false, msg)
+    | _::_, [], platform ->
       let options, clis = List.split newer_cli in
       let msg =
+        platform_msg2 ~string_of_options platform @@
         Printf.sprintf
           "%s can only be used with at least version %s of the opam \
            CLI, but version %s has been requested."
@@ -356,7 +427,7 @@ let mk_vflag_all ~cli ~section ?(default=[]) flags =
           (string_of_sourced_cli cli)
       in
       `Error (false, msg)
-    | [], _::_->
+    | [], _::_, platform ->
       let options, clis, experimentals = split_clis_all older_cli in
       let clis = List.split clis |> fst in
       let in_all =
@@ -365,6 +436,7 @@ let mk_vflag_all ~cli ~section ?(default=[]) flags =
         | _ -> None
       in
       let msg =
+        platform_msg2 ~string_of_options platform @@
         Printf.sprintf
           "%s %swere all removed by version %s of the opam CLI, \
            but version %s has been requested.%s"
@@ -377,11 +449,12 @@ let mk_vflag_all ~cli ~section ?(default=[]) flags =
           (older_experimental_msg (lstring_of_options experimentals))
       in
       `Error (false, msg)
-    | _,_ ->
+    | _,_, platform ->
       let newer, nclis = List.split newer_cli in
       let older, rclis_ist, o_experimentals = split_clis_all older_cli in
       let rclis, insteads = List.split rclis_ist in
       let msg =
+        platform_msg2 ~string_of_options platform @@
         if List.for_all ((<>) None) insteads then
           Printf.sprintf
             "This combination of options is not possible: %s require \
@@ -447,7 +520,7 @@ let mk_enum_opt_all ~cli validity ~section flags value states doc =
     match flag_validity with
     | `Error _ -> flag_validity
     | `Ok elems ->
-      let newer_cli, older_cli, valid =
+      let newer_cli, older_cli, platform, valid =
         preprocess_validity_for_all cli (fun elem (_,_,v) -> v = elem)
           states elems
       in
@@ -478,21 +551,38 @@ let mk_enum_opt_all ~cli validity ~section flags value states doc =
             [to_str experimentals];
         `Ok elems
       in
-      match newer_cli, older_cli, valid with
-      | [], [], elems -> valid_flags elems
-      | [str, c], [], [] ->
+      let final elems platform_err msg =
+        if elems = [] then
+          let msg =
+            match platform_err with
+            | None -> msg
+            | Some msg' -> msg' ^ "\n" ^ msg
+          in
+          `Error (false, msg)
+        else
+          (OpamStd.Option.iter (OpamConsole.warning "%s") (platform_err);
+           OpamConsole.warning "%s" msg;
+           valid_flags elems)
+      in
+      match newer_cli, older_cli, platform, valid with
+      | [], [], [], elems -> valid_flags elems
+      | [str, c], [], [], [] ->
         newer_flag_error cli c (Verbatim (to_str [str]))
-      | [str, c], [], elems ->
+      | [str, c], [], [], elems ->
         (OpamConsole.warning "%s"
            (newer_flag_msg cli c (to_str [str]));
          valid_flags elems)
-      | [], [str, (c, instead), exp], [] ->
+      | [], [str, (c, instead), exp], [], [] ->
         older_flag_error ~exp cli c instead (Verbatim (to_str [str]))
-      | [], [str, (c, instead), exp], elems ->
+      | [], [], [str, platform_err], [] ->
+        platform_error (Verbatim (to_str [str])) platform_err
+      | [], [str, (c, instead), exp], platform, elems ->
+        OpamStd.Option.iter (OpamConsole.warning "%s")
+          (platform_msg ~string_of_options:to_str platform);
         (OpamConsole.warning "%s"
            (older_flag_msg ~exp cli c instead (to_str [str]));
          valid_flags elems)
-      | _::_, [], elems ->
+      | _::_, [], platform, elems ->
         let states, clis = List.split newer_cli in
         let msg =
           Printf.sprintf
@@ -501,9 +591,8 @@ let mk_enum_opt_all ~cli validity ~section flags value states doc =
             (to_str states) (max_cli clis)
             (string_of_sourced_cli cli)
         in
-        if elems = [] then `Error (false, msg) else
-          (OpamConsole.warning "%s" msg; valid_flags elems)
-      | [], _::_, elems->
+        final elems (platform_msg ~string_of_options:to_str platform) msg
+      | [], _::_, platform, elems->
         let states, clis, experimentals = split_clis_all older_cli in
         let clis = List.split clis |> fst in
         let in_all =
@@ -523,9 +612,8 @@ let mk_enum_opt_all ~cli validity ~section flags value states doc =
             (string_of_sourced_cli cli)
             (older_experimental_msg ([to_str experimentals]))
         in
-        if elems = [] then `Error (false, msg) else
-          (OpamConsole.warning "%s" msg; valid_flags elems)
-      | _, _, elems ->
+        final elems (platform_msg ~string_of_options:to_str platform) msg
+      | _, _, platform, elems ->
         let newer, nclis = List.split newer_cli in
         let older, rclis_ist, o_experimentals = split_clis_all older_cli in
         let rclis, insteads = List.split rclis_ist in
@@ -555,8 +643,7 @@ let mk_enum_opt_all ~cli validity ~section flags value states doc =
           Printf.sprintf "%s%s" msg
             (older_experimental_msg ([to_str o_experimentals]))
         in
-        if elems = [] then `Error (false, msg) else
-          (OpamConsole.warning "%s" msg; valid_flags elems)
+        final elems (platform_msg ~string_of_options:to_str platform) msg
   in
   let states = List.map (fun (_, s, v) -> s,v) states in
   term_cli_check ~check Arg.(opt_all (enum states) [] & doc)

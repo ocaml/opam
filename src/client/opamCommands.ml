@@ -304,56 +304,41 @@ let init cli =
        it is possible for a broken package script to delete all your files."
   in
   let cygwin_internal =
-    if Sys.win32 then
       mk_vflag ~cli `none [
-        cli_from ~experimental:true cli2_2,
+        cli_from ~platform:`windows ~experimental:true cli2_2,
         `internal, ["cygwin-internal-install"],
         "Let opam setup and manage an internal Cygwin install (recommended)";
-        cli_from ~experimental:true cli2_2,
+        cli_from ~platform:`windows ~experimental:true cli2_2,
         `default_location, ["cygwin-local-install"],
         "Use preexistent Cygwin install";
         cli_from ~experimental:true cli2_2,
         `no, ["no-cygwin-setup"],
         "Don't setup Cygwin";
       ]
-    else
-      Term.const `none
   in
   let cygwin_extra_packages =
-    if Sys.win32 then
-      mk_opt ~cli (cli_from ~experimental:true cli2_2)
+      mk_opt ~cli (cli_from ~platform:`windows ~experimental:true cli2_2)
         ["cygwin-extra-packages"] "CYGWIN_PACKAGES"
         "Specify additional packages to install \
          with $(b,--cygwin-internal-install)"
         Arg.(some (list string)) None
-    else
-      Term.const None
   in
   let cygwin_location =
-    if Sys.win32 then
-      mk_opt ~cli (cli_from ~experimental:true cli2_2)
+      mk_opt ~cli (cli_from ~platform:`windows ~experimental:true cli2_2)
         ["cygwin-location"] "DIR" "Specify Cygwin root location"
         Arg.(some dirname) None
-    else
-      Term.const None
   in
   let git_location =
-    if Sys.win32 then
-      mk_opt ~cli (cli_from ~experimental:true cli2_2)
+      mk_opt ~cli (cli_from ~platform:`windows ~experimental:true cli2_2)
         ["git-location"] "DIR"
         "Specify git binary directory. \
          Ensure that it doesn't contains bash in the same directory"
         Arg.(some dirname) None
-    else
-      Term.const None
   in
   let no_git_location =
-    if Sys.win32 then
       mk_flag ~cli (cli_from ~experimental:true cli2_2)
         ["no-git-location"]
         "Don't specify nor ask to specify git binary directory."
-    else
-      Term.const false
   in
 
   let init global_options
