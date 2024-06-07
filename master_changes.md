@@ -129,6 +129,7 @@ users)
 ## Shell
 
 ## Internal
+  * Noisy code refactor renaming `OpamClient.git_for_windows_check` to `OpamClient.git_for_windows` [#5997 @dra27]
 
 ## Internal: Windows
   * Set the console to use UTF-8 on Windows using SetConsoleCP and SetConsoleOutputCP [#5970 @kit-ty-kate]
