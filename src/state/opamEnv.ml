@@ -28,7 +28,7 @@ let default_sep_fmt_str var =
   match String.uppercase_ascii var with
   | "PATH" when Sys.win32 ->
     SSemiColon, Target_quoted
-  | "PKG_CONFIG_PATH" | "MANPATH" ->
+  | "MANPATH" ->
     SColon, Host
   | _ -> default_separator, default_format
 

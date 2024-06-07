@@ -698,7 +698,7 @@ The `<path-format>` defines the way to handle variables path formatting:
   any entries which include the separator character.
 
 If a variable is not mentioned in `x-env-path-rewrite`, the separator is assumed to be `;` on Windows and `:` on all other systems; no slash or quoting transformations are performed. There are two special default cases:
-* `PKG_CONFIG_PATH` uses `:` separator and is `target-quoted`
+* `MANPATH` uses `:` separator and is `host`
 * `PATH` on Windows uses `;` separator and is `target-quoted`
 
 For example, on Windows:
