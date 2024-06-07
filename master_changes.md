@@ -69,6 +69,7 @@ users)
 
 ## Repository
   * Fix download URLs containing invalid characters on Windows (e.g. the ? character in `?full_index=1`) [#5921 @dra27]
+  * [BUG] Fix curl failures - the progress meter can become interleaved with the status code on Windows [#5984 @dra27 @kit-ty-kate @rjbou]
 
 ## Lock
 
@@ -170,6 +171,7 @@ users)
   * Extracted `OpamSolution.install_sys_packages` from `OpamSolution.install_depexts` [#5994 @dra27]
 
 ## opam-repository
+  * `OpamDownload.download_command`: separate output from stdout and stderr [#5984 @kit-ty-kate]
 
 ## opam-state
 
@@ -190,3 +192,4 @@ users)
   * `OpamConsole.menu` now supports up to 35 menu items [#5992 @dra27]
   * `OpamStd.Sys.resolve_command`: extracted the logic from `OpamSystem.resolve_command`, without the default environment handling from OpamProcess. [#5991 @dra27]
   * `OpamStd.Sys.resolve_in_path`: split the logic of `OpamStd.Sys.resolve_command` to allow searching for an arbitrary file in the search path [#5991 @dra27]
+  * `OpamProcess.run_background`: name the stderr output file have the .err extension when cmd_stdout is given [#5984 @kit-ty-kate]
