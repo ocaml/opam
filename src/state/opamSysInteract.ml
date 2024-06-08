@@ -454,22 +454,9 @@ module Cygwin = struct
     | `Cygwin -> root / "bin"
 
   (* Set setup.exe in the good place, ie in .opam/.cygwin/ *)
-  let check_setup setup =
+  let check_setup ~update =
     let dst = cygsetup () in
-    match setup with
-    | Some setup ->
-      log "Copying %s into %s"
-          (OpamFilename.to_string setup)
-          (OpamFilename.to_string dst);
-      let sha512 =
-        OpamHash.compute ~kind:`SHA512 (OpamFilename.to_string setup)
-      in
-      OpamFilename.copy ~src:setup ~dst;
-      let checksum_file = OpamFilename.add_extension dst "sha512" in
-      OpamFilename.remove checksum_file;
-      OpamFilename.with_open_out_bin checksum_file @@ fun c ->
-        output_string c (OpamHash.contents sha512)
-    | None ->
+    if update || not (OpamFilename.exists dst) then
       OpamProcess.Job.run @@ download_setupexe dst
 end
 
@@ -1159,8 +1146,13 @@ let update ?(env=OpamVariable.Map.empty) config =
   in
   match cmd with
   | None ->
+    (* Cygwin doesn't have an update database per se, but one is supposed to use
+       the most current setup program when downloading setup.ini (which is the
+       package database (cf. the --no-version-check option).
+       Also, when #5839 is addressed, we'll need to cache setup.ini, and that
+       will want to be updated here too. *)
     if family = Cygwin then
-      Cygwin.check_setup None
+      Cygwin.check_setup ~update:true
     else
       OpamConsole.warning
         "Unknown update command for %s, skipping system update"
