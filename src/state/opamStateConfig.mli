@@ -39,6 +39,7 @@ end
 type t = private {
   root_dir: OpamFilename.Dir.t;
   original_root_dir: OpamFilename.Dir.t;
+  root_from: provenance;
   current_switch: OpamSwitch.t option;
   switch_from: provenance;
   jobs: int Lazy.t;
@@ -58,6 +59,7 @@ type t = private {
 type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
   ?original_root_dir:OpamFilename.Dir.t ->
+  ?root_from:provenance ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:provenance ->
   ?jobs:(int Lazy.t) ->
@@ -84,7 +86,7 @@ val default : t
 (** Get the initial opam root value (from default, env or optional argument).
     This allows one to get it before doing the init, which is useful to get the
     configuration file used to fill some options to init() *)
-val opamroot: ?root_dir:dirname -> unit -> dirname
+val opamroot: ?root_dir:dirname -> unit -> provenance * dirname
 
 (** Loads the global configuration file, protecting against concurrent writes *)
 val load: ?lock_kind: 'a lock -> dirname -> OpamFile.Config.t option
