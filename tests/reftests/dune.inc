@@ -723,6 +723,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:init.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-init.win32)
+ (enabled_if (= %{os_type} "Win32"))
+ (action
+  (diff init.win32.test init.win32.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Win32"))
+ (deps (alias reftest-init.win32)))
+
+(rule
+ (targets init.win32.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Win32"))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:init.win32.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-inplace)
  (action
   (diff inplace.test inplace.out)))
