@@ -105,6 +105,7 @@ module Symbols = struct
   let downwards_double_arrow = Uchar.of_int 0x21d3
   let black_down_pointing_triangle = Uchar.of_int 0x25bc
   let downwards_black_arrow = Uchar.of_int 0x2b07
+  let collision = Uchar.of_int 0x1f4a5
 end
 
 type win32_glyph_checker = {
