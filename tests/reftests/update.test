@@ -1,0 +1,10 @@
+N0REP0
+### <REPO/packages/pkg/pkg.1/opam>
+opam-version: "2.0"
+### opam update --verbose
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [default: rsync]
+[default] synchronised from file://${BASEDIR}/REPO
+Processing: [default: loading data]
+Now run 'opam upgrade' to apply any package updates.

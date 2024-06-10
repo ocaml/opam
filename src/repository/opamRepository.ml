@@ -263,9 +263,11 @@ let pull_tree_t
       | Some e -> Done (Not_available (None, Printexc.to_string e))
     in
     match dirnames with
-    | [ _label, local_dirname, _subpath ] ->
+    | [ label, local_dirname, _subpath ] ->
       (fun archive msg ->
          OpamFilename.cleandir local_dirname;
+         let text = OpamProcess.make_command_text label "extract" in
+         OpamProcess.Job.with_text text @@
          OpamFilename.extract_job archive local_dirname
          @@+ fallback (fun () ->  Done (Up_to_date msg)))
     | _ ->
@@ -285,6 +287,17 @@ let pull_tree_t
                            (Some label, OpamProcess.result_summary r))))
             dirnames
         in
+        let text =
+          let label =
+            match dirnames with
+            | [(label1, _, _); (label2, _, _)] ->
+              label1 ^ ", " ^ label2
+            | (label, _, _)::rest ->
+              Printf.sprintf "%s + %d others" label (List.length rest)
+            | [] -> assert false in
+          OpamProcess.make_command_text label "extract"
+        in
+        OpamProcess.Job.with_text text @@
         OpamFilename.extract_job archive tmpdir
         @@+ fallback (fun () ->
             let failing =

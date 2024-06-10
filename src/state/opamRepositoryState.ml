@@ -78,6 +78,9 @@ module Cache = struct
 end
 
 let load_opams_from_dir repo_name repo_root =
+  if OpamConsole.disp_status_line () || OpamConsole.verbose () then
+    OpamConsole.status_line "Processing: [%s: loading data]"
+      (OpamConsole.colorise `blue (OpamRepositoryName.to_string repo_name));
   (* FIXME: why is this different from OpamPackage.list ? *)
   let rec aux r dir =
     if OpamFilename.exists_dir dir then
@@ -104,7 +107,9 @@ let load_opams_from_dir repo_name repo_root =
           r fnames
     else r
   in
-  aux OpamPackage.Map.empty (OpamRepositoryPath.packages_dir repo_root)
+  Fun.protect
+    (fun () -> aux OpamPackage.Map.empty (OpamRepositoryPath.packages_dir repo_root))
+    ~finally:OpamConsole.clear_status
 
 let load_repo repo repo_root =
   let t = OpamConsole.timer () in
