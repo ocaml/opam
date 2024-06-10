@@ -181,7 +181,7 @@ let check_and_run_external_commands () =
     let yes = if yes then Some (Some true) else None in
     OpamCoreConfig.init ?yes ?confirm_level ();
     OpamFormatConfig.init ();
-    let root_dir = OpamStateConfig.opamroot () in
+    let root_from, root_dir = OpamStateConfig.opamroot () in
     let has_init, root_upgraded =
       match OpamStateConfig.load_defaults ~lock_kind:`Lock_read root_dir with
       | None -> (false, false)
@@ -210,7 +210,7 @@ let check_and_run_external_commands () =
           env_update_resolved "PATH" PlusEq
             (OpamFilename.Dir.to_string plugins_bin)
         ] in
-        OpamStateConfig.init ~root_dir ();
+        OpamStateConfig.init ~root_from ~root_dir ();
         match OpamStateConfig.get_switch_opt () with
         | None -> env_array (OpamEnv.get_pure ~updates ())
         | Some sw ->

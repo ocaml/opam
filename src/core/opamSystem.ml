@@ -88,6 +88,13 @@ let rec mk_temp_dir ?(prefix="opam") () =
   else
     real_path s
 
+let rec mk_unique_dir ~dir ?(prefix="opam") () =
+  let s = dir / Printf.sprintf "%s-%06x" prefix (Random.int 0xFFFFFF) in
+  if Sys.file_exists s then
+    mk_unique_dir ~dir ~prefix ()
+  else
+    real_path s
+
 let safe_mkdir dir =
   try
     log "mkdir %s" dir;

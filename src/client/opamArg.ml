@@ -543,6 +543,7 @@ let apply_global_options cli o =
     (* ?solver_preferences_best_effort_prefix: *)
     (* - state options - *)
     ?root_dir:o.opt_root
+    ?original_root_dir:o.opt_root
     ?current_switch:(o.opt_switch >>| OpamSwitch.of_string)
     ?switch_from:(o.opt_switch >>| fun _ -> `Command_line)
     (* ?jobs: int *)

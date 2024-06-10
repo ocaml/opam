@@ -53,6 +53,8 @@ end
 
 type t = {
   root_dir: OpamFilename.Dir.t;
+  original_root_dir: OpamFilename.Dir.t;
+  root_from: provenance;
   current_switch: OpamSwitch.t option;
   switch_from: provenance;
   jobs: int Lazy.t;
@@ -69,23 +71,32 @@ type t = {
   no_depexts: bool;
 }
 
+let win_space_redirection root =
+  let redirected = OpamPath.redirected root in
+  if OpamFilename.exists redirected then
+    OpamFilename.Dir.of_string (OpamFilename.read redirected)
+  else root
+
+let default_root =
+  (* On Windows, if a .opam directory is found in %HOME% or %USERPROFILE% then
+     then we'll use it. Otherwise, we use %LOCALAPPDATA%. *)
+  let home_location =
+    let open OpamFilename in
+    concat_and_resolve (Dir.of_string (OpamStd.Sys.home ())) ".opam"
+  in
+  if not Sys.win32 || OpamFilename.exists_dir home_location then
+    home_location
+  else
+  let open OpamFilename in
+  let local_appdata =
+    Dir.of_string (OpamStubs.getPathToLocalAppData ())
+  in
+  concat_and_resolve local_appdata "opam"
+
 let default = {
-  root_dir = (
-    (* On Windows, if a .opam directory is found in %HOME% or %USERPROFILE% then
-       then we'll use it. Otherwise, we use %LOCALAPPDATA%. *)
-    let home_location =
-      let open OpamFilename in
-      concat_and_resolve (Dir.of_string (OpamStd.Sys.home ())) ".opam"
-    in
-    if not Sys.win32 || OpamFilename.exists_dir home_location then
-      home_location
-    else
-      let open OpamFilename in
-      let local_appdata =
-        Dir.of_string (OpamStubs.getPathToLocalAppData ())
-      in
-      concat_and_resolve local_appdata "opam"
-    );
+  root_dir = win_space_redirection default_root;
+  original_root_dir = default_root;
+  root_from = `Default;
   current_switch = None;
   switch_from = `Default;
   jobs = lazy (max 1 (OpamSysPoll.cores () - 1));
@@ -108,6 +119,8 @@ let default = {
 
 type 'a options_fun =
   ?root_dir:OpamFilename.Dir.t ->
+  ?original_root_dir:OpamFilename.Dir.t ->
+  ?root_from:provenance ->
   ?current_switch:OpamSwitch.t ->
   ?switch_from:provenance ->
   ?jobs:(int Lazy.t) ->
@@ -126,6 +139,8 @@ type 'a options_fun =
 
 let setk k t
     ?root_dir
+    ?original_root_dir
+    ?root_from
     ?current_switch
     ?switch_from
     ?jobs
@@ -144,6 +159,8 @@ let setk k t
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
     root_dir = t.root_dir + root_dir;
+    original_root_dir = t.original_root_dir + original_root_dir;
+    root_from = t.root_from + root_from;
     current_switch =
       (match current_switch with None -> t.current_switch | s -> s);
     switch_from = t.switch_from + switch_from;
@@ -169,13 +186,22 @@ let update ?noop:_ = setk (fun cfg () -> r := cfg) !r
 
 let initk k =
   let open OpamStd.Option.Op in
+  let root_dir, original_root_dir, root_from =
+    match E.root () with
+    | None -> None, None, None
+    | Some root ->
+      let root = OpamFilename.Dir.of_string root in
+      Some (win_space_redirection root), Some root, Some `Env
+  in
   let current_switch, switch_from =
     match E.switch () with
     | Some "" | None -> None, None
     | Some s -> Some (OpamSwitch.of_string s), Some `Env
   in
   setk (setk (fun c -> r := c; k)) !r
-    ?root_dir:(E.root () >>| OpamFilename.Dir.of_string)
+    ?root_dir
+    ?original_root_dir
+    ?root_from
     ?current_switch
     ?switch_from
     ?jobs:(E.jobs () >>| fun s -> lazy s)
@@ -198,10 +224,14 @@ let initk k =
 let init ?noop:_ = initk (fun () -> ())
 
 let opamroot ?root_dir () =
-  let open OpamStd.Option.Op in
-  (root_dir >>+ fun () ->
-   OpamStd.Env.getopt "OPAMROOT" >>| OpamFilename.Dir.of_string)
-  +! default.root_dir
+  match root_dir with
+  | Some root -> `Command_line, win_space_redirection root
+  | None ->
+    match OpamStd.Env.getopt "OPAMROOT" with
+    | Some root ->
+      `Env, win_space_redirection (OpamFilename.Dir.of_string root)
+    | None ->
+      `Default, default.root_dir
 
 let is_newer_raw = function
   | Some v ->

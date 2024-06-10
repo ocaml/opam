@@ -66,6 +66,7 @@ module Symbols : sig
   val downwards_double_arrow : Uchar.t
   val downwards_black_arrow : Uchar.t
   val black_down_pointing_triangle : Uchar.t
+  val collision : Uchar.t
 end
 
 val utf8_symbol:

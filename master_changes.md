@@ -29,6 +29,7 @@ users)
   * Enhance the Git menu by warning if the user appears to need to restart the shell to pick up PATH changes [#5963 @dra27]
   * Include Git for Windows installations in the list of possibilities where the user instructed Git-for-Windows setup not to update PATH [#5963 @dra27]
   * [BUG] Fail if `--git-location` points to a directory not containing git [#6000 @dra27]
+  * Redirect the opam root to `C:\opamroot-xxx` when the opam root contains spaces on Windows [#5457 @rjbou @dra27]
 
 ## Config report
 
@@ -177,6 +178,8 @@ users)
   * Expose `OpamSolution.print_depext_msg` [#5994 @dra27]
   * Extracted `OpamSolution.install_sys_packages` from `OpamSolution.install_depexts` [#5994 @dra27]
   * `OpamInitDefaults.required_packages_for_cygwin`: no longer includes git; as the need to add that is computed in `OpamClient` [#6000 @dra27]
+  * `OpamClientConfig.opam_init`: add `original_root_dir` argument that contains the original roo directory before redirection [#5457 @rjbou]
+  * `OpamClientConfig.opam_init`: add `root_from` argument that contains the origin of used root[#5457 @dra27]
 
 ## opam-repository
   * `OpamDownload.download_command`: separate output from stdout and stderr [#5984 @kit-ty-kate]
@@ -185,6 +188,8 @@ users)
   * `OpamEnv.cygwin_non_shadowed_programs`: exposes the list of executables (not including git) which should always come from Cygwin [#6000 @dra27]
   * `opamSysInteract.Cygwin.install`: de-label `packages` argument [#6000 @dra27]
   * `OpamSysInteract.Cygwin.check_install` renamed to `analyse_install` which now also returns whether the installation found was MSYS2 or Cygwin [#6000 @dra27]
+  * `OpamStateConfig.r`, `OpamStateConfig.init`: add `original_root_dir` field to config record and argument that contains the original root directory before redirection [#5457 @rjbou]
+  * `OpamStateConfig.r`, `OpamStateConfig.init`: add `root_from` field to config record and argument that contains the origin of used root[#5457 @dra27]
 
 ## opam-solver
 
@@ -192,6 +197,7 @@ users)
   * `OpamPath`: remove `OpamPath.Switch.last_env` function in favor to `OpamPath.last_env` as the files are no more stored in switch directory [#5962 @moyodiallo - fix #5823]
   * `OpamFilter.map_up`: correct handling of FDefined [#5983 @dra27]
   * `OpamFilter.fold_down_left`: correct handling of FDefined and FUndef [#5983 @dra27]
+  * `OpamPath`: add `redirected` the file name of redirected opam root [#5457 @rjbou]
 
 ## opam-core
   * `OpamStd.String`: add `split_quoted` that preserves quoted separator [#5935 @dra27]
@@ -208,3 +214,5 @@ users)
   * `OpamStubs.enumRegistry`: on Windows, retrieves all the values of a given type from a registry key, with their names [#6000 @dra27]
   * `OpamCompat`: add `Seq.find_map` from OCaml 4.14 [#6000 @dra27]
   * `OpamStd.Sys.{get_windows_executable_variant,get_cygwin_variant,is_cygwin_variant}`: renamed `~cygbin` to `?search_in_path` with a change in semantics so that it acts as though the directory was simply the first entry in PATH [#6000 @dra27]
+  * `OpamConsole.Symbols`: add `collision` symbol [#5457 @dra27]
+  * `OpamSystem`: add `mk_unique_dir` that returns an unique directory name as `mk_temp_dir` but not in temporary directory [#5457 @dra27]

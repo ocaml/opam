@@ -94,7 +94,7 @@ let global_options cli =
       switch_to_updated_self
         OpamStd.Option.Op.(options.debug_level ++
                            OpamCoreConfig.E.debug () +! 0 |> abs > 0)
-        (OpamStateConfig.opamroot ?root_dir:options.opt_root ());
+        (snd (OpamStateConfig.opamroot ?root_dir:options.opt_root ()));
     let root_is_ok =
       OpamStd.Option.default false (OpamClientConfig.E.rootisok ())
     in
