@@ -84,7 +84,7 @@ let temp_basename prefix =
 let rec mk_temp_dir ?(prefix="opam") () =
   let s = Filename.get_temp_dir_name () / temp_basename prefix in
   if Sys.file_exists s then
-    mk_temp_dir ()
+    mk_temp_dir ~prefix ()
   else
     real_path s
 
