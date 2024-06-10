@@ -214,3 +214,4 @@ users)
   * `OpamCompat`: add `Seq.find_map` from OCaml 4.14 [#6000 @dra27]
   * `OpamStd.Sys.{get_windows_executable_variant,get_cygwin_variant,is_cygwin_variant}`: renamed `~cygbin` to `?search_in_path` with a change in semantics so that it acts as though the directory was simply the first entry in PATH [#6000 @dra27]
   * `OpamConsole.Symbols`: add `collision` symbol [#5457 @dra27]
+  * `OpamSystem`: add `mk_unique_dir` that returns an unique directory name as `mk_temp_dir` but not in temporary directory [#5457 @dra27]

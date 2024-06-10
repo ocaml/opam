@@ -51,6 +51,10 @@ val verbose_for_base_commands: unit -> bool
     (if [prefix] is not set), pid, and random number. *)
 val mk_temp_dir: ?prefix:string -> unit -> string
 
+(** Returns a directory name, in the [~dir], composed by {i opam}
+    (if [prefix] is not set), and a random number. *)
+val mk_unique_dir: dir:string -> ?prefix:string -> unit -> string
+
 (** [copy_file src dst] copies [src] to [dst]. Remove [dst] before the copy
     if it is a link. *)
 val copy_file: string -> string -> unit
