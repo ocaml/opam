@@ -444,7 +444,7 @@ let get_cygpath_function =
       lazy (
         if OpamStd.Option.map_default
             (OpamStd.Sys.is_cygwin_variant
-               ~cygbin:(OpamCoreConfig.(!r.cygbin)))
+               ?search_in_first:(OpamCoreConfig.(!r.cygbin)))
                false
                (resolve_command command) then
           apply_cygpath
@@ -794,7 +794,7 @@ let install ?(warning=default_install_warning) ?exec src dst =
       copy_file_aux ~src ~dst ();
       if cygcheck then
         match OpamStd.Sys.get_windows_executable_variant
-                ~cygbin:OpamCoreConfig.(!r.cygbin) dst with
+                ?search_in_first:OpamCoreConfig.(!r.cygbin) dst with
         | `Native -> ()
         | (`Cygwin | `Msys2 | `Tainted _) as code -> warning dst code
     end else

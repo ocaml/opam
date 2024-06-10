@@ -28,6 +28,7 @@ users)
   * Skip Git-for-Windows menu if the Git binary resolved in PATH is Git-for-Windows [#5963 @dra27 - fix #5835]
   * Enhance the Git menu by warning if the user appears to need to restart the shell to pick up PATH changes [#5963 @dra27]
   * Include Git for Windows installations in the list of possibilities where the user instructed Git-for-Windows setup not to update PATH [#5963 @dra27]
+  * [BUG] Fail if `--git-location` points to a directory not containing git [#6000 @dra27]
 
 ## Config report
 
@@ -96,6 +97,8 @@ users)
   * Pass --no-version-check to Cygwin setup (suppresses a message box if setup needs updating) [#5830 @dra27]
   * Pass --quiet-mode noinput to stop the user interrupting the setup GUI [#5830 @dra27]
   * Always pass --no-write-registry to the Cygwin installer, not just on first installation [#5995 @dra27]
+  * os-distribution is now by default calculated from cygpath for Cygwin and MSYS2, instead of needing to be set by opam init [#6000 @dra27]
+  * Cygwin setup is now always downloaded and updated both for internal and external Cygwin installations [#6000 @dra27]
 
 ## Format upgrade
   * Handle init OCaml `sys-ocaml-*` eval variables during format upgrade from 2.0 -> 2.1 -> 2.2 [#5829 @dra27]
@@ -130,6 +133,7 @@ users)
 
 ## Client
   * Fix rounding error when displaying the timestamp in debug mode [#5912 @kit-ty-kate - fix #5910]
+  * Overhaul Windows `opam init` to determine Unix and Git configuration simultaneously, and to detect from Cygwin, Git and MSYS2 from all the known package managers and shells [#6000 @dra27]
 
 ## Shell
 
@@ -172,11 +176,15 @@ users)
   * `OpamClient.init` and `OpamClient.reinit`: now can have additional cygwin packages to install [#5930 @moyodiallo]
   * Expose `OpamSolution.print_depext_msg` [#5994 @dra27]
   * Extracted `OpamSolution.install_sys_packages` from `OpamSolution.install_depexts` [#5994 @dra27]
+  * `OpamInitDefaults.required_packages_for_cygwin`: no longer includes git; as the need to add that is computed in `OpamClient` [#6000 @dra27]
 
 ## opam-repository
   * `OpamDownload.download_command`: separate output from stdout and stderr [#5984 @kit-ty-kate]
 
 ## opam-state
+  * `OpamEnv.cygwin_non_shadowed_programs`: exposes the list of executables (not including git) which should always come from Cygwin [#6000 @dra27]
+  * `opamSysInteract.Cygwin.install`: de-label `packages` argument [#6000 @dra27]
+  * `OpamSysInteract.Cygwin.check_install` renamed to `analyse_install` which now also returns whether the installation found was MSYS2 or Cygwin [#6000 @dra27]
 
 ## opam-solver
 
@@ -197,3 +205,6 @@ users)
   * `OpamStd.Sys.resolve_in_path`: split the logic of `OpamStd.Sys.resolve_command` to allow searching for an arbitrary file in the search path [#5991 @dra27]
   * `OpamProcess.run_background`: name the stderr output file have the .err extension when cmd_stdout is given [#5984 @kit-ty-kate]
   * [BUG]: fix incorrect recursion case in `OpamSystem.mk_temp_dir` [#6005 @dra27]
+  * `OpamStubs.enumRegistry`: on Windows, retrieves all the values of a given type from a registry key, with their names [#6000 @dra27]
+  * `OpamCompat`: add `Seq.find_map` from OCaml 4.14 [#6000 @dra27]
+  * `OpamStd.Sys.{get_windows_executable_variant,get_cygwin_variant,is_cygwin_variant}`: renamed `~cygbin` to `?search_in_path` with a change in semantics so that it acts as though the directory was simply the first entry in PATH [#6000 @dra27]

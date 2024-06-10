@@ -43,36 +43,46 @@ val repo_enablers: ?env:gt_variables -> OpamFile.Config.t -> string option
 
 module Cygwin : sig
 
-  (* Default Cygwin installation prefix C:\cygwin64 *)
-  val default_cygroot: string
+  (* Location of the internal Cygwin installation *)
+  val internal_cygroot: unit -> OpamFilename.Dir.t
 
   (* Install an internal Cygwin install, in <root>/.cygwin *)
-  val install: packages:OpamSysPkg.t list -> OpamFilename.t
+  val install: OpamSysPkg.t list -> unit
 
-  (* [check_install ~variant path] checks a Cygwin install at [path]. It checks
-     that 'path\cygcheck.exe', 'path\bin\cygcheck.exe', or
-     'path\usr\bin\cygcheck.exe' exists.
-     If [~variant] is false, checks that it is strictly a Cygwin install,
-     otherwise a Cygwin-like install as MSYS2. *)
-  val check_install:
-    variant:bool -> string -> (OpamFilename.t, string) result
+  (* [analyse_install path] searches for and identifies Cygwin/MSYS2
+     installations. [path] may be able the location of cygcheck.exe itself
+     (with or without the .exe) or just a directory. If [path] is just a
+     directory, then the function searches for 'path\cygcheck.exe',
+     'path\bin\cygcheck.exe', or 'path\usr\bin\cygcheck.exe'. If exactly one
+     is found, and cygpath.exe is found with it, then cygpath is used both to
+     identify whether the installation is Cygwin or MSYS2 and to translate the
+     root directory [/] to its Windows path (i.e. to get the canonical root
+     directory of the installation). MSYS2 is additionally required to have
+     pacman.exe in the same directory as cygcheck.exe and cygpath.exe.
+
+     On success, the result is the kind of installation (Cygwin/MSYS2) along
+     with the root directory (e.g. {v C:\cygwin64 v} or {v C:\msys64 v}),
+     otherwise a description of the problem encountered is returned. *)
+  val analyse_install:
+    string -> ([ `Cygwin | `Msys2 ] * OpamFilename.Dir.t, string) result
+
+  (* [bindir_for_root kind root] returns the bin directory for the given
+     installation root and [kind], as returned by {!analyse_install}. *)
+  val bindir_for_root:
+    [ `Cygwin | `Msys2 ] -> OpamFilename.Dir.t -> OpamFilename.Dir.t
 
   (* Returns true if Cygwin install is internal *)
   val is_internal: OpamFile.Config.t -> bool
 
-  (* [check_setup path] checks and store Cygwin setup executable. Is [path] is
-     [None], it downloads it, otherwise it copies it to
-     <opamroot>/.cygwin/setup-x86_64.exe. If the file is already existent, it
-     is a no-op. *)
-  val check_setup: OpamFilename.t option -> unit
+  (* [check_setup ~update] downloads and stores a Cygwin setup executable to
+     <opamroot>/.cygwin/setup-x86_64.exe. If [~update = false], this only
+     happens if the setup executable does not already exist, otherwise it is.
+     updated. *)
+  val check_setup: update:bool -> unit
 
   (* Return Cygwin binary path *)
   val cygbin_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
 
-  (* Return Cygwin cygcheck.exe path *)
-  val cygcheck_opt: OpamFile.Config.t -> OpamFilename.t option
-
-  (* Return Cygwin installation prefix *)
-  val cygroot_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
-
+  (* Return MSYS2 binary path *)
+  val msys2bin_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
 end

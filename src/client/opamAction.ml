@@ -528,9 +528,8 @@ let compilation_env t opam =
       (OpamFile.OPAM.build_env opam)
   in
   let cygwin_env =
-    match OpamSysInteract.Cygwin.cygbin_opt t.switch_global.config with
+    match OpamCoreConfig.(!r.cygbin) with
     | Some cygbin ->
-      let cygbin = OpamFilename.Dir.to_string cygbin in
       [ OpamTypesBase.env_update_resolved "PATH" Cygwin cygbin
           ~comment:"Cygwin path"
       ] @ (match OpamCoreConfig.(!r.git_location) with

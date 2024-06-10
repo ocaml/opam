@@ -70,6 +70,12 @@ val readRegistry : registry_root -> string -> string -> 'a registry_value -> 'a 
 
       @raise Failure If the value in the registry does not have [value_type] *)
 
+val enumRegistry : registry_root -> string -> 'a registry_value -> (string * 'a) list
+  (** Windows only. [enumRegistry root key value_type] reads all the values
+      from registry key [key] of [root] which have type [value_type].
+
+      Returns [[]] if the key is not found. *)
+
 val writeRegistry :
   registry_root -> string -> string -> 'a registry_value -> 'a -> unit
   (** Windows only. [writeRegistry root key name value_type value] sets the

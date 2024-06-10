@@ -23,6 +23,24 @@ module String = struct
   include Stdlib.String
 end
 
+module Seq = struct
+  [@@@warning "-32"]
+
+  (** NOTE: OCaml >= 4.14 *)
+  let rec find_map f xs =
+    match xs() with
+    | Seq.Nil ->
+      None
+    | Seq.Cons (x, xs) ->
+      match f x with
+      | None ->
+          find_map f xs
+      | Some _ as result ->
+          result
+
+  include Seq
+end
+
 module Either = struct
   (** NOTE: OCaml >= 4.12 *)
   type ('a, 'b) t =
