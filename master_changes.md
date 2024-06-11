@@ -11,6 +11,7 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
+  * Bump the version number after the release of 2.2.0~beta3 [#6009 @kit-ty-kate]
 
 ## Global CLI
 
@@ -117,7 +118,5 @@ users)
 ## opam-solver
 
 ## opam-format
-
-## opam-core
 
 ## opam-core
