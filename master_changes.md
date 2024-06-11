@@ -14,6 +14,7 @@ users)
   * Bump the version number after the release of 2.2.0~beta3 [#6009 @kit-ty-kate]
 
 ## Global CLI
+  * Improve the error message when a directory is not available while fetching using rsync [#6027 @kit-ty-kate]
 
 ## Plugins
 
