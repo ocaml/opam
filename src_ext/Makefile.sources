@@ -18,7 +18,7 @@ MD5_cmdliner = ab2f0130e88e8dcd723ac6154c98a881
 
 $(call PKG_SAME,cmdliner)
 
-URL_ocamlgraph = http://ocamlgraph.lri.fr/download/ocamlgraph-1.8.8.tar.gz
+URL_ocamlgraph = https://github.com/backtracking/ocamlgraph/releases/download/v1.8.8/ocamlgraph-1.8.8.tar.gz
 MD5_ocamlgraph = 9d71ca69271055bd22d0dfe4e939831a
 
 $(call PKG_SAME,ocamlgraph)
