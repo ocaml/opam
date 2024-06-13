@@ -182,10 +182,7 @@ for Opam usage.
 [![badge](https://repology.org/badge/version-for-repo/ubuntu_22_04/opam.svg)](https://repology.org/project/opam/versions)
 
 ##### Versions 18.04 and newer
-There is a [ppa](https://launchpad.net/~avsm/+archive/ubuntu/ppa) available that contains the current stable version of `opam`.
 ```
-add-apt-repository ppa:avsm/ppa
-apt update
 apt install opam
 ```
 
