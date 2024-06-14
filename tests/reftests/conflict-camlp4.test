@@ -5,7 +5,7 @@ f372039d
 Switch invariant: ["camlp4" "ocaml-system"]
 [ERROR] Could not determine which packages to install for this switch:
   * Incompatible packages:
-    - (invariant) -> camlp4
+    - (invariant) -> camlp4 -> ocaml < 4.08 -> ocaml-variants < 4.07.2~
     - (invariant) -> ocaml-system
     You can temporarily relax the switch invariant with `--update-invariant'
 

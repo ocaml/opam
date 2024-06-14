@@ -46,7 +46,7 @@ The following actions would be performed:
 ### opam upgrade bar
 [ERROR] Package conflict!
   * Missing dependency:
-    - foo.1: no longer available
+    - bar -> foo -> foo.1: no longer available
 
 # Return code 20 #
 ### opam clean -s
@@ -54,7 +54,7 @@ Cleaning up switch sw
 ### opam upgrade bar
 [ERROR] Package conflict!
   * Missing dependency:
-    - foo.1: no longer available
+    - bar -> foo -> foo.1: no longer available
 
 # Return code 20 #
 ### : replay the same sequence but with another version of `foo` present

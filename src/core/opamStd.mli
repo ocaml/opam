@@ -184,6 +184,8 @@ end
 
 module List : sig
 
+  val equal : ('a -> 'a -> bool) -> 'a list -> 'a list -> bool
+
   val cons: 'a -> 'a list -> 'a list
 
   (** Convert list items to string and concat. [sconcat_map sep f x] is equivalent

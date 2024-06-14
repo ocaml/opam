@@ -218,9 +218,7 @@ val cycle_conflict:
 
 type explanation =
   [ `Conflict of string option * string list * bool
-  | `Missing of string option * string *
-                (OpamPackage.Name.t * OpamFormula.version_formula)
-                  OpamFormula.formula
+  | `Missing of string option * string * OpamFormula.t
   ]
 
 (** Convert a conflict to something readable by the user. The second argument
