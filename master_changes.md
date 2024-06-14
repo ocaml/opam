@@ -24,6 +24,7 @@ users)
 ## Actions
 
 ## Install
+  * Check if with-test & with-doc depends are installed to launch a reinstall [#4513 @rjbou - fix #4507]
 
 ## Remove
 
