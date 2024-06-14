@@ -4,12 +4,17 @@ AC_COPYRIGHT(Copyright 2012-2019 OcamlPro SAS)
 
 AC_CONFIG_MACRO_DIR([m4])
 
+CAML_LD_LIBRARY_PATH="${CAML_LD_LIBRARY_PATH}"
+OPAM_SWITCH_PREFIX="${OPAM_SWITCH_PREFIX}"
+
 # If a bootstrap compiler has been built, always use it
 PATH_PREPEND=
 PRE_BOOTSTRAP_PATH="$PATH"
 AS_IF([ test -x bootstrap/ocaml/bin/ocamlc -o -x bootstrap/ocaml/bin/ocamlopt ],[
   echo Bootstrap compiler found -- activating
   unset OCAMLLIB
+  unset CAML_LD_LIBRARY_PATH
+  unset OPAM_SWITCH_PREFIX
   export PATH_PREPEND=`pwd`/bootstrap/ocaml/bin:
   export PATH="$PATH_PREPEND$PATH"
 ])
@@ -39,6 +44,8 @@ AS_IF([ test "${OCAML_OS_TYPE}" = "Win32"],[
 
 AC_SUBST(WIN32)
 AC_SUBST(EXE)
+AC_SUBST(CAML_LD_LIBRARY_PATH)
+AC_SUBST(OPAM_SWITCH_PREFIX)
 
 # AC_PREFIX_DEFAULT must be at the top level, which is the reason for the
 # somewhat convoluted pair of sed expressions...

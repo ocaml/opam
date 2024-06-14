@@ -274,7 +274,7 @@ src_ext/secondary/ocaml/bin/ocaml:
 
 cold: compiler
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= ./configure --with-vendored-deps --without-dune --enable-cold-check $(CONFIGURE_ARGS)
-	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE)
+	$(MAKE)
 
 cold-%:
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= $(MAKE) $*

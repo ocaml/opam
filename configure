@@ -702,6 +702,8 @@ AWK
 LIBRARY_PATH
 CPATH
 LIB_PREFIX
+OPAM_SWITCH_PREFIX
+CAML_LD_LIBRARY_PATH
 EXE
 WIN32
 OCAML_OS_TYPE
@@ -2587,6 +2589,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+CAML_LD_LIBRARY_PATH="${CAML_LD_LIBRARY_PATH}"
+OPAM_SWITCH_PREFIX="${OPAM_SWITCH_PREFIX}"
+
 # If a bootstrap compiler has been built, always use it
 PATH_PREPEND=
 PRE_BOOTSTRAP_PATH="$PATH"
@@ -2595,6 +2600,8 @@ then :
 
   echo Bootstrap compiler found -- activating
   unset OCAMLLIB
+  unset CAML_LD_LIBRARY_PATH
+  unset OPAM_SWITCH_PREFIX
   export PATH_PREPEND=`pwd`/bootstrap/ocaml/bin:
   export PATH="$PATH_PREPEND$PATH"
 
@@ -3970,6 +3977,8 @@ else $as_nop
   WIN32=0
 
 fi
+
+
 
 
 
