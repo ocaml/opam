@@ -1,8 +1,8 @@
-# opam and other package managers: distributions list
+# opam and Other Package Managers: Distributions List
 
-This page tracks the state of binary packaging of opam on upstream
-distributions. If you do package up opam for your various OS, please feel free
-to add it below, update [this file](https://github.com/ocaml/opam/tree/master/doc/pages/Distribution.md)
+This page tracks the state of opam's binary packaging on upstream
+distributions. If you do package up opam for your respective OS, please feel free
+to add it below, update [this file](https://github.com/ocaml/opam/tree/master/doc/pages/Distribution.md),
 and open a [pull request](https://github.com/ocaml/opam/compare).
 
 Opam is in [![Packaging status](https://repology.org/badge/tiny-repos/opam.svg?header=)](https://repology.org/project/opam/versions) repository families.
@@ -14,9 +14,9 @@ Those [_pkgs_](http://pkgs.org/search/opam) and
 [_repology_]() pages may be used to
 get an up-to-date overview of official packages on most Linux distributions.
 
-## _Official_ packages
+## _Official_ Packages
 
-OS/distrubtion, their latest opam version and their maintainers:
+OS/distrubtion, their latest opam version, and their maintainers:
 
 * Arch Linux
  [![Arch package](https://repology.org/badge/version-for-repo/arch/opam.svg?header=)](https://www.archlinux.org/packages/?q=opam)
@@ -61,7 +61,7 @@ OS/distrubtion, their latest opam version and their maintainers:
 * Homebrew (macOS)
  [![Homebrew package](https://repology.org/badge/version-for-repo/homebrew/opam.svg?header=)](https://formulae.brew.sh/formula/opam)
 
-* Macports (macOS)
+* MacPorts (macOS)
  [![MacPorts package](https://repology.org/badge/version-for-repo/macports/opam.svg?header=)](https://ports.macports.org/port/opam/summary)
   * [Package definition](https://github.com/macports/macports-ports/blob/master/sysutils/opam/Portfile)
   * Perry E. Metzger [@pmetzger](https://www.github.com/pmetzger)
@@ -101,7 +101,7 @@ OS/distrubtion, their latest opam version and their maintainers:
  [![Ubuntu 22.04 package](https://repology.org/badge/version-for-repo/ubuntu_22_04/opam.svg?header=)](https://packages.ubuntu.com/jammy/opam)
   * [Package search](https://packages.ubuntu.com/search?keywords=opam&searchon=names&suite=jammy&section=all)
 
-## Third party packages
+## Third Party Packages
 
 
 * CentOS (6,7)
@@ -109,7 +109,7 @@ OS/distrubtion, their latest opam version and their maintainers:
 
 * Exherbo Linux
   * 1.1.1 [Package page](http://git.exherbo.org/summer/packages/dev-ocaml/opam/index.html) (_ocaml-unofficial_)
-  * nicoo [@nbraud](https://www.github.com/nbraud)
+  * Nicoo [@nbraud](https://www.github.com/nbraud)
 
 * Ubuntu Linux PPA
   * 2.0.4 [Anil's official opam PPA](https://launchpad.net/~avsm) and [ppa post](https://discuss.ocaml.org/t/opam-2-0-experimental-ppas/2446)
@@ -122,5 +122,5 @@ OS/distrubtion, their latest opam version and their maintainers:
 If you can't find latest version packages for your distribution here, see [the
 opam installation page](Install.html) for binaries or building from source.
 
-[Docker containers](http://hub.docker.com/r/ocaml/opam) for severals
+[Docker containers](http://hub.docker.com/r/ocaml/opam) for several
 distributions and OCaml compiler versions are also available.
