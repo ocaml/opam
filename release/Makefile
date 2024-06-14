@@ -6,7 +6,7 @@ GIT_URL = ..
 OCAMLV = 4.14.2
 FLEXDLLV = 0.43
 # currently hardcoded in Dockerfile.in
-OCAML_URL = https://caml.inria.fr/pub/distrib/ocaml-$(basename $(OCAMLV))/ocaml-$(OCAMLV).tar.gz
+OCAML_URL = https://github.com/ocaml/ocaml/archive/refs/tags/$(OCAMLV).tar.gz
 FLEXDLL_URL = https://github.com/ocaml/flexdll/archive/refs/tags/$(FLEXDLLV).tar.gz
 
 HOST_OS = $(shell uname -s | tr A-Z a-z | sed -e 's/_.*//' -e 's/darwin/macos/' -e 's/cygwin/windows/')
@@ -102,7 +102,7 @@ opam-$(VERSION)-%: $(OUTDIR)/opam-$(VERSION)-%
 build/$(HOST).env:
 	mkdir -p build/$(HOST)
 	cd build/$(HOST) && curl -OL $(OCAML_URL)
-	cd build/$(HOST) && tar xzf ocaml-$(OCAMLV).tar.gz
+	cd build/$(HOST) && tar xzf $(OCAMLV).tar.gz
 	cd build/$(HOST)/ocaml-$(OCAMLV) && curl -OL $(FLEXDLL_URL)
 	cd build/$(HOST)/ocaml-$(OCAMLV) && tar xzf $(shell basename "$(FLEXDLL_URL)")
 	cd build/$(HOST)/ocaml-$(OCAMLV) && rmdir flexdll && mv "flexdll-$(FLEXDLLV)" flexdll
@@ -113,7 +113,7 @@ build/$(HOST).env:
 	    $(EXTRA_CONFIGURE_ARGS_$(HOST_OS)) && \
 	  $(MAKE) -j$(JOBS) && \
 	  $(MAKE) install
-	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/ocaml-$(OCAMLV).tar.gz
+	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/$(OCAMLV).tar.gz
 	touch $@
 
 # Actually builds $(OUTDIR)/opam-$(VERSION)-$(HOST), but we don't want to override the
