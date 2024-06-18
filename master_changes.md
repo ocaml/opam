@@ -99,6 +99,7 @@ users)
 
 ## Reftests
 ### Tests
+  * add a complete test to make sure effectively_equal does not take the location of the fields into account [#6029 @kit-ty-kate]
 
 ### Engine
 
