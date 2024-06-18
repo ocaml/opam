@@ -222,6 +222,5 @@ Already up-to-date.
 Nothing to do.
 ### rm OPAM/eff-eq/.opam-switch/packages/cache
 ### opam upgrade --show
-The following actions would be performed:
-=== recompile 1 package
-  - recompile test-all-fields 1 [upstream or system changes]
+Already up-to-date.
+Nothing to do.

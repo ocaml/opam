@@ -40,6 +40,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Fix `opam upgrade` wanting to recompile opam files containing the `x-env-path-rewrite` field [#6029 @kit-ty-kate - fix #6028]
 
 ## Tree
 
@@ -119,5 +120,6 @@ users)
 ## opam-solver
 
 ## opam-format
+  * `OpamTypesBase`: Add `nullify_pos_map` and `nullify_pos_value` [#6029 @kit-ty-kate]
 
 ## opam-core

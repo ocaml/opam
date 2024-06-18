@@ -62,6 +62,56 @@ let pos_null =
     stop = -1, -1;
   }
 let nullify_pos pelem = {pelem; pos = pos_null}
+let nullify_pos_map f {pelem; pos = _} = nullify_pos (f pelem)
+
+let rec nullify_pos_value {pelem; pos = _} =
+  nullify_pos @@
+  match pelem with
+  | Bool b -> Bool (b : bool)
+  | Int i -> Int (i : int)
+  | String s -> String (s : string)
+  | Relop (relop, v1, v2) ->
+    Relop
+      (nullify_pos_map
+         (fun (x : OpamParserTypes.FullPos.relop_kind) -> x)
+         relop,
+       nullify_pos_value v1,
+       nullify_pos_value v2)
+  | Prefix_relop (relop, v) ->
+    Prefix_relop
+      (nullify_pos_map
+         (fun (x : OpamParserTypes.FullPos.relop_kind) -> x)
+         relop,
+       nullify_pos_value v)
+  | Logop (logop, v1, v2) ->
+    Logop
+      (nullify_pos_map
+         (fun (x : OpamParserTypes.FullPos.logop_kind) -> x)
+         logop,
+       nullify_pos_value v1,
+       nullify_pos_value v2)
+  | Pfxop (pfxop, v) ->
+    Pfxop
+      (nullify_pos_map
+         (fun (x : OpamParserTypes.FullPos.pfxop_kind) -> x)
+         pfxop,
+       nullify_pos_value v)
+  | Ident s -> Ident (s : string)
+  | List {pelem = l; pos = _} ->
+    List (nullify_pos (List.map nullify_pos_value l))
+  | Group {pelem = l; pos = _} ->
+    Group (nullify_pos (List.map nullify_pos_value l))
+  | Option (v, {pelem = filter; pos = _}) ->
+    Option
+      (nullify_pos_value v,
+       nullify_pos (List.map nullify_pos_value filter))
+  | Env_binding (v1, env_update_op, v2) ->
+    Env_binding
+      (nullify_pos_value v1,
+       nullify_pos_map
+         (fun (x : OpamParserTypes.FullPos.env_update_op_kind) -> x)
+         env_update_op,
+       nullify_pos_value v2)
 
 (* XXX update *)
 let pos_best pos1 pos2 =
