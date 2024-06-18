@@ -969,7 +969,7 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
   let options_nums =
     let option_of_index n =
       (* NOTE: 1..9 (starts at ASCII 49) & a..z (starts at ASCII 97) *)
-      (String.make 1 (char_of_int (if n < 9 then n+49 else n+97)))
+      (String.make 1 (char_of_int (if n < 9 then n+49 else (n-9)+97)))
     in
     List.mapi (fun n (ans, _) -> ans, option_of_index n) options
   in

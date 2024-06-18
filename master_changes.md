@@ -14,6 +14,7 @@ users)
   * Bump the version number after the release of 2.2.0~beta3 [#6009 @kit-ty-kate]
 
 ## Global CLI
+  * Fix OpamConsole.menu > 9 options [#6026 @kit-ty-kate]
 
 ## Plugins
 
