@@ -1233,7 +1233,7 @@ let initialise_msys2 root =
     in
     let answer =
       let cmd = OpamConsole.colorise `yellow (cmd ^ " -lc \"uname -a\"") in
-      OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
+      OpamConsole.menu ~default:`Yes ~unsafe_yes:`Yes ~yes:`Ignore ~no:`Quit
         "MSYS2 appears not to have been initialised. opam can:"
         ~options:[
           `Yes, Printf.sprintf
