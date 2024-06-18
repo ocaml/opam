@@ -91,6 +91,7 @@ users)
 ## Shell
 
 ## Internal
+  * Fix a wrong use of `OpamFilename.of_string` [#6024 @kit-ty-kate]
 
 ## Internal: Windows
 

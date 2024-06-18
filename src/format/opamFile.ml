@@ -358,7 +358,7 @@ module LinesBase = struct
       ) lines;
     Buffer.contents buf
 
-  let file_none = OpamFilename.of_string "<none>"
+  let file_none = OpamFilename.raw "<none>"
 
   let pp_string =
     Pp.pp
