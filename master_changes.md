@@ -68,6 +68,7 @@ users)
 ## VCS
 
 ## Build
+  * Fix the lower-bound constraint on ocaml-re (bump from >= 1.9.0 to >= 1.10.0) [#6016 @kit-ty-kate]
 
 ## Infrastructure
 
