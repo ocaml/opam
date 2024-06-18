@@ -39,9 +39,9 @@ fi
 if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
   tar -zxf ${V}.tar.gz
 else
-  mkdir -p ${V}
+  mkdir -p ocaml-${V}
 fi
-cd ${V}
+cd ocaml-${V}
 PATH_PREPEND=
 LIB_PREPEND=
 INC_PREPEND=
@@ -130,7 +130,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
   if [ ! -e ${FLEXDLL} ]; then
     cp $BOOTSTRAP_ROOT/src_ext/archives/${FLEXDLL} . 2>/dev/null || ${CURL} ${FV_URL}
   fi
-  cd ${V}
+  cd ocaml-${V}
   PREFIX=`cd .. ; pwd`/ocaml
   WINPREFIX=`echo ${PREFIX} | cygpath -f - -m`
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
