@@ -20,6 +20,7 @@ users)
 ## Plugins
 
 ## Init
+  * Suppress all the Windows menus when running with `opam init -ya` [#6034 @dra27]
 
 ## Config report
 
