@@ -65,6 +65,7 @@ users)
 ## Repository
   * Accurately tag `curl` download command when loaded from global config file [#6270 @rjbou]
   * Remove wget support for Software Heritage fallback [#6036 @rjbou - fix #5721]
+  * [BUG] Fix SWH liveness check [#6036 @rjbou - fix #5721]
 
 ## Lock
 
