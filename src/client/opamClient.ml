@@ -872,7 +872,7 @@ let git_for_windows kind mechanism cygwin_is_tweakable =
     let prompt () =
       OpamStd.Option.iter (OpamConsole.warning "%s\n") gfw_message;
       OpamConsole.menu "Which Git should opam use?"
-        ~default ~no:default ~options
+        ~default ~yes:default ~no:default ~options
     in
     match prompt () with
     | `Default -> None, cygwin_is_tweakable
@@ -1155,7 +1155,7 @@ let rec cygwin_menu ~bypass_checks header =
      order to operate correctly. At present, this requires the installation \
      of Cygwin to provide these tools.\n\n";
   match OpamConsole.menu "How should opam obtain Unix tools?"
-          ~default ~no:default ~options with
+          ~default ~yes:default ~no:default ~options with
   | `Chosen (kind, `Internal) ->
     assert (kind = `Cygwin);
     Some (kind, `Internal OpamInitDefaults.required_packages_for_cygwin)
@@ -1233,7 +1233,7 @@ let initialise_msys2 root =
     in
     let answer =
       let cmd = OpamConsole.colorise `yellow (cmd ^ " -lc \"uname -a\"") in
-      OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
+      OpamConsole.menu ~default:`Yes ~unsafe_yes:`Yes ~yes:`Ignore ~no:`Quit
         "MSYS2 appears not to have been initialised. opam can:"
         ~options:[
           `Yes, Printf.sprintf
@@ -1728,8 +1728,8 @@ let get_redirected_root () =
     OpamStd.Option.replace check (OpamConsole.read "Root directory for opam: ")
   in
   let rec menu () =
-    match OpamConsole.menu "Where should opam store files?" ~default ~options
-            ~no:default with
+    match OpamConsole.menu "Where should opam store files?" ~options
+            ~default ~yes:default ~no:default with
     | `Redirect ->
       Some None
     | `Endure ->
