@@ -1,0 +1,226 @@
+N0REP0
+### : test all the fields to check that effectively_equal works as expected
+### : each fields' value is placed on the next line to ensure the position will differ from the normalised version
+### <pkg:test-all-fields.1>
+opam-version:
+"2.0"
+name:
+"test-all-fields"
+version:
+"1"
+depends:
+["dummy-dep" {some-filter}]
+conflicts:
+["dummy-conflict" {some-filter}]
+depopts:
+["dummy-dep" {some-filter}]
+conflict-class:
+"conflict-class"
+available:
+true
+flags:
+[plugin]
+setenv:
+[ENV = "some value"]
+build:
+["false" {some-filter}]
+run-test:
+["false" {some-filter}]
+install:
+["false" {some-filter}]
+remove:
+["false" {some-filter}]
+substs:
+["some-file"]
+patches:
+["some-patches" {some-filter}]
+build-env:
+[BUILD_ENV = "some value"]
+extra-source
+"some-file"
+{
+src:
+"https://example.com"
+checksum: "md5=d41d8cd98f00b204e9800998ecf8427e"
+}
+messages:
+["message" {some-filter}]
+post-messages:
+["post-message" {some-filter}]
+depexts:
+[["depext"] {some-filter}]
+dev-repo:
+"git+https://example.com"
+pin-depends:
+["dep.dev" "https://example.com"]
+maintainer:
+"maintainer"
+authors:
+["author1" "author2"]
+license:
+"LicenseRef-custom"
+tags:
+["tag"]
+homepage:
+"https://example.com"
+doc:
+"https://example.com"
+bug-reports:
+"https://example.com"
+x-some-extension:
+[ext "something"]
+x-env-path-rewrite:
+[[ENV false]]
+url
+{
+src: "https://example.com"
+checksum: "md5=d41d8cd98f00b204e9800998ecf8427e"
+}
+synopsis:
+"some synopsis"
+description:
+"some description"
+### opam switch create eff-eq --empty
+### opam var --global some-filter=false
+Added '[some-filter "false" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install --fake test-all-fields
+The following actions will be faked:
+=== install 1 package
+  - install test-all-fields 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of test-all-fields.1
+Done.
+### cat OPAM/repo/default/packages/test-all-fields/test-all-fields.1/opam
+opam-version:
+"2.0"
+name:
+"test-all-fields"
+version:
+"1"
+depends:
+["dummy-dep" {some-filter}]
+conflicts:
+["dummy-conflict" {some-filter}]
+depopts:
+["dummy-dep" {some-filter}]
+conflict-class:
+"conflict-class"
+available:
+true
+flags:
+[plugin]
+setenv:
+[ENV = "some value"]
+build:
+["false" {some-filter}]
+run-test:
+["false" {some-filter}]
+install:
+["false" {some-filter}]
+remove:
+["false" {some-filter}]
+substs:
+["some-file"]
+patches:
+["some-patches" {some-filter}]
+build-env:
+[BUILD_ENV = "some value"]
+extra-source
+"some-file"
+{
+src:
+"https://example.com"
+checksum: "md5=d41d8cd98f00b204e9800998ecf8427e"
+}
+messages:
+["message" {some-filter}]
+post-messages:
+["post-message" {some-filter}]
+depexts:
+[["depext"] {some-filter}]
+dev-repo:
+"git+https://example.com"
+pin-depends:
+["dep.dev" "https://example.com"]
+maintainer:
+"maintainer"
+authors:
+["author1" "author2"]
+license:
+"LicenseRef-custom"
+tags:
+["tag"]
+homepage:
+"https://example.com"
+doc:
+"https://example.com"
+bug-reports:
+"https://example.com"
+x-some-extension:
+[ext "something"]
+x-env-path-rewrite:
+[[ENV false]]
+url
+{
+src: "https://example.com"
+checksum: "md5=d41d8cd98f00b204e9800998ecf8427e"
+}
+synopsis:
+"some synopsis"
+description:
+"some description"
+### cat OPAM/eff-eq/.opam-switch/packages/test-all-fields.1/opam
+opam-version: "2.0"
+synopsis: "some synopsis"
+description: "some description"
+maintainer: "maintainer"
+authors: ["author1" "author2"]
+license: "LicenseRef-custom"
+tags: "tag"
+homepage: "https://example.com"
+doc: "https://example.com"
+bug-reports: "https://example.com"
+depends: [
+  "dummy-dep" {some-filter}
+]
+depopts: [
+  "dummy-dep" {some-filter}
+]
+conflicts: [
+  "dummy-conflict" {some-filter}
+]
+conflict-class: "conflict-class"
+flags: plugin
+setenv: ENV = "some value"
+build: "false" {some-filter}
+run-test: "false" {some-filter}
+install: "false" {some-filter}
+remove: "false" {some-filter}
+substs: "some-file"
+patches: "some-patches" {some-filter}
+build-env: BUILD_ENV = "some value"
+messages: "message" {some-filter}
+post-messages: "post-message" {some-filter}
+depexts: ["depext"] {some-filter}
+dev-repo: "git+https://example.com"
+pin-depends: ["dep.dev" "https://example.com"]
+url {
+  src: "https://example.com"
+  checksum: "md5=d41d8cd98f00b204e9800998ecf8427e"
+}
+extra-source "some-file" {
+  src: "https://example.com"
+  checksum: "md5=d41d8cd98f00b204e9800998ecf8427e"
+}
+x-env-path-rewrite: [
+  [ENV false]
+]
+x-some-extension: [ext "something"]
+### opam upgrade
+Already up-to-date.
+Nothing to do.
+### rm OPAM/eff-eq/.opam-switch/packages/cache
+### opam upgrade --show
+Already up-to-date.
+Nothing to do.

@@ -42,6 +42,8 @@ val string_of_shell: shell -> string
 (** The empty file position *)
 val pos_null: pos
 val nullify_pos : 'a -> 'a with_pos
+val nullify_pos_map : ('a -> 'b) -> 'a with_pos -> 'b with_pos
+val nullify_pos_value : value -> value
 
 (** [pos_best pos1 pos2] returns the most detailed position between [pos1] and
     [pos2] (defaulting to [pos1]) *)

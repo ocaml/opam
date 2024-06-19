@@ -3629,7 +3629,10 @@ module OPAM = struct
 
       (* We keep only `x-env-path-rewrite` as it affects build/install *)
       extensions  =
-        OpamStd.String.Map.filter (fun x _ -> String.equal rewrite_xfield x)
+        OpamStd.String.Map.filter_map (fun k v ->
+            if String.equal rewrite_xfield k
+            then Some (OpamTypesBase.nullify_pos_value v)
+            else None)
           t.extensions;
 
       url         = OpamStd.Option.map effective_url t.url;

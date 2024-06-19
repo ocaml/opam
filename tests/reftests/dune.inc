@@ -417,6 +417,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:download.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-effectively-equal)
+ (action
+  (diff effectively-equal.test effectively-equal.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-effectively-equal)))
+
+(rule
+ (targets effectively-equal.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:effectively-equal.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-empty-conflicts-001)
  (action
   (diff empty-conflicts-001.test empty-conflicts-001.out)))
