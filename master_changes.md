@@ -72,6 +72,7 @@ users)
 
 ## Build
   * Fix the lower-bound constraint on ocaml-re (bump from >= 1.9.0 to >= 1.10.0) [#6016 @kit-ty-kate]
+  * Update source file location as caml.inria.fr is unavailable [#6032 @mtelvers]
 
 ## Infrastructure
 
