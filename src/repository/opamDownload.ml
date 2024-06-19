@@ -268,7 +268,8 @@ let get_output ~post ?(args=[]) url =
   let cmd_args =
     if post then
       match cmd_args with
-      | ("wget"|"curl" as cmd)::args -> Some (cmd :: ["-X"; "POST"] @ args)
+      | ("curl" as cmd)::args -> Some (cmd :: ["-X"; "POST"] @ args)
+      | ("wget" as cmd)::args -> Some (cmd :: ["--method"; "POST"] @ args)
       | _ -> None
     else Some cmd_args
   in
