@@ -159,6 +159,7 @@ users)
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
+  * `OpamDownload.get_output`: use long form for `curl` `POST` request option [#6036 @rjbou]
 
 ## opam-state
 
