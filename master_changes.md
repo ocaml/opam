@@ -169,6 +169,7 @@ users)
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
 
 ## opam-repository
+  * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
 
 ## opam-state
 
