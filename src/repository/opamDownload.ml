@@ -278,7 +278,10 @@ module SWHID = struct
 
   let instance = OpamUrl.of_string "https://archive.softwareheritage.org"
   (* we keep api 1 hardcoded for the moment *)
-  let full_url middle hash = OpamUrl.Op.(instance / "api" / "1" / middle / hash / "")
+  let full_url middle hash =
+    OpamUrl.Op.(instance / "api" / "1" / middle / hash / "")
+  let vault_url kind hash =
+    full_url ("vault/" ^ kind) ("swh:1:dir:" ^ hash)
 
   let check_liveness () =
     OpamProcess.Job.catch (fun _ -> Done false)
@@ -323,7 +326,10 @@ module SWHID = struct
       None
 
   let get_dir hash =
-    let url = full_url "vault/directory" hash in
+    (* https://archive.softwareheritage.org/api/1/vault/flat/doc/ *)
+    let url = vault_url "flat" hash in
+    (* The POST is needed only for asking to cook the archive, it's a no-op on
+       status check *)
     get_output ~post:true url @@| OpamStd.Option.replace @@ fun json ->
     let status = get_value "status" json in
     let fetch_url = get_value "fetch_url" json in
