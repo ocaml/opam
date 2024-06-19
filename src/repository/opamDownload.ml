@@ -283,8 +283,13 @@ module SWHID = struct
   let check_liveness () =
     OpamProcess.Job.catch (fun _ -> Done false)
     @@ fun () ->
-      get_output ~post:true OpamUrl.Op.(instance / "api" / "1" / "ping" / "")
-      @@| fun _ -> true
+    get_output ~post:false OpamUrl.Op.(instance / "api" / "1" / "ping" / "")
+    @@| function
+    | Some (pong::_) ->
+      (* curl output after answer the http code *)
+      (* https://archive.softwareheritage.org/api/1/ping/ *)
+      OpamStd.String.starts_with ~prefix:"\"pong\"" pong
+    | Some _ | None -> false
 
   let get_value key s =
     match OpamJson.of_string s with
