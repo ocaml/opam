@@ -11,15 +11,12 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
-  * Bump the version number after the release of 2.2.0~beta3 [#6009 @kit-ty-kate]
 
 ## Global CLI
-  * Fix OpamConsole.menu > 9 options [#6026 @kit-ty-kate]
 
 ## Plugins
 
 ## Init
-  * Provide defaults so `opam init -y` no longer asks questions [#6033 @dra27 fix #6013]
 
 ## Config report
 
@@ -42,7 +39,6 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
-  * Fix `opam upgrade` wanting to recompile opam files containing the `x-env-path-rewrite` field [#6029 @kit-ty-kate - fix #6028]
 
 ## Tree
 
@@ -71,13 +67,10 @@ users)
 ## VCS
 
 ## Build
-  * Fix the lower-bound constraint on ocaml-re (bump from >= 1.9.0 to >= 1.10.0) [#6016 @kit-ty-kate]
-  * Update source file location as caml.inria.fr is unavailable [#6032 #5789 @mtelvers @kit-ty-kate]
 
 ## Infrastructure
 
 ## Release scripts
-  * Add windows to the release script [#5789 @kit-ty-kate]
 
 ## Install script
 
@@ -96,7 +89,6 @@ users)
 ## Shell
 
 ## Internal
-  * Fix a wrong use of `OpamFilename.of_string` [#6024 @kit-ty-kate]
 
 ## Internal: Windows
 
@@ -106,7 +98,6 @@ users)
 
 ## Reftests
 ### Tests
-  * add a complete test to make sure effectively_equal does not take the location of the fields into account [#6029 @kit-ty-kate]
 
 ### Engine
 
@@ -126,6 +117,5 @@ users)
 ## opam-solver
 
 ## opam-format
-  * `OpamTypesBase`: Add `nullify_pos_map` and `nullify_pos_value` [#6029 @kit-ty-kate]
 
 ## opam-core
