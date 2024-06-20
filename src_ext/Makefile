@@ -8,7 +8,7 @@ endif
 
 PATCH ?= patch
 
-URL_ocaml = https://github.com/ocaml/ocaml/archive/4.14.2.tar.gz
+URL_ocaml = https://github.com/ocaml/ocaml/archive/refs/tags/4.14.2.tar.gz
 MD5_ocaml = b28daefda803b5d5910cecf085b1451c
 
 URL_flexdll = https://github.com/ocaml/flexdll/archive/0.43.tar.gz

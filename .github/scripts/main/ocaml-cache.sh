@@ -46,12 +46,12 @@ esac
 
 FLEXDLL_VERSION=0.43
 
-curl -sLO "https://caml.inria.fr/pub/distrib/ocaml-${OCAML_VERSION%.*}/ocaml-$OCAML_VERSION.tar.gz"
+curl -sLO "https://github.com/ocaml/ocaml/archive/refs/tags/${OCAML_VERSION}.tar.gz"
 if [[ $PLATFORM = 'Windows' ]] ; then
   curl -sLO "https://github.com/ocaml/flexdll/archive/refs/tags/$FLEXDLL_VERSION.tar.gz"
 fi
 
-tar -xzf "ocaml-$OCAML_VERSION.tar.gz"
+tar -xzf "$OCAML_VERSION.tar.gz"
 
 case "${OCAML_VERSION%.*}" in
   4.08) PATCHES='e322556b0a9097a2eff2117476193b773e1b947f 17df117b4939486d3285031900587afce5262c8c';;
