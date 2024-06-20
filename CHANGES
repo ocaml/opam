@@ -3,6 +3,23 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.2.0~rc1:
+* Fix `opam upgrade` wanting to recompile opam files containing the
+  `x-env-path-rewrite` field [#6029 @kit-ty-kate - fix #6028]
+* Provide defaults so `opam init -y` no longer asks questions
+  [#6033 @dra27 - fix #6013]
+* Fix OpamConsole.menu > 9 options [#6026 @kit-ty-kate]
+* Fix the lower-bound constraint on ocaml-re
+  (bump from >= 1.9.0 to >= 1.10.0) [#6016 @kit-ty-kate]
+* Update source file location as caml.inria.fr is unavailable
+  [#6032 #5789 @mtelvers @kit-ty-kate]
+* Fix a wrong use of `OpamFilename.of_string` [#6024 @kit-ty-kate]
+* Add Windows to opam's release script [#5789 @kit-ty-kate]
+* Improve and extend the tests [#6029 @kit-ty-kate]
+* API changes:
+  * `OpamTypesBase`: Add `nullify_pos_map` and `nullify_pos_value`
+    [#6029 @kit-ty-kate]
+
 2.2.0~beta3:
 * (+) New option `opam init --cygwin-extra-packages=CYGWIN_PKGS
   --cygwin-internal-install`, to specify additional packages for internal Cygwin
@@ -94,8 +111,6 @@ are not marked). Those prefixed with "(+)" are new command/option (since
 * Improve the benchmarks [#5909 @kit-ty-kate]
 * Improve the test infrastructure [#5935 #5938 #5998 @dra27]
 * API changes:
-
-
   * `OpamClient.init` and `OpamClient.reinit`: now can have additional cygwin
     packages to install [#5930 @moyodiallo]
   * `OpamClientConfig.opam_init`: add `original_root_dir` argument that
