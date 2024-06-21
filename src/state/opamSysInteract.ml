@@ -1033,14 +1033,14 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        "--no-startmenu";
        "--no-desktop";
        "--no-admin";
+       "--no-version-check";
+       "--no-write-registry";
        "--packages";
        String.concat "," packages;
      ] @ (if Cygwin.is_internal config then
             let common =
               [ "--upgrade-also";
                 "--only-site";
-                "--no-write-registry";
-                "--no-version-check";
                 "--site"; Cygwin.mirror;
                 "--local-package-dir";
                 OpamFilename.Dir.to_string (Cygwin.internal_cygcache ());

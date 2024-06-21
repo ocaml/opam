@@ -60,6 +60,7 @@ users)
 ## Opamfile
 
 ## External dependencies
+ * Always pass --no-version-check and --no-write-registry to Cygwin setup [#6046 @dra27]
 
 ## Format upgrade
 
