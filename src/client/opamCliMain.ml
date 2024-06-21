@@ -181,7 +181,7 @@ let check_and_run_external_commands () =
     let yes = if yes then Some (Some true) else None in
     OpamCoreConfig.init ?yes ?confirm_level ();
     OpamFormatConfig.init ();
-    let root_from, root_dir = OpamStateConfig.opamroot () in
+    let root_from, root_dir = OpamStateConfig.opamroot_with_provenance () in
     let has_init, root_upgraded =
       match OpamStateConfig.load_defaults ~lock_kind:`Lock_read root_dir with
       | None -> (false, false)

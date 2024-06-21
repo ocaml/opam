@@ -209,7 +209,7 @@ let opam_init ?root_dir ?strict ?solver =
   let open OpamStd.Option.Op in
 
   (* (i) get root dir *)
-  let root_from, root = OpamStateConfig.opamroot ?root_dir () in
+  let root_from, root = OpamStateConfig.opamroot_with_provenance ?root_dir () in
 
   (* (ii) load conf file and set defaults *)
   (* the init for OpamFormat is done in advance since (a) it has an effect on

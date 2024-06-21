@@ -223,7 +223,7 @@ let initk k =
 
 let init ?noop:_ = initk (fun () -> ())
 
-let opamroot ?root_dir () =
+let opamroot_with_provenance ?root_dir () =
   match root_dir with
   | Some root -> `Command_line, win_space_redirection root
   | None ->
@@ -232,6 +232,8 @@ let opamroot ?root_dir () =
       `Env, win_space_redirection (OpamFilename.Dir.of_string root)
     | None ->
       `Default, default.root_dir
+
+let opamroot ?root_dir () = snd (opamroot_with_provenance ?root_dir ())
 
 let is_newer_raw = function
   | Some v ->
