@@ -31,6 +31,12 @@ depends: [
   "jsonm"
   "swhid_core"
   "uutf"
+  (("host-system-mingw" {os = "win32" & os-distribution != "cygwinports"} &
+    "conf-mingw-w64-gcc-i686" {os = "win32" & os-distribution != "cygwinports"} &
+    "conf-mingw-w64-gcc-x86_64" {os = "win32" & os-distribution != "cygwinports"}) |
+   ("host-system-msvc" {os = "win32" & os-distribution != "cygwinports"} &
+    "conf-msvc32" {os = "win32" & os-distribution != "cygwinports"} &
+    "conf-msvc64" {os = "win32" & os-distribution != "cygwinports"}))
 ]
 conflicts: ["extlib-compat"]
 build: [
