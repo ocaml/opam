@@ -420,7 +420,7 @@ let import_t ?ask importfile t =
             OpamSwitchState.find_installed_package_by_name t name
           in
           let installed = OpamSwitchState.opam t pkg in
-          if OpamFile.OPAM.effectively_equal
+          if OpamFile.OPAM.effectively_equal (Some pkg)
               ~modulo_state:true installed imported then
             reinst
           else OpamPackage.Set.add pkg reinst
