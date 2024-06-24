@@ -743,7 +743,7 @@ let get_full
   let u =
     (List.map resolve_separator_and_format u) in
   let updates =
-    u @ updates ~set_opamroot ~set_opamswitch ~force_path st in
+    updates ~set_opamroot ~set_opamswitch ~force_path st @ u in
   add env0 updates
 
 let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
