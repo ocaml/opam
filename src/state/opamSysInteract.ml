@@ -1026,9 +1026,10 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
   | Cygwin ->
     (* We use setup_x86_64 to install package instead of `cygcheck` that is
        stored in `sys-pkg-manager-cmd` field *)
+    let is_internal = Cygwin.is_internal config in
     [`AsUser (OpamFilename.to_string (Cygwin.cygsetup ())),
      [ "--root"; (OpamFilename.Dir.to_string (Cygwin.cygroot config));
-       "--quiet-mode"; "noinput";
+       "--quiet-mode"; (if is_internal then "noinput" else "unattended");
        "--no-shortcuts";
        "--no-startmenu";
        "--no-desktop";
@@ -1037,7 +1038,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
        "--no-write-registry";
        "--packages";
        String.concat "," packages;
-     ] @ (if Cygwin.is_internal config then
+     ] @ (if is_internal then
             let common =
               [ "--upgrade-also";
                 "--only-site";
