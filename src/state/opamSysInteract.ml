@@ -774,12 +774,24 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     let get_installed str_pkgs =
       (* ouput:
          >ii  uim-gtk3                 1:1.8.8-6.1  amd64    Universal ...
-         >ii  uim-gtk3-immodule:amd64  1:1.8.8-6.1  amd64    Universal ...
+         >ri  uim-gtk3-immodule:amd64  1:1.8.8-6.1  amd64    Universal ...
+
+         First column is <desired action><package status>
+         * Desired action:
+           u = Unknown           h = Hold             p = Purge
+           i = Install           r = Remove
+         * Package status:
+           n = Not-installed    U = Unpacked          t = Triggers-pending
+           c = Config-files     F = Half-configured   i = Installed
+           H = Half-installed   W = Triggers-awaiting
+
+         We focus on the second element of the column
       *)
       let re_pkg =
         Re.(compile @@ seq
               [ bol;
-                str "ii";
+                alpha;
+                char 'i';
                 rep1 @@ space;
                 group @@ rep1 @@ diff (alt [alnum; punct]) (char ':');
                 (* pkg:arch convention *)
