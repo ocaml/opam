@@ -26,6 +26,7 @@ users)
 ## Actions
 
 ## Install
+  * Fix package name display for no agreement conflicts [#6055 @rjbou - fix #6030]
 
 ## Remove
 
