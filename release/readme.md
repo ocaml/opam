@@ -1,9 +1,10 @@
 # Steps to follow for each release
 
 ## Finalise opam code for release
-* update version in opam files, configure.ac
+* update version in all the opam files and in configure.ac
 * run `make configure` to regenerate `./configure` [checked by github actions]
 * update copyright headers
+* if you're releasing the first final release of a new branch (e.g. 2.2.0): make sure `root_version` in OpamFile.ml is set to the final release number (e.g. for 2.2.0, root_version should be 2.2). Make sure that opamFormatUpgrade.ml also contains an upgrade function from the previous version (that function will most likely be empty)
 * run `make tests`, `opam-rt` [checked by github actions]
 * update the CHANGE file: take `master_changes.md` content to fill it
 
