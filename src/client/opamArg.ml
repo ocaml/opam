@@ -458,6 +458,8 @@ type global_options = {
   no_auto_upgrade : bool;
   working_dir : bool;
   ignore_pin_depends : bool;
+  no_checksums: bool;
+  req_checksums : bool;
   cli : OpamCLIVersion.t;
 }
 
@@ -469,6 +471,7 @@ let create_global_options
     opt_root external_solver use_internal_solver
     cudf_file solver_preferences best_effort safe_mode json no_auto_upgrade
     working_dir ignore_pin_depends
+    no_checksums req_checksums
     d_no_aspcud _ =
   if d_no_aspcud then
     OpamConsole.warning
@@ -485,7 +488,9 @@ let create_global_options
   { git_version; debug_level; verbose; quiet; color; opt_switch; confirm_level; yes;
     strict; opt_root; external_solver; use_internal_solver;
     cudf_file; solver_preferences; best_effort; safe_mode; json;
-    no_auto_upgrade; working_dir; ignore_pin_depends; cli }
+    no_auto_upgrade; working_dir; ignore_pin_depends;
+    no_checksums; req_checksums;
+    cli }
 
 let apply_global_options cli o =
   if o.git_version then (
@@ -532,7 +537,10 @@ let apply_global_options cli o =
     (* - repository options - *)
     (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
     (* ?retries:int *)
-    (* ?force_checksums:bool option *)
+    ?force_checksums:(if o.req_checksums then Some (Some true)
+                      else if o.no_checksums then Some (Some false)
+                      else None)
+    (* ?repo_tarring: bool *)
     (* - solver options *)
     ?cudf_file:(some o.cudf_file)
     ?solver
@@ -631,8 +639,6 @@ type build_options = {
   reuse_build_dir: bool;
   inplace_build : bool;
   make          : string option;
-  no_checksums  : bool;
-  req_checksums : bool;
   build_test    : bool;
   build_doc     : bool;
   dev_setup       : bool;
@@ -650,14 +656,14 @@ type build_options = {
 }
 
 let create_build_options
-    keep_build_dir reuse_build_dir inplace_build make no_checksums
-    req_checksums build_test build_doc dev_setup show dryrun skip_update
+    keep_build_dir reuse_build_dir inplace_build make
+    build_test build_doc dev_setup show dryrun skip_update
     fake jobs ignore_constraints_on unlock_base locked lock_suffix
     assume_depexts no_depexts
     =
   {
-    keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
-    req_checksums; build_test; build_doc; dev_setup; show; dryrun; skip_update;
+    keep_build_dir; reuse_build_dir; inplace_build; make;
+    build_test; build_doc; dev_setup; show; dryrun; skip_update;
     fake; jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
     assume_depexts; no_depexts;
   }
@@ -665,13 +671,14 @@ let create_build_options
 let apply_build_options cli b =
   let open OpamStd.Option.Op in
   let flag f = if f then Some true else None in
+(*
   OpamRepositoryConfig.update
     (* ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t *)
     (* ?retries:int *)
-    ?force_checksums:(if b.req_checksums then Some (Some true)
-                      else if b.no_checksums then Some (Some false)
-                      else None)
+    (* ?force_checksums:bool option *)
+    (* ?repo_tarring: bool *)
     ();
+*)
   OpamStateConfig.update
     (* ?root: -- handled globally *)
     ?jobs:(b.jobs >>| fun j -> lazy j)
@@ -1379,6 +1386,17 @@ let global_options cli =
        through $(i,opam pin) or through $(i,opam install DIR). This is \
        equivalent to setting $(b,IGNOREPINDEPENDS=true)."
   in
+  let no_checksums =
+    mk_flag ~cli cli_original ~section ["no-checksums"]
+      "Do not verify the checksum of downloaded archives.\
+       This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to \"true\"."
+  in
+  let req_checksums =
+    mk_flag ~cli cli_original ~section ["require-checksums"]
+      "Reject the installation of packages that don't provide a checksum for \
+       the upstream archives. \ This is equivalent to setting \
+       $(b,\\$OPAMREQUIRECHECKSUMS) to \"true\"."
+  in
   Term.(const create_global_options
         $git_version $debug $debug_level $verbose $quiet $color $switch
         $yes $confirm_level
@@ -1386,6 +1404,7 @@ let global_options cli =
         $use_internal_solver $cudf_file $solver_preferences $best_effort
         $safe_mode $json_flag $no_auto_upgrade $working_dir
         $ignore_pin_depends
+        $no_checksums $req_checksums
         $d_no_aspcud $cli_arg)
 
 (* lock options *)
@@ -1433,14 +1452,6 @@ let build_options cli =
        affects packages that are explicitly listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
   in
-  let no_checksums =
-    mk_flag ~cli cli_original ~section ["no-checksums"]
-      "Do not verify the checksum of downloaded archives.\
-       This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to \"true\"." in
-  let req_checksums =
-    mk_flag ~cli cli_original ~section ["require-checksums"]
-      "Reject the installation of packages that don't provide a checksum for the upstream archives. \
-       This is equivalent to setting $(b,\\$OPAMREQUIRECHECKSUMS) to \"true\"." in
   let build_test =
     mk_flag_replaced ~cli ~section [
       cli_between cli2_0 cli2_1 ~replaced:"--with-test", ["build-test"];
@@ -1527,7 +1538,7 @@ let build_options cli =
   in
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make
-        $no_checksums $req_checksums $build_test $build_doc $dev_setup $show
+        $build_test $build_doc $dev_setup $show
         $dryrun $skip_update $fake $jobs_flag ~section cli cli_original
         $ignore_constraints_on $unlock_base $locked $lock_suffix
         $assume_depexts $no_depexts)

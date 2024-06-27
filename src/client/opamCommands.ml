@@ -3785,9 +3785,10 @@ let source cli =
       OpamSwitchState.drop
         (OpamClient.PIN.pin t nv.name ~version:nv.version target)
   in
-  mk_command  ~cli cli_original "source" ~doc ~man
+  mk_command ~cli cli_original "source" ~doc ~man
     Term.(const source
-          $global_options cli $atom $dev_repo $pin $no_switch $dir)
+          $global_options cli
+          $atom $dev_repo $pin $no_switch $dir)
 
 (* LINT *)
 let lint_doc = "Checks and validate package description ('opam') files."
