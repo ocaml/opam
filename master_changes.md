@@ -14,6 +14,7 @@ users)
   * Bump version to 2.3.0~alpha~dev [#6045 @rjbou]
 
 ## Global CLI
+  * Add cli version 2.3 [#6045 @rjbou]
 
 ## Plugins
 
