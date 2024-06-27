@@ -9,6 +9,16 @@
 (*                                                                        *)
 (**************************************************************************)
 
+let might_escape ~sep path =
+  let sep =
+    match sep with
+    | `Unix -> "/"
+    | `Windows -> "\\"
+    | `Unspecified -> Filename.dir_sep
+  in
+  List.exists (String.equal Filename.parent_dir_name)
+    Re.(split (compile (str sep)) path)
+
 module Base = struct
   include OpamStd.AbstractString
 
