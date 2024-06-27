@@ -99,6 +99,7 @@ users)
 
 ## Reftests
 ### Tests
+  * clean: Add to check cleaning of sources directories [#5474 @rjbou]
 
 ### Engine
 
