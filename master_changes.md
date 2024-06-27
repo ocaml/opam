@@ -99,6 +99,7 @@ users)
 
 ## Reftests
 ### Tests
+  * cli versioning: untie output from current major version [#6045 @rjbou]
 
 ### Engine
 
