@@ -102,6 +102,7 @@ users)
 ## Reftests
 ### Tests
   * cli versioning: untie output from current major version [#6045 @rjbou]
+  * Set `opam-version` to 2.2 for some conflict message tests based on opam repository to stabilise their output [#6045 @rjbou]
 
 ### Engine
 
