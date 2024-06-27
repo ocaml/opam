@@ -47,8 +47,13 @@ users)
 ## Source
 
 ## Lint
+  * Add E69 to check `extra-files:` duplicated fields [#5561 @rjbou]
+  * Add E71 to check same kind duplicated url checksums [#5561 @rjbou]
+  * Add E72 to check that paths in `extra-files:` are not escapable [#5561 @rjbou]
+  * Update W59 (no checksum in `url`) to always display a warning, untie it from `--check-upstream` option [#5561 @rjbou]
 
 ## Repository
+  * When loading a repository, no more automatically populate `extra-files:` field with found files in `files/` [#5564 @rjbou]
 
 ## Lock
 
@@ -99,6 +104,8 @@ users)
 
 ## Reftests
 ### Tests
+  * lint: update W37, E59, and E65 tests [#5561 @rjbou]
+  * lint: add E70, E71, and E72 tests [#5561 @rjbou]
 
 ### Engine
 
@@ -114,9 +121,13 @@ users)
 ## opam-repository
 
 ## opam-state
+  * `OpamFilteTools.add_aux_files`: ignore non registered extra-files [#5564 @@rjbou]
+  * `OpamFileTools`: `read_opam` & `read_repo_opam` no more add non registered extra-files [#5564 @rjbou]
 
 ## opam-solver
 
 ## opam-format
 
 ## opam-core
+  * `OpamHash`: export `compare_kind` [#5561 @rjbou]
+  * `OpamFilename`: add `might_escape` to check if a path is escapable, ie contains `<sep>..<sep>` [#5561 @rjbou]

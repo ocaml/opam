@@ -62,6 +62,18 @@ depends: "compiler"
 ### <pkg:meta-compiler.1:meta-compiler.config>
 opam-version: "2.0"
 variables { compvar: "something" }
+### <hash.sh>
+set -ue
+file=meta-compiler.config
+path=REPO/packages/meta-compiler/meta-compiler.1
+MD5=$(openssl md5 $path/files/$file | cut -d' ' -f2)
+echo "extra-files: [ \"$file\" \"md5=$MD5\"]" >> $path/opam
+### sh hash.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pkg:compiler.1>
 opam-version: "2.0"
 depends: [
