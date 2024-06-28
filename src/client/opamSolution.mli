@@ -90,7 +90,7 @@ val install_sys_packages: confirm:bool -> sys_packages:OpamSysPkg.Set.t -> requi
    launched, without asking user (used by the `--depext-only` option). If
    [force_depext] is true, it overrides [OpamFile.Config.depext] value. *)
 val install_depexts: ?force_depext:bool -> ?confirm:bool -> rw switch_state ->
-  package_set -> rw switch_state
+  new_packages:package_set -> all_packages:package_set -> rw switch_state
 
 (** {2 Atoms} *)
 

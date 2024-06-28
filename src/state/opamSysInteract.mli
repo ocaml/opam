@@ -19,18 +19,19 @@ open OpamStateTypes
      * third one, not found set: packages not found on the defined repositories
    [env] is used to determine host specification. *)
 val packages_status:
-  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t
-  -> OpamSysPkg.Set.t * OpamSysPkg.Set.t * OpamSysPkg.Set.t
+  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
+  old_packages:OpamSysPkg.Set.t -> OpamSysPkg.Set.t * OpamSysPkg.Set.t * OpamSysPkg.Set.t
 
 (* Return the commands to run to install given system packages.
    [env] is used to determine host specification. *)
 val install_packages_commands:
   ?env:gt_variables -> OpamSwitch.t option -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
-  ([`AsAdmin of string | `AsUser of string] * string list) list
+  required:OpamSysPkg.Set.t -> ([`AsAdmin of string | `AsUser of string] * string list) list
 
 (* Install given system packages, by calling local system package manager.
    [env] is used to determine host specification. *)
-val install: ?env:gt_variables -> OpamSwitch.t option -> OpamFile.Config.t -> OpamSysPkg.Set.t -> unit
+val install: ?env:gt_variables -> OpamSwitch.t option -> OpamFile.Config.t ->
+  OpamSysPkg.Set.t -> required:OpamSysPkg.Set.t -> unit
 
 val update: ?env:gt_variables -> OpamFile.Config.t -> unit
 

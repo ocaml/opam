@@ -473,7 +473,7 @@ let yum_cmd = lazy begin
     raise (OpamSystem.Command_not_found "yum or dnf")
 end
 
-let packages_status ?(env=OpamVariable.Map.empty) config packages =
+let packages_status ?(env=OpamVariable.Map.empty) config packages ~old_packages =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
@@ -988,8 +988,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
          be found.' But omitting them will mean that they won't be
          added to the Nix derivation.
       *)
-      (* TODO *)
-      packages, OpamSysPkg.Set.empty, OpamSysPkg.Set.empty
+      OpamSysPkg.Set.diff packages old_packages, old_packages, OpamSysPkg.Set.empty
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-qP"]
@@ -1025,7 +1024,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
 
 (* Install *)
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_packages =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_packages ~required =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
@@ -1124,7 +1123,10 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_
     | Some switch ->
     let dir = OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) switch in
     let drvFile = create dir (basename (raw "env.nix")) in
-    let packages = String.concat " " (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l) sys_packages []) in
+    let packages = String.concat " "
+      (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l)
+      OpamSysPkg.Set.Op.(sys_packages ++ required) [])
+    in
     let contents =
 {|{ pkgs ? import <nixpkgs> {} }:
 with pkgs;
@@ -1152,11 +1154,11 @@ echo "PATH	+=	$PATH	Nix" >> $out
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
-let install_packages_commands ?env switch config sys_packages =
-  fst (install_packages_commands_t ?env switch config sys_packages)
+let install_packages_commands ?env switch config sys_packages ~required =
+  fst (install_packages_commands_t ?env switch config sys_packages ~required)
 
 let package_manager_name ?env switch config =
-  match install_packages_commands ?env switch config OpamSysPkg.Set.empty with
+  match install_packages_commands ?env switch config OpamSysPkg.Set.empty ~required:OpamSysPkg.Set.empty with
   | ((`AsAdmin pkgman | `AsUser pkgman), _) :: _ -> pkgman
   | [] -> assert false
 
@@ -1181,11 +1183,11 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install ?env switch config packages =
-  if OpamSysPkg.Set.is_empty packages then
+let install ?env switch config packages ~required =
+  if OpamSysPkg.Set.is_empty packages && OpamSysPkg.Set.is_empty required then
     log "Nothing to install"
   else
-    let commands, vars = install_packages_commands_t ?env switch config packages in
+    let commands, vars = install_packages_commands_t ?env switch config packages ~required in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
@@ -1235,7 +1237,7 @@ let repo_enablers ?(env=OpamVariable.Map.empty) config =
   if family ~env () <> Centos then None else
   let (needed, _, _) =
     packages_status ~env config (OpamSysPkg.raw_set
-                       (OpamStd.String.Set.singleton "epel-release"))
+                       (OpamStd.String.Set.singleton "epel-release")) ~old_packages:OpamSysPkg.Set.empty
   in
   if OpamSysPkg.Set.is_empty needed then None
   else
