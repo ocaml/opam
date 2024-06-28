@@ -12,6 +12,7 @@ users)
 
 ## Version
   * Bump version to 2.20~rc2~dev [#6048 @rjbou]
+  * Bump opam-root-version to 2.2 [#5980 @kit-ty-kate]
 
 ## Global CLI
 
