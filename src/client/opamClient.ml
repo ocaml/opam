@@ -1604,7 +1604,7 @@ let check_for_sys_packages config system_packages =
   if system_packages <> [] then
     let (missing, required, available) =
       OpamSysInteract.packages_status config
-        (OpamSysPkg.Set.of_list system_packages)
+        (OpamSysPkg.Set.of_list system_packages) ~old_packages:OpamSysPkg.Set.empty
     in
     if not (OpamSysPkg.Set.is_empty missing) then
       let vars = OpamFile.Config.global_variables config in
@@ -2348,7 +2348,8 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       in
       if depext_only then
         (OpamSolution.install_depexts ~force_depext:true ~confirm:false t
-           (OpamSolver.all_packages solution)), None
+           ~new_packages:(OpamSolver.all_packages solution)
+           ~all_packages:t.installed), None
       else
         let add_roots =
           match add_to_roots, deps_only with
