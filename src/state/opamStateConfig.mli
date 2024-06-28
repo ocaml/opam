@@ -86,7 +86,10 @@ val default : t
 (** Get the initial opam root value (from default, env or optional argument).
     This allows one to get it before doing the init, which is useful to get the
     configuration file used to fill some options to init() *)
-val opamroot: ?root_dir:dirname -> unit -> provenance * dirname
+val opamroot_with_provenance: ?root_dir:dirname -> unit -> provenance * dirname
+
+(** [opamroot ?root_dir () = snd (opamroot_with_provenance ?root_dir ()] *)
+val opamroot: ?root_dir:dirname -> unit -> dirname
 
 (** Loads the global configuration file, protecting against concurrent writes *)
 val load: ?lock_kind: 'a lock -> dirname -> OpamFile.Config.t option

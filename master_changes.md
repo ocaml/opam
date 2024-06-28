@@ -115,6 +115,7 @@ users)
 ## opam-repository
 
 ## opam-state
+ * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]
 
 ## opam-solver
 
