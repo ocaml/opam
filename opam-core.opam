@@ -1,9 +1,8 @@
 opam-version: "2.0"
 version: "2.2.0~rc2~dev"
 synopsis: "Core library for opam 2.2"
-description: """
-Small standard library extensions, and generic system interaction modules used by opam.
-"""
+description:
+  "Small standard library extensions, and generic system interaction modules used by opam."
 maintainer: "opam-devel@lists.ocaml.org"
 authors: [
   "David Allsopp <david@tarides.com>"
@@ -19,16 +18,11 @@ authors: [
   "Ralf Treinen <ralf.treinen@pps.jussieu.fr>"
   "Frederic Tuong <tuong@users.gforge.inria.fr>"
 ]
+license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 homepage: "https://opam.ocaml.org"
 bug-reports: "https://github.com/ocaml/opam/issues"
-dev-repo: "git+https://github.com/ocaml/opam.git"
-license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
-build: [
-  ["./configure" "--disable-checks" "--prefix" prefix]
-  ["dune" "build" "-p" name "-j" jobs]
-]
 depends: [
-  "ocaml" {>= "4.08.0"}
+  "ocaml" {>= "4.08.0" & (os != "win32" | < "5.0")}
   "base-unix"
   "ocamlgraph"
   "re" {>= "1.9.0"}
@@ -37,5 +31,16 @@ depends: [
   "jsonm"
   "swhid_core"
   "uutf"
+  (("host-system-mingw" {os = "win32" & os-distribution != "cygwinports"} &
+    "conf-mingw-w64-gcc-i686" {os = "win32" & os-distribution != "cygwinports"} &
+    "conf-mingw-w64-gcc-x86_64" {os = "win32" & os-distribution != "cygwinports"}) |
+   ("host-system-msvc" {os = "win32" & os-distribution != "cygwinports"} &
+    "conf-msvc32" {os = "win32" & os-distribution != "cygwinports"} &
+    "conf-msvc64" {os = "win32" & os-distribution != "cygwinports"}))
 ]
-conflicts: "extlib-compat"
+conflicts: ["extlib-compat"]
+build: [
+  ["./configure" "--disable-checks" "--prefix" prefix]
+  ["dune" "build" "-p" name "-j" jobs]
+]
+dev-repo: "git+https://github.com/ocaml/opam.git"
