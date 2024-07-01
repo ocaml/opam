@@ -11,6 +11,7 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
+  * Bump version to 2.2.0 [#6060 @rjbou]
   * Bump version to 2.20~rc2~dev [#6048 @rjbou]
   * Bump opam-root-version to 2.2 [#5980 @kit-ty-kate]
 
