@@ -11,9 +11,6 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
-  * Bump version to 2.2.0 [#6060 @rjbou]
-  * Bump version to 2.20~rc2~dev [#6048 @rjbou]
-  * Bump opam-root-version to 2.2 [#5980 @kit-ty-kate]
 
 ## Global CLI
 
@@ -62,8 +59,6 @@ users)
 ## Opamfile
 
 ## External dependencies
- * Always pass --no-version-check and --no-write-registry to Cygwin setup [#6046 @dra27]
- * Use --quiet-mode noinput for the internal Cygwin installation (which is definitely a fully-specified command line) and --quiet-mode unattended for external Cygwin installations (in case the user does need to select something, e.g. a mirror) [#6046 @dra27]
 
 ## Format upgrade
 
@@ -118,7 +113,6 @@ users)
 ## opam-repository
 
 ## opam-state
- * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]
 
 ## opam-solver
 
