@@ -72,6 +72,7 @@ users)
 ## VCS
 
 ## Build
+ * Synchronise opam-core.opam with opam-repository changes [#6043 @dra27]
 
 ## Infrastructure
 
