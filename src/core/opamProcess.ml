@@ -247,6 +247,7 @@ type t = {
   p_time   : float;
   p_stdout : string option;
   p_stderr : string option;
+  mutable p_cycle : int;
   p_env    : string option;
   p_info   : string option;
   p_metadata: (string * string) list;
@@ -467,6 +468,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
     p_time   = time;
     p_stdout = stdout_file;
     p_stderr = stderr_file;
+    p_cycle  = 0;
     p_env    = env_file;
     p_info   = info_file;
     p_metadata = metadata;
@@ -572,6 +574,7 @@ let dry_run_background c = {
   p_time   = Unix.gettimeofday ();
   p_stdout = None;
   p_stderr = None;
+  p_cycle  = 0;
   p_env    = None;
   p_info   = None;
   p_metadata = OpamStd.Option.default [] c.cmd_metadata;
@@ -605,16 +608,29 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
     stop ();
     (* implem relies on sigalrm, not implemented on win32.
        This will fall back to buffered output. *)
-    if Sys.win32 then () else
+    (*if Sys.win32 then () else*)
     let files = OpamStd.List.sort_nodup compare files in
     let ics =
       List.map
         (open_in_gen [Open_nonblock;Open_rdonly;Open_text;Open_creat] 0o600)
         files
     in
-    let f () =
+    let f =
+      let buffer = Buffer.create 80 in
+      fun () ->
       List.iter (fun ic ->
-          try while true do verbose_print_out (input_line ic) done
+          try while true do
+            (* XXX This should with a better read function *)
+            let line = input_line ic in (* line = "" => we must have read a newline, right, therefore if line = "", we can't possibly be at the start of the file??? *)
+            seek_in ic (pos_in ic - 1);
+            let c = input_char ic in
+            if c <> '\n' then
+              Buffer.add_string buffer line
+            else
+              let buffered = Buffer.contents buffer in
+              let () = Buffer.clear buffer in
+              verbose_print_out (buffered ^ line)
+            done
           with End_of_file -> flush stdout
         ) ics
     in
@@ -625,6 +641,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
     | None -> ()
   in
   let isset () = !verbose_f <> None in
+  (* XXX Need a "super print" mechanism here - nothing should be buffered at the end *)
   let flush_and_stop () = print (); stop () in
   set, print, isset, flush_and_stop
 
@@ -666,22 +683,43 @@ let exit_status p return =
     r_cleanup  = cleanup;
   }
 
+let win32_thread (hndl, running) =
+  let rec loop () =
+    try
+      while !running do
+        Unix.sleepf 0.1;
+        if !running then
+          hndl ();
+      done
+    with Sys.Break ->
+      loop () (* XXX This __cannot__ be correct! *)
+  in loop ()
+
 let safe_wait fallback_pid f x =
   let sh =
     if isset_verbose_f () then
-      let hndl _ = print_verbose_f () in
-      Some (Sys.signal Sys.sigalrm (Sys.Signal_handle hndl))
+      if Sys.win32 then
+        let running = ref true in
+        (* XXX Do we need to wait on these threads to release resources??? *)
+        let _ = Thread.create win32_thread (print_verbose_f, running) in
+        Some (fun () -> running := false)
+      else
+        let hndl _ = print_verbose_f () in
+        let sh = Sys.signal Sys.sigalrm (Sys.Signal_handle hndl) in
+        Some (fun () -> Sys.set_signal Sys.sigalrm sh)
     else None
   in
   let cleanup () =
     match sh with
     | Some sh ->
-      ignore (Unix.alarm 0); (* cancels the alarm *)
-      Sys.set_signal Sys.sigalrm sh
+      if not Sys.win32 then
+        ignore (Unix.alarm 0); (* cancels the alarm *)
+      sh ()
     | None -> ()
   in
   let rec aux () =
-    if sh <> None then ignore (Unix.alarm 1);
+    if sh <> None && not Sys.win32 then
+      ignore (Unix.alarm 1);
     match
       try f x with
       | Unix.Unix_error (Unix.EINTR,_,_) -> aux () (* handled signal *)
