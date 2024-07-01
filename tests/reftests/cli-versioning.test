@@ -1,4 +1,7 @@
 N0REP0
+### <opam-version.sh>
+opam --version | cut -f -2 -d '.'
+### sh opam-version.sh >$ OPAMMAJORVERSION
 ### <pkg:baz.1>
 opam-version: "2.0"
 flags: compiler
@@ -7,8 +10,8 @@ opam-version: "2.0"
 flags: compiler
 ### opam option depext=false
 Set to 'false' the field depext in global configuration
-### opam switch install cli-versioning --empty
-opam: install was removed in version 2.1 of the opam CLI, but version 2.2 has been requested. Use create instead or set OPAMCLI environment variable to 2.0.
+### opam switch install cli-versioning --empty | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
+opam: install was removed in version 2.1 of the opam CLI, but version CURRENTMAJOR has been requested. Use create instead or set OPAMCLI environment variable to 2.0.
 # Return code 2 #
 ### OPAMCLI=2.0 opam switch install cli-versioning --empty
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
@@ -62,8 +65,8 @@ The following actions would be performed:
 The following actions would be performed:
 === install 1 package
   - install baz 2
-### opam install baz.2 --unlock-base
-opam: --unlock-base was removed in version 2.1 of the opam CLI, but version 2.2 has been requested. Use --update-invariant instead or set OPAMCLI environment variable to 2.0.
+### opam install baz.2 --unlock-base | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
+opam: --unlock-base was removed in version 2.1 of the opam CLI, but version CURRENTMAJOR has been requested. Use --update-invariant instead or set OPAMCLI environment variable to 2.0.
 # Return code 2 #
 ### # opam option uses mk_command_ret
 ### opam option foo
@@ -134,8 +137,8 @@ The following actions will be performed:
 -> removed   env-2-1.1
 Done.
 ### # Environement variables cli versioning
-### OPAMBUILDDOC=1 opam var share
-[WARNING] OPAMBUILDDOC was ignored because CLI 2.2 was requested and it was removed in 2.1, set OPAMCLI environment variable to 2.0.
+### OPAMBUILDDOC=1 opam var share | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
+[WARNING] OPAMBUILDDOC was ignored because CLI CURRENTMAJOR was requested and it was removed in 2.1, set OPAMCLI environment variable to 2.0.
 ${BASEDIR}/OPAM/cli-versioning/share
 ### OPAMCLI=2.0 OPAMBUILDDOC=1 opam config var share
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.

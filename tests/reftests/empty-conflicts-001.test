@@ -1,6 +1,8 @@
 297366c
 ### OPAMYES=1 OPAMSTRICT=0
 ### OPAMVAR_arch=x86_64 OPAMVAR_os=linux OPAMVAR_os_family=arch OPAMVAR_os_distribution=archarm
+### # We need to set this version to keep the test as is
+### OPAMVAR_opam_version=2.2.0
 ### opam switch create test ocaml-base-compiler.4.07.1 --fake
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>

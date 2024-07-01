@@ -11,8 +11,10 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
+  * Bump version to 2.3.0~alpha~dev [#6045 @rjbou]
 
 ## Global CLI
+  * Add cli version 2.3 [#6045 @rjbou]
 
 ## Plugins
 
@@ -99,6 +101,8 @@ users)
 
 ## Reftests
 ### Tests
+  * cli versioning: untie output from current major version [#6045 @rjbou]
+  * Set `opam-version` to 2.2 for some conflict message tests based on opam repository to stabilise their output [#6045 @rjbou]
 
 ### Engine
 
