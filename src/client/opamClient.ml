@@ -1591,9 +1591,9 @@ let update_with_init_config ?(overwrite=false) config init_config =
 
 let check_for_sys_packages config system_packages =
   if system_packages <> [] then
-    let ((missing, _) as set) =
+    let (missing, required, available) =
       OpamSysInteract.packages_status config
-        (OpamSysPkg.Set.of_list system_packages)
+        (OpamSysPkg.Set.of_list system_packages) ~old_packages:OpamSysPkg.Set.empty
     in
     if not (OpamSysPkg.Set.is_empty missing) then
       let vars = OpamFile.Config.global_variables config in
@@ -1602,8 +1602,8 @@ let check_for_sys_packages config system_packages =
         |> OpamVariable.Map.of_list
       in
       (*Lazy.force header;*)
-      OpamSolution.print_depext_msg set;
-      OpamSolution.install_sys_packages ~confirm:true env config missing ()
+      OpamSolution.print_depext_msg (missing, available);
+      ignore @@ OpamSolution.install_sys_packages ~confirm:true ~sys_packages:missing ~required env config None
 
 let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     ?dot_profile ?update_config ?env_hook ?completion ?inplace
@@ -2299,7 +2299,8 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       in
       if depext_only then
         (OpamSolution.install_depexts ~force_depext:true ~confirm:false t
-           (OpamSolver.all_packages solution)), None
+           ~new_packages:(OpamSolver.all_packages solution)
+           ~all_packages:t.installed), None
       else
       let add_roots =
         OpamStd.Option.map (function

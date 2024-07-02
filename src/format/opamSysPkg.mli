@@ -20,6 +20,9 @@ type status =
     s_available : Set.t;
     (** Package available but not installed *)
 
+    s_required : Set.t;
+    (** Package installed but also needs to be passed to the installation *)
+
     s_not_found : Set.t;
     (** Package unavailable on this system *)
   }

@@ -2,7 +2,7 @@
 
 set -eu
 
-#for target in alpine archlinux centos debian fedora gentoo opensuse oraclelinux ubuntu; do
+#for target in alpine archlinux centos debian fedora gentoo opensuse oraclelinux ubuntu nix; do
 target=$1
 dir=.github/actions/$target
 
@@ -99,6 +99,12 @@ RUN apt install -y $mainlibs $ocaml
 RUN apt install -y g++
 EOF
     ;;
+  nix)
+    cat >$dir/Dockerfile << EOF
+FROM nixos/nix
+RUN nix-channel --update
+RUN nix-env -i gnum4 git rsync patch gnutar bzip2 gnumake wget ocamlPackages.ocaml ocamlPackages.ocaml-compiler-libs
+EOF
 esac
 
 OCAML_INVARIANT="\"ocaml\" {>= \"4.09.0\"$OCAML_CONSTRAINT}"
