@@ -2,7 +2,7 @@
 
 set -eu
 
-#for target in alpine archlinux centos debian fedora gentoo opensuse oraclelinux ubuntu; do
+#for target in alpine archlinux debian fedora gentoo opensuse oraclelinux ubuntu; do
 target=$1
 dir=.github/actions/$target
 
@@ -36,15 +36,6 @@ EOF
     cat >$dir/Dockerfile << EOF
 FROM archlinux
 RUN pacman -Syu --noconfirm $mainlibs $ocaml gcc diffutils
-EOF
-    ;;
- centos)
-   # CentOS 7 doesn't support OCaml 5 (GCC is too old)
-   OCAML_CONSTRAINT=' & < "5.0"'
-    cat >$dir/Dockerfile << EOF
-FROM centos:7
-RUN yum install -y $mainlibs $ocaml
-RUN yum install -y gcc-c++
 EOF
     ;;
   debian)
@@ -160,8 +151,7 @@ test_depext () {
 
 test_depext conf-gmp conf-which conf-autoconf
 
-# disable automake for centos, as os-family returns rhel
-if [ $target != "centos" ] && [ $target != "opensuse" ]; then
+if [ $target != "opensuse" ]; then
   test_depext conf-automake
 fi
 

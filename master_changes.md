@@ -112,6 +112,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Remove centos when testing depexts as the docker images no longer work [#6063 @kit-ty-kate]
 
 ## Doc
 
