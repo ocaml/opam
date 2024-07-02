@@ -80,6 +80,7 @@ users)
 
 ## Install script
   * Provide a shell/install.ps1 PowerShell script to install opam on Windows [#5906 @kit-ty-kate @dra27]
+  * Add opam 2.2.0 to the install scripts [#6062 @kit-ty-kate]
 
 ## Admin
 
