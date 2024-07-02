@@ -398,7 +398,7 @@ let dry_install tog st universe install =
     OpamConsole.error
       "Could not simulate installing the specified package(s) to this switch:";
     OpamConsole.errmsg "%s"
-      (OpamCudf.string_of_conflicts st.packages
+      (OpamCudf.string_of_conflicts
          (OpamSwitchState.unavailable_reason st) cs);
     OpamStd.Sys.exit_because `No_solution
 
