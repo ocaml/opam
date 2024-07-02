@@ -224,7 +224,8 @@ let get_output ~post ?(args=[]) url =
   let cmd_args =
     if post then
       match cmd_args with
-      | ("wget"|"curl" as cmd)::args -> Some (cmd :: ["-X"; "POST"] @ args)
+      | ("curl" as cmd)::args -> Some (cmd :: ["--request"; "POST"] @ args)
+      | ("wget" as cmd)::args -> Some (cmd :: ["--method"; "POST"] @ args)
       | _ -> None
     else Some cmd_args
   in
@@ -239,13 +240,21 @@ module SWHID = struct
 
   let instance = OpamUrl.of_string "https://archive.softwareheritage.org"
   (* we keep api 1 hardcoded for the moment *)
-  let full_url middle hash = OpamUrl.Op.(instance / "api" / "1" / middle / hash / "")
+  let full_url middle hash =
+    OpamUrl.Op.(instance / "api" / "1" / middle / hash / "")
+  let vault_url kind hash =
+    full_url ("vault/" ^ kind) ("swh:1:dir:" ^ hash)
 
   let check_liveness () =
     OpamProcess.Job.catch (fun _ -> Done false)
     @@ fun () ->
-      get_output ~post:true OpamUrl.Op.(instance / "api" / "1" / "ping" / "")
-      @@| fun _ -> true
+    get_output ~post:false OpamUrl.Op.(instance / "api" / "1" / "ping" / "")
+    @@| function
+    | Some (pong::_) ->
+      (* curl output after answer the http code *)
+      (* https://archive.softwareheritage.org/api/1/ping/ *)
+      OpamStd.String.starts_with ~prefix:"\"pong\"" pong
+    | Some _ | None -> false
 
   let get_value key s =
     match OpamJson.of_string s with
@@ -280,7 +289,10 @@ module SWHID = struct
       None
 
   let get_dir hash =
-    let url = full_url "vault/directory" hash in
+    (* https://archive.softwareheritage.org/api/1/vault/flat/doc/ *)
+    let url = vault_url "flat" hash in
+    (* The POST is needed only for asking to cook the archive, it's a no-op on
+       status check *)
     get_output ~post:true url @@| OpamStd.Option.replace @@ fun json ->
     let status = get_value "status" json in
     let fetch_url = get_value "fetch_url" json in
