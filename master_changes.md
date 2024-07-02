@@ -79,6 +79,8 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Add the missing mccs archive to the opam-full-<version>.tar.gz archive [#6066 @kit-ty-kate]
+  * Ensure the configure file stays as it is in the tag, in the opam-full-<version>.tar.gz archive [#6066 @kit-ty-kate]
 
 ## Install script
   * Provide a shell/install.ps1 PowerShell script to install opam on Windows [#5906 @kit-ty-kate @dra27]
