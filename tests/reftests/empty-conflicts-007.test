@@ -1,0 +1,24 @@
+N0REP0
+### : Test the output of 'No agreement' package name, du to Dose_Common.package encoding
+### : see https://github.com/ocaml/opam/issues/6030
+### <pkg:foo.1>
+opam-version: "2.0"
+depends: "ba_z" { > "2" }
+### <pkg:bar.1>
+opam-version: "2.0"
+depends: "ba_z" { < "2" }
+### <pkg:ba_z.1>
+opam-version: "2.0"
+### <pkg:ba_z.2>
+opam-version: "2.0"
+### <pkg:ba_z.3>
+opam-version: "2.0"
+### opam switch create --empty encode-cudf
+### opam install bar foo
+[ERROR] Package conflict!
+  * No agreement on the version of ba_z:
+    - bar -> ba_z < 2
+    - foo -> ba_z >= 3
+
+No solution found, exiting
+# Return code 20 #

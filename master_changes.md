@@ -27,6 +27,7 @@ users)
 ## Actions
 
 ## Install
+  * Fix package name display for no agreement conflicts [#6055 @rjbou - fix #6030]
 
 ## Remove
 
@@ -110,6 +111,7 @@ users)
   * cli versioning: untie output from current major version [#6045 @rjbou]
   * Set `opam-version` to 2.2 for some conflict message tests based on opam repository to stabilise their output [#6045 @rjbou]
   * [BUG]: head -c is not posix compliant. Use cut -b instead. [#5989 @madroach]
+  * Add bad cudf package name encoding (dose3 lib) [#6055 @rjbou]
 
 ### Engine
 

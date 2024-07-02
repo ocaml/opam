@@ -543,6 +543,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:empty-conflicts-006.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-empty-conflicts-007)
+ (action
+  (diff empty-conflicts-007.test empty-conflicts-007.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-empty-conflicts-007)))
+
+(rule
+ (targets empty-conflicts-007.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:empty-conflicts-007.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-env)
  (action
   (diff env.test env.out)))

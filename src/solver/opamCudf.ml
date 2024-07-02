@@ -426,7 +426,7 @@ module Package = struct
   type t = Cudf.package
   include Dose_common.CudfAdd
   let to_string = string_of_package
-  let name_to_string t = t.Cudf.package
+  let name_to_string t = OpamPackage.name_to_string (cudf2opam t)
   let version_to_string t = string_of_int t.Cudf.version
   let to_json = to_json
   let of_json = of_json
