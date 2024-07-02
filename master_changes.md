@@ -22,6 +22,7 @@ users)
 ## Init
 
 ## Config report
+  * add the list of all installed repositories to a new all-repositories field [#5799 @kit-ty-kate]
 
 ## Actions
 

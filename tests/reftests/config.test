@@ -38,6 +38,7 @@ Set to '"-removed"' the field solver-upgrade-criteria in global configuration
 # install-criteria     -removed
 # upgrade-criteria     -removed
 # jobs                 1
+# all-repositories     1 (local)
 # current-switch       none set
 ### # empty switch
 ### opam switch create an-empty-switch --empty
@@ -50,6 +51,7 @@ Set to '"-removed"' the field solver-upgrade-criteria in global configuration
 # install-criteria     -removed
 # upgrade-criteria     -removed
 # jobs                 1
+# all-repositories     1 (local)
 # repositories         1 (local)
 # pinned               0
 # current-switch       an-empty-switch
@@ -120,6 +122,7 @@ Done.
 # install-criteria     -removed
 # upgrade-criteria     -removed
 # jobs                 1
+# all-repositories     2 (local)
 # repositories         2 (local)
 # pinned               1 (rsync)
 # current-switch       a-switch
@@ -152,6 +155,7 @@ Done.
 # install-criteria     -removed
 # upgrade-criteria     -removed
 # jobs                 1
+# all-repositories     1 (local)
 # repositories         1 (local)
 # pinned               0
 # current-switch       an-empty-invariant-with-compiler
@@ -180,6 +184,7 @@ Done.
 # install-criteria     -removed
 # upgrade-criteria     -removed
 # jobs                 1
+# all-repositories     1 (local)
 # repositories         1 (local)
 # pinned               0
 # current-switch       a-package-invariant
@@ -208,6 +213,7 @@ Done.
 # install-criteria     -removed
 # upgrade-criteria     -removed
 # jobs                 1
+# all-repositories     1 (local)
 # repositories         1 (local)
 # pinned               0
 # current-switch       a-compiler-with-depopt
