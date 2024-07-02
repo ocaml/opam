@@ -66,6 +66,7 @@ users)
 ## External dependencies
  * Always pass --no-version-check and --no-write-registry to Cygwin setup [#6046 @dra27]
  * Use --quiet-mode noinput for the internal Cygwin installation (which is definitely a fully-specified command line) and --quiet-mode unattended for external Cygwin installations (in case the user does need to select something, e.g. a mirror) [#6046 @dra27]
+  * [BUG] Fix apt/debian lookup for installed packages [#6054 @rjbou]
 
 ## Format upgrade
 
