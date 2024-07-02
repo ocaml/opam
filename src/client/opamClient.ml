@@ -691,7 +691,7 @@ let string_of_kind = function
   | `Msys2 -> "MSYS2"
   | `Cygwin -> "Cygwin"
 
-let git_for_windows kind mechanism cygwin_is_tweakable =
+let git_for_windows kind mechanism ~interactive ~cygwin_is_tweakable =
   let resolve_git_in p =
     OpamSystem.resolve_command ~env:[||] (Filename.concat p "git.exe")
   in
@@ -890,7 +890,7 @@ let git_for_windows kind mechanism cygwin_is_tweakable =
       | None -> false
       | Some git -> is_git_for_windows git
     in
-    if not git_found && OpamStd.Sys.tty_out then
+    if not git_found && interactive && OpamStd.Sys.tty_out then
       (OpamConsole.header_msg "Git";
        OpamConsole.msg
          "Cygwin Git is functional but can have credentials issues for private \
@@ -900,8 +900,12 @@ let git_for_windows kind mechanism cygwin_is_tweakable =
               "Git for Windows can be downloaded and installed from \
                https://gitforwindows.org" ]);
        menu ())
-    else
-      None, not git_found && cygwin_is_tweakable
+    else begin
+      let install_via_depext = not git_found && cygwin_is_tweakable in
+      if not interactive && install_via_depext then
+        OpamConsole.note "opam will add Git to %s" (string_of_kind kind);
+      None, install_via_depext
+    end
   in
   OpamStd.Option.iter (fun _ ->
       OpamConsole.msg
@@ -1004,10 +1008,10 @@ let cygwin_searches ?first () =
   in
   seq cygwin_searches
 
-let rec cygwin_menu ~bypass_checks header =
+let rec cygwin_menu ~bypass_checks ~interactive header =
   let start = Unix.gettimeofday () in
   let test_mechanism (roots, count, mechanisms) search =
-    match test_mechanism ~bypass_checks header search with
+    match test_mechanism ~bypass_checks ~interactive header search with
     | Some ((kind, `Root root) as mechanism) ->
       if OpamFilename.Dir.Set.mem root roots then
         roots, count, mechanisms
@@ -1148,20 +1152,31 @@ let rec cygwin_menu ~bypass_checks header =
         end
     end
   in
-  Lazy.force header;
-  OpamConsole.msg
-    "\n\
-     opam and the OCaml ecosystem in general require various Unix tools in \
-     order to operate correctly. At present, this requires the installation \
-     of Cygwin to provide these tools.\n\n";
-  match OpamConsole.menu "How should opam obtain Unix tools?"
-          ~default ~yes:default ~no:default ~options with
+  let result =
+    Lazy.force header;
+    if interactive then begin
+      OpamConsole.msg
+        "\n\
+         opam and the OCaml ecosystem in general require various Unix tools in \
+         order to operate correctly. At present, this requires the installation \
+         of Cygwin to provide these tools.\n\n";
+      OpamConsole.menu "How should opam obtain Unix tools?"
+        ~default ~yes:default ~no:default ~options
+    end else
+      default
+  in
+  match result with
   | `Chosen (kind, `Internal) ->
     assert (kind = `Cygwin);
+    if not interactive then
+      OpamConsole.note "opam will maintain an internal Cygwin installation";
     Some (kind, `Internal OpamInitDefaults.required_packages_for_cygwin)
   | `Chosen (kind, ((`Root _) as mechanism)) ->
     Some (kind, mechanism)
-  | `Chosen ((_, `Path _) as mechanism) ->
+  | `Chosen ((kind, `Path _) as mechanism) ->
+    if not interactive then
+      OpamConsole.note "opam will use the %s installation found in your Path"
+                       (string_of_kind kind);
     OpamStd.Option.iter (OpamConsole.warning "%s") warn_path;
     Some mechanism
   | `Specify ->
@@ -1176,11 +1191,11 @@ let rec cygwin_menu ~bypass_checks header =
           Some (kind, `Root root)
         | Error msg ->
           OpamConsole.error "%s" msg;
-          cygwin_menu ~bypass_checks header
+          cygwin_menu ~bypass_checks ~interactive header
     end
   | `Abort -> OpamStd.Sys.exit_because `Aborted
 
-and test_mechanism ~bypass_checks header = function
+and test_mechanism ~bypass_checks ~interactive header = function
   | (`Internal _) as mechanism -> Some (`Cygwin, mechanism)
   | `Path ->
     let cygcheck =
@@ -1204,7 +1219,7 @@ and test_mechanism ~bypass_checks header = function
       | Error msg ->
         OpamConsole.error_and_exit `Not_found "%s" msg
     end
-  | `Menu -> cygwin_menu ~bypass_checks header
+  | `Menu -> cygwin_menu ~bypass_checks ~interactive header
 
 let string_of_cygwin_setup = function
   | `internal pkgs ->
@@ -1268,7 +1283,7 @@ let initialise_msys2 root =
       OpamStd.Sys.exit_because `Aborted
 
 let determine_windows_configuration ?cygwin_setup ?git_location
-                                    ~bypass_checks config =
+                                    ~bypass_checks ~interactive config =
   OpamStd.Option.iter
     (log "Cygwin (from CLI): %a" (slog string_of_cygwin_setup)) cygwin_setup;
   (* Check whether symlinks can be created. Developer Mode is not the only way
@@ -1379,7 +1394,7 @@ let determine_windows_configuration ?cygwin_setup ?git_location
     else
       cygwin_setup
   in
-  let mechanisms, cygwin_tweakable =
+  let mechanisms, cygwin_is_tweakable =
     match cygwin_setup with
     | Some (`internal packages) ->
       (* git, if needed, will be added later *)
@@ -1407,7 +1422,7 @@ let determine_windows_configuration ?cygwin_setup ?git_location
   (* Reduce mechanisms to a single mechanism (which may therefore display a
      menu). *)
   let kind, mechanism =
-    let test_mechanism = test_mechanism ~bypass_checks header in
+    let test_mechanism = test_mechanism ~bypass_checks ~interactive header in
     match OpamCompat.Seq.find_map test_mechanism mechanisms with
     | Some result -> result
     | None ->
@@ -1493,7 +1508,7 @@ let determine_windows_configuration ?cygwin_setup ?git_location
         `Internal, pkgs
       | (`Root _ | `Path _) as mechanism ->
         let cygwin_packages =
-          if cygwin_tweakable && not OpamStateConfig.(!r.no_depexts) then
+          if cygwin_is_tweakable && not OpamStateConfig.(!r.no_depexts) then
             OpamInitDefaults.required_packages_for_cygwin
           else
             []
@@ -1503,14 +1518,14 @@ let determine_windows_configuration ?cygwin_setup ?git_location
     if git_location = None && not git_determined
        && not have_git_for_windows_in_path then
       let git_location, from_cygwin =
-        git_for_windows kind mechanism cygwin_tweakable
+        git_for_windows kind mechanism ~interactive ~cygwin_is_tweakable
       in
       let config =
         OpamStd.Option.map_default (apply_git_location config)
           config git_location
       in
       let cygwin_packages =
-        if cygwin_tweakable && from_cygwin then
+        if cygwin_is_tweakable && from_cygwin then
           OpamSysPkg.of_string "git" :: cygwin_packages
         else
           cygwin_packages
@@ -1601,7 +1616,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
   let config, mechanism, system_packages, msys2_check_root =
     if Sys.win32 then
       determine_windows_configuration ?cygwin_setup ?git_location
-                                      ~bypass_checks config
+                                      ~bypass_checks ~interactive config
     else
       config, None, [], None
   in
@@ -1670,7 +1685,7 @@ let setup_redirection target =
   OpamStateConfig.update ~root_dir ();
   root_dir
 
-let get_redirected_root () =
+let get_redirected_root ~interactive =
   let {contents = {OpamStateConfig.original_root_dir = root; root_from; _}} =
     OpamStateConfig.r
   in
@@ -1728,9 +1743,19 @@ let get_redirected_root () =
     OpamStd.Option.replace check (OpamConsole.read "Root directory for opam: ")
   in
   let rec menu () =
-    match OpamConsole.menu "Where should opam store files?" ~options
-            ~default ~yes:default ~no:default with
+    let result =
+      if interactive then
+        OpamConsole.menu "Where should opam store files?" ~options
+          ~default ~yes:default ~no:default
+      else begin
+        default
+      end
+    in
+    match result with
     | `Redirect ->
+      if not interactive then
+        OpamConsole.note "opam is storing files in %s"
+          (OpamFilename.Dir.to_string default_redirect_root);
       Some None
     | `Endure ->
       None
@@ -1743,14 +1768,16 @@ let get_redirected_root () =
     | `Quit ->
       OpamStd.Sys.exit_because `Aborted
   in
-  OpamConsole.header_msg "opam root file store";
-  OpamConsole.msg
-    "\n\
-     %s\n\
-     \n\
-     Many parts of the OCaml ecosystem do not presently work correctly\n\
-     when installed to directories containing spaces. You have been warned!%s\n\
-     \n" explanation collision;
+  if interactive then begin
+    OpamConsole.header_msg "opam root file store";
+    OpamConsole.msg
+      "\n\
+       %s\n\
+       \n\
+       Many parts of the OCaml ecosystem do not presently work correctly when\n\
+       installed to directories containing spaces. You have been warned!%s\n\
+       \n" explanation collision;
+  end;
   Option.map setup_redirection (menu ())
 
 let init
@@ -1776,7 +1803,7 @@ let init
       if root_empty &&
          Sys.win32 &&
          has_space (OpamFilename.Dir.to_string root) then
-        get_redirected_root ()
+        get_redirected_root ~interactive
       else
         None
     in
@@ -1821,7 +1848,7 @@ let init
         let config, mechanism, system_packages, msys2_check_root =
           if Sys.win32 then
             determine_windows_configuration ?cygwin_setup ?git_location
-                                            ~bypass_checks config
+                                            ~bypass_checks ~interactive config
           else
             config, None, [], None
         in
