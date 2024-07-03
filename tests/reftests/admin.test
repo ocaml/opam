@@ -600,6 +600,10 @@ opam-version: "2.0"
 ### opam-cat packages/with-xf/with-xf.2/opam | "${XF_MD5}" -> "good-md5" | "${XF_SHA256}" -> "good-sha"
 extra-files: ["missing-hash" "md5=good-md5"]
 opam-version: "2.0"
+### ::::::::::::::::::::::::::::::::::::::::::::::::::::::
+### :: Cache is tested in admin-cache.{unix,win32}.test ::
+### ::::::::::::::::::::::::::::::::::::::::::::::::::::::
+### :
 ### ::::::::::::::::::::::
 ### :VII: Specific cases :
 ### ::::::::::::::::::::::
