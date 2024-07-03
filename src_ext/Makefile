@@ -114,7 +114,7 @@ GET_ARCHIVE=\
 
 %.cache:
 	@mkdir -p archives
-	@test -e archives/$(notdir $(URL_$*)) || \
+	@test -f archives/$(notdir $(URL_$*)) || \
           { $(call GET_ARCHIVE,$*) && mv $(call ARCHIVE_FILE,$*) archives/$(notdir $(URL_$*)); }
 
 .PRECIOUS: %.download
