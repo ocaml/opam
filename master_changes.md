@@ -28,6 +28,7 @@ users)
 
 ## Install
   * Fix package name display for no agreement conflicts [#6055 @rjbou - fix #6030]
+  * Make fetching an archive from cache add missing symlinks [#6068 @kit-ty-kate - fix #6064]
 
 ## Remove
 
@@ -93,6 +94,7 @@ users)
   * Add opam 2.2.0 to the install scripts [#6062 @kit-ty-kate]
 
 ## Admin
+  * Make `opam admin cache` add missing symlinks [#6068 @kit-ty-kate - fix #6064]
 
 ## Opam installer
 
@@ -145,6 +147,7 @@ users)
 ## opam-client
 
 ## opam-repository
+ * `OpamRepository.fetch_from_cache`: when an archive is found, add a symlink (or copy) for the ones found in opam file but not in cache [#6068 @kit-ty-kate]
 
 ## opam-state
  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]

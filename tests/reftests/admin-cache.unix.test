@@ -147,40 +147,44 @@ amet : sha512 : exists
 ### # in cache, the archiv is the strongest one
 ### rm -rf cache/md5 cache/sha256
 ### opam admin cache | unordered
+[dolor.1] synchronised (cached)
+[ipsum.1] synchronised (cached)
+[sit.1] synchronised (cached)
+[amet.1] synchronised (cached)
 Done.
 ### sh cache-analysi.sh
-ipsum : md5 : not found
-ipsum : sha256 : not found
+ipsum : md5 : exists, link to sha512
+ipsum : sha256 : exists, link to sha512
 ipsum : sha512 : exists
 --
-dolor : md5 : not found
-dolor : sha256 : not found
+dolor : md5 : exists, link to sha512
+dolor : sha256 : exists, link to sha512
 dolor : sha512 : exists
 --
-sit : md5 : not found
-sit : sha256 : not found
+sit : md5 : exists, link to sha512
+sit : sha256 : exists, link to sha512
 sit : sha512 : exists
 --
-amet : md5 : not found
-amet : sha256 : not found
+amet : md5 : exists, link to sha512
+amet : sha256 : exists, link to sha512
 amet : sha512 : exists
 ### opam admin cache | unordered
 Done.
 ### sh cache-analysi.sh
-ipsum : md5 : not found
-ipsum : sha256 : not found
+ipsum : md5 : exists, link to sha512
+ipsum : sha256 : exists, link to sha512
 ipsum : sha512 : exists
 --
-dolor : md5 : not found
-dolor : sha256 : not found
+dolor : md5 : exists, link to sha512
+dolor : sha256 : exists, link to sha512
 dolor : sha512 : exists
 --
-sit : md5 : not found
-sit : sha256 : not found
+sit : md5 : exists, link to sha512
+sit : sha256 : exists, link to sha512
 sit : sha512 : exists
 --
-amet : md5 : not found
-amet : sha256 : not found
+amet : md5 : exists, link to sha512
+amet : sha256 : exists, link to sha512
 amet : sha512 : exists
 ### :::::::::::::::::::::::::::::::::::::::::::
 ### :III: remove strongest hash and recompute :
@@ -258,13 +262,13 @@ amet : sha512 : exists
 ### sed -i '/"sha512=.*/d' packages/dolor/dolor.1/opam
 ### sed -i '/"md5=.*/d' packages/sit/sit.1/opam
 ### sed -i '/"sha512=.*/d' packages/sit/sit.1/opam
-### opam show --just-file ./packages/ipsum/ipsum.1/opam --field url.src,url.checksum | "${IP_MD5}" -> IP_MD5 | "${IP_SHA512}" -> IP_SHA512
+### opam show --just-file ./packages/ipsum/ipsum.1/opam --field url.src,url.checksum | "${IP_MD5}" -> IP_MD5
 url.src:      file://${BASEDIR}/arch-ipsum.tgz
 url.checksum: md5=IP_MD5
-### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "${DL_MD5}" -> DL_MD5 | "${DL_SHA256}" -> DL_SHA256 | "${DL_SHA512}" -> DL_SHA512
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "${DL_MD5}" -> DL_MD5 | "${DL_SHA256}" -> DL_SHA256
 url.src:      file://${BASEDIR}/arch-dolor.tgz
 url.checksum: md5=DL_MD5, sha256=DL_SHA256
-### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "${ST_MD5}" -> ST_MD5 | "${ST_SHA256}" -> ST_SHA256 | "${ST_SHA512}" -> ST_SHA512
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "${ST_SHA256}" -> ST_SHA256
 url.src:      file://${BASEDIR}/arch-sit.tgz
 url.checksum: sha256=ST_SHA256
 ### rm -rf cache
@@ -294,7 +298,7 @@ amet : sha512 : exists
 ### opam admin add-hashes sha512 --package ipsum
 ### opam admin add-hashes sha512 --package dolor
 ### opam admin add-hashes md5    --package sit
-[file://${BASEDIR}/arch-sit.tgz] downloaded from file://${BASEDIR}/cache
+[file://${BASEDIR}/arch-sit.tgz] found in cache
 ### opam admin add-hashes sha512 --package sit
 ### opam show --just-file ./packages/ipsum/ipsum.1/opam --field url.src,url.checksum | "${IP_MD5}" -> IP_MD5 | "${IP_SHA512}" -> IP_SHA512
 url.src:      file://${BASEDIR}/arch-ipsum.tgz
@@ -330,15 +334,15 @@ Done.
 ### sh cache-analysi.sh
 ipsum : md5 : exists
 ipsum : sha256 : not found
-ipsum : sha512 : not found
+ipsum : sha512 : exists, link to md5
 --
 dolor : md5 : exists, link to sha256
 dolor : sha256 : exists
-dolor : sha512 : not found
+dolor : sha512 : exists, link to md5
 --
-sit : md5 : not found
+sit : md5 : exists, link to sha256
 sit : sha256 : exists
-sit : sha512 : not found
+sit : sha512 : exists, link to sha256
 --
 amet : md5 : exists, link to sha512
 amet : sha256 : exists, link to sha512
@@ -364,9 +368,6 @@ opam-version: "2.0"
 MD5(arch-evil.tgz)= LR_MD5
 ### sh add-urls.sh lorem
 ### opam admin cache | unordered
-[dolor.1] synchronised (cached)
-[ipsum.1] synchronised (cached)
-[sit.1] synchronised (cached)
 [lorem.1] synchronised (file://${BASEDIR}/arch-lorem.tgz)
 Done.
 ### opam admin add-hashes sha256 --package lorem
@@ -380,19 +381,16 @@ lorem : sha256 : not found
 lorem : sha512 : not found
 ### opam admin cache | unordered
 [lorem.1] synchronised (cached)
-[dolor.1] synchronised (cached)
-[ipsum.1] synchronised (cached)
-[sit.1] synchronised (cached)
 Done.
 ### sh cache-analysi.sh
 lorem : md5 : exists
-lorem : sha256 : not found
+lorem : sha256 : exists, link to md5
 lorem : sha512 : not found
 ### mv arch-evil.tgz cache/md5/$PRE_LR_MD5/$LR_MD5
 ### opam admin add-hashes sha512 --package lorem
 ### sh cache-analysi.sh
 lorem : md5 : exists
-lorem : sha256 : not found
+lorem : sha256 : exists, link to md5
 lorem : sha512 : not found
 ### opam admin cache | "${LR_MD5}" -> LR_MD5 | "${LR_SHA256}" -> LR_SHA256 | "${LR_SHA512}" -> LR_SHA512
 [ERROR] Conflicting file hashes, or broken or compromised cache!
@@ -400,9 +398,6 @@ lorem : sha512 : not found
           - sha256=LR_SHA256 (MISMATCH)
           - md5=LR_MD5 (match)
 
-[dolor.1] synchronised (cached)
-[ipsum.1] synchronised (cached)
-[sit.1] synchronised (cached)
 [lorem.1] synchronised (file://${BASEDIR}/arch-lorem.tgz)
 Done.
 ### sh cache-analysi.sh

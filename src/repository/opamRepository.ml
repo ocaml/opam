@@ -44,6 +44,11 @@ let cache_file cache_dir checksum =
   in
   aux cache_dir (OpamHash.to_path checksum)
 
+let link_files ~target f l =
+  List.iter (fun x ->
+      OpamFilename.link ~relative:true ~target ~link:(f x))
+    l
+
 let fetch_from_cache =
   let currently_downloading = ref [] in
   let rec no_concurrent_dls key f x =
@@ -93,21 +98,27 @@ let fetch_from_cache =
       failwith "Version control not allowed as cache URL"
   in
   try
-    let hit_file =
-      OpamStd.List.find_map (fun ck ->
+    match
+      List.fold_left (fun (hit, misses) ck ->
           let f = cache_file cache_dir ck in
-          if OpamFilename.exists f then Some f else None)
-        checksums
-    in
-    if List.for_all
-        (fun ck -> OpamHash.check_file (OpamFilename.to_string hit_file) ck)
-        checksums
-    then Done (Up_to_date (hit_file, OpamUrl.empty))
-    else mismatch hit_file
+          if OpamFilename.exists f
+          then (Some f, misses)
+          else (hit, f :: misses))
+        (None, []) checksums
+    with
+    | None, _ -> raise Not_found
+    | Some hit_file, miss_files ->
+      if List.for_all
+          (fun ck -> OpamHash.check_file (OpamFilename.to_string hit_file) ck)
+          checksums
+      then begin
+        link_files ~target:hit_file Fun.id miss_files;
+        Done (Up_to_date (hit_file, OpamUrl.empty))
+      end else
+        mismatch hit_file
   with Not_found -> match checksums with
     | [] -> let m = "cache miss" in Done (Not_available (Some m, m))
-    | checksum::_ ->
-      (* Try all cache urls in order, but only the first checksum *)
+    | checksum::other_checksums ->
       let local_file = cache_file cache_dir checksum in
       let tmpfile = OpamFilename.add_extension local_file "tmp" in
       let rec try_cache_dl = function
@@ -125,6 +136,7 @@ let fetch_from_cache =
               checksums
           then
             (OpamFilename.move ~src:tmpfile ~dst:local_file;
+             link_files ~target:local_file (cache_file cache_dir) other_checksums;
              Done (Result (local_file, root_cache_url)))
           else mismatch tmpfile
       in
@@ -151,14 +163,9 @@ let validate_and_add_to_cache label url cache_dir file checksums =
     (let checksums = OpamHash.sort checksums in
      match cache_dir, checksums with
      | Some dir, best_chks :: others_chks ->
-       OpamFilename.copy ~src:file ~dst:(cache_file dir best_chks);
-       List.iter (fun checksum ->
-           let target = cache_file dir best_chks in
-           let link = cache_file dir checksum in
-           try
-             OpamFilename.link ~relative:true ~target ~link
-           with Sys_error _ -> ())
-         others_chks;
+       let target = cache_file dir best_chks in
+       OpamFilename.copy ~src:file ~dst:target;
+       link_files ~target (cache_file dir) others_chks;
      | _ -> ());
     true
 
