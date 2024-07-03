@@ -58,7 +58,8 @@ val pull_file:
   unit download OpamProcess.job
 
 (** Same as [pull_file], but without a destination file: just ensures the file
-    is present in the cache. *)
+    is present in the cache and that every listed checksums are correctly linked
+    to the archive, otherwise it adds the missing links. *)
 val pull_file_to_cache:
   string -> cache_dir:dirname -> ?cache_urls:url list ->
   OpamHash.t list -> url list -> string download OpamProcess.job

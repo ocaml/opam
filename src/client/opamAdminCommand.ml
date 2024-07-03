@@ -162,12 +162,13 @@ let package_files_to_cache repo_root cache_dir cache_urls
         OpamConsole.warning "[%s] no checksum, not caching"
           (OpamConsole.colorise `green label);
         Done errors
-      | best_chks :: _ ->
-        let cache_file =
-          OpamRepository.cache_file cache_dir best_chks
+      | _::_ ->
+        let cache_files =
+          List.map (OpamRepository.cache_file cache_dir) checksums
         in
         let error_opt =
-          if not recheck && OpamFilename.exists cache_file then Done None
+          if not recheck && List.for_all OpamFilename.exists cache_files then
+            Done None
           else
             OpamRepository.pull_file_to_cache label
               ~cache_urls ~cache_dir
@@ -190,7 +191,7 @@ let package_files_to_cache repo_root cache_dir cache_urls
               let link =
                 OpamFilename.Op.(link_dir / OpamPackage.to_string nv // name)
               in
-              OpamFilename.link ~relative:true ~target:cache_file ~link)
+              OpamFilename.link ~relative:true ~target:(List.hd cache_files) ~link)
             link;
           errors
     in
