@@ -76,6 +76,7 @@ users)
 ## Install script
 
 ## Admin
+  * Make opam admin cache store a symlink to every checksums, not just the best one [#6069 @kit-ty-kate]
 
 ## Opam installer
 
