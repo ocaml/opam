@@ -136,6 +136,11 @@ opam switch create this-opam --formula='$OCAML_INVARIANT'
 
 # Workdir is /github/workpaces
 cd /github/workspace
+
+### LOCAL TESTING
+#git clone https://github.com/ocaml/opam --single-branch --branch 2.2 --depth 1 local-opam
+#cd local-opam
+
 EOF
 
 # workaround for opensuse, mccs & glpk
