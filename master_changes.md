@@ -122,6 +122,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
 
 ## Doc
   * Remove the ppa from the installation instructions on Ubuntu [#5988 @kit-ty-kate - fix #5987]
