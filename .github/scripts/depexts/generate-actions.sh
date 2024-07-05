@@ -111,11 +111,11 @@ cp binary/opam $dir/opam
 
 cat >>$dir/Dockerfile << EOF
 RUN test -d /opam || mkdir /opam
-ENV OPAMROOTISOK 1
-ENV OPAMROOT /opam/root
-ENV OPAMYES 1
-ENV OPAMCONFIRMLEVEL unsafe-yes
-ENV OPAMPRECISETRACKING 1
+ENV OPAMROOTISOK=1
+ENV OPAMROOT=/opam/root
+ENV OPAMYES=1
+ENV OPAMCONFIRMLEVEL=unsafe-yes
+ENV OPAMPRECISETRACKING=1
 COPY opam /usr/bin/opam
 COPY entrypoint.sh /opam/entrypoint.sh
 ENTRYPOINT ["/opam/entrypoint.sh"]
