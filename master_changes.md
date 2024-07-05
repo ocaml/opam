@@ -125,6 +125,7 @@ users)
   * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
   * Depexts: fix conf package install check [#6079 @rjbou]
   * Depexts: specify packages to test per distribution [#6079 @rjbou]
+  * Depexts: add update depexts check [#6079 @rjbou]
 
 ## Doc
   * Remove the ppa from the installation instructions on Ubuntu [#5988 @kit-ty-kate - fix #5987]
