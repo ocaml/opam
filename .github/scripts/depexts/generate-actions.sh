@@ -212,6 +212,10 @@ else
 fi
 EOF
 
+# Test depexts update
+cat >>$dir/entrypoint.sh << EOF
+./opam update --depexts || ERRORS="\$ERRORS opam-update-depexts"
+EOF
 
 chmod +x $dir/entrypoint.sh
 
