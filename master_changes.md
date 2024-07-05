@@ -126,6 +126,7 @@ users)
   * Depexts: fix conf package install check [#6079 @rjbou]
   * Depexts: specify packages to test per distribution [#6079 @rjbou]
   * Depexts: add update depexts check [#6079 @rjbou]
+  * Depexts: move parts to docker build image, for caching [#6079 @rjbou]
 
 ## Doc
   * Remove the ppa from the installation instructions on Ubuntu [#5988 @kit-ty-kate - fix #5987]
