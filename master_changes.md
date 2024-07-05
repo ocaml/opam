@@ -113,6 +113,7 @@ users)
   * Depexts: specify packages to test per distribution [#6079 @rjbou]
   * Depexts: add update depexts check [#6079 @rjbou]
   * Depexts: move parts to docker build image, for caching [#6079 @rjbou]
+  * Depexts: set version for conf packages to check [#6079 @rjbou]
 
 ## Doc
 
