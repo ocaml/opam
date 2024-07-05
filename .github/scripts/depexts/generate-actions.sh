@@ -117,6 +117,12 @@ ENV OPAMYES=1
 ENV OPAMCONFIRMLEVEL=unsafe-yes
 ENV OPAMPRECISETRACKING=1
 COPY opam /usr/bin/opam
+RUN echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
+RUN /usr/bin/opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
+RUN echo 'archive-mirrors: "https://opam.ocaml.org/cache"' >> \$OPAMROOT/config
+RUN /usr/bin/opam switch create this-opam --formula='$OCAML_INVARIANT'
+RUN /usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps
+RUN /usr/bin/opam clean -as --logs
 COPY entrypoint.sh /opam/entrypoint.sh
 ENTRYPOINT ["/opam/entrypoint.sh"]
 EOF
@@ -128,11 +134,6 @@ cat >$dir/entrypoint.sh << EOF
 set -eux
 
 git config --global --add safe.directory /github/workspace
-# For systems that don't have an up to date compiler, to avoid ocaml-secondary
-echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
-opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
-echo 'archive-mirrors: "https://opam.ocaml.org/cache"' >> \$OPAMROOT/config
-opam switch create this-opam --formula='$OCAML_INVARIANT'
 
 # Workdir is /github/workpaces
 cd /github/workspace
