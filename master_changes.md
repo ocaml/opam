@@ -108,6 +108,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
 
 ## Doc
 

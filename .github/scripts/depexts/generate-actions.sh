@@ -42,9 +42,12 @@ EOF
    # CentOS 7 doesn't support OCaml 5 (GCC is too old)
    OCAML_CONSTRAINT=' & < "5.0"'
     cat >$dir/Dockerfile << EOF
-FROM centos:7
+FROM almalinux:9.4
+RUN dnf install 'dnf-command(config-manager)' -y
+RUN dnf config-manager --set-enabled crb
 RUN yum install -y $mainlibs $ocaml
-RUN yum install -y gcc-c++
+RUN yum install -y gcc-c++ diffutils
+RUN sed -i 's/ID="almalinux"/ID="centos"/' /etc/os-release
 EOF
     ;;
   debian)
