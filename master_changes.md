@@ -109,6 +109,8 @@ users)
 
 ## Github Actions
   * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
+  * Depexts: fix conf package install check [#6079 @rjbou]
+  * Depexts: specify packages to test per distribution [#6079 @rjbou]
 
 ## Doc
 

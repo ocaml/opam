@@ -155,22 +155,58 @@ make
 ./opam switch create confs --empty
 EOF
 
+# Test depexts
+
+DEPEXTS2TEST=""
 test_depext () {
-  for pkg in $@ ; do
-    echo "./opam install $pkg || true" >> $dir/entrypoint.sh
-  done
+  DEPEXTS2TEST="$DEPEXTS2TEST $@"
 }
 
-test_depext conf-gmp conf-which conf-autoconf
+test_depext conf-gmp conf-which
+
+if [ $target != "gentoo" ]; then
+  test_depext conf-autoconf
+fi
 
 # disable automake for centos, as os-family returns rhel
-if [ $target != "centos" ] && [ $target != "opensuse" ]; then
+if [ $target != "centos" ] && [ $target != "gentoo" ] && [ $target != "opensuse" ]; then
   test_depext conf-automake
 fi
 
-# additionnal
-test_depext dpkg # gentoo
-test_depext lib-sundials-dev # os version check
+# additionna
+if [ $target != "oraclelinux" ] && [ $target != "xxx" ]; then
+  test_depext conf-dpkg # gentoo
+fi
+
+if [ $target = "debian" ] || [ $target = "ubuntu" ]; then
+  # os version check on debian & ubuntu
+  test_depext conf-sundials
+fi
+
+
+if [ -z "$DEPEXTS2TEST" ]; then
+  echo "ERROR: You should at least define one depext to test"
+  exit 3
+fi
+
+cat >>$dir/entrypoint.sh << EOF
+ERRORS=""
+test_depexts () {
+  for pkg in \$@ ; do
+    ./opam install \$pkg || ERRORS="\$ERRORS \$pkg"
+  done
+}
+
+test_depexts $DEPEXTS2TEST
+
+if [ -z "\$ERRORS" ]; then
+  exit 0
+else
+  echo "ERROR on packages\$ERRORS"
+  exit 1
+fi
+EOF
+
 
 chmod +x $dir/entrypoint.sh
 
