@@ -168,25 +168,25 @@ test_depext () {
   DEPEXTS2TEST="$DEPEXTS2TEST $@"
 }
 
-test_depext conf-gmp conf-which
+test_depext conf-gmp.4 conf-which.1
 
 if [ $target != "gentoo" ]; then
-  test_depext conf-autoconf
+  test_depext conf-autoconf.0.1
 fi
 
 # disable automake for centos, as os-family returns rhel
 if [ $target != "centos" ] && [ $target != "gentoo" ] && [ $target != "opensuse" ]; then
-  test_depext conf-automake
+  test_depext conf-automake.1
 fi
 
 # additionna
 if [ $target != "oraclelinux" ] && [ $target != "xxx" ]; then
-  test_depext conf-dpkg # gentoo
+  test_depext conf-dpkg.1 # gentoo
 fi
 
 if [ $target = "debian" ] || [ $target = "ubuntu" ]; then
   # os version check on debian & ubuntu
-  test_depext conf-sundials
+  test_depext conf-sundials.2
 fi
 
 
