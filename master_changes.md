@@ -78,6 +78,8 @@ users)
 
 ## Infrastructure
 
+ * Bump opam version used in the depext CI from 2.1.0 to 2.1.6 [#6074 @RyanGibb]
+
 ## Release scripts
   * Add the missing mccs and dune archives to the opam-full-<version>.tar.gz archive [#6066 @kit-ty-kate]
   * Ensure the configure file stays as it is in the tag, in the opam-full-<version>.tar.gz archive [#6066 @kit-ty-kate]
