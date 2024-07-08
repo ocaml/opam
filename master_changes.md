@@ -72,6 +72,10 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Add the missing mccs and dune archives to the opam-full-<version>.tar.gz archive [#6067 @kit-ty-kate]
+  * Ensure the configure file stays as it is in the tag, in the opam-full-<version>.tar.gz archive [#6067 @kit-ty-kate]
+  * Exclude the .git directory from the release archive when using GNU tar [#6067 @kit-ty-kate]
+  * Ensure non-existing %.cache target fail with a fatal error [#6067 @kit-ty-kate]
 
 ## Install script
 

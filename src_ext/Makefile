@@ -95,7 +95,7 @@ clone: $(DUNE_CLONE) $(SRC_EXTS:=.stamp) | ext-ignore
 archives: $(DUNE_CLONE:.stamp=.download) $(SRC_EXTS:=.download)
 	@true
 
-cache-archives: $(SRC_EXTS:=.cache) ocaml.cache flexdll.cache
+cache-archives: $(SRC_EXTS:=.cache) mccs.cache dune-local.cache ocaml.cache flexdll.cache
 	@
 
 has-archives: $(addprefix archives/, $(notdir $(URL_ocaml)) $(notdir $(URL_flexdll)) $(ARCHIVES))
@@ -114,7 +114,7 @@ GET_ARCHIVE=\
 
 %.cache:
 	@mkdir -p archives
-	@test -e archives/$(notdir $(URL_$*)) || \
+	@test -f archives/$(notdir $(URL_$*)) || \
           { $(call GET_ARCHIVE,$*) && mv $(call ARCHIVE_FILE,$*) archives/$(notdir $(URL_$*)); }
 
 .PRECIOUS: %.download
