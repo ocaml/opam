@@ -113,6 +113,7 @@ users)
 ## Test
 
 ## Benchmarks
+  * Make the benchmark setup process faster and the benchmark itself more stable [#6094 @kit-ty-kate]
 
 ## Reftests
 ### Tests
