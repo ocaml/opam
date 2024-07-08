@@ -184,11 +184,28 @@ if [ $target != "oraclelinux" ] && [ $target != "xxx" ]; then
   test_depext conf-dpkg.1 # gentoo
 fi
 
+# package with os-version check
+
 if [ $target = "debian" ] || [ $target = "ubuntu" ]; then
-  # os version check on debian & ubuntu
   test_depext conf-sundials.2
+  # conf-libgccjit.1 conf-rdkit.1
 fi
 
+if [ $target = "alpine" ]; then
+ test_depext conf-clang-format.1
+ # conf-pandoc.0.1
+fi
+
+if [ $target = "fedora" ]; then
+ test_depext conf-emacs.1
+fi
+
+if [ $target = "oraclelinux" ] || [ $target = "centos" ]; then
+  test_depext conf-pkg-config.3
+fi
+
+# oraclelinux: conf-libev.4-12 conf-npm.1
+# centos: conf-perl.2
 
 if [ -z "$DEPEXTS2TEST" ]; then
   echo "ERROR: You should at least define one depext to test"

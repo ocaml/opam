@@ -114,6 +114,7 @@ users)
   * Depexts: add update depexts check [#6079 @rjbou]
   * Depexts: move parts to docker build image, for caching [#6079 @rjbou]
   * Depexts: set version for conf packages to check [#6079 @rjbou]
+  * Depexts: add package to test containing `os-version` in filter [#6079 @rjbou]
 
 ## Doc
 
