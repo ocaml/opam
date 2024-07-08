@@ -14,4 +14,5 @@ RUN install ./opam /usr/local/bin/
 USER opam
 RUN opam init --bare -n --disable-sandboxing /rep/opam-repository
 RUN opam switch create --fake default 4.14.0
+RUN opam list --all -s --all-versions > /home/opam/all-packages
 RUN find /rep/opam-repository -name opam -type f > /home/opam/all-opam-files
