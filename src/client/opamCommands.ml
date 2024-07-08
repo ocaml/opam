@@ -3063,9 +3063,9 @@ let pin ?(unpin_only=false) cli =
     cli_original, "list", `list, [], "Lists pinned packages.";
     cli_from cli2_1, "scan", `scan, ["DIR"],
     "Lists available packages to pin in directory.";
-    cli_original, "add", `add, ["PACKAGE"; "TARGET"],
-    "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
-     or a URL.\n\
+    cli_original, "add", `add, ["PACKAGE..."; "TARGET"],
+    "Pins one or several packages $(i,PACKAGE) to $(i,TARGET), \
+     which may be a version, a path, or a URL.\n\
      $(i,PACKAGE) can be omitted if $(i,TARGET) contains one or more package \
      descriptions. $(i,TARGET) can be replaced by $(b,--dev-repo) if a package \
      by that name is already known, or $(b,--current) if the package is \
