@@ -170,7 +170,7 @@ let get_cache name = get_cache_cont name Fun.id
 
 let cache ?cond ?(key_prefix="needs.Analyse") ?(check_only=false) name =
   get_cache_cont name (fun cache ->
-    let action = "actions/cache@v3" in
+    let action = "actions/cache@v4" in
     let withs =
       if cache.force_gzip then
         [("force-gzip", Literal ["true"])]

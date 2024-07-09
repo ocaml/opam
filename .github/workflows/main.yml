@@ -66,7 +66,7 @@ jobs:
         echo opam-bs-cache=${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }} >> $GITHUB_OUTPUT
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
@@ -84,7 +84,7 @@ jobs:
     steps:
     - name: Cygwin64 Cache
       id: cygwin64
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: D:\Cache\cygwin\x86_64-pc-cygwin
         key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
@@ -115,7 +115,7 @@ jobs:
       uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
@@ -124,7 +124,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -160,14 +160,14 @@ jobs:
     - name: Cygwin64 Cache
       id: cygwin64
       if: matrix.build == 'x86_64-pc-cygwin'
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: D:\Cache\cygwin\x86_64-pc-cygwin
         key: cygwin64-${{ needs.Analyse.outputs.cygwin }}
         force-gzip: true
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
@@ -176,7 +176,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: D:\Cache\ocaml-local.tar
         key: ${{ runner.os }}-${{ matrix.host }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -233,7 +233,7 @@ jobs:
       uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
@@ -242,7 +242,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -273,7 +273,7 @@ jobs:
       run: sudo apt install bubblewrap
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
@@ -282,7 +282,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -291,7 +291,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.OPAMBSROOT }}/**
@@ -302,7 +302,7 @@ jobs:
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
     - name: opam-rt Cache
       id: opam-rt
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/opam-rt/**
         key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
@@ -327,7 +327,7 @@ jobs:
       uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
@@ -336,7 +336,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -345,7 +345,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.OPAMBSROOT }}/**
@@ -356,7 +356,7 @@ jobs:
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
     - name: opam-rt Cache
       id: opam-rt
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/opam-rt/**
         key: ${{ runner.os }}-opam-rt-${{ matrix.ocamlv }}
@@ -380,7 +380,7 @@ jobs:
       uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
@@ -415,7 +415,7 @@ jobs:
       uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
@@ -424,7 +424,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -433,7 +433,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.OPAMBSROOT }}/**
@@ -461,7 +461,7 @@ jobs:
       uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
@@ -470,7 +470,7 @@ jobs:
         force-gzip: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -479,7 +479,7 @@ jobs:
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ${{ env.OPAMBSROOT }}/**
@@ -507,13 +507,13 @@ jobs:
     - name: Checkout tree
       uses: actions/checkout@v4
     - name: opam 1.2 root Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ env.OPAM12CACHE }}
         key: ${{ runner.os }}-opam1.2-root
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -538,13 +538,13 @@ jobs:
     - name: Checkout tree
       uses: actions/checkout@v4
     - name: opam 1.2 root Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ env.OPAM12CACHE }}
         key: ${{ runner.os }}-opam1.2-root
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
@@ -571,7 +571,7 @@ jobs:
       uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache
       id: archives
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           src_ext/archives
