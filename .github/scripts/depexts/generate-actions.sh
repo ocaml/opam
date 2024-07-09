@@ -142,17 +142,6 @@ cd /github/workspace
 #git clone https://github.com/ocaml/opam --single-branch --branch 2.2 --depth 1 local-opam
 #cd local-opam
 
-EOF
-
-# workaround for opensuse, mccs & glpk
-if [ $target = "opensuse" ]; then
-  cat >>$dir/entrypoint.sh << EOF
-OPAMEDITOR="sed -i 's|^build.*$|& [\\"mv\\" \\"src/glpk/dune-shared\\" \\"src/glpk/dune\\"]|'" opam pin edit mccs -yn
-#opam show --raw mccs
-EOF
-fi
-
-cat >>$dir/entrypoint.sh << EOF
 opam install . --deps
 eval \$(opam env)
 ./configure
