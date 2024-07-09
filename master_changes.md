@@ -119,6 +119,7 @@ users)
   * [BUG]: head -c is not posix compliant. Use cut -b instead. [#5989 @madroach]
   * Add bad cudf package name encoding (dose3 lib) [#6055 @rjbou]
   * Add test for filter operators in opam file [#5642 @rjbou]
+  * Update init test to make it no repo [#5327 @rjbou]
 
 ### Engine
 
