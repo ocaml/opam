@@ -118,6 +118,7 @@ users)
   * Depexts: set version for conf packages to check [#6079 @rjbou]
   * Depexts: add package to test containing `os-version` in filter [#6079 @rjbou]
   * Depexts: fix opensuse job [#6079 @rjbou]
+  * Use actions/cache instead of our own fork ocaml-opam/cache [#6081 @rjbou]
 
 ## Doc
 
