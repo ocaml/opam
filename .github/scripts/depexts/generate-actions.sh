@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eu
 
@@ -42,9 +42,12 @@ EOF
    # CentOS 7 doesn't support OCaml 5 (GCC is too old)
    OCAML_CONSTRAINT=' & < "5.0"'
     cat >$dir/Dockerfile << EOF
-FROM centos:7
+FROM almalinux:9.4
+RUN dnf install 'dnf-command(config-manager)' -y
+RUN dnf config-manager --set-enabled crb
 RUN yum install -y $mainlibs $ocaml
-RUN yum install -y gcc-c++
+RUN yum install -y gcc-c++ diffutils
+RUN sed -i 's/ID="almalinux"/ID="centos"/' /etc/os-release
 EOF
     ;;
   debian)
@@ -108,12 +111,18 @@ cp binary/opam $dir/opam
 
 cat >>$dir/Dockerfile << EOF
 RUN test -d /opam || mkdir /opam
-ENV OPAMROOTISOK 1
-ENV OPAMROOT /opam/root
-ENV OPAMYES 1
-ENV OPAMCONFIRMLEVEL unsafe-yes
-ENV OPAMPRECISETRACKING 1
+ENV OPAMROOTISOK=1
+ENV OPAMROOT=/opam/root
+ENV OPAMYES=1
+ENV OPAMCONFIRMLEVEL=unsafe-yes
+ENV OPAMPRECISETRACKING=1
 COPY opam /usr/bin/opam
+RUN echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
+RUN /usr/bin/opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
+RUN echo 'archive-mirrors: "https://opam.ocaml.org/cache"' >> \$OPAMROOT/config
+RUN /usr/bin/opam switch create this-opam --formula='$OCAML_INVARIANT'
+RUN /usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps
+RUN /usr/bin/opam clean -as --logs
 COPY entrypoint.sh /opam/entrypoint.sh
 ENTRYPOINT ["/opam/entrypoint.sh"]
 EOF
@@ -125,25 +134,14 @@ cat >$dir/entrypoint.sh << EOF
 set -eux
 
 git config --global --add safe.directory /github/workspace
-# For systems that don't have an up to date compiler, to avoid ocaml-secondary
-echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
-opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
-echo 'archive-mirrors: "https://opam.ocaml.org/cache"' >> \$OPAMROOT/config
-opam switch create this-opam --formula='$OCAML_INVARIANT'
 
 # Workdir is /github/workpaces
 cd /github/workspace
-EOF
 
-# workaround for opensuse, mccs & glpk
-if [ $target = "opensuse" ]; then
-  cat >>$dir/entrypoint.sh << EOF
-OPAMEDITOR="sed -i 's|^build.*$|& [\\"mv\\" \\"src/glpk/dune-shared\\" \\"src/glpk/dune\\"]|'" opam pin edit mccs -yn
-#opam show --raw mccs
-EOF
-fi
+### LOCAL TESTING
+#git clone https://github.com/ocaml/opam --single-branch --branch 2.2 --depth 1 local-opam
+#cd local-opam
 
-cat >>$dir/entrypoint.sh << EOF
 opam install . --deps
 eval \$(opam env)
 ./configure
@@ -152,22 +150,79 @@ make
 ./opam switch create confs --empty
 EOF
 
+# Test depexts
+
+DEPEXTS2TEST=""
 test_depext () {
-  for pkg in $@ ; do
-    echo "./opam install $pkg || true" >> $dir/entrypoint.sh
+  DEPEXTS2TEST="$DEPEXTS2TEST $@"
+}
+
+test_depext conf-gmp.4 conf-which.1
+
+if [ $target != "gentoo" ]; then
+  test_depext conf-autoconf.0.1
+fi
+
+# disable automake for centos, as os-family returns rhel
+if [ $target != "centos" ] && [ $target != "gentoo" ] && [ $target != "opensuse" ]; then
+  test_depext conf-automake.1
+fi
+
+# additionna
+if [ $target != "oraclelinux" ] && [ $target != "xxx" ]; then
+  test_depext conf-dpkg.1 # gentoo
+fi
+
+# package with os-version check
+
+if [ $target = "debian" ] || [ $target = "ubuntu" ]; then
+  test_depext conf-sundials.2
+  # conf-libgccjit.1 conf-rdkit.1
+fi
+
+if [ $target = "alpine" ]; then
+ test_depext conf-clang-format.1
+ # conf-pandoc.0.1
+fi
+
+if [ $target = "fedora" ]; then
+ test_depext conf-emacs.1
+fi
+
+if [ $target = "oraclelinux" ] || [ $target = "centos" ]; then
+  test_depext conf-pkg-config.3
+fi
+
+# oraclelinux: conf-libev.4-12 conf-npm.1
+# centos: conf-perl.2
+
+if [ -z "$DEPEXTS2TEST" ]; then
+  echo "ERROR: You should at least define one depext to test"
+  exit 3
+fi
+
+cat >>$dir/entrypoint.sh << EOF
+ERRORS=""
+test_depexts () {
+  for pkg in \$@ ; do
+    ./opam install \$pkg || ERRORS="\$ERRORS \$pkg"
   done
 }
 
-test_depext conf-gmp conf-which conf-autoconf
+test_depexts $DEPEXTS2TEST
 
-# disable automake for centos, as os-family returns rhel
-if [ $target != "centos" ] && [ $target != "opensuse" ]; then
-  test_depext conf-automake
+if [ -z "\$ERRORS" ]; then
+  exit 0
+else
+  echo "ERROR on packages\$ERRORS"
+  exit 1
 fi
+EOF
 
-# additionnal
-test_depext dpkg # gentoo
-test_depext lib-sundials-dev # os version check
+# Test depexts update
+cat >>$dir/entrypoint.sh << EOF
+./opam update --depexts || ERRORS="\$ERRORS opam-update-depexts"
+EOF
 
 chmod +x $dir/entrypoint.sh
 
