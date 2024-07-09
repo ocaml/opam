@@ -193,7 +193,7 @@ jobs:
       run: ldd ./opam.exe | test "$(grep -v -F /cygdrive/c/Windows/)" = ''
     - name: Upload opam binaries for Windows
       if: endsWith(matrix.host, '-pc-windows')
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: opam-exe-${{ matrix.host }}-${{ matrix.ocamlv }}-${{ matrix.build }}
         path: |
