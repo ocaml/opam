@@ -120,6 +120,7 @@ users)
   * Depexts: fix opensuse job [#6079 @rjbou]
   * Use actions/cache instead of our own fork ocaml-opam/cache [#6081 @rjbou]
   * Update action cache to v4 [#6081 @rjbou]
+  * Update action checkout to v4 [#6081 @rjbou]
 
 ## Doc
 
