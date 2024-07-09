@@ -99,8 +99,10 @@ let fetch_from_cache =
           if OpamFilename.exists f then Some f else None)
         checksums
     in
-    if List.for_all
-        (fun ck -> OpamHash.check_file (OpamFilename.to_string hit_file) ck)
+    if OpamRepositoryConfig.(!r.trust_cache) ||
+       List.for_all
+        (fun ck ->
+           OpamHash.check_file (OpamFilename.to_string hit_file) ck)
         checksums
     then Done (Up_to_date (hit_file, OpamUrl.empty))
     else mismatch hit_file
