@@ -126,6 +126,8 @@ users)
 ## Doc
   * Remove the ppa from the installation instructions on Ubuntu [#5988 @kit-ty-kate - fix #5987]
 
+  * Clarify documentation for `enable` pseudo-variable
+
 ## Security fixes
 
 # API updates
