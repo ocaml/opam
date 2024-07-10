@@ -1246,34 +1246,9 @@ module OpamSys = struct
   (* OCaml 4.05.0 no longer follows the updated PATH to resolve commands. This
      makes unqualified commands absolute as a workaround. *)
   let resolve_command =
-    let check_perms =
-      if Sys.win32 then fun f ->
-        try (Unix.stat f).Unix.st_kind = Unix.S_REG
-        with e -> fatal e; false
-      else fun f ->
-        try
-          let {Unix.st_uid; st_gid; st_perm; st_kind; _} = Unix.stat f in
-          if st_kind <> Unix.S_REG then false else
-          let groups =
-            IntSet.of_list (Unix.getegid () :: Array.to_list (Unix.getgroups ()))
-          in
-          let mask =
-            if Unix.geteuid () = (st_uid : int) then
-              0o100
-            else if IntSet.mem st_gid groups then
-              0o010
-            else
-              0o001
-          in
-          if (st_perm land mask) <> 0 then
-            true
-          else
-          match OpamACL.get_acl_executable_info f st_uid with
-          | None -> false
-          | Some [] -> true
-          | Some gids ->
-            not (IntSet.is_empty (IntSet.inter (IntSet.of_list gids) groups))
-        with e -> fatal e; false
+    let check_perms f =
+      try Unix.access f (Unix.R_OK :: if Sys.win32 then [] else [Unix.X_OK]); true
+      with Unix.Unix_error _ -> false
     in
     let resolve ?dir env name =
       if not (Filename.is_relative name) then begin
