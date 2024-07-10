@@ -2522,7 +2522,7 @@ let repository cli =
         if scope = [] ||
            List.exists (function
                | `This_switch | `Current_switch | `Switch _ -> true
-               | _ -> false)
+               | `All | `Default | `No_selection -> false)
              scope
         then switches
         else []
