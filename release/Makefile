@@ -50,26 +50,24 @@ build/%.image: build/Dockerfile.%
 	docker build -t opam-build-$* -f $^ build
 	touch $@
 
-SHA_LINK = $(if $(shell mkdir -p build/tmp_extract && tar xzf "$(OUTDIR)/opam-full-$(VERSION).tar.gz" -C build/tmp_extract && grep -F URL_sha build/tmp_extract/opam-full-$(VERSION)/src_ext/Makefile.sources),-lsha_stubs)
-
 # Actually, this is for alpine 3.13, and varies
 CLINKING_linux = \
 -Wl,-Bstatic \
--lunix -lmccs_stubs -lmccs_glpk_stubs $(SHA_LINK) \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
 -lstdc++ \
 -static-libgcc \
 -static
 # -Wl,-Bdynamic
 
 CLINKING_macos = \
--lunix -lmccs_stubs -lmccs_glpk_stubs $(SHA_LINK) \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
 -lstdc++
 
 CLINKING_openbsd = $(CLINKING_macos)
 CLINKING_freebsd = $(CLINKING_macos)
 
 CLINKING_windows = \
--lunix -lmccs_stubs -lmccs_glpk_stubs $(SHA_LINK) \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
 -lopam_stubs_win32_stubs \
 -l:libstdc++.a -l:libpthread.a \
 -Wl,-static \
@@ -122,8 +120,7 @@ host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	    MAKE=$(MAKE) \
 	    $(EXPORTS_$(HOST_OS)); \
 	  cd build/opam-full-$(VERSION) && \
-	  { { ./configure --with-mccs >&2 && $(MAKE) lib-ext >&2 ; } || \
-	    ./configure --with-vendored-deps >&2 ; } && \
+	  ./configure --with-vendored-deps --with-mccs && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
 	  $(MAKE) opam; \
 	)
