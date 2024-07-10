@@ -108,6 +108,18 @@ users)
 ### Engine
 
 ## Github Actions
+  * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
+  * Depexts: fix conf package install check [#6079 @rjbou]
+  * Depexts: specify packages to test per distribution [#6079 @rjbou]
+  * Depexts: add update depexts check [#6079 @rjbou]
+  * Depexts: move parts to docker build image, for caching [#6079 @rjbou]
+  * Depexts: set version for conf packages to check [#6079 @rjbou]
+  * Depexts: add package to test containing `os-version` in filter [#6079 @rjbou]
+  * Depexts: fix opensuse job [#6079 @rjbou]
+  * Use actions/cache instead of our own fork ocaml-opam/cache [#6081 @rjbou]
+  * Update action cache to v4 [#6081 @rjbou]
+  * Update action checkout to v4 [#6081 @rjbou]
+  * Update action upload-artifact to v4 [#6081 @rjbou]
 
 ## Doc
 
