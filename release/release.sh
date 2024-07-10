@@ -1,32 +1,63 @@
 #!/usr/bin/env bash
 set -uex
 
-# This script is expected to run on Linux with docker available, and to have
-# three remotes "some-osx-x86", "some-osx-arm" and "some-openbsd", with the
-# corresponding OSes, ocaml deps installed
+unset $(env | cut -d= -f1 | grep -Fvx HOME | grep -Fvx PWD | grep -Fvx USER | grep -Fvx SHELL | grep -Fvx TERM)
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin
 
-LC_ALL=C
+usage() {
+    echo "Usage: $0 TAG"
+    exit 1
+}
+
+if [[ $# -lt 1 || $# -gt 1 || "x$1" =~ "x-" ]]; then
+  usage
+fi
+
+TAG="$1"
+shift
+
+if test "$(uname -s)" != Darwin -o "$(uname -m)" != arm64; then
+  echo "This script is required to be run on macOS/arm64"
+  exit 1
+fi
+
 DIR=$(dirname $0)
 cd "$DIR"
-if [[ $# -eq 0 || "x$1" =~ "x-" ]]; then
-    echo "Usage: $0 TAG [archive|builds]"
-    exit 1
-fi
 
-TAG="$1"; shift
+LC_ALL=C
+CWD=$(pwd)
+JOBS=$(sysctl -n hw.ncpu)
+SSH="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
-if [[ $# -eq 0 || " $* " =~ " archive " ]]; then
-  make TAG="$TAG" GIT_URL="https://github.com/ocaml/opam.git" "out/opam-full-$TAG.tar.gz"
-  ( cd out && git-upload-release ocaml opam "$TAG" "opam-full-$TAG.tar.gz"; )
-fi
+OUTDIR="out/$TAG"
+mkdir -p "$OUTDIR"
 
-if [[ $# -eq 0 || " $* " =~ " builds " ]]; then
-  make TAG="$TAG" all &
-  make TAG="$TAG" remote REMOTE=some-osx-x86 REMOTE_DIR=opam-release &
-  make TAG="$TAG" remote REMOTE=some-osx-arm REMOTE_DIR=opam-release &
-  make TAG="$TAG" remote REMOTE=some-openbsd REMOTE_MAKE=gmake REMOTE_DIR=opam-release &
-  wait
-  cd out && for f in opam-$TAG-*; do
-      git-upload-release ocaml opam "$TAG" $f
-  done
-fi
+qemu_build() {
+  local port=$1
+  local image=$2
+  local install=$3
+  local make=$4
+  local arch=$5
+
+  if ! ${SSH} -p "${port}" root@localhost true; then
+      qemu-img convert -O raw "./qemu-base-images/${image}.qcow2" "./qemu-base-images/${image}.raw"
+      "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 2G -smp "${JOBS}" &
+      sleep 60
+  fi
+  ${SSH} -p "${port}" root@localhost "${install}"
+  make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR="opam-release-$TAG"
+  ${SSH} -p "${port}" root@localhost "shutdown -p now"
+}
+
+make JOBS="${JOBS}" TAG="$TAG" "${OUTDIR}/opam-full-$TAG.tar.gz"
+make JOBS="${JOBS}" TAG="$TAG" x86_64-linux
+make JOBS="${JOBS}" TAG="$TAG" i686-linux
+make JOBS="${JOBS}" TAG="$TAG" armhf-linux
+make JOBS="${JOBS}" TAG="$TAG" arm64-linux
+make JOBS="${JOBS}" TAG="$TAG" ppc64le-linux
+make JOBS="${JOBS}" TAG="$TAG" s390x-linux
+[ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+[ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
+[ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git
+[ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.4-amd64 "pkg_add gmake curl bzip2" gmake x86_64
+[ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-13.2-RELEASE-amd64 "pkg install -y gmake curl bzip2" gmake x86_64
