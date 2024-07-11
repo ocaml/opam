@@ -568,6 +568,10 @@ let compilation_env t opam =
     OpamTypesBase.env_update_resolved "OPAMCLI" Eq "2.0"
       ~comment:"opam CLI version"
   in
+  let safe =
+    OpamTypesBase.env_update_resolved "OPAMSAFE" Eq "1"
+      ~comment:"sanitation for recursive opam calls"
+  in
   let scrub = OpamClientConfig.(!r.scrubbed_environment_variables) in
   OpamEnv.get_full ~scrub ~set_opamroot:true ~set_opamswitch:true
     ~force_path:true t ~updates:([
@@ -576,7 +580,8 @@ let compilation_env t opam =
         makelevel;
         pkg_name;
         pkg_version;
-        cli
+        cli;
+        safe;
       ] @
         build_env
         @ cygwin_env)
