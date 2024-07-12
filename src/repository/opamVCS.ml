@@ -84,7 +84,7 @@ module Make (VCS: VCS) = struct
            (OpamFilename.Dir.to_string dirname)
            (OpamUrl.to_string url)
            (match e with Failure fw -> fw | _ -> Printexc.to_string e);
-         Done (Not_available (None, OpamUrl.to_string url)))
+         Done (Not_available (Generic_failure (None, OpamUrl.to_string url))))
     @@ fun () ->
     if VCS.exists dirname then
       VCS.clean dirname @@+ fun () ->

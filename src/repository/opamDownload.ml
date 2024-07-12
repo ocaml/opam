@@ -14,8 +14,8 @@ open OpamProcess.Job.Op
 
 let log fmt = OpamConsole.log "CURL" fmt
 
-exception Download_fail of string option * string
-let fail (s,l) = raise (Download_fail (s,l))
+exception Download_fail of dl_failure
+let fail (s,l) = raise (Download_fail (Generic_failure (s,l)))
 
 let user_agent =
   CString (Printf.sprintf "opam/%s" (OpamVersion.(to_string current)))
@@ -301,8 +301,9 @@ module SWHID = struct
     let rec aux max_tries =
       if max_tries <= 0 then
         Done (Not_available
-                (Some (fallback_err "max_tries"),
-                 fallback_err "%d attempts tried; aborting" attempts))
+                (Generic_failure
+                   (Some (fallback_err "max_tries"),
+                    fallback_err "%d attempts tried; aborting" attempts)))
       else
         get_dir hash @@+ function
         | Some (`Done fetch_url) -> Done (Result fetch_url)
@@ -310,7 +311,8 @@ module SWHID = struct
           Unix.sleep 10;
           aux (max_tries - 1)
         | None | Some (`Failed | `Unknown) ->
-          Done (Not_available (None, fallback_err "Unknown swhid"))
+          Done (Not_available
+                  (Generic_failure (None, fallback_err "Unknown swhid")))
     in
     aux max_tries
 
@@ -342,21 +344,21 @@ module SWHID = struct
                let sources = OpamFilename.Op.(dir / "src") in
                OpamFilename.extract_job archive sources @@| function
                | Some e ->
-                 Not_available (
+                 Not_available (Generic_failure (
                    Some (fallback_err "archive extraction failure"),
                    fallback_err "archive extraction failure %s"
                      (match e with
                       | Failure s -> s
                       | OpamSystem.Process_error pe ->
                         OpamProcess.string_of_result pe
-                      | e -> Printexc.to_string e))
+                      | e -> Printexc.to_string e)))
                | None ->
                  (match OpamSWHID.compute sources with
                   | None ->
-                    Not_available (
+                    Not_available (Generic_failure (
                       Some (fallback_err "can't check archive validity"),
                       fallback_err
-                        "error on swhid computation, can't check its validity")
+                        "error on swhid computation, can't check its validity"))
                   | Some computed ->
                     if String.equal computed hash then
                       (List.iter (fun (_nv, dst, _sp) ->
@@ -365,23 +367,23 @@ module SWHID = struct
                           dirnames;
                        Result (Some "SWH fallback"))
                     else
-                      Not_available (
+                      Not_available (Generic_failure (
                         Some (fallback_err "archive not valid"),
                         fallback_err
                           "archive corrupted, opam file swhid %S vs computed %S"
-                          hash computed)))
+                          hash computed))))
           else
-            Done (Not_available
+            Done (Not_available (Generic_failure
                     (Some (fallback_err "skip retrieval"),
-                     fallback_err "retrieval refused by user"))
+                     fallback_err "retrieval refused by user")))
         else
-          Done (Not_available
+          Done (Not_available (Generic_failure
                   (Some (fallback_err "unreachable"),
-                   fallback_err "network failure or API down"))
+                   fallback_err "network failure or API down")))
       else
-        Done (Not_available
+        Done (Not_available (Generic_failure
                 (Some (fallback_err "no retrieval"),
                  fallback_err "Download tool permitting post request (%s) not \
                  set as download tool"
-                   (OpamStd.Format.pretty_list post_tools)))
+                   (OpamStd.Format.pretty_list post_tools))))
 end

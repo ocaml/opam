@@ -830,7 +830,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
          | `http ->
            OpamProcess.Job.catch (function
                | Failure msg -> Done (Some msg)
-               | OpamDownload.Download_fail (s,l) ->
+               | OpamDownload.Download_fail (Generic_failure (s,l)) ->
                  Done (Some (OpamStd.Option.default l s))
                | e -> Done (Some (Printexc.to_string e)))
            @@ fun () ->
@@ -848,7 +848,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
            OpamLocal.rsync_file url filename
            @@| function
            | Up_to_date f | Result f -> check_checksum f
-           | Not_available (_,src) ->
+           | Not_available (Generic_failure (_,src)) ->
              Some ("Source not found: "^src)
      in
      cond 60 `Error "Upstream check failed"

@@ -48,13 +48,20 @@ type std_path =
   | Lib | Bin | Sbin | Share | Doc | Etc | Man
   | Toplevel | Stublibs
 
+(** Download failure explanation *)
+type dl_fail_reason = string option * string
+(** Respectively the short and long version of an error message. The
+    usage is: the first argument is displayed on normal mode (nothing
+    if [None]), and the second one on verbose mode. *)
+
+(** Download failure kind *)
+type dl_failure =
+  | Generic_failure of dl_fail_reason
+
 (** Download result *)
 type 'a download =
   | Up_to_date of 'a
-  | Not_available of string option * string
-  (** Arguments are respectively the short and long version of an error message.
-      The usage is: the first argument is displayed on normal mode (nothing
-      if [None]), and the second one on verbose mode. *)
+  | Not_available of dl_failure
   | Result of 'a
 
 (** {2 Packages} *)

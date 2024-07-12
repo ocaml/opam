@@ -175,7 +175,7 @@ let package_files_to_cache repo_root cache_dir cache_urls
               checksums
               (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
             @@| fun r -> match OpamRepository.report_fetch_result nv r with
-            | Not_available (_,m) -> Some m
+            | Not_available (Generic_failure (_,m)) -> Some m
             | Up_to_date () | Result () -> None
         in
         error_opt @@| function

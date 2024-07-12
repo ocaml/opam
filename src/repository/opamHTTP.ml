@@ -75,13 +75,15 @@ module B = struct
     OpamProcess.Job.catch
       (fun e ->
          OpamStd.Exn.fatal e;
-         let s,l =
+         let failure =
            let str = Printf.sprintf "%s (%s)" (OpamUrl.to_string remote_url) in
            match e with
-           | OpamDownload.Download_fail (s,l) -> s, str l
-           | _ -> Some "Download failed", str "download failed"
+           | OpamDownload.Download_fail (Generic_failure (s, l)) ->
+             Generic_failure (s, str l)
+           | _ ->
+             Generic_failure (Some "Download failed", str "download failed")
          in
-         Done (Not_available (s,l)))
+         Done (Not_available failure))
     @@ fun () ->
     OpamDownload.download ~quiet:true ~overwrite:true ?checksum remote_url dirname
     @@+ fun local_file -> Done (Result (Some local_file))

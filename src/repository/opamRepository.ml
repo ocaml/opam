@@ -75,7 +75,7 @@ let fetch_from_cache =
           checksums);
     OpamFilename.remove file;
     let m = "cache CONFLICT" in
-    Done (Not_available (Some m, m))
+    Done (Not_available (Generic_failure (Some m, m)))
   in
   let dl_from_cache_job root_cache_url checksum file =
     let url = cache_url root_cache_url checksum in
@@ -92,7 +92,8 @@ let fetch_from_cache =
         | None ->
           (OpamLocal.rsync_file url file @@| function
             | Result _ | Up_to_date _-> ()
-            | Not_available (s,l) -> raise (OpamDownload.Download_fail (s,l)))
+            | Not_available failure ->
+              raise (OpamDownload.Download_fail failure))
       end
     | #OpamUrl.version_control ->
       failwith "Version control not allowed as cache URL"
@@ -117,12 +118,16 @@ let fetch_from_cache =
       end else
         mismatch hit_file
   with Not_found -> match checksums with
-    | [] -> let m = "cache miss" in Done (Not_available (Some m, m))
+    | [] ->
+      let m = "cache miss" in
+      Done (Not_available (Generic_failure (Some m, m)))
     | checksum::other_checksums ->
       let local_file = cache_file cache_dir checksum in
       let tmpfile = OpamFilename.add_extension local_file "tmp" in
       let rec try_cache_dl = function
-        | [] -> let m = "cache miss" in Done (Not_available (Some m, m))
+        | [] ->
+          let m = "cache miss" in
+          Done (Not_available (Generic_failure (Some m, m)))
         | root_cache_url::other_caches ->
           OpamProcess.Job.catch
             (function Failure _
@@ -223,7 +228,7 @@ let pull_from_upstream
     then ret
     else
     let m = "Checksum mismatch" in
-    Not_available (Some m, m)
+    Not_available (Generic_failure (Some m, m))
   | (Result None | Up_to_date None) as ret -> ret
   | Not_available _ as na -> na
 
@@ -239,7 +244,7 @@ let pull_from_mirrors label ?full_fetch ?working_dir ?subpath
       pull_from_upstream label ?full_fetch ?working_dir ?subpath
         cache_dir destdir checksums url
       @@+ function
-      | Not_available (_,s) ->
+      | Not_available (Generic_failure (_,s)) ->
         OpamConsole.warning "%s: download of %s failed (%s), trying mirror"
           label (OpamUrl.to_string url) s;
         aux mirrors
@@ -252,7 +257,7 @@ let pull_from_mirrors label ?full_fetch ?working_dir ?subpath
       label (OpamUrl.to_string url);
     OpamFilename.rmdir destdir;
     let m = "can't check directory checksum" in
-    url, Not_available (Some m, m)
+    url, Not_available (Generic_failure (Some m, m))
   | ret -> ret
 
 (* handle subpathes *)
@@ -263,11 +268,14 @@ let pull_tree_t
     let fallback success = function
       | None -> success ()
       | Some (Failure s) ->
-        Done (Not_available (Some s, "Could not extract archive:\n"^s))
+        Done (Not_available
+                (Generic_failure (Some s, "Could not extract archive:\n"^s)))
       | Some (OpamSystem.Process_error pe) ->
-        Done (Not_available (Some (OpamProcess.result_summary pe),
-                             OpamProcess.string_of_result pe))
-      | Some e -> Done (Not_available (None, Printexc.to_string e))
+        Done (Not_available (Generic_failure
+                               (Some (OpamProcess.result_summary pe),
+                             OpamProcess.string_of_result pe)))
+      | Some e -> Done (Not_available
+                          (Generic_failure (None, Printexc.to_string e)))
     in
     match dirnames with
     | [ label, local_dirname, _subpath ] ->
@@ -291,7 +299,8 @@ let pull_tree_t
                    Done (Up_to_date label)
                  with OpamSystem.Process_error r ->
                    Done (Not_available
-                           (Some label, OpamProcess.result_summary r))))
+                           (Generic_failure
+                              (Some label, OpamProcess.result_summary r)))))
             dirnames
         in
         let text =
@@ -310,8 +319,8 @@ let pull_tree_t
             let failing =
               OpamStd.List.filter_map (function
                   | Result _ | Up_to_date _ -> None
-                  | Not_available (Some s,l) -> Some (s,l)
-                  | Not_available (None, _) -> assert false
+                  | Not_available (Generic_failure (Some s,l)) -> Some (s,l)
+                  | Not_available _ -> assert false
                 ) (copies ())
             in
             if failing = [] then Done (Up_to_date msg) else
@@ -325,7 +334,7 @@ let pull_tree_t
                      Printf.sprintf "%s: %s" nv msg)
                     failing)
             in
-            Done (Not_available (Some simple, long)))
+            Done (Not_available (Generic_failure (Some simple, long))))
   in
   let label = OpamStd.List.concat_map ", " (fun (x,_,_) -> x) dirnames in
   (match cache_dir with
@@ -336,7 +345,7 @@ let pull_tree_t
    | None ->
      assert (cache_urls = []);
      let m = "no cache" in
-     Done (Not_available (Some m, m)))
+     Done (Not_available (Generic_failure (Some m, m))))
   @@+ function
   | Up_to_date (archive, _) ->
     extract_archive archive "cached"
@@ -350,9 +359,9 @@ let pull_tree_t
     if checksums = [] && OpamRepositoryConfig.(!r.force_checksums = Some true)
     then
       Done (
-        Not_available (
-          Some ("missing checksum"),
-          label ^ ": Missing checksum, and `--require-checksums` was set."))
+        Not_available (Generic_failure (
+            Some ("missing checksum"),
+            label ^ ": Missing checksum, and `--require-checksums` was set.")))
     else
       OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
       let extract url archive =
@@ -409,7 +418,7 @@ let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
    | None ->
      assert (cache_urls = []);
      let m = "no cache" in
-     Done (Not_available (Some m, m)))
+     Done (Not_available (Generic_failure (Some m, m))))
   @@+ function
   | Up_to_date (f, _) ->
     if not silent_hits then
@@ -428,15 +437,19 @@ let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
     then
       Done (
         Not_available
-          (Some "missing checksum",
-           label ^ ": Missing checksum, and `--require-checksums` was set."))
+          (Generic_failure
+             (Some "missing checksum",
+              label ^ ": Missing checksum, and `--require-checksums` \
+                       was set.")))
     else
       OpamFilename.with_tmp_dir_job (fun tmpdir ->
           pull_from_mirrors label cache_dir tmpdir checksums remote_urls
           @@| function
           | _, Up_to_date _ -> assert false
           | _, Result (Some f) -> OpamFilename.move ~src:f ~dst:file; Result ()
-          | _, Result None -> let m = "is a directory" in Not_available (Some m, m)
+          | _, Result None ->
+            let m = "is a directory" in
+            Not_available (Generic_failure (Some m, m))
           | _, (Not_available _ as na) -> na)
 
 let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
@@ -453,7 +466,9 @@ let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
         @@| function
         | _, Up_to_date _ -> assert false
         | url, Result (Some _) -> Result (OpamUrl.to_string url)
-        | _, Result None -> let m = "is a directory" in Not_available (Some m, m)
+        | _, Result None ->
+          let m = "is a directory" in
+          Not_available (Generic_failure (Some m, m))
         | _, (Not_available _ as na) -> na)
 
 let packages repo_root =
@@ -607,8 +622,8 @@ let report_fetch_result pkg = function
       (OpamConsole.colorise `green (OpamPackage.to_string pkg))
       msg;
     Up_to_date ()
-  | Not_available (s, l) ->
+  | Not_available (Generic_failure (s, l)) ->
     let msg = match s with None -> l | Some s -> s in
     OpamConsole.msg "[%s] fetching sources failed: %s\n"
       (OpamConsole.colorise `red (OpamPackage.to_string pkg)) msg;
-    Not_available (s, l)
+    Not_available (Generic_failure (s, l))
