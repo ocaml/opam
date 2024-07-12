@@ -298,7 +298,7 @@ amet : sha512 : exists
 ### opam admin add-hashes sha512 --package ipsum
 ### opam admin add-hashes sha512 --package dolor
 ### opam admin add-hashes md5    --package sit
-[file://${BASEDIR}/arch-sit.tgz] found in cache
+[file://${BASEDIR}/arch-sit.tgz] downloaded from file://${BASEDIR}/cache
 ### opam admin add-hashes sha512 --package sit
 ### opam show --just-file ./packages/ipsum/ipsum.1/opam --field url.src,url.checksum | "${IP_MD5}" -> IP_MD5 | "${IP_SHA512}" -> IP_SHA512
 url.src:      file://${BASEDIR}/arch-ipsum.tgz
@@ -338,7 +338,7 @@ ipsum : sha512 : exists, link to md5
 --
 dolor : md5 : exists, link to sha256
 dolor : sha256 : exists
-dolor : sha512 : exists, link to md5
+dolor : sha512 : exists, link to sha256
 --
 sit : md5 : exists, link to sha256
 sit : sha256 : exists

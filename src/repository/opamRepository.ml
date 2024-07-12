@@ -101,7 +101,7 @@ let fetch_from_cache =
     match
       List.fold_left (fun (hit, misses) ck ->
           let f = cache_file cache_dir ck in
-          if OpamFilename.exists f
+          if OpamFilename.exists f && not (OpamFilename.is_symlink f)
           then (Some f, misses)
           else (hit, f :: misses))
         (None, []) checksums
