@@ -622,8 +622,9 @@ let report_fetch_result pkg = function
       (OpamConsole.colorise `green (OpamPackage.to_string pkg))
       msg;
     Up_to_date ()
-  | Not_available (Generic_failure (s, l)) ->
+  | Not_available failure as result ->
+    let s, l = OpamTypesBase.get_dl_failure_reason failure in
     let msg = match s with None -> l | Some s -> s in
     OpamConsole.msg "[%s] fetching sources failed: %s\n"
       (OpamConsole.colorise `red (OpamPackage.to_string pkg)) msg;
-    Not_available (Generic_failure (s, l))
+    result

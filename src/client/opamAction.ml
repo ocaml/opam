@@ -296,7 +296,8 @@ let download_shared_source st url nvs =
       Done (Some na))
   @@ fun () ->
   OpamUpdate.download_shared_package_source st url nvs @@| function
-  | Some (Not_available (Generic_failure (s, l))), _ ->
+  | Some (Not_available failure), _ ->
+    let s, l = OpamTypesBase.get_dl_failure_reason failure in
     let msg = OpamStd.Option.default l s in
     OpamConsole.error "Failed to get sources of %s%s: %s"
       (labelise OpamPackage.to_string)
@@ -306,7 +307,8 @@ let download_shared_source st url nvs =
          Printf.sprintf " (%s)" (OpamUrl.to_string (OpamFile.URL.url url)))
       msg;
     Some (s, l)
-  | _, ((nv, name, Not_available (Generic_failure (s, l))) :: _) ->
+  | _, ((nv, name, Not_available failure) :: _) ->
+    let s, l = OpamTypesBase.get_dl_failure_reason failure in
     let msg = match s with None -> l | Some s -> s in
     OpamConsole.error "Failed to get extra source \"%s\" of %s: %s"
       name (OpamPackage.to_string nv) msg;
@@ -468,7 +470,9 @@ let prepare_package_source st nv dir =
         (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
       @@| function
       | Result () | Up_to_date () -> None
-      | Not_available (Generic_failure (_,msg)) -> Some (Failure msg)
+      | Not_available failure ->
+          let _, msg = OpamTypesBase.get_dl_failure_reason failure in
+          Some (Failure msg)
     in
     List.fold_left (fun job dl ->
         job @@+ function

@@ -345,3 +345,6 @@ let switch_selections_compare x
 
 let switch_selections_equal x y =
   switch_selections_compare x y = 0
+
+let get_dl_failure_reason = function
+  | Generic_failure r -> r
