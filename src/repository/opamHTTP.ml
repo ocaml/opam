@@ -80,6 +80,7 @@ module B = struct
            match e with
            | OpamDownload.Download_fail (Generic_failure (s, l)) ->
              Generic_failure (s, str l)
+           | OpamDownload.Download_fail failure -> failure
            | _ ->
              Generic_failure (Some "Download failed", str "download failed")
          in

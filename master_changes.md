@@ -114,6 +114,7 @@ users)
 
 ## Internal
   * Stop using polymorphic comparison when comparing `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
+  * Structured download error types [#6107 @Keryan-dev]
 
 ## Internal: Windows
 

@@ -54,9 +54,22 @@ type dl_fail_reason = string option * string
     usage is: the first argument is displayed on normal mode (nothing
     if [None]), and the second one on verbose mode. *)
 
+(** Tool download failure infos *)
+type 'a dl_tool_failure = {
+  dl_exit_code : int;
+  dl_url : string;
+  dl_reason : 'a;
+}
+
+type curl_error =
+  | Curl_empty_response
+  | Curl_error_response of string
+  | Curl_generic_error of dl_fail_reason
+
 (** Download failure kind *)
 type dl_failure =
   | Generic_failure of dl_fail_reason
+  | Curl_failure of curl_error dl_tool_failure
 
 (** Download result *)
 type 'a download =

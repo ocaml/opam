@@ -348,3 +348,14 @@ let switch_selections_equal x y =
 
 let get_dl_failure_reason = function
   | Generic_failure r -> r
+  | Curl_failure { dl_exit_code; dl_url; dl_reason } ->
+    let head_msg =
+      Printf.sprintf "curl failure while downloading %s\nExited with code %d\n"
+        dl_url dl_exit_code
+    in
+    match dl_reason with
+    | Curl_empty_response ->
+      Some "curl failure", head_msg^"Empty response"
+    | Curl_error_response e ->
+      Some "curl failure", head_msg^"Returned code "^e
+    | Curl_generic_error (s, l) -> s, head_msg^l

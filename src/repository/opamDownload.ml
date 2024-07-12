@@ -15,7 +15,7 @@ open OpamProcess.Job.Op
 let log fmt = OpamConsole.log "CURL" fmt
 
 exception Download_fail of dl_failure
-let fail (s,l) = raise (Download_fail (Generic_failure (s,l)))
+let fail failure = raise (Download_fail failure)
 
 let user_agent =
   CString (Printf.sprintf "opam/%s" (OpamVersion.(to_string current)))
@@ -93,27 +93,34 @@ let tool_return url ret =
   match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
   | _, `Default ->
     if OpamProcess.is_failure ret then
-      fail (Some "Download command failed",
+      fail (Generic_failure (Some "Download command failed",
                 Printf.sprintf "Download command failed: %s"
-                  (OpamProcess.result_summary ret))
+                  (OpamProcess.result_summary ret)))
     else Done ()
   | _, `Curl ->
-    if OpamProcess.is_failure ret then
-      fail (Some "Curl failed", Printf.sprintf "Curl failed: %s"
-                  (OpamProcess.result_summary ret));
-    match ret.OpamProcess.r_stdout with
-    | [] ->
-      fail (Some "curl empty response",
-                Printf.sprintf "curl: empty response while downloading %s"
-                  (OpamUrl.to_string url))
-    | l  ->
-      let code = List.hd (List.rev l) in
-      let num = try int_of_string code with Failure _ -> 999 in
-      if num >= 400 then
-        fail (Some ("curl error code " ^ code),
-                  Printf.sprintf "curl: code %s while downloading %s"
-                    code (OpamUrl.to_string url))
-      else Done ()
+    let error =
+      if OpamProcess.is_failure ret then
+        Some (Curl_generic_error
+                (Some "Curl failed",
+                 Printf.sprintf "Curl failed: %s"
+                   (OpamProcess.result_summary ret)))
+      else match ret.OpamProcess.r_stdout with
+        | [] -> Some Curl_empty_response
+        | l  ->
+          let code = List.hd (List.rev l) in
+          let num = try int_of_string code with Failure _ -> 999 in
+          if num >= 400
+          then Some (Curl_error_response code)
+          else None
+    in
+    match error with
+    | Some dl_reason ->
+      fail (Curl_failure
+              { dl_exit_code = ret.OpamProcess.r_code;
+                dl_url = OpamUrl.to_string url;
+                dl_reason;
+              })
+    | None -> Done ()
 
 let download_command ~compress ?checksum ~url ~dst () =
   let cmd, args =
@@ -156,17 +163,17 @@ let really_download
   download_command ~compress ?checksum ~url ~dst:tmp_dst ()
   @@+ fun () ->
   if not (Sys.file_exists tmp_dst) then
-    fail (Some "Downloaded file not found",
-          "Download command succeeded, but resulting file not found")
+    fail (Generic_failure (Some "Downloaded file not found",
+          "Download command succeeded, but resulting file not found"))
   else if Sys.file_exists dst && not overwrite then
     OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
   if validate &&
      OpamRepositoryConfig.(!r.force_checksums <> Some false) then
     OpamStd.Option.iter (fun cksum ->
         if not (OpamHash.check_file tmp_dst cksum) then
-          fail (Some "Bad checksum",
+          fail (Generic_failure (Some "Bad checksum",
                     Printf.sprintf "Bad checksum, expected %s"
-                      (OpamHash.to_string cksum)))
+                      (OpamHash.to_string cksum))))
       checksum;
   OpamSystem.mv tmp_dst dst;
   Done ()
