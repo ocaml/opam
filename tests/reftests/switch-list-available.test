@@ -29,13 +29,18 @@ flags: compiler
 a      1
 b      1
 a      2
+a      3
+a      4
+b      4
+[NOTE] Some compilers may have been hidden (e.g. pre-releases). If you want to display them, run: 'opam switch list-available --all'
+### opam switch list-available --all
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+a      1
+b      1
+a      2
 b      2
 a      3
 b      3
 a      4
 b      4
-### opam switch list-available --all
-opam: unknown option '--all', did you mean either '--full' or '--cli'?
-Usage: opam switch [OPTION]… [COMMAND] [ARG]…
-Try 'opam switch --help' or 'opam --help' for more information.
-# Return code 2 #
