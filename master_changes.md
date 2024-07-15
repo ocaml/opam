@@ -25,7 +25,7 @@ users)
 ## Config report
 
 ## Actions
-  * Always set OPAMSAFE=1 when compiling a package [#6090 @kit-ty-kate - fix #6088]
+  * Always set OPAMSAFE=1 when compiling a package [#6090 @kit-ty-kate]
 
 ## Install
   * Fix package name display for no agreement conflicts [#6055 @rjbou - fix #6030]
