@@ -47,3 +47,10 @@ The following actions will be performed:
 Done.
 ### cat $OPAMROOT/undef-switch/lib/prefix
 ${BASEDIR}/OPAM/undef-switch
+### # switch with repo link
+### # expects a warning, useful to check chosen backend
+### opam switch create w-repo --repositories=from-link=https://github.com/ocaml/opam-repository.git --dry-run --empty
+Creating repository from-link...
+[ERROR] Could not update repository "from-link": OpamDownload.Download_fail(_, "curl: empty response while downloading https://github.com/ocaml/opam-repository.git/index.tar.gz")
+[ERROR] Initial fetch of these repositories failed: from-link
+# Return code 40 #
