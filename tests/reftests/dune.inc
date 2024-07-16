@@ -1,5 +1,47 @@
 
 (rule
+ (alias reftest-admin-cache.unix)
+ (enabled_if (= %{os_type} "Unix"))
+ (action
+  (diff admin-cache.unix.test admin-cache.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Unix"))
+ (deps (alias reftest-admin-cache.unix)))
+
+(rule
+ (targets admin-cache.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Unix"))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:admin-cache.unix.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-admin-cache.win32)
+ (enabled_if (= %{os_type} "Win32"))
+ (action
+  (diff admin-cache.win32.test admin-cache.win32.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (= %{os_type} "Win32"))
+ (deps (alias reftest-admin-cache.win32)))
+
+(rule
+ (targets admin-cache.win32.out)
+ (deps root-N0REP0)
+ (enabled_if (= %{os_type} "Win32"))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:admin-cache.win32.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-admin)
  (action
   (diff admin.test admin.out)))
