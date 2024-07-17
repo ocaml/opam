@@ -535,10 +535,14 @@ url.checksum: md5=HASH
 root: OPAM
 no hash-cache
 ### opam admin add-hashes md5
-### # ERROR as the cache is in ~/.cache/opam-hash-cache
 ### sh check-hash-ca.sh
 root: OPAM
-no hash-cache
+md5_to_sha256: 0
+md5_to_sha512: 0
+sha256_to_md5: 0
+sha256_to_sha512: 0
+sha512_to_md5: 0
+sha512_to_sha256: 0
 ### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
 url.src:      file://${BASEDIR}/arch1.tgz
 url.checksum: md5=HASH
@@ -549,7 +553,12 @@ url.checksum: md5=HASH
 [WARNING] Not found packages not-found, sit.2 and sed.2. Ignoring them.
 ### sh check-hash-ca.sh
 root: OPAM
-no hash-cache
+md5_to_sha256: 2
+md5_to_sha512: 0
+sha256_to_md5: 0
+sha256_to_sha512: 0
+sha512_to_md5: 0
+sha512_to_sha256: 0
 ### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
 url.src:      file://${BASEDIR}/arch1.tgz
 url.checksum: md5=HASH sha256=HASH
@@ -565,7 +574,12 @@ url.checksum:
 [file://${BASEDIR}/arch2.tgz] found in cache
 ### sh check-hash-ca.sh
 root: OPAM
-no hash-cache
+md5_to_sha256: 2
+md5_to_sha512: 4
+sha256_to_md5: 0
+sha256_to_sha512: 2
+sha512_to_md5: 0
+sha512_to_sha256: 0
 ### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
 url.src:      file://${BASEDIR}/arch1.tgz
 url.checksum: md5=HASH sha256=HASH sha512=HASH
@@ -583,7 +597,12 @@ no hash-cache
 ### opam admin add-hashes sha256
 ### sh check-hash-ca.sh
 root: MAPO
-no hash-cache
+md5_to_sha256: 2
+md5_to_sha512: 0
+sha256_to_md5: 0
+sha256_to_sha512: 0
+sha512_to_md5: 0
+sha512_to_sha256: 2
 ### :::::::::::::::::::::
 ### :VI: update-extrafiles :
 ### :::::::::::::::::::::

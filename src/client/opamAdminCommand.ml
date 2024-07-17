@@ -430,14 +430,11 @@ let add_hashes_command_doc =
 let add_hashes_command cli =
   let command = "add-hashes" in
   let doc = add_hashes_command_doc in
-  let cache_dir = OpamFilename.Dir.of_string "~/.cache/opam-hash-cache" in
   let man = [
     `S Manpage.s_description;
-    `P (Printf.sprintf
-          "This command scans through package definitions, and add hashes as \
-           requested (fetching the archives if required). A cache is generated \
-           in %s for subsequent runs."
-          (OpamArg.escape_path (OpamFilename.Dir.to_string cache_dir)));
+    `P "This command scans through package definitions, and add hashes as \
+        requested (fetching the archives if required). A cache is generated \
+        in <opamroot>/download-cache/hash-cache for subsequent runs.";
   ]
   in
   let hash_kinds = [`MD5; `SHA256; `SHA512] in
@@ -456,14 +453,14 @@ let add_hashes_command cli =
     OpamArg.mk_flag ~cli OpamArg.cli_original ["replace"]
       "Replace the existing hashes rather than adding to them"
   in
-  let hash_tables =
+  let create_hash_tables hash_cache_dir =
     let t = Hashtbl.create (List.length hash_kinds) in
     List.iter (fun k1 ->
         List.iter (fun k2 ->
             if k1 <> k2 then (
               let cache_file : string list list OpamFile.t =
                 OpamFile.make @@ OpamFilename.Op.(
-                    cache_dir //
+                    hash_cache_dir //
                     (OpamHash.string_of_kind k1 ^ "_to_" ^
                      OpamHash.string_of_kind k2))
               in
@@ -481,7 +478,7 @@ let add_hashes_command cli =
       hash_kinds;
     t
   in
-  let save_hashes () =
+  let save_hashes hash_tables =
     Hashtbl.iter (fun _ (file, tbl) ->
         Hashtbl.fold
           (fun src dst l -> [OpamHash.to_string src; OpamHash.to_string dst]::l)
@@ -495,7 +492,7 @@ let add_hashes_command cli =
       hash_tables
   in
   let additions_count = ref 0 in
-  let get_hash cache_urls kind known_hashes url =
+  let get_hash hash_tables ~cache_urls ~cache_dir kind known_hashes url =
     let found =
       List.fold_left (fun result hash ->
           match result with
@@ -516,9 +513,7 @@ let add_hashes_command cli =
         OpamProcess.Job.ignore_errors ~default:None
           (fun () ->
              OpamRepository.pull_file (OpamUrl.to_string url)
-               ~cache_dir:(OpamRepositoryPath.download_cache
-                             OpamStateConfig.(!r.root_dir))
-               ~cache_urls
+               ~cache_dir ~cache_urls
                f known_hashes [url]
              @@| function
              | Result () | Up_to_date () ->
@@ -534,12 +529,17 @@ let add_hashes_command cli =
                h0 h
            ) known_hashes;
          incr additions_count;
-         if !additions_count mod 20 = 0 then save_hashes ()
+         if !additions_count mod 20 = 0 then save_hashes hash_tables
        | None -> ());
       h
   in
   let cmd global_options hash_types replace packages () =
     OpamArg.apply_global_options cli global_options;
+    let cache_dir =
+      OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir)
+    in
+    let hash_cache_dir = OpamFilename.Op.(cache_dir / "hash-cache") in
+    let hash_tables = create_hash_tables hash_cache_dir in
     let repo_root = checked_repo_root () in
     let cache_urls =
       cache_urls repo_root
@@ -569,15 +569,14 @@ let add_hashes_command cli =
               List.fold_left (fun (has_error, hashes) kind ->
                   if List.exists (fun h -> OpamHash.kind h = kind) hashes
                   then has_error, hashes else
-                  match get_hash cache_urls kind hashes
-                          (OpamFile.URL.url urlf)
-                  with
-                  | Some h -> has_error, hashes @ [h]
-                  | None ->
-                    OpamConsole.error "Could not get hash for %s: %s"
-                      (OpamPackage.to_string nv)
-                      (OpamUrl.to_string (OpamFile.URL.url urlf));
-                    true, hashes)
+                    match get_hash hash_tables ~cache_urls ~cache_dir kind
+                            hashes (OpamFile.URL.url urlf) with
+                    | Some h -> has_error, hashes @ [h]
+                    | None ->
+                      OpamConsole.error "Could not get hash for %s: %s"
+                        (OpamPackage.to_string nv)
+                        (OpamUrl.to_string (OpamFile.URL.url urlf));
+                      true, hashes)
                 (has_error, hashes)
                 hash_types
             in
@@ -605,7 +604,7 @@ let add_hashes_command cli =
         )
         pkg_prefixes false
     in
-    save_hashes ();
+    save_hashes hash_tables;
     if has_error then OpamStd.Sys.exit_because `Sync_error
     else OpamStd.Sys.exit_because `Success
   in
