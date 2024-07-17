@@ -513,6 +513,16 @@ for p in $@; do
   fi
   echo "}" >> $file
 done
+### <check-hash-ca.sh>
+hc=$OPAMROOT/download-cache/hash-cache
+echo "root: $(basename $(dirname $(dirname "$hc")))"
+if [ -d "$hc" ]; then
+  for f in $(ls "$hc") ; do
+    echo "$f: $(wc -l "$hc/$f" | cut -f 1 -d ' ')"
+  done
+else
+  echo "no hash-cache"
+fi
 ### sh add-urls.sh arch1 0 dolor
 ### sh add-urls.sh arch2 1 sit
 ### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
@@ -521,7 +531,14 @@ url.checksum:
 ### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
 url.src:      file://${BASEDIR}/arch2.tgz
 url.checksum: md5=HASH
+### sh check-hash-ca.sh
+root: OPAM
+no hash-cache
 ### opam admin add-hashes md5
+### # ERROR as the cache is in ~/.cache/opam-hash-cache
+### sh check-hash-ca.sh
+root: OPAM
+no hash-cache
 ### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
 url.src:      file://${BASEDIR}/arch1.tgz
 url.checksum: md5=HASH
@@ -530,6 +547,9 @@ url.src:      file://${BASEDIR}/arch2.tgz
 url.checksum: md5=HASH
 ### opam admin add-hashes sha256 --packages not-found,dolor,sit.1,sit.2,sed,sed.2
 [WARNING] Not found packages not-found, sit.2 and sed.2. Ignoring them.
+### sh check-hash-ca.sh
+root: OPAM
+no hash-cache
 ### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
 url.src:      file://${BASEDIR}/arch1.tgz
 url.checksum: md5=HASH sha256=HASH
@@ -543,6 +563,9 @@ url.checksum:
 ### opam admin add-hashes sha512
 [file://${BASEDIR}/arch1.tgz] found in cache
 [file://${BASEDIR}/arch2.tgz] found in cache
+### sh check-hash-ca.sh
+root: OPAM
+no hash-cache
 ### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
 url.src:      file://${BASEDIR}/arch1.tgz
 url.checksum: md5=HASH sha256=HASH sha512=HASH
@@ -552,6 +575,15 @@ url.checksum: md5=HASH sha256=HASH sha512=HASH
 ### opam lint --check-upstream ./packages/dolor/dolor.1/opam ./packages/sit/sit.1/opam
 ${BASEDIR}/packages/dolor/dolor.1/opam: Passed.
 ${BASEDIR}/packages/sit/sit.1/opam: Passed.
+### # change opam root to test opam root creation
+### OPAMROOT=$BASEDIR/MAPO
+### sh check-hash-ca.sh
+root: MAPO
+no hash-cache
+### opam admin add-hashes sha256
+### sh check-hash-ca.sh
+root: MAPO
+no hash-cache
 ### :::::::::::::::::::::
 ### :VI: update-extrafiles :
 ### :::::::::::::::::::::
