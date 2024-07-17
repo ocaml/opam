@@ -188,7 +188,10 @@ let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
   in
   let st = { st with compiler_packages } in
   if not OpamStateConfig.(!r.dryrun) then (
-    if OpamSwitchState.selections st <> old_selections then write_selections st;
+    if not (OpamTypesBase.switch_selections_equal
+              (OpamSwitchState.selections st)
+              old_selections) then
+      write_selections st;
     if not (OpamPackage.Set.equal reinstall0 reinstall) then
       OpamFile.PkgList.write
         (OpamPath.Switch.reinstall st.switch_global.root st.switch)

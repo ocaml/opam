@@ -107,6 +107,7 @@ users)
 ## Shell
 
 ## Internal
+  * Stop using polymorphic comparison when comparing `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
 
 ## Internal: Windows
 
@@ -151,5 +152,6 @@ users)
 ## opam-solver
 
 ## opam-format
+  * Add `OpamTypesBase.switch_selections_{compare,equal}`: proper comparison functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
 
 ## opam-core

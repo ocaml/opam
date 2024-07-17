@@ -464,7 +464,7 @@ let dev_packages st ?autolock ?(working_dir=OpamPackage.Set.empty) packages =
   (* The following is needed for pinned packages that may have changed
      version *)
   let selections1 = OpamSwitchState.selections st in
-  if selections0 <> selections1 then
+  if not (OpamTypesBase.switch_selections_equal selections0 selections1) then
     OpamFile.SwitchSelections.write
       (OpamPath.Switch.selections st.switch_global.root st.switch)
       selections1;
