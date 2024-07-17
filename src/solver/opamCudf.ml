@@ -747,9 +747,7 @@ end
 
 type explanation =
   [ `Conflict of string option * string list * bool
-  | `Missing of string option * string *
-                (OpamPackage.Name.t * OpamFormula.version_formula)
-                  OpamFormula.formula
+  | `Missing of string option * string * OpamFormula.t
   ]
 
 module Pp_explanation = struct
@@ -1024,6 +1022,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
                  not (List.exists (function `Conflict (_,_,has_invariant) -> has_invariant | _ -> false) explanations)
             in
             let msg = `Conflict (msg1, msg2, msg3) in
+            (* TODO: remove this List.mem *)
             if List.mem msg explanations then raise Not_found else
               msg :: explanations, ct_chains
           | Missing (p, deps) ->
@@ -1043,13 +1042,59 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
               let sdeps = OpamFormula.to_string fdeps in
               `Missing (Some csp, sdeps, fdeps)
             in
-            if List.mem msg explanations then raise Not_found else
-              msg :: explanations, ct_chains
+            msg :: explanations, ct_chains
           | Dependency _ ->
             explanations, ct_chains
         with Not_found ->
           explanations, ct_chains)
       ([], ct_chains) reasons
+  in
+
+  let rec is_included_in_formula formula1 formula2 =
+    match formula1, formula2 with
+    | Empty, Empty -> true
+    | Atom (name1, vformula1), Atom (name2, vformula2) ->
+      OpamPackage.Name.equal name1 name2 &&
+      let formula_eq x y = OpamFormula.compare_nc (name1, x) (name2, y) = 0 in
+      begin match OpamFormula.simplify_version_formula (Or (vformula1, vformula2)) with
+      | Some simplified -> formula_eq simplified vformula2
+      | None -> false
+      end
+    | Block x, y | x, Block y -> is_included_in_formula x y
+    | And (x1, x2), And (y1, y2) | Or (x1, x2), Or (y1, y2) ->
+        is_included_in_formula x1 y1 &&
+        is_included_in_formula x2 y2
+    | Empty, _
+    | Atom _, _
+    | And _, _
+    | Or _, _ -> false
+  in
+
+  let explanations =
+    let rec simplify acc = function
+      | [] -> acc
+      | (`Conflict _ as x)::xs ->
+        (* TODO: improve this when the List.mem above is removed *)
+        simplify (x :: acc) xs
+      | `Missing x::xs ->
+        let x, xs =
+          List.fold_left (fun ((csp, _, fdeps) as x, xs) -> function
+              | `Conflict _ as y -> (x, xs @ [y])
+              | `Missing ((csp', _, fdeps') as y) ->
+                if OpamStd.Option.equal String.equal csp csp' then
+                  if is_included_in_formula fdeps fdeps' then
+                    (y, xs)
+                  else if is_included_in_formula fdeps' fdeps then
+                    (x, xs)
+                  else
+                    (x, xs @ [`Missing y])
+                else
+                  (x, xs @ [`Missing y]))
+            (x, []) xs
+        in
+        simplify (`Missing x :: acc) xs
+    in
+    List.rev (simplify [] explanations)
   in
 
   let same_depexts sdeps fdeps =
