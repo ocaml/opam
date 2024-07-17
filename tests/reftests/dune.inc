@@ -210,27 +210,6 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:config.test} %{read-lines:testing-env}))))
 
 (rule
- (alias reftest-conflict-4373)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
- (action
-  (diff conflict-4373.test conflict-4373.out)))
-
-(alias
- (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
- (deps (alias reftest-conflict-4373)))
-
-(rule
- (targets conflict-4373.out)
- (deps root-c1d23f0e)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
- (package opam)
- (action
-  (with-stdout-to
-   %{targets}
-   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:conflict-4373.test} %{read-lines:testing-env}))))
-
-(rule
  (alias reftest-conflict-badversion)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
@@ -1785,6 +1764,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:unhelpful-conflicts-001.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-unhelpful-conflicts-002)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
+ (action
+  (diff unhelpful-conflicts-002.test unhelpful-conflicts-002.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
+ (deps (alias reftest-unhelpful-conflicts-002)))
+
+(rule
+ (targets unhelpful-conflicts-002.out)
+ (deps root-143dd2a2f59f5befbf3cb90bb2667f911737fbf8)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:unhelpful-conflicts-002.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-update-upgrade)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
@@ -2055,6 +2055,27 @@
            file://%{dep:opam-repo-11ea1cb})))))
 
 (rule
+ (targets opam-archive-143dd2a2f59f5befbf3cb90bb2667f911737fbf8.tar.gz)
+ (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/143dd2a2f59f5befbf3cb90bb2667f911737fbf8.tar.gz)))
+
+(rule
+  (targets opam-repo-143dd2a2f59f5befbf3cb90bb2667f911737fbf8)
+  (action
+   (progn
+    (run mkdir -p %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-143dd2a2f59f5befbf3cb90bb2667f911737fbf8.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-143dd2a2f59f5befbf3cb90bb2667f911737fbf8)
+  (deps opam-root-version)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-143dd2a2f59f5befbf3cb90bb2667f911737fbf8})))))
+
+(rule
  (targets opam-archive-297366c.tar.gz)
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/297366c.tar.gz)))
 
@@ -2221,27 +2242,6 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a})))))
-
-(rule
- (targets opam-archive-c1d23f0e.tar.gz)
- (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/c1d23f0e.tar.gz)))
-
-(rule
-  (targets opam-repo-c1d23f0e)
-  (action
-   (progn
-    (run mkdir -p %{targets})
-    (run tar -C %{targets} -xzf %{dep:opam-archive-c1d23f0e.tar.gz} --strip-components=1))))
-
-(rule
-  (targets root-c1d23f0e)
-  (deps opam-root-version)
-  (action
-   (progn
-    (ignore-stdout
-    (run %{bin:opam} init --root=%{targets}
-           --no-setup --bypass-checks --no-opamrc --bare
-           file://%{dep:opam-repo-c1d23f0e})))))
 
 (rule
  (targets opam-archive-de897adf36c4230dfea812f40c98223b31c4521a.tar.gz)
