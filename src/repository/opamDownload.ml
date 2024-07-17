@@ -35,7 +35,6 @@ let curl_args = [
 ]
 
 let wget_args = [
-  CString "--content-disposition", None;
   CString "-t", None; CIdent "retry", None;
   CString "-O", None; CIdent "out", None;
   CString "-U", None; user_agent, None;
