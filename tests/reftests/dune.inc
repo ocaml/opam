@@ -1,5 +1,23 @@
 
 (rule
+ (alias reftest-admin-cache)
+ (action
+  (diff admin-cache.test admin-cache.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-admin-cache)))
+
+(rule
+ (targets admin-cache.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:admin-cache.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-admin)
  (action
   (diff admin.test admin.out)))

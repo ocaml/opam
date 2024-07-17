@@ -125,6 +125,7 @@ users)
   * Add test for filter operators in opam file [#5642 @rjbou]
   * Update init test to make it no repo [#5327 @rjbou]
   * Add a test in admin cache for hash cache [#6103 @rjbou]
+  * Add admin cache test [#6068 @rjbou]
 
 ### Engine
 
