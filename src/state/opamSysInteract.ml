@@ -1115,14 +1115,13 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_
      "-Su"::"--noconfirm"::packages], None
   | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
   | Nix ->
-    let open OpamFilename in
     (match switch with
     | None ->
         log "Nix depext must be passed switch";
         [], None
     | Some switch ->
     let dir = OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) switch in
-    let drvFile = create dir (basename (raw "env.nix")) in
+    let drvFile = OpamFilename.create dir (OpamFilename.basename (OpamFilename.raw "env.nix")) in
     let packages = String.concat " "
       (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l)
       OpamSysPkg.Set.Op.(sys_packages ++ required) [])
@@ -1148,8 +1147,8 @@ echo "PATH	+=	$PATH	Nix" >> "$out"
   preferLocalBuild = true;
 }
 |} in
-    write drvFile contents;
-    let envFile = create dir (basename (raw "nix.env")) |> OpamFilename.to_string in
+    OpamFilename.write drvFile contents;
+    let envFile = OpamFilename.create dir (OpamFilename.basename (OpamFilename.raw "nix.env")) |> OpamFilename.to_string in
     [`AsUser "nix-build", [ OpamFilename.to_string drvFile; "--out-link"; envFile ] ], None)
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
