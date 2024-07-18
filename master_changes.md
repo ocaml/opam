@@ -155,6 +155,7 @@ users)
   * Add a test showing the behaviour of `opam list --latests-only` [#5375 @kit-ty-kate]
 
 ### Engine
+  * Add a test filtering mechanism [#6105 @Keryan-dev]
 
 ## Github Actions
   * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
