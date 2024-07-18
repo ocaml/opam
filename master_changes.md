@@ -101,6 +101,7 @@ users)
 ## Opam file format
 
 ## Solver
+  * Fix some of the unhelpful conflict messages by merging formulas that include each other [#5210 @kit-ty-kate]
 
 ## Client
 
@@ -122,6 +123,7 @@ users)
   * Add bad cudf package name encoding (dose3 lib) [#6055 @rjbou]
   * Add test for filter operators in opam file [#5642 @rjbou]
   * Update init test to make it no repo [#5327 @rjbou]
+  * Add a test showing an unhelpful conflict message [#5210 @kit-ty-kate]
 
 ### Engine
 

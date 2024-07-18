@@ -109,9 +109,18 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Source https://fake.exe/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/n] y
--> retrieved snappy-swhid-dir.2  (SWH fallback)
--> installed snappy-swhid-dir.2
-Done.
+[ERROR] Failed to get sources of snappy-swhid-dir.2: SWH fallback: Unknown swhid
+
+OpamSolution.Fetch_fail("SWH fallback: Unknown swhid")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - fetch snappy-swhid-dir 2
++- 
+- No changes have been performed
+'${OPAM} install snappy-swhid-dir -v' failed.
+# Return code 40 #
 ### opam clean -c
 Clearing cache of downloaded files
 ### opam option download-command=curl

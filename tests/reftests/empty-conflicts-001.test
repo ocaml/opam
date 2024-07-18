@@ -24,25 +24,37 @@ Done.
     You can temporarily relax the switch invariant with `--update-invariant'
   * No agreement on the version of ocaml-base-compiler:
     - (invariant) -> ocaml-base-compiler = 4.07.1
-    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> ocaml >= 4.08.0 -> ocaml-base-compiler >= 4.12.0~
-  * No agreement on the version of cstruct:
-    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> cstruct < 4.0.0
-    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> cstruct >= 6.0.0
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> ocaml >= 4.08.0 -> ocaml-base-compiler (= 4.09.1 | = 4.10.0 | = 4.10.1 | = 4.11.0 | = 4.11.2 | >= 4.12.0~)
   * No agreement on the version of cstruct:
     - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> cstruct < 6.0.0
     - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> cstruct >= 6.0.0
+  * No agreement on the version of ocaml-base-compiler:
+    - (invariant) -> ocaml-base-compiler = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> sexplib < 113.01.00 -> ocaml < 4.03.0 -> ocaml-base-compiler (< 3.07+1 | = 3.08.0 | = 3.09.1 | = 3.10.0 | = 3.10.1 | = 3.12.0 | = 4.00.0 | = 4.00.1 | = 4.01.0 | = 4.02.3)
+  * No agreement on the version of ocaml:
+    - (invariant) -> ocaml-base-compiler = 4.07.1 -> ocaml = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> x509 < 0.6.0 -> asn1-combinators < 0.2.0 -> ocaml < 4.06.0
+  * No agreement on the version of ocaml-base-compiler:
+    - (invariant) -> ocaml-base-compiler = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> x509 < 0.6.0 -> asn1-combinators < 0.2.0 -> ocaml < 4.06.0 -> ocaml-base-compiler = 4.03.0
+  * No agreement on the version of ocaml:
+    - (invariant) -> ocaml-base-compiler = 4.07.1 -> ocaml = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> ppx_sexp_conv < v0.11.0 -> ppx_core < v0.10 -> base < v0.10 -> ocaml < 4.07.0
+  * No agreement on the version of ocaml-base-compiler:
+    - (invariant) -> ocaml-base-compiler = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> ppx_sexp_conv < v0.11.0 -> ppx_core < v0.10 -> base < v0.10 -> ocaml < 4.07.0 -> ocaml-base-compiler = 4.06.0
+  * Incompatible packages:
+    - (invariant) -> ocaml-base-compiler = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> ocaml >= 4.08.0 -> dkml-base-compiler
+  * Incompatible packages:
+    - (invariant) -> ocaml-base-compiler = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> sexplib < 113.01.00 -> ocaml < 4.03.0 -> ocaml-system >= 3.09.1
+  * Incompatible packages:
+    - (invariant) -> ocaml-base-compiler = 4.07.1
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> sexplib < 113.01.00 -> ocaml < 4.03.0 -> ocaml-variants
   * Missing dependency:
-    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.1
-    unmet availability conditions: 'false'
-  * Missing dependency:
-    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.2
-    unmet availability conditions: 'false'
-  * Missing dependency:
-    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.3
-    unmet availability conditions: 'false'
-  * Missing dependency:
-    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto = 0.8.4
-    unmet availability conditions: 'false'
+    - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> dns-client >= 5.0.0 -> mirage-crypto-rng >= 0.8.0 -> mirage-crypto (= 0.8.1 | = 0.8.2 | = 0.8.3 | = 0.8.4)
+    unmet availability conditions, e.g. 'false'
   * Missing dependency:
     - h2-mirage >= 0.9.0 -> gluten-mirage >= 0.3.0 -> conduit-mirage >= 2.0.2 -> tls -> sexplib < 113.01.00 -> ocaml < 4.03.0 -> ocaml-variants -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'

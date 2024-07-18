@@ -225,6 +225,11 @@ module OpamList = struct
     in
     s, List.rev l_rev
 
+  let rec equal f x y = match x, y with
+    | [], [] -> true
+    | x::xs, y::ys when f x y -> equal f xs ys
+    | _, _ -> false
+
 end
 
 
