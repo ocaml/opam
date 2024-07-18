@@ -188,21 +188,25 @@ test: tests
 bench:
 	@$(DUNE) exec --display=quiet $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) -- ./tests/bench/bench.exe
 
+define tests-summary =
+  ret=$$?; \
+  echo "###     TESTS RESULT SUMMARY     ###"; \
+  for t in _build/default/tests/reftests/*.test; do \
+    printf "%-30s" $$(basename $$t .test); \
+    if [ ! -e $${t%.test}.out ]; \
+    then printf '\033[33m[SKIP]\033[m\n'; \
+    elif diff -q --strip-trailing-cr $$t $${t%.test}.out >/dev/null; \
+    then printf '\033[32m[ OK ]\033[m\n'; \
+    else printf '\033[31m[FAIL]\033[m\n'; \
+    fi; \
+  done; \
+  test $$ret -eq 0
+endef
+
 .PHONY: tests
 tests: $(DUNE_DEP) src/client/no-git-version
 	@$(DUNE) runtest $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) src/ tests/ --no-buffer; \
-	ret=$$?; \
-	echo "###     TESTS RESULT SUMMARY     ###"; \
-	for t in _build/default/tests/reftests/*.test; do \
-	  printf "%-30s" $$(basename $$t .test); \
-	  if [ ! -e $${t%.test}.out ]; \
-	  then printf '\033[33m[SKIP]\033[m\n'; \
-	  elif diff -q --strip-trailing-cr $$t $${t%.test}.out >/dev/null; \
-	  then printf '\033[32m[ OK ]\033[m\n'; \
-	  else printf '\033[31m[FAIL]\033[m\n'; \
-	  fi; \
-	done; \
-	test $$ret -eq 0
+	$(tests-summary)
 
 .PHONY: crowbar
 # only run the quickcheck-style tests, not very covering
@@ -233,7 +237,8 @@ reftest-runner: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . tests/reftests/run.exe
 
 reftests: $(DUNE_DEP) src/client/no-git-version
-	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest
+	@$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest; \
+	$(tests-summary)
 
 reftest-%: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest-$* --force
