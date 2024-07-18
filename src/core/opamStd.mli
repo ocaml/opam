@@ -255,6 +255,8 @@ module List : sig
 
   (** Like [List.fold_left], but also performs [List.map] at the same time *)
   val fold_left_map: ('s -> 'a -> ('s * 'b)) -> 's -> 'a list -> 's * 'b list
+
+  val equal : ('a -> 'a -> bool) -> 'a list -> 'a list -> bool
 end
 
 module String : sig
