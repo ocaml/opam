@@ -661,8 +661,7 @@ let compute_updates ?(force_path=false) st =
     List.map resolve_separator_and_format updates
   in
   let nix_env =
-    let open OpamFilename in
-    create (OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) st.switch) (basename (raw "nix.env"))
+    OpamFilename.create (OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) st.switch) (OpamFilename.basename (OpamFilename.raw "nix.env"))
     |> OpamFile.make
     |> OpamFile.Environment.read_opt
     |> Option.fold ~none:[] ~some:(List.map resolve_separator_and_format)
