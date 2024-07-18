@@ -1325,7 +1325,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t ~new_packages ~all_p
         new_packages
         (Lazy.force t.sys_packages)
     in
-    Some ({ t with sys_packages = lazy sys_packages })
+    Some { t with sys_packages = lazy sys_packages }
   in
   let confirm =
     confirm && not (OpamSysInteract.Cygwin.is_internal t.switch_global.config)

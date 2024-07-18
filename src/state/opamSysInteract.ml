@@ -1140,9 +1140,9 @@ stdenv.mkDerivation {
 vars=("NIX_CC" "NIX_CC_FLAGS" "NIX_CFLAGS_COMPILE" "NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu" "NIX_LDFLAGS" "PKG_CONFIG_PATH")
 for var in "''${vars[@]}"; do
   escaped="$(echo "''${!var}" | sed -e 's/^$/@/' -e 's/ /\\ /g')"
-  echo "$var	=	$escaped	Nix" >> $out
+  echo "$var	=	$escaped	Nix" >> "$out"
 done
-echo "PATH	+=	$PATH	Nix" >> $out
+echo "PATH	+=	$PATH	Nix" >> "$out"
   '';
 
   preferLocalBuild = true;
