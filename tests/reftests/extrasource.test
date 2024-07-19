@@ -398,6 +398,10 @@ Done.
 ### opam source good-sha256
 Successfully extracted to ${BASEDIR}/good-sha256.1
 ### test -f good-sha256.1/i-am-a-patch
+### rm -r good-sha256.1
+### opam source good-sha256 --require-checksums
+Successfully extracted to ${BASEDIR}/good-sha256.1
+### test -f good-sha256.1/i-am-a-patch
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:3: good md5 & sha256
@@ -448,6 +452,10 @@ The following actions will be performed:
 -> installed good-md5-good-sha256.1
 Done.
 ### opam source good-md5-good-sha256
+Successfully extracted to ${BASEDIR}/good-md5-good-sha256.1
+### test -f good-md5-good-sha256.1/i-am-a-patch
+### rm -r good-md5-good-sha256.1
+### opam source good-md5-good-sha256 --require-checksums
 Successfully extracted to ${BASEDIR}/good-md5-good-sha256.1
 ### test -f good-md5-good-sha256.1/i-am-a-patch
 ### opam clean --download-cache
@@ -501,6 +509,10 @@ Done.
 ### opam source good-sha256-good-md5
 Successfully extracted to ${BASEDIR}/good-sha256-good-md5.1
 ### test -f good-sha256-good-md5.1/i-am-a-patch
+### rm -r good-sha256-good-md5.1
+### opam source good-sha256-good-md5 --require-checksums
+Successfully extracted to ${BASEDIR}/good-sha256-good-md5.1
+### test -f good-sha256-good-md5.1/i-am-a-patch
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:5: no checksum
@@ -545,6 +557,12 @@ no-checksum.1/i-am-a-patch: Missing checksum, and `--require-checksums` was set.
 ### opam source no-checksum
 Successfully extracted to ${BASEDIR}/no-checksum.1
 ### test -f no-checksum.1/i-am-a-patch
+### rm -r no-checksum.1
+### opam source no-checksum --require-checksums
+[WARNING] Some errors extracting to ${BASEDIR}/no-checksum.1: Failure("no-checksum.1/i-am-a-patch: Missing checksum, and `--require-checksums` was set.")
+
+### test -f no-checksum.1/i-am-a-patch
+# Return code 1 #
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:6: multiple md5
@@ -600,6 +618,14 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 # Return code 40 #
 ### test -f multiple-md5.1/i-am-a-patch
 # Return code 1 #
+### opam source multiple-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+[ERROR] multiple-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
+          expected md5=hash
+          got      md5=hash
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f multiple-md5.1/i-am-a-patch
+# Return code 1 #
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:7: bad md5
@@ -648,6 +674,14 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 - No changes have been performed
 # Return code 40 #
 ### opam source bad-md5 | '[0-9a-z]{32}' -> 'hash'
+[ERROR] bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
+          expected md5=hash
+          got      md5=hash
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f bad-md5.1/i-am-a-patch
+# Return code 1 #
+### opam source bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
 [ERROR] bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
           expected md5=hash
           got      md5=hash
@@ -780,6 +814,14 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 # Return code 40 #
 ### test -f good-md5-bad-sha256.1/i-am-a-patch
 # Return code 1 #
+### opam source good-md5-bad-sha256 --require-checksums | '[0-9a-z]{64}' -> 'md5'
+[ERROR] good-md5-bad-sha256.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
+          expected sha256=md5
+          got      sha256=md5
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f good-md5-bad-sha256.1/i-am-a-patch
+# Return code 1 #
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:9: good sha256 & bad md5
@@ -828,6 +870,14 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 - No changes have been performed
 # Return code 40 #
 ### opam source good-sha256-bad-md5 | '[0-9a-z]{32}' -> 'hash'
+[ERROR] good-sha256-bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
+          expected md5=hash
+          got      md5=hash
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f good-sha256-bad-md5.1/i-am-a-patch
+# Return code 1 #
+### opam source good-sha256-bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
 [ERROR] good-sha256-bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
           expected md5=hash
           got      md5=hash
@@ -959,6 +1009,14 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 # Return code 40 #
 ### test -f clash-with-all-md5s.666/i-am-a-patch
 # Return code 1 #
+### opam source clash-with-all-md5s --require-checksums | '[0-9a-z]{32}' -> 'hash'
+[ERROR] clash-with-all-md5s.666/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
+          expected md5=hash
+          got      md5=hash
+[ERROR] Download failed: Checksum mismatch
+# Return code 40 #
+### test -f clash-with-all-md5s.666/i-am-a-patch
+# Return code 1 #
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :::::::::::::::::
@@ -1011,6 +1069,11 @@ The following actions will be performed:
 Successfully extracted to ${BASEDIR}/not-mentioned.1
 ### test -f not-mentioned.1/i-am-a-patch
 # Return code 1 #
+### rm -r not-mentioned.1
+### opam source not-mentioned --require-checksums
+Successfully extracted to ${BASEDIR}/not-mentioned.1
+### test -f not-mentioned.1/i-am-a-patch
+# Return code 1 #
 ### :II:2: Double extra-source
 ### opam lint --package multiple
 <default>/multiple.1: Errors.
@@ -1059,6 +1122,10 @@ The following actions will be performed:
 -> installed multiple.1
 Done.
 ### opam source multiple
+Successfully extracted to ${BASEDIR}/multiple.1
+### test -f multiple.1/i-am-a-patch
+### rm -r multiple.1
+### opam source multiple --require-checksums
 Successfully extracted to ${BASEDIR}/multiple.1
 ### test -f multiple.1/i-am-a-patch
 ### :::::::::::::::::
@@ -1242,6 +1309,10 @@ Done.
 ### opam source escape-absolute
 Successfully extracted to ${BASEDIR}/escape-absolute.1
 ### test -f escape-absolute.1/etc/passwd
+### rm -r escape-absolute.1
+### opam source escape-absolute --require-checksums
+Successfully extracted to ${BASEDIR}/escape-absolute.1
+### test -f escape-absolute.1/etc/passwd
 ### :IV:2: good md5
 ### # /!\ all escape!!!
 ### opam lint --package escape-build-good-md5
@@ -1279,5 +1350,9 @@ Done.
 ### test -f shouldnt-exist
 ### rm shouldnt-exist
 ### opam source escape-source-good-md5
+Successfully extracted to ${BASEDIR}/escape-source-good-md5.1
+### test -f shouldnt-exist
+### rm -r escape-source-good-md5.1
+### opam source escape-source-good-md5 --require-checksums
 Successfully extracted to ${BASEDIR}/escape-source-good-md5.1
 ### test -f shouldnt-exist
