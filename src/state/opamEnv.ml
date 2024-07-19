@@ -660,13 +660,7 @@ let compute_updates ?(force_path=false) st =
     in
     List.map resolve_separator_and_format updates
   in
-  let nix_env =
-    OpamFilename.create (OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) st.switch) (OpamFilename.basename (OpamFilename.raw "nix.env"))
-    |> OpamFile.make
-    |> OpamFile.Environment.read_opt
-    |> Option.fold ~none:[] ~some:(List.map resolve_separator_and_format)
-  in
-  switch_env @ pkg_env @ man_path @ [path] @ nix_env
+  switch_env @ pkg_env @ man_path @ [path]
 
 let updates_common ~set_opamroot ~set_opamswitch root switch =
   let root =
@@ -683,11 +677,20 @@ let updates_common ~set_opamroot ~set_opamswitch root switch =
     else [] in
   root @ switch
 
+let updates_nix st =
+  match OpamSysPoll.os_family st.switch_global.global_variables with
+  | Some "nixos" ->
+    OpamFilename.create (OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) st.switch) (OpamFilename.basename (OpamFilename.raw "nix.env"))
+    |> OpamFile.make
+    |> OpamFile.Environment.read_opt
+    |> Option.fold ~none:[] ~some:(List.map resolve_separator_and_format)
+  | _ -> []
+
 let updates ~set_opamroot ~set_opamswitch ?force_path st =
   let common =
     updates_common ~set_opamroot ~set_opamswitch st.switch_global.root st.switch
   in
-  common @ compute_updates ?force_path st
+  common @ compute_updates ?force_path st @ updates_nix st
 
 let get_pure ?(updates=[]) () =
   let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
