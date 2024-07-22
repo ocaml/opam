@@ -98,8 +98,8 @@ let () =
     if base_name = filename then archive_hashes else
       let archive_hash, tags =
         match first_line_tags ~path:filename with
-        | [] -> "", []
-        | ar::_ as tags -> ar, tags
+        | [] -> assert false (* String.split_on_char never returns [] *)
+        | ar::tags -> ar, tags
       in
       let os_condition =
         match Filename.extension base_name with
@@ -109,11 +109,16 @@ let () =
             String.(capitalize_ascii (sub os 1 (length os - 1)))
       in
       let tags_conditions =
-        List.map (fun tag ->
-            Printf.sprintf
-              "(= %%{env:TEST%s=0} 1)"
-              tag)
-          tags
+        List.map (function
+            | "N0REP0" as tag ->
+              Printf.sprintf
+                "(= %%{env:TEST%s=0} 1)"
+                tag
+            | tag -> failwith @@
+              Printf.sprintf "Tag '%s' unrecognized in test '%s'"
+                tag filename)
+          (if String.equal archive_hash null_hash
+           then archive_hash :: tags else tags)
       in
       let condition =
         Printf.sprintf

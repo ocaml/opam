@@ -211,19 +211,19 @@
 
 (rule
  (alias reftest-conflict-4373)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTc1d23f0e=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff conflict-4373.test conflict-4373.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTc1d23f0e=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-conflict-4373)))
 
 (rule
  (targets conflict-4373.out)
  (deps root-c1d23f0e)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTc1d23f0e=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -232,19 +232,19 @@
 
 (rule
  (alias reftest-conflict-badversion)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff conflict-badversion.test conflict-badversion.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-conflict-badversion)))
 
 (rule
  (targets conflict-badversion.out)
  (deps root-f372039d)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -253,19 +253,19 @@
 
 (rule
  (alias reftest-conflict-camlp4)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff conflict-camlp4.test conflict-camlp4.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-conflict-camlp4)))
 
 (rule
  (targets conflict-camlp4.out)
  (deps root-f372039d)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -274,19 +274,19 @@
 
 (rule
  (alias reftest-conflict-core)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff conflict-core.test conflict-core.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-conflict-core)))
 
 (rule
  (targets conflict-core.out)
  (deps root-f372039d)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -295,19 +295,19 @@
 
 (rule
  (alias reftest-conflict-resto)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTa5d7cdc0=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff conflict-resto.test conflict-resto.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTa5d7cdc0=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-conflict-resto)))
 
 (rule
  (targets conflict-resto.out)
  (deps root-a5d7cdc0)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTa5d7cdc0=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -316,19 +316,19 @@
 
 (rule
  (alias reftest-conflict-solo5)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff conflict-solo5.test conflict-solo5.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-conflict-solo5)))
 
 (rule
  (targets conflict-solo5.out)
  (deps root-f372039d)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -379,19 +379,19 @@
 
 (rule
  (alias reftest-cudf-preprocess)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTad4dd344=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff cudf-preprocess.test cudf-preprocess.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTad4dd344=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-cudf-preprocess)))
 
 (rule
  (targets cudf-preprocess.out)
  (deps root-ad4dd344)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTad4dd344=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -526,19 +526,19 @@
 
 (rule
  (alias reftest-empty-conflicts-001)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST297366c=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff empty-conflicts-001.test empty-conflicts-001.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST297366c=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-empty-conflicts-001)))
 
 (rule
  (targets empty-conflicts-001.out)
  (deps root-297366c)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST297366c=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -547,19 +547,19 @@
 
 (rule
  (alias reftest-empty-conflicts-002)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST11ea1cb=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff empty-conflicts-002.test empty-conflicts-002.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST11ea1cb=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-empty-conflicts-002)))
 
 (rule
  (targets empty-conflicts-002.out)
  (deps root-11ea1cb)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST11ea1cb=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -568,19 +568,19 @@
 
 (rule
  (alias reftest-empty-conflicts-003)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST3235916=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff empty-conflicts-003.test empty-conflicts-003.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST3235916=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-empty-conflicts-003)))
 
 (rule
  (targets empty-conflicts-003.out)
  (deps root-3235916)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST3235916=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -589,19 +589,19 @@
 
 (rule
  (alias reftest-empty-conflicts-004)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST0070613707=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff empty-conflicts-004.test empty-conflicts-004.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST0070613707=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-empty-conflicts-004)))
 
 (rule
  (targets empty-conflicts-004.out)
  (deps root-0070613707)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST0070613707=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -610,19 +610,19 @@
 
 (rule
  (alias reftest-empty-conflicts-005)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTde897adf36c4230dfea812f40c98223b31c4521a=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff empty-conflicts-005.test empty-conflicts-005.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTde897adf36c4230dfea812f40c98223b31c4521a=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-empty-conflicts-005)))
 
 (rule
  (targets empty-conflicts-005.out)
  (deps root-de897adf36c4230dfea812f40c98223b31c4521a)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTde897adf36c4230dfea812f40c98223b31c4521a=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -631,19 +631,19 @@
 
 (rule
  (alias reftest-empty-conflicts-006)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTc1842d168d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff empty-conflicts-006.test empty-conflicts-006.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTc1842d168d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-empty-conflicts-006)))
 
 (rule
  (targets empty-conflicts-006.out)
  (deps root-c1842d168d)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTc1842d168d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -946,19 +946,19 @@
 
 (rule
  (alias reftest-install-formula)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff install-formula.test install-formula.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-install-formula)))
 
 (rule
  (targets install-formula.out)
  (deps root-f372039d)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -967,19 +967,19 @@
 
 (rule
  (alias reftest-install-pgocaml)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff install-pgocaml.test install-pgocaml.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-install-pgocaml)))
 
 (rule
  (targets install-pgocaml.out)
  (deps root-f372039d)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -1072,19 +1072,19 @@
 
 (rule
  (alias reftest-list-coinstallable)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST7371c1d9=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff list-coinstallable.test list-coinstallable.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST7371c1d9=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-list-coinstallable)))
 
 (rule
  (targets list-coinstallable.out)
  (deps root-7371c1d9)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST7371c1d9=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -1093,19 +1093,19 @@
 
 (rule
  (alias reftest-list-large-dependencies)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST7371c1d9=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff list-large-dependencies.test list-large-dependencies.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST7371c1d9=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-list-large-dependencies)))
 
 (rule
  (targets list-large-dependencies.out)
  (deps root-7371c1d9)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST7371c1d9=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -1135,19 +1135,19 @@
 
 (rule
  (alias reftest-list.unix)
- (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff list.unix.test list.unix.out)))
 
 (alias
  (name reftest)
- (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-list.unix)))
 
 (rule
  (targets list.unix.out)
  (deps root-f372039d)
- (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTf372039d=0} 1))))
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -1219,19 +1219,19 @@
 
 (rule
  (alias reftest-opamrt-big-upgrade)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST7090735c=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff opamrt-big-upgrade.test opamrt-big-upgrade.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST7090735c=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-opamrt-big-upgrade)))
 
 (rule
  (targets opamrt-big-upgrade.out)
  (deps root-7090735c)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST7090735c=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -1513,19 +1513,19 @@
 
 (rule
  (alias reftest-show)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST009e00fa=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff show.test show.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST009e00fa=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-show)))
 
 (rule
  (targets show.out)
  (deps root-009e00fa)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST009e00fa=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -1702,19 +1702,19 @@
 
 (rule
  (alias reftest-unhelpful-conflicts-001)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTc1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff unhelpful-conflicts-001.test unhelpful-conflicts-001.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTc1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-unhelpful-conflicts-001)))
 
 (rule
  (targets unhelpful-conflicts-001.out)
  (deps root-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTc1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
@@ -1765,19 +1765,19 @@
 
 (rule
  (alias reftest-upgrade-format)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST009e00fa=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
   (diff upgrade-format.test upgrade-format.out)))
 
 (alias
  (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST009e00fa=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (deps (alias reftest-upgrade-format)))
 
 (rule
  (targets upgrade-format.out)
  (deps root-009e00fa)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TEST009e00fa=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
   (with-stdout-to
