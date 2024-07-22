@@ -176,8 +176,8 @@ let package_files_to_cache repo_root cache_dir cache_urls
               (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
             @@| fun r -> match OpamRepository.report_fetch_result nv r with
             | Not_available failure ->
-              let _, m = OpamTypesBase.get_dl_failure_reason failure in
-              Some m
+              let r = OpamTypesBase.get_dl_failure_reason failure in
+              Some r.long_reason
             | Up_to_date () | Result () -> None
         in
         error_opt @@| function

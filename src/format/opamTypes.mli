@@ -49,10 +49,12 @@ type std_path =
   | Toplevel | Stublibs
 
 (** Download failure explanation *)
-type dl_fail_reason = string option * string
-(** Respectively the short and long version of an error message. The
-    usage is: the first argument is displayed on normal mode (nothing
-    if [None]), and the second one on verbose mode. *)
+type dl_fail_reason = {
+  short_reason : string option;
+  long_reason : string;
+}
+(** The usage is: [short_reason] is displayed on normal mode
+    (nothing if [None]), and [long_reason] on verbose mode. *)
 
 (** Tool download failure infos *)
 type 'a dl_tool_failure = {

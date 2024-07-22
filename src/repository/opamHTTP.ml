@@ -78,11 +78,14 @@ module B = struct
          let failure =
            let str = Printf.sprintf "%s (%s)" (OpamUrl.to_string remote_url) in
            match e with
-           | OpamDownload.Download_fail (Generic_failure (s, l)) ->
-             Generic_failure (s, str l)
+           | OpamDownload.Download_fail (
+               Generic_failure { short_reason; long_reason = l }) ->
+             Generic_failure { short_reason; long_reason = str l }
            | OpamDownload.Download_fail failure -> failure
            | _ ->
-             Generic_failure (Some "Download failed", str "download failed")
+             Generic_failure {
+               short_reason = Some "Download failed";
+               long_reason = str "download failed"; }
          in
          Done (Not_available failure))
     @@ fun () ->

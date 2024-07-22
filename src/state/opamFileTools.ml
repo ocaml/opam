@@ -830,8 +830,9 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
          | `http ->
            OpamProcess.Job.catch (function
                | Failure msg -> Done (Some msg)
-               | OpamDownload.Download_fail (Generic_failure (s,l)) ->
-                 Done (Some (OpamStd.Option.default l s))
+               | OpamDownload.Download_fail (
+                   Generic_failure { short_reason; long_reason }) ->
+                 Done (Some (OpamStd.Option.default long_reason short_reason))
                | e -> Done (Some (Printexc.to_string e)))
            @@ fun () ->
            OpamDownload.download ~overwrite:false url dir
@@ -849,8 +850,8 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
            @@| function
            | Up_to_date f | Result f -> check_checksum f
            | Not_available failure ->
-             let _, src = OpamTypesBase.get_dl_failure_reason failure in
-             Some ("Source not found: "^src)
+             let r = OpamTypesBase.get_dl_failure_reason failure in
+             Some ("Source not found: "^r.long_reason)
      in
      cond 60 `Error "Upstream check failed"
        ~detail:(OpamStd.Option.to_list upstream_error)

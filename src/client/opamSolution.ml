@@ -634,8 +634,8 @@ let parallel_apply t
             OpamAction.download_shared_source t url nvs) @@+ function
        | None ->
          store_time (); Done (`Successful (installed, removed))
-       | Some (_short_error, long_error) ->
-         Done (`Exception (Fetch_fail long_error)))
+       | Some { short_reason = _; long_reason } ->
+         Done (`Exception (Fetch_fail long_reason)))
 
     | `Build nv ->
       if assume_built && OpamPackage.Set.mem nv requested then

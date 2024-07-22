@@ -17,6 +17,7 @@ let log fmt = OpamConsole.log "CURL" fmt
 exception Download_fail of dl_failure
 let fail failure = raise (Download_fail failure)
 
+
 let user_agent =
   CString (Printf.sprintf "opam/%s" (OpamVersion.(to_string current)))
 
@@ -93,17 +94,18 @@ let tool_return url ret =
   match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
   | _, `Default ->
     if OpamProcess.is_failure ret then
-      fail (Generic_failure (Some "Download command failed",
-                Printf.sprintf "Download command failed: %s"
-                  (OpamProcess.result_summary ret)))
+      fail (Generic_failure {
+          short_reason = Some "Download command failed";
+          long_reason = Printf.sprintf "Download command failed: %s"
+              (OpamProcess.result_summary ret); })
     else Done ()
   | _, `Curl ->
     let error =
       if OpamProcess.is_failure ret then
         Some (Curl_generic_error
-                (Some "Curl failed",
-                 Printf.sprintf "Curl failed: %s"
-                   (OpamProcess.result_summary ret)))
+                { short_reason = Some "Curl failed";
+                  long_reason = Printf.sprintf "Curl failed: %s"
+                      (OpamProcess.result_summary ret); })
       else match ret.OpamProcess.r_stdout with
         | [] -> Some Curl_empty_response
         | l  ->
@@ -163,17 +165,20 @@ let really_download
   download_command ~compress ?checksum ~url ~dst:tmp_dst ()
   @@+ fun () ->
   if not (Sys.file_exists tmp_dst) then
-    fail (Generic_failure (Some "Downloaded file not found",
-          "Download command succeeded, but resulting file not found"))
+    fail (Generic_failure {
+        short_reason = Some "Downloaded file not found";
+        long_reason = "Download command succeeded, but resulting file \
+                       not found"; })
   else if Sys.file_exists dst && not overwrite then
     OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
   if validate &&
      OpamRepositoryConfig.(!r.force_checksums <> Some false) then
     OpamStd.Option.iter (fun cksum ->
         if not (OpamHash.check_file tmp_dst cksum) then
-          fail (Generic_failure (Some "Bad checksum",
-                    Printf.sprintf "Bad checksum, expected %s"
-                      (OpamHash.to_string cksum))))
+          fail (Generic_failure {
+              short_reason = Some "Bad checksum";
+              long_reason = Printf.sprintf "Bad checksum, expected %s"
+                      (OpamHash.to_string cksum); }))
       checksum;
   OpamSystem.mv tmp_dst dst;
   Done ()
@@ -308,9 +313,10 @@ module SWHID = struct
     let rec aux max_tries =
       if max_tries <= 0 then
         Done (Not_available
-                (Generic_failure
-                   (Some (fallback_err "max_tries"),
-                    fallback_err "%d attempts tried; aborting" attempts)))
+                (Generic_failure {
+                   short_reason = Some (fallback_err "max_tries");
+                   long_reason = fallback_err "%d attempts tried; aborting"
+                       attempts; }))
       else
         get_dir hash @@+ function
         | Some (`Done fetch_url) -> Done (Result fetch_url)
@@ -319,7 +325,9 @@ module SWHID = struct
           aux (max_tries - 1)
         | None | Some (`Failed | `Unknown) ->
           Done (Not_available
-                  (Generic_failure (None, fallback_err "Unknown swhid")))
+                  (Generic_failure {
+                      short_reason = None;
+                      long_reason = fallback_err "Unknown swhid"; }))
     in
     aux max_tries
 
@@ -351,21 +359,24 @@ module SWHID = struct
                let sources = OpamFilename.Op.(dir / "src") in
                OpamFilename.extract_job archive sources @@| function
                | Some e ->
-                 Not_available (Generic_failure (
-                   Some (fallback_err "archive extraction failure"),
-                   fallback_err "archive extraction failure %s"
-                     (match e with
-                      | Failure s -> s
-                      | OpamSystem.Process_error pe ->
-                        OpamProcess.string_of_result pe
-                      | e -> Printexc.to_string e)))
+                 Not_available (Generic_failure {
+                   short_reason =
+                     Some (fallback_err "archive extraction failure");
+                   long_reason = fallback_err "archive extraction failure %s"
+                       (match e with
+                        | Failure s -> s
+                        | OpamSystem.Process_error pe ->
+                          OpamProcess.string_of_result pe
+                        | e -> Printexc.to_string e); })
                | None ->
                  (match OpamSWHID.compute sources with
                   | None ->
-                    Not_available (Generic_failure (
-                      Some (fallback_err "can't check archive validity"),
-                      fallback_err
-                        "error on swhid computation, can't check its validity"))
+                    Not_available (Generic_failure {
+                      short_reason =
+                        Some (fallback_err "can't check archive validity");
+                      long_reason = fallback_err
+                        "error on swhid computation, can't check its validity";
+                    })
                   | Some computed ->
                     if String.equal computed hash then
                       (List.iter (fun (_nv, dst, _sp) ->
@@ -374,23 +385,23 @@ module SWHID = struct
                           dirnames;
                        Result (Some "SWH fallback"))
                     else
-                      Not_available (Generic_failure (
-                        Some (fallback_err "archive not valid"),
-                        fallback_err
-                          "archive corrupted, opam file swhid %S vs computed %S"
-                          hash computed))))
+                      Not_available (Generic_failure {
+                        short_reason = Some (fallback_err "archive not valid");
+                        long_reason = fallback_err
+                            "archive corrupted, opam file swhid %S vs \
+                             computed %S" hash computed; })))
           else
-            Done (Not_available (Generic_failure
-                    (Some (fallback_err "skip retrieval"),
-                     fallback_err "retrieval refused by user")))
+            Done (Not_available (Generic_failure {
+                    short_reason = Some (fallback_err "skip retrieval");
+                    long_reason = fallback_err "retrieval refused by user"; }))
         else
-          Done (Not_available (Generic_failure
-                  (Some (fallback_err "unreachable"),
-                   fallback_err "network failure or API down")))
+          Done (Not_available (Generic_failure {
+                  short_reason = Some (fallback_err "unreachable");
+                  long_reason = fallback_err "network failure or API down"; }))
       else
-        Done (Not_available (Generic_failure
-                (Some (fallback_err "no retrieval"),
-                 fallback_err "Download tool permitting post request (%s) not \
-                 set as download tool"
-                   (OpamStd.Format.pretty_list post_tools))))
+        Done (Not_available (Generic_failure {
+                short_reason = Some (fallback_err "no retrieval");
+                long_reason = fallback_err "Download tool permitting \
+                  post request (%s) not set as download tool"
+                    (OpamStd.Format.pretty_list post_tools); }))
 end

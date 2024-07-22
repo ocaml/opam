@@ -88,8 +88,8 @@ let get_source_definition ?version ?subpath ?locked st nv url =
   in
   OpamUpdate.fetch_dev_package url srcdir ?subpath nv @@| function
   | Not_available failure ->
-    let _, s = OpamTypesBase.get_dl_failure_reason failure in
-    raise (Fetch_Fail s)
+    let r = OpamTypesBase.get_dl_failure_reason failure in
+    raise (Fetch_Fail r.long_reason)
   | Up_to_date _ | Result _ ->
     let srcdir = OpamFilename.SubPath.(srcdir /? subpath) in
     match OpamPinned.find_opam_file_in_source ?locked nv.name srcdir with
@@ -831,9 +831,9 @@ let scan ~normalise ~recurse ?subpath url =
                         OpamStateConfig.(!r.root_dir))
           basename pin_cache_dir [] [url] @@| function
         | Not_available failure ->
-          let _, u = OpamTypesBase.get_dl_failure_reason failure in
+          let r = OpamTypesBase.get_dl_failure_reason failure in
           OpamConsole.error_and_exit `Sync_error
-            "Could not retrieve %s" u
+            "Could not retrieve %s" r.long_reason
         | Result _ | Up_to_date _ ->
           pins_of_dir pin_cache_dir, Some cleanup
       with e -> OpamStd.Exn.finalise e cleanup

@@ -355,7 +355,9 @@ let get_dl_failure_reason = function
     in
     match dl_reason with
     | Curl_empty_response ->
-      Some "curl failure", head_msg^"Empty response"
+      { short_reason = Some "curl failure";
+        long_reason = head_msg^"Empty response" }
     | Curl_error_response e ->
-      Some "curl failure", head_msg^"Returned code "^e
-    | Curl_generic_error (s, l) -> s, head_msg^l
+      { short_reason = Some "curl failure";
+        long_reason = head_msg^"Returned code "^e }
+    | Curl_generic_error r -> { r with long_reason = head_msg^r.long_reason }
