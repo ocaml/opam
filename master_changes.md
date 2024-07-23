@@ -25,6 +25,7 @@ users)
 ## Config report
 
 ## Actions
+  * Add support for wget2 [#6104 @kit-ty-kate]
 
 ## Install
   * Fix package name display for no agreement conflicts [#6055 @rjbou - fix #6030]
