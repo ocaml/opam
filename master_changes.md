@@ -157,6 +157,7 @@ users)
   * Add a test showing the behaviour of `opam list --latests-only` [#5375 @kit-ty-kate]
   * Add a test filtering mechanism [#6105 @Keryan-dev]
   * Add a package fetching test [#6146 @rjbou]
+  * Add a test showing the behaviour of `opam switch list-available` [#6098 @kit-ty-kate]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
