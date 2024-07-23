@@ -148,6 +148,7 @@ users)
   * Add a test for --deps-only setting direct dependencies as root packages [#6125 @rjbou]
   * Add a test file for `opam install --check` [#6121 @kit-ty-kate]
   * Add reinstall test for delayed removal of packages [#6139 @rjbou]
+  * Add a test showing the behaviour of `opam switch list-available` [#6098 @kit-ty-kate]
 
 ### Engine
 

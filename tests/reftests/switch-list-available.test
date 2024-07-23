@@ -1,0 +1,41 @@
+N0REP0
+### <pkg:a.1>
+opam-version: "2.0"
+flags: compiler
+### <pkg:a.2>
+opam-version: "2.0"
+flags: compiler
+### <pkg:a.3>
+opam-version: "2.0"
+flags: compiler
+### <pkg:a.4>
+opam-version: "2.0"
+flags: compiler
+### <pkg:b.1>
+opam-version: "2.0"
+flags: compiler
+### <pkg:b.2>
+opam-version: "2.0"
+flags: [compiler avoid-version]
+### <pkg:b.3>
+opam-version: "2.0"
+flags: [compiler deprecated]
+### <pkg:b.4>
+opam-version: "2.0"
+flags: compiler
+### opam switch list-available
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+a      1
+b      1
+a      2
+b      2
+a      3
+b      3
+a      4
+b      4
+### opam switch list-available --all
+opam: unknown option '--all', did you mean either '--full' or '--cli'?
+Usage: opam switch [OPTION]… [COMMAND] [ARG]…
+Try 'opam switch --help' or 'opam --help' for more information.
+# Return code 2 #
