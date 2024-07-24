@@ -112,6 +112,7 @@ users)
 
 ## Internal
   * Stop using polymorphic comparison when comparing `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
+  * Remove the meta opam packages opam and opam-admin [#6115 @kit-ty-kate]
 
 ## Internal: Windows
 
