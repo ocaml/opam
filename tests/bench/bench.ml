@@ -20,37 +20,45 @@ let () =
   in
   let time_misspelled_cmd =
     (* NOTE: https://github.com/ocaml/opam/issues/5479 *)
+    Gc.compact ();
     time_cmd ~exit:2 (fmt "%s sitch" bin)
   in
   let time_install_cmd =
     (* NOTE: https://github.com/ocaml/opam/issues/5502 *)
+    Gc.compact ();
     launch "opam switch create one --empty";
     time_cmd ~exit:0 (fmt "%s install magic-trace -y --fake --sw one" bin)
   in
   let time_install_cmd_w_invariant =
     (* NOTE: https://github.com/ocaml/opam/issues/5502 *)
+    Gc.compact ();
     launch "opam switch create two --empty";
     launch "opam switch set-invariant core -n --sw two";
     time_cmd ~exit:0 (fmt "%s install magic-trace -y --fake --sw two" bin)
   in
-  let time_OpamSystem_read_10 =
+  let time_OpamSystem_read_100 =
     (* NOTE: https://github.com/ocaml/opam/pull/5896 *)
-    let time_OpamSystem_read () =
+    Gc.compact ();
+    let files =
       let ic = Stdlib.open_in_bin "/home/opam/all-opam-files" in
-      let before = Unix.gettimeofday () in
-      let rec loop () =
+      let rec loop files =
         match Stdlib.input_line ic with
-        | file -> ignore (OpamSystem.read file); loop ()
-        | exception End_of_file -> Unix.gettimeofday () -. before
+        | file -> loop (file :: files)
+        | exception End_of_file -> files
       in
-      loop ()
+      loop []
     in
-    let n = 10 in
-    let l = List.init n (fun _ -> time_OpamSystem_read ()) in
+    let n = 100 in
+    let l = List.init n (fun _ ->
+        let before = Unix.gettimeofday () in
+        List.iter (fun file -> ignore (OpamSystem.read file)) files;
+        Unix.gettimeofday () -. before)
+    in
     List.fold_left (+.) 0.0 l /. float_of_int n
   in
   let time_deps_only_installed_pkg =
     (* NOTE: https://github.com/ocaml/opam/pull/5908 *)
+    Gc.compact ();
     launch (fmt "%s switch create three --fake ocaml-base-compiler.4.14.0" bin);
     launch (fmt "%s install -y --fake core.v0.15.0" bin);
     time_cmd ~exit:0 (fmt "%s install --show --deps-only core.v0.15.0" bin)
@@ -76,7 +84,7 @@ let () =
           "units": "secs"
         },
         {
-          "name": "OpamSystem.read amortised over 10 runs",
+          "name": "OpamSystem.read amortised over 100 runs",
           "value": %f,
           "units": "secs"
         },
@@ -102,7 +110,7 @@ let () =
       time_misspelled_cmd
       time_install_cmd
       time_install_cmd_w_invariant
-      time_OpamSystem_read_10
+      time_OpamSystem_read_100
       time_deps_only_installed_pkg
       bin_size
   in
