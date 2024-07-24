@@ -459,7 +459,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Failed to get sources of no-checksum.1: missing checksum
 
-OpamSolution.Fetch_fail("no-checksum.1: Missing checksum, and `--require-checksums` was set.")
+no-checksum.1: Missing checksum, and `--require-checksums` was set.
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -493,7 +493,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get sources of multiple-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -513,7 +513,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get sources of multiple-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -552,7 +552,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get sources of bad-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -572,7 +572,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get sources of bad-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -628,7 +628,7 @@ The following actions will be performed:
           got      sha256=hash
 [ERROR] Failed to get sources of good-md5-bad-sha256.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -678,7 +678,7 @@ The following actions will be performed:
           got      sha256=hash
 [ERROR] Failed to get sources of good-md5-bad-sha256.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -701,7 +701,7 @@ The following actions will be performed:
           got      sha256=hash
 [ERROR] Failed to get sources of good-md5-bad-sha256.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -740,7 +740,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get sources of good-sha256-bad-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -760,7 +760,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get sources of good-sha256-bad-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -815,7 +815,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get sources of clash-with-all-md5s.666: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -881,7 +881,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get sources of clash-with-all-md5s.666: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -904,7 +904,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get sources of clash-with-all-md5s.666: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>

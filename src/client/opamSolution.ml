@@ -20,7 +20,7 @@ module PackageAction = OpamSolver.Action
 module PackageActionGraph = OpamSolver.ActionGraph
 
 
-exception Fetch_fail of string
+exception Fetch_fail of dl_failure
 
 let post_message ?(failed=false) st action =
   match action, failed with
@@ -230,6 +230,8 @@ let display_error (n, error) =
     | Sys.Break | OpamParallel.Aborted -> ()
     | Failure s -> disp "%s" s
     | OpamSystem.Process_error e -> disp "%s" (OpamProcess.string_of_result e)
+    | Fetch_fail failure ->
+      disp "%s" (get_dl_failure_reason failure).long_reason
     | e ->
       disp "%s" (Printexc.to_string e);
       if OpamConsole.debug () then
@@ -635,8 +637,7 @@ let parallel_apply t
        | Result () | Up_to_date () ->
          store_time (); Done (`Successful (installed, removed))
        | Not_available failure ->
-         let r = get_dl_failure_reason failure in
-         Done (`Exception (Fetch_fail r.long_reason)))
+         Done (`Exception (Fetch_fail failure)))
 
     | `Build nv ->
       if assume_built && OpamPackage.Set.mem nv requested then
@@ -763,7 +764,9 @@ let parallel_apply t
           ) OpamPackage.Map.empty results in
         if not (OpamPackage.Map.is_empty failed_downloads) then
           OpamJson.append "download-failures"
-            (`O (List.map (fun (nv, err) -> OpamPackage.to_string nv, `String err)
+            (`O (List.map (fun (nv, failure) ->
+                 let err = (get_dl_failure_reason failure).long_reason in
+                 OpamPackage.to_string nv, `String err)
                    (OpamPackage.Map.bindings failed_downloads)));
         (* Report build/install/remove failures *)
         let j =

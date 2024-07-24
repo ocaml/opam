@@ -563,7 +563,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of multiple-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -583,7 +583,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of multiple-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -618,7 +618,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of bad-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -638,7 +638,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of bad-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -690,7 +690,7 @@ The following actions will be performed:
           got      sha256=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of good-md5-bad-sha256.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -740,7 +740,7 @@ The following actions will be performed:
           got      sha256=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of good-md5-bad-sha256.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -763,7 +763,7 @@ The following actions will be performed:
           got      sha256=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of good-md5-bad-sha256.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -798,7 +798,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of good-sha256-bad-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -818,7 +818,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of good-sha256-bad-md5.1: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -853,7 +853,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of clash-with-all-md5s.666: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -919,7 +919,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of clash-with-all-md5s.666: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -942,7 +942,7 @@ The following actions will be performed:
           got      md5=hash
 [ERROR] Failed to get extra source "i-am-a-patch" of clash-with-all-md5s.666: Checksum mismatch
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>

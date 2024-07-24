@@ -271,7 +271,7 @@ The following actions will be performed:
 [ERROR] Failed to get sources of extra.3, intra.3, no-extra.3, out.3 (file://${BASEDIR}/shared.tgz): Checksum mismatch
 -> installed in.3
 
-OpamSolution.Fetch_fail("Checksum mismatch")
+Checksum mismatch
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
