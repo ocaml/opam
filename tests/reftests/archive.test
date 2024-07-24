@@ -354,7 +354,7 @@ The following actions will be performed:
 Done.
 ### sh check-cache.sh
 MD5: archive, with matching checksum
-SHA256: not found
+SHA256: link, to md5 archive
 ### opam remove good-md5-good-sha256
 The following actions will be performed:
 === remove 1 package
@@ -405,7 +405,7 @@ The following actions will be performed:
 Done.
 ### sh check-cache.sh
 MD5: archive, with matching checksum
-SHA256: not found
+SHA256: link, to md5 archive
 ### opam remove good-sha256-good-md5
 The following actions will be performed:
 === remove 1 package
@@ -962,7 +962,7 @@ The following actions will be performed:
 -> installed good-sha256-good-md5.1
 Done.
 ### sh check-cache.sh
-MD5: not found
+MD5: link, to sha256 archive
 SHA256: archive, with matching checksum
 ### opam clean --download-cache
 Clearing cache of downloaded files
