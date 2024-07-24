@@ -349,3 +349,49 @@ url {
 src: "file://${BASEDIR}/export-extra-files"
 }
 }
+### : import with deps-only :
+### <pkg:foo.1>
+opam-version: "2.0"
+flags: compiler
+### <pkg:foo.2>
+opam-version: "2.0"
+flags: compiler
+### <pkg:bar.1>
+opam-version: "2.0"
+depends: "baz"
+### <pkg:baz.1>
+opam-version: "2.0"
+### opam switch create for-deps foo.1
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo" {= "1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam install bar
+The following actions will be performed:
+=== install 2 packages
+  - install bar 1
+  - install baz 1 [required by bar]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed baz.1
+-> installed bar.1
+Done.
+### opam switch export deps.xp
+### opam-cat deps.xp
+compiler: ["foo.1"]
+installed: ["bar.1" "baz.1" "foo.1"]
+opam-version: "2.0"
+roots: ["bar.1" "foo.1"]
+### opam switch import deps.xp --switch deps --deps-only
+The following actions will be performed:
+=== install 2 packages
+  - install baz 1
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed baz.1
+-> installed foo.1
+Done.
