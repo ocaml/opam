@@ -63,6 +63,26 @@ let () =
     launch (fmt "%s install -y --fake core.v0.15.0" bin);
     time_cmd ~exit:0 (fmt "%s install --show --deps-only core.v0.15.0" bin)
   in
+  let time_OpamPackage_Version_compare_100 =
+    (* NOTE: https://github.com/ocaml/opam/pull/5518 *)
+    Gc.compact ();
+    let ic = Stdlib.open_in_bin "/home/opam/all-packages" in
+    let pkgs =
+      let rec loop pkgs =
+        match Stdlib.input_line ic with
+        | pkg -> loop (OpamPackage.version (OpamPackage.of_string pkg) :: pkgs)
+        | exception End_of_file -> pkgs
+      in
+      loop []
+    in
+    let n = 100 in
+    let l = List.init n (fun _ ->
+        let before = Unix.gettimeofday () in
+        let _ = List.stable_sort OpamPackage.Version.compare pkgs in
+        Unix.gettimeofday () -. before)
+    in
+    List.fold_left (+.) 0.0 l /. float_of_int n
+  in
   let json = fmt {|{
   "results": [
     {
@@ -92,6 +112,11 @@ let () =
           "name": "Deps-only install of an already installed package",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "OpamPackage.Version.compare amortised over 100 runs",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -112,6 +137,7 @@ let () =
       time_install_cmd_w_invariant
       time_OpamSystem_read_100
       time_deps_only_installed_pkg
+      time_OpamPackage_Version_compare_100
       bin_size
   in
   print_endline json

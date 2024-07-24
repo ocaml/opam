@@ -1,3 +1,3 @@
 (executable
  (name bench)
- (libraries unix opam-core))
+ (libraries unix opam-core opam-format))

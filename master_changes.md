@@ -119,6 +119,7 @@ users)
 
 ## Benchmarks
   * Make the benchmark setup process faster and the benchmark itself more stable [#6094 @kit-ty-kate]
+  * Add a benchmark showing the current performance of OpamVersionCompare [#6078 @kit-ty-kate]
 
 ## Reftests
 ### Tests
