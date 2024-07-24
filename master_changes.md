@@ -94,6 +94,7 @@ users)
   * Add opam 2.2.0 to the install scripts [#6062 @kit-ty-kate]
 
 ## Admin
+  * Change hash cache location from `~/.cache` to `<opamroot>/download-cache/hash-cache` [#6103 @rjbou]
 
 ## Opam installer
 
@@ -123,6 +124,7 @@ users)
   * Add bad cudf package name encoding (dose3 lib) [#6055 @rjbou]
   * Add test for filter operators in opam file [#5642 @rjbou]
   * Update init test to make it no repo [#5327 @rjbou]
+  * Add a test in admin cache for hash cache [#6103 @rjbou]
 
 ### Engine
 
