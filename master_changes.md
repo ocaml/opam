@@ -78,6 +78,7 @@ users)
 
 ## Build
  * Synchronise opam-core.opam with opam-repository changes [#6043 @dra27]
+  * Unset OPAM_SWITCH_PREFIX when using make cold [#5534 @kit-ty-kate]
 
 ## Infrastructure
 
