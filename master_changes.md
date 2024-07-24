@@ -134,6 +134,7 @@ users)
   * Add a test in admin cache for hash cache [#6103 @rjbou]
   * Add admin cache test [#6068 @rjbou]
   * env: Add a test for `build-env` overwrites build env opam environment variables [#5377 @rjbou]
+  * clean: Add to check cleaning of sources directories [#5474 @rjbou]
 
 ### Engine
 
