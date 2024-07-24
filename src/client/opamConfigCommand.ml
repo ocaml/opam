@@ -788,8 +788,8 @@ let set_var svar value conf =
   in
   if global_option || switch_option then
     (OpamConsole.msg
-       "You are setting a variable that have the same name than a %s option.\n\
-        Maybe you want to use 'opam option'\n"
+       "You are setting a variable that has the same name as a %s option.\n\
+        Maybe you want to use 'opam option' instead\n"
        (if global_option then "global" else "switch");
      if not (OpamConsole.confirm "Set variable %s anyway?" svar) then
        OpamStd.Sys.exit_because `Aborted);
