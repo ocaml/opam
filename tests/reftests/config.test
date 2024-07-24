@@ -38,6 +38,7 @@ Set to '"-removed"' the field solver-upgrade-criteria in global configuration
 # install-criteria     -removed
 # upgrade-criteria     -removed
 # jobs                 1
+# repositories         1 (local)
 # current-switch       none set
 ### # empty switch
 ### opam switch create an-empty-switch --empty
