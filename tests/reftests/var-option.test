@@ -427,7 +427,7 @@ Removed variable dolore in global configuration
 []
 ### opam option global-variables
 [[foo "global-foo" "Set through 'opam var'"] [bin "global-bin" "Set through 'opam var'"] [os-version "dolor" "Set through 'opam var'"] [os-family "ipsum" "Set through 'opam var'"] [os-distribution "lorem" "Set through 'opam var'"] [os "linux" "Set through 'opam var'"] [make "make" "Set through 'opam var'"] [arch "x86_64" "Set through 'opam var'"] [sys-ocaml-version "4.08.0" "Set through 'opam var'"]]
-### # Check unable operations
+### # Check disallowed operations
 ### opam option 'variables+={esse: "cillum"}'
 [ERROR] Field variables can't be directly appended to, use `opam var` instead
 # Return code 2 #
