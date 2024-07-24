@@ -112,3 +112,8 @@ val raw_of_op: euok_writeable env_update_op_kind -> OpamParserTypes.FullPos.env_
 (* Path transformers & separator functions *)
 val string_of_path_format: path_format -> string
 val char_of_separator: separator -> char
+
+(** Comparators **)
+(* Switch selections *)
+val switch_selections_compare : switch_selections -> switch_selections -> int
+val switch_selections_equal : switch_selections -> switch_selections -> bool
