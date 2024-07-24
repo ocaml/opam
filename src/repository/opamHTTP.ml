@@ -85,7 +85,8 @@ module B = struct
            | _ ->
              Generic_failure {
                short_reason = Some "Download failed";
-               long_reason = str "download failed"; }
+               long_reason = str "download failed, "^(Printexc.to_string e);
+             }
          in
          Done (Not_available failure))
     @@ fun () ->

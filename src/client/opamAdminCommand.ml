@@ -176,8 +176,7 @@ let package_files_to_cache repo_root cache_dir cache_urls
               (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
             @@| fun r -> match OpamRepository.report_fetch_result nv r with
             | Not_available failure ->
-              let r = OpamTypesBase.get_dl_failure_reason failure in
-              Some r.long_reason
+              Some failure
             | Up_to_date () | Result () -> None
         in
         error_opt @@| function
@@ -287,8 +286,13 @@ let cache_command cli =
            (OpamPackage.Map.keys errors));
       OpamConsole.errmsg "%s"
         (OpamStd.Format.itemize (fun (nv,el) ->
+             let reasons =
+               List.map (fun e ->
+                   (OpamTypesBase.get_dl_failure_reason e).long_reason)
+                 el
+             in
              Printf.sprintf "[%s] %s" (OpamPackage.to_string nv)
-               (String.concat "\n" el))
+               (String.concat "\n" reasons))
             (OpamPackage.Map.bindings errors))
     );
 

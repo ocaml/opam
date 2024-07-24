@@ -328,22 +328,25 @@ let pull_tree_t
             let failing =
               OpamStd.List.filter_map (function
                   | Result _ | Up_to_date _ -> None
-                  | Not_available (Generic_failure
-                                     { short_reason = Some s;
-                                       long_reason = l }) ->
-                    Some (s,l)
-                  | Not_available _ -> assert false
+                  | Not_available failure -> Some failure
                 ) (copies ())
             in
             if failing = [] then Done (Up_to_date msg) else
             let simple =
               Printf.sprintf "Failed to copy source of %s"
-                (OpamStd.Format.pretty_list (List.map fst failing))
+                (OpamStd.Format.pretty_list (List.map (fun e ->
+                     let r = OpamTypesBase.get_dl_failure_reason e in
+                     OpamStd.Option.default r.long_reason r.short_reason)
+                   failing))
             in
             let long =
               Printf.sprintf "Failed to copy source of:\n%s"
-                (OpamStd.Format.itemize (fun (nv, msg) ->
-                     Printf.sprintf "%s: %s" nv msg)
+                (OpamStd.Format.itemize (fun e ->
+                     let r = OpamTypesBase.get_dl_failure_reason e in
+                     match r.short_reason with
+                     | Some nv ->
+                       Printf.sprintf "%s: %s" nv r.long_reason
+                     | None -> r.long_reason)
                     failing)
             in
             Done (Not_available (Generic_failure { short_reason = Some simple;
