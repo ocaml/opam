@@ -513,6 +513,9 @@ module Sys : sig
   (** The output of the command "uname", with the given argument. Memoised. *)
   val uname: string -> string option
 
+  (** The output of the command "getconf", with the given argument. Memoised. *)
+  val getconf: string -> string option
+
   (** Append .exe (only if missing) to executable filenames on Windows *)
   val executable_name : string -> string
 

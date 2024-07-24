@@ -995,18 +995,21 @@ module OpamSys = struct
 
   let etc () = "/etc"
 
-  let uname =
+  let memo_command =
     let memo = Hashtbl.create 7 in
-    fun arg ->
-      try Hashtbl.find memo arg with Not_found ->
+    fun cmd arg ->
+      try Hashtbl.find memo (cmd, arg) with Not_found ->
         let r =
           try
-            with_process_in "uname" arg
+            with_process_in cmd arg
               (fun ic -> Some (OpamString.strip (input_line ic)))
           with Unix.Unix_error _ | Sys_error _ | Not_found -> None
         in
-        Hashtbl.add memo arg r;
+        Hashtbl.add memo (cmd, arg) r;
         r
+
+  let uname = memo_command "uname"
+  let getconf = memo_command "getconf"
 
   let system =
     let system = Lazy.from_fun OpamStubs.getPathToSystem in
