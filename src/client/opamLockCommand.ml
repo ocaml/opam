@@ -274,8 +274,20 @@ let lock_opam ?(only_direct=false) st opam =
          (OpamPackage.Name.Set.elements uninstalled_depopts))
   in
   let pin_depends =
+    let pin_depends =
+      let is_pin nv = OpamSwitchState.is_pinned st nv.name in
+      let pins map set =
+        OpamPackage.Map.fold (fun nv _ set ->
+            if is_pin nv then OpamPackage.Set.add nv set else set)
+          map set
+      in
+      OpamPackage.Set.filter is_pin all_depends
+      |> pins dev_depends_map
+      |> pins test_depends_map
+      |> pins doc_depends_map
+      |> pins dev_setup_depends_map
+    in
     OpamPackage.Set.fold (fun nv acc ->
-        if not (OpamSwitchState.is_pinned st nv.name) then acc else
         match OpamSwitchState.primary_url st nv with
         | None -> acc
         | Some u ->
@@ -296,7 +308,7 @@ let lock_opam ?(only_direct=false) st opam =
                 | None -> local_warn ())
              | _ -> local_warn ())
           | None -> (nv, u) :: acc)
-      all_depends []
+      pin_depends []
     |> List.rev
   in
   opam
