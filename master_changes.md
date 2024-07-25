@@ -23,6 +23,7 @@ users)
   * Suppress all the Windows menus when running with `opam init -ya` [#6034 @dra27]
 
 ## Config report
+  * Always list all the repositories regardless of whether or not a switch is currently set [#6116 @kit-ty-kate]
 
 ## Actions
   * Add support for wget2 [#6104 @kit-ty-kate]

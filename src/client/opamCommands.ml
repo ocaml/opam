@@ -1487,39 +1487,40 @@ let config cli =
             if n <> 0 then [Printf.sprintf "%d (%s)" n label]
             else [] in
           print "jobs" "%d" (Lazy.force OpamStateConfig.(!r.jobs));
+          OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+          print "repositories" "%s"
+            (let repos = rt.repositories in
+             let default, nhttp, nlocal, nvcs =
+               OpamRepositoryName.Map.fold
+                 (fun _ repo (dft, nhttp, nlocal, nvcs) ->
+                    let dft =
+                      if OpamUrl.root repo.repo_url =
+                         OpamUrl.root OpamInitDefaults.repository_url
+                      then
+                        OpamRepositoryName.Map.find
+                          repo.repo_name
+                          rt.repos_definitions |>
+                        OpamFile.Repo.stamp
+                      else dft
+                    in
+                    match repo.repo_url.OpamUrl.backend with
+                    | `http -> dft, nhttp+1, nlocal, nvcs
+                    | `rsync -> dft, nhttp, nlocal+1, nvcs
+                    | _ -> dft, nhttp, nlocal, nvcs+1)
+                 repos (None,0,0,0)
+             in
+             String.concat ", "
+               (nprint "http" nhttp @
+                nprint "local" nlocal @
+                nprint "version-controlled" nvcs) ^
+             match default with
+             | Some v -> Printf.sprintf " (default repo at %s)" v
+             | None -> ""
+            );
           match OpamStateConfig.get_switch_opt () with
           | None -> print "current-switch" "%s" "none set"; `Ok ()
           | Some switch ->
-            OpamSwitchState.with_ `Lock_none ~switch gt @@ fun state ->
-            print "repositories" "%s"
-              (let repos = state.switch_repos.repositories in
-               let default, nhttp, nlocal, nvcs =
-                 OpamRepositoryName.Map.fold
-                   (fun _ repo (dft, nhttp, nlocal, nvcs) ->
-                      let dft =
-                        if OpamUrl.root repo.repo_url =
-                           OpamUrl.root OpamInitDefaults.repository_url
-                        then
-                          OpamRepositoryName.Map.find
-                            repo.repo_name
-                            state.switch_repos.repos_definitions |>
-                          OpamFile.Repo.stamp
-                        else dft
-                      in
-                      match repo.repo_url.OpamUrl.backend with
-                      | `http -> dft, nhttp+1, nlocal, nvcs
-                      | `rsync -> dft, nhttp, nlocal+1, nvcs
-                      | _ -> dft, nhttp, nlocal, nvcs+1)
-                   repos (None,0,0,0)
-               in
-               String.concat ", "
-                 (nprint "http" nhttp @
-                  nprint "local" nlocal @
-                  nprint "version-controlled" nvcs) ^
-               match default with
-               | Some v -> Printf.sprintf " (default repo at %s)" v
-               | None -> ""
-              );
+            OpamSwitchState.with_ `Lock_none ~rt ~switch gt @@ fun state ->
             print "pinned" "%s"
               (if OpamPackage.Set.is_empty state.pinned then "0" else
                let pinnings =
