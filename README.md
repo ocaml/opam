@@ -15,8 +15,9 @@ and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 
 ## Compiling This Repo
 
-Either from an existing opam installation, use `opam pin add opam-devel
---dev`, or:
+Either from an existing opam installation, use
+`opam pin add .` if you cloned locally the repository,
+`opam pin add git+https://github.com/ocaml/opam` otherwise, or:
 
 * Make sure you have the required dependencies installed:
   - GNU make
