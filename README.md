@@ -180,7 +180,10 @@ that's not an option for you, you can use `git format-patch` and email us.
 
 ## Versioning
 
-The release cycle respects [Semantic Versioning](http://semver.org/).
+The release cycle of the opam binary respects [Semantic Versioning](http://semver.org/).
+Note however that the version ordering used for user packages managed by opam
+follows the Debian definition (more details in [this
+section](https://opam.ocaml.org/doc/Manual.html#version-ordering) of the user manual).
 
 ## Related Repositories
 
