@@ -320,6 +320,14 @@ relational operators are `=`, `!=`, `<`, `<=`, `>` and `>=`, and their meaning
 is defined by Version Ordering. They always have higher priority than logical
 operators.
 
+Here is a full example:
+
+```
+"foo" { >= "3.12" } & ("bar" | "baz" { !(> "2" & < "3.5") & != "5.1" })
+```
+
+#### Version-ordering
+
 > <a id="version-ordering">**Version Ordering**</a> follows the basics of the
 > [Debian definition](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version).
 >
@@ -351,10 +359,13 @@ operators.
 > Here is an example of an ordered sequence: `~~`, `~`, `~beta2`, `~beta10`,
 > `0.1`, `1.0~beta`, `1.0`, `1.0-test`, `1.0.1`, `1.0.10`, `dev`, `trunk`.
 
-Here is a full example:
+For quick sanity checks, you can compare package versions using the OCaml REPL:
 
 ```
-"foo" { >= "3.12" } & ("bar" | "baz" { !(> "2" & < "3.5") & != "5.1" })
+#use "topfind";;
+#require "opam-core";;
+# OpamVersionCompare.compare "1.2.10" "1.2.9";;
+- : int = 1
 ```
 
 ### Variables
