@@ -688,7 +688,9 @@ let make_command st opam ?dir ?text_command (cmd, args) =
   OpamSystem.make_command ~env ~name ?dir ~text
     ~resolve_path:OpamStateConfig.(not !r.dryrun)
     ~metadata:["context", context]
-    ~verbose:(OpamConsole.verbose ())
+    ~verbose:(OpamConsole.verbose () ||
+              OpamPackage.Name.Set.mem (OpamPackage.name nv)
+                OpamClientConfig.(!r.verbose_on))
     cmd args
 
 let remove_commands t nv =
@@ -977,7 +979,10 @@ let build_package t ?(test=false) ?(doc=false) ?(dev_setup=false) build_dir nv =
       (OpamPackage.to_string nv) (OpamProcess.string_of_command cmd);
     Done (Some (OpamSystem.Process_error result))
   | None, None ->
-    if commands <> [] && OpamConsole.verbose () then
+    if commands <> [] && (OpamConsole.verbose () ||
+                          OpamPackage.Name.Set.mem (OpamPackage.name nv)
+                            OpamClientConfig.(!r.verbose_on))
+    then
       OpamConsole.msg "%s compiled  %s.%s\n"
         (if not (OpamConsole.utf8 ()) then "->"
          else OpamActionGraph.

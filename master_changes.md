@@ -32,6 +32,9 @@ users)
   * Fix package name display for no agreement conflicts [#6055 @rjbou - fix #6030]
   * Make fetching an archive from cache add missing symlinks [#6068 @kit-ty-kate - fix #6064]
 
+## Build (package)
+  * ◈ Add `--verbose-on` option to enable verbose mode on specified package names [#5682 @desumn @rjbou]
+
 ## Remove
 
 ## Switch
@@ -136,6 +139,7 @@ users)
   * Add admin cache test [#6068 @rjbou]
   * env: Add a test for `build-env` overwrites build env opam environment variables [#5377 @rjbou]
   * clean: Add to check cleaning of sources directories [#5474 @rjbou]
+  * Add reftest for `--verbose-on` option [#5682 @rjbou]
 
 ### Engine
 
@@ -158,6 +162,9 @@ users)
 # API updates
 ## opam-client
   * `OpamSwitchCommand.import`: add optional `?deps_only` argument to install only dependencies of root packages [#5388 @rjbou]
+  * `OpamArg.build_options`: add `--verbose-on` flag [#5682 @desumn @rjbou]
+  * `OpamClientConfig.build_options`: add `verbose_on` field [#5682 @desumn]
+  * `OpamClientConfig.E`, `OpamArg.environment_variables`: and `OPAMVERBOSEON` support [#5682 @desumn @rjbou]
 
 ## opam-repository
  * `OpamRepository.fetch_from_cache`: when an archive is found, add a symlink (or copy) for the ones found in opam file but not in cache [#6068 @kit-ty-kate]
@@ -171,3 +178,4 @@ users)
   * Add `OpamTypesBase.switch_selections_{compare,equal}`: proper comparison functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
 
 ## opam-core
+  * `OpamStd.Env`: add `env_string_list` for parsing string list environment variables (comma separated) [#5682 @desumn]

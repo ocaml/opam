@@ -304,6 +304,8 @@ let environment_variables =
       "see option `--skip-updates'.";
       "STATS", cli_original, (fun v -> STATS (env_bool v)),
       "display stats at the end of command.";
+      "VERBOSEON", cli_from cli2_2, (fun v -> VERBOSEON (env_string_list v)),
+      "see option --verbose-on";
       "WORKINGDIR", cli_original, (fun v -> WORKINGDIR (env_bool v)),
       "see option `--working-dir'.";
     ] in
@@ -647,19 +649,20 @@ type build_options = {
   lock_suffix   : string;
   assume_depexts: bool;
   no_depexts    : bool;
+  verbose_on    : name list option;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc dev_setup show dryrun skip_update
     fake jobs ignore_constraints_on unlock_base locked lock_suffix
-    assume_depexts no_depexts
+    assume_depexts no_depexts verbose_on
     =
   {
     keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
     req_checksums; build_test; build_doc; dev_setup; show; dryrun; skip_update;
     fake; jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
-    assume_depexts; no_depexts;
+    assume_depexts; no_depexts; verbose_on;
   }
 
 let apply_build_options cli b =
@@ -697,6 +700,10 @@ let apply_build_options cli b =
     ?fake:(flag b.fake)
     ?skip_dev_update:(flag b.skip_update)
     ?assume_depexts:(flag (b.assume_depexts || b.no_depexts))
+    ?verbose_on:
+      (b.verbose_on >>= function
+        | [] -> None
+        | vo -> Some (OpamPackage.Name.Set.of_list vo))
     ~scrubbed_environment_variables
     ()
 
@@ -1525,12 +1532,18 @@ let build_options cli =
        you installed the required dependency by hand. Implies \
        $(b,--assume-depexts), and stores the exceptions upon success as well."
   in
+  let verbose_on =
+    mk_opt ~cli (cli_from cli2_3) ~section ["verbose-on"] "PACKAGES"
+      "Be more verbose on specific packages.\
+       This is equivalent to setting $(b,\\$OPAMVERBOSE)."
+      Arg.(some (list package_name)) None
+  in
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make
         $no_checksums $req_checksums $build_test $build_doc $dev_setup $show
         $dryrun $skip_update $fake $jobs_flag ~section cli cli_original
         $ignore_constraints_on $unlock_base $locked $lock_suffix
-        $assume_depexts $no_depexts)
+        $assume_depexts $no_depexts $verbose_on)
 
 (* Option common to install commands *)
 let assume_built ?section cli =

@@ -698,6 +698,8 @@ module Config : sig
 
   val env_string: env_var -> string option
 
+  val env_string_list : env_var -> string list option
+
   val env_float: env_var -> float option
 
   val env_when: env_var -> when_ option

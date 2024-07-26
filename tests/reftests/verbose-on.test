@@ -1,0 +1,312 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+build: [ "echo" name ]
+depends: "bar"
+### <pkg:bar.1>
+opam-version: "2.0"
+build: [ "echo" name ]
+depends: "baz"
+### <pkg:baz.1>
+opam-version: "2.0"
+build: [ "echo" name ]
+depends: "qux"
+### <pkg:qux.1>
+opam-version: "2.0"
+build: [ "echo" name ]
+### OPAMYES=1
+### opam switch create verbose-on --empty
+### : with --verbose-on option
+### opam install foo
+The following actions will be performed:
+=== install 4 packages
+  - install bar 1 [required by foo]
+  - install baz 1 [required by bar]
+  - install foo 1
+  - install qux 1 [required by baz]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed qux.1
+-> installed baz.1
+-> installed bar.1
+-> installed foo.1
+Done.
+### opam reinstall qux --verbose-on foo | unordered | sed-cmd echo
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 1 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> removed   bar.1
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
+-> installed baz.1
+-> installed bar.1
++ echo "foo" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/foo.1)
+- foo
+-> compiled  foo.1
+-> installed foo.1
+Done.
+### opam reinstall qux --verbose-on bar | unordered | sed-cmd echo
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 1 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> removed   bar.1
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
+-> installed baz.1
++ echo "bar" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/bar.1)
+- bar
+-> compiled  bar.1
+-> installed bar.1
+-> installed foo.1
+Done.
+### opam reinstall qux --verbose-on bar,qux | unordered | sed-cmd echo
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 1 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++ echo "qux" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/qux.1)
+- qux
+-> compiled  qux.1
+-> removed   foo.1
+-> removed   bar.1
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
+-> installed baz.1
++ echo "bar" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/bar.1)
+- bar
+-> compiled  bar.1
+-> installed bar.1
+-> installed foo.1
+Done.
+### opam reinstall qux --verbose-on foo,bar,baz,qux | unordered | sed-cmd echo
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 1 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++ echo "qux" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/qux.1)
+- qux
+-> compiled  qux.1
+-> removed   foo.1
+-> removed   bar.1
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
++ echo "baz" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/baz.1)
+- baz
+-> compiled  baz.1
+-> installed baz.1
++ echo "bar" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/bar.1)
+- bar
+-> compiled  bar.1
+-> installed bar.1
++ echo "foo" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/foo.1)
+- foo
+-> compiled  foo.1
+-> installed foo.1
+Done.
+### : unknown package
+### opam reinstall qux --verbose-on unknown-pkg | unordered
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 1 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> removed   bar.1
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
+-> installed baz.1
+-> installed bar.1
+-> installed foo.1
+Done.
+### : upgrade
+### <pkg:bar.2>
+opam-version: "2.0"
+build: [ "echo" name ]
+depends: "baz"
+### opam upgrade --verbose-on bar | unordered | sed-cmd echo
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1      [uses bar]
+=== upgrade 1 package
+  - upgrade   bar 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> removed   bar.1
+-> installed bar.2
++ echo "bar" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/bar.2)
+- bar
+-> compiled  bar.2
+-> installed foo.1
+Done.
+### : with OPAMVERBOSEON environment variable
+### OPAMVERBOSEON=foo
+### opam reinstall qux | unordered | sed-cmd echo
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 2 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> removed   bar.2
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
+-> installed baz.1
+-> installed bar.2
++ echo "foo" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/foo.1)
+- foo
+-> compiled  foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSEON=bar
+### opam reinstall qux | unordered | sed-cmd echo
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 2 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> removed   bar.2
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
+-> installed baz.1
++ echo "bar" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/bar.2)
+- bar
+-> compiled  bar.2
+-> installed bar.2
+-> installed foo.1
+Done.
+### OPAMVERBOSEON=baz,qux
+### opam reinstall qux | unordered | sed-cmd echo
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 2 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++ echo "qux" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/qux.1)
+- qux
+-> compiled  qux.1
+-> removed   foo.1
+-> removed   bar.2
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
++ echo "baz" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/baz.1)
+- baz
+-> compiled  baz.1
+-> installed baz.1
+-> installed bar.2
+-> installed foo.1
+Done.
+### OPAMVERBOSEON=foo,bar,baz,qux
+### opam reinstall qux | unordered | sed-cmd echo
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 2 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++ echo "qux" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/qux.1)
+- qux
+-> compiled  qux.1
+-> removed   foo.1
+-> removed   bar.2
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
++ echo "baz" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/baz.1)
+- baz
+-> compiled  baz.1
+-> installed baz.1
++ echo "bar" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/bar.2)
+- bar
+-> compiled  bar.2
+-> installed bar.2
++ echo "foo" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/foo.1)
+- foo
+-> compiled  foo.1
+-> installed foo.1
+Done.
+### OPAMVERBOSEON=""
+### opam reinstall qux | unordered
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 2 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> removed   bar.2
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
+-> installed baz.1
+-> installed bar.2
+-> installed foo.1
+Done.
+### OPAMVERBOSEON=3
+### opam reinstall qux
+Fatal error: Package name "3" should contain at least one letter
+# Return code 99 #
+### OPAMVERBOSEON=unknown-pkg
+### opam reinstall qux | unordered
+The following actions will be performed:
+=== recompile 4 packages
+  - recompile bar 2 [uses baz]
+  - recompile baz 1 [uses qux]
+  - recompile foo 1 [uses bar]
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> removed   bar.2
+-> removed   baz.1
+-> removed   qux.1
+-> installed qux.1
+-> installed baz.1
+-> installed bar.2
+-> installed foo.1
+Done.

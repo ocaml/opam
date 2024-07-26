@@ -31,6 +31,7 @@ module E = struct
     | SKIPUPDATE of bool option
     | STATS of bool option
     | WORKINGDIR of bool option
+    | VERBOSEON of string list option
 
   open OpamStd.Config.E
   let assumedepexts = value (function ASSUMEDEPEXTS b -> b | _ -> None)
@@ -53,6 +54,7 @@ module E = struct
   let skipupdate = value (function SKIPUPDATE b -> b | _ -> None)
   let stats = value (function STATS b -> b | _ -> None)
   let workingdir = value (function WORKINGDIR b -> b | _ -> None)
+  let verboseon = value (function VERBOSEON s -> s | _ -> None)
 
 end
 
@@ -76,6 +78,7 @@ type t = {
   assume_depexts: bool;
   cli: OpamCLIVersion.t;
   scrubbed_environment_variables: string list;
+  verbose_on : OpamTypes.name_set;
 }
 
 let default = {
@@ -98,6 +101,7 @@ let default = {
   assume_depexts = false;
   cli = OpamCLIVersion.current;
   scrubbed_environment_variables = [];
+  verbose_on = OpamPackage.Name.Set.empty;
 }
 
 type 'a options_fun =
@@ -120,6 +124,7 @@ type 'a options_fun =
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
   ?scrubbed_environment_variables:string list ->
+  ?verbose_on:OpamTypes.name_set ->
   'a
 
 let setk k t
@@ -142,6 +147,7 @@ let setk k t
     ?assume_depexts
     ?cli
     ?scrubbed_environment_variables
+    ?verbose_on
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
@@ -163,7 +169,8 @@ let setk k t
     no_auto_upgrade = t.no_auto_upgrade + no_auto_upgrade;
     assume_depexts = t.assume_depexts + assume_depexts;
     cli = t.cli + cli;
-    scrubbed_environment_variables = t.scrubbed_environment_variables + scrubbed_environment_variables
+    scrubbed_environment_variables = t.scrubbed_environment_variables + scrubbed_environment_variables;
+    verbose_on = t.verbose_on + verbose_on;
   }
 
 let set t = setk (fun x () -> x) t
@@ -198,6 +205,10 @@ let initk k =
     ?assume_depexts:(E.assumedepexts ())
     ?cli:None
     ?scrubbed_environment_variables:None
+    ?verbose_on:
+      (E.verboseon () >>= function
+        | [] -> None
+        | vo -> Some (OpamPackage.Name.(Set.of_list (List.map of_string vo))))
 
 let init ?noop:_ = initk (fun () -> ())
 
