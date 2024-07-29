@@ -83,6 +83,17 @@ let () =
     in
     List.fold_left (+.) 0.0 l /. float_of_int n
   in
+  let time_install_check_installed =
+    Gc.compact ();
+    launch (fmt "%s switch create four --fake ocaml-base-compiler.4.14.0" bin);
+    launch (fmt "%s install -y --fake core.v0.15.0" bin);
+    time_cmd ~exit:0 (fmt "%s install --check core.v0.15.0" bin)
+  in
+  let time_install_check_not_installed =
+    Gc.compact ();
+    launch (fmt "%s switch create five --fake ocaml-base-compiler.4.14.0" bin);
+    time_cmd ~exit:1 (fmt "%s install --check core.v0.15.0" bin)
+  in
   let json = fmt {|{
   "results": [
     {
@@ -117,6 +128,16 @@ let () =
           "name": "OpamPackage.Version.compare amortised over 100 runs",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "opam install --check on an already installed package",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam install --check on a non-installed package",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -138,6 +159,8 @@ let () =
       time_OpamSystem_read_100
       time_deps_only_installed_pkg
       time_OpamPackage_Version_compare_100
+      time_install_check_installed
+      time_install_check_not_installed
       bin_size
   in
   print_endline json
