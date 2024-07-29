@@ -978,6 +978,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list-large-dependencies.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-list)
+ (action
+  (diff list.test list.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-list)))
+
+(rule
+ (targets list.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-list.unix)
  (enabled_if (= %{os_type} "Unix"))
  (action
