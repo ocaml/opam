@@ -118,6 +118,7 @@ users)
 
 ## Internal
   * Stop using polymorphic comparison when comparing `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
+  * Run `Gc.compact` in OpamParallel, when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
 
 ## Internal: Windows
 
@@ -180,3 +181,4 @@ users)
 
 ## opam-core
   * `OpamStd.Env`: add `env_string_list` for parsing string list environment variables (comma separated) [#5682 @desumn]
+  * `OpamParallel.*.{map,reduce,iter}`: Run `Gc.compact` when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
