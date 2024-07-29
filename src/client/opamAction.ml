@@ -245,7 +245,7 @@ let download_shared_source st url nvs =
          | None, _ | _, [_] -> ""
          | Some url, _ -> " " ^ OpamUrl.to_string (OpamFile.URL.url url))) url;
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake)
-  then Done None else
+  then Done (Result ()) else
   let nvs =
     (* filter out version-pinned packages since we already have their source *)
     List.filter (fun nv ->
@@ -259,7 +259,7 @@ let download_shared_source st url nvs =
                OpamFile.OPAM.version_opt) = Some nv.version))
       nvs
   in
-  if nvs = [] then Done None
+  if nvs = [] then Done (Up_to_date ())
   else
   let print_action =
     OpamConsole.msg "%s retrieved %s  (%s)\n"
@@ -290,14 +290,16 @@ let download_shared_source st url nvs =
   OpamProcess.Job.catch (fun e ->
       let na =
         match e with
-        | OpamDownload.Download_fail (s,l) -> (s,l)
-        | e -> (None, Printexc.to_string e)
+        | OpamDownload.Download_fail failure -> failure
+        | e -> Generic_failure
+                 { short_reason = None; long_reason = Printexc.to_string e }
       in
-      Done (Some na))
+      Done (Not_available na))
   @@ fun () ->
   OpamUpdate.download_shared_package_source st url nvs @@| function
-  | Some (Not_available (s, l)), _ ->
-    let msg = OpamStd.Option.default l s in
+  | Some (Not_available failure), _ ->
+    let r = OpamTypesBase.get_dl_failure_reason failure in
+    let msg = OpamStd.Option.default r.long_reason r.short_reason in
     OpamConsole.error "Failed to get sources of %s%s: %s"
       (labelise OpamPackage.to_string)
       (match url, nvs with
@@ -305,34 +307,36 @@ let download_shared_source st url nvs =
        | Some url, _ ->
          Printf.sprintf " (%s)" (OpamUrl.to_string (OpamFile.URL.url url)))
       msg;
-    Some (s, l)
-  | _, ((nv, name, Not_available (s, l)) :: _) ->
-    let msg = match s with None -> l | Some s -> s in
+    Not_available failure
+  | _, ((nv, name, Not_available failure) :: _) ->
+    let r = OpamTypesBase.get_dl_failure_reason failure in
+    let msg = OpamStd.Option.default r.long_reason r.short_reason in
     OpamConsole.error "Failed to get extra source \"%s\" of %s: %s"
       name (OpamPackage.to_string nv) msg;
-    Some (s, l)
+    Not_available failure
   | Some (Result msg), _ ->
-    print_full_action msg; None
+    print_full_action msg; Result ()
   | Some (Up_to_date msg), _ ->
-    print_full_action msg; None
-  | None, [] -> None
+    print_full_action msg; Up_to_date ()
+  | None, [] -> Up_to_date ()
   | None, (e :: es as extras) ->
     if List.for_all (function _, _, Up_to_date _ -> true | _ -> false) extras then
-      print_full_action "cached"
+      (print_full_action "cached";
+       Up_to_date ())
     else
-      (match e, es with
-       | (_, _, Result msg), [] -> print_full_action msg
-       | _, _ ->
-         print_single_actions
-           (List.map (fun (nv, _, _) ->
-                nv,
-                (Printf.sprintf "%d extra sources"
-                   (List.length
-                      (List.filter (fun (nv',_,_) ->
-                           OpamPackage.compare nv nv' = 0)
-                          extras))))
-               extras));
-    None
+      ((match e, es with
+          | (_, _, Result msg), [] -> print_full_action msg
+          | _, _ ->
+            print_single_actions
+              (List.map (fun (nv, _, _) ->
+                   nv,
+                   (Printf.sprintf "%d extra sources"
+                      (List.length
+                         (List.filter (fun (nv',_,_) ->
+                              OpamPackage.compare nv nv' = 0)
+                             extras))))
+                  extras));
+       Result ())
 
 let download_package st nv =
   download_shared_source st
@@ -468,7 +472,9 @@ let prepare_package_source st nv dir =
         (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
       @@| function
       | Result () | Up_to_date () -> None
-      | Not_available (_,msg) -> Some (Failure msg)
+      | Not_available failure ->
+          let r = OpamTypesBase.get_dl_failure_reason failure in
+          Some (Failure r.long_reason)
     in
     List.fold_left (fun job dl ->
         job @@+ function

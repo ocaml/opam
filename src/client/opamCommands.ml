@@ -3337,9 +3337,10 @@ let pin ?(unpin_only=false) cli =
             ~cache_dir:(OpamRepositoryPath.download_cache
                           OpamStateConfig.(!r.root_dir))
             basename pin_cache_dir [] [url] @@| function
-          | Not_available (_,u) ->
+          | Not_available failure ->
+            let r = OpamTypesBase.get_dl_failure_reason failure in
             OpamConsole.error_and_exit `Sync_error
-              "Could not retrieve %s" u
+              "Could not retrieve %s" r.long_reason
           | Result _ | Up_to_date _ ->
             let pkgs =
               OpamAuxCommands.opams_of_dir ?locked ~recurse ?subpath
@@ -3716,8 +3717,10 @@ let source cli =
                   (OpamPackage.to_string nv) dir []
                   [url])
            with
-           | Not_available (_,u) ->
-             OpamConsole.error_and_exit `Sync_error "%s is not available" u
+           | Not_available failure ->
+             let r = OpamTypesBase.get_dl_failure_reason failure in
+             OpamConsole.error_and_exit `Sync_error "%s is not available"
+               r.long_reason
            | Result _ | Up_to_date _ ->
              OpamConsole.formatted_msg
                "Successfully fetched %s development repo to %s\n"
@@ -3727,8 +3730,11 @@ let source cli =
         (let job =
            let open OpamProcess.Job.Op in
            OpamUpdate.download_package_source t nv dir @@+ function
-           | Some (Not_available (_,s)), _ | _, (_, Not_available (_, s)) :: _ ->
-             OpamConsole.error_and_exit `Sync_error "Download failed: %s" s
+           | Some (Not_available failure), _
+           | _, (_, Not_available failure) :: _ ->
+             let r = OpamTypesBase.get_dl_failure_reason failure in
+             OpamConsole.error_and_exit `Sync_error "Download failed: %s"
+               r.long_reason
            | None, _ | Some (Result _ | Up_to_date _), _ ->
              OpamAction.prepare_package_source t nv dir @@| function
              | None ->

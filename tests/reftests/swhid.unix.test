@@ -39,7 +39,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Failed to get sources of snappy-ko.2: Download command failed
 
-OpamSolution.Fetch_fail("https://fake.exe/url.tar.gz (Download command failed: \"curl --write-out %{http_code}\\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-ko.2/url.tar.gz.part -- https://fake.exe/url.tar.gz\" exited with code 6)")
+https://fake.exe/url.tar.gz (Download command failed: "curl --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-ko.2/url.tar.gz.part -- https://fake.exe/url.tar.gz" exited with code 6)
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -68,7 +68,7 @@ The following actions will be performed:
 Processing  1/3: [snappy-swhid-dir.2: http]
 [ERROR] Failed to get sources of snappy-swhid-dir.2: Download command failed
 
-OpamSolution.Fetch_fail("https://fake.exe/url.tar.gz (Download command failed: \"curl --write-out %{http_code}\\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-swhid-dir.2/url.tar.gz.part -- https://fake.exe/url.tar.gz\" exited with code 6)")
+https://fake.exe/url.tar.gz (Download command failed: "curl --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/fallback/.opam-switch/sources/snappy-swhid-dir.2/url.tar.gz.part -- https://fake.exe/url.tar.gz" exited with code 6)
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -132,7 +132,7 @@ The following actions will be performed:
 Source https://fake.exe/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/n] y
 [ERROR] Failed to get sources of snappy-swhid-ko.2: SWH fallback: Unknown swhid
 
-OpamSolution.Fetch_fail("SWH fallback: Unknown swhid")
+SWH fallback: Unknown swhid
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -152,7 +152,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Failed to get sources of snappy-swhid-ko.2: SWH fallback: no retrieval
 
-OpamSolution.Fetch_fail("SWH fallback: Download tool permitting post request (wget and curl) not set as download tool")
+SWH fallback: Download tool permitting post request (wget and curl) not set as download tool
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>

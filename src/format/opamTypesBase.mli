@@ -117,3 +117,6 @@ val char_of_separator: separator -> char
 (* Switch selections *)
 val switch_selections_compare : switch_selections -> switch_selections -> int
 val switch_selections_equal : switch_selections -> switch_selections -> bool
+
+(* Download error helper functions *)
+val get_dl_failure_reason : dl_failure -> dl_fail_reason

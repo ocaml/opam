@@ -48,13 +48,35 @@ type std_path =
   | Lib | Bin | Sbin | Share | Doc | Etc | Man
   | Toplevel | Stublibs
 
+(** Download failure explanation *)
+type dl_fail_reason = {
+  short_reason : string option;
+  long_reason : string;
+}
+(** The usage is: [short_reason] is displayed on normal mode
+    (nothing if [None]), and [long_reason] on verbose mode. *)
+
+(** Tool download failure infos *)
+type 'a dl_tool_failure = {
+  dl_exit_code : int;
+  dl_url : string;
+  dl_reason : 'a;
+}
+
+type curl_error =
+  | Curl_empty_response
+  | Curl_error_response of string
+  | Curl_generic_error of dl_fail_reason
+
+(** Download failure kind *)
+type dl_failure =
+  | Generic_failure of dl_fail_reason
+  | Curl_failure of curl_error dl_tool_failure
+
 (** Download result *)
 type 'a download =
   | Up_to_date of 'a
-  | Not_available of string option * string
-  (** Arguments are respectively the short and long version of an error message.
-      The usage is: the first argument is displayed on normal mode (nothing
-      if [None]), and the second one on verbose mode. *)
+  | Not_available of dl_failure
   | Result of 'a
 
 (** {2 Packages} *)

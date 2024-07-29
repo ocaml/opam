@@ -64,8 +64,6 @@ let read_opam_file_for_pinning ?locked ?(quiet=false) name f url =
   >>| OpamFile.OPAM.with_locked_opt locked
 
 
-exception Fetch_Fail of string
-
 let get_source_definition ?version ?subpath ?locked st nv url =
   let root = st.switch_global.root in
   let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
@@ -87,11 +85,11 @@ let get_source_definition ?version ?subpath ?locked st nv url =
     | _, _ -> url
   in
   OpamUpdate.fetch_dev_package url srcdir ?subpath nv @@| function
-  | Not_available (_,s) -> raise (Fetch_Fail s)
+  | Not_available _ as err -> err
   | Up_to_date _ | Result _ ->
     let srcdir = OpamFilename.SubPath.(srcdir /? subpath) in
     match OpamPinned.find_opam_file_in_source ?locked nv.name srcdir with
-    | None -> None
+    | None -> Result None
     | Some (f, locked) ->
       match read_opam_file_for_pinning nv.name ?locked f (OpamFile.URL.url url) with
       | None ->
@@ -100,8 +98,8 @@ let get_source_definition ?version ?subpath ?locked st nv url =
             (OpamPath.Switch.Overlay.tmp_opam root st.switch nv.name)
         in
         OpamFilename.copy ~src:(OpamFile.filename f) ~dst;
-        None
-      | Some opam -> Some (fix opam)
+        Result None
+      | Some opam -> Result (Some (fix opam))
 
 let copy_files st opam =
   let name = OpamFile.OPAM.name opam in
@@ -530,16 +528,20 @@ and source_pin
   OpamFilename.remove (OpamFile.filename temp_file);
 
   let opam_opt =
-    try
-      opam_opt >>+ fun () ->
-      urlf >>= fun url ->
+    opam_opt >>+ fun () ->
+    urlf >>= fun url ->
+    match
       OpamProcess.Job.run @@ get_source_definition ?version ?subpath ?locked st nv url
-    with Fetch_Fail err ->
+    with
+    | Result o | Up_to_date o -> o
+    | Not_available failure ->
       if force then None else
         (OpamConsole.error_and_exit `Sync_error
            "Error getting source from %s:\n%s"
            (OpamStd.Option.to_string OpamUrl.to_string target_url)
-           (OpamStd.Format.itemize (fun x -> x) [err]));
+           (OpamStd.Format.itemize (fun x ->
+                (OpamTypesBase.get_dl_failure_reason x).long_reason)
+               [failure]))
   in
   let opam_opt = opam_opt >>| OpamFormatUpgrade.opam_file in
 
@@ -828,9 +830,10 @@ let scan ~normalise ~recurse ?subpath url =
           ~cache_dir:(OpamRepositoryPath.download_cache
                         OpamStateConfig.(!r.root_dir))
           basename pin_cache_dir [] [url] @@| function
-        | Not_available (_,u) ->
+        | Not_available failure ->
+          let r = OpamTypesBase.get_dl_failure_reason failure in
           OpamConsole.error_and_exit `Sync_error
-            "Could not retrieve %s" u
+            "Could not retrieve %s" r.long_reason
         | Result _ | Up_to_date _ ->
           pins_of_dir pin_cache_dir, Some cleanup
       with e -> OpamStd.Exn.finalise e cleanup
