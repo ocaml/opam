@@ -168,3 +168,34 @@ depends: [
 Missing dependencies:
 a
 # Return code 1 #
+### ::: check that --check correctly checks dependencies recursively
+### <pkg:test.3>
+opam-version: "2.0"
+depends: [
+  "a" {= "3"}
+]
+### <pkg:a.3>
+opam-version: "2.0"
+depends: [
+  "b"
+]
+### <pkg:b.1>
+opam-version: "2.0"
+### opam install --fake a.3
+The following actions will be faked:
+=== upgrade 1 package
+  - upgrade a 1 to 3
+=== install 1 package
+  - install b 1      [required by a]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of b.1
+Faking installation of a.3
+Done.
+### <pkg:a.3>
+opam-version: "2.0"
+depends: [
+  "b" {> "1"}
+]
+### opam install --check test.3
+All dependencies installed
