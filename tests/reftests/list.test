@@ -49,3 +49,33 @@ other-choice.4
 should.1
 top.1
 unrelated.1
+### ::: Check the behaviour of --latests-only
+### OPAMVAR_arch=x86_64
+### <pkg:package.1>
+opam-version: "2.0"
+### <pkg:package.2>
+opam-version: "2.0"
+available: arch = "arm64"
+### opam list --latests-only --all-versions --short
+choice.1
+other-choice.4
+package.2
+should.1
+shouldnt.1
+top.1
+unrelated.1
+### opam list --available --latests-only --all-versions --short
+choice.1
+other-choice.4
+package.1
+should.1
+shouldnt.1
+top.1
+unrelated.1
+### opam list --latests-only --available --all-versions --short
+choice.1
+other-choice.4
+should.1
+shouldnt.1
+top.1
+unrelated.1
