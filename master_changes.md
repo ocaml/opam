@@ -143,6 +143,7 @@ users)
   * clean: Add to check cleaning of sources directories [#5474 @rjbou]
   * Add reftest for `--verbose-on` option [#5682 @rjbou]
   * Add a test for --deps-only setting direct dependencies as root packages [#6125 @rjbou]
+  * Add a test file for `opam install --check` [#6121 @kit-ty-kate]
 
 ### Engine
 

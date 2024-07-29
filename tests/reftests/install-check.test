@@ -1,0 +1,33 @@
+N0REP0
+### opam switch create test-switch --empty
+### ::: check that --check works correctly with non-registered packages
+### <pkg:test.1>
+opam-version: "2.0"
+depends: [
+  "a"
+  "does-no-exists"
+]
+### <pkg:a.1>
+opam-version: "2.0"
+### opam install --check test.1
+Missing dependencies:
+a
+# Return code 1 #
+### opam install --fake a
+The following actions will be faked:
+=== install 1 package
+  - install a 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of a.1
+Done.
+### opam install --check test.1
+All dependencies installed
+### ::: check that --check works correctly with non-registered versions
+### <pkg:test.2>
+opam-version: "2.0"
+depends: [
+  "a" {= "2"}
+]
+### opam install --check test.2
+All dependencies installed

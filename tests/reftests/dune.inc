@@ -813,6 +813,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:inplace.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-install-check)
+ (action
+  (diff install-check.test install-check.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-install-check)))
+
+(rule
+ (targets install-check.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:install-check.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-install-formula)
  (action
   (diff install-formula.test install-formula.out)))
