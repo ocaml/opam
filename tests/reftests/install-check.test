@@ -135,4 +135,6 @@ depends: [
   "b" {> "1"}
 ]
 ### opam install --check test.3
-All dependencies installed
+Missing dependencies:
+b
+# Return code 1 #
