@@ -1945,10 +1945,9 @@ let init
   gt, rt, default_compiler
 
 let check_installed ~build ~post t atoms =
-  let available = (Lazy.force t.available_packages) in
   let pkgs =
     OpamPackage.to_map
-      (OpamFormula.packages_of_atoms available atoms)
+      (OpamFormula.packages_of_atoms t.packages atoms)
   in
   let test = OpamStateConfig.(!r.build_test) in
   let doc = OpamStateConfig.(!r.build_doc) in
