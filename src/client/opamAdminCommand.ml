@@ -854,8 +854,7 @@ let compare_package_versions_command cli =
   let cmd global_options v1 v2 () =
     OpamArg.apply_global_options cli global_options;
     let result = OpamPackage.Version.compare v1 v2 in
-    OpamConsole.formatted_msg "%d (%s %s %s)\n"
-      result
+    OpamConsole.formatted_msg "%s %s %s\n"
       (OpamPackage.Version.to_string v1)
       (if result < 0 then "<" else if result = 0 then "=" else ">")
       (OpamPackage.Version.to_string v2);
