@@ -132,6 +132,7 @@ The following actions will be performed:
 -> installed roots2.1
 Done.
 ### opam list --roots -s
+roots2
 ### opam remove roots1
 The following actions will be performed:
 === remove 2 packages
@@ -152,6 +153,7 @@ The following actions will be performed:
 -> installed roots1.1
 Done.
 ### opam list --roots -s
+roots1
 ### opam remove roots1
 The following actions will be performed:
 === remove 1 package
@@ -174,6 +176,8 @@ The following actions will be performed:
 -> installed stoor1.1
 Done.
 ### opam list --roots -s
+roots2
+stoor1
 ### opam remove roots1 stoor1 | unordered
 The following actions will be performed:
 === remove 3 packages
@@ -198,6 +202,7 @@ The following actions will be performed:
 -> installed roots2.1
 Done.
 ### opam list --roots -s
+roots2
 ### opam remove roots1
 The following actions will be performed:
 === remove 2 packages

@@ -31,6 +31,7 @@ users)
 ## Install
   * Fix package name display for no agreement conflicts [#6055 @rjbou - fix #6030]
   * Make fetching an archive from cache add missing symlinks [#6068 @kit-ty-kate - fix #6064]
+  * [BUG] Fix `opam install --deps-only` set direct dependencies as root packages [#6125 @rjbou]
 
 ## Build (package)
   * ◈ Add `--verbose-on` option to enable verbose mode on specified package names [#5682 @desumn @rjbou]
