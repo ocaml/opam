@@ -830,6 +830,39 @@ let check_command cli =
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg)
 
+let compare_package_versions_command_doc = "Compare 2 package versions"
+let compare_package_versions_command cli =
+  let version_arg n =
+    let doc =
+      Arg.info
+        ~docv:"VERSION"
+        ~doc:"Package version to compare" []
+    in
+    Arg.(required & pos n (Arg.some' OpamArg.package_version) None & doc)
+  in
+  let command = "compare-package-versions" in
+  let doc = compare_package_versions_command_doc in
+  let man = [
+    `S Manpage.s_description;
+    `P "This command compares 2 package versions for quick sanity checks, and prints the result of the comparison to the console. For example:";
+    `I ("For example:", "opam admin compare-package-versions 0.0.9 0.0.10");
+    `I ("outputs:", "-1 (0.0.9 < 0.0.10)");
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
+  ]
+  in
+  let cmd global_options v1 v2 () =
+    OpamArg.apply_global_options cli global_options;
+    let result = OpamPackage.Version.compare v1 v2 in
+    OpamConsole.formatted_msg "%d (%s %s %s)\n"
+      result
+      (OpamPackage.Version.to_string v1)
+      (if result < 0 then "<" else if result = 0 then "=" else ">")
+      (OpamPackage.Version.to_string v2);
+  in
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
+  Term.(const cmd $ global_options cli $ version_arg 0 $ version_arg 1)
+
 let pattern_list_arg =
   OpamArg.arg_list "PATTERNS"
     "Package patterns with globs. matching against $(b,NAME) or \
@@ -1217,6 +1250,7 @@ let admin_subcommands cli =
     upgrade_command cli;
     lint_command cli;
     check_command cli;
+    compare_package_versions_command cli;
     list_command cli;
     filter_command cli;
     add_constraint_command cli;
