@@ -189,6 +189,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:cli-versioning.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-compare-package-versions)
+ (action
+  (diff compare-package-versions.test compare-package-versions.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-compare-package-versions)))
+
+(rule
+ (targets compare-package-versions.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:compare-package-versions.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-config)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
