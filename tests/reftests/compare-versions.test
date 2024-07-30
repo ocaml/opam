@@ -1,0 +1,21 @@
+N0REP0
+### opam admin compare-versions 0.0.9 0.0.10
+0.0.9 < 0.0.10
+### opam admin compare-versions 1.2.3 1.2.3~preview
+1.2.3 > 1.2.3~preview
+### opam admin compare-versions 1.2.3 1.2.3-option
+1.2.3 < 1.2.3-option
+### opam admin compare-versions 0.1.0 0.01.0
+0.1.0 = 0.01.0
+### opam admin compare-versions 0.2.2 0.2.0
+0.2.2 > 0.2.0
+### opam admin assert-compare-versions 0.0.9 lt 0.0.10
+### opam admin assert-compare-versions 1.2.3 lt 1.2.3~preview
+# Return code 1 #
+### opam admin assert-compare-versions 0.1.0 eq 0.01.0
+### opam admin assert-compare-versions 0.0.9 eq 0.0.10
+# Return code 1 #
+### opam admin assert-compare-versions 0.1.0 le 0.1.0
+### opam admin assert-compare-versions 0.0.9 le 0.0.10
+### opam admin assert-compare-versions 0.2.2 le 0.2.1
+# Return code 1 #

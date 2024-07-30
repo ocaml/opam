@@ -830,6 +830,94 @@ let check_command cli =
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg)
 
+let compare_versions_command_doc = "Compare 2 package versions"
+let compare_versions_command cli =
+  let version_arg n =
+    let doc =
+      Arg.info
+        ~docv:(Printf.sprintf "V%d" n)
+        ~doc:"Package version to compare" []
+    in
+    Arg.(required & pos n (some OpamArg.package_version) None & doc)
+  in
+  let command = "compare-versions" in
+  let doc = compare_versions_command_doc in
+  let man = [
+    `S Manpage.s_description;
+    `P "This command compares 2 package versions. It outputs 'V0 OP V1' to \
+        the console with OP in {<,>,=} such that the equation holds. \
+        For example:";
+    `Pre "\n\
+          \\$ opam admin compare-versions 0.0.9 0.0.10\n\
+          0.0.9 < 0.0.10";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
+  ]
+  in
+  let cmd global_options v0 v1 () =
+    OpamArg.apply_global_options cli global_options;
+    let result = OpamPackage.Version.compare v0 v1 in
+    OpamConsole.formatted_msg "%s %s %s\n"
+      (OpamPackage.Version.to_string v0)
+      (if result < 0 then "<" else if result = 0 then "=" else ">")
+      (OpamPackage.Version.to_string v1);
+  in
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
+    Term.(const cmd $ global_options cli $ version_arg 0 $ version_arg 1)
+
+let assert_compare_versions_command_doc =
+  "Verify an equation comparing 2 package versions"
+let assert_compare_versions_command cli =
+  let operators : (string * OpamFormula.relop) list =
+    [ "lt", `Lt
+    ; "le", `Leq
+    ; "eq", `Eq
+    ]
+  in
+  let operator =
+    let doc =
+      Arg.info
+        ~docv:"OP"
+        ~doc:(Printf.sprintf
+                "$(docv) must be %s.\n" (Arg.doc_alts_enum ~quoted:true operators))
+        []
+    in
+    Arg.(required & pos 1 (some (enum operators)) None & doc)
+  in
+  let version_arg n =
+    let doc =
+      Arg.info
+        ~docv:(Printf.sprintf "V%d" (if n = 0 then 0 else 1))
+        ~doc:"Package version to compare" []
+    in
+    Arg.(required & pos n (some OpamArg.package_version) None & doc)
+  in
+  let command = "assert-compare-versions" in
+  let doc = assert_compare_versions_command_doc in
+  let man = [
+    `S Manpage.s_description;
+    `P "This command verifies a stated equation comparing 2 package versions. \
+        It exit 0 if the comparison holds, and 1 if it doesn't. For example:";
+    `Pre "\n\
+          \\$ opam admin assert-compare-versions 0.0.9 lt 0.0.10\n\
+          [0]\n\
+          \n\
+          \\$ opam admin assert-compare-versions 0.0.9 eq 0.0.10\n\
+          [1]";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
+  ]
+  in
+  let cmd global_options v0 operator v1 () =
+    OpamArg.apply_global_options cli global_options;
+    OpamStd.Sys.exit_because
+      (if OpamFormula.eval_relop operator v0 v1
+       then `Success
+       else `False)
+  in
+  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
+    Term.(const cmd $ global_options cli $ version_arg 0 $ operator $ version_arg 2)
+
 let pattern_list_arg =
   OpamArg.arg_list "PATTERNS"
     "Package patterns with globs. matching against $(b,NAME) or \
@@ -1227,6 +1315,8 @@ let admin_subcommands cli =
     upgrade_command cli;
     lint_command cli;
     check_command cli;
+    assert_compare_versions_command cli;
+    compare_versions_command cli;
     list_command cli;
     filter_command cli;
     add_constraint_command cli;
