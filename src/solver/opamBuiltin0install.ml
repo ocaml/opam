@@ -23,9 +23,10 @@ let command_name = None
 let preemptive_check = false
 
 let default_criteria = {
-  crit_default = "";
-  crit_upgrade = "";
-  crit_fixup = "";
+  crit_default = "-changed,\
+                  -count[avoid-version,solution]";
+  crit_upgrade = "-count[avoid-version,solution]";
+  crit_fixup = "-count[avoid-version,solution]";
   crit_best_effort_prefix = None;
 }
 
@@ -90,25 +91,54 @@ let reconstruct_universe universe selections =
 type options = {
   drop_installed_packages : bool;
   prefer_oldest : bool;
+  handle_avoid_version : bool;
+  prefer_installed : bool;
 }
 
 let parse_criteria criteria =
-  let default = {drop_installed_packages = false; prefer_oldest = false} in
-  match criteria with
-  | "" -> default
-  | "+removed" -> {drop_installed_packages = true; prefer_oldest = false}
-  | "+count[version-lag,solution]" -> {drop_installed_packages = false; prefer_oldest = true}
-  | "+removed,+count[version-lag,solution]" ->
-    {drop_installed_packages = true; prefer_oldest = true}
-  | _ ->
-    OpamConsole.warning "Criteria '%s' is not supported by the 0install solver" criteria;
-    default
+  let default =
+    {
+      drop_installed_packages = false;
+      prefer_oldest = false;
+      handle_avoid_version = false;
+      prefer_installed = false;
+    }
+  in
+  let rec parse default (criteria : OpamCudfCriteria.criterion list) =
+    match criteria with
+    | [] -> default
+    | (Plus, Removed, None)::xs ->
+      parse {default with drop_installed_packages = true} xs
+    | (Plus, Solution, Some "version-lag")::xs ->
+      parse {default with prefer_oldest = true} xs
+    | (Minus, Solution, Some "avoid-version")::xs ->
+      parse {default with handle_avoid_version = true} xs
+    | (Minus, Changed, None)::xs ->
+      parse {default with prefer_installed = true} xs
+    | criterion::xs ->
+      OpamConsole.warning
+        "Criteria '%s' is not supported by the 0install solver"
+        (OpamCudfCriteria.criterion_to_string criterion);
+      parse default xs
+  in
+  parse default (OpamCudfCriteria.of_string criteria)
 
 let call ~criteria ?timeout:_ (preamble, universe, request) =
-  let {drop_installed_packages; prefer_oldest} = parse_criteria criteria in
+  let {
+    drop_installed_packages;
+    prefer_oldest;
+    handle_avoid_version;
+    prefer_installed;
+  } =
+    parse_criteria criteria
+  in
   let timer = OpamConsole.timer () in
   let pkgs, constraints = create_spec ~drop_installed_packages universe request in
-  let context = Opam_0install_cudf.create ~prefer_oldest ~constraints universe in
+  let context =
+    Opam_0install_cudf.create
+      ~prefer_oldest ~handle_avoid_version ~prefer_installed
+      ~constraints universe
+  in
   match Opam_0install_cudf.solve context pkgs with
   | Ok selections ->
     let universe = reconstruct_universe universe selections in
