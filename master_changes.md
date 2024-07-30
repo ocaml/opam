@@ -104,6 +104,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test for --deps-only setting direct dependencies as root packages [#6125 @rjbou]
 
 ### Engine
 
