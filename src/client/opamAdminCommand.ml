@@ -846,7 +846,7 @@ let compare_package_versions_command cli =
     `S Manpage.s_description;
     `P "This command compares 2 package versions for quick sanity checks, and prints the result of the comparison to the console. For example:";
     `I ("For example:", "opam admin compare-package-versions 0.0.9 0.0.10");
-    `I ("outputs:", "-1 (0.0.9 < 0.0.10)");
+    `I ("outputs:", "0.0.9 < 0.0.10");
     `S Manpage.s_arguments;
     `S Manpage.s_options;
   ]
