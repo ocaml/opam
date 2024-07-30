@@ -830,8 +830,8 @@ let check_command cli =
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg)
 
-let compare_package_versions_command_doc = "Compare 2 package versions"
-let compare_package_versions_command cli =
+let compare_versions_command_doc = "Compare 2 package versions"
+let compare_versions_command cli =
   let version_arg n =
     let doc =
       Arg.info
@@ -840,12 +840,12 @@ let compare_package_versions_command cli =
     in
     Arg.(required & pos n (Arg.some' OpamArg.package_version) None & doc)
   in
-  let command = "compare-package-versions" in
-  let doc = compare_package_versions_command_doc in
+  let command = "compare-versions" in
+  let doc = compare_versions_command_doc in
   let man = [
     `S Manpage.s_description;
     `P "This command compares 2 package versions for quick sanity checks, and prints the result of the comparison to the console. For example:";
-    `I ("For example:", "opam admin compare-package-versions 0.0.9 0.0.10");
+    `I ("For example:", "opam admin compare-versions 0.0.9 0.0.10");
     `I ("outputs:", "0.0.9 < 0.0.10");
     `S Manpage.s_arguments;
     `S Manpage.s_options;
@@ -1259,7 +1259,7 @@ let admin_subcommands cli =
     upgrade_command cli;
     lint_command cli;
     check_command cli;
-    compare_package_versions_command cli;
+    compare_versions_command cli;
     list_command cli;
     filter_command cli;
     add_constraint_command cli;
