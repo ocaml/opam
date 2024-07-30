@@ -830,8 +830,54 @@ let check_command cli =
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg)
 
+module Compare_version_operator = struct
+  type t =
+    [ `Lt
+    | `Let
+    | `Eq
+    | `Gt
+    | `Get
+    ]
+
+  let all = [ `Lt ; `Let ; `Eq ; `Gt ; `Get ]
+
+  let eval : t -> int -> int -> bool = function
+    | `Lt -> ( < )
+    | `Let -> ( <= )
+    | `Eq -> ( = )
+    | `Gt -> ( > )
+    | `Get -> ( >= )
+
+  let assert_ t result = eval t result 0
+
+  let to_string : t -> string = function
+    | `Lt -> "<"
+    | `Let -> "<="
+    | `Eq -> "="
+    | `Gt -> ">"
+    | `Get -> ">="
+end
+
 let compare_versions_command_doc = "Compare 2 package versions"
 let compare_versions_command cli =
+  let operators =
+    List.map (fun op -> Compare_version_operator.to_string op, op)
+      Compare_version_operator.all
+  in
+  let assert_result =
+    let doc =
+      Arg.info
+        ~docv:"OP"
+        ~doc:(Printf.sprintf
+             "When supplied, the output is suppressed and the result of the \
+              comparison is checked againts the provided operator. The command exits 0 \
+              if the comparison holds, and 1 otherwise. \
+              $(docv) must be %s.\n" (Arg.doc_alts_enum ~quoted:true operators))
+        [ "assert" ]
+    in
+    let op_conv = Arg.enum operators in
+    Arg.(value & opt (Arg.some' op_conv) None doc)
+  in
   let version_arg n =
     let doc =
       Arg.info
@@ -844,23 +890,40 @@ let compare_versions_command cli =
   let doc = compare_versions_command_doc in
   let man = [
     `S Manpage.s_description;
-    `P "This command compares 2 package versions for quick sanity checks, and prints the result of the comparison to the console. For example:";
-    `I ("For example:", "opam admin compare-versions 0.0.9 0.0.10");
-    `I ("outputs:", "0.0.9 < 0.0.10");
+    `P "This command compares 2 package versions for quick sanity checks, and by default prints the result of the comparison to the console. You may optionally control the exit-code with '--assert=OP'. For example:";
+    `Pre "\n\
+       \\$ opam admin compare-versions 0.0.9 0.0.10\n\
+       0.0.9 < 0.0.10\n\
+       \n\
+       \\$ opam admin compare-versions 0.0.9 0.0.10 --assert '<'\n\
+       [0]\n\
+       \n\
+       \\$ opam admin compare-versions 0.0.9 0.0.10 --assert '>='\n\
+       [1]";
     `S Manpage.s_arguments;
     `S Manpage.s_options;
   ]
   in
-  let cmd global_options v1 v2 () =
+  let cmd global_options v1 v2 assert_result () =
     OpamArg.apply_global_options cli global_options;
     let result = OpamPackage.Version.compare v1 v2 in
-    OpamConsole.formatted_msg "%s %s %s\n"
-      (OpamPackage.Version.to_string v1)
-      (if result < 0 then "<" else if result = 0 then "=" else ">")
-      (OpamPackage.Version.to_string v2);
+    if Option.is_none assert_result then
+      OpamConsole.formatted_msg "%s %s %s\n"
+        (OpamPackage.Version.to_string v1)
+        (if result < 0 then "<" else if result = 0 then "=" else ">")
+        (OpamPackage.Version.to_string v2);
+    let exit_reason =
+      match assert_result with
+      | None -> `Success
+      | Some op ->
+        if Compare_version_operator.assert_ op result
+        then `Success
+        else `False
+    in
+    OpamStd.Sys.exit_because exit_reason
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
-  Term.(const cmd $ global_options cli $ version_arg 0 $ version_arg 1)
+  Term.(const cmd $ global_options cli $ version_arg 0 $ version_arg 1 $ assert_result)
 
 let pattern_list_arg =
   OpamArg.arg_list "PATTERNS"

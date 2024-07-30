@@ -61,13 +61,13 @@
   (package opam))
 
 (rule
-  (with-stdout-to opam-admin-compare-package-versions.0 (echo "")))
+  (with-stdout-to opam-admin-compare-versions.0 (echo "")))
 (rule
-  (targets opam-admin-compare-package-versions.1 opam-admin-compare-package-versions.err)
+  (targets opam-admin-compare-versions.1 opam-admin-compare-versions.err)
   (deps using-built-opam)
-  (action (progn (with-stderr-to opam-admin-compare-package-versions.err
-                   (with-stdout-to opam-admin-compare-package-versions.1 (run %{bin:opam} admin compare-package-versions --help=groff)))
-                 (diff opam-admin-compare-package-versions.err %{dep:opam-admin-compare-package-versions.0})))
+  (action (progn (with-stderr-to opam-admin-compare-versions.err
+                   (with-stdout-to opam-admin-compare-versions.1 (run %{bin:opam} admin compare-versions --help=groff)))
+                 (diff opam-admin-compare-versions.err %{dep:opam-admin-compare-versions.0})))
   (package opam))
 
 (rule
@@ -140,7 +140,7 @@
     opam-admin-add-constraint.1 
     opam-admin-filter.1 
     opam-admin-list.1 
-    opam-admin-compare-package-versions.1 
+    opam-admin-compare-versions.1 
     opam-admin-check.1 
     opam-admin-lint.1 
     opam-admin-upgrade.1 
