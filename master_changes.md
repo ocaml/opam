@@ -23,6 +23,7 @@ users)
 ## Actions
 
 ## Install
+  * [BUG] Fix `opam install --deps-only` set direct dependencies as root packages [#6125 @rjbou]
 
 ## Remove
 
