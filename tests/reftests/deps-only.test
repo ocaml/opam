@@ -105,3 +105,123 @@ depends: "foo"
 conflicts: "bar"
 ### opam install d --deps-only
 Nothing to do.
+### :::: check if deps-only installed packages are set root ::::
+### <pkg:roots1.1>
+opam-version: "2.0"
+### <pkg:roots2.1>
+opam-version: "2.0"
+depends: "roots1"
+### <pkg:roots3.1>
+opam-version: "2.0"
+depends: "roots2"
+### <pkg:stoor1.1>
+opam-version: "2.0"
+### <pkg:stoor2.1>
+opam-version: "2.0"
+depends: "stoor1"
+### opam switch create roots --empty
+### : deps of a package
+### opam install roots3 --deps-only
+The following actions will be performed:
+=== install 2 packages
+  - install roots1 1 [required by roots2]
+  - install roots2 1 [required by roots3]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed roots1.1
+-> installed roots2.1
+Done.
+### opam list --roots -s
+roots2
+### opam remove roots1
+The following actions will be performed:
+=== remove 2 packages
+  - remove roots1 1
+  - remove roots2 1 [uses roots1]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   roots2.1
+-> removed   roots1.1
+Done.
+### : deps for 2 package that depend on each other
+### opam install roots3 roots2 --deps-only
+The following actions will be performed:
+=== install 1 package
+  - install roots1 1 [required by roots2]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed roots1.1
+Done.
+### opam list --roots -s
+roots1
+### opam remove roots1
+The following actions will be performed:
+=== remove 1 package
+  - remove roots1 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   roots1.1
+Done.
+### : deps for 2 package that depend on each other
+### opam install roots3 stoor2 --deps-only | unordered
+The following actions will be performed:
+=== install 3 packages
+  - install roots1 1 [required by roots2]
+  - install roots2 1 [required by roots3]
+  - install stoor1 1 [required by stoor2]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed roots1.1
+-> installed roots2.1
+-> installed stoor1.1
+Done.
+### opam list --roots -s
+roots2
+stoor1
+### opam remove roots1 stoor1 | unordered
+The following actions will be performed:
+=== remove 3 packages
+  - remove roots1 1
+  - remove roots2 1 [uses roots1]
+  - remove stoor1 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   roots2.1
+-> removed   roots1.1
+-> removed   stoor1.1
+Done.
+### : deps with explicite set-root
+### opam install roots3 --deps-only --set-root
+The following actions will be performed:
+=== install 2 packages
+  - install roots1 1 [required by roots2]
+  - install roots2 1 [required by roots3]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed roots1.1
+-> installed roots2.1
+Done.
+### opam list --roots -s
+roots2
+### opam remove roots1
+The following actions will be performed:
+=== remove 2 packages
+  - remove roots1 1
+  - remove roots2 1 [uses roots1]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   roots2.1
+-> removed   roots1.1
+Done.
+### : deps with explicit unset-root
+### opam install roots3 --deps-only --unset-root
+The following actions will be performed:
+=== install 2 packages
+  - install roots1 1 [required by roots2]
+  - install roots2 1 [required by roots3]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed roots1.1
+-> installed roots2.1
+Done.
+### opam list --roots -s
