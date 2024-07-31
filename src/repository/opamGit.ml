@@ -214,7 +214,12 @@ module VCS : OpamVCS.VCS = struct
                    @ List.map OpamFilename.SubPath.to_string
                      (OpamStd.Option.to_list subpath))
     @@> function
-    | { OpamProcess.r_code = 0; _ } -> Done true
+    | { OpamProcess.r_code = 0; _ } ->
+      git repo_root ["submodule"; "status"; "--recursive"] @@> fun r ->
+      if r.r_code = 0 &&
+         List.for_all (fun s -> String.length s > 0 && s.[0] = ' ') r.r_stdout
+      then Done true
+      else (OpamProcess.cleanup ~force:true r; Done false)
     | { OpamProcess.r_code = 1; _ } as r ->
       OpamProcess.cleanup ~force:true r; Done false
     | r -> OpamSystem.process_error r
