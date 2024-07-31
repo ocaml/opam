@@ -1,6 +1,8 @@
 N0REP0
 ### OPAMYES=1
-### : --current option :
+### :::::::::::::::::::::::
+### :1: --current option
+### :::::::::::::::::::::::
 ### opam switch create pinning --empty
 ### opam pin --current foo
 [ERROR] foo is not installed, invalid flag `--current'
@@ -42,7 +44,9 @@ Now run 'opam upgrade' to apply any package updates.
 foo    1
 ### opam pin --current foo
 foo is now pinned locally (version 1)
-### : check no repin in case of double 'install .' :
+### :::::::::::::::::::::::
+### :2: check no repin in case of double 'install .'
+### :::::::::::::::::::::::
 ### <pin:nip/nip.opam>
 opam-version: "2.0"
 ### opam install ./nip
@@ -74,7 +78,9 @@ The following actions will be performed:
 -> retrieved nip.dev  (file://${BASEDIR}/nip)
 -> installed nip.dev
 Done.
-### : depext update :
+### :::::::::::::::::::::::
+### :3: depext update
+### :::::::::::::::::::::::
 ### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
 ### opam var --global os-family=dummy-success
 Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
@@ -175,13 +181,19 @@ echo "another-inexistant" "inexistant"
 -> installed qux.dev
 -> installed bar.dev
 Done.
-### : Test opam pin remove <pkg>.<version>
+### :::::::::::::::::::::::
+### :4: Test opam pin remove <pkg>.<version>
+### :::::::::::::::::::::::
 ### opam pin remove --no-action bar.dev
 Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
 ### opam pin remove --no-action nip.wrong-version
 [ERROR] nip is pinned but not to version wrong-version. Skipping.
 # Return code 2 #
-### : Test opam pin remove --all
+### opam pin remove --no-action bar.dev
+[NOTE] bar is not pinned.
+### :::::::::::::::::::::::
+### :5: Test opam pin remove --all
+### :::::::::::::::::::::::
 ### OPAMNODEPEXTS=1
 ### opam pin add --no-action bar.dev ./bar
 [bar.dev] synchronised (file://${BASEDIR}/bar)
@@ -234,7 +246,9 @@ The following actions will be performed:
 -> removed   qux.dev
 Done.
 ### opam pin
-### : Error retrieving git pin :
+### :::::::::::::::::::::::
+### :6: Error retrieving git pin :
+### :::::::::::::::::::::::
 ### mkdir pin-empty
 ### git -C pin-empty init -q --initial-branch=master
 ### git -C pin-empty config core.autocrlf false
@@ -263,8 +277,10 @@ Could not retrieve some package sources, they will not be pinned nor installed:
 
 Continue anyway? [y/n] y
 ### opam pin
-### : Parse error with future opam version field on pin
-### :: just the opam version that is a future
+### :::::::::::::::::::::::
+### :7: Parse error with future opam version field on pin
+### :::::::::::::::::::::::
+### :7:a: just the opam version that is a future
 ### <pin:pin-at-two-one/pin-at-two-one.opam>
 opam-version: "2.1"
 ### opam install ./pin-at-two-one
@@ -337,7 +353,7 @@ opam-version: "50.0"
              error  2: File format error: unsupported or missing file format version; should be 2.0 or older
 [ERROR] No package named pin-at-future found.
 # Return code 5 #
-### :: opam version is a future and there is a parse error
+### :7:b: opam version is a future and there is a parse error
 ### <junk.sh>
 echo GARBAGE>>"$1"
 ### sh junk.sh pin-at-two-one/pin-at-two-one.opam
