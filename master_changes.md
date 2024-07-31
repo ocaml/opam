@@ -89,6 +89,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * Fail when git submodule fails to update instead of showing a warning and ignoring the error [#6132 @kit-ty-kate - fix #6131]
 
 ## Build
  * Synchronise opam-core.opam with opam-repository changes [#6043 @dra27]

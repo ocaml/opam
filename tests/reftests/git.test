@@ -51,24 +51,22 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   submodule.1
 Done.
-### opam install submodule
+### opam install submodule | '".+[/\\]git(\.exe)? ' -> '"git '
 The following actions will be performed:
 === install 1 package
   - install submodule 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-[WARNING] Git submodule update failed in ${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1
--> retrieved submodule.1  (git+file://${BASEDIR}/use-submodule)
-[ERROR] The compilation of submodule.1 failed at "ls vendor/some-file".
+[ERROR] Could not synchronize ${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1 from "git+file://${BASEDIR}/use-submodule":
+        "git submodule update --init --recursive" exited with code 1
+[ERROR] Failed to get sources of submodule.1: git+file://${BASEDIR}/use-submodule
 
-##% output ###
-# ls: cannot access 'vendor/some-file': No such file or directory
-
+OpamSolution.Fetch_fail("git+file://${BASEDIR}/use-submodule")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 +- The following actions failed
-| - build submodule 1
+| - fetch submodule 1
 +- 
 - No changes have been performed
-# Return code 31 #
+# Return code 40 #
