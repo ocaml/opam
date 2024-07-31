@@ -214,7 +214,19 @@ module VCS : OpamVCS.VCS = struct
                    @ List.map OpamFilename.SubPath.to_string
                      (Option.to_list subpath))
     @@> function
-    | { OpamProcess.r_code = 0; _ } -> Done true
+    | { OpamProcess.r_code = 0; _ } ->
+      git repo_root ["submodule"; "status"; "--recursive"] @@> fun r ->
+      if r.r_code = 0 &&
+         (* NOTE: We check the first character of each lines of the output
+            to verify that every submodules are in their expected state.
+            The git submodule manual states:
+            Each SHA-1 will possibly be prefixed with - if the submodule is
+            not initialized, + if the currently checked out submodule commit
+            does not match the SHA-1 found in the index of the containing
+            repository and U if the submodule has merge conflicts. *)
+         List.for_all (fun s -> String.length s > 0 && s.[0] = ' ') r.r_stdout
+      then Done true
+      else (OpamProcess.cleanup ~force:true r; Done false)
     | { OpamProcess.r_code = 1; _ } as r ->
       OpamProcess.cleanup ~force:true r; Done false
     | r -> OpamSystem.process_error r
