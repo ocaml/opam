@@ -802,11 +802,10 @@ The following actions will be performed:
 Done.
 ### opam show nip-fo --field=version
 dev2
-### rm -r REPO/packages
 ### :::::::::::::::::::::::
 ### :X: --current
 ### :::::::::::::::::::::::
-### opam switch create pinning --empty
+### opam switch create current --empty
 ### opam pin --current foo
 [ERROR] foo is not installed, invalid flag `--current'
 # Return code 2 #
@@ -840,49 +839,63 @@ Nothing to do.
 Now run 'opam upgrade' to apply any package updates.
 ### opam list --available --repo=default
 # Packages matching: from-repository(default) & available
-# No matches found
+# Name  # Installed # Synopsis
+nip     --
+nip-v   --
+nip2    --
+nip3    --
+no-url  --
+no-url2 --
 ### opam list -A
 # Packages matching: any
-# Name # Installed # Synopsis
-foo    1
+# Name  # Installed # Synopsis
+foo     1
+nip     --
+nip-v   --
+nip2    --
+nip3    --
+no-url  --
+no-url2 --
 ### opam pin --current foo
 foo is now pinned locally (version 1)
 ### :::::::::::::::::::::::
 ### :XI: special cases
 ### :::::::::::::::::::::::
 ### :XI:a: check no repin in case of double 'install .' :
-### <pin:nip/nip.opam>
+### opam switch create repin --empty
+### <pin:nip-local/nip-local.opam>
 opam-version: "2.0"
-### opam install ./nip
-Package nip does not exist, create as a NEW package? [y/n] y
-nip is now pinned to file://${BASEDIR}/nip (version dev)
+### opam install ./nip-local
+Package nip-local does not exist, create as a NEW package? [y/n] y
+nip-local is now pinned to file://${BASEDIR}/nip-local (version dev)
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  - install nip-local dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved nip.dev  (file://${BASEDIR}/nip)
--> installed nip.dev
+-> retrieved nip-local.dev  (file://${BASEDIR}/nip-local)
+-> installed nip-local.dev
 Done.
-### opam remove nip
+### opam remove nip-local
 The following actions will be performed:
 === remove 1 package
-  - remove nip dev (pinned)
+  - remove nip-local dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   nip.dev
+-> removed   nip-local.dev
 Done.
-### opam install ./nip
-[nip.dev] synchronised (no changes)
+### opam install ./nip-local
+[nip-local.dev] synchronised (no changes)
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  - install nip-local dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved nip.dev  (file://${BASEDIR}/nip)
--> installed nip.dev
+-> retrieved nip-local.dev  (file://${BASEDIR}/nip-local)
+-> installed nip-local.dev
 Done.
 ### :XI:b: depext update :
+### opam switch create depexts --empty
 ### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
 ### opam var --global os-family=dummy-success
 Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
@@ -984,24 +997,100 @@ echo "another-inexistant" "inexistant"
 -> installed bar.dev
 Done.
 ### :XI:c: Test opam pin remove <pkg>.<version>
-### opam pin remove --no-action bar.dev
-Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
+### opam switch create removal --empty
+### opam pin ./nip --no-action
+nip is now pinned to file://${BASEDIR}/nip (version ved)
+### opam pin remove --no-action nip.dev
+[ERROR] nip is pinned but not to version dev. Skipping.
+# Return code 2 #
+### opam pin ./nip --no-action
+[NOTE] Package nip is already pinned to file://${BASEDIR}/nip (version ved).
+nip is now pinned to file://${BASEDIR}/nip (version ved)
 ### opam pin remove --no-action nip.wrong-version
 [ERROR] nip is pinned but not to version wrong-version. Skipping.
 # Return code 2 #
+### opam pin remove --no-action nip2.dev
+[NOTE] nip2 is not pinned.
 ### :XI:d: Test opam pin remove --all
-### OPAMNODEPEXTS=1
-### opam pin add --no-action bar.dev ./bar
+### opam switch create removals --empty
+### opam option --switch removals 'depext-bypass=["inexistant" "another-inexistant"]'
+Set to '["inexistant" "another-inexistant"]' the field depext-bypass in switch removals
+### opam pin add bar.dev ./bar
+Package bar does not exist, create as a NEW package? [y/n] y
 [bar.dev] synchronised (file://${BASEDIR}/bar)
+The following additional pinnings are required by bar.dev:
+  - qux.dev at file://${BASEDIR}/qux
+Pin and install them? [y/n] y
+Package qux does not exist, create as a NEW package? [y/n] y
+[qux.dev] synchronised (no changes)
+qux is now pinned to file://${BASEDIR}/qux (version dev)
 bar is now pinned to file://${BASEDIR}/bar (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install bar dev (pinned)
+  - install qux dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved bar.dev  (file://${BASEDIR}/bar)
+-> retrieved qux.dev  (file://${BASEDIR}/qux)
+-> installed qux.dev
+-> installed bar.dev
+Done.
+### <pkg:foo.1>
+opam-version: "2.0"
+### opam install foo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### rm -r REPO/packages/foo
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+
+<><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
+[bar.dev] synchronised (no changes)
+[qux.dev] synchronised (no changes)
+Now run 'opam upgrade' to apply any package updates.
+### opam pin --current foo
+foo is now pinned locally (version 1)
+### opam pin add ./nip-path
+Package nip-path does not exist, create as a NEW package? [y/n] y
+nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path.ved
+Done.
+### opam pin add nip --dev
+[nip.1] synchronised (file://${BASEDIR}/nip)
+nip is now pinned to file://${BASEDIR}/nip (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip.ved
+Done.
 ### opam pin
-bar.dev    rsync             file://${BASEDIR}/bar
-foo.1      local definition
-nip.dev    rsync             file://${BASEDIR}/nip
-qux.dev    rsync             file://${BASEDIR}/qux
+bar.dev         rsync             file://${BASEDIR}/bar
+foo.1           local definition
+nip.ved         rsync             file://${BASEDIR}/nip
+nip-path.ved    rsync             file://${BASEDIR}/nip-path
+qux.dev         rsync             file://${BASEDIR}/qux
 ### opam pin remove --no-action --all
 Ok, qux is no longer pinned to file://${BASEDIR}/qux (version dev)
-Ok, nip is no longer pinned to file://${BASEDIR}/nip (version dev)
+Ok, nip-path is no longer pinned to file://${BASEDIR}/nip-path (version ved)
+Ok, nip is no longer pinned to file://${BASEDIR}/nip (version ved)
 Ok, foo is no longer pinned locally (version 1)
 Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
 ### opam pin
@@ -1043,13 +1132,14 @@ The following actions will be performed:
 Done.
 ### opam pin
 ### :XI:e: Error retrieving git pin :
+### opam switch create git-error --empty
 ### mkdir pin-empty
 ### git -C pin-empty init -q --initial-branch=master
 ### git -C pin-empty config core.autocrlf false
 ### <pin:pin-empty/opam>
 opam-version: "2.0"
 ### opam pin --no-action ./pin-empty
-[ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#master":
+[ERROR] Could not synchronize ${BASEDIR}/OPAM/git-error/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#master":
         Git repository seems just initialized, try again after your first commit
 Could not retrieve some package sources, they will not be pinned nor installed:
   - pin-empty:git+file://${BASEDIR}/pin-empty#master
@@ -1064,7 +1154,7 @@ pin-empty is now pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
 ### opam unpin pin-empty
 Ok, pin-empty is no longer pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
 ### opam pin --no-action ./pin-empty#inexistant
-[ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#inexistant":
+[ERROR] Could not synchronize ${BASEDIR}/OPAM/git-error/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#inexistant":
         Branch inexistant not found
 Could not retrieve some package sources, they will not be pinned nor installed:
   - pin-empty:git+file://${BASEDIR}/pin-empty#inexistant
