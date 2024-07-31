@@ -88,6 +88,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * Check the status of git submodules when checking if a repository is up-to-date [#6132 @kit-ty-kate]
 
 ## Build
   * Update the dependency constraint on `patch` to now require its stable version [#6663 @kit-ty-kate]

@@ -81,25 +81,26 @@ The following actions will be performed:
   - install submodule 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved submodule.1  (no changes)
-[ERROR] The compilation of submodule.1 failed at "cat vendor/some-file".
-
-##% output ###
-# cat: vendor/some-file: No such file or directory
-
-
-
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - build submodule 1
-+- 
-- No changes have been performed
-# Return code 31 #
+-> retrieved submodule.1  (git+file://${BASEDIR}/use-submodule)
+-> installed submodule.1
+Done.
 ### : Simulate corruption / --working-dir
 ### <OPAM/submodule/.opam-switch/sources/submodule.1/vendor/some-file>
 changed content
 ### opam update --dev
-### opam reinstall -v submodule
-submodule is not installed. Install it? [Y/n] n
-'${OPAM} reinstall -v submodule' failed.
-# Return code 10 #
+[NOTE] submodule.1 has previously been updated with --working-dir, not resetting unless explicitly selected
+### opam reinstall -v submodule | sed-cmd cat
+The following actions will be performed:
+=== recompile 1 package
+  - recompile submodule 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/4: [submodule.1: git]
+-> retrieved submodule.1  (git+file://${BASEDIR}/use-submodule)
+Processing  2/4: [submodule: cat]
++ cat "vendor/some-file" (CWD=${BASEDIR}/OPAM/submodule/.opam-switch/build/submodule.1)
+- changed content
+-> compiled  submodule.1
+-> removed   submodule.1
+-> installed submodule.1
+Done.
