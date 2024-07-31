@@ -179,9 +179,7 @@ module VCS : OpamVCS.VCS = struct
       if OpamFilename.exists (repo_root // ".gitmodules") then
         git repo_root [ "submodule"; "update"; "--init"; "--recursive" ]
         @@> fun r ->
-        if OpamProcess.is_failure r then
-          OpamConsole.warning "Git submodule update failed in %s"
-            (OpamFilename.Dir.to_string repo_root);
+        OpamSystem.raise_on_process_error r;
         Done ()
       else Done ()
 
