@@ -13,8 +13,8 @@ git=""
 if [ $# -eq 2 ]; then
   git=$2
 fi
-mkdir -p $n
-cat << EOF > $n/$n.opam
+mkdir -p "$n"
+cat << EOF > "$n/$n.opam"
 opam-version:"2.0"
 version: "$v"
 build: [ "test" "-f" "%{name}%.%{version}%.t" ]
@@ -28,15 +28,15 @@ license: "MIT"
 dev-repo: "hg+https://pkg@op.am"
 bug-reports: "https://nobug"
 EOF
-cat << EOF > $n/$n.install
+cat << EOF > "$n/$n.install"
 lib: ["$nv.t"]
 EOF
-echo piou >> $n/$nv.t
+echo piou >> "$n/$nv.t"
 if [ "x$git" = "xgit" ]; then
-  test -d $n/.git || git -C ./$n init -q --initial-branch=master
-  git -C ./$n config core.autocrlf false
-  git -C ./$n add $n.opam $nv.t $n.install
-  git -C ./$n commit -qm "add $nv package"
+  test -d "$n/.git" || git -C "./$n" init -q --initial-branch=master
+  git -C "./$n" config core.autocrlf false
+  git -C "./$n" add "$n.opam" "$nv.t" "$n.install"
+  git -C "./$n" commit -qm "add $nv package"
 fi
 ### # local dir with git
 ### sh add-pin.sh nip-git git
@@ -50,14 +50,14 @@ fi
 ### sh add-pin.sh nip-path4
 ### # repo
 ### <add-repo.sh>
-for nv in $@ ; do
+for nv in "$@" ; do
   n=${nv%.*}
   pre=REPO/packages/$n/$nv
-  mkdir -p $pre/files
-  echo piou >> $nv.t
-  tar czf $nv.tgz $nv.t
-  MD5=$(openssl md5 $nv.tgz | cut -d' ' -f2)
-  cat << EOF > $pre/opam
+  mkdir -p "$pre/files"
+  echo piou >> "$nv.t"
+  tar czf "$nv.tgz" "$nv.t"
+  MD5=$(openssl md5 "$nv.tgz" | cut -d' ' -f2)
+  cat << EOF > "$pre/opam"
 opam-version:"2.0"
 build: [ "test" "-f" "%{name}%.%{version}%.t" ]
 dev-repo: "file://$BASEDIR/$n"
