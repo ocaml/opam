@@ -106,6 +106,7 @@ users)
 ## Reftests
 ### Tests
   * Move pin test to pin-legacy [#6135 @rjbou]
+  * More exhaustive test for pin command: test different behaviour and cli options [#6135 @rjbou]
 
 ### Engine
 
