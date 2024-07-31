@@ -2274,21 +2274,34 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
         (OpamSolution.install_depexts ~force_depext:true ~confirm:false t
            (OpamSolver.all_packages solution)), None
       else
-      let add_roots =
-        OpamStd.Option.map (function
-            | true ->
-              OpamPackage.Name.Set.union requested @@
-              OpamPackage.Name.Set.of_list (List.rev_map fst deps_atoms)
-            | false -> OpamPackage.Name.Set.empty)
-          add_to_roots
-      in
-      let t, res =
-        OpamSolution.apply ?ask t
-          ~requested:packages
-          ~print_requested:(print_requested requested formula)
-          ?add_roots ~skip
-          ~download_only ~assume_built solution in
-      t, Some (Success res)
+        let add_roots =
+          match add_to_roots, deps_only with
+          | (Some true | None), true ->
+            let pkgs_solution = OpamSolver.all_packages solution in
+            let requested_deps =
+              OpamPackage.Set.fold (fun nv acc ->
+                  OpamFormula.Or
+                    (OpamPackageVar.all_depends t (OpamSwitchState.opam t nv)
+                       ~depopts:false ~build:true ~post:false,
+                     acc))
+                (OpamPackage.packages_of_names pkgs_solution requested)
+                (* solution contains 'deps-to-xxx' virtual packages
+                   and requested is deps-to-xxx packages *)
+                OpamFormula.Empty
+            in
+            Some (OpamPackage.names_of_packages
+                    (OpamFormula.packages pkgs_solution requested_deps))
+          | Some true, false -> Some requested
+          | Some false, _ -> Some OpamPackage.Name.Set.empty
+          | None, false -> None
+        in
+        let t, res =
+          OpamSolution.apply ?ask t
+            ~requested:packages
+            ~print_requested:(print_requested requested formula)
+            ?add_roots ~skip
+            ~download_only ~assume_built solution in
+        t, Some (Success res)
   in
   OpamStd.Option.iter (OpamSolution.check_solution t) solution;
   t
