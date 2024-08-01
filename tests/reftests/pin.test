@@ -187,7 +187,7 @@ nip-path3.ved    rsync    file://${BASEDIR}/nip-path3
 nip-v.2          version  2
 nip2.ved         rsync    file://${BASEDIR}/nip2
 no-url.ved       rsync    file://${BASEDIR}/no-url
-### find OPAM/targets/lib/ -name '*.t' | sort
+### find OPAM/targets/lib -name '*.t' | sort
 OPAM/targets/lib/nip-git/nip-git.ved.t
 OPAM/targets/lib/nip-git2/nip-git2.ved.t
 OPAM/targets/lib/nip-path/nip-path.ved.t
@@ -236,9 +236,9 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed nip-git2.ved
 Done.
-### opam pin add ./nip-path2 --kind git
-[ERROR] Command "/usr/bin/git ls-files" failed:
-"/usr/bin/git ls-files" exited with code 128
+### opam pin add ./nip-path2 --kind git | sed-cmd git | "128.*" -> "128"
+[ERROR] Command "git ls-files" failed:
+"git ls-files" exited with code 128
 # Return code 99 #
 ### : auto
 ### opam pin add ./nip-git3 --kind auto
@@ -337,7 +337,7 @@ nip-path.ved                  rsync             file://${BASEDIR}/nip-path
 nip-path3.ved                 rsync             file://${BASEDIR}/nip-path3
 no-url.1       (uninstalled)  local definition
 no-url2.1      (uninstalled)  local definition
-### find OPAM/kinds/lib/ -name '*.t' | sort
+### find OPAM/kinds/lib -name '*.t' | sort
 OPAM/kinds/lib/nip-git/nip-git.ved.t
 OPAM/kinds/lib/nip-git2/nip-git2.ved.t
 OPAM/kinds/lib/nip-git3/nip-git3.ved.t
@@ -408,21 +408,11 @@ nip-git.ved      git    git+file://${BASEDIR}/nip-git#master
 nip-git2.ved     rsync  file://${BASEDIR}/nip-git2
 nip-path.ved     rsync  file://${BASEDIR}/nip-path
 nip-path2.ved    rsync  file://${BASEDIR}/nip-path2
-### find OPAM/kinds/lib/ -name '*.t' | sort
-OPAM/kinds/lib/nip-git/nip-git.ved.t
-OPAM/kinds/lib/nip-git2/nip-git2.ved.t
-OPAM/kinds/lib/nip-git3/nip-git3.ved.t
-OPAM/kinds/lib/nip-path/nip-path.ved.t
-OPAM/kinds/lib/nip-path3/nip-path3.ved.t
-OPAM/kinds/lib/nip/nip.1.t
-### # absence of virtual ones
-### ls OPAM/kinds/.opam-switch/sources | sort
-nip
-nip-git
-nip-git2
-nip-git3
-nip-path
-nip-path3
+### find OPAM/env-kinds/lib -name '*.t' | sort
+OPAM/env-kinds/lib/nip-git/nip-git.ved.t
+OPAM/env-kinds/lib/nip-git2/nip-git2.ved.t
+OPAM/env-kinds/lib/nip-path/nip-path.ved.t
+OPAM/env-kinds/lib/nip-path2/nip-path2.ved.t
 ### OPAMPINKINDAUTO=1
 ### :::::::::::::::::::::::
 ### :III: Actions
@@ -462,7 +452,7 @@ nip-path2 ved         pinned to version ved at file://${BASEDIR}/nip-path2
 nip-git4.ved   (uninstalled)  git    git+file://${BASEDIR}/nip-git4#master
 nip-path.ved                  rsync  file://${BASEDIR}/nip-path
 nip-path2.ved                 rsync  file://${BASEDIR}/nip-path2
-### find OPAM/actions/lib/ -name '*.t' | sort
+### find OPAM/actions/lib -name '*.t' | sort
 OPAM/actions/lib/nip-path/nip-path.ved.t
 OPAM/actions/lib/nip-path2/nip-path2.ved.t
 ### opam pin remove ./nip-git4
@@ -483,7 +473,7 @@ Done.
 # Name   # Installed # Synopsis
 nip-path ved         A word
 ### opam pin list
-### find OPAM/actions/lib/ -name '*.t' | sort
+### find OPAM/actions/lib -name '*.t' | sort
 OPAM/actions/lib/nip-path/nip-path.ved.t
 ### :::::::::::::::::::::::
 ### :IV: pin --recursive and --subpath are in rec-pin.test
@@ -629,7 +619,7 @@ nip-git2.ved     rsync  file://${BASEDIR}/lot_of_pkgs
 nip-git3.ved     rsync  file://${BASEDIR}/lot_of_pkgs
 nip-path2.ved    rsync  file://${BASEDIR}/lot_of_pkgs
 nip-path3.ved    rsync  file://${BASEDIR}/lot_of_pkgs
-### find OPAM/scans/lib/ -name '*.t' | sort
+### find OPAM/scans/lib -name '*.t' | sort
 OPAM/scans/lib/nip-git2/nip-git2.ved.t
 OPAM/scans/lib/nip-git3/nip-git3.ved.t
 OPAM/scans/lib/nip-path2/nip-path2.ved.t
@@ -670,7 +660,7 @@ nip is now pinned to file://${BASEDIR}/nip.1.tgz (version 42)
 nip.42       (uninstalled)  rsync  file://${BASEDIR}/nip.1.tgz
 nip-path.42                 rsync  file://${BASEDIR}/nip-path
 nip-v.2      (uninstalled)  rsync  file://${BASEDIR}/nip-v.1.tgz
-### find OPAM/versions/lib/ -name '*.t' | sort
+### find OPAM/versions/lib -name '*.t' | sort
 OPAM/versions/lib/nip-path/nip-path.ved.t
 ### :::::::::::::::::::::::
 ### :VII: Linting
