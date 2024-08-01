@@ -199,6 +199,7 @@ OPAM/targets/lib/no-url/no-url.ved.t
 ### :::::::::::::::::::::::
 ### :II: Pin kinds
 ### :::::::::::::::::::::::
+### :II:1: -kind option
 ### opam switch create kinds --empty
 ### : path
 ### opam pin add ./nip-git --kind path
@@ -351,6 +352,78 @@ nip-git2
 nip-git3
 nip-path
 nip-path3
+### :II:1: OPAMPINKINDAUTO environment variable
+### opam switch create env-kinds --empty
+### : auto
+### OPAMPINKINDAUTO=1
+### opam pin add ./nip-git
+Package nip-git does not exist, create as a NEW package? [y/n] y
+nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-git.ved
+Done.
+### opam pin add ./nip-path
+Package nip-path does not exist, create as a NEW package? [y/n] y
+nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path.ved
+Done.
+### : disable auto
+### OPAMPINKINDAUTO=0
+### opam pin add ./nip-git2
+Package nip-git2 does not exist, create as a NEW package? [y/n] y
+nip-git2 is now pinned to file://${BASEDIR}/nip-git2 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-git2.ved
+Done.
+### opam pin add ./nip-path2
+Package nip-path2 does not exist, create as a NEW package? [y/n] y
+nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path2.ved
+Done.
+### : list
+### opam pin list
+nip-git.ved      git    git+file://${BASEDIR}/nip-git#master
+nip-git2.ved     rsync  file://${BASEDIR}/nip-git2
+nip-path.ved     rsync  file://${BASEDIR}/nip-path
+nip-path2.ved    rsync  file://${BASEDIR}/nip-path2
+### find OPAM/kinds/lib/ -name '*.t' | sort
+OPAM/kinds/lib/nip-git/nip-git.ved.t
+OPAM/kinds/lib/nip-git2/nip-git2.ved.t
+OPAM/kinds/lib/nip-git3/nip-git3.ved.t
+OPAM/kinds/lib/nip-path/nip-path.ved.t
+OPAM/kinds/lib/nip-path3/nip-path3.ved.t
+OPAM/kinds/lib/nip/nip.1.t
+### # absence of virtual ones
+### ls OPAM/kinds/.opam-switch/sources | sort
+nip
+nip-git
+nip-git2
+nip-git3
+nip-path
+nip-path3
+### OPAMPINKINDAUTO=1
 ### :::::::::::::::::::::::
 ### :III: Actions
 ### :::::::::::::::::::::::
