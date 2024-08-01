@@ -66,10 +66,10 @@ url {
   checksum: "md5=$MD5"
 }
 EOF
-  cat << EOF > $pre/files/$n.install
+  cat << EOF > "$pre/files/$n.install"
 lib: ["$nv.t"]
 EOF
-  sh add-pin.sh $n
+  sh add-pin.sh "$n"
 done
 ### sh add-repo.sh nip-v.1 nip-v.2 nip-v.3
 ### sh add-repo.sh nip.1 nip2.1 nip3.1
