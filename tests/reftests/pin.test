@@ -1,9 +1,9 @@
 N0REP0
 ### OPAMYES=1
 ### <add-pin.sh>
-nv=$1
-n=${nv%.*}
-v=${nv#*.}
+nv="$1"
+n="${nv%.*}"
+v="${nv#*.}"
 if [ "x$n" = "x$nv" ]; then
   nv=$n
   v=ved
