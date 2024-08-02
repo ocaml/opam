@@ -171,6 +171,7 @@ users)
   * Add a package fetching test [#6146 @rjbou]
   * Add a test showing the behaviour of `opam switch list-available` [#6098 @kit-ty-kate]
   * Add a test for git packages with submodules [#6132 @kit-ty-kate]
+  * Add basic test for `install --check` [#6122 @rjbou]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]

@@ -1,5 +1,138 @@
 N0REP0
+### OPAMYES=1
+### <pkg:foo.1>
+opam-version: "2.0"
+### <pkg:bar.1>
+opam-version: "2.0"
+depends: "foo"
+### <pkg:baz.1>
+opam-version: "2.0"
+depends: "bar"
+### <pkg:qux.1>
+opam-version: "2.0"
+depends: "foo"
+### <pkg:corge.1>
+opam-version: "2.0"
+depends: "qux"
+### <pkg:grault.1>
+opam-version: "2.0"
+### <pkg:garply.1>
+opam-version: "2.0"
+### opam switch create check --empty
+### opam install --check baz
+Missing dependencies:
+bar
+# Return code 1 #
+### opam install --check baz corge
+Missing dependencies:
+bar qux
+# Return code 1 #
+### opam install --check grault
+All dependencies installed
+### opam install foo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam install --check baz
+Missing dependencies:
+bar
+# Return code 1 #
+### opam install --check baz corge
+Missing dependencies:
+bar qux
+# Return code 1 #
+### opam install --check grault
+All dependencies installed
+### opam install qux
+The following actions will be performed:
+=== install 1 package
+  - install qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed qux.1
+Done.
+### opam install --check baz corge
+Missing dependencies:
+bar
+# Return code 1 #
+### opam install bar
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### opam install --check baz
+All dependencies installed
+### opam install --check baz corge
+All dependencies installed
 ### opam switch create test-switch --empty
+### ::: dependencies disjunction
+### <pkg:top.1>
+opam-version: "2.0"
+depends: [
+  "foo"
+  ("grault" | "garply")
+]
+### opam install --check top
+Missing dependencies:
+foo garply grault
+# Return code 1 #
+### opam install foo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam install --check top
+Missing dependencies:
+garply grault
+# Return code 1 #
+### opam install grault
+The following actions will be performed:
+=== install 1 package
+  - install grault 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed grault.1
+Done.
+### opam install --check top
+All dependencies installed
+### opam remove grault
+The following actions will be performed:
+=== remove 1 package
+  - remove grault 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   grault.1
+Done.
+### opam install garply
+The following actions will be performed:
+=== install 1 package
+  - install garply 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed garply.1
+Done.
+### opam install --check top
+All dependencies installed
+### opam install grault
+The following actions will be performed:
+=== install 1 package
+  - install grault 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed grault.1
+Done.
+### opam install --check top
+All dependencies installed
 ### ::: check that --check works correctly with non-registered packages
 ### <pkg:test.1>
 opam-version: "2.0"
