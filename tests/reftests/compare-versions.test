@@ -5,9 +5,16 @@ N0REP0
 1.2.3 > 1.2.3~preview
 ### opam admin compare-versions 0.1.0 0.01.0
 0.1.0 = 0.01.0
+### opam admin compare-versions 0.1.0 0.01.0 --assert '='
 ### opam admin compare-versions 0.0.9 0.0.10 --assert '<'
 ### opam admin compare-versions 0.0.9 0.0.10 --assert '<='
+### opam admin compare-versions 1.2.3 1.2.3~preview --assert '>'
+### opam admin compare-versions 1.2.3 1.2.3~preview --assert '>='
 ### opam admin compare-versions 0.0.9 0.0.10 --assert '='
+# Return code 1 #
+### opam admin compare-versions 1.2.3 1.2.3~preview --assert '<'
+# Return code 1 #
+### opam admin compare-versions 1.2.3-option 1.2.3 --assert '<='
 # Return code 1 #
 ### opam admin compare-versions 0.0.9 0.0.10 --assert '>'
 # Return code 1 #
