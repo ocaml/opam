@@ -135,3 +135,116 @@ The following actions would be performed:
 === install 2 packages
   - install d 1 [required by e]
   - install e 1
+### :::::: Reinstall package that changed, with failing build instruction
+### :::::: It keeps the old packages as is
+### opam switch create recompile-false --empty
+### <pkg:f.1>
+opam-version: "2.0"
+build: "true"
+### <pkg:g.1>
+opam-version: "2.0"
+build: [
+  [ "touch" "%{name}%-true.bin" ]
+  [ "true" ]
+]
+depends: "f"
+### <pkg:g.1:g.install>
+bin: ["g-true.bin"]
+### <pkg:h.1>
+opam-version: "2.0"
+build: [
+  [ "touch" "%{name}%-true.bin" ]
+  [ "true" ]
+]
+depends: "g"
+### <pkg:h.1:h.install>
+bin: ["h-true.bin"]
+### opam install h --yes
+The following actions will be performed:
+=== install 3 packages
+  - install f 1 [required by g]
+  - install g 1 [required by h]
+  - install h 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed f.1
+-> installed g.1
+-> installed h.1
+Done.
+### ls OPAM/recompile-false/.opam-switch/install
+f.changes
+g.changes
+g.install
+h.changes
+h.install
+### ls OPAM/recompile-false/bin | unordered
+g-true.bin
+h-true.bin
+### <pkg:g.1>
+opam-version: "2.0"
+build: [
+  [ "touch" "%{name}%-false.bin" ]
+  [ "false" ]
+]
+depends: "f"
+### <pkg:g.1:g.install>
+bin: ["g-false.bin"]
+### opam reinstall g --yes --cudf=graph
+The following actions will be performed:
+=== recompile 2 packages
+  - recompile g 1
+  - recompile h 1 [uses g]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of g.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build g 1
++- 
+- No changes have been performed
+# Return code 31 #
+### cat graph-actions-explicit.dot
+digraph G {
+  "fetch g.1";
+  "remove g.1";
+  "build g.1";
+  "remove h.1";
+  "install g.1";
+  "fetch h.1";
+  "install h.1";
+  "build h.1";
+  
+  
+  "fetch g.1" -> "remove g.1";
+  "fetch g.1" -> "build g.1";
+  "remove g.1" -> "install g.1";
+  "build g.1" -> "remove g.1";
+  "build g.1" -> "remove h.1";
+  "build g.1" -> "install g.1";
+  "remove h.1" -> "remove g.1";
+  "remove h.1" -> "install h.1";
+  "install g.1" -> "build h.1";
+  "fetch h.1" -> "remove h.1";
+  "fetch h.1" -> "build h.1";
+  "build h.1" -> "install h.1";
+  
+  }
+### opam list
+# Packages matching: installed
+# Name # Installed # Synopsis
+f      1
+g      1
+h      1
+### ls OPAM/recompile-false/.opam-switch/install
+f.changes
+g.changes
+g.install
+h.changes
+h.install
+### ls OPAM/recompile-false/bin | unordered
+g-true.bin
+h-true.bin
