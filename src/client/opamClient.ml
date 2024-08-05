@@ -1946,7 +1946,6 @@ let init
 
 let check_installed ~build ~post t atoms =
   let available = (Lazy.force t.available_packages) in
-  let uninstalled = OpamPackage.Set.Op.(available -- t.installed) in
   let pkgs =
     OpamPackage.to_map
       (OpamFormula.packages_of_atoms available atoms)
@@ -1992,11 +1991,11 @@ let check_installed ~build ~post t atoms =
       | None -> assert false (* version set can't be empty *)
       | Some (pkg, missing_conj) ->
         OpamPackage.Map.add pkg
-          (OpamPackage.names_of_packages
-             (List.fold_left (fun names disj ->
-                  OpamPackage.Set.union names
-                    (OpamFormula.packages_of_atoms uninstalled disj))
-                 OpamPackage.Set.empty missing_conj))
+          (List.fold_left (fun names disj ->
+               List.fold_left (fun names (name, _) ->
+                   OpamPackage.Name.Set.add name names)
+                 names disj)
+              OpamPackage.Name.Set.empty missing_conj)
           map
     ) pkgs OpamPackage.Map.empty
 
