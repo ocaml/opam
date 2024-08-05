@@ -881,7 +881,7 @@ let compare_versions_command cli =
   let version_arg n =
     let doc =
       Arg.info
-        ~docv:"VERSION"
+        ~docv:(Printf.sprintf "VERSION%d" (n+1))
         ~doc:"Package version to compare" []
     in
     Arg.(required & pos n (Arg.some' OpamArg.package_version) None & doc)
@@ -890,15 +890,18 @@ let compare_versions_command cli =
   let doc = compare_versions_command_doc in
   let man = [
     `S Manpage.s_description;
-    `P "This command compares 2 package versions for quick sanity checks, and by default prints the result of the comparison to the console. You may optionally control the exit-code with '--assert=OP'. For example:";
+    `P "This command compares 2 package versions for quick sanity checks, \
+        and by default prints the result of the comparison to the console. \
+        You may optionally control the exit-code with '--assert=OP'. \
+        For example:";
     `Pre "\n\
        \\$ opam admin compare-versions 0.0.9 0.0.10\n\
        0.0.9 < 0.0.10\n\
        \n\
-       \\$ opam admin compare-versions 0.0.9 0.0.10 --assert '<'\n\
+       \\$ opam admin compare-versions 0.0.9 0.0.10 --assert='<'\n\
        [0]\n\
        \n\
-       \\$ opam admin compare-versions 0.0.9 0.0.10 --assert '>='\n\
+       \\$ opam admin compare-versions 0.0.9 0.0.10 --assert='>='\n\
        [1]";
     `S Manpage.s_arguments;
     `S Manpage.s_options;
@@ -907,20 +910,17 @@ let compare_versions_command cli =
   let cmd global_options v1 v2 assert_result () =
     OpamArg.apply_global_options cli global_options;
     let result = OpamPackage.Version.compare v1 v2 in
-    if Option.is_none assert_result then
+    match assert_result with
+    | None ->
       OpamConsole.formatted_msg "%s %s %s\n"
         (OpamPackage.Version.to_string v1)
         (if result < 0 then "<" else if result = 0 then "=" else ">")
-        (OpamPackage.Version.to_string v2);
-    let exit_reason =
-      match assert_result with
-      | None -> `Success
-      | Some op ->
-        if Compare_version_operator.assert_ op result
-        then `Success
-        else `False
-    in
-    OpamStd.Sys.exit_because exit_reason
+        (OpamPackage.Version.to_string v2)
+    | Some op ->
+      OpamStd.Sys.exit_because
+        (if Compare_version_operator.assert_ op result
+         then `Success
+         else `False)
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ version_arg 0 $ version_arg 1 $ assert_result)
