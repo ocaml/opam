@@ -852,7 +852,7 @@ let env_arg cli =
     Arg.(list string) []
 
 let state_selection_arg cli =
-  OpamArg.mk_vflag ~cli ~section:OpamArg.package_selection_section
+  OpamArg.mk_vflag ~cli ~section:OpamArg.order_sensible_selector_section
     OpamListCommand.Available [
     OpamArg.cli_original, OpamListCommand.Any, ["A";"all"],
     "Include all, even uninstalled or unavailable packages";
@@ -938,7 +938,15 @@ let list_command cli =
         opam installation.";
     `S Manpage.s_arguments;
     `S Manpage.s_options;
+    `S OpamArg.order_sensible_selector_section;
+    `P "These options are sensible to the order they are given to the command. \
+        For example: $(b,--available --latests-only) will first list all the \
+        available packages, then choose only the latest packages in that set; \
+        while $(b,--latests-only --available) will first lists all the latest \
+        packages, then only show the ones that are available in that set.";
     `S OpamArg.package_selection_section;
+    `P "These options will always be given to the command in the same order, \
+        regardless of the order they have been given to the command.";
     `S OpamArg.package_listing_section;
   ]
   in

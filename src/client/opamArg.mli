@@ -216,6 +216,7 @@ val lock_suffix: ?section:string -> OpamCLIVersion.Sourced.t -> string Term.t
 
 (** Man section name *)
 val package_selection_section: string
+val order_sensible_selector_section : string
 
 (** Some package selection flags. Default section is âckage seletion one *)
 val post: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t

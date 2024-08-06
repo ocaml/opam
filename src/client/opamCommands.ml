@@ -563,7 +563,15 @@ let list ?(force_search=false) cli =
         extended search capabilities within the packages' metadata, see \
         $(b,opam search).";
     `S Manpage.s_arguments;
+    `S OpamArg.order_sensible_selector_section;
+    `P "These options are sensible to the order they are given to the command. \
+        For example: $(b,--available --latests-only) will first list all the \
+        available packages, then choose only the latest packages in that set; \
+        while $(b,--latests-only --available) will first lists all the latest \
+        packages, then only show the ones that are available in that set.";
     `S selection_docs;
+    `P "These options will always be given to the command in the same order, \
+        regardless of the order they have been given to the command.";
     `S display_docs;
   ] in
   let pattern_list =
@@ -573,7 +581,7 @@ let list ?(force_search=false) cli =
       Arg.string
   in
   let state_selector =
-    mk_vflag_all ~cli ~section:selection_docs [
+    mk_vflag_all ~cli ~section:OpamArg.order_sensible_selector_section [
         cli_original, OpamListCommand.Any, ["A";"all"],
           "Include all, even uninstalled or unavailable packages";
         cli_original, OpamListCommand.Installed, ["i";"installed"],
