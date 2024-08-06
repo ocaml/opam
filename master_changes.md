@@ -188,3 +188,4 @@ users)
 
 ## opam-core
   * `OpamStd.Env`: add `env_string_list` for parsing string list environment variables (comma separated) [#5682 @desumn]
+  * `OpamSystem.read`: Speedup by using `Stdlib.In_channel.input_all` when available [#5896 @kit-ty-kate]
