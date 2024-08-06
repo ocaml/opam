@@ -677,3 +677,11 @@ opam-file                       Missing extra-files field for missing-file for n
 # Packages matching: available
 # Name   # Installed # Synopsis
 no-extra --
+### ::: Test opam admin list --latests-only
+### <packages/no-extra/no-extra.2/opam>
+opam-version: "2.0"
+### opam admin list --short --all-versions
+no-extra.1
+no-extra.2
+### opam admin list --short --all-versions --latests-only
+no-extra.2
