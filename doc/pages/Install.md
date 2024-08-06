@@ -25,6 +25,10 @@ The quickest way to get the latest opam up and working is to run
 ```
 bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
 ```
+or [this script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.ps1) on Windows using PowerShell:
+```
+Invoke-Expression "& { $(Invoke-RestMethod https://raw.githubusercontent.com/ocaml/opam/master/shell/install.ps1) }"
+```
 
 This will simply check your architecture, download and install the proper
 pre-compiled binary, backup your opam data if from an older version, and run
@@ -35,11 +39,11 @@ pre-compiled binary, backup your opam data if from an older version, and run
 and run `sh install.sh`)
 
 We provide pre-compiled binaries for:
-- Linux (amd64, arm64, arm7, i686)
+- Linux (amd64, arm64, ppc64le, s390x, arm7, i686)
 - macOS (amd64, arm64)
 - FreeBSD (amd64)
 - OpenBSD (amd64)
-- We do not at present provide an official Windows distribution of opam, but please see [this separately maintained distribution](https://fdopen.github.io/opam-repository-mingw/)
+- Windows (amd64)
 (other platforms are available using the other methods below)
 
 If you don't like scripts, you can just pick your download
@@ -185,9 +189,6 @@ for Opam usage.
 apt install opam
 ```
 
-#### Windows
-
-Full support for Windows is planned for opam 2.2, and we expect to provide an opam package in [Chocolatey](https://chocolatey.org/) and [winget](https://docs.microsoft.com/en-us/windows/package-manager/). If you'd like to help out, please get in touch!
 #### Guix & Guix System
 
 [![badge](https://repology.org/badge/version-for-repo/gnuguix/opam.svg)](https://repology.org/project/opam/versions)
@@ -211,9 +212,9 @@ You can also download the full archives, including opam dependencies (these
 don't require any extra downloads, just the OCaml compiler -- 4.02.3 or later
 for the latest version):
 
-* [2.1.0](https://github.com/ocaml/opam/releases/download/2.1.0/opam-full-2.1.0.tar.gz)
- - MD5: 24dbfb43515e8edc617485f6c5853802
- - SHA384: ba4d375a1dea73937e8790c45c2fbd3d68ebbb0fddd2fd22af3e682037d50979abeda0c5cf17ffd8cc6a3951ff07242f
+* [2.2.0](https://github.com/ocaml/opam/releases/download/2.2.0/opam-full-2.2.0-2.tar.gz)
+ - MD5: ba94fd83c0e023b0d3c91857f28b8755
+ - SHA384: 365eb949bfe18d0f189b35e620fa854628ab3e962721ee43488865456bf80da0dbba037b8fdb3830abb83f64b7c79106
 
 Follow the instructions in the included
 [`README.md`](https://github.com/ocaml/opam#readme) to get opam built and
