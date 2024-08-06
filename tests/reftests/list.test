@@ -79,3 +79,100 @@ should.1
 shouldnt.1
 top.1
 unrelated.1
+### ::: Test --latests-only together with --depends-on / required-by
+### <pkg:dolor.1>
+opam-version: "2.0"
+### <pkg:dolor.2>
+opam-version: "2.0"
+### <pkg:sit.1>
+opam-version: "2.0"
+### <pkg:sit.2>
+opam-version: "2.0"
+### <pkg:amet.1>
+opam-version: "2.0"
+depends: "dolor"
+### <pkg:amet.2>
+opam-version: "2.0"
+depends: "sit" { = "1" }
+### <pkg:consectetur.1>
+opam-version: "2.0"
+### <pkg:consectetur.2>
+opam-version: "2.0"
+### <pkg:adipiscing.1>
+opam-version: "2.0"
+depends: "amet" { = "1" }
+### <pkg:adipiscing.2>
+opam-version: "2.0"
+depends: "amet" { = "2" }
+### <pkg:elit.1>
+opam-version: "2.0"
+depends: "consectetur"
+### <pkg:elit.2>
+opam-version: "2.0"
+depends: "adipiscing"
+### opam list --depends-on sit --recursive --short --all-versions
+adipiscing.2
+amet.2
+elit.2
+sit.1
+sit.2
+### opam list --latests-only --depends-on sit --recursive --short --all-versions
+adipiscing.2
+amet.2
+elit.2
+sit.2
+### opam list --depends-on sit.1 --recursive --short --all-versions
+adipiscing.2
+amet.2
+elit.2
+sit.1
+### opam list --latests-only --depends-on sit.1 --recursive --short --all-versions
+adipiscing.2
+amet.2
+elit.2
+sit.1
+### opam list --depends-on sit.2 --recursive --short --all-versions
+sit.2
+### opam list --latests-only --depends-on sit.2 --recursive --short --all-versions
+sit.2
+### opam list --required-by elit --recursive --short --all-versions
+adipiscing.1
+adipiscing.2
+amet.1
+amet.2
+consectetur.1
+consectetur.2
+dolor.1
+dolor.2
+elit.1
+elit.2
+sit.1
+### opam list --latests-only --required-by elit --recursive --short --all-versions
+adipiscing.2
+amet.2
+consectetur.2
+dolor.2
+elit.2
+sit.1
+### opam list --required-by elit.1 --recursive --short --all-versions
+consectetur.1
+consectetur.2
+elit.1
+### opam list --latests-only --required-by elit.1 --recursive --short --all-versions
+consectetur.2
+elit.1
+### opam list --required-by elit.2 --recursive --short --all-versions
+adipiscing.1
+adipiscing.2
+amet.1
+amet.2
+dolor.1
+dolor.2
+elit.2
+sit.1
+### opam list --latests-only --required-by elit.2 --recursive --short --all-versions
+adipiscing.2
+amet.2
+dolor.2
+elit.2
+sit.1
