@@ -21,6 +21,7 @@ users)
 
 ## Init
   * Suppress all the Windows menus when running with `opam init -ya` [#6034 @dra27]
+  * Add curl to the list of required cygwin packages to avoid issues with Windows' curl [#6142 @kit-ty-kate - fix #6120]
 
 ## Config report
   * Always list all the repositories regardless of whether or not a switch is currently set [#6116 @kit-ty-kate]
