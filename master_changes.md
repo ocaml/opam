@@ -17,6 +17,7 @@ users)
 ## Plugins
 
 ## Init
+  * Add curl to the list of required cygwin packages to avoid issues with Windows' curl [#6142 @kit-ty-kate - fix #6120]
 
 ## Config report
 
