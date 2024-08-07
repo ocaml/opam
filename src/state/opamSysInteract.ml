@@ -321,50 +321,55 @@ module Cygwin = struct
     let fstab = cygwin_root / "etc" // "fstab" in
     let cygcheck = cygwin_bin // cygcheckexe in
     let local_cygwin_setupexe = cygsetup () in
-    if OpamFilename.exists cygcheck then
-      OpamConsole.warning "Cygwin already installed in root %s"
-        (OpamFilename.Dir.to_string cygwin_root)
-    else
-      (* rjbou: dry run ? there is no dry run on install, from where this
-         function is called *)
-      (OpamProcess.Job.run @@
-       (* download setup.exe *)
-       download_setupexe local_cygwin_setupexe @@+ fun () ->
-       (* launch install *)
-       let args = [
-         "--root"; OpamFilename.Dir.to_string cygwin_root;
-         "--arch"; "x86_64";
-         "--only-site";
-         "--site"; mirror;
-         "--local-package-dir";
-         OpamFilename.Dir.to_string (internal_cygcache ());
-         "--no-admin";
-         "--no-desktop";
-         "--no-replaceonreboot";
-         "--no-shortcuts";
-         "--no-startmenu";
-         "--no-write-registry";
-         "--no-version-check";
-         "--quiet-mode"; "noinput";
-       ] @
-         match packages with
-         | [] -> []
-         | spkgs ->
-           [ "--packages";
-             OpamStd.List.concat_map "," OpamSysPkg.to_string spkgs ]
-       in
-       let args =
-         if Unix.has_symlink () then
-           "--symlink-type" :: "native" :: args
-         else
-           args
-       in
-       OpamSystem.make_command
-         (OpamFilename.to_string local_cygwin_setupexe)
-         args @@> fun r ->
-       OpamSystem.raise_on_process_error r;
-       set_fstab_noacl fstab;
-       Done ())
+    let not_already_installed =
+      if OpamFilename.exists cygcheck then
+        (log "Cygwin already installed in root %s"
+           (OpamFilename.Dir.to_string cygwin_root);
+         false)
+      else
+        true
+    in
+    (* rjbou: dry run ? there is no dry run on install, from where this
+       function is called *)
+    OpamProcess.Job.run @@
+    (* download setup.exe *)
+    download_setupexe local_cygwin_setupexe @@+ fun () ->
+    (* launch install *)
+    let args = [
+      "--root"; OpamFilename.Dir.to_string cygwin_root;
+      "--arch"; "x86_64";
+      "--only-site";
+      "--site"; mirror;
+      "--local-package-dir";
+      OpamFilename.Dir.to_string (internal_cygcache ());
+      "--no-admin";
+      "--no-desktop";
+      "--no-replaceonreboot";
+      "--no-shortcuts";
+      "--no-startmenu";
+      "--no-write-registry";
+      "--no-version-check";
+      "--quiet-mode"; "noinput";
+    ] @
+      match packages with
+      | [] -> []
+      | spkgs ->
+        [ "--packages";
+          OpamStd.List.concat_map "," OpamSysPkg.to_string spkgs ]
+    in
+    let args =
+      if Unix.has_symlink () then
+        "--symlink-type" :: "native" :: args
+      else
+        args
+    in
+    OpamSystem.make_command
+      (OpamFilename.to_string local_cygwin_setupexe)
+      args @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    if not_already_installed then
+      set_fstab_noacl fstab;
+    Done ()
 
   let analysis_cache = Hashtbl.create 17
 
