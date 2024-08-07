@@ -165,6 +165,7 @@ users)
   * Fix pinning instructions in readme [#5946 @rjbou - fix #5945]
   * Add a brief note about version ordering and an OCaml REPL example [#6119 @mbarbin]
   * Update the installation documentation after the release of opam 2.2 [#6138 @kit-ty-kate]
+  * Fix formatting of inline code in `Environment update portability` section [#6141 @shonfeder]
 
 ## Security fixes
 
