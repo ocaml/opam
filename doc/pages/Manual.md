@@ -713,14 +713,14 @@ If a variable is not mentioned in `x-env-path-rewrite`, the separator is assumed
 * `PATH` on Windows uses `;` separator and is `target-quoted`
 
 For example, on Windows:
-- `[FOO false]`: `FOO` won't be translated nor rewritten, and default separator is used if needed
-- `[FOO true]`: `FOO` is rewritten using defaults `;` and `target` with slash rewriting
-  - `FOO = "a:/path/to"` -> FOO=a:\path\to
-- `[FOO ":" "target-quoted"]: `FOO` will be appended using `:` separator, if the added path contains '/' they are transformed into `\`, and if the added path contains a `:`, the added path will be quoted
-  - `FOO += "a/path/to"` -> FOO=a\path\to:R:\previous\path
-  - `FOO += "a:path/to"` -> FOO="a:path\to":R:\previous\path
-- `[FOO ":" "host"]: `FOO` will be appended using `:`, and its path will be translated according to the host translator, i.e. `cygpath <path>`:
-  - `FOO += "A:\path\to"` -> FOO=/cygdrive/a/path/to:/previous/path
+- `[FOO false]`: `FOO` won't be translated nor rewritten, and default separator is used if needed.
+- `[FOO true]`: `FOO` is rewritten using defaults `;` and `target` with slash rewriting. E.g.,
+  - `FOO = "a:/path/to"` -> `FOO=a:\path\to`
+- `[FOO ":" "target-quoted"]`: `FOO` will be appended using `:` separator, if the added path contains `/` they are transformed into `\\`, and if the added path contains a `:`, the added path will be quoted. E.g.,:
+  - `FOO += "a/path/to"` -> `FOO=a\path\to:R:\previous\path`
+  - `FOO += "a:path/to"` -> `FOO="a:path\to":R:\previous\path`
+- `[FOO ":" "host"]`: `FOO` will be appended using `:`, and its path will be translated according to the host translator, i.e. `cygpath <path>`. E.g.,
+  - `FOO += "A:\path\to"` -> `FOO=/cygdrive/a/path/to:/previous/path`
 
 ### URLs
 
