@@ -149,6 +149,7 @@ users)
   * Add reinstall test for delayed removal of packages [#6139 @rjbou]
 
 ### Engine
+  * Clone opam-repository once and use it locally instead of downloading individual commits [#5449 @kit-ty-kate]
 
 ## Github Actions
   * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
