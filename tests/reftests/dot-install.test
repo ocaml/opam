@@ -211,7 +211,7 @@ Not found: ${BASEDIR}/OPAM/inst/.opam-switch/install/dot.changes
   - install lot-of-files ~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/lot-of-files.install.in
-FILE(.config)                   Wrote ${BASEDIR}/OPAM/inst/.opam-switch/config/lot-of-files.config in 0.000s
+FILE(.config)                   Wrote ${BASEDIR}/OPAM/inst/.opam-switch/config/lot-of-files.config atomically in 0.000s
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/fichier -> ${BASEDIR}/OPAM/inst/bin/fichier (755)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/lib/lot-of-files
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/a-file -> ${BASEDIR}/OPAM/inst/lib/lot-of-files/a-file (644)

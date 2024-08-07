@@ -1162,7 +1162,6 @@ end
 
 module type SyntaxFileArg = sig
   val internal: string
-  val atomic: bool
   val format_version: OpamVersion.t
   type t
   val empty: t
@@ -1173,7 +1172,6 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t
 
 module type LineFileArg = sig
   val internal: string
-  val atomic: bool
   type t
   val empty: t
   val pp: (string list list, t) OpamPp.t
