@@ -355,32 +355,39 @@ let pull_tree_t
           label ^ ": Missing checksum, and `--require-checksums` was set."))
     else
       OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
-      let extract url archive =
-        match dirnames with
-        | [_] ->
-          let tmp_archive = OpamFilename.(create tmpdir (basename archive)) in
-          OpamFilename.move ~src:archive ~dst:tmp_archive;
-          extract_archive tmp_archive url
-        | _ -> extract_archive archive url
-      in
-      let pull label checksums remote_urls =
-        match dirnames with
-        | [ label, local_dirname, subpath ] ->
-          pull_from_mirrors label ?full_fetch ?working_dir ?subpath
-            cache_dir local_dirname checksums remote_urls
+      (* We need to check if the url can be an archive or not, to know if it
+         need to be downloaded directly in the source directory [local_dirname]
+         or in temporary one [tmpdir] to extract it in sources directory *)
+      let pull =
+        let label0, destdir, subpath =
+          match dirnames with
+          | [ label, local_dirname, subpath ] ->
+            let need_local_dirname =
+              List.for_all OpamUrl.(fun u ->
+                  match u.backend with
+                  | #version_control -> true
+                  | `http -> false
+                  | `rsync -> local_dir u <> None)
+                remote_urls
+            in
+            Some label,
+            (if need_local_dirname then local_dirname else tmpdir),
+            subpath
+          | _ -> None, tmpdir, None
+        in
+        fun label checksums remote_urls ->
+          pull_from_mirrors (OpamStd.Option.default label label0)
+            ?full_fetch ?working_dir ?subpath cache_dir destdir
+            checksums remote_urls
           @@| fun (url, res) ->
           (OpamUrl.to_string_w_subpath subpath url),
           res
-        | _ ->
-          pull_from_mirrors label ?full_fetch ?working_dir cache_dir tmpdir
-            checksums remote_urls
-          @@| fun (url, res) -> OpamUrl.to_string url, res
       in
       pull label checksums remote_urls
       @@+ function
       | _, Up_to_date None -> Done (Up_to_date "no changes")
       | url, (Up_to_date (Some archive) | Result (Some archive)) ->
-        extract url archive
+        extract_archive archive url
       | url, Result None -> Done (Result url)
       | _, (Not_available _ as na) -> Done na
 

@@ -33,7 +33,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
-+ wget "-t" "3" "-O" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
++ wget "-t" "3" "-O" "${OPAMTMP}/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
 Processing  1/1: [foo.1: extract]
 + tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
 Done.
@@ -48,7 +48,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
-+ curl "--write-out" "%{http_code}\n" "--retry" "3" "--retry-delay" "2" "--user-agent" "opam/current" "-L" "-o" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
++ curl "--write-out" "%{http_code}\n" "--retry" "3" "--retry-delay" "2" "--user-agent" "opam/current" "-L" "-o" "${OPAMTMP}/v1.0.0.tar.gz.part" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
 Processing  1/1: [foo.1: extract]
 + tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
 Done.
@@ -107,10 +107,10 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
-+ curl "--write-out" "%{http_code}\n" "--retry" "3" "--retry-delay" "2" "--user-agent" "opam/current" "-L" "-o" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
-[ERROR] Failed to get sources of foo.1: curl error code ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz]
++ curl "--write-out" "%{http_code}\n" "--retry" "3" "--retry-delay" "2" "--user-agent" "opam/current" "-L" "-o" "${OPAMTMP}/v1.0.0.tar.gz.part" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
+[ERROR] Failed to get sources of foo.1: curl error code ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${OPAMTMP}/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz]
 
-OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: code ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: code ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${OPAMTMP}/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -147,9 +147,159 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
-+ wget "-t" "3" "-O" "${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
++ wget "-t" "3" "-O" "${OPAMTMP}/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
 Processing  1/1: [foo.1: extract]
 + tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
 Done.
 ### opam clean -c
 Clearing cache of downloaded files
+### OPAMVERBOSE=0
+### ::::::::::::::::::::::::::::::::::
+### :II: Copy/moves
+### ::::::::::::::::::::::::::::::::::
+### OPAMDEBUGSECTIONS=SYSTEM
+### :II:1: local
+### :II:1:a: archive
+### tar czf arch.tgz REPO/repo
+### <pkg:foo.1>
+opam-version: "2.0"
+### <mkurl.sh>
+file="REPO/packages/foo/foo.1/opam"
+basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+url="$basedir/arch.tgz"
+echo "url {" >> "$file"
+echo "src:\"$url\"" >> "$file"
+MD5=$(openssl md5 "$url" | cut -d' ' -f2)
+echo "checksum: \"md5=$MD5\"" >> "$file"
+echo "}" >> "$file"
+### sh mkurl.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install foo --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd rsync | sed-cmd tar | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/"
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/1: [foo.1: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/arch.tgz" "${OPAMTMP}"
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5-dir/
+SYSTEM                          copy ${OPAMTMP}/arch.tgz -> ${BASEDIR}/OPAM/download-cache/md5-dir/
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/1: [foo.1: extract]
++ tar "xfz" "${OPAMTMP}/arch.tgz" "-C" "${OPAMTMP}"
+SYSTEM                          copydir ${OPAMTMP}/REPO -> ${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/foo.1
+SYSTEM                          rmdir ${OPAMTMP}
+SYSTEM                          rmdir ${OPAMTMP}
+Done.
+### :II:1:b: git
+### <pin:bar/opam>
+opam-version: "2.0"
+### <bar/a-file>
+content
+### git -C bar init -q --initial-branch=master
+### git -C bar config core.autocrlf false
+### git -C bar add opam a-file
+### git -C bar commit -qm "init"
+### <pkg:bar.1>
+opam-version: "2.0"
+### <mkurl.sh>
+file="REPO/packages/bar/bar.1/opam"
+basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+echo "url {" >> "$file"
+echo "src:\"git+file://$basedir/bar\"" >> "$file"
+echo "}" >> "$file"
+### sh mkurl.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install bar --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd git | grep -v "state-.*.export"
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1
+Processing  1/1: [bar.1: git]
++ git "init" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "config" "--local" "fetch.prune" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "config" "--local" "diff.noprefix" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "config" "--local" "core.autocrlf" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "config" "--local" "core.eol" "lf" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "config" "--local" "color.ui" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "remote" "add" "origin" "file://${BASEDIR}/bar" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "remote" "set-url" "origin" "file://${BASEDIR}/bar" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "fetch" "-q" "file://${BASEDIR}/bar" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "reset" "--hard" "refs/remotes/opam-ref" "--" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
+SYSTEM                          rmdir ${OPAMTMP}
+Done.
+### :II:2: distant
+### :II:2:a: archive
+### <pkg:baz.1>
+opam-version: "2.0"
+url {
+  src: "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
+  checksum: "md5=c9c157af4229fbb45d3f59f0d6d75dbe"
+}
+### opam install baz --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd wget | sed-cmd tar | "${OPAMVERSION}" -> "current" | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/" | grep -v "OPAM[/\\]log"
+The following actions will be performed:
+=== install 1 package
+  - install baz 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/download/.opam-switch/sources/baz.1
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/1: [baz.1: http]
++ wget "-t" "3" "-O" "${OPAMTMP}/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
+SYSTEM                          mv ${OPAMTMP}/v1.0.0.tar.gz.part -> ${OPAMTMP}/v1.0.0.tar.gz
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5-dir/
+SYSTEM                          copy ${OPAMTMP}/v1.0.0.tar.gz -> ${BASEDIR}/OPAM/download-cache/md5-dir/
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/1: [baz.1: extract]
++ tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"
+SYSTEM                          copydir ${OPAMTMP}/get_line-1.0.0 -> ${BASEDIR}/OPAM/download/.opam-switch/sources/baz.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/baz.1
+SYSTEM                          rmdir ${OPAMTMP}
+SYSTEM                          rmdir ${OPAMTMP}
+Done.
+### :II:2:b: git
+### <pkg:qux.1>
+opam-version: "2.0"
+url {
+  src: "git+https://github.com/ocaml-opam/opam-depext"
+}
+### opam install qux --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd git | grep -v "state-.*.export"
+The following actions will be performed:
+=== install 1 package
+  - install qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1
+Processing  1/1: [qux.1: git]
++ git "init" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "config" "--local" "fetch.prune" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "config" "--local" "diff.noprefix" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "config" "--local" "core.autocrlf" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "config" "--local" "core.eol" "lf" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "config" "--local" "color.ui" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "remote" "add" "origin" "https://github.com/ocaml-opam/opam-depext" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/git
++ git "init" "--bare" (CWD=${BASEDIR}/OPAM/download-cache/git)
++ git "remote" "set-url" "origin" "https://github.com/ocaml-opam/opam-depext" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "fetch" "-q" "https://github.com/ocaml-opam/opam-depext" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "push" git "+refs/remotes/opam-ref:refs/remotes/cd8336413a06dcd0c48d3f48df5d1940" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "reset" "--hard" "refs/remotes/opam-ref" "--" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
+SYSTEM                          rmdir ${OPAMTMP}
+Done.
