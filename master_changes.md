@@ -33,6 +33,7 @@ users)
   * Make fetching an archive from cache add missing symlinks [#6068 @kit-ty-kate - fix #6064]
   * [BUG] Fix `opam install --deps-only` set direct dependencies as root packages [#6125 @rjbou]
   * [BUG] Fix `opam install --check pkg` when pkg depends on a non-existing package [#6121 @kit-ty-kate]
+  * Disable shallow clone by default except for opam repositories [#6146 @kit-ty-kate - fix #6145]
 
 ## Build (package)
   * ◈ Add `--verbose-on` option to enable verbose mode on specified package names [#5682 @desumn @rjbou]
@@ -195,6 +196,7 @@ users)
 
 ## opam-repository
  * `OpamRepository.fetch_from_cache`: when an archive is found, add a symlink (or copy) for the ones found in opam file but not in cache [#6068 @kit-ty-kate]
+ * `?full_fetch` is now `true` by default instead of `false` [#6146 @kit-ty-kate - fix #6145]
 
 ## opam-state
  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]
