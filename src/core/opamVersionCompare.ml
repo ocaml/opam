@@ -15,7 +15,6 @@
 let is_digit = function
   | '0'..'9' -> true
   | _ -> false
-;;
 
 (* [skip_while_from i f w m] yields the index of the leftmost character
  * in the string [s], starting from [i], and ending at [m], that does
@@ -23,7 +22,6 @@ let is_digit = function
 let rec skip_while_from i f w m =
   if i = m then i
   else if f w.[i] then skip_while_from (i + 1) f w m else i
-;;
 
 (* splits a version into (epoch,rest), without the separating ':'. The
  * epoch is delimited by the leftmost occurrence of ':' in x, and is ""
@@ -36,7 +34,6 @@ let extract_epoch x =
     in (epoch,rest)
   with
     | Not_found -> ("",x)
-;;
 
 (* splits a version into (prefix,revision). The revision starts on the
  * right-most occurrence of '-', or is empty in case the version does
@@ -49,7 +46,6 @@ let extract_revision x =
     (before,after)
   with
     | Not_found -> (x,"")
-;;
 
 (* character comparison uses a modified character ordering: '~' first,
    then letters, then anything else *)
@@ -64,12 +60,11 @@ let compare_chars c1 c2 = match c1 with
   | _ -> (match c2 with
       | '~'|'a'..'z'|'A'..'Z' -> 1
       | _ -> Char.compare c1 c2)
-;;
 
 (* return the first index of x, starting from xi, of a nun-null
  * character in x.  or (length x) in case x contains only 0's starting
  * from xi on.  *)
-let skip_zeros x xi xl = skip_while_from xi (fun c -> c = '0') x xl;;
+let skip_zeros x xi xl = skip_while_from xi (fun c -> c = '0') x xl
 
 (* compare versions chunks, that is parts of version strings that are
  * epoch, upstream version, or revisision. Alternates string comparison
@@ -142,7 +137,6 @@ let compare_chunks x y =
       let comp = Char.compare x.[xi] y.[yi]
       in if comp = 0 then loop_numerical (xi+1) (yi+1) yn else comp
   in loop_lexical 0 0
-;;
 
 let compare (x : string) (y : string) =
   let normalize_comp_result x = if x=0 then 0 else if x < 0 then -1 else 1
@@ -159,8 +153,6 @@ let compare (x : string) (y : string) =
       let u_comp = compare_chunks u1 u2 in
       if u_comp <> 0 then normalize_comp_result u_comp
       else normalize_comp_result (compare_chunks r1 r2)
-;;
 
 let equal (x : string) (y : string) =
   if x = y then true else (compare x y) = 0
-;;
