@@ -45,8 +45,8 @@ module type S = sig
       [checksum] can be used for retrieval but is NOT checked by this
       function.
 
-      If [full_fetch] is set to true, VCS repository is retrieved with full
-      history (by default, no history).
+      If [full_fetch] is set to false, VCS repository is retrieved with shallow
+      history (by default, full history).
       If [cache_dir] is given, the directory is used by VCS tool as a its cache
       directory.
       If [subpath] is given, only that [subpath] of the url is retrieved. *)

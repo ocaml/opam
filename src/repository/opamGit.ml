@@ -62,7 +62,7 @@ module VCS : OpamVCS.VCS = struct
     | Some h -> "refs/remotes/opam-ref-"^h
     | None -> "refs/remotes/opam-ref"
 
-  let fetch ?(full_fetch = false) ?cache_dir ?subpath repo_root repo_url =
+  let fetch ?(full_fetch = true) ?cache_dir ?subpath repo_root repo_url =
     (match subpath with
      | Some sp ->
        git repo_root [ "config"; "--local"; "core.sparseCheckout"; "true" ]
