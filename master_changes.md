@@ -194,6 +194,7 @@ users)
   * `OpamArg.build_options`: add `--verbose-on` flag [#5682 @desumn @rjbou]
   * `OpamClientConfig.build_options`: add `verbose_on` field [#5682 @desumn]
   * `OpamClientConfig.E`, `OpamArg.environment_variables`: and `OPAMVERBOSEON` support [#5682 @desumn @rjbou]
+  * `OpamListCommand.selector`: Add `NotFlag` selector [#6098 @kit-ty-kate]
 
 ## opam-repository
  * `OpamRepository.fetch_from_cache`: when an archive is found, add a symlink (or copy) for the ones found in opam file but not in cache [#6068 @kit-ty-kate]
