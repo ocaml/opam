@@ -2882,17 +2882,19 @@ let switch cli =
                patt))
           pattlist
       in
-      let formula =
-        let base_formula = List.map (fun f -> OpamFormula.Atom f) filters in
-        if all then
-          base_formula
-        else
-          OpamFormula.Atom (OpamListCommand.NotFlag Pkgflag_AvoidVersion)
-          :: OpamFormula.Atom (OpamListCommand.NotFlag Pkgflag_Deprecated)
-          :: base_formula
+      let all_compilers =
+        OpamListCommand.filter ~base:compilers st
+          (OpamFormula.ands (List.map (fun f -> OpamFormula.Atom f) filters))
       in
       let compilers =
-        OpamListCommand.filter ~base:compilers st (OpamFormula.ands formula)
+        if all then
+          all_compilers
+        else
+          OpamListCommand.filter ~base:all_compilers st
+            (OpamFormula.ands [
+                OpamFormula.Atom (OpamListCommand.NotFlag Pkgflag_AvoidVersion);
+                OpamFormula.Atom (OpamListCommand.NotFlag Pkgflag_Deprecated);
+              ])
       in
       let format =
         if print_short then OpamListCommand.([ Package ])
@@ -2913,7 +2915,7 @@ let switch cli =
            order = `Custom order;
         }
         compilers;
-      if not all then
+      if not all && not (OpamPackage.Set.equal all_compilers compilers) then
         OpamConsole.note
           "Some compilers may have been hidden (e.g. pre-releases). \
            If you want to display them, run: 'opam switch list-available --all'";
