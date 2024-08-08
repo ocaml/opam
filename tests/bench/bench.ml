@@ -94,6 +94,11 @@ let () =
     launch (fmt "%s switch create five --fake ocaml-base-compiler.4.14.0" bin);
     time_cmd ~exit:1 (fmt "%s install --check core.v0.15.0" bin)
   in
+  let time_list_installed_noninstalled_packages =
+    Gc.compact ();
+    launch (fmt "%s switch create six --empty" bin);
+    time_cmd ~exit:0 (fmt "%s list --installed --short --safe --color=never ocp-indent ocp-index merlin" bin)
+  in
   let json = fmt {|{
   "results": [
     {
@@ -138,6 +143,11 @@ let () =
           "name": "opam install --check on a non-installed package",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "opam list --installed on non-installed packages",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -161,6 +171,7 @@ let () =
       time_OpamPackage_Version_compare_100
       time_install_check_installed
       time_install_check_not_installed
+      time_list_installed_noninstalled_packages
       bin_size
   in
   print_endline json
