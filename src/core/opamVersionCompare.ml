@@ -1,5 +1,7 @@
 (******************************************************************************)
-(*  This file is part of the Dose library http://www.irill.org/software/dose  *)
+(*  This file is a modified version of the one found in the Dose library      *)
+(*  See https://gitlab.com/irill/dose3/                                       *)
+(*  The original can be found in src/versioning/debian.ml                     *)
 (*                                                                            *)
 (*  Copyright (C) 2011 Ralf Treinen <ralf.treinen@pps.jussieu.fr>             *)
 (*                                                                            *)
@@ -22,18 +24,6 @@ let is_digit = function
 let rec skip_while_from i f w m =
   if i = m then i
   else if f w.[i] then skip_while_from (i + 1) f w m else i
-
-(* splits a version into (epoch,rest), without the separating ':'. The
- * epoch is delimited by the leftmost occurrence of ':' in x, and is ""
- * in case there is no ':' in x.  *)
-let extract_epoch x =
-  try
-    let ci = String.index x ':' in
-    let epoch = String.sub x 0 ci
-    and rest = String.sub x (ci + 1) (String.length x - ci - 1)
-    in (epoch,rest)
-  with
-    | Not_found -> ("",x)
 
 (* splits a version into (prefix,revision). The revision starts on the
  * right-most occurrence of '-', or is empty in case the version does
@@ -143,16 +133,11 @@ let compare (x : string) (y : string) =
   in
   if x = y then 0
   else
-    let (e1,rest1) = extract_epoch x
-    and (e2,rest2) = extract_epoch y in
-    let e_comp = compare_chunks e1 e2 in
-    if e_comp <> 0 then normalize_comp_result e_comp
-    else
-      let (u1,r1) = extract_revision rest1
-      and (u2,r2) = extract_revision rest2 in
-      let u_comp = compare_chunks u1 u2 in
-      if u_comp <> 0 then normalize_comp_result u_comp
-      else normalize_comp_result (compare_chunks r1 r2)
+    let (u1,r1) = extract_revision x
+    and (u2,r2) = extract_revision y in
+    let u_comp = compare_chunks u1 u2 in
+    if u_comp <> 0 then normalize_comp_result u_comp
+    else normalize_comp_result (compare_chunks r1 r2)
 
 let equal (x : string) (y : string) =
   if x = y then true else (compare x y) = 0
