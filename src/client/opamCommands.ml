@@ -2821,6 +2821,9 @@ let switch cli =
     if d_no_autoinstall then
       OpamConsole.warning "Option %s is deprecated, ignoring it."
         (OpamConsole.colorise `bold "--no-autoinstall");
+    if all && command <> Some `list_available then
+      OpamConsole.warning "Option %s is not used"
+        (OpamConsole.colorise `bold "--all");
     apply_global_options cli global_options;
     apply_build_options cli build_options;
     let invariant_arg ?repos rt args =
