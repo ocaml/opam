@@ -172,6 +172,7 @@ users)
   * Add a brief note about version ordering and an OCaml REPL example [#6119 @mbarbin]
   * Update the installation documentation after the release of opam 2.2 [#6138 @kit-ty-kate]
   * Fix formatting of inline code in `Environment update portability` section [#6141 @shonfeder]
+  * Add some missing environment variable added during a build [#5363 @kit-ty-kate @rjbou]
 
 ## Security fixes
 
