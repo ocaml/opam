@@ -133,6 +133,7 @@ users)
   * Make the benchmark setup process faster and the benchmark itself more stable [#6094 @kit-ty-kate]
   * Add a benchmark showing the current performance of OpamVersionCompare [#6078 @kit-ty-kate]
   * Add a benchmark for `opam install --check` [#6123 @kit-ty-kate]
+  * Add a benchmark for `opam list --installed` on non-installed packages [#6149 @kit-ty-kate]
 
 ## Reftests
 ### Tests
