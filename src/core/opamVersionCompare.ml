@@ -1,5 +1,7 @@
 (******************************************************************************)
-(*  This file is part of the Dose library http://www.irill.org/software/dose  *)
+(*  This file is a modified version of the one found in the Dose library      *)
+(*  See https://gitlab.com/irill/dose3/                                       *)
+(*  The original can be found in src/versioning/debian.ml                     *)
 (*                                                                            *)
 (*  Copyright (C) 2011 Ralf Treinen <ralf.treinen@pps.jussieu.fr>             *)
 (*                                                                            *)
@@ -15,28 +17,13 @@
 let is_digit = function
   | '0'..'9' -> true
   | _ -> false
-;;
 
 (* [skip_while_from i f w m] yields the index of the leftmost character
  * in the string [s], starting from [i], and ending at [m], that does
  * not satisfy the predicate [f], or [length w] if no such index exists.  *)
 let rec skip_while_from i f w m =
-  if i = m then i
+  if (i : int) = m then i
   else if f w.[i] then skip_while_from (i + 1) f w m else i
-;;
-
-(* splits a version into (epoch,rest), without the separating ':'. The
- * epoch is delimited by the leftmost occurrence of ':' in x, and is ""
- * in case there is no ':' in x.  *)
-let extract_epoch x =
-  try
-    let ci = String.index x ':' in
-    let epoch = String.sub x 0 ci
-    and rest = String.sub x (ci + 1) (String.length x - ci - 1)
-    in (epoch,rest)
-  with
-    | Not_found -> ("",x)
-;;
 
 (* splits a version into (prefix,revision). The revision starts on the
  * right-most occurrence of '-', or is empty in case the version does
@@ -49,7 +36,6 @@ let extract_revision x =
     (before,after)
   with
     | Not_found -> (x,"")
-;;
 
 (* character comparison uses a modified character ordering: '~' first,
    then letters, then anything else *)
@@ -64,12 +50,11 @@ let compare_chars c1 c2 = match c1 with
   | _ -> (match c2 with
       | '~'|'a'..'z'|'A'..'Z' -> 1
       | _ -> Char.compare c1 c2)
-;;
 
 (* return the first index of x, starting from xi, of a nun-null
  * character in x.  or (length x) in case x contains only 0's starting
  * from xi on.  *)
-let skip_zeros x xi xl = skip_while_from xi (fun c -> c = '0') x xl;;
+let skip_zeros x xi xl = skip_while_from xi (fun c -> c = '0') x xl
 
 (* compare versions chunks, that is parts of version strings that are
  * epoch, upstream version, or revisision. Alternates string comparison
@@ -80,8 +65,8 @@ let compare_chunks x y =
   and yl = String.length y
   in
   let rec loop_lexical xi yi =
-    assert (xi <= xl && yi <= yl);
-    match (xi=xl,yi=yl) with (* which of x and y is exhausted? *)
+    assert ((xi : int) <= xl && (yi : int) <= yl);
+    match ((xi : int) = xl, (yi : int) = yl) with (* which of x and y is exhausted? *)
       | true,true -> 0
       | true,false ->
         (* if y continues numerically than we have to continue by
@@ -92,10 +77,10 @@ let compare_chunks x y =
          * larger anyway, so we only have to skip 0's in the y part
          * and check whether this exhausts the y part.  *)
         let ys = skip_zeros y yi yl in
-        if ys = yl then 0 else if y.[ys]='~' then 1 else -1
+        if (ys : int) = yl then 0 else if y.[ys]='~' then 1 else -1
       | false,true -> (* symmetric to the preceding case *)
         let xs = skip_zeros x xi xl in
-        if xs = xl then 0 else if x.[xs]='~' then -1 else 1
+        if (xs : int) = xl then 0 else if x.[xs]='~' then -1 else 1
       | false,false -> (* which of x and y continues numerically? *)
         match (is_digit x.[xi], is_digit y.[yi]) with
           | true,true ->
@@ -111,14 +96,14 @@ let compare_chunks x y =
             let comp = compare_chars x.[xi] y.[yi]
             in if comp = 0 then loop_lexical (xi+1) (yi+1) else comp
   and compare_numerical xi yi =
-    assert (xi = xl || (xi < xl && x.[xi] <> '0'));
+    assert ((xi : int) = xl || ((xi : int) < xl && x.[xi] <> '0'));
     (* leading zeros have been stripped *)
-    assert (yi = yl || (yi < yl && y.[yi] <> '0'));
+    assert ((yi : int) = yl || ((yi : int) < yl && y.[yi] <> '0'));
     (* leading zeros have been stripped *)
     let xn = skip_while_from xi is_digit x xl (* length of numerical part *)
     and yn = skip_while_from yi is_digit y yl (* length of numerical part *)
     in
-    let comp = compare (xn-xi) (yn-yi)
+    let comp = Int.compare (xn-xi) (yn-yi)
     in if comp = 0
       then (* both numerical parts have same length: compare digit by digit *)
         loop_numerical xi yi yn
@@ -128,10 +113,10 @@ let compare_chunks x y =
          * to numerical comparison.  *)
         comp
   and loop_numerical xi yi yn =
-    assert (xi <= xl && yi <= yn && yn <= yl);
+    assert ((xi : int) <= xl && (yi : int) <= yn && (yn : int) <= yl);
     (* invariant: the two numerical parts that remain to compare are
        of the same length *)
-    if yi=yn
+    if (yi : int) = yn
     then
       (* both numerical parts are exhausted, we switch to lexical
          comparison *)
@@ -142,25 +127,17 @@ let compare_chunks x y =
       let comp = Char.compare x.[xi] y.[yi]
       in if comp = 0 then loop_numerical (xi+1) (yi+1) yn else comp
   in loop_lexical 0 0
-;;
 
 let compare (x : string) (y : string) =
   let normalize_comp_result x = if x=0 then 0 else if x < 0 then -1 else 1
   in
-  if x = y then 0
+  if (x : string) = y then 0
   else
-    let (e1,rest1) = extract_epoch x
-    and (e2,rest2) = extract_epoch y in
-    let e_comp = compare_chunks e1 e2 in
-    if e_comp <> 0 then normalize_comp_result e_comp
-    else
-      let (u1,r1) = extract_revision rest1
-      and (u2,r2) = extract_revision rest2 in
-      let u_comp = compare_chunks u1 u2 in
-      if u_comp <> 0 then normalize_comp_result u_comp
-      else normalize_comp_result (compare_chunks r1 r2)
-;;
+    let (u1,r1) = extract_revision x
+    and (u2,r2) = extract_revision y in
+    let u_comp = compare_chunks u1 u2 in
+    if u_comp <> 0 then normalize_comp_result u_comp
+    else normalize_comp_result (compare_chunks r1 r2)
 
 let equal (x : string) (y : string) =
-  if x = y then true else (compare x y) = 0
-;;
+  if (x : string) = y then true else (compare x y) = 0

@@ -122,6 +122,7 @@ users)
   * Stop using polymorphic comparison when comparing `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
   * Remove the meta opam packages opam and opam-admin [#6115 @kit-ty-kate]
   * Reduce allocations in OpamVersionCompare [#6144 @talex5]
+  * Speedup OpamVersionCompare by 25% by removing the unused handling of epoch [#5518 @kit-ty-kate]
 
 ## Internal: Windows
 
