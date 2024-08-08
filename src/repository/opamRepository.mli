@@ -43,8 +43,8 @@ val pull_shared_tree:
   url list -> string download OpamProcess.job
 
 (* Same as [pull_shared_tree], but for a unique label/dirname.
-   If [full_fetch] is true, VCS repository is retrieved with full history (by
-   default, no history). *)
+   If [full_fetch] is set to false, VCS repository is retrieved with shallow
+   history (by default, full history). *)
 val pull_tree:
   string -> ?full_fetch:bool -> ?cache_dir:dirname -> ?cache_urls:url list ->
   ?working_dir:bool -> ?subpath:subpath ->

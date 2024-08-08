@@ -132,7 +132,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam source pandore.4 --dir pandore5
 Successfully extracted to ${BASEDIR}/pandore5
 ### git -C pandore5 rev-list --all --count
-1
+2
 ### opam source pandore.4 --dev --dir pandore6
 Successfully fetched pandore development repo to ${BASEDIR}/pandore6
 ### git -C pandore6 rev-list --all --count
