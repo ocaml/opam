@@ -1571,6 +1571,7 @@ let subpath ?section cli =
     Arg.(some subpath_conv) None
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
+let order_sensible_selector_section = "ORDER-SENSIBLE SELECTORS"
 
 let post ?(section=package_selection_section) cli =
   mk_flag ~cli cli_original ["post"]  ~section
