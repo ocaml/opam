@@ -3148,7 +3148,12 @@ let switch cli =
       in
       OpamSwitchAction.install_switch_config gt.root st.switch config;
       `Ok ()
-    | command, params -> bad_subcommand ~cli commands ("switch", command, params)
+    (* NOTE: The explicit pattern ensures there hasn't been any typos in
+       the polymorphic variant *)
+    | ((None | Some (`list | `current | `default _ | `show_invariant)), (_::_ as params))
+    | Some `install, ([] as params)
+    | Some (`import | `export | `set), ((_::_::_ | []) as params) ->
+      bad_subcommand ~cli commands ("switch", command, params)
   in
   mk_command_ret  ~cli cli_original "switch" ~doc ~man
     Term.(const switch
