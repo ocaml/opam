@@ -29,8 +29,8 @@ module type VCS = sig
       Be aware that the remote URL might have been changed, so make sure
       to update accordingly.
 
-      If [full_fetch] is set to true, VCS repository is retrieved with full
-      history (by default, no history).
+      If [full_fetch] is set to false, VCS repository is retrieved with shallow
+      history (by default, full history).
       If [cache_dir] is given, the directory is used by VCS tool as a its cache
       directory.
       If [subpath] is given, only that [subpath] of the url is retrieved. *)

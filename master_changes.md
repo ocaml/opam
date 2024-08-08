@@ -24,6 +24,7 @@ users)
 
 ## Install
   * [BUG] Fix `opam install --deps-only` set direct dependencies as root packages [#6125 @rjbou]
+  * Disable shallow clone by default except for opam repositories [#6146 @kit-ty-kate - fix #6145]
 
 ## Remove
 
@@ -132,6 +133,7 @@ users)
 ## opam-client
 
 ## opam-repository
+ * `?full_fetch` is now `true` by default instead of `false` [#6146 @kit-ty-kate - fix #6145]
 
 ## opam-state
 

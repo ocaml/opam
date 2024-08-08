@@ -87,7 +87,7 @@ Done.
 opam
 root.ml
 ### cat OPAM/downloads-repo/lib/foo-git-hist
-1
+2
 ### :: pinning
 ### opam switch create downloads-pin --empty
 ### opam pin foo-arch-pin arch.tgz -y
@@ -124,7 +124,7 @@ Done.
 opam
 root.ml
 ### cat OPAM/downloads-pin/lib/foo-git-pin-hist
-1
+2
 ### :: dev-repo
 ### opam switch create downloads-devrepo --empty
 ### opam pin foo-git --dev-repo -y
@@ -143,4 +143,4 @@ Done.
 opam
 root.ml
 ### cat OPAM/downloads-devrepo/lib/foo-git-hist
-1
+2
