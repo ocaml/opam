@@ -161,6 +161,10 @@ users)
   * Depexts: set version for conf packages to check [#6079 @rjbou]
   * Depexts: add package to test containing `os-version` in filter [#6079 @rjbou]
   * Depexts: fix opensuse job [#6079 @rjbou]
+  * Use actions/cache instead of our own fork ocaml-opam/cache [#6081 @rjbou]
+  * Update action cache to v4 [#6081 @rjbou]
+  * Update action checkout to v4 [#6081 @rjbou]
+  * Update action upload-artifact to v4 [#6081 @rjbou]
 
 ## Doc
   * Remove the ppa from the installation instructions on Ubuntu [#5988 @kit-ty-kate - fix #5987]

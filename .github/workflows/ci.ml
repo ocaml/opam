@@ -170,20 +170,15 @@ let get_cache name = get_cache_cont name Fun.id
 
 let cache ?cond ?(key_prefix="needs.Analyse") ?(check_only=false) name =
   get_cache_cont name (fun cache ->
-    let action =
-      if cache.force_gzip || check_only then
-        "ocaml-opam/cache@opam"
-      else
-        "actions/cache@v3"
-    in
+    let action = "actions/cache@v4" in
     let withs =
       if cache.force_gzip then
-        [("force-gzip", Literal ["true"])]
+        [("enableCrossOsArchive", Literal ["true"])]
       else
         [] in
     let withs =
       if check_only then
-        ("check-only", Literal ["true"]) :: withs
+        ("lookup-only", Literal ["true"]) :: withs
       else
         withs in
     let withs =
@@ -329,7 +324,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
          ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-windows")))
          ~withs:[ ("name", Literal ["opam-exe-${{ matrix.host }}-${{ matrix.ocamlv }}-${{ matrix.build }}"]);
                   ("path", Literal ["D:\\Local\\bin\\opam.exe"; "D:\\Local\\bin\\opam-installer.exe"; "D:\\Local\\bin\\opam-putenv.exe"]) ]
-         "actions/upload-artifact@v3")
+         "actions/upload-artifact@v4")
     ++ only_on Windows (run "Test (basic - Cygwin)" ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-cygwin"))) ["bash -exu .github/scripts/main/test.sh"])
     ++ only_on Windows (run "Test (basic - native Windows)" ~env:[("OPAMROOT", {|D:\a\opam\opam\.opam|})] ~shell:"cmd" ~cond:(Predicate(false, EndsWith("matrix.host", "-pc-cygwin")))
          ({|set Path=D:\Cache\ocaml-local\bin;%Path%|} ::
