@@ -57,6 +57,7 @@ type selector =
   | Pattern of pattern_selector * string
   | Atoms of atom list
   | Flag of package_flag
+  | NotFlag of package_flag
   | Tag of string
   | From_repository of repository_name list
   | Owns_file of filename

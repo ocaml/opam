@@ -2794,6 +2794,12 @@ let switch cli =
        right away: wait for the next $(i,install), $(i,upgrade) or similar \
        command."
   in
+  let all =
+    mk_flag ~cli (cli_from cli2_3) ["all"]
+      "Only for $(i,list-available): show all available compilers, \
+       regardless of whether they are flagged with $(i,avoid-version) \
+       or $(i,deprecated)."
+  in
   (* Deprecated options *)
   let d_alias_of =
     mk_opt ~cli (cli_between cli2_0 cli2_1)
@@ -2805,7 +2811,7 @@ let switch cli =
   let switch
       global_options build_options command print_short
       no_switch packages formula empty descr full freeze no_install deps_only repos
-      force no_action
+      force no_action all
       d_alias_of d_no_autoinstall params () =
     if d_alias_of <> None then
       OpamConsole.warning
@@ -2815,6 +2821,9 @@ let switch cli =
     if d_no_autoinstall then
       OpamConsole.warning "Option %s is deprecated, ignoring it."
         (OpamConsole.colorise `bold "--no-autoinstall");
+    if all && command <> Some `list_available then
+      OpamConsole.warning "Option %s is not used"
+        (OpamConsole.colorise `bold "--all");
     apply_global_options cli global_options;
     apply_build_options cli build_options;
     let invariant_arg ?repos rt args =
@@ -2873,16 +2882,26 @@ let switch cli =
                patt))
           pattlist
       in
-      let compilers =
+      let all_compilers =
         OpamListCommand.filter ~base:compilers st
           (OpamFormula.ands (List.map (fun f -> OpamFormula.Atom f) filters))
+      in
+      let compilers =
+        if all then
+          all_compilers
+        else
+          OpamListCommand.filter ~base:all_compilers st
+            (OpamFormula.ands [
+                OpamFormula.Atom (OpamListCommand.NotFlag Pkgflag_AvoidVersion);
+                OpamFormula.Atom (OpamListCommand.NotFlag Pkgflag_Deprecated);
+              ])
       in
       let format =
         if print_short then OpamListCommand.([ Package ])
         else OpamListCommand.([ Name; Version; Synopsis; ])
       in
       let order nv1 nv2 =
-        if nv1.version = nv2.version
+        if OpamPackage.Version.equal nv1.version nv2.version
         then OpamPackage.Name.compare nv1.name nv2.name
         else OpamPackage.Version.compare nv1.version nv2.version
       in
@@ -2896,6 +2915,10 @@ let switch cli =
            order = `Custom order;
         }
         compilers;
+      if not all && not (OpamPackage.Set.equal all_compilers compilers) then
+        OpamConsole.note
+          "Some compilers may have been hidden (e.g. pre-releases). \
+           If you want to display them, run: 'opam switch list-available --all'";
       `Ok ()
     | Some `install, switch_arg::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
@@ -3135,7 +3158,12 @@ let switch cli =
       in
       OpamSwitchAction.install_switch_config gt.root st.switch config;
       `Ok ()
-    | command, params -> bad_subcommand ~cli commands ("switch", command, params)
+    (* NOTE: The explicit pattern ensures there hasn't been any typos in
+       the polymorphic variant *)
+    | ((None | Some (`list | `current | `default _ | `show_invariant)), (_::_ as params))
+    | Some `install, ([] as params)
+    | Some (`import | `export | `set), ((_::_::_ | []) as params) ->
+      bad_subcommand ~cli commands ("switch", command, params)
   in
   mk_command_ret  ~cli cli_original "switch" ~doc ~man
     Term.(const switch
@@ -3143,7 +3171,7 @@ let switch cli =
           $print_short_flag cli cli_original
           $no_switch
           $packages $formula $empty $descr $full $freeze $no_install
-          $deps_only $repos $force $no_action $d_alias_of $d_no_autoinstall
+          $deps_only $repos $force $no_action $all $d_alias_of $d_no_autoinstall
           $params)
 
 (* PIN *)

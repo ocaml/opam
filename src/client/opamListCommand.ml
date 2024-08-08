@@ -72,6 +72,7 @@ type selector =
   | Pattern of pattern_selector * string
   | Atoms of atom list
   | Flag of package_flag
+  | NotFlag of package_flag
   | Tag of string
   | From_repository of repository_name list
   | Owns_file of filename
@@ -124,6 +125,9 @@ let string_of_selector =
       (fun a -> OpamFormula.short_string_of_atom a % `bold) atoms
   | Flag fl ->
     Printf.sprintf "%s(%s)" ("has-flag" % `green)
+      (OpamTypesBase.string_of_pkg_flag fl % `bold)
+  | NotFlag fl ->
+    Printf.sprintf "%s(%s)" ("not-has-flag" % `green)
       (OpamTypesBase.string_of_pkg_flag fl % `bold)
   | Tag t ->
     Printf.sprintf "%s(%s)" ("has-tag" % `green) (t % `bold)
@@ -305,6 +309,10 @@ let apply_selector ~base st = function
   | Flag f ->
     OpamPackage.Set.filter (fun nv ->
         get_opam st nv |> OpamFile.OPAM.has_flag f)
+      base
+  | NotFlag f ->
+    OpamPackage.Set.filter (fun nv ->
+        not (get_opam st nv |> OpamFile.OPAM.has_flag f))
       base
   | Tag t ->
     OpamPackage.Set.filter (fun nv ->
