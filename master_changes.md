@@ -33,6 +33,7 @@ users)
   * Make fetching an archive from cache add missing symlinks [#6068 @kit-ty-kate - fix #6064]
   * [BUG] Fix `opam install --deps-only` set direct dependencies as root packages [#6125 @rjbou]
   * [BUG] Fix `opam install --check pkg` when pkg depends on a non-existing package [#6121 @kit-ty-kate]
+  * Make `opam install --check` check if all dependencies are installed recursively [#6122 @kit-ty-kate - fix #6097]
 
 ## Build (package)
   * ◈ Add `--verbose-on` option to enable verbose mode on specified package names [#5682 @desumn @rjbou]
@@ -149,6 +150,7 @@ users)
   * Add a test for --deps-only setting direct dependencies as root packages [#6125 @rjbou]
   * Add a test file for `opam install --check` [#6121 @kit-ty-kate]
   * Add reinstall test for delayed removal of packages [#6139 @rjbou]
+  * Add basic test for `install --check` [#6122 @rjbou]
 
 ### Engine
 

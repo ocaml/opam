@@ -1945,11 +1945,6 @@ let init
   gt, rt, default_compiler
 
 let check_installed ~build ~post t atoms =
-  let available = (Lazy.force t.available_packages) in
-  let pkgs =
-    OpamPackage.to_map
-      (OpamFormula.packages_of_atoms available atoms)
-  in
   let test = OpamStateConfig.(!r.build_test) in
   let doc = OpamStateConfig.(!r.build_doc) in
   let dev_setup = OpamStateConfig.(!r.dev_setup) in
@@ -1962,42 +1957,63 @@ let check_installed ~build ~post t atoms =
     | None -> OpamPackageVar.resolve_switch ~package t var
     | Some _ -> content
   in
-  OpamPackage.Name.Map.fold (fun name versions map ->
-      let compliant, missing_opt =
-        OpamPackage.Version.Set.fold (fun version (found, missing) ->
-            if found then (found, missing)
-            else
-            let pkg = OpamPackage.create name version in
-            let cnf_formula =
-              OpamSwitchState.opam t pkg
-              |> OpamFile.OPAM.depends
-              |> OpamFilter.filter_formula ~default:false (env pkg)
-              |> OpamFormula.to_cnf
-            in
-            let missing_conj =
-              List.filter
-                (List.for_all (fun ((n,_vc) as atom) ->
-                     OpamPackage.Set.for_all
-                       (fun p -> not (OpamFormula.check atom p))
-                       (OpamPackage.packages_of_name t.installed n)))
-                cnf_formula
-            in
-            if missing_conj = [] then true, None
-            else false, Some (pkg,missing_conj))
-          versions (false,None)
-      in
-      if compliant then map else
-      match missing_opt with
-      | None -> assert false (* version set can't be empty *)
-      | Some (pkg, missing_conj) ->
-        OpamPackage.Map.add pkg
-          (List.fold_left (fun names disj ->
-               List.fold_left (fun names (name, _) ->
-                   OpamPackage.Name.Set.add name names)
-                 names disj)
-              OpamPackage.Name.Set.empty missing_conj)
-          map
-    ) pkgs OpamPackage.Map.empty
+  let rec loop map atoms =
+    List.fold_left (fun map atom ->
+        let versions =
+          OpamPackage.Set.fold (fun pkg versions ->
+              if OpamFormula.check atom pkg
+              then OpamPackage.version pkg :: versions
+              else versions)
+            t.packages []
+        in
+        let _found, missing_opt =
+          List.fold_left (fun (found, missing) version ->
+              if found then (found, missing)
+              else
+                let pkg = OpamPackage.create (fst atom) version in
+                let cnf_formula =
+                  OpamSwitchState.opam t pkg
+                  |> OpamFile.OPAM.depends
+                  |> OpamFilter.filter_formula ~default:false (env pkg)
+                  |> OpamFormula.to_cnf
+                in
+                let missing_conj, found_conj =
+                  List.partition
+                    (List.for_all (fun ((n,_vc) as atom) ->
+                         OpamPackage.Set.for_all
+                           (fun p -> not (OpamFormula.check atom p))
+                           (OpamPackage.packages_of_name t.installed n)))
+                    cnf_formula
+                in
+                (missing_conj = [], Some (pkg, missing_conj, found_conj)))
+            (false, None) versions
+        in
+        match missing_opt with
+        | None -> assert false (* version set can't be empty *)
+        | Some (pkg, missing_conj, found_conj) ->
+          let missing_set =
+            List.fold_left (fun names disj ->
+                List.fold_left (fun names (name, _) ->
+                    OpamPackage.Name.Set.add name names)
+                  names disj)
+              OpamPackage.Name.Set.empty missing_conj
+          in
+          let found_atoms =
+            List.fold_left (fun found disj ->
+                List.fold_left (fun atoms atom -> atom :: atoms) found disj)
+              [] found_conj
+          in
+          let new_map =
+            if OpamPackage.Name.Set.is_empty missing_set
+            then map
+            else OpamPackage.Map.add pkg missing_set map
+          in
+          if found_atoms = []
+          then new_map
+          else loop new_map found_atoms
+      ) map atoms
+  in
+  loop OpamPackage.Map.empty atoms
 
 let assume_built_restrictions ?available_packages t atoms =
   let missing = check_installed ~build:false ~post:false t atoms in
