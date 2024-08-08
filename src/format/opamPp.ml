@@ -15,7 +15,7 @@ open OpamStd.Op
 
 type bad_format = pos option * string
 
-exception Bad_version of bad_format
+exception Bad_version of bad_format * OpamVersion.t option
 exception Bad_format of bad_format
 exception Bad_format_list of bad_format list
 
@@ -25,10 +25,10 @@ let bad_format ?pos fmt =
        raise (Bad_format (pos,str)))
     fmt
 
-let bad_version ?pos fmt =
+let bad_version v ?pos fmt =
   Printf.ksprintf
     (fun str ->
-       raise (Bad_version (pos,str)))
+       raise (Bad_version ((pos,str), v)))
     fmt
 
 let add_pos pos = function
@@ -36,24 +36,24 @@ let add_pos pos = function
     if pos_opt = None || pos_opt = Some pos_null
     then Bad_format (Some pos, msg)
     else e
-  | Bad_version (pos_opt,msg) as e ->
+  | Bad_version ((pos_opt,msg),v) as e ->
     if pos_opt = None || pos_opt = Some pos_null
-    then Bad_version (Some pos, msg)
+    then Bad_version ((Some pos, msg),v)
     else e
 
   | e -> e
 
 let rec string_of_bad_format ?file e =
   match e, file with
-  | Bad_version (None, msg), Some filename
+  | Bad_version ((None, msg), _), Some filename
   | Bad_format (None, msg), Some filename
-  | Bad_version (Some {filename; start = -1, -1 ; stop = -1,-1 }, msg), _
+  | Bad_version ((Some {filename; start = -1, -1 ; stop = -1,-1 }, msg), _), _
   | Bad_format (Some {filename; start = -1, -1 ; stop = -1,-1 }, msg), _ ->
     Printf.sprintf "In %s:\n%s" filename msg
-  | Bad_version (Some pos, msg), _
+  | Bad_version ((Some pos, msg), _), _
   | Bad_format (Some pos, msg), _ ->
     Printf.sprintf "At %s:\n%s" (string_of_pos pos) msg
-  | Bad_version (None, msg), None
+  | Bad_version ((None, msg), _), None
   | Bad_format (None, msg), None ->
     Printf.sprintf "Input error:\n%s" msg
   | Bad_format_list bfl, _ ->
@@ -137,13 +137,13 @@ let ignore = {
   name_constr = (fun _ -> "<ignored>");
 }
 
-let check ?name ?(raise=bad_format) ?errmsg f =
+let check ?name ?(raise=fun _ ?pos fmt -> bad_format ?pos fmt) ?errmsg f =
   pp
     ?name
     (fun ~pos x ->
        if not (f x) then
          match errmsg with
-         | Some m -> raise ~pos "%s" m
+         | Some m -> raise x ~pos "%s" m
          | None -> unexpected ()
        else x)
     (fun x ->

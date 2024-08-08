@@ -1095,7 +1095,7 @@ let lint_gen ?check_extra_files ?check_upstream ?(handle_dirname=false)
       [0, `Error, "File does not exist"], None
     | OpamLexer.Error _ | Parsing.Parse_error ->
       [1, `Error, "File does not parse"], None
-    | OpamPp.Bad_version bf | OpamPp.Bad_format bf -> [warn_of_bad_format bf], None
+    | OpamPp.Bad_version (bf, _) | OpamPp.Bad_format bf -> [warn_of_bad_format bf], None
     | OpamPp.Bad_format_list bfl -> List.map warn_of_bad_format bfl, None
   in
   let check_extra_files = match check_extra_files with
@@ -1328,6 +1328,35 @@ let read_opam dir =
       (OpamPp.string_of_bad_format (OpamPp.Bad_format (snd err)));
     None
   | None, None -> None
+  | exception OpamPp.Bad_version ((_, _errmsg), Some version) ->
+    let sversion = OpamVersion.to_string version in
+    log "opam-version %S unsupported on %s. Added as dummy unavailable package."
+      sversion (OpamFile.to_string opam_file);
+    if OpamVersion.compare OpamVersion.current version >= 0 then begin
+      log
+        "Unexpected failure: failed to parse version %S \
+         but is below the current version %S"
+        sversion (OpamVersion.to_string OpamVersion.current);
+      Some
+        (OpamFile.OPAM.empty
+         |> OpamFile.OPAM.with_available (FBool false)
+         |> OpamFile.OPAM.with_descr_body
+           (Printf.sprintf
+              "Failed to parse version %S but is below the current version %S"
+              sversion (OpamVersion.to_string OpamVersion.current)))
+    end else
+      Some
+        (OpamFile.OPAM.empty
+         |> OpamFile.OPAM.with_available
+           (FOp (FIdent ([], OpamVariable.of_string "opam-version", None),
+                 `Geq, FString sversion))
+         |> OpamFile.OPAM.with_descr_body
+           (Printf.sprintf
+              "This package uses opam 3.0 file format which opam 2.2 cannot \
+               read.\n\n\
+               In order to install or view information on this package, please \
+               upgrade your opam installation to at least version %s."
+              sversion))
 
 let read_repo_opam ~repo_name ~repo_root dir =
   let open OpamStd.Option.Op in
