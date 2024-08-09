@@ -90,7 +90,7 @@ val mk_vflag_all:
   (validity * 'a * string list * string) list ->
   'a list Term.t
 
-(* Escaped Windows directory separator. To use instead of [Filename.dir_sep] for
+(* Escaped Windows directory separator. To use instead of {!Filename.dir_sep} for
    manpage strings *)
 val dir_sep: string
 
@@ -318,7 +318,7 @@ val enum_with_default: (string * 'a default) list -> 'a Arg.converter
 val mk_subcommands_with_default:
   cli:OpamCLIVersion.Sourced.t ->
   'a default subcommands -> 'a option Term.t * string list Term.t
-(** Same as {!mk_subcommand} but use the default value if no
+(** Same as {!mk_subcommands} but use the default value if no
     sub-command is selected. *)
 
 val bad_subcommand:
