@@ -101,7 +101,7 @@ exception Cyclic_actions of Cudf.package action list list
     [reduce_actions] to reduce it to a graph including reinstall and
     up/down-grade actions.
 
-    May raise [Cyclic_actions]. *)
+    @raise Cyclic_actions *)
 val atomic_actions:
   simple_universe:Cudf.universe ->
   complete_universe:Cudf.universe ->

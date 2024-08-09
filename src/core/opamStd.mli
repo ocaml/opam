@@ -22,8 +22,9 @@ module type SET = sig
 
   val is_singleton: t -> bool
 
-  (** Returns one element, assuming the set is a singleton. Raises [Not_found]
-      on an empty set, [Failure] on a non-singleton. *)
+  (** Returns one element, assuming the set is a singleton.
+      @raise Not_found on an empty set
+      @raise Failure on a non-singleton *)
   val choose_one : t -> elt
 
   val choose_opt: t -> elt option
@@ -36,7 +37,7 @@ module type SET = sig
   val find: (elt -> bool) -> t -> elt
   val find_opt: (elt -> bool) -> t -> elt option
 
-  (** Raises Failure in case the element is already present *)
+  (** @raise Failure in case the element is already present *)
   val safe_add: elt -> t -> t
 
   (** Accumulates the resulting sets of a function of elements until a fixpoint
@@ -44,8 +45,8 @@ module type SET = sig
   val fixpoint: (elt -> t) -> t -> t
 
   (** [map_reduce f op t] applies [f] to every element of [t] and combines the
-      results using associative operator [op]. Raises [Invalid_argument] on an
-      empty set, or returns [default] if it is defined. *)
+      results using associative operator [op].
+      @raise Invalid_argument on an empty set if [default] is not defined *)
   val map_reduce: ?default:'a -> (elt -> 'a) -> ('a -> 'a -> 'a) -> t -> 'a
 
   module Op : sig
@@ -81,7 +82,7 @@ module type MAP = sig
 
   val of_list: (key * 'a) list -> 'a t
 
-  (** Raises Failure in case the element is already present *)
+  (** @raise Failure in case the element is already present *)
   val safe_add: key -> 'a -> 'a t -> 'a t
 
   (** [update k f zero map] updates the binding of [k] in [map] using function
@@ -89,8 +90,8 @@ module type MAP = sig
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
 
   (** [map_reduce f op t] applies [f] to every binding of [t] and combines the
-      results using associative operator [op]. Raises [Invalid_argument] on an
-      empty map, or returns [default] if it is defined. *)
+      results using associative operator [op].
+      @raise Invalid_argument on an empty map if [default] is not defined *)
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
 
@@ -611,7 +612,7 @@ module Sys : sig
       [Unix.execvpe]. *)
   exception Exec of string * string array * string array
 
-  (** Raises [Exit i] *)
+  (** Raise exception {!Exit} [i] *)
   (* val exit: int -> 'a *)
 
   type exit_reason =
@@ -624,7 +625,7 @@ module Sys : sig
 
   val get_exit_code : exit_reason -> int
 
-  (** Raises [Exit], with the code associated to the exit reason *)
+  (** Raise exception {!Exit}, with the code associated to the exit reason *)
   val exit_because: exit_reason -> 'a
 
   (**/**)
