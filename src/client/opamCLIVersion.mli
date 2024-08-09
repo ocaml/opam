@@ -26,7 +26,7 @@ val is_supported : t -> bool
 val of_string_opt : string -> t option
 val of_string : string -> t
 
-(** Comparison [>]] with [(major, minor)] *)
+(** Comparison [>=] with [(major, minor)] *)
 val ( >= ) : t -> int * int -> bool
 
 (** Comparison [<] with [(major, minor)] *)
