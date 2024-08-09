@@ -15,7 +15,7 @@ users)
   * Bump opam-root-version to 2.2 [#5980 @kit-ty-kate]
 
 ## Global CLI
-  * Add cli version 2.3 [#6045 @rjbou]
+  * Add cli version 2.3 [#6045 #6151 @rjbou]
 
 ## Plugins
 
