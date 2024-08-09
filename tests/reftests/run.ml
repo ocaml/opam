@@ -57,6 +57,7 @@
 
 type test = {
   repo_hash: string;
+  tags : string list;
   commands: (string * string list) list;
 }
 
@@ -92,8 +93,10 @@ v}*)
 
 let load_test f =
   let ic = open_in f in
-  let repo_hash = try input_line ic with
-    | End_of_file -> failwith "Malformed test file"
+  let repo_hash, tags =
+    match String.split_on_char ' ' (input_line ic) with
+    | [] | exception End_of_file -> failwith "Malformed test file"
+    | h::t -> h, t
   in
   let commands =
     let rec aux commands =
@@ -109,7 +112,7 @@ let load_test f =
     aux []
   in
   close_in ic;
-  { repo_hash; commands }
+  { repo_hash; tags; commands }
 
 let base_env =
   let propagate v = try [v, Sys.getenv v] with Not_found -> [] in
@@ -726,7 +729,7 @@ let run_test ?(vars=[]) ~opam t =
   ignore @@ command ~silent:true opam.as_called
     ["var"; "--quiet"; "--root"; opamroot; "--global"; "--cli=2.1";
      "sys-ocaml-version=4.08.0"];
-  print_endline t.repo_hash;
+  print_endline (String.concat " " (t.repo_hash::t.tags));
   let _vars =
     List.fold_left (fun vars (cmd, out) ->
         print_string cmd_prompt;

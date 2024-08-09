@@ -154,8 +154,12 @@ users)
   * Add a test file for `opam install --check` [#6121 @kit-ty-kate]
   * Add reinstall test for delayed removal of packages [#6139 @rjbou]
   * Add a test showing the behaviour of `opam list --latests-only` [#5375 @kit-ty-kate]
+  * Add a test filtering mechanism [#6105 @Keryan-dev]
 
 ### Engine
+  * Add a test filtering mechanism [#6105 @Keryan-dev]
+  * Add a test filter on N0REP0 first line [#6105 @Keryan-dev]
+  * Add a makefile target `quick-test` to launch only `N0REP0` tests [#6105 @Keryan-dev]
 
 ## Github Actions
   * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]

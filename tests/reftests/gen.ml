@@ -1,8 +1,8 @@
-let first_line ~path =
+let first_line_tags ~path =
   let ic = open_in path in
   let s = input_line ic in
   close_in ic;
-  s
+  String.split_on_char ' ' s
 
 let null_hash= "N0REP0"
 let default_repo = "opam-repo-"^null_hash
@@ -95,15 +95,37 @@ let () =
   in
   let process archive_hashes filename =
     let base_name = OpamStd.String.remove_suffix ~suffix:".test" filename in
-    let condition = match Filename.extension base_name with
-      | "" -> ""
-      | os ->
-        Printf.sprintf "\n (enabled_if (= %%{os_type} %S))"
-          String.(capitalize_ascii (sub os 1 (length os - 1)))
-    in
     if base_name = filename then archive_hashes else
+      let archive_hash, tags =
+        match first_line_tags ~path:filename with
+        | [] -> assert false (* String.split_on_char never returns [] *)
+        | ar::tags -> ar, tags
+      in
+      let os_condition =
+        match Filename.extension base_name with
+        | "" -> ""
+        | os ->
+          Printf.sprintf "(= %%{os_type} %S)"
+            String.(capitalize_ascii (sub os 1 (length os - 1)))
+      in
+      let tags_conditions =
+        List.map (function
+            | "N0REP0" as tag ->
+              Printf.sprintf
+                "(= %%{env:TEST%s=0} 1)"
+                tag
+            | tag -> failwith @@
+              Printf.sprintf "Tag '%s' unrecognized in test '%s'"
+                tag filename)
+          (if String.equal archive_hash null_hash
+           then archive_hash :: tags else tags)
+      in
+      let condition =
+        Printf.sprintf
+          "\n (enabled_if (and %s (or (<> %%{env:TESTALL=1} 0) %s)))"
+          os_condition (String.concat "\n   " tags_conditions)
+      in
       (print_string (diff_rule base_name ~condition);
-       let archive_hash = first_line ~path:filename in
        if archive_hash = null_hash then
          (print_string (run_rule ~base_name ~archive_hash:null_hash ~condition);
           archive_hashes)
