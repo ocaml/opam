@@ -47,3 +47,13 @@ The following actions will be performed:
 Done.
 ### cat $OPAMROOT/undef-switch/lib/prefix
 ${BASEDIR}/OPAM/undef-switch
+### # switch with repo link
+### # expects a warning, useful to check chosen backend
+### opam switch create w-repo --repositories=from-link=https://github.com/ocaml/opam-repository.git --dry-run --empty
+Creating repository from-link...
+[from-link] Initialised
+[WARNING] The repository 'from-link' at git+https://github.com/ocaml/opam-repository.git doesn't have a 'repo' file, and might not be compatible with this version of opam.
+[NOTE] Repository at git+https://github.com/ocaml/opam-repository.git doesn't define its version, assuming it's 1.2.
+
+<><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
+Upgrading repository "from-link"...
