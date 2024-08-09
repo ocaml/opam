@@ -65,6 +65,7 @@ val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
 (** Utility function to construct a json of validation results.
     The format is as follow:
+    {[
     { "file"     : string <filename>,
       "result"   : string (passed | error | warning),
       "warnings" :
@@ -78,6 +79,7 @@ val warns_to_string: (int * [`Warning|`Error] * string) list -> string
           ...
         ]
     }
+    ]}
 *)
 val warns_to_json:
   ?filename:string -> (int * [`Warning|`Error] * string) list -> OpamJson.t

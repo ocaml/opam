@@ -167,11 +167,11 @@ val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
 (** Return the transitive dependency closures
     of a collection of packages.
 
-    [depopts]: include optional dependencies (depopts: foo)
-    [build]: include build dependencies (depends: foo {build})
-    [post]: include post dependencies (depends: foo {post})
-    [installed]: only consider already-installed packages
-    [unavaiable]: also consider unavailable packages
+    @param depopts include optional dependencies ([depopts: foo])
+    @param build include build dependencies ([depends: foo {build}])
+    @param post include post dependencies ([depends: foo {post}])
+    @param installed only consider already-installed packages
+    @param unavailable also consider unavailable packages
 *)
 val dependencies:
   'a switch_state -> build:bool -> post:bool -> depopts:bool ->
