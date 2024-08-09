@@ -90,7 +90,7 @@ val mk_vflag_all:
   (validity * 'a * string list * string) list ->
   'a list Term.t
 
-(* Escaped Windows directory separator. To use instead of [Filename.dir_sep] for
+(* Escaped Windows directory separator. To use instead of {!Filename.dir_sep} for
    manpage strings *)
 val dir_sep: string
 

@@ -29,7 +29,7 @@ end
 
 val load: 'a lock -> [< unlocked ] global_state -> 'a repos_state
 
-(** Loads the repository state as [load], and calls the given function while
+(** Loads the repository state as {!load}, and calls the given function while
     keeping it locked (as per the [lock] argument), releasing the lock
     afterwards *)
 val with_:
@@ -60,7 +60,7 @@ val load_repo:
 (** Get the (lazily extracted) repository root for the given repository *)
 val get_root: 'a repos_state -> repository_name -> OpamFilename.Dir.t
 
-(** Same as [get_root], but with a repository rather than just a name as argument *)
+(** Same as {!get_root}, but with a repository rather than just a name as argument *)
 val get_repo_root: 'a repos_state -> repository -> OpamFilename.Dir.t
 
 (* (\** Runs the given function with access to a (possibly temporary) directory
@@ -70,7 +70,7 @@ val get_repo_root: 'a repos_state -> repository -> OpamFilename.Dir.t
  * val with_repo_root:
  *   'a global_state -> repository -> (OpamFilename.Dir.t -> 'b) -> 'b
  * 
- * (\** As [with_repo_root], but on jobs *\)
+ * (\** As {!with_repo_root}, but on jobs *\)
  * val with_repo_root_job:
  *   'a global_state -> repository ->
  *   (OpamFilename.Dir.t -> 'b OpamProcess.job) -> 'b OpamProcess.job *)

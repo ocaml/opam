@@ -21,11 +21,11 @@ val check_and_run_external_commands:
   unit -> OpamCLIVersion.Sourced.t * string list
 
 (** Handles flushing buffers and catching exceptions from the main call,
-    including special cases like [OpamStd.Sys.Exec] that is expected to do a
-    [Unix.exec], but after all proper cleanup has been done. *)
+    including special cases like {!OpamStd.Sys.Exec} that is expected to do a
+    {!Unix.exec}, but after all proper cleanup has been done. *)
 val main_catch_all: (unit -> unit) -> unit
 
-(** Handling of debug JSON output, according to [OpamClientConfig.json_out] *)
+(** Handling of debug JSON output, according to {!OpamClientConfig.json_out} *)
 val json_out: unit -> unit
 
 (** [run default command_list] runs command-line argument parsing and processing

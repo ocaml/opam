@@ -98,12 +98,12 @@ type result = {
     Don't forget to call [cleanup result] afterwards *)
 val run : command -> result
 
-(** Same as [run], but doesn't wait. Use wait_one to wait and collect
+(** Same as {!run}, but doesn't wait. Use wait_one to wait and collect
     results;
     Don't forget to call [cleanup result] afterwards *)
 val run_background: command -> t
 
-(** Similar to [run_background], except that no process is created, and a dummy
+(** Similar to {!run_background}, except that no process is created, and a dummy
     process (suitable for dry_wait_one) is returned. *)
 val dry_run_background: command -> t
 
@@ -111,15 +111,15 @@ val dry_run_background: command -> t
     careful to handle Sys.Break *)
 val wait: t -> result
 
-(** Like [wait], but returns None immediately if the process hasn't ended *)
+(** Like {!wait}, but returns None immediately if the process hasn't ended *)
 val dontwait: t -> result option
 
 (** Wait for the first of the listed processes to terminate, and return its
     termination status *)
 val wait_one: t list -> t * result
 
-(** Similar to [wait_one] for simulations, to be used with
-    [dry_run_background] *)
+(** Similar to {!wait_one} for simulations, to be used with
+    {!dry_run_background} *)
 val dry_wait_one: t list -> t * result
 
 (** Send SIGINT to a process (or SIGKILL on Windows) *)
@@ -205,7 +205,7 @@ module Job: sig
   val of_list: ?keep_going:bool -> command list ->
     (command * result) option Op.job
 
-  (** As [of_list], but takes a list of functions that return the commands. The
+  (** As {!of_list}, but takes a list of functions that return the commands. The
       functions will only be evaluated when the command needs to be run. *)
   val of_fun_list: ?keep_going:bool -> (unit -> command) list ->
     (command * result) option Op.job
@@ -221,6 +221,7 @@ module Job: sig
 end
 
 type 'a job = 'a Job.Op.job
+
 
 (** Current environment. On Windows, Cygwin installation binary path and git
     location path may be added to PATH. **)

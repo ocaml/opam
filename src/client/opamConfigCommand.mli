@@ -70,7 +70,7 @@ type update_op = [ append_op  | whole_op ]
     Raise [Invalid_argument] if the string is malformed *)
 val parse_update: string -> string * update_op
 
-(** As [parse_update] but parse only overwrites and reverts. String is of the
+(** As {!parse_update} but parse only overwrites and reverts. String is of the
     form [var=[value]]`.
     Raise [Invalid_argument] if the string is malformed *)
 val parse_whole: string -> string * whole_op
@@ -79,13 +79,13 @@ val whole_of_update_op: update_op -> whole_op
 
 (** [set_opt_global gt field value] updates global config field with update
     value in <opamroot>/config file. Modifiable fields are a subset of all
-    defined fields in [OpamFile.Config.t]. On revert, field is reverted to its
-    initial value as defined in [OpamInitDefaults.init_config], to default
-    value otherwise ([OpamFile.Config.empty]).
-    May raise [OpamStd.Sys.Exit 2]. *)
+    defined fields in {!OpamFile.Config.t}. On revert, field is reverted to its
+    initial value as defined in {!OpamInitDefaults.init_config}, to default
+    value otherwise ({!OpamFile.Config.empty}).
+    May raise [OpamStd.Sys.Exit]. *)
 val set_opt_global: rw global_state -> string -> update_op -> rw global_state
 
-(** As [set_opt_global], [set_opt_switch] updates switch config file in
+(** As {!set_opt_global}, {!set_opt_switch} updates switch config file in
     <opamroot>/<switch>/.opam-switch/switch-config. If switch state is given,
     uses its config and returns it with then new config. Otherwise, loads the
     raw switch state and returns [None].
@@ -94,7 +94,7 @@ val set_opt_switch:
   'a global_state -> ?st:rw switch_state -> string -> update_op
   -> rw switch_state option
 
-(** [set_var_global] and [set_var_switch] update respectively `global-variables`
+(** {!set_var_global} and {!set_var_switch} update respectively `global-variables`
     field in global config and `variables` field in switch config, by appending
     the new variables to current set. If switch state is given, uses its
     config and returns it with then new config. Otherwise, loads the raw switch

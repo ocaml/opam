@@ -9,7 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Darcs repository backend (based on OpamVCS) *)
+(** Darcs repository backend (based on {!OpamVCS} *)
 
 module VCS: OpamVCS.VCS
 
