@@ -223,6 +223,10 @@ end
 type 'a job = 'a Job.Op.job
 
 (**/**)
+(** Current environment. On Windows, Cygwin installation binary path and git
+    location path may be added to PATH. **)
+val default_env : unit -> string array
+
 (** As {!OpamStd.Sys.resolve_command}, except the default for [~env] is
     {!default_env}. *)
 val resolve_command: ?env:string array -> ?dir:string -> string -> string option
@@ -233,5 +237,3 @@ val create_process_env :
   string -> string array -> string array ->
   Unix.file_descr -> Unix.file_descr -> Unix.file_descr ->
   int
-
-val default_env : unit -> string array
