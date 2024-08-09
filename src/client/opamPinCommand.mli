@@ -31,7 +31,8 @@ exception Nothing_to_do
 
     If [force], don't abort even if the source can't be fetched from [target]
 
-    May raise [Aborted] or [Nothing_to_do]. *)
+    @raise Aborted
+    @raise Nothing_to_do *)
 val source_pin:
   rw switch_state -> name ->
   ?version:version -> ?edit:bool -> ?opam:OpamFile.OPAM.t -> ?quiet:bool ->

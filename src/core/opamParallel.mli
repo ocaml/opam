@@ -35,8 +35,8 @@ exception Aborted
 (** Simply parallel execution of tasks *)
 
 (** In the simple iter, map and reduce cases, ints are the indexes of the jobs
-    in the list. First list is return code of sucessfull commands, second those
-    which raised expcetions, and third one those which were canceled. *)
+    in the list. First list is return code of successful commands, second those
+    which raised exceptions, and third one those which were canceled. *)
 exception Errors of int list * (int * exn) list * int list
 
 val iter: jobs:int -> command:('a -> unit OpamProcess.job) -> ?dry_run:bool ->
