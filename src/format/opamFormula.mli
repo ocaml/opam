@@ -135,6 +135,10 @@ val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
 (** Fold function (bottom-up, right-to-left) *)
 val fold_right: ('a -> 'b -> 'a) -> 'a -> 'b formula -> 'a
 
+(** [exists f formula] scans the whole [formula] until [f atom] returns [true],
+    in which case it returns [true]. Returns [false] otherwise *)
+val exists: ('a -> bool) -> 'a formula -> bool
+
 (** Sort formula, using [compare] function. `Block` around `Or` and `And` \
     are removed. *)
 val sort: ('a -> 'a -> int) -> 'a formula -> 'a formula

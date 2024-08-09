@@ -114,7 +114,7 @@ module PkgGraph: Graph.Sig.I
 val dependency_graph :
   depopts:bool -> build:bool -> post:bool ->
   installed:bool ->
-  ?unavailable:bool ->
+  unavailable:bool ->
   universe -> PkgGraph.t
 
 (** Check the current set of installed packages in a universe for

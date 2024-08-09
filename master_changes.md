@@ -49,6 +49,7 @@ users)
 
 ## List
   * ◈ Add a new `--latests-only` option to only list the latest packages [#5375 @kit-ty-kate]
+  * Speedup `opam list` on options that do not use availibility information [#5317 @kit-ty-kate - fix #5314]
 
 ## Show
 
@@ -192,11 +193,15 @@ users)
 
 ## opam-state
  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]
+ * Make `OpamSwitchState.{,reverse_}dependencies ?unavailable` a non-optional argument to enforce speedups when availablity information is not needed [#5317 @kit-ty-kate]
 
 ## opam-solver
+ * Make `OpamSolver.dependency_graph ?unavailable` a non-optional argument to enforce speedups when availablity information is not needed [#5317 @kit-ty-kate]
 
 ## opam-format
   * Add `OpamTypesBase.switch_selections_{compare,equal}`: proper comparison functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
+  * Add `OpamFormula.exists` [#5317 @kit-ty-kate]
+  * Make `OpamTypes.{u_available,u_attrs}` lazy to speedup actions that do not require availiblity information [#5317 @kit-ty-kate - fix #5314]
 
 ## opam-core
   * `OpamStd.Env`: add `env_string_list` for parsing string list environment variables (comma separated) [#5682 @desumn]
