@@ -82,14 +82,15 @@ val whole_of_update_op: update_op -> whole_op
     defined fields in {!OpamFile.Config.t}. On revert, field is reverted to its
     initial value as defined in {!OpamInitDefaults.init_config}, to default
     value otherwise ({!OpamFile.Config.empty}).
-    May raise [OpamStd.Sys.Exit]. *)
+    @raise OpamStd.Sys.Exit ([`Bad_argument], [2]) if the field is not found or not
+    modifiable, or the value have a parse error. *)
 val set_opt_global: rw global_state -> string -> update_op -> rw global_state
 
 (** As {!set_opt_global}, {!set_opt_switch} updates switch config file in
     <opamroot>/<switch>/.opam-switch/switch-config. If switch state is given,
     uses its config and returns it with then new config. Otherwise, loads the
     raw switch state and returns [None].
-    Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
+    @raise OpamStd.Sys.Exit ([`Configuration_error], [50]) if no switch is set *)
 val set_opt_switch:
   'a global_state -> ?st:rw switch_state -> string -> update_op
   -> rw switch_state option
@@ -99,11 +100,11 @@ val set_opt_switch:
     the new variables to current set. If switch state is given, uses its
     config and returns it with then new config. Otherwise, loads the raw switch
     state and returns [None].
-    Raises [OpamStd.Sys.Exit 2] ([`Bad_argument]) if field is not modifiable *)
+    @raise OpamStd.Sys.Exit ([`Bad_argument], [2]) if field is not modifiable *)
 val set_var_global:
   rw global_state -> string -> whole_op -> rw global_state
 
-(** Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
+(** @raise OpamStd.Sys.Exit ([`Configuration_error], [50]) if no switch is set *)
 val set_var_switch:
     'a global_state -> ?st:rw switch_state -> string -> whole_op
     -> rw switch_state option
@@ -118,7 +119,7 @@ val options_list:
   ?st:unlocked switch_state -> 'a global_state -> unit
 val options_list_global: 'a global_state -> unit
 
-(** Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
+(** @raise OpamStd.Sys.Exit ([`Configuration_error], [50]) if no switch is set *)
 val options_list_switch:
   ?st:unlocked switch_state -> 'a global_state -> unit
 
@@ -129,7 +130,7 @@ val vars_list:
   ?st:'a switch_state -> 'b global_state -> unit
 val vars_list_global: 'a global_state -> unit
 
-(** Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
+(** @raise OpamStd.Sys.Exit ([`Configuration_error], [50]) if no switch is set *)
 val vars_list_switch:
   ?st:'a switch_state -> 'b global_state -> unit
 
@@ -142,7 +143,7 @@ val vars_list_switch:
 
 val option_show_global: 'a global_state -> string -> unit
 
-(** Raises [OpamStd.Sys.Exit 50] ([`Configuration_error]) if no switch is set *)
+(** @raise OpamStd.Sys.Exit ([`Configuration_error], [50]) if no switch is set *)
 val option_show_switch:
   'a global_state -> ?st:unlocked switch_state -> string -> unit
 
