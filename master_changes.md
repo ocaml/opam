@@ -42,6 +42,7 @@ users)
 
 ## Switch
   * ◈ Add `opam switch import --deps-only` option to install only dependencies of root package at import [#5388 @rjbou - fix #5200]
+  * [BUG] Make accepted `--repos` URLs on creation consistent with `opam repository` [#6091 @Keryan-dev - fix #4673]
 
 ## Config
 

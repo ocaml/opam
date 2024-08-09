@@ -2557,7 +2557,7 @@ let repository cli =
 (* From a list of strings (either "repo_name" or "repo_name=URL"), configure the
    repos with URLs if possible, and return the updated repos_state and selection of
    repositories *)
-let with_repos_rt gt repos f =
+let with_repos_rt gt cli repos f =
   OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
   let repos, rt =
   match repos with
@@ -2574,9 +2574,10 @@ let with_repos_rt gt repos f =
       OpamStd.List.filter_map (function
           | (_, None) -> None
           | (n, Some url) ->
+            let handle_suffix = OpamCLIVersion.Op.(cli @>= cli2_3) in
             let repo =
               OpamStd.Option.Op.(
-                OpamUrl.parse_opt ~handle_suffix:false ~from_file:false url
+                OpamUrl.parse_opt ~handle_suffix ~from_file:false url
                 >>| fun u -> n, u)
             in
             if repo = None then
@@ -2720,9 +2721,11 @@ let switch cli =
           This scans the current directory for package definitions, chooses a \
           compatible compiler, creates a local switch and installs the local \
           package dependencies.";
-      `Pre "    opam switch create trunk --repos \
-            default,beta=git+https://github.com/ocaml/ocaml-beta-repository.git \
-            ocaml-variants.4.10.0+trunk";
+      `Pre (Printf.sprintf
+              "    opam switch create trunk --repos \
+               default,beta=%shttps://github.com/ocaml/ocaml-beta-repository.git \
+               ocaml-variants.4.10.0+trunk"
+              (if OpamCLIVersion.Op.(cli @>= cli2_3) then "" else "git+"));
       `P "Create a new switch called \"trunk\", with \
           $(b,ocaml-variants.4.10.0+trunk) as compiler, with a new $(i,beta) \
           repository bound to the given URL selected besides the default one."
@@ -2869,7 +2872,7 @@ let switch cli =
       `Ok ()
     | Some `list_available, pattlist ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      with_repos_rt gt repos @@ fun (repos, rt) ->
+      with_repos_rt gt cli repos @@ fun (repos, rt) ->
       let compilers = OpamSwitchCommand.get_compiler_packages ?repos rt in
       let st = OpamSwitchState.load_virtual ?repos_list:repos gt rt in
       OpamConsole.msg "# Listing available compilers from repositories: %s\n"
@@ -2909,7 +2912,7 @@ let switch cli =
       `Ok ()
     | Some `install, switch_arg::params ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      with_repos_rt gt repos @@ fun (repos, rt) ->
+      with_repos_rt gt cli repos @@ fun (repos, rt) ->
       let switch = OpamSwitch.of_string switch_arg in
       let use_local =
         not no_install && not empty && OpamSwitch.is_external switch
@@ -2999,7 +3002,7 @@ let switch cli =
         else Some (OpamFile.make (OpamFilename.of_string filename))
       in
       if is_new_switch then
-        with_repos_rt gt repos @@ fun (repos, rt) ->
+        with_repos_rt gt cli repos @@ fun (repos, rt) ->
         let synopsis = "Import from " ^ Filename.basename filename in
         let (), gt =
           OpamGlobalState.with_write_lock gt @@ fun gt ->
