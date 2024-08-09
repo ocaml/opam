@@ -31,7 +31,7 @@ val default_solver_selection: (module S) list
 *)
 val custom_solver : OpamTypes.arg list -> (module S)
 
-(** Like [custom_solver], but takes a simple command as a string *)
+(** Like {!custom_solver}, but takes a simple command as a string *)
 val solver_of_string : string -> (module S)
 
 (** Gets the first present solver from the list. Exits with error if none was found. *)

@@ -85,7 +85,7 @@ val pinned_package:
     known hash) into the cache. For non-VC remotes, verifies the checksum if
     any.
     If an archive is not found, it launches Software Heritage fallback (see
-    [OpamDownload.SWHID]).
+    {!OpamDownload.SWHID}).
 
     Stops on first error. The extra downloads list is reverted, so that the
     error is always first if any.
@@ -95,7 +95,7 @@ val download_package_source:
   'a switch_state -> package -> dirname ->
   (string download option * (string * string download) list) OpamProcess.job
 
-(** As [download_package_source] but for several packages sharing the same
+(** As {!download_package_source} but for several packages sharing the same
     source. If [url] is None, do nothing. Downloads and synchronise upstream
     source in their respective source directories. *)
 val download_shared_package_source:
@@ -105,7 +105,7 @@ val download_shared_package_source:
 
 (** [cleanup_source old_opam_option new_opam] checks if the remote URL has
     changed between [old_opam_option] and [new_opam], and, depending on that,
-    cleans up the source directory of the package ([OpamPath.Switch.sources]) if
+    cleans up the source directory of the package ({!OpamPath.Switch.sources}) if
     needed. *)
 val cleanup_source:
   'a switch_state -> OpamFile.OPAM.t option -> OpamFile.OPAM.t -> unit

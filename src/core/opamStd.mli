@@ -186,13 +186,13 @@ module List : sig
 
   val cons: 'a -> 'a list -> 'a list
 
-  (** Convert list items to string and concat. [sconcat_map sep f x] is equivalent
-      to String.concat sep (List.map f x) but tail-rec. *)
+  (** Convert list items to string and concat. [concat_map sep f x] is equivalent
+      to [String.concat sep (List.map f x)] but tail-rec. *)
   val concat_map:
     ?left:string -> ?right:string -> ?nil:string -> ?last_sep:string ->
     string -> ('a -> string) -> 'a list -> string
 
-  (** Like [List.find], but returning option instead of raising *)
+  (** Like {!Stdlib.List.find}, but returning option instead of raising *)
   val find_opt: ('a -> bool) -> 'a list -> 'a option
 
   val to_string: ('a -> string) -> 'a list -> string
@@ -214,7 +214,8 @@ module List : sig
       @raise Not_found if all of them yield [None] *)
   val find_map: ('a -> 'b option) -> 'a list -> 'b
 
-  (** Like [find_map], but returns [Some _] if succeeded and [None] if failed. *)
+  (** Like {!find_map},
+  but returns [Some _] if succeeded and [None] if failed. *)
   val find_map_opt: ('a -> 'b option) -> 'a list -> 'b option
 
   (** Insert a value in an ordered list *)
@@ -224,19 +225,19 @@ module List : sig
       end if index < 0 or > length respectively). Not tail-recursive *)
   val insert_at: int -> 'a -> 'a list -> 'a list
 
-  (** Like [List.assoc] with an equality function. *)
+  (** Like {!List.assoc} with an equality function. *)
   val assoc: ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b
 
-  (** Like [assoc], but returning option instead of raising [Not_found] *)
+  (** Like {!assoc}, but returning option instead of raising [Not_found] *)
   val assoc_opt: ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b option
 
-  (** Like [assoc], but as an option, and also returns the list with the
+  (** Like {!assoc}, but as an option, and also returns the list with the
       binding removed, e.g. equivalent to [(assoc_opt x l, remove_assoc x l)]
       (but tail-recursive and more efficient) *)
   val pick_assoc:
     ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b option * ('a * 'b) list
 
-  (** Like [assoc], but returns a boolean instead of associated value *)
+  (** Like {!assoc}, but returns a boolean instead of associated value *)
   val mem_assoc: ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> bool
 
   (** [remove_assoc eq k l] removes first association of [k] from list [l]
@@ -250,10 +251,11 @@ module List : sig
   val update_assoc:
     ('a -> 'a -> bool) -> 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
 
-  (** Like [pick_assoc], but with a test function that takes a list element *)
+  (** Like {!pick_assoc}, but with a test function that takes a list element *)
   val pick: ('a -> bool) -> 'a list -> 'a option * 'a list
 
-  (** Like [List.fold_left], but also performs [List.map] at the same time *)
+  (** Like {!Stdlib.List.fold_left}, but also performs {!Stdlib.List.map} at
+      the same time *)
   val fold_left_map: ('s -> 'a -> ('s * 'b)) -> 's -> 'a list -> 's * 'b list
 end
 
@@ -281,8 +283,8 @@ module String : sig
   val exact_match: Re.re -> string -> bool
   val find_from: (char -> bool) -> string -> int -> int
 
-  (** Like [String.compare], but with lowercase/uppercase variants ordered next
-      to each other (still considered not equal though) *)
+  (** Like {!Stdlib.String.compare}, but with lowercase/uppercase variants
+      ordered next to each other (still considered not equal though) *)
   val compare_case: string -> string -> int
 
   (** {3 Manipulation} *)
@@ -303,14 +305,14 @@ module String : sig
   (** Cut a string at the first occurrence of the given char *)
   val cut_at: string -> char -> (string * string) option
 
-  (** Same as [cut_at], but starts from the right *)
+  (** Same as {!cut_at}, but starts from the right *)
   val rcut_at: string -> char -> (string * string) option
 
   (** Split a string at occurrences of a given characters. Empty strings are
       skipped. *)
   val split: string -> char -> string list
 
-  (** The same as [split], but keep empty strings (leading, trailing or between
+  (** The same as {!split}, but keep empty strings (leading, trailing or between
       contiguous delimiters) *)
   val split_delim: string -> char -> string list
 
@@ -371,7 +373,7 @@ module Exn : sig
   (** To use when catching default exceptions: ensures we don't catch fatal errors
       like C-c. try-with should _always_ (by decreasing order of preference):
       - either catch specific exceptions
-      - or re-raise the same exception (preferably with [Exn.finalise])
+      - or re-raise the same exception (preferably with {!Exn.finalise})
       - or call this function on the caught exception *)
   val fatal: exn -> unit
 
@@ -388,7 +390,7 @@ module Exn : sig
   val finalise: exn -> (unit -> unit) -> 'a
 
   (** Execute the given continuation, then run the finaliser before returning
-      the result. If an exception is raised, call [finalise] with the given
+      the result. If an exception is raised, call {!finalise} with the given
       finaliser. *)
   val finally: (unit -> unit) -> (unit -> 'a) -> 'a
 
@@ -642,7 +644,7 @@ module Win32 : sig
 
   val set_parent_pid : int32 -> unit
   (** Change which the pid written to by {!parent_putenv}. This function cannot
-      be called after [parent_putenv]. *)
+      be called after {!parent_putenv}. *)
 
   val parent_putenv : string -> string -> bool
   (** Update an environment variable in the parent (i.e. shell) process's
@@ -693,7 +695,7 @@ module Config : sig
   val env_int: env_var -> int option
 
   type level = int
-  (* Like [env_int], but accept boolean values for 0 and 1 *)
+  (* Like {!env_int}, but accept boolean values for 0 and 1 *)
   val env_level: env_var -> level option
 
   type sections = int option String.Map.t

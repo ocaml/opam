@@ -430,8 +430,8 @@ type spf_resolved = [ `resolved ]
 type spf_unresolved = [ `unresolved ]
 
 (** Transformation for environment variables containing paths. They are either
-    unresolved at the beginning [SPF_Unresolved], then propagated as resolved
-    [SPF_Resolved]. *)
+    unresolved at the beginning {!SPF_Unresolved}, then propagated as resolved
+    {!SPF_Resolved}. *)
 type _ separator_path_format =
   | SPF_Resolved:
       (separator * path_format) option

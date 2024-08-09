@@ -50,7 +50,7 @@ val set_url:
   rw repos_state -> repository_name -> url -> trust_anchors option ->
   rw repos_state
 
-(** Update the given repositories, as per [OpamUpdate.repositories], checks for
+(** Update the given repositories, as per {!OpamUpdate.repositories}, checks for
     their version and runs the upgrade script locally if they are for an earlier
     opam. Returns list of repositories that failed and the new repository state.
     *)

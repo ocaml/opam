@@ -11,7 +11,7 @@
 open OpamStateTypes
 
 (* Given a list of system packages, retrieve their installation status from the
-   system and returns a pair of [sys_package] set:
+   system and returns a pair of {!sys_package} set:
      * first one is available set: package that exist on the default
        repositories, but not installed)
      * second one, not found set: packages not found on the defined repositories

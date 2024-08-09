@@ -242,7 +242,7 @@ val of_conjunction: atom conjunction -> t
     is not a disjunction, then fail. *)
 val to_disjunction: t -> atom disjunction
 
-(** Like [to_disjunction], but accepts conjunctions within constraint formulas,
+(** Like {!to_disjunction}, but accepts conjunctions within constraint formulas,
     resolving them using the provided package set. Conjunctions between packages
     still raise [Failure]. *)
 val set_to_disjunction: OpamPackage.Set.t -> t -> atom disjunction
