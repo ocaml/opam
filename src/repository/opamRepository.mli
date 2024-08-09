@@ -42,7 +42,7 @@ val pull_shared_tree:
   (string * OpamFilename.Dir.t * subpath option) list -> OpamHash.t list ->
   url list -> string download OpamProcess.job
 
-(* Same as [pull_shared_tree], but for a unique label/dirname.
+(* Same as {!pull_shared_tree}, but for a unique label/dirname.
    If [full_fetch] is set to false, VCS repository is retrieved with shallow
    history (by default, full history). *)
 val pull_tree:

@@ -68,7 +68,7 @@ exception Parse_variable of string * string
 val filter_ident_of_string:
   string -> name option list * variable * (string * string) option
 
-(** Like [Filter_ident_of_string] but parses also [%{?pkg+:var:}%] syntax for
+(** Like {!filter_ident_of_string} but parses also [%{?pkg+:var:}%] syntax for
     variables with package name that contains a [+]. if [accept] is [false],
     [Parse_variable (pkg,var)] is raised when several [+] are encountered in
     package name, i.e. [pkg++:var]. *)

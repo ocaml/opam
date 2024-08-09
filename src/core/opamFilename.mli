@@ -282,7 +282,7 @@ val find_in_parents: (Dir.t -> bool) ->  Dir.t -> Dir.t option
 
 (** {2 Locking} *)
 
-(** See [OpamSystem.flock]. Prefer the higher level [with_flock] functions when
+(** See {!OpamSystem.flock}.  Prefer the higher level [with_flock] functions when
     possible *)
 val flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t -> OpamSystem.lock
 

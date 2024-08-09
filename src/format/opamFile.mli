@@ -60,7 +60,7 @@ module type IO_FILE = sig
 
 end
 
-(* Error less [IO_FILE] read functions. *)
+(* Error less {!IO_FILE} read functions. *)
 module type BestEffortRead = sig
   type t
   val read: t typed_file -> t

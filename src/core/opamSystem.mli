@@ -18,17 +18,17 @@ exception Command_not_found of string
 
 exception Permission_denied of string
 
-(** raise [Process_error] *)
+(** raise {!Process_error} *)
 val process_error: OpamProcess.result -> 'a
 
-(** raise [Process_error] if the process didn't return 0 *)
+(** raise {!Process_error} if the process didn't return 0 *)
 val raise_on_process_error: OpamProcess.result -> unit
 
 (** Exception raised when a computation in the current process
     fails. *)
 exception Internal_error of string
 
-(** Raise [Internal_error] *)
+(** Raise {!Internal_error} *)
 val internal_error: ('a, unit, string, 'b) format4 -> 'a
 
 (** [with_tmp_dir fn] executes [fn] creates a temporary directory and
@@ -287,7 +287,7 @@ val release_all_locks: unit -> unit
 
 (** Acquires a lock on the given file.
     Raises [Locked] if the lock can't be acquired and [dontblock] is set. Raises
-    [OpamStd.Sys.Exit] if [safe_mode] is set and a write lock is required. Also
+    {!OpamStd.Sys.Exit} if [safe_mode] is set and a write lock is required. Also
     raises Unix errors if the lock file can't be opened. *)
 val flock: [< lock_flag ] -> ?dontblock:bool -> string -> lock
 
@@ -346,7 +346,7 @@ val print_stats: unit -> unit
 val register_printer: unit -> unit
 
 (** Initialises signal handlers, catch_break and some exception printers. The
-    lib may not perform properly without this if [Sys.catch_break] isn't set
+    lib may not perform properly without this if {!Sys.catch_break} isn't set
     and SIGPIPE isn't handled (with a no-op) *)
 val init: unit -> unit
 

@@ -112,7 +112,7 @@ users)
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
   * Fix debian manual url fragment [#6231 @RyanGibb]
-  * mli documentation: fix code blocks [#6150 @rjbou]
+  * mli documentation: fix code blocks, references [#6150 @rjbou]
   * Unhide `OpamProcess` functions [#6150 @rjbou]
 
 ## Security fixes
