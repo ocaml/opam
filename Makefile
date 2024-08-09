@@ -237,7 +237,11 @@ reftest-runner: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . tests/reftests/run.exe
 
 reftests: $(DUNE_DEP) src/client/no-git-version
-	@$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest; \
+	@ $(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest; \
+	$(tests-summary)
+
+quick-reftests: $(DUNE_DEP) src/client/no-git-version
+	@ TESTALL=0 TESTN0REP0=1 $(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest; \
 	$(tests-summary)
 
 reftest-%: $(DUNE_DEP) src/client/no-git-version
