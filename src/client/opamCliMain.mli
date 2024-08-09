@@ -8,6 +8,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+exception InvalidCLI of OpamCLIVersion.Sourced.t
+
 (** Handles calling opam plugins (à la git). E.g. [opam publish] runs
     [opam-publish] from PATH, with specific addition of OpamPath.plugins_bin and
     the current switch bin directory).
