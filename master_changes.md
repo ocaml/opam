@@ -117,6 +117,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
 
 ## opam-repository
 
