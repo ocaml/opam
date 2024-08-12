@@ -238,7 +238,7 @@ Processing  1/1: [bar.1: git]
 + git "config" "--local" "color.ui" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
 + git "remote" "add" "origin" "file://${BASEDIR}/bar" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
 + git "remote" "set-url" "origin" "file://${BASEDIR}/bar" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
-+ git "fetch" "-q" "file://${BASEDIR}/bar" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "fetch" "-q" "file://${BASEDIR}/bar" "--update-shallow" "+HEAD:refs/remotes/opam-ref" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
 + git "reset" "--hard" "refs/remotes/opam-ref" "--" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
 + git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
 SYSTEM                          rmdir ${OPAMTMP}
@@ -297,7 +297,7 @@ Processing  1/1: [qux.1: git]
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/git
 + git "init" "--bare" (CWD=${BASEDIR}/OPAM/download-cache/git)
 + git "remote" "set-url" "origin" "https://github.com/ocaml-opam/opam-depext" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
-+ git "fetch" "-q" "https://github.com/ocaml-opam/opam-depext" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "fetch" "-q" "https://github.com/ocaml-opam/opam-depext" "--update-shallow" "+HEAD:refs/remotes/opam-ref" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
 + git "push" git "+refs/remotes/opam-ref:refs/remotes/cd8336413a06dcd0c48d3f48df5d1940" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
 + git "reset" "--hard" "refs/remotes/opam-ref" "--" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
 + git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
