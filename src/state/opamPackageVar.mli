@@ -23,7 +23,7 @@ val package_variable_names: (string * string) list
 (** Variables that are pre-defined in the dependency filtered-formula scope, and
     which resolution is delayed to after the universe is computed (these are the
     only ones allowed in the universe, and resolved by
-    [OpamFilter.filter_deps]) *)
+    {!OpamFilter.filter_deps}) *)
 val predefined_depends_variables: full_variable list
 
 (** Resolves globally available variables only *)
@@ -45,7 +45,7 @@ val resolve:
   ?local:OpamVariable.variable_contents option OpamVariable.Map.t ->
   OpamFilter.env
 
-(** Like [resolve_switch], but takes more specific parameters so that it can be
+(** Like {!resolve_switch}, but takes more specific parameters so that it can be
     used before the switch state is fully loaded *)
 val resolve_switch_raw:
   ?package:package ->

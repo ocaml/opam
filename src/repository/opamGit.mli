@@ -9,7 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Git repository backend (based on OpamVCS) *)
+(** Git repository backend (based on {!OpamVCS}) *)
 
 module VCS: OpamVCS.VCS
 

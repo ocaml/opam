@@ -20,7 +20,7 @@ val getpid : unit -> int
       faked process ID returned by the Microsoft C Runtime
       (see https://caml.inria.fr/mantis/view.php?id=4034).
 
-      On all other platforms, this is just an alias for [Unix.getpid]. *)
+      On all other platforms, this is just an alias for {!Unix.getpid}. *)
 
 val getCurrentProcessID : unit -> int32
   (** Windows only. As {!getpid}, but without the possibility of truncating the
@@ -113,7 +113,7 @@ val getProcessArchitecture : int32 option -> windows_cpu_architecture
 
 val process_putenv : int32 -> string -> string -> bool
 (** Windows only. [process_putenv pid name value] sets the environment variable
-    [name] to [value] in given process ID ([Unix.putenv] must also be called to
+    [name] to [value] in given process ID ({!Unix.putenv} must also be called to
     update the value in the current process). This function must not be called
     if the target process is 32-bit and the current process is 64-bit or vice
     versa (outcomes vary from a no-op to a segfault). *)
