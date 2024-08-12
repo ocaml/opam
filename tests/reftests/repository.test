@@ -618,7 +618,6 @@ to-many-commits
 oper3
 oper
 ### opam repository remove does-not-exist
-Repositories removed from the selections of switch repos. Use '--all' to forget about them altogether.
 [WARNING] Repository 'does-not-exist' not found in the current switch, ignoring
 ### opam repository remove does-not-exist --all
 [WARNING] No configured repositories by these names found: does-not-exist

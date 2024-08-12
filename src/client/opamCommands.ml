@@ -2421,6 +2421,7 @@ let repository cli =
       let full_wipe = List.mem `All scope in
       let global = global || full_wipe in
       let unknown_repos = ref (if full_wipe then [] else names) in
+      let has_known_repos = ref false in
       let rm =
         List.filter (fun n ->
             let seen =
@@ -2431,6 +2432,8 @@ let repository cli =
                 List.filter
                   (fun n' -> not (OpamRepositoryName.equal n n'))
                   !unknown_repos;
+            if seen && not !has_known_repos then
+              has_known_repos := true;
             not seen)
       in
       let gt =
@@ -2445,7 +2448,7 @@ let repository cli =
              "No configured repositories by these names found: %s");
         OpamRepositoryState.drop @@
         List.fold_left OpamRepositoryCommand.remove rt names
-      else if scope = [`Current_switch] then
+      else if scope = [`Current_switch] && !has_known_repos then
         OpamConsole.msg
           "Repositories removed from the selections of switch %s. \
            Use '--all' to forget about them altogether.\n"

@@ -69,6 +69,7 @@ users)
 
 ## Repository
   * Check that the repositories given to `opam repository remove` actually exist [#5014 @kit-ty-kate - fixes #5012]
+  * Don't display any notes about removed repositories when no repositories have been removed [#5014 @kit-ty-kate]
 
 ## Lock
 
