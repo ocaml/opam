@@ -875,8 +875,7 @@ let compare_versions_command cli =
                  $(docv) must be %s.\n" (Arg.doc_alts_enum ~quoted:true operators))
         [ "assert" ]
     in
-    let op_conv = Arg.enum operators in
-    Arg.(value & opt (Arg.some' op_conv) None doc)
+    Arg.(value & opt (some (enum operators)) None doc)
   in
   let version_arg n =
     let doc =
@@ -884,7 +883,7 @@ let compare_versions_command cli =
         ~docv:(Printf.sprintf "VERSION%d" (n+1))
         ~doc:"Package version to compare" []
     in
-    Arg.(required & pos n (Arg.some' OpamArg.package_version) None & doc)
+    Arg.(required & pos n (some OpamArg.package_version) None & doc)
   in
   let command = "compare-versions" in
   let doc = compare_versions_command_doc in
