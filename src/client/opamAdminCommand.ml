@@ -869,10 +869,10 @@ let compare_versions_command cli =
       Arg.info
         ~docv:"OP"
         ~doc:(Printf.sprintf
-             "When supplied, the output is suppressed and the result of the \
-              comparison is checked againts the provided operator. The command exits 0 \
-              if the comparison holds, and 1 otherwise. \
-              $(docv) must be %s.\n" (Arg.doc_alts_enum ~quoted:true operators))
+                "When supplied, the output is suppressed and the result of \
+                 the comparison is checked againts the provided operator. \
+                 The command exits 0 if the comparison holds, and 1 otherwise. \
+                 $(docv) must be %s.\n" (Arg.doc_alts_enum ~quoted:true operators))
         [ "assert" ]
     in
     let op_conv = Arg.enum operators in
@@ -895,14 +895,14 @@ let compare_versions_command cli =
         You may optionally control the exit-code with '--assert=OP'. \
         For example:";
     `Pre "\n\
-       \\$ opam admin compare-versions 0.0.9 0.0.10\n\
-       0.0.9 < 0.0.10\n\
-       \n\
-       \\$ opam admin compare-versions 0.0.9 0.0.10 --assert='<'\n\
-       [0]\n\
-       \n\
-       \\$ opam admin compare-versions 0.0.9 0.0.10 --assert='>='\n\
-       [1]";
+          \\$ opam admin compare-versions 0.0.9 0.0.10\n\
+          0.0.9 < 0.0.10\n\
+          \n\
+          \\$ opam admin compare-versions 0.0.9 0.0.10 --assert='<'\n\
+          [0]\n\
+          \n\
+          \\$ opam admin compare-versions 0.0.9 0.0.10 --assert='>='\n\
+          [1]";
     `S Manpage.s_arguments;
     `S Manpage.s_options;
   ]
@@ -923,7 +923,7 @@ let compare_versions_command cli =
          else `False)
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
-  Term.(const cmd $ global_options cli $ version_arg 0 $ version_arg 1 $ assert_result)
+    Term.(const cmd $ global_options cli $ version_arg 0 $ version_arg 1 $ assert_result)
 
 let pattern_list_arg =
   OpamArg.arg_list "PATTERNS"
