@@ -15,10 +15,8 @@ users)
   * Bump opam-root-version to 2.2 [#5980 @kit-ty-kate]
 
 ## Global CLI
-  * Add cli version 2.3 [#6045 #6151 @rjbou]
-  * ◈ Add `opam admin compare-package-versions` to compare package versions for sanity checks [#6124 @mbarbin]
   * ◈ Add `opam admin compare-versions` to compare package versions for sanity checks [#6124 @mbarbin]
-  * Add cli version 2.3 [#6045 @rjbou]
+  * Add cli version 2.3 [#6045 #6151 @rjbou]
 
 ## Plugins
 
