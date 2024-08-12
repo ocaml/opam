@@ -1,0 +1,146 @@
+N0REP0
+### <a-dev/root.ml>
+print_endline "i'm root file"
+### <pin:a-dev/opam>
+opam-version: "2.0"
+build: [
+  [ "sh" "-c" "git ls-files > files || ls > files" ]
+  [ "sh" "-c" "git rev-list --all --count > hist || echo > hist" ]
+]
+install: [
+  [ "cp" "files" "%{lib}%/%{name}%-files" ]
+  [ "cp" "hist" "%{lib}%/%{name}%-hist" ]
+]
+### tar czf arch.tgz a-dev
+### git -C ./a-dev init -q --initial-branch=master
+### git -C ./a-dev config core.autocrlf false
+### git -C ./a-dev add opam
+### git -C ./a-dev commit -qm "init"
+### git -C ./a-dev add root.ml
+### git -C ./a-dev commit -qm "i'm empty"
+### <pkg:foo-arch.1>
+opam-version: "2.0"
+build: [ "sh" "-c" "ls > files" ]
+install: [ "cp" "files" "%{lib}%/%{name}%-files" ]
+### <pkg:foo-git.1>
+opam-version: "2.0"
+build: [
+  [ "sh" "-c" "git ls-files > files" ]
+  [ "sh" "-c" "git rev-list --all --count > hist" ]
+]
+install: [
+  [ "cp" "files" "%{lib}%/%{name}%-files" ]
+  [ "cp" "hist" "%{lib}%/%{name}%-hist" ]
+]
+### <mkurl.sh>
+p=foo-arch.1
+arch=arch
+file="REPO/packages/${p%.*}/$p/opam"
+basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+MD5=$(openssl md5 "$arch.tgz" | cut -d' ' -f2)
+cat << EOF >> "$file"
+url {
+  src: "$arch.tgz"
+  checksum: "md5=$MD5"
+}
+dev-repo: "git+file://${basedir}/a-dev"
+EOF
+
+p=foo-git.1
+file="REPO/packages/${p%.*}/$p/opam"
+cat << EOF >> "$file"
+url {
+  src: "git+file://${basedir}/a-dev"
+}
+dev-repo: "git+file://${basedir}/a-dev"
+EOF
+### sh mkurl.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create downloads-repo --empty
+### opam install foo-arch
+The following actions will be performed:
+=== install 1 package
+  - install foo-arch 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-arch.1  (file://${BASEDIR}/arch.tgz)
+-> installed foo-arch.1
+Done.
+### cat OPAM/downloads-repo/lib/foo-arch-files | sort
+files
+opam
+root.ml
+### opam install foo-git
+The following actions will be performed:
+=== install 1 package
+  - install foo-git 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-git.1  (git+file://${BASEDIR}/a-dev)
+-> installed foo-git.1
+Done.
+### cat OPAM/downloads-repo/lib/foo-git-files | sort
+opam
+root.ml
+### cat OPAM/downloads-repo/lib/foo-git-hist
+1
+### :: pinning
+### opam switch create downloads-pin --empty
+### opam pin foo-arch-pin arch.tgz -y
+Package foo-arch-pin does not exist, create as a NEW package? [y/n] y
+[foo-arch-pin.dev] synchronised (file://${BASEDIR}/arch.tgz)
+foo-arch-pin is now pinned to file://${BASEDIR}/arch.tgz (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install foo-arch-pin dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-arch-pin.dev  (file://${BASEDIR}/arch.tgz)
+-> installed foo-arch-pin.dev
+Done.
+### cat OPAM/downloads-pin/lib/foo-arch-pin-files | sort
+files
+opam
+root.ml
+### opam pin foo-git-pin ./a-dev -y
+Package foo-git-pin does not exist, create as a NEW package? [y/n] y
+[foo-git-pin.dev] synchronised (file://${BASEDIR}/a-dev)
+foo-git-pin is now pinned to git+file://${BASEDIR}/a-dev#master (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install foo-git-pin dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-git-pin.dev  (git+file://${BASEDIR}/a-dev#master)
+-> installed foo-git-pin.dev
+Done.
+### cat OPAM/downloads-pin/lib/foo-git-pin-files | sort
+opam
+root.ml
+### cat OPAM/downloads-pin/lib/foo-git-pin-hist
+1
+### :: dev-repo
+### opam switch create downloads-devrepo --empty
+### opam pin foo-git --dev-repo -y
+[foo-git.1] synchronised (file://${BASEDIR}/a-dev)
+foo-git is now pinned to git+file://${BASEDIR}/a-dev (version 1)
+
+The following actions will be performed:
+=== install 1 package
+  - install foo-git 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-git.1  (git+file://${BASEDIR}/a-dev)
+-> installed foo-git.1
+Done.
+### cat OPAM/downloads-devrepo/lib/foo-git-files | sort
+opam
+root.ml
+### cat OPAM/downloads-devrepo/lib/foo-git-hist
+1

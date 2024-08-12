@@ -639,6 +639,24 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:extrasource.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-fetch-package)
+ (action
+  (diff fetch-package.test fetch-package.out)))
+
+(alias
+ (name reftest)
+ (deps (alias reftest-fetch-package)))
+
+(rule
+ (targets fetch-package.out)
+ (deps root-N0REP0)
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:fetch-package.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-init-ocaml-eval-variables.unix)
  (enabled_if (= %{os_type} "Unix"))
  (action
