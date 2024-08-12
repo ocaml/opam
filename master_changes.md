@@ -155,6 +155,7 @@ users)
   * Add reinstall test for delayed removal of packages [#6139 @rjbou]
   * Add a test showing the behaviour of `opam list --latests-only` [#5375 @kit-ty-kate]
   * Add a test filtering mechanism [#6105 @Keryan-dev]
+  * Add a package fetching test [#6146 @rjbou]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
