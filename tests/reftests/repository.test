@@ -817,6 +817,7 @@ GARBAGE
 [ERROR] No package matching two-three found
 # Return code 5 #
 ### : Repo config with no url repo
+### cp OPAM/repo/repos-config repos-config.bak
 ### opam switch create nourl --empty
 ### opam repo remove --all repo versions
 ### <nourl/repo>
@@ -868,3 +869,44 @@ opam-version: "2.0"
 
 # Packages matching: any
 # No matches found
+### mv repos-config.bak OPAM/repo/repos-config
+### : Check the behaviour of opam repository remove when given unknown repositories
+### <REM/repo>
+opam-version: "2.0"
+### mkdir REM/packages
+### opam switch create rm-unknown --empty
+### opam repository add oper ./REM --this-switch
+[oper] Initialised
+### opam repository add oper3 ./REM --this-switch
+[oper3] Initialised
+### opam repository add repo2 ./REM --dont-select
+[repo2] Initialised
+### opam repository add to-many-commits ./REM --this-switch
+[to-many-commits] Initialised
+### opam repository remove repo versions --all
+### opam repository --all --short
+oper
+oper3
+repo2
+to-many-commits
+### opam repository --short
+to-many-commits
+oper3
+oper
+### opam repository remove does-not-exist
+Repositories removed from the selections of switch rm-unknown. Use '--all' to forget about them altogether.
+### opam repository remove does-not-exist --all
+[WARNING] No configured repositories by these names found: does-not-exist
+### opam repository remove does-not-exist oper
+Repositories removed from the selections of switch rm-unknown. Use '--all' to forget about them altogether.
+### opam repository remove does-not-exist repo2
+Repositories removed from the selections of switch rm-unknown. Use '--all' to forget about them altogether.
+### opam repository remove does-not-exist repo2 --all
+[WARNING] No configured repositories by these names found: does-not-exist
+### opam repository --all --short
+oper
+oper3
+to-many-commits
+### opam repository --short
+to-many-commits
+oper3
