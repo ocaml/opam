@@ -230,7 +230,6 @@ tests-%: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest-legacy-$* --force
 
 reftest-gen: src/client/no-git-version
-	echo >tests/reftests/dune.inc
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest-gen --auto-promote --force
 
 reftest-runner: $(DUNE_DEP) src/client/no-git-version
