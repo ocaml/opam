@@ -889,8 +889,8 @@ let compare_versions_command cli =
   let doc = compare_versions_command_doc in
   let man = [
     `S Manpage.s_description;
-    `P "This command compares 2 package versions for quick sanity checks, \
-        and by default prints the result of the comparison to the console. \
+    `P "This command compares 2 package versions for quick sanity checks. \
+        By default it prints the result of the comparison to the console. \
         You may optionally control the exit-code with '--assert=OP'. \
         For example:";
     `Pre "\n\
