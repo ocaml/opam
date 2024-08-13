@@ -60,7 +60,7 @@ d.1
 ### opam tree nonsense
 [ERROR] Could not simulate installing the specified package(s) to this switch:
   * Missing dependency:
-    - nonsense
+    - (request) -> nonsense
     unknown package
 
 # Return code 20 #

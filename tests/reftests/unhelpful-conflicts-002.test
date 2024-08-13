@@ -28,7 +28,7 @@ ocaml-config is now pinned locally (version 1)
 ### opam install --show expect.0.0.6
 [ERROR] Package conflict!
   * Missing dependency:
-    - ocaml < 4.12.0
+    - expect >= 0.0.6 -> batteries -> ocaml < 4.12.0
     not available because the package is pinned to version 4.12.0
 
 No solution found, exiting

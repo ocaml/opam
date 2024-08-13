@@ -1156,11 +1156,6 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
     reduce_invariant_msg [] false explanations
   in
 
-  let same_depexts sdeps fdeps =
-    List.for_all (function
-        | `Missing (_, sdeps', fdeps') -> sdeps = sdeps' && fdeps = fdeps'
-        | _ -> false)
-  in
   log ~level:3 "Explanations: %a" Pp_explanation.pp_explanationlist explanations;
   match explanations with
   | [] ->
@@ -1168,8 +1163,6 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
       "Internal error while computing conflict explanations:\n\
        sorry about that. Please report how you got here in \
        https://github.com/ocaml/opam/discussions/5130 if possible."
-  | `Missing (_, sdeps, fdeps) :: rest when same_depexts sdeps fdeps rest ->
-    [`Missing (None, sdeps, fdeps)]
   | _ -> explanations
 
 let strings_of_cycles cycles =

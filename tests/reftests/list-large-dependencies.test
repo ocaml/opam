@@ -331,7 +331,7 @@ abt
 ### opam install abella --show
 [ERROR] Package conflict!
   * Missing dependency:
-    - test-not-in-repo.dev: no longer available
+    - (invariant) -> test-not-in-repo -> test-not-in-repo.dev: no longer available
 
 No solution found, exiting
 # Return code 20 #
