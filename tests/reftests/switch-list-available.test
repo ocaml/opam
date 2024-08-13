@@ -1,0 +1,151 @@
+N0REP0
+### <pkg:comp-a.1>
+opam-version: "2.0"
+flags: compiler
+### <pkg:comp-a.2>
+opam-version: "2.0"
+flags: compiler
+### <pkg:comp-a.3>
+opam-version: "2.0"
+flags: compiler
+### <pkg:comp-a.4>
+opam-version: "2.0"
+flags: compiler
+### <pkg:comp-b.1>
+opam-version: "2.0"
+flags: compiler
+### <pkg:pkg-1.1>
+opam-version: "2.0"
+### <pkg:pkg-1.2>
+opam-version: "2.0"
+### <pkg:pkg-2.1>
+opam-version: "2.0"
+### opam switch list-available
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-a 1
+comp-b 1
+comp-a 2
+comp-a 3
+comp-a 4
+### opam switch list-available --all
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-a 1
+comp-b 1
+comp-a 2
+comp-a 3
+comp-a 4
+### <pkg:comp-b.2>
+opam-version: "2.0"
+flags: [compiler avoid-version]
+### <pkg:comp-b.3>
+opam-version: "2.0"
+flags: [compiler deprecated]
+### <pkg:comp-b.4>
+opam-version: "2.0"
+flags: compiler
+### opam switch list-available
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-a 1
+comp-b 1
+comp-a 2
+comp-a 3
+comp-a 4
+comp-b 4
+[NOTE] Some compilers have been hidden (e.g. pre-releases). If you want to display them, run: 'opam switch list-available --all'
+### opam switch list-available --all
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-a 1
+comp-b 1
+comp-a 2
+comp-b 2
+comp-a 3
+comp-b 3
+comp-a 4
+comp-b 4
+### opam switch list-available --cli 2.2
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-a 1
+comp-b 1
+comp-a 2
+comp-b 2
+comp-a 3
+comp-b 3
+comp-a 4
+comp-b 4
+### :: patterns selectors
+### opam switch list-available pkg-1
+# Listing available compilers from repositories: default
+# No matches found
+### opam switch list-available pkg-1 --all
+# Listing available compilers from repositories: default
+# No matches found
+### opam switch list-available comp-b
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-b 1
+comp-b 4
+[NOTE] Some compilers have been hidden (e.g. pre-releases). If you want to display them, run: 'opam switch list-available --all'
+### opam switch list-available comp-b --all
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-b 1
+comp-b 2
+comp-b 3
+comp-b 4
+### opam switch list-available comp-b.1
+# Listing available compilers from repositories: default
+# No matches found
+### opam switch list-available comp-b.1 --all
+# Listing available compilers from repositories: default
+# No matches found
+### opam switch list-available comp-b.2
+# Listing available compilers from repositories: default
+# No matches found
+### opam switch list-available comp-b.2 --all
+# Listing available compilers from repositories: default
+# No matches found
+### <pkg:comp_c.1>
+opam-version: "2.0"
+flags: compiler
+### <pkg:comp_c.2>
+opam-version: "2.0"
+flags: [compiler avoid-version]
+### opam switch list-available "pkg-*"
+# Listing available compilers from repositories: default
+# No matches found
+### opam switch list-available "comp-*"
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-a 1
+comp-b 1
+comp-a 2
+comp-a 3
+comp-a 4
+comp-b 4
+[NOTE] Some compilers have been hidden (e.g. pre-releases). If you want to display them, run: 'opam switch list-available --all'
+### opam switch list-available "comp-*" --all
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-a 1
+comp-b 1
+comp-a 2
+comp-b 2
+comp-a 3
+comp-b 3
+comp-a 4
+comp-b 4
+### opam switch list-available "comp_*"
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp_c 1
+[NOTE] Some compilers have been hidden (e.g. pre-releases). If you want to display them, run: 'opam switch list-available --all'
+### opam switch list-available "comp_*" --all
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp_c 1
+comp_c 2

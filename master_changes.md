@@ -44,6 +44,7 @@ users)
 ## Switch
   * ◈ Add `opam switch import --deps-only` option to install only dependencies of root package at import [#5388 @rjbou - fix #5200]
   * [BUG] Make accepted `--repos` URLs on creation consistent with `opam repository` [#6091 @Keryan-dev - fix #4673]
+  * ◈ opam switch list-available will not display compilers flagged with avoid-version/deprecated unless --all is given [#6098 @kit-ty-kate - fix #6089]
 
 ## Config
 
@@ -157,6 +158,7 @@ users)
   * Add a test showing the behaviour of `opam list --latests-only` [#5375 @kit-ty-kate]
   * Add a test filtering mechanism [#6105 @Keryan-dev]
   * Add a package fetching test [#6146 @rjbou]
+  * Add a test showing the behaviour of `opam switch list-available` [#6098 @kit-ty-kate]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
@@ -193,6 +195,7 @@ users)
   * `OpamArg.build_options`: add `--verbose-on` flag [#5682 @desumn @rjbou]
   * `OpamClientConfig.build_options`: add `verbose_on` field [#5682 @desumn]
   * `OpamClientConfig.E`, `OpamArg.environment_variables`: and `OPAMVERBOSEON` support [#5682 @desumn @rjbou]
+  * `OpamListCommand.selector`: Add `NotFlag` selector [#6098 @kit-ty-kate]
 
 ## opam-repository
  * `OpamRepository.fetch_from_cache`: when an archive is found, add a symlink (or copy) for the ones found in opam file but not in cache [#6068 @kit-ty-kate]
