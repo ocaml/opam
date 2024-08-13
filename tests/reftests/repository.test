@@ -122,7 +122,7 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/fo
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.2/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/opam in 0.000s
-FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-hash.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-hash.cache written in 0.000s
 Now run 'opam upgrade' to apply any package updates.
@@ -203,7 +203,7 @@ FILE(repo)                      Read ${BASEDIR}/OPAM/repo/repo2/repo in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.2/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.1/opam in 0.000s
 [tarred] no changes from file://${BASEDIR}/REPO
-FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-hash.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-hash.cache written in 0.000s
 Now run 'opam upgrade' to apply any package updates.
@@ -247,7 +247,7 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/fo
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.2/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/opam in 0.000s
-FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config in 0.000s
+FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-hash.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-hash.cache written in 0.000s
 Now run 'opam upgrade' to apply any package updates.
