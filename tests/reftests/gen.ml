@@ -52,7 +52,7 @@ let archive_download_rule archive_hash =
 let default_repo_rule =
   Format.sprintf {|
 (rule
- (targets %s)
+ (targets (dir %s))
  (action
   (progn
    (run mkdir -p %%{targets}/packages)
@@ -64,7 +64,7 @@ let default_repo_rule =
 let archive_unpack_rule archive_hash =
   Format.sprintf {|
 (rule
-  (targets %s)
+  (targets (dir %s))
   (action
    (progn
     (run mkdir -p %%{targets})
@@ -74,7 +74,7 @@ let archive_unpack_rule archive_hash =
 let opam_init_rule archive_hash =
   Format.sprintf {|
 (rule
-  (targets %s)
+  (targets (dir %s))
   (deps opam-root-version)
   (action
    (progn

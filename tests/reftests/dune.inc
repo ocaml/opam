@@ -1953,7 +1953,7 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:working-dir.test} %{read-lines:testing-env}))))
 
 (rule
- (targets opam-repo-N0REP0)
+ (targets (dir opam-repo-N0REP0))
  (action
   (progn
    (run mkdir -p %{targets}/packages)
@@ -1961,7 +1961,7 @@
    (run cp repo %{targets}/repo))))
 
 (rule
-  (targets root-N0REP0)
+  (targets (dir root-N0REP0))
   (deps opam-root-version)
   (action
    (progn
@@ -1975,14 +1975,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/0070613707.tar.gz)))
 
 (rule
-  (targets opam-repo-0070613707)
+  (targets (dir opam-repo-0070613707))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-0070613707.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-0070613707)
+  (targets (dir root-0070613707))
   (deps opam-root-version)
   (action
    (progn
@@ -1996,14 +1996,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/009e00fa.tar.gz)))
 
 (rule
-  (targets opam-repo-009e00fa)
+  (targets (dir opam-repo-009e00fa))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-009e00fa.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-009e00fa)
+  (targets (dir root-009e00fa))
   (deps opam-root-version)
   (action
    (progn
@@ -2017,14 +2017,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/11ea1cb.tar.gz)))
 
 (rule
-  (targets opam-repo-11ea1cb)
+  (targets (dir opam-repo-11ea1cb))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-11ea1cb.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-11ea1cb)
+  (targets (dir root-11ea1cb))
   (deps opam-root-version)
   (action
    (progn
@@ -2038,14 +2038,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/297366c.tar.gz)))
 
 (rule
-  (targets opam-repo-297366c)
+  (targets (dir opam-repo-297366c))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-297366c.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-297366c)
+  (targets (dir root-297366c))
   (deps opam-root-version)
   (action
    (progn
@@ -2059,14 +2059,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/3235916.tar.gz)))
 
 (rule
-  (targets opam-repo-3235916)
+  (targets (dir opam-repo-3235916))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-3235916.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-3235916)
+  (targets (dir root-3235916))
   (deps opam-root-version)
   (action
    (progn
@@ -2080,14 +2080,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/7090735c.tar.gz)))
 
 (rule
-  (targets opam-repo-7090735c)
+  (targets (dir opam-repo-7090735c))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-7090735c.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-7090735c)
+  (targets (dir root-7090735c))
   (deps opam-root-version)
   (action
    (progn
@@ -2101,14 +2101,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/7371c1d9.tar.gz)))
 
 (rule
-  (targets opam-repo-7371c1d9)
+  (targets (dir opam-repo-7371c1d9))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-7371c1d9.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-7371c1d9)
+  (targets (dir root-7371c1d9))
   (deps opam-root-version)
   (action
    (progn
@@ -2122,14 +2122,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/a5d7cdc0.tar.gz)))
 
 (rule
-  (targets opam-repo-a5d7cdc0)
+  (targets (dir opam-repo-a5d7cdc0))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-a5d7cdc0.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-a5d7cdc0)
+  (targets (dir root-a5d7cdc0))
   (deps opam-root-version)
   (action
    (progn
@@ -2143,14 +2143,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/ad4dd344.tar.gz)))
 
 (rule
-  (targets opam-repo-ad4dd344)
+  (targets (dir opam-repo-ad4dd344))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-ad4dd344.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-ad4dd344)
+  (targets (dir root-ad4dd344))
   (deps opam-root-version)
   (action
    (progn
@@ -2164,14 +2164,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/c1842d168d.tar.gz)))
 
 (rule
-  (targets opam-repo-c1842d168d)
+  (targets (dir opam-repo-c1842d168d))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-c1842d168d.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-c1842d168d)
+  (targets (dir root-c1842d168d))
   (deps opam-root-version)
   (action
    (progn
@@ -2185,14 +2185,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a.tar.gz)))
 
 (rule
-  (targets opam-repo-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
+  (targets (dir opam-repo-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
+  (targets (dir root-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a))
   (deps opam-root-version)
   (action
    (progn
@@ -2206,14 +2206,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/c1d23f0e.tar.gz)))
 
 (rule
-  (targets opam-repo-c1d23f0e)
+  (targets (dir opam-repo-c1d23f0e))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-c1d23f0e.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-c1d23f0e)
+  (targets (dir root-c1d23f0e))
   (deps opam-root-version)
   (action
    (progn
@@ -2227,14 +2227,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/de897adf36c4230dfea812f40c98223b31c4521a.tar.gz)))
 
 (rule
-  (targets opam-repo-de897adf36c4230dfea812f40c98223b31c4521a)
+  (targets (dir opam-repo-de897adf36c4230dfea812f40c98223b31c4521a))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-de897adf36c4230dfea812f40c98223b31c4521a.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-de897adf36c4230dfea812f40c98223b31c4521a)
+  (targets (dir root-de897adf36c4230dfea812f40c98223b31c4521a))
   (deps opam-root-version)
   (action
    (progn
@@ -2248,14 +2248,14 @@
  (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/f372039d.tar.gz)))
 
 (rule
-  (targets opam-repo-f372039d)
+  (targets (dir opam-repo-f372039d))
   (action
    (progn
     (run mkdir -p %{targets})
     (run tar -C %{targets} -xzf %{dep:opam-archive-f372039d.tar.gz} --strip-components=1))))
 
 (rule
-  (targets root-f372039d)
+  (targets (dir root-f372039d))
   (deps opam-root-version)
   (action
    (progn

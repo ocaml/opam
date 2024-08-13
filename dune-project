@@ -1,7 +1,8 @@
-(lang dune 2.0)
+(lang dune 3.0)
 (name opam)
 
 (implicit_transitive_deps true)
+(using directory-targets 0.1)
 
 (package (name opam-core))
 (package (name opam-format))
