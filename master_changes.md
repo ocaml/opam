@@ -181,6 +181,7 @@ users)
   * Update action cache to v4 [#6081 @rjbou]
   * Update action checkout to v4 [#6081 @rjbou]
   * Update action upload-artifact to v4 [#6081 @rjbou]
+  * preamble: Allow local git submodules (ignore CVE-2022-39253) [#6132 @kit-ty-kate]
 
 ## Doc
   * Remove the ppa from the installation instructions on Ubuntu [#5988 @kit-ty-kate - fix #5987]
