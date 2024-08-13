@@ -1,0 +1,73 @@
+N0REP0
+### <pkg:lorem.1>
+opam-version: "2.0"
+available: [ os = "linux" ]
+### <pkg:ipsum.1>
+opam-version: "2.0"
+### <pkg:dolor.1>
+opam-version: "2.0"
+### <pkg:sit.1>
+opam-version: "2.0"
+depends: [ "lorem" | "adipscing" ]
+### <pkg:amet.1>
+opam-version: "2.0"
+### <pkg:consectetur.1>
+opam-version: "2.0"
+### <pkg:adipscing.1>
+opam-version: "2.0"
+available: [ os = "win32" ]
+### <pkg:elit.1>
+opam-version: "2.0"
+available: false
+### mv REPO/packages .
+### opam admin list
+# Packages matching: available
+# Name      # Installed # Synopsis
+adipscing   --
+amet        --
+consectetur --
+dolor       --
+ipsum       --
+lorem       --
+sit         --
+### opam admin filter --dry-run 'a*'
+The following 2 packages will be kept in the repository (6 packages will be REMOVED):
+adipscing.1 amet.1
+rm -rf ${BASEDIR}/packages/consectetur/consectetur.1
+rm -rf ${BASEDIR}/packages/dolor/dolor.1
+rm -rf ${BASEDIR}/packages/elit/elit.1
+rm -rf ${BASEDIR}/packages/ipsum/ipsum.1
+rm -rf ${BASEDIR}/packages/lorem/lorem.1
+rm -rf ${BASEDIR}/packages/sit/sit.1
+### opam admin filter --dry-run 'a*' --remove
+The following 2 packages will be REMOVED from the repository (6 packages will be kept):
+adipscing.1 amet.1
+rm -rf ${BASEDIR}/packages/adipscing/adipscing.1
+rm -rf ${BASEDIR}/packages/amet/amet.1
+### opam admin filter --dry-run --available
+The following 7 packages will be kept in the repository (1 packages will be REMOVED):
+adipscing.1 amet.1 consectetur.1 dolor.1 ipsum.1 lorem.1 sit.1
+rm -rf ${BASEDIR}/packages/elit/elit.1
+### opam admin filter --dry-run --resolve sit --environment 'os=win32'
+The following 2 packages will be kept in the repository (6 packages will be REMOVED):
+adipscing.1 sit.1
+rm -rf ${BASEDIR}/packages/amet/amet.1
+rm -rf ${BASEDIR}/packages/consectetur/consectetur.1
+rm -rf ${BASEDIR}/packages/dolor/dolor.1
+rm -rf ${BASEDIR}/packages/elit/elit.1
+rm -rf ${BASEDIR}/packages/ipsum/ipsum.1
+rm -rf ${BASEDIR}/packages/lorem/lorem.1
+### opam admin filter --dry-run --resolve sit --environment 'os=linux'
+The following 2 packages will be kept in the repository (6 packages will be REMOVED):
+lorem.1 sit.1
+rm -rf ${BASEDIR}/packages/adipscing/adipscing.1
+rm -rf ${BASEDIR}/packages/amet/amet.1
+rm -rf ${BASEDIR}/packages/consectetur/consectetur.1
+rm -rf ${BASEDIR}/packages/dolor/dolor.1
+rm -rf ${BASEDIR}/packages/elit/elit.1
+rm -rf ${BASEDIR}/packages/ipsum/ipsum.1
+### opam admin filter --dry-run --available --environment 'os=linux'
+The following 6 packages will be kept in the repository (2 packages will be REMOVED):
+amet.1 consectetur.1 dolor.1 ipsum.1 lorem.1 sit.1
+rm -rf ${BASEDIR}/packages/adipscing/adipscing.1
+rm -rf ${BASEDIR}/packages/elit/elit.1
