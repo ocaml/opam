@@ -830,39 +830,11 @@ let check_command cli =
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg)
 
-module Compare_version_operator = struct
-  type t =
-    [ `Lt
-    | `Let
-    | `Eq
-    | `Gt
-    | `Get
-    ]
-
-  let all = [ `Lt ; `Let ; `Eq ; `Gt ; `Get ]
-
-  let eval : t -> int -> int -> bool = function
-    | `Lt -> ( < )
-    | `Let -> ( <= )
-    | `Eq -> ( = )
-    | `Gt -> ( > )
-    | `Get -> ( >= )
-
-  let assert_ t result = eval t result 0
-
-  let to_string : t -> string = function
-    | `Lt -> "<"
-    | `Let -> "<="
-    | `Eq -> "="
-    | `Gt -> ">"
-    | `Get -> ">="
-end
-
 let compare_versions_command_doc = "Compare 2 package versions"
 let compare_versions_command cli =
   let operators =
-    List.map (fun op -> Compare_version_operator.to_string op, op)
-      Compare_version_operator.all
+    List.map (fun op -> OpamFormula.string_of_relop op, op)
+      OpamFormula.all_relop
   in
   let assert_result =
     let doc =
@@ -908,16 +880,16 @@ let compare_versions_command cli =
   in
   let cmd global_options v1 v2 assert_result () =
     OpamArg.apply_global_options cli global_options;
-    let result = OpamPackage.Version.compare v1 v2 in
     match assert_result with
     | None ->
+      let result = OpamPackage.Version.compare v1 v2 in
       OpamConsole.formatted_msg "%s %s %s\n"
         (OpamPackage.Version.to_string v1)
         (if result < 0 then "<" else if result = 0 then "=" else ">")
         (OpamPackage.Version.to_string v2)
     | Some op ->
       OpamStd.Sys.exit_because
-        (if Compare_version_operator.assert_ op result
+        (if OpamFormula.eval_relop op v1 v2
          then `Success
          else `False)
   in

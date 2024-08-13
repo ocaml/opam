@@ -21,6 +21,8 @@ let neg_relop = function
 
 let string_of_relop = OpamPrinter.FullPos.relop_kind
 
+let all_relop = [ `Eq ; `Neq ; `Geq ; `Gt ; `Leq ; `Lt ]
+
 type version_constraint = relop * OpamPackage.Version.t
 
 type atom = OpamPackage.Name.t * version_constraint option
