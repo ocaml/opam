@@ -1116,3 +1116,44 @@ url {
 ${BASEDIR}/lint.opam: Errors.
              error 71: Field 'url.checksum' contains duplicated checksums: "md5: 2 occurences", "sha256: 3 occurences"
 # Return code 1 #
+### : E72: Field 'extra-sources' contains duplicated checksums
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+extra-source "double-file" {
+  src:"https://git.url/repo.tgz"
+  checksum:[
+  "md5=00000000000000000000000000000000"
+  "md5=11111111111111111111111111111111"
+  "sha256=2222222222222222222222222222222222222222222222222222222222222222"
+  "sha256=3333333333333333333333333333333333333333333333333333333333333333"
+  "sha256=4444444444444444444444444444444444444444444444444444444444444444"
+  "sha512=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+  ]
+}
+extra-source "double-file2" {
+  src:"https://git.url/repo.tgz"
+  checksum:[
+  "md5=00000000000000000000000000000000"
+  "md5=11111111111111111111111111111111"
+  ]
+}
+extra-source "double-file3" {
+  src:"https://git.url/repo.tgz"
+  checksum:[
+  "md5=00000000000000000000000000000000"
+  "sha256=3333333333333333333333333333333333333333333333333333333333333333"
+  "sha512=55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+  ]
+}
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 72: Field 'extra-sources' contains duplicated checksums: "double-file have md5: 2 occurences and sha256: 3 occurences", "double-file2 have md5: 2 occurences"
+# Return code 1 #

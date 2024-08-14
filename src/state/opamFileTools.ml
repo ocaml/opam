@@ -1052,6 +1052,32 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
      cond 71 `Error
        "Field 'url.checksum' contains duplicated checksums"
        ?detail has_double);
+    (let has_double, detail =
+       OpamFile.OPAM.extra_sources t
+       |> List.rev_map (fun (basename, url) ->
+           basename,
+           OpamFile.URL.checksum url
+           |> List.rev_map OpamHash.kind
+           |> check_double
+             OpamHash.compare_kind
+             OpamHash.string_of_kind)
+       |> List.fold_left (fun (has_double, details) (basename, (double, detail)) ->
+           let has_double = has_double || double in
+           let details =
+             match detail with
+             | None -> details
+             | Some detail ->
+               Printf.sprintf "%s have %s"
+                 (OpamFilename.Base.to_string basename)
+                 (OpamStd.Format.pretty_list detail)
+               :: details
+           in
+           has_double, details) (false, [])
+       |> (function hd, [] -> hd, None | hd, d -> hd, Some d)
+     in
+     cond 72 `Error
+       "Field 'extra-sources' contains duplicated checksums"
+       ?detail has_double);
   ]
   in
   format_errors @
