@@ -1277,7 +1277,7 @@ let check_and_print_env_warning st =
       OpamStateConfig.(!r.switch_from <> `Command_line))
   then
     OpamConsole.formatted_msg
-      "# Run %s to update the current shell environment\n"
+      "# To update the current shell environment, run: %s\n"
       (OpamConsole.colorise `bold (eval_string st.switch_global
                                      (Some st.switch)))
 
