@@ -266,3 +266,19 @@ The following actions will be performed:
 Done.
 ### opam install --check some-ocaml-pkg.1
 All dependencies installed
+### ::: check that --check correctly detect an unknown package
+### <pkg:unknown-dep.1>
+opam-version: "2.0"
+depends: [
+  "does-not-exist"
+]
+### opam install --check unknown-dep.1
+Missing dependencies:
+does-not-exist
+# Return code 1 #
+### opam install --check does-not-exist
+All dependencies installed
+### opam install --check does-not-exist.9999
+All dependencies installed
+### opam install --check some-ocaml-pkg.2
+All dependencies installed
