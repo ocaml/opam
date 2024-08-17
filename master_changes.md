@@ -35,6 +35,7 @@ users)
   * [BUG] Fix `opam install --check pkg` when pkg depends on a non-existing package [#6121 @kit-ty-kate]
   * Disable shallow clone by default except for opam repositories [#6146 @kit-ty-kate - fix #6145]
   * Improve performance of `opam install --check` [#6122 @kit-ty-kate]
+  * Make `opam install --check` check if all dependencies are installed recursively [#6122 @kit-ty-kate - fix #6097]
 
 ## Build (package)
   * ◈ Add `--verbose-on` option to enable verbose mode on specified package names [#5682 @desumn @rjbou]

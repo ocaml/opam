@@ -198,7 +198,9 @@ depends: [
   "b" {> "1"}
 ]
 ### opam install --check test.3
-All dependencies installed
+Missing dependencies:
+b
+# Return code 1 #
 ### : make sure disjunctions and post-dependencies work
 ### <pkg:ocaml.1>
 opam-version: "2.0"
@@ -277,8 +279,14 @@ Missing dependencies:
 does-not-exist
 # Return code 1 #
 ### opam install --check does-not-exist
-All dependencies installed
+Missing dependencies:
+does-not-exist
+# Return code 1 #
 ### opam install --check does-not-exist.9999
-All dependencies installed
+Missing dependencies:
+does-not-exist
+# Return code 1 #
 ### opam install --check some-ocaml-pkg.2
-All dependencies installed
+Missing dependencies:
+some-ocaml-pkg
+# Return code 1 #
