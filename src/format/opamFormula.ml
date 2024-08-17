@@ -33,6 +33,19 @@ let string_of_atom = function
       (string_of_relop r)
       (OpamPackage.Version.to_string c)
 
+let compare_relop x y =
+  Stdlib.compare (x : [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]) (y : relop)
+
+let compare_version_constraint (relop1, v1) (relop2, v2) =
+  let cmp = compare_relop relop1 relop2 in
+  if cmp <> 0 then cmp
+  else OpamPackage.Version.compare v1 v2
+
+let compare_atom (name1, vc1) (name2, vc2) =
+  let cmp = OpamPackage.Name.compare name1 name2 in
+  if cmp <> 0 then cmp
+  else Option.compare compare_version_constraint vc1 vc2
+
 let short_string_of_atom = function
   | n, None       -> OpamPackage.Name.to_string n
   | n, Some (`Eq,c) ->

@@ -229,6 +229,7 @@ users)
   * Add `OpamTypesBase.switch_selections_{compare,equal}`: proper comparison functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
   * `OpamFormula`: add `exists` [#5317 @kit-ty-kate]
   * `OpamTypes.universe`: make `u_available` and `u_attrs` lazy to speedup actions that do not require availiblity information [#5317 @kit-ty-kate - fix #5314]
+  * `OpamFormula`: add some missing comparison functions for `relop`, `version_constraint` and `atom` (`compare_relop`, `compare_version_constraint` and `compare_atom` respectively) [#6122 @kit-ty-kate]
 
 ## opam-core
   * `OpamStd.Env`: add `env_string_list` for parsing string list environment variables (comma separated) [#5682 @desumn]
