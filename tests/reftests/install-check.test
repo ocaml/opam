@@ -199,3 +199,70 @@ depends: [
 ]
 ### opam install --check test.3
 All dependencies installed
+### : make sure disjunctions and post-dependencies work
+### <pkg:ocaml.1>
+opam-version: "2.0"
+depends: [
+  "base-unix" {post}
+  "ocaml-base-compiler" | "ocaml-variants"
+]
+### <pkg:base-unix.1>
+opam-version: "2.0"
+depends: [
+  "ocaml"
+]
+### <pkg:ocaml-base-compiler.1>
+opam-version: "2.0"
+### <pkg:ocaml-variants.1>
+opam-version: "2.0"
+### <pkg:dune.1>
+opam-version: "2.0"
+depends: [
+  "ocaml"
+]
+### <pkg:some-ocaml-pkg.1>
+opam-version: "2.0"
+depends: [
+  "ocaml"
+  "dune"
+]
+### opam install --check some-ocaml-pkg
+Missing dependencies:
+dune ocaml
+# Return code 1 #
+### opam install ocaml
+The following actions will be performed:
+=== install 3 packages
+  - install base-unix           1
+  - install ocaml               1
+  - install ocaml-base-compiler 1 [required by ocaml]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.1
+-> installed ocaml.1
+-> installed base-unix.1
+Done.
+### opam install --check some-ocaml-pkg
+Missing dependencies:
+dune
+# Return code 1 #
+### opam install --deps-only some-ocaml-pkg.1
+The following actions will be performed:
+=== install 1 package
+  - install dune 1 [required by some-ocaml-pkg]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dune.1
+Done.
+### opam install --check some-ocaml-pkg.1
+All dependencies installed
+### opam install some-ocaml-pkg.1
+The following actions will be performed:
+=== install 1 package
+  - install some-ocaml-pkg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed some-ocaml-pkg.1
+Done.
+### opam install --check some-ocaml-pkg.1
+All dependencies installed
