@@ -74,6 +74,7 @@ users)
 ## Clean
 
 ## Env
+  * Make the shell environment update hint easier to copy/paste [#6159 @kit-ty-kate - fix #6158]
 
 ## Opamfile
   * Make all writes atomic [#5489 @kit-ty-kate]
