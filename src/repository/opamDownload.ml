@@ -20,19 +20,28 @@ let fail (s,l) = raise (Download_fail (s,l))
 let user_agent =
   CString (Printf.sprintf "opam/%s" (OpamVersion.(to_string current)))
 
-let curl_args = [
-  CString "--write-out", None;
-  CString "%%{http_code}\\n", None; (* 6.5 13-Mar-2000 *)
-  CString "--retry", None; CIdent "retry", None; (* 7.12.3 20-Dec-2004 *)
-  CString "--retry-delay", None; CString "2", None; (* 7.12.3 20-Dec-2004 *)
-  CString "--compressed",
-  Some (FIdent (OpamFilter.ident_of_string "compress")); (* 7.10 1-Oct-2002 *)
-  CString "--user-agent", None; user_agent, None; (* 4.5.1 12-Jun-1998 *)
-  CString "-L", None; (* 4.9 7-Oct-1998 *)
-  CString "-o", None; CIdent "out", None; (* 2.3 21-Aug-1997 *)
-  CString "--", None; (* End list of options; 5.0 1-Dec-1998 *)
-  CIdent "url", None;
-]
+let curl_args =
+  let main_args = [
+    CString "--retry", None; CIdent "retry", None; (* 7.12.3 20-Dec-2004 *)
+    CString "--retry-delay", None; CString "2", None; (* 7.12.3 20-Dec-2004 *)
+    CString "--compressed",
+    Some (FIdent (OpamFilter.ident_of_string "compress")); (* 7.10 1-Oct-2002 *)
+    CString "--user-agent", None; user_agent, None; (* 4.5.1 12-Jun-1998 *)
+    CString "-L", None; (* 4.9 7-Oct-1998 *)
+    CString "-o", None; CIdent "out", None; (* 2.3 21-Aug-1997 *)
+    CString "--", None; (* End list of options; 5.0 1-Dec-1998 *)
+    CIdent "url", None;
+  ] in
+  fun ~with_mitigation ->
+    if with_mitigation then
+      (* --fail is as old as curl; though the assumption that it leads to exit
+         code 22 when there's an error is probably 5.3 21-Dec-1998 (prior to
+         that it led to exit code 21) *)
+      (CString "--fail", None) :: main_args
+    else
+      (CString "--write-out", None) ::
+      (CString "%%{http_code}\\n", None) :: (* 6.5 13-Mar-2000 *)
+      main_args
 
 let wget_args = [
   CString "--content-disposition", None;
@@ -57,14 +66,16 @@ let ftp_args = [
   CIdent "url", None;
 ]
 
-let download_args ~url ~out ~retry ?checksum ~compress () =
+let download_args ~url ~out ~retry ?(with_curl_mitigation=false)
+                  ?checksum ~compress () =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =
     match cmd with
     | [(CIdent "wget"), _] -> cmd @ wget_args
     | [(CIdent "fetch"), _] -> cmd @ fetch_args
     | [(CIdent "ftp"), _] -> cmd @ ftp_args
-    | [_] -> cmd @ curl_args (* Assume curl if the command is a single arg *)
+      (* Assume curl if the command is a single arg *)
+    | [_] -> cmd @ curl_args ~with_mitigation:with_curl_mitigation
     | _ -> cmd
   in
   OpamFilter.single_command (fun v ->
@@ -90,7 +101,28 @@ let download_args ~url ~out ~retry ?checksum ~compress () =
       | _ -> None)
     cmd
 
-let tool_return url ret =
+let download_command_t ~with_curl_mitigation ~compress ?checksum ~url ~dst c =
+  let cmd, args =
+    match
+      download_args
+        ~url
+        ~out:dst
+        ~retry:OpamRepositoryConfig.(!r.retries)
+        ~with_curl_mitigation
+        ?checksum
+        ~compress
+        ()
+    with
+    | cmd::args -> cmd, args
+    | [] ->
+      OpamConsole.error_and_exit `Configuration_error
+        "Empty custom download command"
+  in
+  let stdout = OpamSystem.temp_file ~auto_clean:false "dl" in
+  OpamProcess.Job.finally (fun () -> OpamSystem.remove_file stdout) @@ fun () ->
+  OpamSystem.make_command ~allow_stdin:false ~stdout cmd args @@> c
+
+let tool_return redownload_command url ret =
   match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
   | _, `Default ->
     if OpamProcess.is_failure ret then
@@ -100,8 +132,28 @@ let tool_return url ret =
     else Done ()
   | _, `Curl ->
     if OpamProcess.is_failure ret then
-      fail (Some "Curl failed", Printf.sprintf "Curl failed: %s"
-              (OpamProcess.result_summary ret))
+      if ret.r_code = 43 then begin
+        (* Code 43 is CURLE_BAD_FUNCTION_ARGUMENT (7.1 7-Aug-2000). This should
+           never be encountered using the curl binary, so we assume that it's
+           a manifestation of curl/curl#13845 (see also #6120). *)
+        log "Attempting to mitigate curl/curl#13845";
+        redownload_command ~with_curl_mitigation:true @@ function ret ->
+          if OpamProcess.is_failure ret then
+            if ret.r_code = 22 then
+              (* If this broken version of curl persists for some time, it is
+                 relatively straightforward to parse the http response code from
+                 the message, as it hasn't changed. *)
+              fail (Some "curl failed owing to a server-side issue",
+                    Printf.sprintf "curl failed with server-side error: %s"
+                      (OpamProcess.result_summary ret))
+            else
+              fail (Some "curl failed",
+                    Printf.sprintf "curl failed: %s"
+                      (OpamProcess.result_summary ret))
+          else Done ()
+      end else
+        fail (Some "curl failed", Printf.sprintf "curl failed: %s"
+                (OpamProcess.result_summary ret))
     else
       match ret.OpamProcess.r_stdout with
       | [] ->
@@ -118,24 +170,9 @@ let tool_return url ret =
         else Done ()
 
 let download_command ~compress ?checksum ~url ~dst () =
-  let cmd, args =
-    match
-      download_args
-        ~url
-        ~out:dst
-        ~retry:OpamRepositoryConfig.(!r.retries)
-        ?checksum
-        ~compress
-        ()
-    with
-    | cmd::args -> cmd, args
-    | [] ->
-      OpamConsole.error_and_exit `Configuration_error
-        "Empty custom download command"
-  in
-  let stdout = OpamSystem.temp_file ~auto_clean:false "dl" in
-  OpamProcess.Job.finally (fun () -> OpamSystem.remove_file stdout) @@ fun () ->
-  OpamSystem.make_command ~allow_stdin:false ~stdout cmd args @@> tool_return url
+  let download_command = download_command_t ~compress ?checksum ~url ~dst in
+  download_command ~with_curl_mitigation:false
+  @@ tool_return download_command url
 
 let really_download
     ?(quiet=false) ~overwrite ?(compress=false) ?checksum ?(validate=true)
