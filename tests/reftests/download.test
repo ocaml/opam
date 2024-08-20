@@ -64,9 +64,9 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + curl "--another-args" "3"
-[ERROR] Failed to get sources of foo.1: Curl failed
+[ERROR] Failed to get sources of foo.1: curl failed
 
-OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (Curl failed: \"curl --another-args 3\" exited with code 2)")
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl failed: \"curl --another-args 3\" exited with code 2)")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
