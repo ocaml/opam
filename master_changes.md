@@ -211,6 +211,7 @@ users)
  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]
 
 ## opam-solver
+ * `OpamCudfCriteria`, `OpamBuiltinZ3.Syntax`: Move `OpamBuiltinZ3.Syntax` into a dedicated module `OpamCudfCriteria` [#6130 @kit-ty-kate]
 
 ## opam-format
   * Add `OpamTypesBase.switch_selections_{compare,equal}`: proper comparison functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
