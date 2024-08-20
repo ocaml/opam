@@ -101,20 +101,21 @@ let tool_return url ret =
   | _, `Curl ->
     if OpamProcess.is_failure ret then
       fail (Some "Curl failed", Printf.sprintf "Curl failed: %s"
-                  (OpamProcess.result_summary ret));
-    match ret.OpamProcess.r_stdout with
-    | [] ->
-      fail (Some "curl empty response",
-                Printf.sprintf "curl: empty response while downloading %s"
-                  (OpamUrl.to_string url))
-    | l  ->
-      let code = List.hd (List.rev l) in
-      let num = try int_of_string code with Failure _ -> 999 in
-      if num >= 400 then
-        fail (Some ("curl error code " ^ code),
-                  Printf.sprintf "curl: code %s while downloading %s"
-                    code (OpamUrl.to_string url))
-      else Done ()
+              (OpamProcess.result_summary ret))
+    else
+      match ret.OpamProcess.r_stdout with
+      | [] ->
+        fail (Some "curl empty response",
+              Printf.sprintf "curl: empty response while downloading %s"
+                (OpamUrl.to_string url))
+      | l  ->
+        let code = List.hd (List.rev l) in
+        let num = try int_of_string code with Failure _ -> 999 in
+        if num >= 400 then
+          fail (Some ("curl error code " ^ code),
+                Printf.sprintf "curl: code %s while downloading %s"
+                  code (OpamUrl.to_string url))
+        else Done ()
 
 let download_command ~compress ?checksum ~url ~dst () =
   let cmd, args =
