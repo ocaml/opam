@@ -89,6 +89,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * Fail when git submodule fails to update instead of showing a warning and ignoring the error [#6132 @kit-ty-kate - fix #6131]
 
 ## Build
  * Synchronise opam-core.opam with opam-repository changes [#6043 @dra27]
@@ -161,6 +162,7 @@ users)
   * Add a test filtering mechanism [#6105 @Keryan-dev]
   * Add a package fetching test [#6146 @rjbou]
   * Add a test showing the behaviour of `opam switch list-available` [#6098 @kit-ty-kate]
+  * Add a test for git packages with submodules [#6132 @kit-ty-kate]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
@@ -181,6 +183,7 @@ users)
   * Update action cache to v4 [#6081 @rjbou]
   * Update action checkout to v4 [#6081 @rjbou]
   * Update action upload-artifact to v4 [#6081 @rjbou]
+  * preamble: Allow local git submodules (ignore CVE-2022-39253) [#6132 @kit-ty-kate]
 
 ## Doc
   * Remove the ppa from the installation instructions on Ubuntu [#5988 @kit-ty-kate - fix #5987]

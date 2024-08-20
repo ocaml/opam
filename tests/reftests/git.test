@@ -1,0 +1,72 @@
+N0REP0
+### : Check the bevahiour when presented with a broken submodule
+### mkdir submodule
+### git -C ./submodule init -q
+### git -C ./submodule config core.autocrlf false
+### touch ./submodule/some-file
+### git -C ./submodule add ./some-file
+### git -C ./submodule commit -qm "first commit"
+### mkdir use-submodule
+### git -C ./use-submodule init -q
+### git -C ./use-submodule config core.autocrlf false
+### ### This test may fail locally depending on your git version
+### ### File protocol is removed locally since git 2.38,
+### ### to fix a CVE: https://www.cve.org/CVERecord?id=CVE-2022-39253
+### git -C ./use-submodule submodule add ../submodule ./vendor
+Cloning into '${BASEDIR}/use-submodule/vendor'...
+done.
+### git -C ./use-submodule commit -qm "first commit"
+### <create-submodule-pkg.sh>
+mkdir -p REPO/packages/submodule/submodule.1
+ESCAPED_BASEDIR=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat > REPO/packages/submodule/submodule.1/opam << EOF
+opam-version: "2.0"
+build: ["ls" "vendor/some-file"]
+url {
+  src: "git+file://${ESCAPED_BASEDIR}/use-submodule"
+}
+EOF
+### sh ./create-submodule-pkg.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create submodule --empty
+### opam install submodule
+The following actions will be performed:
+=== install 1 package
+  - install submodule 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved submodule.1  (git+file://${BASEDIR}/use-submodule)
+-> installed submodule.1
+Done.
+### rm -r ./submodule
+### opam remove submodule
+The following actions will be performed:
+=== remove 1 package
+  - remove submodule 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   submodule.1
+Done.
+### opam install submodule | '".+[/\\]git(\.exe)? ' -> '"git '
+The following actions will be performed:
+=== install 1 package
+  - install submodule 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Could not synchronize ${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1 from "git+file://${BASEDIR}/use-submodule":
+        "git submodule update --init --recursive" exited with code 1
+[ERROR] Failed to get sources of submodule.1: git+file://${BASEDIR}/use-submodule
+
+OpamSolution.Fetch_fail("git+file://${BASEDIR}/use-submodule")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - fetch submodule 1
++- 
+- No changes have been performed
+# Return code 40 #
