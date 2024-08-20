@@ -133,7 +133,7 @@ let lock_opam ?(only_direct=false) st opam =
   (* Depends *)
   let all_depends =
     OpamSwitchState.dependencies
-      ~depopts:true ~build:true ~post:true ~installed:true
+      ~depopts:true ~build:true ~post:true ~installed:true ~unavailable:false
       st (OpamPackage.Set.singleton nv) |>
     OpamPackage.Set.remove nv
   in
@@ -177,7 +177,7 @@ let lock_opam ?(only_direct=false) st opam =
       else
         (OpamSwitchState.dependencies
            ~depopts:false ~build:true ~post:true ~installed:true
-           st installed
+           ~unavailable:false st installed
          -- all_depends)
         |> map_of_set (`other_dep typ)
         |> OpamPackage.Map.union (fun _v _o -> `other_dep typ) depends_map

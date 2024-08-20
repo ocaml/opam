@@ -998,7 +998,7 @@ let universe st
        would be much more involved, but some solvers might struggle without any
        cleanup at this point *)
     (* remove_conflicts st base *)
-    (Lazy.force st.available_packages)
+    st.available_packages
   in
   let u_reinstall =
     (* Ignore reinstalls outside of the dependency cone of
@@ -1019,15 +1019,18 @@ let universe st
     | None -> OpamPackage.Set.empty
   in
   let missing_depexts =
-    OpamPackage.Map.fold (fun nv status acc ->
-        if OpamSysPkg.Set.is_empty status.OpamSysPkg.s_available
-        then acc
-        else OpamPackage.Set.add nv acc)
-      (Lazy.force st.sys_packages)
-      OpamPackage.Set.empty
+    lazy (
+      OpamPackage.Map.fold (fun nv status acc ->
+          if OpamSysPkg.Set.is_empty status.OpamSysPkg.s_available
+          then acc
+          else OpamPackage.Set.add nv acc)
+        (Lazy.force st.sys_packages)
+        OpamPackage.Set.empty)
   in
   let avoid_versions =
-    OpamPackage.Set.filter (avoid_version st) u_available
+    lazy (
+      OpamPackage.Set.filter (avoid_version st)
+        (Lazy.force u_available))
   in
   let u =
 {
@@ -1042,7 +1045,7 @@ let universe st
   u_pinned    = OpamPinned.packages st;
   u_invariant;
   u_reinstall;
-  u_attrs     = ["opam-query", requested;
+  u_attrs     = ["opam-query", lazy requested;
                  "missing-depexts", missing_depexts;
                  "avoid-version", avoid_versions];
 }
@@ -1343,7 +1346,7 @@ let dependencies_filter_to_formula_t ~build ~post st nv =
   OpamFilter.filter_formula ~default:true env
 
 let dependencies_t st base_deps_compute deps_compute
-    ~depopts ~installed ?(unavailable=false) packages =
+    ~depopts ~installed ~unavailable packages =
   if OpamPackage.Set.is_empty packages then OpamPackage.Set.empty else
   let base =
     packages ++

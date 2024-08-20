@@ -2386,6 +2386,7 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
         let keep_cone =
           keep |> OpamSwitchState.dependencies t
             ~build:true ~post:true ~depopts:true ~installed:true
+            ~unavailable:false
         in
         let autoremove =
           packages ++ (t.installed -- keep_cone)
@@ -2395,10 +2396,12 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
         let remove_cone =
           packages |> OpamSwitchState.reverse_dependencies t
             ~build:true ~post:true ~depopts:false ~installed:true
+            ~unavailable:false
         in
         autoremove %%
         (remove_cone |> OpamSwitchState.dependencies t
-           ~build:true ~post:true ~depopts:false ~installed:true)
+           ~build:true ~post:true ~depopts:false ~installed:true
+           ~unavailable:false)
       else
         packages
     in

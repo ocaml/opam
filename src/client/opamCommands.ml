@@ -750,7 +750,8 @@ let list ?(force_search=false) cli =
     let results =
       OpamListCommand.filter ~base:all st filter
     in
-    if not no_depexts && not silent then
+    if not no_depexts && not silent &&
+       OpamFormula.exists OpamListCommand.uses_depexts state_selector then
       (let drop_by_depexts =
          List.fold_left (fun missing str ->
              let is_missing pkgs =
@@ -1585,7 +1586,7 @@ let config cli =
                 | Some o -> OpamFile.OPAM.has_flag Pkgflag_Compiler o
                 | None -> false)
             |> OpamSwitchState.dependencies ~depopts:true ~post:true ~build:true
-              ~installed:true state
+              ~installed:true ~unavailable:false state
             |> OpamPackage.Set.iter process;
             if not Sys.win32 && List.mem "." (OpamStd.Sys.split_path_variable (Sys.getenv "PATH"))
             then OpamConsole.warning

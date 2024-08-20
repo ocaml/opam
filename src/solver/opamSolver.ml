@@ -24,7 +24,7 @@ let empty_universe =
   {
     u_packages = OpamPackage.Set.empty;
     u_installed = OpamPackage.Set.empty;
-    u_available = OpamPackage.Set.empty;
+    u_available = lazy OpamPackage.Set.empty;
     u_depends = OpamPackage.Map.empty;
     u_depopts = OpamPackage.Map.empty;
     u_conflicts = OpamPackage.Map.empty;
@@ -189,8 +189,11 @@ let opam2cudf_map universe version_map packages =
   let installed_root_map = set_to_bool_map universe.u_installed_roots in
   let pinned_to_current_version_map = set_to_bool_map universe.u_pinned in
   let avoid_versions =
-    OpamStd.Option.default OpamPackage.Set.empty @@
-    OpamStd.List.assoc_opt String.equal "avoid-version" universe.u_attrs
+    match
+      OpamStd.List.assoc_opt String.equal "avoid-version" universe.u_attrs
+    with
+    | None -> OpamPackage.Set.empty
+    | Some attr -> Lazy.force attr
   in
   let version_lag_map =
     OpamPackage.Name.Map.fold (fun name version_set acc ->
@@ -222,6 +225,7 @@ let opam2cudf_map universe version_map packages =
   in
   let extras_maps =
     List.map (fun (label, set) ->
+        let set = Lazy.force set in
         OpamPackage.Set.fold (fun nv ->
             OpamPackage.Map.add nv (label, `Int 1))
           (packages %% set) OpamPackage.Map.empty)
@@ -281,7 +285,7 @@ let opam2cudf_map universe version_map packages =
         OpamPackage.Map.update nv
           (fun deps -> OpamFormula.ands [unav_dep; deps])
           OpamFormula.Empty)
-      (universe.u_installed -- universe.u_available)
+      (universe.u_installed -- Lazy.force universe.u_available)
       depends_map
   in
   let depopts_map =
@@ -437,7 +441,7 @@ let cycle_conflict ~version_map univ cycles =
 
 let resolve universe request =
   log "resolve request=%a" (slog string_of_request) request;
-  let all_packages = universe.u_available ++ universe.u_installed in
+  let all_packages = Lazy.force universe.u_available ++ universe.u_installed in
   let version_map = cudf_versions_map universe in
   let univ_gen = load_cudf_universe universe ~version_map all_packages in
   let cudf_universe = univ_gen ~depopts:false ~build:true ~post:true () in
@@ -516,7 +520,7 @@ let coinstallable_subset universe ?(add_invariant=true) set packages =
     (slog OpamPackage.Set.to_string) packages;
   let cudf_packages_map =
     load_cudf_packages ~add_invariant ~build:true ~post:true universe
-      (universe.u_available ++ set ++ packages) ()
+      (Lazy.force universe.u_available ++ set ++ packages) ()
   in
   let cudf_set, cudf_packages_map =
     OpamPackage.Set.fold (fun nv (set, map) ->
@@ -560,17 +564,17 @@ let installable_subset universe packages =
     universe ~add_invariant:true OpamPackage.Set.empty packages
 
 let installable universe =
-  installable_subset universe universe.u_available
+  installable_subset universe (Lazy.force universe.u_available)
 
 module PkgGraph = Graph.Imperative.Digraph.ConcreteBidirectional(OpamPackage)
 
 let dependency_graph
-    ~depopts ~build ~post ~installed ?(unavailable=false)
+    ~depopts ~build ~post ~installed ~unavailable
     universe =
   let u_packages =
     if installed then universe.u_installed else
     if unavailable then universe.u_packages else
-      universe.u_available in
+      Lazy.force universe.u_available in
   let cudf_graph =
     load_cudf_universe ~depopts ~build ~post universe u_packages () |>
     OpamCudf.Graph.of_universe
@@ -625,7 +629,7 @@ let atom_coinstallability_check universe atoms =
       (check_pkg ::
        opam_invariant_package version_map universe.u_invariant ::
        OpamCudf.Set.elements
-         (opam2cudf_set universe version_map universe.u_available
+         (opam2cudf_set universe version_map (Lazy.force universe.u_available)
             ~depopts:false ~build:true ~post:true))
   in
   Dose_algo.Depsolver.edos_install cudf_universe check_pkg
@@ -776,12 +780,12 @@ let dump_universe universe oc =
   let version_map = cudf_versions_map universe in
   let cudf_univ =
     load_cudf_universe ~depopts:false ~build:true ~post:true ~version_map
-      universe universe.u_available () in
+      universe (Lazy.force universe.u_available) () in
   OpamCudf.dump_universe oc cudf_univ;
   (* Add explicit bindings to retrieve original versions of non-available and
      non-existing (but referred to) packages *)
   OpamPackage.Map.iter (fun nv i ->
-      if not (OpamPackage.Set.mem nv universe.u_available) then
+      if not (OpamPackage.Set.mem nv (Lazy.force universe.u_available)) then
         Printf.fprintf oc "#v2v:%s:%d=%s\n"
           (OpamPackage.name_to_string nv) i (OpamPackage.version_to_string nv)
     ) version_map
