@@ -94,6 +94,8 @@ users)
 ## Build
  * Synchronise opam-core.opam with opam-repository changes [#6043 @dra27]
   * Unset OPAM_SWITCH_PREFIX when using make cold [#5534 @kit-ty-kate]
+  * Bump the vendored opam-0install-cudf to 0.5.0 [#6130 @kit-ty-kate]
+  * Require opam-0install-cudf >= 0.5.0 [#6130 @kit-ty-kate]
 
 ## Infrastructure
 
@@ -121,6 +123,11 @@ users)
 ## Opam file format
 
 ## Solver
+  * Add support for unordered criteria with the `builtin-0install` solver [#6130 @kit-ty-kate]
+  * Add support for the `-changed` criteria with the `builtin-0install` solver, to make the solver prefer to keep packages installed at their current version [#6130 @kit-ty-kate]
+  * Add support for the `-count[avoid-version,solution]` criteria with the `builtin-0install` solver, to avoid packages marked with `avoid-version` flag [#6130 @kit-ty-kate]
+  * The default criteria for the `builtin-0install` solver changed from empty to `-changed,-count[avoid-version,solution]` [#6130 @kit-ty-kate]
+  * The upgrade and fixup criteria for the `builtin-0install` solver changed from empty to `-count[avoid-version,solution]` [#6130 @kit-ty-kate]
 
 ## Client
 
@@ -211,6 +218,7 @@ users)
  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to `OpamStateConfig.opamroot` for compatibility with third party code [#6047 @dra27]
 
 ## opam-solver
+ * `OpamCudfCriteria`, `OpamBuiltinZ3.Syntax`: Move `OpamBuiltinZ3.Syntax` into a dedicated module `OpamCudfCriteria` [#6130 @kit-ty-kate]
 
 ## opam-format
   * Add `OpamTypesBase.switch_selections_{compare,equal}`: proper comparison functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]

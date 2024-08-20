@@ -6594,8 +6594,8 @@ printf "%s\n" "not found" >&6; }
 
 
 
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package opam-0install-cudf 0.4 or later" >&5
-printf %s "checking for OCaml findlib package opam-0install-cudf 0.4 or later... " >&6; }
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package opam-0install-cudf 0.5.0 or later" >&5
+printf %s "checking for OCaml findlib package opam-0install-cudf 0.5.0 or later... " >&6; }
 
   if version=`$OCAMLFIND query opam-0install-cudf -format '%v' 2>/dev/null`
 then :
@@ -6619,7 +6619,7 @@ then :
                      -e 's/[^0-9]//g'`
 
 
-  ax_compare_version_B=`echo "0.4" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+  ax_compare_version_B=`echo "0.5.0" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
                      -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
                      -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
                      -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
