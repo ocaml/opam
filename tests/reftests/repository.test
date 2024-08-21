@@ -607,3 +607,29 @@ opam-version: "2.0"
 [to-many-commits] Initialised
 ### git -C ./OPAM/repo/to-many-commits rev-list --all --count
 1
+### : Check the behaviour of opam repository remove when given unknown repositories
+### opam repository --all --short
+oper
+oper3
+repo2
+to-many-commits
+### opam repository --short
+to-many-commits
+oper3
+oper
+### opam repository remove does-not-exist
+[WARNING] Repository 'does-not-exist' not found in the current switch, ignoring
+### opam repository remove does-not-exist --all
+[WARNING] No configured repositories by these names found: does-not-exist
+### opam repository remove does-not-exist oper
+Repositories removed from the selections of switch repos. Use '--all' to forget about them altogether.
+[WARNING] Repository 'does-not-exist' not found in the current switch, ignoring
+### opam repository remove does-not-exist repo2 --all
+[WARNING] No configured repositories by these names found: does-not-exist
+### opam repository --all --short
+oper
+oper3
+to-many-commits
+### opam repository --short
+to-many-commits
+oper3

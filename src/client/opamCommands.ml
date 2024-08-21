@@ -2420,13 +2420,29 @@ let repository cli =
       `Ok ()
     | Some `remove, names ->
       let names = List.map OpamRepositoryName.of_string names in
-      let rm = List.filter (fun n -> not (List.mem n names)) in
       let full_wipe = List.mem `All scope in
       let global = global || full_wipe in
+      let unknown_repos = ref (if full_wipe then [] else names) in
+      let has_known_repos = ref false in
+      let rm =
+        List.filter (fun n ->
+            let seen =
+              List.exists (fun n' -> OpamRepositoryName.equal n n') names
+            in
+            if seen && not full_wipe then
+              unknown_repos :=
+                List.filter
+                  (fun n' -> not (OpamRepositoryName.equal n n'))
+                  !unknown_repos;
+            if seen && not !has_known_repos then
+              has_known_repos := true;
+            not seen)
+      in
       let gt =
         OpamRepositoryCommand.update_selection gt
           ~global ~switches:switches rm
       in
+      let unknown_repos = !unknown_repos in
       if full_wipe then
         OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
         check_for_repos rt names
@@ -2434,11 +2450,16 @@ let repository cli =
              "No configured repositories by these names found: %s");
         OpamRepositoryState.drop @@
         List.fold_left OpamRepositoryCommand.remove rt names
-      else if scope = [`Current_switch] then
+      else if scope = [`Current_switch] && !has_known_repos then
         OpamConsole.msg
           "Repositories removed from the selections of switch %s. \
            Use '--all' to forget about them altogether.\n"
           (OpamSwitch.to_string (OpamStateConfig.get_switch ()));
+      List.iter (fun repo ->
+          OpamConsole.warning "Repository '%s' not found in the \
+                               current switch, ignoring"
+            (OpamRepositoryName.to_string repo))
+        unknown_repos;
       `Ok ()
     | Some `add, [name] ->
       let name = OpamRepositoryName.of_string name in
