@@ -23,8 +23,6 @@ users)
 ## Actions
 
 ## Install
-  * [BUG] Fix `opam install --deps-only` set direct dependencies as root packages [#6125 @rjbou]
-  * Disable shallow clone by default except for opam repositories [#6146 @kit-ty-kate - fix #6145]
 
 ## Remove
 
@@ -51,7 +49,6 @@ users)
 ## Lint
 
 ## Repository
- * Mitigate curl/curl#13845 by falling back from --write-out to --fail if exit code 43 is returned by curl [#6168 @dra27 - fix #6120]
 
 ## Lock
 
@@ -70,16 +67,10 @@ users)
 ## VCS
 
 ## Build
- * Synchronise opam-core.opam with opam-repository changes [#6043 @dra27]
 
 ## Infrastructure
 
 ## Release scripts
-  * Add the missing mccs and dune archives to the opam-full-<version>.tar.gz archive [#6067 @kit-ty-kate]
-  * Ensure the configure file stays as it is in the tag, in the opam-full-<version>.tar.gz archive [#6067 @kit-ty-kate]
-  * Exclude the .git directory from the release archive when using GNU tar [#6067 @kit-ty-kate]
-  * Ensure non-existing %.cache target fail with a fatal error [#6067 @kit-ty-kate]
-  * Remove opam 2.1 support from the release script [#6084 @kit-ty-kate]
 
 ## Install script
 
@@ -107,24 +98,10 @@ users)
 
 ## Reftests
 ### Tests
-  * Add a test for --deps-only setting direct dependencies as root packages [#6125 @rjbou]
-  * Add a package fetching test [#6146 @rjbou]
 
 ### Engine
 
 ## Github Actions
-  * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
-  * Depexts: fix conf package install check [#6079 @rjbou]
-  * Depexts: specify packages to test per distribution [#6079 @rjbou]
-  * Depexts: add update depexts check [#6079 @rjbou]
-  * Depexts: move parts to docker build image, for caching [#6079 @rjbou]
-  * Depexts: set version for conf packages to check [#6079 @rjbou]
-  * Depexts: add package to test containing `os-version` in filter [#6079 @rjbou]
-  * Depexts: fix opensuse job [#6079 @rjbou]
-  * Use actions/cache instead of our own fork ocaml-opam/cache [#6081 @rjbou]
-  * Update action cache to v4 [#6081 @rjbou]
-  * Update action checkout to v4 [#6081 @rjbou]
-  * Update action upload-artifact to v4 [#6081 @rjbou]
 
 ## Doc
 
@@ -134,7 +111,6 @@ users)
 ## opam-client
 
 ## opam-repository
- * `?full_fetch` is now `true` by default instead of `false` [#6146 @kit-ty-kate - fix #6145]
 
 ## opam-state
 
