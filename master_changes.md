@@ -99,6 +99,7 @@ users)
   * Unset OPAM_SWITCH_PREFIX when using make cold [#5534 @kit-ty-kate]
   * Bump the vendored opam-0install-cudf to 0.5.0 [#6130 @kit-ty-kate]
   * Require opam-0install-cudf >= 0.5.0 [#6130 @kit-ty-kate]
+  * Bump the vendored mccs to 1.1+18 [#6170 @kit-ty-kate]
 
 ## Infrastructure
 
