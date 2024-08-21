@@ -1944,12 +1944,7 @@ let init
     ?dot_profile ?update_config ?env_hook ~completion shell;
   gt, rt, default_compiler
 
-let check_installed ~build ~post t atoms =
-  let available = (Lazy.force t.available_packages) in
-  let pkgs =
-    OpamPackage.to_map
-      (OpamFormula.packages_of_atoms available atoms)
-  in
+let check_installed ~build ~post ~recursive t atoms =
   let test = OpamStateConfig.(!r.build_test) in
   let doc = OpamStateConfig.(!r.build_doc) in
   let dev_setup = OpamStateConfig.(!r.dev_setup) in
@@ -1962,62 +1957,109 @@ let check_installed ~build ~post t atoms =
     | None -> OpamPackageVar.resolve_switch ~package t var
     | Some _ -> content
   in
-  OpamPackage.Name.Map.fold (fun name versions map ->
-      let compliant, missing_opt =
-        OpamPackage.Version.Set.fold (fun version (found, missing) ->
-            if found then (found, missing)
-            else
-            let pkg = OpamPackage.create name version in
-            let cnf_formula =
-              OpamSwitchState.opam t pkg
-              |> OpamFile.OPAM.depends
-              |> OpamFilter.filter_formula ~default:false (env pkg)
-              |> OpamFormula.to_cnf
+  let pkg_version_map = OpamPackage.to_map t.packages in
+  let module SeenSet = Set.Make (struct
+      type t = OpamFormula.atom
+      let compare = OpamFormula.compare_atom
+    end)
+  in
+  let rec loop map seen atoms =
+    List.fold_left (fun (map, seen) atom ->
+        if SeenSet.mem atom seen then
+          (* This is required for things like post-dependencies *)
+          (map, seen)
+        else
+          let seen = SeenSet.add atom seen in
+          let pkgname = fst atom in
+          let _found, missing_opt =
+            match OpamPackage.Name.Map.find_opt pkgname pkg_version_map with
+            | None -> (false, None)
+            | Some versions ->
+              OpamPackage.Version.Set.fold (fun version (found, missing) ->
+                  let pkg = OpamPackage.create pkgname version in
+                  if found || not (OpamFormula.check atom pkg) then
+                    (found, missing)
+                  else
+                    let cnf_formula =
+                      OpamSwitchState.opam t pkg
+                      |> OpamFile.OPAM.depends
+                      |> OpamFilter.filter_formula ~default:false (env pkg)
+                      |> OpamFormula.to_cnf
+                    in
+                    let rec get_found_and_missing found_conj missing_conj =
+                      function
+                      | [] -> (found_conj, missing_conj)
+                      | disj::xs ->
+                        let installed_conj =
+                          List.find_opt (fun ((n,_vc) as atom) ->
+                              OpamPackage.Set.exists
+                                (fun p -> OpamFormula.check atom p)
+                                (OpamPackage.packages_of_name t.installed n))
+                            disj
+                        in
+                        match installed_conj with
+                        | Some conj ->
+                          get_found_and_missing (conj :: found_conj)
+                            missing_conj xs
+                        | None ->
+                          (* TODO: maybe it would be nice to display
+                             disjunctions correctly in the output instead of
+                             transforming everything into one big conjunction *)
+                          get_found_and_missing found_conj
+                            (disj @ missing_conj) xs
+                    in
+                    let (found_conj, missing_conj) =
+                      get_found_and_missing [] [] cnf_formula
+                    in
+                    (missing_conj = [], Some (missing_conj, found_conj)))
+                versions (false, None)
+          in
+          match missing_opt with
+          | None ->
+            (* No version *)
+            OpamPackage.Name.Map.add pkgname
+              (OpamPackage.Name.Set.singleton pkgname)
+              map,
+            seen
+          | Some (missing_conj, found_conj) ->
+            let missing_set =
+              List.fold_left (fun names (name, _) ->
+                  OpamPackage.Name.Set.add name names)
+                OpamPackage.Name.Set.empty missing_conj
             in
-            let missing_conj =
-              List.filter
-                (List.for_all (fun ((n,_vc) as atom) ->
-                     OpamPackage.Set.for_all
-                       (fun p -> not (OpamFormula.check atom p))
-                       (OpamPackage.packages_of_name t.installed n)))
-                cnf_formula
+            let new_map =
+              if OpamPackage.Name.Set.is_empty missing_set
+              then map
+              else OpamPackage.Name.Map.add pkgname missing_set map
             in
-            if missing_conj = [] then true, None
-            else false, Some (pkg,missing_conj))
-          versions (false,None)
-      in
-      if compliant then map else
-      match missing_opt with
-      | None -> assert false (* version set can't be empty *)
-      | Some (pkg, missing_conj) ->
-        OpamPackage.Map.add pkg
-          (List.fold_left (fun names disj ->
-               List.fold_left (fun names (name, _) ->
-                   OpamPackage.Name.Set.add name names)
-                 names disj)
-              OpamPackage.Name.Set.empty missing_conj)
-          map
-    ) pkgs OpamPackage.Map.empty
+            if found_conj = [] || not recursive
+            then (new_map, seen)
+            else loop new_map seen found_conj
+      ) (map, seen) atoms
+  in
+  fst (loop OpamPackage.Name.Map.empty SeenSet.empty atoms)
 
 let assume_built_restrictions ?available_packages t atoms =
-  let missing = check_installed ~build:false ~post:false t atoms in
+  let missing =
+    check_installed ~build:false ~post:false ~recursive:false t atoms
+  in
   let atoms =
-    if OpamPackage.Map.is_empty missing then atoms else
+    if OpamPackage.Name.Map.is_empty missing then atoms else
       (OpamConsole.warning
          "You specified '--assume-built' but the following dependencies \
           aren't installed, skipping\n%s\
           Launch 'opam install %s --deps-only' (and recompile) to \
           install them.\n"
-         (OpamStd.Format.itemize (fun (nv, names) ->
-              Printf.sprintf "%s: %s" (OpamPackage.name_to_string nv)
+         (OpamStd.Format.itemize (fun (name, names) ->
+              Printf.sprintf "%s: %s" (OpamPackage.Name.to_string name)
                 (OpamStd.List.concat_map " " OpamPackage.Name.to_string
                    (OpamPackage.Name.Set.elements names)))
-             (OpamPackage.Map.bindings missing))
-         (OpamStd.List.concat_map " " OpamPackage.name_to_string
-            (OpamPackage.Map.keys missing));
+             (OpamPackage.Name.Map.bindings missing))
+         (OpamStd.List.concat_map " " OpamPackage.Name.to_string
+            (OpamPackage.Name.Map.keys missing));
        List.filter (fun (n,_) ->
-           not (OpamPackage.Map.exists (fun nv _ ->
-               OpamPackage.name nv = n) missing))
+           not (OpamPackage.Name.Map.exists (fun name _ ->
+               OpamPackage.Name.equal name n) missing))
          atoms)
   in
   let pinned =
@@ -2037,7 +2079,7 @@ let assume_built_restrictions ?available_packages t atoms =
     | None -> Lazy.force t.available_packages
   in
   let uninstalled_dependencies =
-    (OpamPackage.Map.values missing
+    (OpamPackage.Name.Map.values missing
      |> List.fold_left OpamPackage.Name.Set.union OpamPackage.Name.Set.empty
      |> OpamPackage.packages_of_names available_packages)
     -- installed_dependencies

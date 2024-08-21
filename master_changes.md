@@ -34,6 +34,8 @@ users)
   * [BUG] Fix `opam install --deps-only` set direct dependencies as root packages [#6125 @rjbou]
   * [BUG] Fix `opam install --check pkg` when pkg depends on a non-existing package [#6121 @kit-ty-kate]
   * Disable shallow clone by default except for opam repositories [#6146 @kit-ty-kate - fix #6145]
+  * Improve performance of `opam install --check` [#6122 @kit-ty-kate]
+  * Make `opam install --check` check if all dependencies are installed recursively [#6122 @kit-ty-kate - fix #6097]
 
 ## Build (package)
   * ◈ Add `--verbose-on` option to enable verbose mode on specified package names [#5682 @desumn @rjbou]
@@ -171,6 +173,7 @@ users)
   * Add a package fetching test [#6146 @rjbou]
   * Add a test showing the behaviour of `opam switch list-available` [#6098 @kit-ty-kate]
   * Add a test for git packages with submodules [#6132 @kit-ty-kate]
+  * Add basic test for `install --check` [#6122 @rjbou]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
@@ -227,6 +230,7 @@ users)
   * Add `OpamTypesBase.switch_selections_{compare,equal}`: proper comparison functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
   * `OpamFormula`: add `exists` [#5317 @kit-ty-kate]
   * `OpamTypes.universe`: make `u_available` and `u_attrs` lazy to speedup actions that do not require availiblity information [#5317 @kit-ty-kate - fix #5314]
+  * `OpamFormula`: add some missing comparison functions for `relop`, `version_constraint` and `atom` (`compare_relop`, `compare_version_constraint` and `compare_atom` respectively) [#6122 @kit-ty-kate]
 
 ## opam-core
   * `OpamStd.Env`: add `env_string_list` for parsing string list environment variables (comma separated) [#5682 @desumn]

@@ -72,10 +72,19 @@ val install_t:
   rw switch_state
 
 (** Check that the given list of packages [atoms] have their dependencies
-    satisfied, without calling the solver. Returns missing dependencies. *)
+    satisfied, without calling the solver.
+    Returns a map of package names to their set of missing dependencies.
+
+    @param recursive if [true] will check every installed dependencies
+    recursively. For example, this is useful if a package currently installed
+    has been modified and a dependencies has been added but that package has
+    not yet been upgraded.
+    Note: if [true], the keys of the resulting map might contain packages
+    further down the dependency tree and is no longer guaranteed to contain
+    only packages from [atoms]. *)
 val check_installed:
-  build:bool -> post:bool -> rw switch_state -> atom list ->
-  OpamPackage.Name.Set.t OpamPackage.Map.t
+  build:bool -> post:bool -> recursive:bool -> rw switch_state -> atom list ->
+  OpamPackage.Name.Set.t OpamPackage.Name.Map.t
 
 (** Reinstall the given set of packages. *)
 val reinstall:

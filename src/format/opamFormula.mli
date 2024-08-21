@@ -15,11 +15,17 @@
 (** binary operations (compatible with the Dose type for Cudf operators!) *)
 type relop = OpamParserTypes.FullPos.relop_kind (* = [ `Eq | `Neq | `Geq | `Gt | `Leq | `Lt ] *)
 
+val compare_relop : relop -> relop -> int
+
 (** Version constraints for OPAM *)
 type version_constraint = relop * OpamPackage.Version.t
 
+val compare_version_constraint : version_constraint -> version_constraint -> int
+
 (** Formula atoms for OPAM *)
 type atom = OpamPackage.Name.t * version_constraint option
+
+val compare_atom : atom -> atom -> int
 
 (** Pretty-printing of atoms *)
 val string_of_atom: atom -> string
