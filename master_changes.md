@@ -63,6 +63,9 @@ New option/command/subcommand are prefixed with ◈.
 ## Infrastructure
   * Ensure the full archive includes the 0install sources [#5624 @dra27]
 
+## Release scripts
+  * Fix the binaries built by docker as the result of the configure script was prepended [#6175 @kit-ty-kate - fix #6174]
+
 ## Admin
   *
 
