@@ -69,6 +69,7 @@ type t = {
   p_time   : float;         (** Process start time *)
   p_stdout : string option; (** stdout dump file *)
   p_stderr : string option; (** stderr dump file *)
+  mutable p_cycle : int;    (** Number of times output has been detected *)
   p_env    : string option; (** dump environment variables *)
   p_info   : string option; (** dump process info *)
   p_metadata: (string * string) list; (** Metadata associated to the process *)
