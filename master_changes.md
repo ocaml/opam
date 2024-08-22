@@ -71,6 +71,7 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Fix the binaries built by docker as the result of the configure script was prepended [#6175 @kit-ty-kate - fix #6174]
 
 ## Install script
 
