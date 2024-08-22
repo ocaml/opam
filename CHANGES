@@ -3,6 +3,38 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.2.1:
+* (*) Fix a regression in `opam install --deps-only` where the direct
+  dependencies were not set as root packages [#6125 @rjbou]
+* (*) Fix a regression when fetching git packages where the resulting git
+  repository could lead to unexpected outputs of git commands, by disabling
+  shallow clone by default except when fetching an opam repositories
+  [#6146 @kit-ty-kate - fix #6145]
+* Mitigate curl/curl#13845 by falling back from `--write-out` to `--fail`
+  if exit code 43 is returned by curl [#6168 @dra27 - fix #6120]
+* Synchronise opam-core.opam with opam-repository changes [#6043 @dra27]
+* Fix and improve the release script and the creation of the
+  `opam-full-<version>.tar.gz` archive [#6067 @kit-ty-kate]
+* Improve and extend the tests [#6125 #6146 @rjbou]
+* Improve the test infrastructure [#6079 #6081 @rjbou]
+* API changes
+  * `?full_fetch` is now `true` by default instead of `false`
+    [#6146 @kit-ty-kate - fix #6145]
+
+2.2.0:
+* Bump `opam-root-version` to 2.2 [#5980 @kit-ty-kate]
+* Cygwin initialisation enhancement
+  * Always pass `--no-version-check` and `--no-write-registry` to Cygwin setup
+    [#6046 @dra27]
+  * Use `--quiet-mode noinput` for the internal Cygwin installation (which is
+    definitely a fully-specified command line) and `--quiet-mode` unattended
+    for external Cygwin installations (in case the user does need to select
+    something, e.g. a mirror) [#6046 @dra27]
+* API changes
+  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to
+    `OpamStateConfig.opamroot` for compatibility with third party code
+    [#6047 @dra27]
+
 2.2.0~rc1:
 * Fix `opam upgrade` wanting to recompile opam files containing the
   `x-env-path-rewrite` field [#6029 @kit-ty-kate - fix #6028]
