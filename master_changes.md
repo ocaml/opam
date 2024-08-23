@@ -116,6 +116,7 @@ users)
 ## Install script
   * Provide a shell/install.ps1 PowerShell script to install opam on Windows [#5906 @kit-ty-kate @dra27]
   * Add opam 2.2.0 to the install scripts [#6062 @kit-ty-kate]
+  * Add opam 2.2.1 to the install scripts [#6173 @kit-ty-kate]
 
 ## Admin
   * Change hash cache location from `~/.cache` to `<opamroot>/download-cache/hash-cache` [#6103 @rjbou]

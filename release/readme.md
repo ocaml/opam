@@ -67,6 +67,7 @@
 ## Publish the release
 
 * add hashes in `install.sh` (and check signatures)
+* bring the changes to the changelog (CHANGES) from the branch of the release to the `master` branch
 * publish opam packages in opam-repository (and add `flags: avoid-version` and `available: opam-version >= "2.1.0"` to each packages if this is not a stable version)
 * update versions (and messages, if necessary) in https://github.com/ocaml/opam-repository/blob/master/repo
 
@@ -82,7 +83,6 @@
 
 * Bump the version with a `~dev` at the end (e.g. `2.2.0~alpha~dev`)
 * Check if reftests needs an update
-* Bring the changes to the changelog (CHANGES) from the branch of the release to the `master` branch
 
 ### On a release candidate
 * create a branch to a `x.y` for rc's and the final release
