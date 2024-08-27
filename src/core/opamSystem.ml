@@ -1505,12 +1505,13 @@ let translate_patch ~dir orig corrected =
       else
         (id, (fun s -> s ^ "\r"), strip 1)
     in
-    if OpamConsole.debug () then
+    if OpamConsole.debug () then begin
       let log_transform (first_line, last_line, add_cr) =
          let indicator = if add_cr then '+' else '-' in
          log ~level:3 "Transform %d-%d %c\\r" first_line last_line indicator
       in
-      List.iter log_transform transforms;
+      List.iter log_transform transforms
+    end;
     let rec fold_lines n transforms =
       match input_line ch with
       | line ->
