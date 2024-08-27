@@ -88,6 +88,79 @@ license: "MIT"
 dev-repo: "hg+https://pkg@op.am"
 bug-reports: "https://nobug"
 build: ["false"]
+### :II:6: extra-files management
+### :II:6:a: opamfile then extrafile
+### <pkg:bar.1>
+opam-version: "2.0"
+### cat REPO/packages/bar/bar.1/opam
+opam-version: "2.0"
+### <pkg:bar.1:xf-bar>
+I'm an extra file
+### cat REPO/packages/bar/bar.1/opam
+opam-version: "2.0"
+extra-files: ["xf-bar" "md5=dbaf1ea561686374373dc7d154f3a0ff"]
+### :II:6:b: extrafile then opamfile
+### <pkg:baz.1:xf-baz>
+I'm an another extra file
+### test -f REPO/packages/baz/baz.1/opam
+# Return code 1 #
+### <pkg:baz.1>
+opam-version: "2.0"
+### cat REPO/packages/baz/baz.1/opam
+opam-version: "2.0"
+extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+### :II:6:c: redefinie opamfile
+### <pkg:qux.1>
+opam-version: "2.0"
+### cat REPO/packages/qux/qux.1/opam
+opam-version: "2.0"
+### <pkg:qux.1:xf-qux>
+I'm yet another extra file
+### cat REPO/packages/qux/qux.1/opam
+opam-version: "2.0"
+extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
+### <pkg:qux.1>
+opam-version: "2.0"
+### cat REPO/packages/qux/qux.1/opam
+opam-version: "2.0"
+extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
+### :II:6:d: redefinie extrafile
+### <pkg:corge.1:xf-corge>
+I'm an yet another another extra file
+### <pkg:corge.1>
+opam-version: "2.0"
+### cat REPO/packages/corge/corge.1/opam
+opam-version: "2.0"
+extra-files: ["xf-corge" "md5=d419630b165e4f2a1ad55d26c9b19e40"]
+### <pkg:corge.1:xf-corge>
+I'm the final one
+### cat REPO/packages/corge/corge.1/opam
+opam-version: "2.0"
+extra-files: ["xf-corge" "md5=71e14bfb95ec10cb60f3b6cafd908a08"]
+### :II:6:e: opamfile contains already extrafile defined
+### <pkg:grault.1>
+opam-version: "2.0"
+extra-files: [ "file" "md5=00000000000000000000000000000000" ]
+### cat REPO/packages/grault/grault.1/opam
+opam-version: "2.0"
+extra-files: [ "file" "md5=00000000000000000000000000000000" ]
+### <pkg:grault.1:xf-grault>
+It was not the final in the end
+### cat REPO/packages/grault/grault.1/opam
+opam-version: "2.0"
+extra-files: [
+  ["file" "md5=00000000000000000000000000000000"]
+  ["xf-grault" "md5=9fd8d4d58e5fd899478b03ab24a11d00"]
+]
+### <pkg:grault.1:xf-grault2>
+I'm the real final!
+### cat REPO/packages/grault/grault.1/opam
+opam-version: "2.0"
+extra-files: [
+  ["file" "md5=00000000000000000000000000000000"]
+  ["xf-grault" "md5=9fd8d4d58e5fd899478b03ab24a11d00"]
+  ["xf-grault2" "md5=5c1ff559ac6490338d362978c058f44a"]
+]
 ### ###################
 ### :III: Environment variables
 ### ###################

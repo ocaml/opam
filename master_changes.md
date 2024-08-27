@@ -223,6 +223,7 @@ users)
   * Fix some json output automatic replacement (duration and path on Windows) [#6184 @rjbou]
   * Add test for reftest syntax [#6184 @rjbou]
   * Add some readme file [#6184 @rjbou]
+  * Add new mechanism to add automatically files under `files/` directory to related opam file [#5564 @rjbou]
 
 ## Github Actions
   * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
