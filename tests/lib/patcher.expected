@@ -7,6 +7,7 @@ PATCH                           No CRLF adaptation necessary for b/test1
 PATCH                           No CRLF adaptation necessary for b/test2
 PATCH                           No CRLF adaptation necessary for b/test3
 PATCH                           No CRLF adaptation necessary for b/will-null-file
+PATCH                           No patch translation needed for input.patch -> output.patch
 Before patch state of c:
   ./always-crlf: CRLF
   ./always-lf: LF
@@ -44,6 +45,7 @@ PATCH                           No CRLF adaptation necessary for b/test1
 PATCH                           Adding \r to patch chunks for b/test2
 PATCH                           No CRLF adaptation necessary for b/test3
 PATCH                           Adding \r to patch chunks for b/will-null-file
+PATCH                           Transforming patch input.patch to output.patch
 PATCH                           Transform 32-36 +\r
 PATCH                           Transform 62-67 +\r
 PATCH                           Transform 82-87 +\r

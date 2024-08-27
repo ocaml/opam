@@ -1485,10 +1485,12 @@ let translate_patch ~dir orig corrected =
         process_state_transition `Header state transforms |> List.rev
   in
   let transforms = fold_lines `Header 1 [] in
-  if transforms = [] then
+  if transforms = [] then begin
+    log ~level:1 "No patch translation needed for %s -> %s" orig corrected;
     copy_file orig corrected
-  else begin
+  end else begin
     seek_in ch 0;
+    log ~level:1 "Transforming patch %s to %s" orig corrected;
     let ch_out =
       try open_out_bin corrected
       with Sys_error _ ->
