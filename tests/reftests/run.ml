@@ -831,12 +831,16 @@ let run_test ?(vars=[]) ~opam t =
             in
             [
               seq [ str {|"duration": |};
-                    rep1 digit; char '.';
-                    rep1 @@ alt [digit ; char 'e'; char '-'] ],
+                    rep1 digit;
+                    opt @@ seq [ char '.';
+                                 rep1 @@ alt [digit ; char 'e'; char '-']];
+                    eow ],
               Sed {|"duration": 6.2831853071|};
               hex_output ".env";
               hex_output ".out";
               str OpamVersion.(to_string (full ())), Sed "currentv";
+              (* For opam Windows path *)
+              str (String.escaped opam.as_seen_in_opam), Sed "${OPAM}";
             ]
           in
           let to_string f =
