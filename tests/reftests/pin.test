@@ -291,7 +291,7 @@ KO
 foo.opam
 im.here
 im.here.dir/ok
-### opam pin foo ./foo#master -v
+### opam pin foo ./foo#master -v | sed-cmd test
 Package foo does not exist, create as a NEW package? [y/n] y
 [foo.dev: rsync]
 [foo.dev] synchronised (file://${BASEDIR}/foo)
@@ -303,13 +303,13 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  2/3: [foo: test im.here]
-+ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "test" "-f" "im.here" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
++ test "-f" "im.here" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
 Processing  2/3: [foo: test im.here.dir]
-+ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "test" "-d" "im.here.dir" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
++ test "-d" "im.here.dir" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
 Processing  2/3: [foo: test]
-+ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "test" "-f" "im.here.dir/ok" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
++ test "-f" "im.here.dir/ok" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
 Processing  2/3: [foo: test !]
-+ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "test" "!" "-f" "imnot.here" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
++ test "!" "-f" "imnot.here" (CWD=${BASEDIR}/OPAM/pinning/.opam-switch/build/foo.3.2)
 [ERROR] The compilation of foo.3.2 failed at "test ! -f imnot.here".
 
 
