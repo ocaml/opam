@@ -1485,10 +1485,12 @@ let translate_patch ~dir orig corrected =
         process_state_transition `Header state transforms |> List.rev
   in
   let transforms = fold_lines `Header 1 [] in
-  if transforms = [] then
+  if transforms = [] then begin
+    log ~level:1 "No patch translation needed for %s -> %s" orig corrected;
     copy_file orig corrected
-  else begin
+  end else begin
     seek_in ch 0;
+    log ~level:1 "Transforming patch %s to %s" orig corrected;
     let ch_out =
       try open_out_bin corrected
       with Sys_error _ ->
@@ -1503,12 +1505,13 @@ let translate_patch ~dir orig corrected =
       else
         (id, (fun s -> s ^ "\r"), strip 1)
     in
-    if OpamConsole.debug () then
+    if OpamConsole.debug () then begin
       let log_transform (first_line, last_line, add_cr) =
          let indicator = if add_cr then '+' else '-' in
          log ~level:3 "Transform %d-%d %c\\r" first_line last_line indicator
       in
-      List.iter log_transform transforms;
+      List.iter log_transform transforms
+    end;
     let rec fold_lines n transforms =
       match input_line ch with
       | line ->
