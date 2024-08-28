@@ -9,52 +9,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(* Simple CRAM-like test framework for opam tests.
-   Features and format:
-   - first line is
-     * the git hash of the opam repository to use, an opamroot is already
-       initialised with that repo as "default"
-     * or N0REP0 for no dependency on opam repository, and an opamroot is
-       already initialised with an empty `default` repository in `./REPO`
-       directory, that you need to populate
-   - 'opam' is automatically redirected to the correct binary
-   - the command prefix is `### `
-   - use `### <FILENAME>`, then the contents below to create a file verbatim
-   - use `### <pkg:NAME.VERSION>`, then the contents of an opam file below to
-     add this package to `default` repository in `./REPO`
-   - use `### <pkg:NAME.VERSION:FILENAME>`, then the contents below to add this
-     file as a extra-file of the given package in the `default` repository, and
-     implicitely run `opam update default`
-   - use `### <pin:path>`, then the contents below to create a minimal opam
-     file, it is extended by template defined fields to pin it without lint
-     errors
-   - `### FOO=x BAR=y` to export variables for subsequent commands
-   - shell-like command handling:
-     * **NO pattern expansion, shell pipes, sequences or redirections**
-     * `FOO=x BAR=y command`
-     * Arguments can be quoted: eg `"foo\"bar"`, `'foo\bar'`, but not combined
-       (`foo'bar'` is not translated to `foobar`)
-     * Variable expansion in arguments (`$FOO` or `${FOO}`). Undefined variables
-       are left as-is
-     * rewrites:
-       * `| 'REGEXP' -> 'STR'` (can be repeated; set `STR` to `\c` to
-         clear the line)
-       * `| grep REGEXP`
-       * `| grep -v REGEXP`
-       * `| unordered` compares lines without considering their ordering
-       * `| sed-cmd command` replaces full path resolved command by `command`
-     * variables from command outputs: `cmd args >$ VAR`
-     * `### : comment`
-     * `opam-cat file`: prints a normalised opam file
-     * `json-cat file`: print a human readable opam output json file, with
-       replacement of some duration and temporary files names
-   - if you need more shell power, create a script using <FILENAME> then run it.
-     Or just use `sh -c`... but beware for compatibility.
-
-   The opam roots are generated using dynamically generated dune rules (see
-   gen.ml and dune.inc), then the tests are run using this script.
-*)
-
 type test = {
   repo_hash: string;
   tags : string list;

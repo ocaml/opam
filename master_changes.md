@@ -186,6 +186,7 @@ users)
   * Speedup `make reftest-gen` [#6155 @kit-ty-kate]
   * Fix some json output automatic replacement (duration and path on Windows) [#6184 @rjbou]
   * Add test for reftest syntax [#6184 @rjbou]
+  * Add some readme file [#6184 @rjbou]
 
 ## Github Actions
   * Depexts: replace centos docker with almalinux to fake a centos [#6079 @rjbou]
