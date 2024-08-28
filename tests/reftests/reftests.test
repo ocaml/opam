@@ -1,0 +1,292 @@
+N0REP0
+### ###################
+### :I: opam setup
+### ###################
+### :I:1: opam root
+### test -d OPAM
+### ls OPAM
+config
+config.lock
+lock
+opam-init
+repo
+### opam var root
+${BASEDIR}/OPAM
+### :I:1: repo
+### find REPO | sort
+REPO
+REPO/packages
+REPO/repo
+### cat REPO/repo
+opam-version: "2.0"
+### ###################
+### :II: File creation
+### ###################
+### :II:1: simple file
+### <a-file>
+and some content
+### cat a-file
+and some content
+### <some/directory/file>
+and still some content
+### :II:2: package file in repo, and repository update
+### opam switch create reftests --empty
+### opam list --all
+# Packages matching: any
+# No matches found
+### <pkg:foo.1>
+opam-version: "2.0"
+### cat REPO/packages/foo/foo.1/opam
+opam-version: "2.0"
+### opam list --all
+# Packages matching: any
+# Name # Installed # Synopsis
+foo    --
+### :II:3: extrafile file in repo
+### <pkg:foo.1:xfile>
+i'm with package foo
+### cat REPO/packages/foo/foo.1/files/xfile
+i'm with package foo
+### :II:4: opam file for pin
+### <pin:pkg.opam>
+opam-version: "2.0"
+### cat pkg.opam
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://pkg@op.am"
+bug-reports: "https://nobug"
+### <pin:pkg/pkg.opam>
+opam-version: "2.0"
+### cat pkg/pkg.opam
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://pkg@op.am"
+bug-reports: "https://nobug"
+### :II:5: opam file for pin with content
+### <pin:pkg.opam>
+opam-version: "2.0"
+synopsis: "something"
+build: ["false"]
+### cat pkg.opam
+opam-version: "2.0"
+synopsis: "something"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://pkg@op.am"
+bug-reports: "https://nobug"
+build: ["false"]
+### ###################
+### :III: Environment variables
+### ###################
+### :III:1: definition
+### FOO=foo
+### echo $FOO
+foo
+### BAR=bar echo $BAR
+bar
+### :III:2: set
+### echo baz >$ BAZ
+### echo $BAZ
+baz
+### :III:3: spaces in variable expansion
+### echo "tree   spaces should appear as 3 spaces" >$ SPACES
+### echo $SPACES
+tree   spaces should appear as 3 spaces
+### ###################
+### :IV: rewrites
+### ###################
+### <rewrites>
+lorem ipsum dolor sit amet
+consectetur adipiscing elit
+sed non risus
+suspendisse lectus tortor
+dignissim sit amet
+### :IV:1: grep
+### cat rewrites | grep amet
+lorem ipsum dolor sit amet
+dignissim sit amet
+### :IV:2: grep -v
+### cat rewrites | grep -v amet
+consectetur adipiscing elit
+sed non risus
+suspendisse lectus tortor
+### cat rewrites | "amet" -> '\c'
+lorem ipsum dolor sit \c
+consectetur adipiscing elit
+sed non risus
+suspendisse lectus tortor
+dignissim sit \c
+### :IV:3: regexp
+### cat rewrites | "amet" -> "XXX"
+lorem ipsum dolor sit XXX
+consectetur adipiscing elit
+sed non risus
+suspendisse lectus tortor
+dignissim sit XXX
+### cat rewrites | "Lorem.*" -> "XXX"
+lorem ipsum dolor sit amet
+consectetur adipiscing elit
+sed non risus
+suspendisse lectus tortor
+dignissim sit amet
+### IPSUM=ipsum
+### cat rewrites | "${IPSUM}" -> "XXX"
+lorem XXX dolor sit amet
+consectetur adipiscing elit
+sed non risus
+suspendisse lectus tortor
+dignissim sit amet
+### :IV:4: unordered
+### <random.ml>
+Random.self_init ();
+let fst () = print_endline "first" in
+let snd () = print_endline "second" in
+let rand = Random.int 100 in
+if rand mod 2 = 0 then
+  (fst (); snd ())
+else
+  (snd (); fst ())
+### ocaml random.ml | unordered
+first
+second
+### :IV:5: sort
+### cat rewrites | sort
+consectetur adipiscing elit
+dignissim sit amet
+lorem ipsum dolor sit amet
+sed non risus
+suspendisse lectus tortor
+### :IV:6: sed-cmd
+### <commands>
+/usr/bin/echo piou
+"/usr/bin/echo" "piou"
+C:\Windows\system32\echo.exe piou
+C:\Windows\system32\echo piou
+C:\Windows\system 32\echo.exe piou
+C:\Windows\system 32\echo piou
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo" piou
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo" piou
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo" piou
+${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo" piou
+${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo" piou
+${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo" piou
+/usr/bin/echo
+### : cmd need to be followed with at least one space
+### cat commands | sed-cmd echo
+echo piou
+echo "piou"
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+/usr/bin/echo
+### ###################
+### :V: Additional commands
+### ###################
+### :V:1: opam-cat
+### <pkg.opam>
+opam-version: "2.0"
+build:
+  [ "false" ]
+install:
+  [
+    [ "true" ]
+  ]
+### opam-cat pkg.opam
+build: ["false"]
+install: [["true"]]
+opam-version: "2.0"
+### :V:2: json-cat
+### opam switch create empty --empty --json=opam.json
+### json-cat opam.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "switch",
+    "create",
+    "empty",
+    "--empty",
+    "--json=opam.json"
+  ]
+}
+### opam install foo --json=opam.json
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### json-cat opam.json
+{
+  "opam-version": "currentv",
+  "command-line": [
+    "${OPAM}",
+    "install",
+    "foo",
+    "--json=opam.json"
+  ],
+  "switch": "empty",
+  "request": {
+    "action": "install",
+    "install": [
+      "foo"
+    ],
+    "remove": [],
+    "upgrade": [],
+    "all": [
+      "foo"
+    ],
+    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+  },
+  "solution": [
+    {
+      "install": {
+        "name": "foo",
+        "version": "1"
+      }
+    }
+  ],
+  "results": [
+    {
+      "action": {
+        "build": {
+          "name": "foo",
+          "version": "1"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    },
+    {
+      "action": {
+        "install": {
+          "name": "foo",
+          "version": "1"
+        }
+      },
+      "result": "OK",
+      "duration": 6.2831853071
+    }
+  ]
+}
