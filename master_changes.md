@@ -47,6 +47,7 @@ users)
   * ◈ Add `opam switch import --deps-only` option to install only dependencies of root package at import [#5388 @rjbou - fix #5200]
   * [BUG] Make accepted `--repos` URLs on creation consistent with `opam repository` [#6091 @Keryan-dev - fix #4673]
   * ◈ opam switch list-available will not display compilers flagged with avoid-version/deprecated unless --all is given [#6098 @kit-ty-kate - fix #6089]
+  * [BUG] Correctly handle `pkg.version` pattern in `opam switch list-available` [#6186 @arozovyk - fix #6152]
 
 ## Config
 
