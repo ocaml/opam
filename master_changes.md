@@ -40,6 +40,7 @@ users)
 ## Switch
   * [BUG] Fix `opam switch remove <dir>` failure when it is a linked switch [#6276 @btjorge - fix #6275]
   * [BUG] Fix `opam switch list-available` when given several arguments [#6318 @kit-ty-kate]
+  * [BUG] Correctly handle `pkg.version` pattern in `opam switch list-available` [#6186 @arozovyk - fix #6152]
 
 ## Config
 

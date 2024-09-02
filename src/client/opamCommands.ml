@@ -2894,18 +2894,8 @@ let switch cli =
       OpamConsole.msg "# Listing available compilers from repositories: %s\n"
         (OpamStd.List.concat_map ", " OpamRepositoryName.to_string
            (OpamStd.Option.default (OpamGlobalState.repos_list gt) repos));
-      let filters =
-        List.map (fun patt ->
-            OpamListCommand.Pattern
-              ({ OpamListCommand.default_pattern_selector with
-                 OpamListCommand.fields = ["name"; "version"] },
-               patt))
-          pattlist
-      in
-      let all_compilers =
-        OpamListCommand.filter ~base:compilers st
-          (OpamFormula.ors (List.map (fun f -> OpamFormula.Atom f) filters))
-      in
+      let filters = OpamListCommand.pattern_selector pattlist in
+      let all_compilers = OpamListCommand.filter ~base:compilers st filters in
       let compilers =
         if all then
           all_compilers
