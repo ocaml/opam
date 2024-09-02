@@ -577,7 +577,7 @@ let list ?(force_search=false) cli =
   let pattern_list =
     arg_list "PATTERNS"
       "Package patterns with globs. Unless $(b,--search) is specified, they \
-       match againsta $(b,NAME) or $(b,NAME.VERSION)"
+       match against a $(b,NAME) or $(b,NAME.VERSION)"
       Arg.string
   in
   let state_selector =
