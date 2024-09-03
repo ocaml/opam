@@ -71,6 +71,11 @@ users)
 ## Source
 
 ## Lint
+  * Add E70 to check `extra-files:` duplicated fields [#5561 @rjbou]
+  * Add E71 to check if the same checksum algorithm is used several times for a given url in `url` section [#5561 @rjbou]
+  * Add E72 to check if the same checksum algorithm is used several times for a given url in `extra-sources` section [#5561 @rjbou]
+  * Add E73 to check that paths in `extra-files:` are not escapable [#5561 @rjbou]
+  * Update W59 (no checksum in `url`) to always display a warning, untying it from `--check-upstream` [#5561 @rjbou]
 
 ## Repository
  * Mitigate curl/curl#13845 by falling back from --write-out to --fail if exit code 43 is returned by curl [#6168 @dra27 - fix #6120]
@@ -180,6 +185,20 @@ users)
   * Add a test showing the behaviour of `opam switch list-available` [#6098 @kit-ty-kate]
   * Add a test for git packages with submodules [#6132 @kit-ty-kate]
   * Add basic test for `install --check` [#6122 @rjbou]
+  * lint: add an additional test case for W37 [#5561 @rjbou]
+  * lint: update W37 to test other urls scheme [#5561 @rjbou]
+  * lint: update W37 to test other url schemes [#5561 @rjbou]
+  * lint: add E70 test [#5561 @rjbou]
+  * lint: add E71 test [#5561 @rjbou]
+  * lint: add E72 test [#5561 @rjbou]
+  * lint: add E73 test [#5561 @rjbou]
+  * lint: add more test cases for E59: special cases (conf, git url), with and without option `--with-check-upstream` [#5561 @rjbou]
+  * lint: add E70 test [#5561 @rjbou]
+  * lint: add E71 test [#5561 @rjbou]
+  * lint: add E72 test [#5561 @rjbou]
+  * lint: add E73 test [#5561 @rjbou]
+  * lint: add more test cases for E59: special cases (conf, git url), with and without option `--with-check-upstream` [#5561 @rjbou]
+  * lint: add more test cases for W59: special cases (conf, git url), with and without `--with-check-upstream` [#5561 @rjbou]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
@@ -240,3 +259,5 @@ users)
 
 ## opam-core
   * `OpamStd.Env`: add `env_string_list` for parsing string list environment variables (comma separated) [#5682 @desumn]
+  * `OpamHash`: export `compare_kind` [#5561 @rjbou]
+  * `OpamFilename`: add `might_escape` to check if a path is escapable, ie contains `<sep>..<sep>` [#5561 @rjbou]

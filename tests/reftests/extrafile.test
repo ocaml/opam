@@ -200,9 +200,13 @@ Successfully extracted to ${BASEDIR}/good-md5.1
 Clearing cache of downloaded files
 ### :I:2: good md5 & sha256
 ### opam lint --package good-md5-good-sha256
-<default>/good-md5-good-sha256.1: Passed.
+<default>/good-md5-good-sha256.1: Errors.
+             error 70: Field 'extra-files' contains duplicated files: "p.patch: 2 occurences"
+# Return code 1 #
 ### opam lint --package good-md5-good-sha256 --check-upstream
-<default>/good-md5-good-sha256.1: Passed.
+<default>/good-md5-good-sha256.1: Errors.
+             error 70: Field 'extra-files' contains duplicated files: "p.patch: 2 occurences"
+# Return code 1 #
 ### opam install good-md5-good-sha256
 The following actions will be performed:
 === install 1 package
@@ -284,9 +288,13 @@ Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p
 Clearing cache of downloaded files
 ### :I:4: good md5 & bad sha256
 ### opam lint --package good-md5-bad-sha256
-<default>/good-md5-bad-sha256.1: Passed.
+<default>/good-md5-bad-sha256.1: Errors.
+             error 70: Field 'extra-files' contains duplicated files: "p.patch: 2 occurences"
+# Return code 1 #
 ### opam lint --package good-md5-bad-sha256 --check-upstream
-<default>/good-md5-bad-sha256.1: Passed.
+<default>/good-md5-bad-sha256.1: Errors.
+             error 70: Field 'extra-files' contains duplicated files: "p.patch: 2 occurences"
+# Return code 1 #
 ### opam install good-md5-bad-sha256
 The following actions will be performed:
 === install 1 package
@@ -520,10 +528,12 @@ Clearing cache of downloaded files
 ### opam lint --package escape-good-md5
 <default>/escape-good-md5.1: Errors.
              error 53: Mismatching 'extra-files:' field: "../../../no-checksum/no-checksum.1/files/p.patch"
+             error 73: Field 'extra-files' contains path with '..': "../../../no-checksum/no-checksum.1/files/p.patch"
 # Return code 1 #
 ### opam lint --package escape-good-md5 --check-upstream
 <default>/escape-good-md5.1: Errors.
              error 53: Mismatching 'extra-files:' field: "../../../no-checksum/no-checksum.1/files/p.patch"
+             error 73: Field 'extra-files' contains path with '..': "../../../no-checksum/no-checksum.1/files/p.patch"
 # Return code 1 #
 ### # ERROR it copies it to build dir ^ relative path -> escape!!!!
 ### # currently writing in /tmp as a common it copies in

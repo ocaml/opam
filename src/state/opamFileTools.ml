@@ -396,10 +396,31 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
         | #OpamUrl.version_control -> true
         | _ -> false)
   in
-  let check_upstream =
-    check_upstream &&
+  let is_url_archive =
     not (OpamFile.OPAM.has_flag Pkgflag_Conf t) &&
     url_vcs = Some false
+  in
+  let check_upstream = check_upstream && is_url_archive in
+  let check_double compare to_str lst =
+    let double =
+      List.sort compare lst
+      |> List.fold_left (fun (last, dbl) elem ->
+          match last with
+          | Some last ->
+            if compare last elem = 0 then
+              Some elem, OpamStd.String.Map.update (to_str elem) ((+) 1) 1 dbl
+            else
+              Some elem, dbl
+          | None -> Some elem, dbl)
+        (None, OpamStd.String.Map.empty)
+      |> snd
+    in
+    if OpamStd.String.Map.is_empty double then false, None else
+      true,
+      Some (List.map (fun (elem, occ) ->
+          Printf.sprintf "%s: %d occurence%s"
+            elem occ (if occ = 1 then "" else "s"))
+          (OpamStd.String.Map.bindings double))
   in
   let warnings = [
     cond 20 `Warning
@@ -790,7 +811,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
         Printf.sprintf "Found %s variable%s, predefined one%s" var s_ nvar)
        (rem_test || rem_doc));
     cond 59 `Warning "url doesn't contain a checksum"
-      (check_upstream &&
+      (is_url_archive &&
        OpamStd.Option.map OpamFile.URL.checksum t.url = Some []);
     (let upstream_error =
        if not check_upstream then None else
@@ -909,7 +930,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
               ("file" | "path" | "local" | "rsync") -> true
             | _, _ -> false)
            && (Filename.is_relative u.path
-               || OpamStd.String.contains ~sub:".." u.path))
+               || OpamFilename.might_escape ~sep:`Unix u.path))
          (all_urls t)
      in
      cond 65 `Error
@@ -1011,6 +1032,66 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
              p v p v)
            vars)
        (vars <> []));
+    (let has_double, detail =
+       check_double OpamFilename.Base.compare OpamFilename.Base.to_string
+         (match OpamFile.OPAM.extra_files t with
+          | Some extra_files -> List.map fst extra_files
+          | None -> [])
+     in
+     cond 70 `Error
+       "Field 'extra-files' contains duplicated files"
+       ?detail
+       has_double);
+    (let has_double, detail =
+       check_double OpamHash.compare_kind OpamHash.string_of_kind
+         (match OpamFile.OPAM.url t with
+          | Some url ->
+            List.map OpamHash.kind (OpamFile.URL.checksum url)
+          | None -> [])
+     in
+     cond 71 `Error
+       "Field 'url.checksum' contains duplicated checksums"
+       ?detail has_double);
+    (let has_double, detail =
+       OpamFile.OPAM.extra_sources t
+       |> List.rev_map (fun (basename, url) ->
+           basename,
+           OpamFile.URL.checksum url
+           |> List.rev_map OpamHash.kind
+           |> check_double
+             OpamHash.compare_kind
+             OpamHash.string_of_kind)
+       |> List.fold_left (fun (has_double, details) (basename, (double, detail)) ->
+           let has_double = has_double || double in
+           let details =
+             match detail with
+             | None -> details
+             | Some detail ->
+               Printf.sprintf "%s have %s"
+                 (OpamFilename.Base.to_string basename)
+                 (OpamStd.Format.pretty_list detail)
+               :: details
+           in
+           has_double, details) (false, [])
+       |> (function hd, [] -> hd, None | hd, d -> hd, Some d)
+     in
+     cond 72 `Error
+       "Field 'extra-sources' contains duplicated checksums"
+       ?detail has_double);
+    (let relative =
+       match t.extra_files with
+       | None -> []
+       | Some extra_files ->
+         List.filter_map (fun (base, _) ->
+             let path = OpamFilename.Base.to_string base in
+             if OpamFilename.might_escape ~sep:`Unix path then
+               Some path else None)
+           extra_files
+     in
+     cond 73 `Error
+       "Field 'extra-files' contains path with '..'"
+       ~detail:relative
+       (relative <> []));
   ]
   in
   format_errors @
