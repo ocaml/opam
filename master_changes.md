@@ -61,6 +61,7 @@ users)
 ## Show
 
 ## Var/Option
+  * Fix the value of the 'arch' variable when the current OS is 32bit on a 64bit machine [#5950 @kit-ty-kate - fix #5949]
 
 ## Update / Upgrade
 
@@ -264,3 +265,4 @@ users)
   * `OpamStd.Env`: add `env_string_list` for parsing string list environment variables (comma separated) [#5682 @desumn]
   * `OpamHash`: export `compare_kind` [#5561 @rjbou]
   * `OpamFilename`: add `might_escape` to check if a path is escapable, ie contains `<sep>..<sep>` [#5561 @rjbou]
+  * Add `OpamStd.Sys.getconf` [#5950 @kit-ty-kate]
