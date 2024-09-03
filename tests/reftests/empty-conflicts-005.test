@@ -18,26 +18,20 @@ Done.
 [ERROR] Package conflict!
   * No agreement on the version of ocaml:
     - (invariant) -> ocaml-variants = 4.12.0+trunk -> ocaml = 4.12.0
-    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.06.0
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.12
     You can temporarily relax the switch invariant with `--update-invariant'
   * No agreement on the version of ocaml-variants:
     - (invariant) -> ocaml-variants = 4.12.0+trunk
-    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.06.0 -> ocaml-variants < 3.09.2~
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.12 -> ocaml-variants < 4.11.3~
   * No agreement on the version of ocaml-migrate-parsetree:
-    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0
     - pgocaml_ppx >= 4.2.2 -> ppx_deriving >= 4.0 -> ppxlib >= 0.20.0 -> ocaml-migrate-parsetree >= 2.1.0
-  * Missing dependency:
-    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.09.0 -> ocaml-variants < 4.08.2~ -> ocaml-beta
-    unmet availability conditions: 'enable-ocaml-beta-repository'
-  * Missing dependency:
-    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.11 -> ocaml-variants < 4.10.1~ -> ocaml-beta
-    unmet availability conditions: 'enable-ocaml-beta-repository'
-  * Missing dependency:
-    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.11 -> ocaml-variants < 4.10.2~ -> ocaml-beta
-    unmet availability conditions: 'enable-ocaml-beta-repository'
-  * Missing dependency:
-    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.12 -> ocaml-variants < 4.11.1~ -> ocaml-beta
-    unmet availability conditions: 'enable-ocaml-beta-repository'
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0
+  * Incompatible packages:
+    - (invariant) -> ocaml-variants = 4.12.0+trunk
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.12 -> ocaml-base-compiler (= 3.07+1 | = 3.07+2 | = 3.08.0 | = 3.09.1 | = 3.09.2 | = 3.09.3 | = 3.10.0 | = 3.11.2 | = 4.00.0 | = 4.00.1 | = 4.01.0 | = 4.02.0 | = 4.02.2 | = 4.02.3 | = 4.04.0 | = 4.04.1 | = 4.04.2 | = 4.06.0 | = 4.08.1 | = 4.10.0 | = 4.10.1 | = 4.10.2 | = 4.11.0)
+  * Incompatible packages:
+    - (invariant) -> ocaml-variants = 4.12.0+trunk
+    - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.06.0 -> ocaml-system >= 3.09.1
   * Missing dependency:
     - pgocaml_ppx >= 4.2.2 -> ocaml-migrate-parsetree < 2.0.0 -> ocaml < 4.12 -> ocaml-variants < 4.11.3~ -> ocaml-beta
     unmet availability conditions: 'enable-ocaml-beta-repository'

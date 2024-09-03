@@ -85,7 +85,7 @@ depends: "b"
 ### opam install a c --deps-only
 [ERROR] Package conflict!
   * Missing dependency:
-    - a
+    - deps-of-c -> b -> a
     unmet availability conditions: 'false'
 
 No solution found, exiting
@@ -93,7 +93,7 @@ No solution found, exiting
 ### opam install c --deps-only
 [ERROR] Package conflict!
   * Missing dependency:
-    - a
+    - deps-of-c -> b -> a
     unmet availability conditions: 'false'
 
 No solution found, exiting

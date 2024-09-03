@@ -142,6 +142,7 @@ users)
   * Add support for the `-count[avoid-version,solution]` criteria with the `builtin-0install` solver, to avoid packages marked with `avoid-version` flag [#6130 @kit-ty-kate]
   * The default criteria for the `builtin-0install` solver changed from empty to `-changed,-count[avoid-version,solution]` [#6130 @kit-ty-kate]
   * The upgrade and fixup criteria for the `builtin-0install` solver changed from empty to `-count[avoid-version,solution]` [#6130 @kit-ty-kate]
+  * Fix some of the unhelpful conflict messages by merging formulas that include each other [#5210 @kit-ty-kate]
 
 ## Client
 
@@ -200,6 +201,7 @@ users)
   * lint: add E73 test [#5561 @rjbou]
   * lint: add more test cases for E59: special cases (conf, git url), with and without option `--with-check-upstream` [#5561 @rjbou]
   * lint: add more test cases for W59: special cases (conf, git url), with and without `--with-check-upstream` [#5561 @rjbou]
+  * Add a test showing an unhelpful conflict message [#5210 @kit-ty-kate]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
