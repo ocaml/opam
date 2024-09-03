@@ -1449,6 +1449,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:rec-pin.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-reftests)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff reftests.test reftests.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-reftests)))
+
+(rule
+ (targets reftests.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:reftests.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-reinstall)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
