@@ -22,7 +22,7 @@ license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 homepage: "https://opam.ocaml.org"
 bug-reports: "https://github.com/ocaml/opam/issues"
 depends: [
-  "ocaml" {>= "4.08.0" & (os != "win32" | < "5.0")}
+  "ocaml" {>= "4.08.0"}
   "base-unix"
   "ocamlgraph"
   "re" {>= "1.9.0"}

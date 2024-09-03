@@ -109,6 +109,7 @@ users)
   * Bump the vendored opam-0install-cudf to 0.5.0 [#6130 @kit-ty-kate]
   * Require opam-0install-cudf >= 0.5.0 [#6130 @kit-ty-kate]
   * Bump the vendored mccs to 1.1+18 [#6170 @kit-ty-kate]
+  * Fix Windows builds with OCaml >= 5.0 [#6189 @kit-ty-kate - fix #6148]
 
 ## Infrastructure
 
