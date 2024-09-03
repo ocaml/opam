@@ -90,7 +90,6 @@ users)
 ## Shell
 
 ## Internal
-  * Fix error in `OpamSystem.transform_patch` - patches were only applied when debugging [#6182 @dra27 regression since #3449]
 
 ## Internal: Windows
 
