@@ -577,7 +577,7 @@ let list ?(force_search=false) cli =
   let pattern_list =
     arg_list "PATTERNS"
       "Package patterns with globs. Unless $(b,--search) is specified, they \
-       match againsta $(b,NAME) or $(b,NAME.VERSION)"
+       match against a $(b,NAME) or $(b,NAME.VERSION)"
       Arg.string
   in
   let state_selector =
@@ -2894,16 +2894,27 @@ let switch cli =
         (OpamStd.List.concat_map ", " OpamRepositoryName.to_string
            (OpamStd.Option.default (OpamGlobalState.repos_list gt) repos));
       let filters =
+        let name_patt =
+          { OpamListCommand.default_pattern_selector with exact = true; fields = ["name"] }
+        in
+        let version_patt =
+          { OpamListCommand.default_pattern_selector with exact = true; fields = ["version"] }
+        in
         List.map (fun patt ->
-            OpamListCommand.Pattern
-              ({ OpamListCommand.default_pattern_selector with
-                 OpamListCommand.fields = ["name"; "version"] },
-               patt))
+            match OpamStd.String.cut_at patt '.' with
+            | None ->
+              Atom (OpamListCommand.Pattern 
+                      ( name_patt, patt))
+            | Some (name, version) ->
+              OpamFormula.ands
+                [Atom (OpamListCommand.Pattern (name_patt, name));
+                 Atom (OpamListCommand.Pattern (version_patt, version))]
+          )
           pattlist
       in
       let all_compilers =
         OpamListCommand.filter ~base:compilers st
-          (OpamFormula.ands (List.map (fun f -> OpamFormula.Atom f) filters))
+          (OpamFormula.ands filters)
       in
       let compilers =
         if all then
