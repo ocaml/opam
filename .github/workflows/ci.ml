@@ -14,11 +14,11 @@
 open Lib
 
 let latest_ocaml4 = "4.14.2"
-let latest_ocaml5 = "5.2.0" (* Add this number to ocamls below when the next version comes out *)
+let latest_ocaml5 = "5.3" (* Add this number to ocamls below when the next version comes out *)
 let ocamls = [
   (* Fully supported versions *)
   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1";
-  "5.0.0"; "5.1.1";
+  "5.0.0"; "5.1.1"; "5.2.0";
 
   (* The last elements of the list after 4.14 will be used as default versions *)
   latest_ocaml4; latest_ocaml5;
@@ -70,7 +70,7 @@ jobs:
 let end_workflow ~oc:_ ~workflow:_ = ()
 
 let ocamls =
-  List.map (fun v -> Scanf.sscanf v "%u.%u.%u" (fun major minor _ -> ((major, minor), v))) ocamls
+  List.map (fun v -> Scanf.sscanf v "%u.%u" (fun major minor -> ((major, minor), v))) ocamls
 
 let platform_ocaml_matrix ?(dir=List.drop_while) ~fail_fast start_version =
   (fail_fast,
@@ -312,8 +312,9 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
           "x86_64-pc-windows"
         ] in
         let ocaml5 = [
+          "x86_64-pc-cygwin";
           "x86_64-w64-mingw32";
-          (* "x86_64-pc-windows"; 5.3 needed *)
+          "x86_64-pc-windows";
         ] in
         let matrix_elem ocamlv hosts =
           let elem ocaml host =

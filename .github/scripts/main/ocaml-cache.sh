@@ -46,7 +46,7 @@ esac
 
 FLEXDLL_VERSION=0.43
 
-curl -sLO "https://github.com/ocaml/ocaml/archive/refs/tags/${OCAML_VERSION}.tar.gz"
+curl -sLO "https://github.com/ocaml/ocaml/archive/${OCAML_VERSION}.tar.gz"
 if [[ $PLATFORM = 'Windows' ]] ; then
   curl -sLO "https://github.com/ocaml/flexdll/archive/refs/tags/$FLEXDLL_VERSION.tar.gz"
 fi
