@@ -88,6 +88,7 @@ users)
 
 ## Env
   * Make the shell environment update hint easier to copy/paste [#6159 @kit-ty-kate - fix #6158]
+  * Add install.exe to the list of non-shadowed programs when adding Cygwin's bin directory to PATH (ocamlfind et al can be affected by Vim for Windows) [#6190 @dra27]
 
 ## Opamfile
   * Make all writes atomic [#5489 @kit-ty-kate]

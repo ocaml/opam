@@ -307,7 +307,9 @@ let rezip_to_string ?insert z =
   join_var (rezip ?insert z)
 
 let cygwin_non_shadowed_programs =
-  ["bash.exe"; "make.exe"; "sort.exe"; "tar.exe"]
+  [ "bash.exe"; "make.exe"; "sort.exe"; "tar.exe";
+    "install.exe"; (* from Vim for Windows *)
+  ]
 
 let apply_op_zip ~sepfmt var op arg (rl1,l2 as zip) =
   let arg = transform_format ~sepfmt var arg in
