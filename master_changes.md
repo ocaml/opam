@@ -174,6 +174,8 @@ users)
   * Check `shell/install.sh` using `shellcheck` [#6313 @kit-ty-kate]
   * Fix the alpine depexts test [#6363 @kit-ty-kate]
   * Speedup the gentoo depexts test [#6363 @kit-ty-kate]
+  * Add OCaml 5.3 to the build matrix [#6192 @kit-ty-kate]
+  * Add OCaml 5.3/MSVC to the build matrix [#6192 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]

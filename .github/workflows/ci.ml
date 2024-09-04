@@ -14,11 +14,11 @@
 open Lib
 
 let latest_ocaml4 = "4.14.2"
-let latest_ocaml5 = "5.2.0" (* Add this number to ocamls below when the next version comes out *)
+let latest_ocaml5 = "5.3.0" (* Add this number to ocamls below when the next version comes out *)
 let ocamls = [
   (* Fully supported versions *)
   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1";
-  "5.0.0"; "5.1.1";
+  "5.0.0"; "5.1.1"; "5.2.1";
 
   (* The last elements of the list after 4.14 will be used as default versions *)
   latest_ocaml4; latest_ocaml5;
@@ -312,8 +312,9 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
           "x86_64-pc-windows"
         ] in
         let ocaml5 = [
+          (* "x86_64-pc-cygwin"; *) (* TODO: Restore Cygwin + OCaml 5.3 when C++ support is fixed and released *)
           "x86_64-w64-mingw32";
-          (* "x86_64-pc-windows"; 5.3 needed *)
+          "x86_64-pc-windows";
         ] in
         let matrix_elem ocamlv hosts =
           let elem ocaml host =
@@ -525,8 +526,8 @@ let main oc : unit =
     ("OPAM12CACHE", "~/.cache/opam1.2/cache");
     (* These should be identical to the values in appveyor.yml *)
     ("OPAM_REPO", "https://github.com/ocaml/opam-repository.git");
-    ("OPAM_TEST_REPO_SHA", "dff745994c64d083a6ba3ddc5a9c28ed0ad0f40a");
-    ("OPAM_REPO_SHA", "6eee105e52e098e36949a584c053a18bcb9b2f6b");
+    ("OPAM_TEST_REPO_SHA", "67e940587b8aca227f511e1943bcd31eabe6b1db");
+    ("OPAM_REPO_SHA", "67e940587b8aca227f511e1943bcd31eabe6b1db");
     ("SOLVER", "");
     (* Cygwin configuration *)
     ("CYGWIN_MIRROR", "http://mirrors.kernel.org/sourceware/cygwin/");
