@@ -62,6 +62,7 @@ users)
 
 ## Var/Option
   * Fix the value of the 'arch' variable when the current OS is 32bit on a 64bit machine [#5950 @kit-ty-kate - fix #5949]
+  * Warn when setting a variable if an option is shadowed [#4904 @rjbou - fix #4730]
 
 ## Update / Upgrade
 

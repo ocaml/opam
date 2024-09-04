@@ -936,6 +936,19 @@ type ('var,'config) var_confset =
   }
 
 let set_var var value conf =
+  let svar = OpamVariable.Full.to_string var in
+  let global_option, switch_option =
+    let exists f = List.exists (fun (name, _) -> String.equal svar name) f in
+    (exists OpamFile.Config.fields),
+    (exists OpamFile.Switch_config.fields)
+  in
+  if global_option || switch_option then
+    (let scope = if global_option then "global" else "switch" in
+     OpamConsole.warning
+       "You are setting a variable that has the same name as a %s option.\n\
+        Did you mean to use `opam option` instead? You can revert this variable \
+        using: 'opam var %s= --%s'\n"
+       scope svar scope);
   let conf = conf (OpamVariable.Full.variable var) in
   let global_vars = conf.stv_vars in
   let rest = List.filter (fun v -> not (conf.stv_find v)) global_vars in
