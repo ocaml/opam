@@ -20,6 +20,14 @@
   (copy opamStubsTypes.ml opamStubsTypes.mli))
 
 (rule
+ (enabled_if (< %{ocaml_version} "5.0"))
+ (action (copy# opamStubs.ocaml4.ml opamStubs.win32.ml)))
+
+(rule
+ (enabled_if (>= %{ocaml_version} "5.0"))
+ (action (copy# opamStubs.ocaml5.ml opamStubs.win32.ml)))
+
+(rule
   (write-file opamCoreConfigDeveloper.ml
     "let value = \"%{read-strings:developer}\""))
 
