@@ -17,4 +17,4 @@
   (wrapped     false))
 
 (rule
-  (copy opamCudfSolverSig.ml opamCudfSolverSig.mli))
+  (copy# opamCudfSolverSig.ml opamCudfSolverSig.mli))

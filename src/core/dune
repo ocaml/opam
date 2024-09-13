@@ -14,7 +14,7 @@
   (wrapped     false))
 
 (rule
-  (copy opamStubsTypes.ml opamStubsTypes.mli))
+  (copy# opamStubsTypes.ml opamStubsTypes.mli))
 
 (rule
  (enabled_if (< %{ocaml_version} "5.0"))

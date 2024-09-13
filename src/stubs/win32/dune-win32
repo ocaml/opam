@@ -19,7 +19,7 @@
   (wrapped         false))
 
 (rule
-  (copy opamWin32Stubs.ml opamWin32Stubs.mli))
+  (copy# opamWin32Stubs.ml opamWin32Stubs.mli))
 
 (rule
   (targets opam-putenv.exe)
