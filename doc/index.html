@@ -86,20 +86,12 @@ td.sublib {
   <td>C stubs for Windows. A &ldquo;dummy&rdquo; alternate is provided for Unix, which doesn&rsquo;t require any C code</td></tr>
 <tr><th><a href="opam-core/OpamStubsTypes">opamStubsTypes.ml</a></th>
   <td>Types in the stubs definitions (shared between both implementations)</td></tr>
-
-<tr class="lib">
-  <th><code>src/stubs</code></th>
-  <td><em>opam-stubs</em> library</td>
-</tr>
-
-<tr><td colspan="2" class="libnote">
-    C stubs. This library is built on Windows-only and automatically pulled into opam-core if needed
-</td></tr>
-
 <tr><th><a>opamInject.c</a></th>
   <td>Code for process injection shared between <a>opamWindows.c</a> and <a>opam-putenv.c</a></td></tr>
 <tr><th><a>opamWindows.c</a></th>
-  <td>C stubs themselves</td></tr>
+  <td>C stubs for Windows</td></tr>
+<tr><th><a>opamCommonStubs.c</a></th>
+  <td>Common C stubs for Unix and Windows</td></tr>
 
 <tr class="lib">
   <th><a href="opam-format"><code>src/format</code></a></th>

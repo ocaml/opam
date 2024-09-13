@@ -8,7 +8,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Types for C stubs modules. *)
+(** Types for C stubs modules and common C stubs. *)
 
 (** CONSOLE_SCREEN_BUFFER_INFO struct
     (see https://docs.microsoft.com/en-us/windows/console/console-screen-buffer-info-str)

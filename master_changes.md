@@ -112,6 +112,7 @@ users)
   * Require opam-0install-cudf >= 0.5.0 [#6130 @kit-ty-kate]
   * Bump the vendored mccs to 1.1+18 [#6170 @kit-ty-kate]
   * Fix Windows builds with OCaml >= 5.0 [#6189 @kit-ty-kate - fix #6148]
+  * Upgrade the minimum required version for dune from 2.0.0 to 2.6.0 [#5381 @dra27]
 
 ## Infrastructure
 
@@ -158,6 +159,7 @@ users)
   * Speedup OpamVersionCompare by 25% by removing the unused handling of epoch [#5518 @kit-ty-kate]
   * Fix error in `OpamSystem.transform_patch` - patches were only applied when debugging [#6182 @dra27 regression since #3449]
   * Remove `--with-acl` option from the configure script and its related C stubs (reverts a Cygwin fix in #4265) [#5381 @kit-ty-kate - fix #5373]
+  * Move Windows stubs to opam-core [#5381 @dra27]
 
 ## Internal: Windows
 

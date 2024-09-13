@@ -35,7 +35,7 @@ depends: [
   "opam-repository" {= version}
   "re" {>= "1.10.0"}
   "cmdliner" {>= "1.1.0"}
-  "dune" {>= "2.0.0"}
+  "dune" {>= "2.6.0"}
 ]
 conflicts: [
   "extlib" {< "1.7.8"}

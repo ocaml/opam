@@ -58,3 +58,9 @@ CAMLprim value opam_is_executable(value path)
   caml_stat_free(p);
   CAMLreturn(Val_bool(ret == 0));
 }
+
+/* This is done here as it simplifies the dune file */
+#ifdef _WIN32
+#include "opamInject.c"
+#include "opamWindows.c"
+#endif

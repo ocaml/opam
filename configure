@@ -5001,8 +5001,8 @@ fi
     if  test "x${CC64}" != "xno"
 then :
 
-      echo "${CC64} -o " > src/stubs/win32/cc64
-      echo " -Wdeclaration-after-statement -municode " >> src/stubs/win32/cc64
+      echo "${CC64} -o " > src/core/cc64
+      echo " -Wdeclaration-after-statement -municode " >> src/core/cc64
 
 fi
 
@@ -5048,14 +5048,14 @@ else $as_nop
 printf "%s\n" "from $MSVS_NAME" >&6; }
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      echo "cl /nologo /Fe" > src/stubs/win32/cc64
-      echo " " >> src/stubs/win32/cc64
-      echo "PATH" >> src/stubs/win32/cc64
-      echo "${MSVS_PATH}" >> src/stubs/win32/cc64
-      echo "LIB" >> src/stubs/win32/cc64
-      echo "${MSVS_LIB}" >> src/stubs/win32/cc64
-      echo "INCLUDE" >> src/stubs/win32/cc64
-      echo "${MSVS_INC}" >> src/stubs/win32/cc64
+      echo "cl /nologo /Fe" > src/core/cc64
+      echo " " >> src/core/cc64
+      echo "PATH" >> src/core/cc64
+      echo "${MSVS_PATH}" >> src/core/cc64
+      echo "LIB" >> src/core/cc64
+      echo "${MSVS_LIB}" >> src/core/cc64
+      echo "INCLUDE" >> src/core/cc64
+      echo "${MSVS_INC}" >> src/core/cc64
 
 fi
 
@@ -5820,7 +5820,7 @@ fi
     # NOTE: On Windows, the Windows specific dlls should stay dynamic for security reasons
     # NOTE: -l:libstdc++.a is necessary (vs. -lstdc++) as flexlink will use libstdc++.dll.a
     # which still depends on the DLL at runtime instead of libstdc++.a (that looks like a bug in flexlink)
-    platform_dependent_stuff="-cclib -lopam_stubs_win32_stubs -cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid -cclib -luserenv"
+    platform_dependent_stuff="-cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid -cclib -luserenv"
     if test "x${SYSTEM}" = "xmingw"
 then :
   platform_dependent_stuff="${platform_dependent_stuff} -cclib -lwindowsapp"
@@ -7076,7 +7076,7 @@ if test "x$prefix" = "xNONE"; then
   prefix=$ac_default_prefix
 fi
 
-ac_config_files="$ac_config_files Makefile.config src/ocaml-flags-configure.sexp src/stubs/c-flags.sexp"
+ac_config_files="$ac_config_files Makefile.config src/ocaml-flags-configure.sexp src/core/c-flags.sexp"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -7781,7 +7781,7 @@ do
   case $ac_config_target in
     "Makefile.config") CONFIG_FILES="$CONFIG_FILES Makefile.config" ;;
     "src/ocaml-flags-configure.sexp") CONFIG_FILES="$CONFIG_FILES src/ocaml-flags-configure.sexp" ;;
-    "src/stubs/c-flags.sexp") CONFIG_FILES="$CONFIG_FILES src/stubs/c-flags.sexp" ;;
+    "src/core/c-flags.sexp") CONFIG_FILES="$CONFIG_FILES src/core/c-flags.sexp" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -8250,16 +8250,6 @@ else $as_nop
 printf "%s\n" "$as_me: WARNING: --with-private-runtime ignored (not building on mingw)" >&2;}
 
 fi
-
-fi
-
-rm -f src/stubs/win32/dune
-if  test ${WIN32} -eq 1
-then :
-
-  cd src/stubs/win32
-  ${LN_S} -f dune-win32 dune
-  cd ../../..
 
 fi
 

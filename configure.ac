@@ -198,8 +198,8 @@ AS_IF([ test ${WIN32} -eq 1 ],[
         ac_tool_prefix='x86_64-w64-mingw32-'])])
     AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
     AS_IF([ test "x${CC64}" != "xno" ],[
-      echo "${CC64} -o " > src/stubs/win32/cc64
-      echo " -Wdeclaration-after-statement -municode " >> src/stubs/win32/cc64
+      echo "${CC64} -o " > src/core/cc64
+      echo " -Wdeclaration-after-statement -municode " >> src/core/cc64
     ])
   ],[
     AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
@@ -223,14 +223,14 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AC_MSG_RESULT([from $MSVS_NAME])
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      echo "cl /nologo /Fe" > src/stubs/win32/cc64
-      echo " " >> src/stubs/win32/cc64
-      echo "PATH" >> src/stubs/win32/cc64
-      echo "${MSVS_PATH}" >> src/stubs/win32/cc64
-      echo "LIB" >> src/stubs/win32/cc64
-      echo "${MSVS_LIB}" >> src/stubs/win32/cc64
-      echo "INCLUDE" >> src/stubs/win32/cc64
-      echo "${MSVS_INC}" >> src/stubs/win32/cc64
+      echo "cl /nologo /Fe" > src/core/cc64
+      echo " " >> src/core/cc64
+      echo "PATH" >> src/core/cc64
+      echo "${MSVS_PATH}" >> src/core/cc64
+      echo "LIB" >> src/core/cc64
+      echo "${MSVS_LIB}" >> src/core/cc64
+      echo "INCLUDE" >> src/core/cc64
+      echo "${MSVS_INC}" >> src/core/cc64
     ])
   ])
   AS_IF([ test "x${CC64}" = "xno" ],[
@@ -330,7 +330,7 @@ AS_CASE([$TARGET],
     # NOTE: On Windows, the Windows specific dlls should stay dynamic for security reasons
     # NOTE: -l:libstdc++.a is necessary (vs. -lstdc++) as flexlink will use libstdc++.dll.a
     # which still depends on the DLL at runtime instead of libstdc++.a (that looks like a bug in flexlink)
-    platform_dependent_stuff="-cclib -lopam_stubs_win32_stubs -cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid -cclib -luserenv"
+    platform_dependent_stuff="-cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid -cclib -luserenv"
     AS_IF([test "x${SYSTEM}" = "xmingw"], [platform_dependent_stuff="${platform_dependent_stuff} -cclib -lwindowsapp"])
   ])
 AS_CASE([${support_static},${enable_static}],
@@ -433,7 +433,7 @@ fi
 AC_CONFIG_FILES(
   Makefile.config
   src/ocaml-flags-configure.sexp
-  src/stubs/c-flags.sexp
+  src/core/c-flags.sexp
 )
 AC_OUTPUT
 
@@ -447,13 +447,6 @@ AS_IF([test "x${with_private_runtime}" != "xno"],[
   ],[
     AC_MSG_WARN([--with-private-runtime ignored (not building on mingw)])
   ])
-])
-
-rm -f src/stubs/win32/dune
-AS_IF([ test ${WIN32} -eq 1],[
-  cd src/stubs/win32
-  ${LN_S} -f dune-win32 dune
-  cd ../../..
 ])
 
 echo
