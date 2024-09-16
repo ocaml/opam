@@ -94,6 +94,7 @@ users)
 ## Opamfile
   * Make all writes atomic [#5489 @kit-ty-kate]
   * Propagate future opamfile parse errors correctly [#6199 @dra27]
+  * Ensure future syntax errors are only reported when the syntax version is greater than the client, not the format library [#6199 @dra27 - fix #6188]
 
 ## External dependencies
  * Always pass --no-version-check and --no-write-registry to Cygwin setup [#6046 @dra27]

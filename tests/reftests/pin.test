@@ -353,7 +353,7 @@ echo GARBAGE>>"$1"
         Parse error [skipped]
 
 [ERROR] Invalid opam file in pin-at-two-two source from file://${BASEDIR}/pin-at-two-two:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
+             error  2: File format error at line 11, column 0: Parse error
 [ERROR] No package named pin-at-two-two found.
 # Return code 5 #
 ### sh junk.sh pin-at-two-three/pin-at-two-three.opam
@@ -367,7 +367,7 @@ echo GARBAGE>>"$1"
         Parse error [skipped]
 
 [ERROR] Invalid opam file in pin-at-two-three source from file://${BASEDIR}/pin-at-two-three:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
+             error  2: File format error at line 11, column 0: Parse error
 [ERROR] No package named pin-at-two-three found.
 # Return code 5 #
 ### sh junk.sh pin-at-future/pin-at-future.opam

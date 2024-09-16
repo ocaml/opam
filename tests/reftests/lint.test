@@ -1267,11 +1267,11 @@ ${BASEDIR}/future/pin-at-two-one.opam: Errors.
 # Return code 1 #
 ### opam lint future/pin-at-two-two.opam
 ${BASEDIR}/future/pin-at-two-two.opam: Errors.
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
+             error  2: File format error at line 11, column 0: Parse error
 # Return code 1 #
 ### opam lint future/pin-at-two-three.opam
 ${BASEDIR}/future/pin-at-two-three.opam: Errors.
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
+             error  2: File format error at line 11, column 0: Parse error
 # Return code 1 #
 ### opam lint future/pin-at-future.opam
 ${BASEDIR}/future/pin-at-future.opam: Errors.
