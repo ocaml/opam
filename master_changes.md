@@ -206,6 +206,7 @@ users)
   * lint: add more test cases for E59: special cases (conf, git url), with and without option `--with-check-upstream` [#5561 @rjbou]
   * lint: add more test cases for W59: special cases (conf, git url), with and without `--with-check-upstream` [#5561 @rjbou]
   * Add a test showing an unhelpful conflict message [#5210 @kit-ty-kate]
+  * Add test in pin and lint for future opam version parse error [#6199 @dra27]
 
 ### Engine
   * Add a test filtering mechanism [#6105 @Keryan-dev]
