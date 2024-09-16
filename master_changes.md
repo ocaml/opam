@@ -102,6 +102,7 @@ users)
 
 ## Env
   * Add the `OPAMSOLVERTOLERANCE` environment variable to allow users to fix solver timeouts for good [#5510 @kit-ty-kate - fix #3230]
+  * [BUG] Don't write empty environment update segments to variables.sh (`FOO += ""` no longer adds `FOO='':"$FOO"; export FOO;`) [#6198 @dra27]
 
 ## Opamfile
 

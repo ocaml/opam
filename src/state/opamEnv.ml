@@ -1184,7 +1184,20 @@ let write_custom_init_scripts root custom =
     ) custom
 
 let write_dynamic_init_scripts st =
-  let updates = updates ~set_opamroot:false ~set_opamswitch:false st in
+  (* Empty environment updates must not be written to the scripts *)
+  let is_not_empty_update
+    : (_, OpamTypes.euok_writeable) OpamTypes.env_update -> _ = function
+  | {envu_value = ""; envu_op; _} ->
+    begin match envu_op with
+    | PlusEq | EqPlus | ColonEq | EqColon | EqPlusEq -> false
+    | Eq -> true
+    end
+  | _ -> true
+  in
+  let updates =
+    updates ~set_opamroot:false ~set_opamswitch:false st
+    |> List.filter is_not_empty_update
+  in
   try
     if OpamStateConfig.is_newer_than_self
         ~lock_kind:`Lock_write st.switch_global then
