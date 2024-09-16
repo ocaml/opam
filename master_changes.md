@@ -16,6 +16,7 @@ users)
 
 ## Global CLI
   * Add cli version 2.3 [#6045 #6151 @rjbou]
+  * Improve the error message when a directory is not available while fetching using rsync [#6027 @kit-ty-kate]
 
 ## Plugins
 

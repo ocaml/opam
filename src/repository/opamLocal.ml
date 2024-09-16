@@ -168,9 +168,9 @@ module B = struct
          else
            OpamFilename.mkdir quarantine;
          pull_dir_quiet quarantine url) @@+ function
-    | Not_available _ ->
+    | Not_available (_, msg) ->
       finalise ();
-      Done (OpamRepositoryBackend.Update_err (Failure "rsync failed"))
+      Done (OpamRepositoryBackend.Update_err (Failure ("rsync error: " ^ msg)))
     | Up_to_date _ ->
       finalise (); Done OpamRepositoryBackend.Update_empty
     | Result _ ->
