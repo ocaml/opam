@@ -93,6 +93,7 @@ users)
 
 ## Opamfile
   * Make all writes atomic [#5489 @kit-ty-kate]
+  * Propagate future opamfile parse errors correctly [#6199 @dra27]
 
 ## External dependencies
  * Always pass --no-version-check and --no-write-registry to Cygwin setup [#6046 @dra27]
