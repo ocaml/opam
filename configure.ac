@@ -69,9 +69,6 @@ AS_IF([test "x$with_0install_solver" = xno],
 )
 
 
-AC_ARG_WITH([libacl],
-  AS_HELP_STRING([--with-libacl],[Compile opam with libacl support]),,[with_libacl=auto])
-
 AC_ARG_WITH([private_runtime],
   AS_HELP_STRING([--with-private-runtime],[For a mingw-w64 build, manifest the runtime DLLs locally in Opam.Runtime.arch]),,[with_private_runtime=no]
 )
@@ -165,23 +162,6 @@ AS_IF([test "x${enable_developer_mode}" = "xyes"],[
 
 AS_IF([test "x${with_mccs}" = "xno"], [AC_SUBST(MCCS_ENABLED,false)], [AC_SUBST(MCCS_ENABLED,true)])
 
-AS_IF([test "x${with_libacl}" != "xno"],[
-  have_libacl=yes
-  AC_CHECK_HEADER([acl/libacl.h],,[have_libacl=no])
-  AC_SEARCH_LIBS([acl_get_perm],[acl],,[have_libacl=no])
-  AS_IF([test "x${SYSTEM}" = "xcygwin"],[
-    AS_IF([test "x${have_libacl}" = "xno"],[AC_MSG_ERROR([opam on Cygwin requires libacl])],[with_libacl=yes])
-  ])
-  AS_IF([test "x${with_libacl}${have_libacl}" = "xyesno"],[AC_MSG_ERROR([libacl not found])])
-])
-AS_IF([test "x${with_libacl}" = "xyes"],[
-  AS_IF([test "x${ac_cv_search_acl_get_perm}" = "xnone required"],[
-    AC_SUBST(CONF_LIBACL_LINK,[])
-  ],[
-    AC_SUBST(CONF_LIBACL_LINK,[${ac_cv_search_acl_get_perm}])
-  ])
-])
-
 CONF_OCAMLFLAGS=''
 
 AS_IF([test "x${CI}" != "x" -o "x${enable_developer_mode}" = "xyes"],[
@@ -218,8 +198,8 @@ AS_IF([ test ${WIN32} -eq 1 ],[
         ac_tool_prefix='x86_64-w64-mingw32-'])])
     AC_CHECK_TOOL(CC64,[${T_CC64}],[no])
     AS_IF([ test "x${CC64}" != "xno" ],[
-      echo "${CC64} -o " > src/stubs/win32/cc64
-      echo " -Wdeclaration-after-statement -municode " >> src/stubs/win32/cc64
+      echo "${CC64} -o " > src/core/cc64
+      echo " -Wdeclaration-after-statement -municode " >> src/core/cc64
     ])
   ],[
     AC_MSG_CHECKING([whether Microsoft Linker needs a PATH shim])
@@ -243,14 +223,14 @@ AS_IF([ test ${WIN32} -eq 1 ],[
       AC_MSG_RESULT([from $MSVS_NAME])
       CL_FULL="`PATH="${MSVS_PATH}:${PATH}" which cl | cygpath -f - -w`"
       MSVS_PATH="`echo "${MSVS_PATH}" | cygpath -f - -wp`"
-      echo "cl /nologo /Fe" > src/stubs/win32/cc64
-      echo " " >> src/stubs/win32/cc64
-      echo "PATH" >> src/stubs/win32/cc64
-      echo "${MSVS_PATH}" >> src/stubs/win32/cc64
-      echo "LIB" >> src/stubs/win32/cc64
-      echo "${MSVS_LIB}" >> src/stubs/win32/cc64
-      echo "INCLUDE" >> src/stubs/win32/cc64
-      echo "${MSVS_INC}" >> src/stubs/win32/cc64
+      echo "cl /nologo /Fe" > src/core/cc64
+      echo " " >> src/core/cc64
+      echo "PATH" >> src/core/cc64
+      echo "${MSVS_PATH}" >> src/core/cc64
+      echo "LIB" >> src/core/cc64
+      echo "${MSVS_LIB}" >> src/core/cc64
+      echo "INCLUDE" >> src/core/cc64
+      echo "${MSVS_INC}" >> src/core/cc64
     ])
   ])
   AS_IF([ test "x${CC64}" = "xno" ],[
@@ -350,7 +330,7 @@ AS_CASE([$TARGET],
     # NOTE: On Windows, the Windows specific dlls should stay dynamic for security reasons
     # NOTE: -l:libstdc++.a is necessary (vs. -lstdc++) as flexlink will use libstdc++.dll.a
     # which still depends on the DLL at runtime instead of libstdc++.a (that looks like a bug in flexlink)
-    platform_dependent_stuff="-cclib -lopam_stubs_win32_stubs -cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid -cclib -luserenv"
+    platform_dependent_stuff="-cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid -cclib -luserenv"
     AS_IF([test "x${SYSTEM}" = "xmingw"], [platform_dependent_stuff="${platform_dependent_stuff} -cclib -lwindowsapp"])
   ])
 AS_CASE([${support_static},${enable_static}],
@@ -362,7 +342,7 @@ AS_IF([test "${enable_static}" = yes],[
   ],[
     unix_lib_name=unixnat
   ])
-  echo "(-noautolink -cclib -l${unix_lib_name} -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs ${platform_dependent_stuff})" > src/client/linking.sexp
+  echo "(-noautolink -cclib -l${unix_lib_name} -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs -cclib -lopam_core_stubs ${platform_dependent_stuff})" > src/client/linking.sexp
   AC_MSG_RESULT([static])
 ],[
   AC_MSG_RESULT([shared])
@@ -453,8 +433,7 @@ fi
 AC_CONFIG_FILES(
   Makefile.config
   src/ocaml-flags-configure.sexp
-  src/stubs/c-flags.sexp
-  src/stubs/libacl/c-libraries.sexp
+  src/core/c-flags.sexp
 )
 AC_OUTPUT
 
@@ -468,19 +447,6 @@ AS_IF([test "x${with_private_runtime}" != "xno"],[
   ],[
     AC_MSG_WARN([--with-private-runtime ignored (not building on mingw)])
   ])
-])
-
-rm -f src/stubs/win32/dune
-AS_IF([ test ${WIN32} -eq 1],[
-  cd src/stubs/win32
-  ${LN_S} -f dune-win32 dune
-  cd ../../..
-])
-rm -f src/stubs/libacl/dune
-AS_IF([ test "x${with_libacl}" = "xyes" ],[
-  cd src/stubs/libacl
-  ${LN_S} -f dune-libacl dune
-  cd ../../..
 ])
 
 echo

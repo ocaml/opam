@@ -113,6 +113,7 @@ users)
   * Require opam-0install-cudf >= 0.5.0 [#6130 @kit-ty-kate]
   * Bump the vendored mccs to 1.1+18 [#6170 @kit-ty-kate]
   * Fix Windows builds with OCaml >= 5.0 [#6189 @kit-ty-kate - fix #6148]
+  * Upgrade the minimum required version for dune from 2.0.0 to 2.6.0 [#5381 @dra27]
 
 ## Infrastructure
 
@@ -158,6 +159,8 @@ users)
   * Reduce allocations in OpamVersionCompare [#6144 @talex5]
   * Speedup OpamVersionCompare by 25% by removing the unused handling of epoch [#5518 @kit-ty-kate]
   * Fix error in `OpamSystem.transform_patch` - patches were only applied when debugging [#6182 @dra27 regression since #3449]
+  * Remove `--with-acl` option from the configure script and its related C stubs (reverts a Cygwin fix in #4265) [#5381 @kit-ty-kate - fix #5373]
+  * Move Windows stubs to opam-core [#5381 @dra27]
 
 ## Internal: Windows
 
@@ -272,3 +275,5 @@ users)
   * `OpamHash`: export `compare_kind` [#5561 @rjbou]
   * `OpamFilename`: add `might_escape` to check if a path is escapable, ie contains `<sep>..<sep>` [#5561 @rjbou]
   * Add `OpamStd.Sys.getconf` [#5950 @kit-ty-kate]
+  * `OpamStd.Sys.resolve_command`: Fix opam unable to find executables on systems where users belong to more than 32 groups when opam is built using musl libc [#5381 @kit-ty-kate - fix #5373]
+  * `OpamACL`: remove module [#5381 @kit-ty-kate]

@@ -3,29 +3,39 @@
   (public_name opam-core)
   (synopsis    "OCaml Package Manager core internal stdlib")
   ; TODO: Remove (re_export ...) when CI uses the OCaml version that includes https://github.com/ocaml/ocaml/pull/11989
-  (libraries   re (re_export ocamlgraph) unix sha jsonm swhid_core uutf
-               (select opamACL.ml from
-                       (opam-core.libacl -> opamACL.libacl.ml)
-                       (                 -> opamACL.dummy.ml))
-               (select opamStubs.ml from
-                       (opam-core.stubs -> opamStubs.win32.ml)
-                       (                -> opamStubs.dummy.ml)))
+  (libraries   re (re_export ocamlgraph) unix sha jsonm swhid_core uutf)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)
                (:include ../ocaml-context-flags.sexp)))
+  (foreign_stubs
+    (language c)
+    (names opam_stubs)
+    (flags :standard
+           -DUNICODE -D_UNICODE -DCAML_NAME_SPACE
+           (:include c-flags.sexp)))
+  (c_library_flags (:standard
+                   (:include c-libraries.sexp)))
   (wrapped     false))
 
 (rule
-  (copy opamStubsTypes.ml opamStubsTypes.mli))
+  (deps opamWindows.c opamInject.c)
+  (action (copy# opamCommonStubs.c opam_stubs.c)))
 
 (rule
- (enabled_if (< %{ocaml_version} "5.0"))
- (action (copy# opamStubs.ocaml4.ml opamStubs.win32.ml)))
+  (copy# opamStubsTypes.ml opamStubsTypes.mli))
 
 (rule
- (enabled_if (>= %{ocaml_version} "5.0"))
- (action (copy# opamStubs.ocaml5.ml opamStubs.win32.ml)))
+  (enabled_if (<> %{os_type} "Win32"))
+  (action (copy# opamStubs.unix.ml opamStubs.ml)))
+
+(rule
+ (enabled_if (and (= %{os_type} "Win32") (< %{ocaml_version} "5.0")))
+ (action (copy# opamStubs.ocaml4.ml opamStubs.ml)))
+
+(rule
+ (enabled_if (and (= %{os_type} "Win32") (>= %{ocaml_version} "5.0")))
+ (action (copy# opamStubs.ocaml5.ml opamStubs.ml)))
 
 (rule
   (write-file opamCoreConfigDeveloper.ml
@@ -44,3 +54,23 @@
   (targets developer)
   (mode    fallback)
   (action  (with-stdout-to %{targets} (echo ""))))
+
+(rule
+  (enabled_if (= %{os_type} "Win32"))
+  (targets opam-putenv.exe)
+  (deps    opamInject.c)
+  (action  (run ocaml %{dep:../../shell/build-putenv.ml} %{targets} %{dep:opam-putenv.c} %{dep:cc64})))
+
+(install
+  (enabled_if (= %{os_type} "Win32"))
+  (section bin)
+  (package opam)
+  (files   opam-putenv.exe))
+
+(rule
+  (with-stdout-to c-libraries.sexp (run ocaml %{dep:../../shell/context_flags.ml} clibs)))
+
+(rule
+  (targets c-flags.sexp)
+  (mode    fallback)
+  (action  (with-stdout-to %{targets} (echo "()"))))

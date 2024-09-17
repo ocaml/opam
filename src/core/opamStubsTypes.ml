@@ -8,7 +8,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Types for C stubs modules. *)
+(** Types for C stubs modules and common C stubs. *)
 
 (** CONSOLE_SCREEN_BUFFER_INFO struct
     (see https://docs.microsoft.com/en-us/windows/console/console-screen-buffer-info-str)
@@ -113,3 +113,8 @@ type win32_version_info = {
   strings: ((int * int) * win32_non_fixed_version_info) list;
     (** Non-fixed string table. First field is a pair of Language and Codepage ID. *)
 }
+
+external is_executable : string -> bool = "opam_is_executable"
+(** faccessat on Unix; _waccess on Windows. Checks whether a path is executable
+    for the current process. On Unix, unlike Unix.access, this is checked using
+    the EUID/EGID rather than RUID/RGID. *)
