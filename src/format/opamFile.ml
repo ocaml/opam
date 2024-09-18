@@ -874,9 +874,17 @@ module Syntax = struct
     let filename = OpamFilename.to_string filename in
     lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
                                   Lexing.pos_fname = filename };
-    try OpamParser.main OpamLexer.token lexbuf filename with
-    | OpamLexer.Error msg -> error msg
-    | Parsing.Parse_error -> error "Parse error"
+    match OpamParser.main OpamLexer.token lexbuf filename with
+    | {file_contents =
+         [{pelem = Variable({pelem = "opam-version"; _},
+                            {pelem = String ver; _}); _ };
+          {pelem = Section {section_kind = {pelem = "#"; _}; _}; _}]; _}
+      when OpamVersion.(compare (nopatch (of_string ver))
+                          (nopatch OpamVersion.current)) <= 0 ->
+      error "Parse error"
+    | opamfile -> opamfile
+    | exception OpamLexer.Error msg -> error msg
+    | exception Parsing.Parse_error -> error "Parse error"
 
 
   let pp_channel filename ic oc =
@@ -1171,7 +1179,8 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
     let catch_future_syntax_error = function
     | {file_contents = [{pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _ };
                         {pelem = Section {section_kind = {pelem = "#"; _}; _}; pos}]; _}
-      when OpamVersion.(compare (nopatch (of_string ver)) (nopatch X.format_version)) <= 0 ->
+      when OpamVersion.(compare (nopatch (of_string ver))
+                          (nopatch OpamVersion.current)) <= 0 ->
         raise (OpamPp.Bad_version (Some pos, "Parse error"))
     | opamfile -> opamfile
 
