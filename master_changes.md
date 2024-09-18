@@ -128,6 +128,7 @@ users)
   * Exclude the .git directory from the release archive when using GNU tar [#6066 @kit-ty-kate]
   * Ensure non-existing %.cache target fail with a fatal error [#6066 @kit-ty-kate]
   * Remove opam 2.1 support from the release script [#6084 #6175 @kit-ty-kate]
+  * Remove the getgroups workaround allowing users belonging to more than 32 groups [#6200 @dra27 @kit-ty-kate]
 
 ## Install script
   * Provide a shell/install.ps1 PowerShell script to install opam on Windows [#5906 @kit-ty-kate @dra27]
