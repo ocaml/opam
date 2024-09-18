@@ -607,3 +607,191 @@ opam-version: "2.0"
 [to-many-commits] Initialised
 ### git -C ./OPAM/repo/to-many-commits rev-list --all --count
 1
+### : Test repository upgrade path (packages requiring newer version of opam) ::::
+### OPAMDEBUGSECTIONS="opam-file"
+### sh -c "opam --version | cut -f -2 -d '.'" >$ OPAMMAJORVERSION
+### opam repository remove -a oper3 oper repo2 to-many-commits
+### <VRS/repo>
+opam-version: "2.0"
+### <VRS/packages/good-opam-version/good-opam-version.1/opam>
+opam-version: "2.0"
+### opam repository --this-switch add versions ./VRS
+[versions] Initialised
+### opam repository --this-switch add repo ./REPO
+[repo] Initialised
+### opam list -A --all-versions -s
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+good-opam-version.1
+### :: with opam strict
+### OPAMSTRICT=1
+### <VRS/packages/bad-opam-version/bad-opam-version.1/opam>
+opam-version: "5.0"
+some-field-that-do-not-exist: true
+### opam update -a --debug-level=-1
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[repo] no changes from file://${BASEDIR}/REPO
+[versions] synchronised from file://${BASEDIR}/VRS
+opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/versions/packages/bad-opam-version/bad-opam-version.1/opam. Added as dummy unavailable package.
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A --all-versions -s
+bad-opam-version.1
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+good-opam-version.1
+### opam show --raw bad-opam-version.1 | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "1"
+synopsis: ""
+description: """\
+This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
+
+In order to install or view information on this package, please upgrade your opam installation to at least version 5.0."""
+available: opam-version >= "5.0"
+### :: without opam strict
+### OPAMSTRICT=0
+### <REPO/packages/bad-opam-version/bad-opam-version.2/opam>
+opam-version: "5.0"
+some-field-that-do-not-exist: true
+### <REPO/packages/bad-opam-version/bad-opam-version.3/opam>
+opam-version: "5.0"
+GARBAGE
+### <VRS/packages/a/a.1/opam>
+opam-version: "2.0"
+### opam update -a --debug-level=-1
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[repo] synchronised from file://${BASEDIR}/REPO
+opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.2/opam. Added as dummy unavailable package.
+opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.3/opam. Added as dummy unavailable package.
+[versions] synchronised from file://${BASEDIR}/VRS
+opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/versions/packages/bad-opam-version/bad-opam-version.1/opam. Added as dummy unavailable package.
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A --all-versions -s
+a.1
+bad-opam-version.1
+bad-opam-version.2
+bad-opam-version.3
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+good-opam-version.1
+### opam repository remove -a versions
+### opam repository remove -a repo
+### opam list -A --all-versions -s
+### opam repository --this-switch add repo ./REPO
+[repo] Initialised
+### opam repository --this-switch add versions ./VRS
+[versions] Initialised
+### opam list -A --all-versions -s
+a.1
+bad-opam-version.1
+bad-opam-version.2
+bad-opam-version.3
+foo.1
+foo.2
+foo.3
+foo.4
+foo.5
+foo.6
+good-opam-version.1
+### opam show --raw bad-opam-version.1 | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "1"
+synopsis: ""
+description: """\
+This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
+
+In order to install or view information on this package, please upgrade your opam installation to at least version 5.0."""
+available: opam-version >= "5.0"
+### opam show --raw bad-opam-version.2 | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "2"
+synopsis: ""
+description: """\
+This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
+
+In order to install or view information on this package, please upgrade your opam installation to at least version 5.0."""
+available: opam-version >= "5.0"
+### opam show --raw bad-opam-version.3 | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
+opam-version: "2.0"
+name: "bad-opam-version"
+version: "3"
+synopsis: ""
+description: """\
+This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
+
+In order to install or view information on this package, please upgrade your opam installation to at least version 5.0."""
+available: opam-version >= "5.0"
+### :: Parse errors
+### <VRS/packages/two-zero/two-zero.1/opam>
+opam-version: "2.0"
+GARBAGE
+### opam update versions
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[versions] synchronised from file://${BASEDIR}/VRS
+[WARNING] Could not read file ${BASEDIR}/OPAM/repo/versions/packages/two-zero/two-zero.1/opam. skipping:
+          At ${BASEDIR}/OPAM/repo/versions/packages/two-zero/two-zero.1/opam:3:0-3:0::
+          Parse error
+### opam show two-zero --raw
+[ERROR] No package matching two-zero found
+# Return code 5 #
+### rm -r VRS/packages
+### <VRS/packages/two-one/two-one.1/opam>
+opam-version: "2.1"
+GARBAGE
+### opam update versions
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[versions] synchronised from file://${BASEDIR}/VRS
+[WARNING] Could not read file ${BASEDIR}/OPAM/repo/versions/packages/two-one/two-one.1/opam. skipping:
+          At ${BASEDIR}/OPAM/repo/versions/packages/two-one/two-one.1/opam:3:0-3:0::
+          Parse error
+Now run 'opam upgrade' to apply any package updates.
+### opam show two-one --raw
+[ERROR] No package matching two-one found
+# Return code 5 #
+### rm -r VRS/packages
+### <VRS/packages/two-two/two-two.1/opam>
+opam-version: "2.2"
+GARBAGE
+### opam update versions
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[versions] synchronised from file://${BASEDIR}/VRS
+[WARNING] Could not read file ${BASEDIR}/OPAM/repo/versions/packages/two-two/two-two.1/opam. skipping:
+          At ${BASEDIR}/OPAM/repo/versions/packages/two-two/two-two.1/opam:3:0-3:0::
+          Parse error
+### opam show two-two --raw
+[ERROR] No package matching two-two found
+# Return code 5 #
+### rm -r VRS/packages
+### <VRS/packages/two-three/two-three.1/opam>
+opam-version: "2.3"
+GARBAGE
+### opam update versions
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[versions] synchronised from file://${BASEDIR}/VRS
+[WARNING] Could not read file ${BASEDIR}/OPAM/repo/versions/packages/two-three/two-three.1/opam. skipping:
+          At ${BASEDIR}/OPAM/repo/versions/packages/two-three/two-three.1/opam:3:0-3:0::
+          Parse error
+### opam show two-three --raw
+[ERROR] No package matching two-three found
+# Return code 5 #

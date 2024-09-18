@@ -1176,7 +1176,7 @@ let lint_gen ?check_extra_files ?check_upstream ?(handle_dirname=false)
       [0, `Error, "File does not exist"], None
     | OpamLexer.Error _ | Parsing.Parse_error ->
       [1, `Error, "File does not parse"], None
-    | OpamPp.Bad_version bf | OpamPp.Bad_format bf -> [warn_of_bad_format bf], None
+    | OpamPp.Bad_version (bf, _) | OpamPp.Bad_format bf -> [warn_of_bad_format bf], None
     | OpamPp.Bad_format_list bfl -> List.map warn_of_bad_format bfl, None
   in
   let check_extra_files = match check_extra_files with
@@ -1409,6 +1409,23 @@ let read_opam dir =
       (OpamPp.string_of_bad_format (OpamPp.Bad_format (snd err)));
     None
   | None, None -> None
+  | exception OpamPp.Bad_version ((_, _errmsg), Some version) ->
+    let sversion = OpamVersion.to_string version in
+    let scurrent = OpamVersion.to_string OpamVersion.current_nopatch in
+    log "opam-version %S unsupported on %s. Added as dummy unavailable package."
+      sversion (OpamFile.to_string opam_file);
+    Some
+      (OpamFile.OPAM.empty
+       |> OpamFile.OPAM.with_available
+         (FOp (FIdent ([], OpamVariable.of_string "opam-version", None),
+               `Geq, FString sversion))
+       |> OpamFile.OPAM.with_descr_body
+         (Printf.sprintf
+            "This package uses opam %s file format which opam %s cannot \
+             read.\n\n\
+             In order to install or view information on this package, please \
+             upgrade your opam installation to at least version %s."
+            sversion scurrent sversion))
 
 let read_repo_opam ~repo_name ~repo_root dir =
   let open OpamStd.Option.Op in
