@@ -235,7 +235,7 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
        from the repo *)
     let add_extra_files srcdir file opam =
       if OpamFilename.dirname (OpamFile.filename file) <> srcdir
-      then OpamFileTools.add_aux_files ~files_subdir_hashes:true opam
+      then OpamFileTools.add_aux_files ~files_subdir_hashes:false opam
       else opam
     in
     let locked = if autolock then OpamFile.OPAM.locked opam else None in

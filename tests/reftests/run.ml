@@ -262,7 +262,10 @@ let rec with_temp_dir f =
 
 type command =
   | File_contents of string
-  | Repo_pkg_file_contents of string
+  | Repo_pkg_file_contents of
+      string * string (* name * version *)
+      * [ `opam
+        | `files of string (* file name *) ]
   | Pin_file_content of string
   | Cat of { files: string list;
              filter: (Re.t * filt_sort) list; }
@@ -324,7 +327,7 @@ module Parse = struct
       group @@ seq [ alpha; rep @@ alt [ alnum; set "_-+" ]];
       char '.';
       group @@ rep1 @@ alt [ alnum; set "-_+.~" ];
-      opt @@ seq [ char ':' ; group @@ rep1 @@ alt [ alnum; set "-_+.~" ]];
+      opt @@ seq [ char ':' ; group @@ rep1 @@ alt [ alnum; set "-_+.~" ] ];
       char '>'
     ]
 
@@ -333,26 +336,24 @@ module Parse = struct
       if String.length str > 4 && String.sub str 1 4 = "pin:" then
         Pin_file_content (String.sub str 5 (String.length str - 6))
       else
-      try
-        let grs = exec (compile re_package) str in
-        let name = Group.get grs 1 in
-        let version = Group.get grs 2 in
-        Repo_pkg_file_contents
-          (try
-             let files = Group.get grs 3 in
-             Printf.sprintf "%s/packages/%s/%s.%s/files/%s"
-               default_repo name name version files
-           with Not_found ->
-             Printf.sprintf "%s/packages/%s/%s.%s/opam"
-               default_repo name name version)
-      with Not_found ->
-        File_contents (String.sub str 1 (String.length str - 2))
-    else if str.[0] = ':' || str.[0] = '#' then
-      Comment str
+        try
+          let grs = exec (compile re_package) str in
+          let name = Group.get grs 1 in
+          let version = Group.get grs 2 in
+          Repo_pkg_file_contents
+            (name, version,
+             try
+               let file = Group.get grs 3 in
+               `files (file)
+             with Not_found -> `opam)
+        with Not_found ->
+          File_contents (String.sub str 1 (String.length str - 2))
+      else if str.[0] = ':' || str.[0] = '#' then
+        Comment str
     else
-    let varbinds, pos =
-      let gr = exec (compile @@ rep re_varbind) str in
-      List.map (fun gr ->
+      let varbinds, pos =
+        let gr = exec (compile @@ rep re_varbind) str in
+        List.map (fun gr ->
           Group.get gr 1,
           (match Group.get gr 2 with
            | "=" -> `eq
@@ -362,18 +363,18 @@ module Parse = struct
           get_str (Group.get gr 3))
         (all (compile @@ re_varbind) (Group.get gr 0)),
       Group.stop gr 0
-    in
+        in
     let cmd, pos =
       try
         let gr = exec ~pos (compile re_str_atom) str in
         Some (get_str (Group.get gr 0)),
         Group.stop gr 0
-      with Not_found -> None, pos
-    in
+          with Not_found -> None, pos
+        in
     let args =
       let grs = all ~pos (compile re_str_atom) str in
       List.map (fun gr -> Group.get gr 0) grs
-    in
+      in
     let get_str ?escape s =
       str_replace_path ?escape OpamSystem.back_to_forward
         (filters_of_var vars)
@@ -387,29 +388,29 @@ module Parse = struct
     let rec get_args_rewr acc = function
       | [] -> List.rev acc, false, false, [], None
       | ("|"|">$") :: _ as rewr ->
-        let rec get_rewr (unordered, sort, acc) = function
-          | "|" :: re :: "->" :: str :: r ->
-            get_rewr (unordered, sort, (posix_re re, Sed (get_str str)) :: acc) r
-          | "|" :: "grep" :: "-v" :: re :: r ->
-            get_rewr (unordered, sort, (posix_re re, GrepV) :: acc) r
-          | "|" :: "grep" :: re :: r ->
-            get_rewr (unordered, sort, (posix_re re, Grep) :: acc) r
-          | "|" :: "sort" :: r ->
-            if acc <> [] then
-              Printf.printf "Warning: sort should appear _before_ any filters\n%!";
+          let rec get_rewr (unordered, sort, acc) = function
+            | "|" :: re :: "->" :: str :: r ->
+                get_rewr (unordered, sort, (posix_re re, Sed (get_str str)) :: acc) r
+            | "|" :: "grep" :: "-v" :: re :: r ->
+                get_rewr (unordered, sort, (posix_re re, GrepV) :: acc) r
+            | "|" :: "grep" :: re :: r ->
+                get_rewr (unordered, sort, (posix_re re, Grep) :: acc) r
+            | "|" :: "sort" :: r ->
+                if acc <> [] then
+                  Printf.printf "Warning: sort should appear _before_ any filters\n%!";
             get_rewr (unordered, true, acc) r
-          | "|" :: "unordered" :: r ->
-            get_rewr (true, sort, acc) r
-          | "|" :: "sed-cmd" :: cmd :: r ->
-            let sandbox =
-              (* Sandbox prefix
+            | "|" :: "unordered" :: r ->
+                get_rewr (true, sort, acc) r
+            | "|" :: "sed-cmd" :: cmd :: r ->
+                let sandbox =
+                  (* Sandbox prefix
                  >[...] /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "cmd" <
                  >[...] ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "cmd" <
                  -->
-                 >[...] cmd <
+                   >[...] cmd <
               *)
-              seq [
-                alt [ char '/'; Re.str "${" ];
+                  seq [
+                    alt [ char '/'; Re.str "${" ];
                 non_greedy @@ rep1 any; Re.str "sandbox.sh";
                 space;
                 char '"';
@@ -418,25 +419,25 @@ module Parse = struct
                 space;
                 char '"'; Re.str cmd; char '"';
                 space;
-              ]
-            in
+                ]
+    in
             let with_quote_set s = set ("\"'"^s) in
             let opt_quoted r = [
               seq @@ [ char '"'] @  r @ [ char '"'; rep1 space ];
               seq @@ r @ [ rep1 space ];
-            ] in
+              ] in
             let unix_prefix =
               (* Unix & Mac command prefix
                  >[...] /usr/bin/cmd <
                  >[...] /usr/bin/cmd <
                  -->
-                 >[...] cmd <
+                   >[...] cmd <
               *)
               opt_quoted @@ [
                 rep1 @@ seq [ char '/'; rep1 @@ diff any (with_quote_set "/ ") ];
                 char '/';
                 Re.str cmd;
-              ]
+                ]
             in
             let win_prefix =
               (* Windows command prefix
@@ -444,7 +445,7 @@ module Parse = struct
                  >[...] C:\Windows\system32\cmd <
                  >[...] C:\Windows\system 32\cmd <
                  -->
-                 >[...] cmd <
+                   >[...] cmd <
               *)
               opt_quoted @@ [
                 alpha; char ':';
@@ -453,43 +454,43 @@ module Parse = struct
                 char '\\'; opt @@ char '\\';
                 Re.str cmd;
                 opt @@ Re.str ".exe";
-              ] in
+                ] in
             let re = alt @@ sandbox :: unix_prefix @ win_prefix in
             let str = Printf.sprintf "%s " cmd in
             get_rewr (unordered, sort, (re, Sed str) :: acc) r
-          | ">$" :: output :: [] ->
-            unordered, sort, List.rev acc, Some (get_str output)
-          | [] ->
-            unordered, sort, List.rev acc, None
-          | r ->
-            Printf.printf
+            | ">$" :: output :: [] ->
+                unordered, sort, List.rev acc, Some (get_str output)
+            | [] ->
+                unordered, sort, List.rev acc, None
+            | r ->
+                Printf.printf
               "Bad rewrite %S, expecting '| RE -> STR' or '>$ VAR'\n%!"
               (String.concat " " r);
             unordered, sort, List.rev acc, None
-        in
+            in
         let unordered, sort, rewr, out = get_rewr (false, false, []) rewr in
         List.rev acc, unordered, sort, rewr, out
-      | arg :: r -> get_args_rewr (arg :: acc) r
-    in
+            | arg :: r -> get_args_rewr (arg :: acc) r
+        in
     let args, unordered, sort, rewr, output = get_args_rewr [] args in
     match cmd with
     | Some "opam-cat" ->
-      Cat { files = args; filter = rewr; }
+        Cat { files = args; filter = rewr; }
     | Some "json-cat" ->
-      Json { files = args; filter = rewr; }
+        Json { files = args; filter = rewr; }
     | Some cmd ->
-      let env, plus =
-        List.fold_left (fun (env,plus) (v,op,value) ->
+        let env, plus =
+          List.fold_left (fun (env,plus) (v,op,value) ->
             match op with
             | `eq -> (v,value)::env, plus
             | `pluseq -> env, (v^"+="^value)::plus
             | `eqplus -> env, (v^"=+"^value)::plus)
           ([],[]) varbinds
-      in
+    in
       (match plus with
        | [] -> ()
        | _ ->
-         OpamConsole.error
+           OpamConsole.error
            "variable bindings at the beginning of a command does not \
             support '+=' or '=+' operators: %s"
            (OpamStd.Format.pretty_list plus));
@@ -501,10 +502,10 @@ module Parse = struct
         output;
         unordered;
         sort;
-      }
-    | None ->
-      Export varbinds
-end
+        }
+       | None ->
+           Export varbinds
+    end
 
 let parse_command = Parse.command
 
@@ -654,6 +655,86 @@ let print_file ~filters reader names =
       in
       if not (String.equal s "\\c") then print_string (s^"\n"))
 
+let add_extra_files fpath opamfile file =
+  let replace f ~default l =
+    let found, nl =
+      List.fold_left (fun (found, nl) item ->
+          if found then found, item::nl else
+            match f item with
+            | Some y -> true, y::nl
+            | None -> false, item::nl)
+        (false, []) l
+    in
+    (if not found then default::nl else nl)
+    |> List.rev
+  in
+  let open OpamParserTypes.FullPos in
+  let pos = (* null pos *)
+    { filename = opamfile.file_name; start = -1, -1; stop = -1, -1; }
+  in
+  let md5 = OpamHash.(to_string (compute ~kind:`MD5 fpath)) in
+  let xf_pair =
+    [{ pelem = String file; pos };
+     { pelem = String md5; pos }]
+  in
+  let xf_pair_list =
+    { pelem = List { pelem = xf_pair; pos}; pos}
+  in
+  let default =
+    { pelem = Variable ({ pelem = "extra-files"; pos},
+                        xf_pair_list); pos}
+  in
+  let with_field xfiles =
+    Some { pelem = Variable
+               ({ pelem = "extra-files"; pos},
+                { pelem = List { pelem = xfiles ; pos}; pos}); pos}
+  in
+  let file_contents =
+    replace ~default
+      (function
+        | { pelem = Variable
+                ({ pelem = "extra-files"; _},
+                 { pelem = List { pelem = xfiles ; _}; _}); _} ->
+          (match xfiles with
+           | [{ pelem = String xf; _};
+              { pelem = String _checksum; _}] as xfield ->
+             with_field @@
+             if String.equal xf file then
+               xf_pair
+             else
+               [{ pelem = List { pelem = xfield; pos}; pos};
+                { pelem = List { pelem = xf_pair; pos}; pos}]
+           | { pelem = List _; _}::_ ->
+             (* There is only 2 construction
+                * 1 file, list of 2 strings
+                  * extra-files: [ "file" "checksum" ]
+                * list of files
+                  * extra-files: [[ "file" "checksum" ]]
+                  * extra-files: [[ "file" "checksum" ] [ "file2" "checkums2"]]
+             *)
+             assert (List.for_all (function
+                   { pelem = List
+                         { pelem = [{ pelem = String _; _ };
+                                    { pelem = String _; _}];
+                           _}; _} -> true
+                 | _ -> false) xfiles);
+             with_field @@
+             replace (function
+                 | { pelem = List
+                         { pelem =
+                             [ { pelem = String xf; _ };
+                               { pelem = String _; _}]; _}; _}
+                   when String.equal xf file ->
+                   Some xf_pair_list
+                 | _ -> None)
+               ~default:xf_pair_list xfiles
+           (* cf comment above *)
+           | _ -> assert false)
+        | _ -> None)
+      opamfile.file_contents
+  in
+  { opamfile with file_contents }
+
 let run_test ?(vars=[]) ~opam t =
   let old_cwd = Sys.getcwd () in
   let opamroot0 = Filename.concat old_cwd ("root-"^t.repo_hash) in
@@ -695,9 +776,53 @@ let run_test ?(vars=[]) ~opam t =
           write_file ~path ~contents;
           print_string contents;
           vars
-        | Repo_pkg_file_contents path ->
+        | Repo_pkg_file_contents (name, version, repo_file) ->
           let contents = String.concat "\n" out ^ "\n" in
-          write_file ~path ~contents;
+          let opam_path =
+            Printf.sprintf "%s/packages/%s/%s.%s/opam"
+              default_repo name name version
+          in
+          let file_path file =
+            Printf.sprintf "%s/packages/%s/%s.%s/files/%s"
+              default_repo name name version file
+          in
+          (match repo_file with
+           | `opam ->
+             let contents =
+               try
+                 (* update with extra files if found *)
+                 let files =
+                   Filename.concat (Filename.dirname opam_path) "files"
+                   |> Sys.readdir
+                   |> Array.to_list
+                   |> List.filter (fun f ->
+                       not (Sys.is_directory (file_path f)))
+                 in
+                 match files with
+                 | [] -> contents
+                 | _ ->
+                   let opamfile = OpamParser.FullPos.string contents opam_path in
+                   List.fold_left (fun opamfile file ->
+                       add_extra_files (file_path file) opamfile file)
+                     opamfile files
+                   |> OpamPrinter.FullPos.opamfile
+               with Sys_error _ -> contents
+             in
+             (* and write opam file *)
+             write_file ~path:opam_path ~contents;
+           | `files file ->
+             (* first update the given file *)
+             let fpath = file_path file in
+             write_file ~path:fpath ~contents;
+             (* then update the opam file *)
+             if Sys.file_exists opam_path then
+               let opamfile = OpamParser.FullPos.file opam_path in
+               let contents =
+                 add_extra_files fpath opamfile file
+                 |> OpamPrinter.FullPos.opamfile
+               in
+               write_file ~path:opam_path ~contents
+          );
           print_string contents;
           ignore @@ run_cmd ~opam ~dir ~vars ~silent:true
             "opam" ["update"; "default"];

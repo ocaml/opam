@@ -32,10 +32,16 @@ output...
 
 - use `### <FILENAME>` followed by the content of the file, to create a file verbatim
 - use `### <pkg:NAME.VERSION>` followed by the content of an opam file, to
-  add this package to `default` repository in `./REPO`. This will also implicitly run `opam update default`
+  add this package to `default` repository in `./REPO`. This will also
+  implicitly run `opam update default`. Look for files in `files/` directory
+  and add 'extra-files:' field automatically.
+
 - use `### <pkg:NAME.VERSION:FILENAME>` followed by the content of the file, to add this
   file as a extra-file of the given package in the `default` repository, and
-  implicitely run `opam update default`
+  implicitly run `opam update default`. Associated opam file updated
+  automatically with that file as an
+  'extra-files:'
+
 - use `### <pin:path>` followed by the content of an opam file, to have some 
   fields automatically filled to be able to pin it without lint errors
 

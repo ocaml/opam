@@ -674,7 +674,7 @@ license: "ISC"
 dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 extra-files: [ "more-file-bad-md5" "md5=00000000000000000000000000000000" ]
-### <pkg:lint.1:more-file-bad-md5>
+### <REPO/packages/lint/lint.1/more-file-bad-md5>
 and there is content!
 ### <pkg:lint.2>
 opam-version: "2.0"
@@ -688,14 +688,6 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### <pkg:lint.2:more-file-good-md5>
 and there is content!
-### <add-hash.sh>
-hsh=`openssl md5 REPO/packages/lint/lint.2/files/more-file-good-md5 | cut -d ' ' -f 2`
-echo "extra-files: [ \"more-file-good-md5\" \"md5=$hsh\" ]" >> REPO/packages/lint/lint.2/opam
-### sh add-hash.sh
-### opam update
-
-<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
 ### opam lint --package lint.1
 <default>/lint.1: Errors.
              error 53: Mismatching 'extra-files:' field: "more-file-bad-md5"
@@ -1075,11 +1067,11 @@ maintainer: "maint@tain.er"
 license: "ISC"
 dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
-### <pkg:lint.3:single-file>
+### <REPO/packages/lint/lint.3/files/single-file>
 file
-### <pkg:lint.3:double-file>
+### <REPO/packages/lint/lint.3/files/double-file>
 file
-### <pkg:lint.3:quadra-file>
+### <REPO/packages/lint/lint.3/files/quadra-file>
 file
 ### <hash.sh>
 set -ue

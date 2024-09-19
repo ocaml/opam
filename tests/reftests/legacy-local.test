@@ -640,6 +640,21 @@ Testing optional dependencies
 ### cp packages/P5.opam       REPO/packages/P5.1/opam
 ### cp packages/P5/README     REPO/packages/P5.1/descr
 ### sh mkurl.sh P5.1 P5.tar.gz
+### <hash.sh>
+set -ue
+for nv in REPO/packages/*; do
+  nv=`echo "$nv" | cut -f3 -d/`
+  n=`echo "$nv" | cut -f1 -d.`
+  path=REPO/packages/$nv
+  if [ -d "$path/files" ]; then
+    echo "extra-files:[" >> "$path/opam"
+    for file in `ls "$path/files"`; do
+      echo "  [\"$file\" \"md5=`openssl md5 "$path/files/$file" | cut -f2 -d' '`\"]" >> "$path/opam"
+    done
+    echo   "]" >> "$path/opam"
+  fi
+done
+### sh hash.sh
 ### <REPO/repo>
 archive-mirrors: "cache"
 ### opam update
