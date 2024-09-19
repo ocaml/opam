@@ -179,7 +179,7 @@ module Installed_cache = OpamCached.Make(struct
   end)
 
 let depexts_status_of_packages_raw
-    ~depexts ?env global_config switch_config packages =
+    ~depexts ?env global_config switch_config packages ~old_packages =
   if OpamPackage.Set.is_empty packages then OpamPackage.Map.empty else
   let open OpamSysPkg.Set.Op in
   let syspkg_set, syspkg_map =
@@ -190,6 +190,10 @@ let depexts_status_of_packages_raw
         else OpamPackage.Map.add nv s map)
       packages (OpamSysPkg.Set.empty, OpamPackage.Map.empty)
   in
+  let old_syspkg_set =
+    OpamPackage.Set.fold (fun nv set -> depexts nv ++ set)
+      old_packages OpamSysPkg.Set.empty
+  in
   let chronos = OpamConsole.timer () in
   let bypass =
     OpamFile.Config.depext_bypass global_config ++
@@ -197,8 +201,8 @@ let depexts_status_of_packages_raw
   in
   let syspkg_set = syspkg_set -- bypass in
   let ret =
-    match OpamSysInteract.packages_status ?env global_config syspkg_set with
-    | avail, not_found ->
+    match OpamSysInteract.packages_status ?env global_config syspkg_set ~old_packages:old_syspkg_set with
+    | avail, required, not_found ->
       let avail, not_found =
         if OpamStateConfig.(!r.no_depexts) then
           (* Mark all as available. This is necessary to store the exceptions
@@ -211,6 +215,7 @@ let depexts_status_of_packages_raw
       in
       OpamPackage.Map.map (fun set ->
           { OpamSysPkg.s_available = set %% avail;
+            OpamSysPkg.s_required = set %% required;
             OpamSysPkg.s_not_found = set %% not_found}
         ) syspkg_map
     | exception (Failure msg) ->
@@ -517,6 +522,7 @@ let load lock_kind gt rt switch =
       depexts_status_of_packages_raw gt.config switch_config
         ~env:gt.global_variables
         (Lazy.force available_packages)
+        ~old_packages:(Lazy.force available_packages)
         ~depexts:(fun package ->
             let env =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
@@ -1262,7 +1268,7 @@ let update_pin nv opam st =
   let sys_packages = lazy (
     OpamPackage.Map.union (fun _ n -> n)
       (Lazy.force st.sys_packages)
-      (depexts_status_of_packages st (OpamPackage.Set.singleton nv))
+      (depexts_status_of_packages st (OpamPackage.Set.singleton nv) ~old_packages:(OpamPackage.Set.singleton nv))
   ) in
   let available_packages = lazy (
     OpamPackage.Set.filter (fun nv -> depexts_unavailable st nv = None)

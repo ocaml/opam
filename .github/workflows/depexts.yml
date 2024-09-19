@@ -199,3 +199,21 @@ jobs:
     - name: depexts actions ubuntu
       uses: ./.github/actions/ubuntu
       id: depexts-ubuntu
+
+  depexts-nix:
+    needs: opam-cache
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: opam binary cache
+      uses: actions/cache@v3
+      with:
+        path: binary/opam
+        key: binary-${{ env.OPAMVERSION }}
+    - name: generate action
+      run: |
+        bash .github/scripts/depexts/generate-actions.sh nix
+    - name: depexts actions nix
+      uses: ./.github/actions/nix
+      id: depexts-nix
