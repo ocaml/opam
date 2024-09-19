@@ -115,6 +115,7 @@ end
    below pattern matching *)
 type families =
   | Alpine
+  | Altlinux
   | Arch
   | Centos
   | Cygwin
@@ -174,6 +175,7 @@ let family ~env () =
   | Some family ->
     match family with
     | "alpine" | "wolfi" -> Alpine
+    | "altlinux" -> Altlinux
     | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol"
     | "rhel" -> Centos
     | "archlinux" | "arch" -> Arch
@@ -697,7 +699,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     compute_sets sys_installed ~sys_available
   | Arch ->
     compute_sets_for_arch ~pacman:"pacman"
-  | Centos ->
+  | Centos | Altlinux ->
     (* Output format:
        >crypto-policies
        >python3-pip-wheel
@@ -1016,6 +1018,8 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
   in
   match family ~env () with
   | Alpine -> [`AsAdmin "apk", "add"::yes ~no:["-i"] [] packages], None
+  | Altlinux ->
+    [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages], None
   | Arch -> [`AsAdmin "pacman", "-Su"::yes ["--noconfirm"] packages], None
   | Centos ->
     (* TODO: check if they all declare "rhel" as primary family *)
@@ -1145,7 +1149,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Arch -> Some (`AsAdmin "pacman", ["-Sy"])
     | Centos -> Some (`AsAdmin (Lazy.force yum_cmd), ["makecache"])
     | Cygwin -> None
-    | Debian -> Some (`AsAdmin "apt-get", ["update"])
+    | Debian | Altlinux -> Some (`AsAdmin "apt-get", ["update"])
     | Dummy test ->
       if test.install then None else Some (`AsUser "false", [])
     | Freebsd -> None
