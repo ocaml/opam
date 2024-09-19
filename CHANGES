@@ -3,6 +3,181 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.3.0~alpha1:
+* (*) When loading a repository, don't automatically populate `extra-files:`
+  field with found files in `files/` [#5564 @rjbou]
+* Fix most unhelpful conflict explanation message by merging all formulas
+  together [#6106 @kit-ty-kate]
+* Silently mark packages requiring an unsupported version of opam as unavailable
+  [#5665 @kit-ty-kate - fix #5631]
+* Fix Windows builds with OCaml >= 5.0 [#6189 @kit-ty-kate - fix #6148]
+* (+) Add a new `opam list --latests-only` option to only list the latest
+  packages [#5375 @kit-ty-kate]
+* (*) opam switch list-available will not display compilers flagged with
+  avoid-version/deprecated unless --all is given
+  [#6098 @kit-ty-kate - fix #6089]
+* (*) Fix `opam install --check pkg` when pkg depends on a non-existing package
+  [#6121 @kit-ty-kate]
+* (*) Make `opam install --check` check if all dependencies are installed
+  recursively [#6122 @kit-ty-kate - fix #6097]
+* (+) Add the `--verbose-on` option to enable verbose mode on specified package
+  names [#5682 @desumn @rjbou]
+* (+) Add `opam switch import --deps-only` option to install only dependencies
+  of root package at import [#5388 @rjbou - fix #5200]
+* Always list all the repositories with `opam config report` regardless of
+  whether or not a switch is currently set [#6116 @kit-ty-kate]
+* Add support for wget2 [#6104 @kit-ty-kate]
+* (*) Make accepted `--repos` URLs on creation consistent with `opam repository`
+  [#6091 @Keryan-dev - fix #4673]
+* (*) Fix the value of the 'arch' variable when the current OS is 32bit on a
+  64bit machine [#5950 @kit-ty-kate - fix #5949]
+* Fix package names displayed on conflicts [#6055 @rjbou - fix #6030]
+* Improve the error message when a directory is not available while fetching
+  using rsync [#6027 @kit-ty-kate]
+* (*) Fail when git submodule fails to update instead of showing a warning and
+  ignoring the error [#6132 @kit-ty-kate - fix #6131]
+* Suppress all the Windows menus when running with `opam init -ya`
+  [#6034 @dra27]
+* Improvements to the `builtin-0install` solver:
+  * Add support for unordered criteria [#6130 @kit-ty-kate]
+  * Add support for the `-changed` criteria to make the solver prefer to keep
+    packages installed at their current version [#6130 @kit-ty-kate]
+  * Add support for the `-count[avoid-version,solution]` criteria to avoid
+    packages marked with `avoid-version` flag [#6130 @kit-ty-kate]
+  * The default criteria changed from empty to
+    `-changed,-count[avoid-version,solution]` [#6130 @kit-ty-kate]
+  * The upgrade and fixup criteria changed from empty to
+    `-count[avoid-version,solution]` [#6130 @kit-ty-kate]
+* Fix apt/debian lookup for installed packages [#6054 @rjbou]
+* Make `opam config report` return the actual invariant syntax expected by
+  `--invariant` [#5619 @kit-ty-kate - fixes #5491]
+* (*) Make `opam switch set-invariant` return the actual invariant syntax
+  expected by `--invariant` [#5619 @kit-ty-kate - fixes #5491]
+* Make fetching an archive from cache add missing symlinks
+  [#6068 @kit-ty-kate - fix #6064]
+* Performance improvements:
+  * Stop using polymorphic comparison when comparing
+    `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
+  * Improve performance of `opam install --check` [#6122 @kit-ty-kate]
+  * Reduce allocations in `OpamVersionCompare` [#6144 @talex5]
+  * Speedup `OpamVersionCompare` by 25% by removing the unused handling of epoch
+    [#5518 @kit-ty-kate]
+  * Speedup `opam list` on options that do not use availibility information
+    [#5317 @kit-ty-kate - fix #5314]
+* Make all writes atomic [#5489 @kit-ty-kate]
+* Warn when setting a variable if an option is shadowed
+  [#4904 @rjbou - fix #4730]
+* Changes and improvements to `opam lint`:
+  * Add E70 to check `extra-files:` duplicated fields [#5561 @rjbou]
+  * Add E71 to check if the same checksum algorithm is used several times for a
+    given url in `url` section [#5561 @rjbou]
+  * Add E72 to check if the same checksum algorithm is used several times for a
+    given url in `extra-sources` section [#5561 @rjbou]
+  * Add E73 to check that paths in `extra-files:` are not escapable
+    [#5561 @rjbou]
+  * Update W59 (no checksum in `url`) to always display a warning, untying it
+    from `--check-upstream` [#5561 @rjbou]
+* Changes and improvements to the compilation of opam itself:
+  * Unset `OPAM_SWITCH_PREFIX` when using `make cold` [#5534 @kit-ty-kate]
+  * Bump the vendored opam-0install-cudf to 0.5.0 [#6130 @kit-ty-kate]
+  * Require opam-0install-cudf >= 0.5.0 [#6130 @kit-ty-kate]
+  * Bump the vendored mccs to 1.1+18 [#6170 @kit-ty-kate]
+  * Upgrade the minimum required version for dune from 2.0.0 to 2.6.0
+    [#5381 @dra27]
+  * Remove `--with-acl` option from the configure script and its related C stubs
+    (reverts a Cygwin fix in #4265) [#5381 @kit-ty-kate - fix #5373]
+* Make the shell environment update hint easier to copy/paste
+  [#6159 @kit-ty-kate - fix #6158]
+* Remove unnecessary copies/move when fetching archives
+  [#5018 @kit-ty-kate @rjbou]
+* (*) Change the default cache location of `opam admin add-hashes` from
+  `~/.cache` to `<opamroot>/download-cache/hash-cache` [#6103 @rjbou]
+* Make `opam admin cache` add missing symlinks [#6068 @kit-ty-kate - fix #6064]
+* Add install.exe to the list of non-shadowed programs when adding Cygwin's bin
+  directory to PATH (ocamlfind et al can be affected by Vim for Windows)
+  [#6190 @dra27]
+* Propagate future opamfile parse errors correctly [#6199 @dra27]
+* Ensure future syntax errors are only reported when the syntax version is
+  greater than the client, not the format library [#6199 @dra27 - fix #6188]
+* Always pass `--no-version-check` and `--no-write-registry` to Cygwin setup
+  [#6046 @dra27]
+* Use `--quiet-mode noinput` for the internal Cygwin installation (which is
+  definitely a fully-specified command line) and `--quiet-mode unattended` for
+  external Cygwin installations (in case the user does need to select something,
+  e.g. a mirror) [#6046 @dra27]
+* Add cli version 2.3 [#6045 #6151 @rjbou]
+* Provide a shell/install.ps1 PowerShell script to install opam on Windows
+  [#5906 @kit-ty-kate @dra27]
+* Fix opam unable to find executables on systems where users belong to more than
+  32 groups when opam is built using musl libc
+  [#5381 #6200 @kit-ty-kate @dra27 - fix #5373]
+* Allow patches to be applied regardless of CRLF or LF line ending
+  [#6182 @dra27]
+* Internal changes:
+  * Move Windows stubs to opam-core [#5381 @dra27]
+  * Remove the meta opam packages opam and opam-admin [#6115 @kit-ty-kate]
+* Improve and extend the tests
+  [#6045 #6045 #5989 #6055 #5642 #5327 #6103 #6068 #5377 #5474 #5682 #6125 #6121
+   #6139 #5375 #6105 #6146 #6098 #6132 #6122 #5561 #6106 #6199
+   @rjbou @kit-ty-kate @dra27 @Keryan-dev @madroach]
+* Improve the benchmarks [#6094 #6078 #6123 #6149 @kit-ty-kate]
+* Improve the test infrastructure
+  [#6105 #6155 #6184 #5564 #6079 #6081 #6132 #6074
+   @rjbou @kit-ty-kate @Keryan-dev @RyanGibb]
+* Improve the documentation
+  [#5988 #5946 #6119 #6138 #6141 #5363
+   @kit-ty-kate @rjbou @mbarbin @shonfeder]
+* API changes
+  * `OpamACL`: remove module [#5381 @kit-ty-kate]
+  * `OpamArg.build_options`: add `--verbose-on` flag [#5682 @desumn @rjbou]
+  * `OpamClientConfig.build_options`: add `verbose_on` field [#5682 @desumn]
+  * `OpamClientConfig.E`, `OpamArg.environment_variables`: and `OPAMVERBOSEON`
+    support [#5682 @desumn @rjbou]
+  * `OpamCudfCriteria`, `OpamBuiltinZ3.Syntax`: Move `OpamBuiltinZ3.Syntax`
+    into a dedicated module `OpamCudfCriteria` [#6130 @kit-ty-kate]
+  * `OpamFilename`: add `might_escape` to check if a path is escapable, ie
+    contains `<sep>..<sep>` [#5561 @rjbou]
+  * `OpamFileTools`: `read_opam` & `read_repo_opam` stop adding non registered
+    extra-files [#5564 @rjbou]
+  * `OpamFileTools.add_aux_files`: ignore non registered extra-files and make
+    the `files_subdir_hashes` argument optional (defaults to `false`)
+    [#5564 @rjbou]
+  * `OpamFormula`: add some missing comparison functions for `relop`,
+    `version_constraint` and `atom` (`compare_relop`,
+    `compare_version_constraint` and `compare_atom` respectively)
+    [#6122 @kit-ty-kate]
+  * `OpamFormula`: add `exists` [#5317 @kit-ty-kate]
+  * `OpamGit.fetch ?full_fetch` is now `true` by default instead of `false`
+    [#6146 @kit-ty-kate - fix #6145]
+  * `OpamHash`: export `compare_kind` [#5561 @rjbou]
+  * `OpamListCommand.selector`: Add `NotFlag` selector [#6098 @kit-ty-kate]
+  * `OpamRepository.fetch_from_cache`: when an archive is found, add a symlink
+    (or copy) for the ones found in opam file but not in cache
+    [#6068 @kit-ty-kate]
+  * `OpamStateConfig.opamroot_with_provenance`: restore previous behaviour to
+    `OpamStateConfig.opamroot` for compatibility with third party code
+    [#6047 @dra27]
+  * `OpamSolver.dependency_graph`: make `unavailable` a non-optional argument to
+    enforce speedups when availability information is not needed
+    [#5317 @kit-ty-kate]
+  * `OpamTypes.universe`: make `u_available` and `u_attrs` lazy to speedup
+    actions that do not require availiblity information
+    [#5317 @kit-ty-kate - fix #5314]
+  * `OpamTypesBase.switch_selections_{compare,equal}`: Add proper comparison
+    functions for `OpamTypes.switch_selections` [#6102 @kit-ty-kate]
+  * `OpamStd.Env`: add `env_string_list` for parsing string list environment
+    variables (comma separated) [#5682 @desumn]
+  * `OpamStd.Sys.getconf`: add a function to call the `getconf` command
+    [#5950 @kit-ty-kate]
+  * `OpamStd.Sys.resolve_command`: Fix opam unable to find executables on
+    systems where users belong to more than 32 groups when opam is built using
+    musl libc [#5381 @kit-ty-kate - fix #5373]
+  * `OpamSwitchCommand.import`: add optional `?deps_only` argument to install
+    only dependencies of root packages [#5388 @rjbou]
+  * `OpamSwitchState.{,reverse_}dependencies`: make `unavailable` a non-optional
+    argument to enforce speedups when availability information is not needed
+    [#5317 @kit-ty-kate]
+
 2.2.1:
 * (*) Fix a regression in `opam install --deps-only` where the direct
   dependencies were not set as root packages [#6125 @rjbou]
