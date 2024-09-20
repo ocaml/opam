@@ -75,6 +75,7 @@ users)
 ## Release scripts
   * Fix the release script after the bump of dune lang to 2.6 [#6204 @kit-ty-kate]
   * Fix the release script after the introduction of opam\_core\_stubs [#6204 @kit-ty-kate]
+  * Improve the release script by ignoring interactive questions asked by the FreeBSD package manager [#6204 @kit-ty-kate]
 
 ## Install script
 
