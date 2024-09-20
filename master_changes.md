@@ -75,6 +75,7 @@ users)
 ## Release scripts
 
 ## Install script
+  * Add 2.3.0\~alpha1 to the install scripts [#6203 @kit-ty-kate]
 
 ## Admin
 

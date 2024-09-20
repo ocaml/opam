@@ -20,16 +20,17 @@ param (
   [string]$OpamBinDir = $null
 )
 
-$DevVersion = "2.2.1"
+$DevVersion = "2.3.0~alpha1"
 $IsAdmin = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 $DefaultBinDir = If ($IsAdmin) {"$Env:ProgramFiles\opam\bin"} Else {"$Env:LOCALAPPDATA\Programs\opam\bin"}
 
 $SHA512s = @{
-  "opam-2.2.0-beta2-x86_64-windows.exe" = "74f034ccc30ef0b2041283ff125be2eab565d4019e79f946b515046c4c290a698266003445f38b91321a9ef931093651f861360906ff06c076c24d18657e2aaf";
-  "opam-2.2.0-beta3-x86_64-windows.exe" = "f09337d94e06cedb379c5bf45a50a79cf2b2e529d7c2bb9b35c8a56d40902ff8c7e3f4de9c75fb5c8dd8272b87b2a2645b14e40ef965376ef0d19afd923acf3b";
-  "opam-2.2.0-rc1-x86_64-windows.exe"   = "f2ec830a5706c45cb56a96713e296ef756c3f2904ca15f7c2ad0442916a9585fa1de8070208f2a6bb3a84dc74b677f946f5bc386c8ed1489da802b1d66a5e094";
-  "opam-2.2.0-x86_64-windows.exe"       = "171b679c192801f7ec783de4c51d614055cff167d521d31c543b6bed14d9eb3d37a808be4d83ff9acfd0fc1d7008e6582dce245836a51109fc0cb8456528c473";
-  "opam-2.2.1-x86_64-windows.exe"       = "7a6dd3012e5553ab85337411d0a145c5d26ceff30687c5e91aaff81d9bd48bbf1852ae37ca8992d57435838a025557512e6ac6958fba7123bacd21d9a8aba31a";
+  "opam-2.2.0-beta2-x86_64-windows.exe"  = "74f034ccc30ef0b2041283ff125be2eab565d4019e79f946b515046c4c290a698266003445f38b91321a9ef931093651f861360906ff06c076c24d18657e2aaf";
+  "opam-2.2.0-beta3-x86_64-windows.exe"  = "f09337d94e06cedb379c5bf45a50a79cf2b2e529d7c2bb9b35c8a56d40902ff8c7e3f4de9c75fb5c8dd8272b87b2a2645b14e40ef965376ef0d19afd923acf3b";
+  "opam-2.2.0-rc1-x86_64-windows.exe"    = "f2ec830a5706c45cb56a96713e296ef756c3f2904ca15f7c2ad0442916a9585fa1de8070208f2a6bb3a84dc74b677f946f5bc386c8ed1489da802b1d66a5e094";
+  "opam-2.2.0-x86_64-windows.exe"        = "171b679c192801f7ec783de4c51d614055cff167d521d31c543b6bed14d9eb3d37a808be4d83ff9acfd0fc1d7008e6582dce245836a51109fc0cb8456528c473";
+  "opam-2.2.1-x86_64-windows.exe"        = "7a6dd3012e5553ab85337411d0a145c5d26ceff30687c5e91aaff81d9bd48bbf1852ae37ca8992d57435838a025557512e6ac6958fba7123bacd21d9a8aba31a";
+  "opam-2.3.0-alpha1-x86_64-windows.exe" = "2058acf0810c8bbc9d924827484c800b47f74d9c90d70319343a7e8e3ab6592b9f0dea1c76547ea1294b72106c3bcdb91e41718471ec85211ed43d7a8d7372c7";
 }
 
 Function DownloadAndCheck {
