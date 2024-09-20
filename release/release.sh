@@ -40,7 +40,7 @@ windows_build() {
     qemu-img convert -O raw "./${image}.qcow2" "./${image}.raw"
     # NOTE: -machine q35 seems to be required to avoid random but recurring crashes
     "qemu-system-x86_64" -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" -machine q35 &
-    sleep 120
+    sleep 240
   fi
 
   # Disable Windows Defender before anything else (makes the build process faster)
