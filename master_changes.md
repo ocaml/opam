@@ -73,6 +73,7 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Fix the release script after the bump of dune lang to 2.6 [#6204 @kit-ty-kate]
 
 ## Install script
 

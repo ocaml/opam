@@ -124,6 +124,7 @@ host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
 	  $(MAKE) opam; \
 	)
+	chmod u+w build/opam-full-$(VERSION)/_build/default/src/client/opamMain.exe
 	cp build/opam-full-$(VERSION)/opam $(OUTDIR)/opam-$(VERSION)-$(HOST)
 	strip $(OUTDIR)/opam-$(VERSION)-$(HOST)
 	$(OUTDIR)/opam-$(VERSION)-$(HOST) --version
