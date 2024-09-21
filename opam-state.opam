@@ -32,5 +32,5 @@ depends: [
   "opam-repository" {= version}
   "re" {>= "1.9.0"}
   "spdx_licenses" {>= "1.0.0"}
-  "dune" {>= "2.6.0"}
+  "dune" {>= "2.8.0"}
 ]

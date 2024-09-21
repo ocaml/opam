@@ -70,6 +70,7 @@ users)
 ## VCS
 
 ## Build
+  * Bump the requirement for dune to 2.8 [#6204 @kit-ty-kate]
 
 ## Infrastructure
 

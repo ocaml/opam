@@ -31,7 +31,7 @@ depends: [
   "ocaml" {>= "4.08.0"}
   "opam-client" {= version}
   "cmdliner" {>= "1.1.0"}
-  "dune" {>= "2.6.0"}
+  "dune" {>= "2.8.0"}
   "conf-openssl" {with-test}
   "conf-diffutils" {with-test}
 ]
