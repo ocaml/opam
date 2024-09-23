@@ -62,6 +62,7 @@ users)
 ## Opamfile
 
 ## External dependencies
+  * Add apt-rpm/ALTLinux family support for depext
 
 ## Format upgrade
 
