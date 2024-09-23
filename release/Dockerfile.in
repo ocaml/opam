@@ -26,8 +26,6 @@ CMD { tar xz && \
       cd opam-full-${VERSION} && \
       ./configure --with-vendored-deps --with-mccs && \
       echo "(${LINKING})" > src/client/linking.sexp && \
-      make opam && \
-      chmod u+w _build/default/src/client/opamMain.exe && \
-      strip opam ; \
+      make opam-stripped ; \
     } >&2 && \
-    cat opam
+    cat opam-stripped

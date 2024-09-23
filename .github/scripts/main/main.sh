@@ -42,7 +42,7 @@ if [ $OPAM_UPGRADE -eq 1 ]; then
 fi
 # Disable implicit transitive deps
 sed -i -e '/(implicit_transitive_deps /s/true/false/' dune-project
-make all admin
+make all admin opam-stripped
 sed -i -e '/(implicit_transitive_deps /s/false/true/' dune-project
 
 rm -f "$PREFIX/bin/opam"

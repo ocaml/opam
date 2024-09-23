@@ -78,6 +78,7 @@ users)
   * Fix the release script after the bump of dune lang to 2.6 [#6204 @kit-ty-kate]
   * Fix the release script after the introduction of opam\_core\_stubs [#6204 @kit-ty-kate]
   * Improve the release script by ignoring interactive questions asked by the FreeBSD package manager [#6204 @kit-ty-kate]
+  * Simplify the making of stripped binaries by introducing the `make opam-stripped` target [#6208 @kit-ty-kate]
 
 ## Install script
 
