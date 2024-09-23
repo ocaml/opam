@@ -1,4 +1,4 @@
-(lang dune 2.6)
+(lang dune 2.8)
 (name opam)
 
 (implicit_transitive_deps true)

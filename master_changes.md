@@ -11,6 +11,7 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
+  * Bump the version of opam to 2.4.0~alpha1~dev [#6204 @kit-ty-kate]
 
 ## Global CLI
 
@@ -69,10 +70,14 @@ users)
 ## VCS
 
 ## Build
+  * Bump the requirement for dune to 2.8 [#6204 @kit-ty-kate]
 
 ## Infrastructure
 
 ## Release scripts
+  * Fix the release script after the bump of dune lang to 2.6 [#6204 @kit-ty-kate]
+  * Fix the release script after the introduction of opam\_core\_stubs [#6204 @kit-ty-kate]
+  * Improve the release script by ignoring interactive questions asked by the FreeBSD package manager [#6204 @kit-ty-kate]
 
 ## Install script
   * Add 2.3.0\~alpha1 to the install scripts [#6203 @kit-ty-kate]
