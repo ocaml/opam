@@ -52,6 +52,9 @@ users)
 ## Lint
 
 ## Repository
+  * [BUG] Fix SWH archive cooking request for wget [#6036 @rjbou - fix #5721]
+  * [BUG] Fix SWH liveness check [#6036 @rjbou]
+  * Update SWH API request [#6036 @rjbou]
 
 ## Lock
 
@@ -119,6 +122,8 @@ users)
 ## opam-client
 
 ## opam-repository
+  * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
+  * `OpamDownload.get_output`: use long form for `curl` `POST` request option [#6036 @rjbou]
 
 ## opam-state
 
