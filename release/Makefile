@@ -53,22 +53,21 @@ build/%.image: build/Dockerfile.%
 # Actually, this is for alpine 3.13, and varies
 CLINKING_linux = \
 -Wl,-Bstatic \
--lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
 -lstdc++ \
 -static-libgcc \
 -static
 # -Wl,-Bdynamic
 
 CLINKING_macos = \
--lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
 -lstdc++
 
 CLINKING_openbsd = $(CLINKING_macos)
 CLINKING_freebsd = $(CLINKING_macos)
 
 CLINKING_windows = \
--lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs \
--lopam_stubs_win32_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
 -l:libstdc++.a -l:libpthread.a \
 -Wl,-static \
 -ladvapi32 -lgdi32 -luser32 -lshell32 -lole32 -luuid -luserenv
@@ -124,6 +123,7 @@ host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
 	  $(MAKE) opam; \
 	)
+	chmod u+w build/opam-full-$(VERSION)/_build/default/src/client/opamMain.exe
 	cp build/opam-full-$(VERSION)/opam $(OUTDIR)/opam-$(VERSION)-$(HOST)
 	strip $(OUTDIR)/opam-$(VERSION)-$(HOST)
 	$(OUTDIR)/opam-$(VERSION)-$(HOST) --version

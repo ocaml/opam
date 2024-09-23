@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.3.0~alpha1"
+version: "2.3.0~alpha2~dev"
 synopsis: "Bootstrapped development binary for opam 2.2"
 description: """
 This package compiles (bootstraps) opam. For consistency and safety of the installation, the binaries are not installed into the PATH, but into lib/opam-devel, from where the user can manually install them system-wide.
@@ -31,7 +31,7 @@ depends: [
   "ocaml" {>= "4.08.0"}
   "opam-client" {= version}
   "cmdliner" {>= "1.1.0"}
-  "dune" {>= "2.6.0"}
+  "dune" {>= "2.8.0"}
   "conf-openssl" {with-test}
   "conf-diffutils" {with-test}
 ]
