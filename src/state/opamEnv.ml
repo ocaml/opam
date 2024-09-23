@@ -1185,9 +1185,13 @@ let write_custom_init_scripts root custom =
 
 let write_dynamic_init_scripts st =
   (* Empty environment updates must not be written to the scripts *)
-  let is_not_empty_update = function
+  let is_not_empty_update
+    : (_, OpamTypes.euok_writeable) OpamTypes.env_update -> _ = function
   | {envu_value = ""; envu_op; _} ->
-    envu_op = Eq
+    begin match envu_op with
+    | PlusEq | EqPlus | ColonEq | EqColon | EqPlusEq -> false
+    | Eq -> true
+    end
   | _ -> true
   in
   let updates =
