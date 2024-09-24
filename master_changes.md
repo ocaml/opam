@@ -28,6 +28,7 @@ users)
 
 ## Install
   * Do not keep the build directory of the pinned packages [#6436 @kit-ty-kate]
+  * [BUG] Fix `opam install <local_dir>` not updating and storing pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
 
 ## Build (package)
   * Patches are now applied using the `patch` OCaml library instead of GNU Patch [#5892 @kit-ty-kate - fix #6019 #6052]

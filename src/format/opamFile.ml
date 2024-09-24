@@ -3370,6 +3370,8 @@ module OPAMSyntax = struct
         OpamStd.Option.Op.(t.url >>= URL.subpath) = None)
       ~errmsg:"The url.subpath field is not allowed in files with \
                `opam-version` <= 2.0" -|
+    (* Fields added here are also added in [OpamAuxCommands.autopin_aux] to
+       check pin status. Keep synchronised. *)
     handle_subpath_2_0 -|
     handle_locked -|
     handle_env_paths
