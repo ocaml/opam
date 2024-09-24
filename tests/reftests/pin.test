@@ -1131,6 +1131,19 @@ depends: "dependency" {= "2"}
 ### opam install --deps-only ./pin-change
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
 [pin-change.dev] synchronised (no changes)
+The following actions will be performed:
+=== recompile 1 package
+  - recompile pin-change dev (pinned) [uses dependency]
+=== upgrade 1 package
+  - upgrade   dependency 1 to 2       [required by pin-change]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dependency.1
+-> installed dependency.2
+-> retrieved pin-change.dev  (no changes)
+-> removed   pin-change.dev
+-> installed pin-change.dev
+Done.
 ### opam remove pin-change
 The following actions will be performed:
 === remove 1 package
@@ -1147,10 +1160,10 @@ depends: "dependency" {= "3"}
 [pin-change.dev] synchronised (no changes)
 The following actions will be performed:
 === upgrade 1 package
-  - upgrade dependency 1 to 3 [required by pin-change]
+  - upgrade dependency 2 to 3 [required by pin-change]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   dependency.1
+-> removed   dependency.2
 -> installed dependency.3
 Done.
 ### opam pin | '\(at [a-f0-9]+\)' -> '(at HASH)'
