@@ -180,6 +180,7 @@ users)
   * Add a test showing the behaviour when a pin depend is unpinned [#6380 @rjbou]
   * Add a test to ensure `opam upgrade <pkg>` will not upgrade unrelated things [#6373 @kit-ty-kate]
   * Add a test in init to show ocaml system compiler selection behaviour [#6307 @kit-ty-kate @rjbou]
+  * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
 
 ### Engine
 
