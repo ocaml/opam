@@ -201,6 +201,7 @@ users)
   * Add a test for packages with subpath in a repository [#6439 @rjbou]
   * Add tests for `--keep-build-dir` and `OPAMKEEPBUILDDIR` [#6436 @rjbou @kit-ty-kate]
   * Add admin filter subcommand test [#6166 @rjbou]
+  * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
 
 ### Engine
 
