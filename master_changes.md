@@ -24,6 +24,7 @@ users)
 ## Actions
 
 ## Install
+  * Fix `opam install <local_dir>` not updating pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
 
 ## Build (package)
 
