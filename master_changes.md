@@ -106,6 +106,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
 
 ### Engine
 
