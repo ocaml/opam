@@ -443,9 +443,21 @@ opam-version: "2.0"
 depends: "dependency" {= "1"}
 ### ::: behaviour when the package is not pinned
 ### opam install ./pin-change
+pin-change is now pinned to git+file://${BASEDIR}/pin-change#master (version dev)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
 [pin-change.dev] synchronised (no changes)
-[NOTE] Package pin-change is already installed (current version is dev).
+The following actions will be performed:
+=== recompile 1 package
+  - recompile pin-change dev (pinned)
+=== install 1 package
+  - install   dependency 1            [required by pin-change]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dependency.1
+-> retrieved pin-change.dev  (no changes)
+-> removed   pin-change.dev
+-> installed pin-change.dev
+Done.
 ### <pin:pin-change/opam>
 opam-version: "2.0"
 depends: "dependency" {= "2"}
@@ -466,6 +478,13 @@ depends: "dependency" {= "3"}
 ### opam install --deps-only ./pin-change/opam
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
 [pin-change.dev] synchronised (no changes)
-Nothing to do.
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade dependency 1 to 3 [required by pin-change]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dependency.1
+-> installed dependency.3
+Done.
 ### opam pin
 pin-change.dev  (uninstalled)  git  git+file://${BASEDIR}/pin-change#master
