@@ -25,6 +25,7 @@ users)
 
 ## Install
   * Fix `opam install <local_dir>` not updating and storing pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
+  * Fix `opam install --deps-only/--show-action <local_dir>` not updating (without storing) pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
 
 ## Build (package)
 
