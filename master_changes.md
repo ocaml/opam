@@ -197,6 +197,7 @@ users)
   * Untie lock with pin depend test from OPAMEDITOR behaviour [#6412 @rjbou]
   * Add test for lint E63 [#6438 @rjbou]
   * Add a test for packages with subpath in a repository [#6439 @rjbou]
+  * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
 
 ### Engine
 
