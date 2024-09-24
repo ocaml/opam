@@ -819,10 +819,8 @@ Done.
 dev1
 ### sh add-pin.sh nip-of.dev2 git
 ### opam install ./nip-of
-[nip-of.dev1] synchronised (git+file://${BASEDIR}/nip-of#master)
-[nip-of] Conflicting update of the metadata from git+file://${BASEDIR}/nip-of#master.
-Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-of (there will be a backup)? [Y/n] y
-User metadata backed up in ${BASEDIR}/OPAM/backup/nip-of.bak
+nip-of is now pinned to git+file://${BASEDIR}/nip-of#master (version dev2)
+[nip-of.dev2] synchronised (git+file://${BASEDIR}/nip-of#master)
 The following actions will be performed:
 === upgrade 1 package
   - upgrade nip-of dev1 to dev2 (pinned)
@@ -870,10 +868,8 @@ Done.
 dev1
 ### sh add-pin.sh nip-fo.dev2 git
 ### opam install ./nip-fo
-[nip-fo.dev1] synchronised (git+file://${BASEDIR}/nip-fo#master)
-[nip-fo] Conflicting update of the metadata from git+file://${BASEDIR}/nip-fo#master.
-Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-fo (there will be a backup)? [Y/n] y
-User metadata backed up in ${BASEDIR}/OPAM/backup/nip-fo.bak
+nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#master (version dev2)
+[nip-fo.dev2] synchronised (git+file://${BASEDIR}/nip-fo#master)
 The following actions will be performed:
 === upgrade 1 package
   - upgrade nip-fo dev1 to dev2 (pinned)
@@ -888,18 +884,20 @@ dev2
 ### git -C ./nip-fo add nip-fo.dev3.t
 ### git -C ./nip-fo commit -qm "add install file"
 ### opam install ./nip-fo
+nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#master (version dev3)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/nip-fo (`--working-dir' not specified or specified with no argument).
-[nip-fo.dev2] synchronised (git+file://${BASEDIR}/nip-fo#master)
+[nip-fo.dev3] synchronised (git+file://${BASEDIR}/nip-fo#master)
 The following actions will be performed:
-=== recompile 1 package
-  - recompile nip-fo dev2 (pinned)
+=== upgrade 1 package
+  - upgrade nip-fo dev2 to dev3 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip-fo.dev3  (no changes)
 -> removed   nip-fo.dev2
--> installed nip-fo.dev2
+-> installed nip-fo.dev3
 Done.
 ### opam show nip-fo --field=version
-dev2
+dev3
 ### :::::::::::::::::::::::
 ### :X: --current is in pin-legacy.test
 ### :::::::::::::::::::::::
@@ -1112,9 +1110,21 @@ opam-version: "2.0"
 depends: "dependency" {= "1"}
 ### :C:e:3: behaviour when the package is not pinned
 ### opam install ./pin-change
+pin-change is now pinned to git+file://${BASEDIR}/pin-change#master (version dev)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
 [pin-change.dev] synchronised (no changes)
-[NOTE] Package pin-change is already installed (current version is dev).
+The following actions will be performed:
+=== recompile 1 package
+  - recompile pin-change dev (pinned)
+=== install 1 package
+  - install   dependency 1            [required by pin-change]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dependency.1
+-> retrieved pin-change.dev  (no changes)
+-> removed   pin-change.dev
+-> installed pin-change.dev
+Done.
 ### <pin:pin-change/opam>
 opam-version: "2.0"
 depends: "dependency" {= "2"}
@@ -1135,7 +1145,14 @@ depends: "dependency" {= "3"}
 ### opam install --deps-only ./pin-change/opam
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
 [pin-change.dev] synchronised (no changes)
-Nothing to do.
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade dependency 1 to 3 [required by pin-change]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dependency.1
+-> installed dependency.3
+Done.
 ### opam pin | '\(at [a-f0-9]+\)' -> '(at HASH)'
 pin-change.dev  (uninstalled)  git  git+file://${BASEDIR}/pin-change#master  (at HASH)
 ### :C:f: stored overlay opam file
