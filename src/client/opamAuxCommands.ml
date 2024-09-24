@@ -250,7 +250,7 @@ let resolve_locals ?(quiet=false) ?locked ?recurse ?subpath
              (OpamUrl.to_string nf.pin.pin_url))
           duplicates)
 
-let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
+let autopin_aux st ?quiet ?recurse ?subpath ?locked
     atom_or_local_list =
   let to_pin, atoms =
     resolve_locals ?quiet ?recurse ?subpath ?locked atom_or_local_list
@@ -303,16 +303,31 @@ let autopin_aux st ?quiet ?(for_view=false) ?recurse ?subpath ?locked
               | _ -> false)
            | None -> false)
           &&
-          (* For `opam show`, we need to check does the opam file changed to
-             perform a simulated pin if so *)
-          (not for_view ||
-           match
+          (match
              OpamSwitchState.opam_opt st pinned_pkg,
              OpamFile.OPAM.read_opt nf.pin.pin_file
            with
            | Some opam0, Some opam ->
              let opam = OpamFile.OPAM.with_locked_opt nf.pin.pin_locked opam in
-             OpamFile.OPAM.equal opam0 opam
+             let opam = OpamFile.OPAM.with_name nf.pin_name opam in
+             let opam =
+               match OpamFile.OPAM.version_opt opam with
+               | None ->
+                 OpamFile.OPAM.with_version
+                   (OpamPinCommand.default_version st nf.pin_name) opam
+               | Some _ -> opam
+             in
+             let opam =
+               OpamFile.OPAM.with_url
+                 (OpamFile.URL.create ?subpath:nf.pin.pin_subpath nf.pin.pin_url)
+                 opam
+             in
+             let opam =
+               (* This is required to avoid the case where locked opam files were
+                  stored with the added `available: opam-version >= "2.1"` *)
+               OpamFile.OPAM.with_available (OpamFile.OPAM.available opam0) opam
+             in
+             OpamFile.OPAM.effectively_equal opam0 opam
            | _, _ -> false)
         with Not_found -> false)
       to_pin
@@ -396,7 +411,7 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
 let simulate_autopin st ?quiet ?(for_view=false) ?locked ?recurse ?subpath
     atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
-    autopin_aux st ?quiet ~for_view ?recurse ?subpath ?locked atom_or_local_list
+    autopin_aux st ?quiet ?recurse ?subpath ?locked atom_or_local_list
   in
   if to_pin = [] then st, atoms else
   let st =
