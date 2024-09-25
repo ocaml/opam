@@ -99,6 +99,24 @@ let () =
     launch (fmt "%s switch create six --empty" bin);
     time_cmd ~exit:0 (fmt "%s list --installed --short --safe --color=never ocp-indent ocp-index merlin" bin)
   in
+  launch (fmt "%s switch create seven --empty" bin);
+  launch (fmt "%s install -y --fake dune" bin);
+  let time_show_installed =
+    Gc.compact ();
+    time_cmd ~exit:0 (fmt "%s show dune" bin)
+  in
+  let time_show_with_depexts =
+    Gc.compact ();
+    time_cmd ~exit:0 (fmt "%s show conf-llvm" bin)
+  in
+  let time_show_raw =
+    Gc.compact ();
+    time_cmd ~exit:0 (fmt "%s show --raw conf-llvm" bin)
+  in
+  let time_show_precise =
+    Gc.compact ();
+    time_cmd ~exit:0 (fmt "%s show --raw conf-llvm.14.0.6" bin)
+  in
   let json = fmt {|{
   "results": [
     {
@@ -148,6 +166,26 @@ let () =
           "name": "opam list --installed on non-installed packages",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "opam show of an installed package",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam show with depexts",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam show --raw pkgname",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam show --raw pkgname.version",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -172,6 +210,10 @@ let () =
       time_install_check_installed
       time_install_check_not_installed
       time_list_installed_noninstalled_packages
+      time_show_installed
+      time_show_with_depexts
+      time_show_raw
+      time_show_precise
       bin_size
   in
   print_endline json
