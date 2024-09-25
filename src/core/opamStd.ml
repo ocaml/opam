@@ -695,11 +695,11 @@ module OpamString = struct
     let acc = ref [] in
     let in_run = ref false in
     let slice_start = ref 0 in
-
-    for i=0 to String.length s-1 do
-      if String.get s i = c then (
+    let len = String.length s in
+    for i=0 to len-1 do
+      if (String.get s i : char) = (c : char) then (
         if not !in_run then (
-          if i > !slice_start then
+          if (i : int) > (!slice_start : int) then
             acc := String.sub s !slice_start (i - !slice_start) :: !acc;
           in_run := true;
         )
@@ -710,8 +710,8 @@ module OpamString = struct
         )
       )
     done;
-    if not !in_run && !slice_start < String.length s then
-      acc := String.sub s !slice_start (String.length s - !slice_start) :: !acc;
+    if not !in_run && (!slice_start : int) < (len : int) then
+      acc := String.sub s !slice_start (len - !slice_start) :: !acc;
     List.rev !acc
 
   let split_delim s c =

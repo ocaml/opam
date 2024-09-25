@@ -106,15 +106,15 @@ let () =
   in
   let time_show_with_depexts =
     Gc.compact ();
-    time_cmd ~exit:0 (fmt "%s show conf-autoconf" bin)
+    time_cmd ~exit:0 (fmt "%s show conf-pkg-config" bin)
   in
   let time_show_raw =
     Gc.compact ();
-    time_cmd ~exit:0 (fmt "%s show --raw conf-autoconf" bin)
+    time_cmd ~exit:0 (fmt "%s show --raw conf-pkg-config" bin)
   in
   let time_show_precise =
     Gc.compact ();
-    time_cmd ~exit:0 (fmt "%s show --raw conf-autoconf.0.1" bin)
+    time_cmd ~exit:0 (fmt "%s show --raw conf-pkg-config.2" bin)
   in
   let json = fmt {|{
   "results": [
