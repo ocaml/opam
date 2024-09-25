@@ -15,7 +15,11 @@ open Lib
 
 let ocamls = [
   (* Fully supported versions *)
-   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1"; "5.0.0"; "5.1.1"; "4.14.1";
+  "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1";
+  "5.0.0"; "5.1.1"; "5.2.0";
+
+  (* The last elements of the list after 4.14 will be used as default versions *)
+  "4.14.1";
 ]
 
 (* Entry point for the workflow. Workflows are specified as continuations where
@@ -65,7 +69,7 @@ let end_workflow ~oc:_ ~workflow:_ = ()
 let ocamls =
   List.map (fun v -> Scanf.sscanf v "%u.%u.%u" (fun major minor _ -> ((major, minor), v))) ocamls
 
-let latest_ocaml = List.fold_left (fun _ (v, _) -> v) (0, 0) ocamls
+let latest_ocaml = (4, 14)
 
 let platform_ocaml_matrix ?(dir=List.drop_while) ~fail_fast start_version =
   (fail_fast,
