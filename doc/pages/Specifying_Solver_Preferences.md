@@ -1,3 +1,11 @@
+---
+slug: Specifying_Solver_Preferences.html
+order: 8
+title: Solver Preferences
+description: |
+  Everything about solver preferences for opam.
+---
+
 # Specifying user Preferences for the External Solvers
 
 A fundamental distinguishing feature of the `opam` package manager is the fact that it is designed to reuse state-of-the-art dependency solving technology that gives the users the possibility to express their preferences regarding the operations to be performed during an installation, instead of being bound to an hard-coded strategy.

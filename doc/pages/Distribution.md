@@ -1,3 +1,11 @@
+---
+slug: Distribution.html
+order: 6
+title: Distribution
+description: |
+  State of binary packaging of opam on upstream distributions.
+---
+
 # opam and other package managers: distributions list
 
 This page tracks the state of binary packaging of opam on upstream

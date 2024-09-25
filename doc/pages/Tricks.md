@@ -1,3 +1,11 @@
+---
+slug: Tricks.html
+order: 4
+title: Tricks
+description: |
+  Random collection of opam use tricks.
+---
+
 > The following are beyond the scope of the [FAQ](FAQ.html), but have been found
 > useful for specific use-cases or for advanced users.
 

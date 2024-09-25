@@ -1,3 +1,11 @@
+---
+slug: Packaging.html
+order: 5
+title: Publishing Packages
+description: |
+  How to create and publish opam packages.
+---
+
 # Creating and publishing opam packages
 
 An opam package is defined by a `<pkgname>.opam`, or simply `opam` file,
