@@ -15,7 +15,11 @@ open Lib
 
 let ocamls = [
   (* Fully supported versions *)
-   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1"; "5.0.0"; "5.1.1"; "4.14.1";
+  "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1";
+  "5.0.0"; "5.1.1"; "5.2.0";
+
+  (* The last elements of the list after 4.14 will be used as default versions *)
+  "4.14.1";
 ]
 
 (* Entry point for the workflow. Workflows are specified as continuations where
@@ -65,7 +69,7 @@ let end_workflow ~oc:_ ~workflow:_ = ()
 let ocamls =
   List.map (fun v -> Scanf.sscanf v "%u.%u.%u" (fun major minor _ -> ((major, minor), v))) ocamls
 
-let latest_ocaml = List.fold_left (fun _ (v, _) -> v) (0, 0) ocamls
+let start_latests_ocaml = (4, 14)
 
 let platform_ocaml_matrix ?(dir=List.drop_while) ~fail_fast start_version =
   (fail_fast,
@@ -351,7 +355,7 @@ let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macO
     | MacOS -> [analyse_job]  (* This isn't gated on build_macOS_job for speed *)
     | Linux -> [analyse_job; build_linux_job]
   in
-  let matrix = platform_ocaml_matrix ~fail_fast:false latest_ocaml in
+  let matrix = platform_ocaml_matrix ~fail_fast:false start_latests_ocaml in
   let host = host_of_platform platform in
   let ocamlv = "${{ matrix.ocamlv }}" in
   job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~env:[("OPAM_TEST", "1")] ~matrix ~needs ("Test-" ^ name_of_platform platform)
@@ -391,7 +395,7 @@ let solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
   let only_on target = only_on platform target in
   let needs = [analyse_job; (match platform with Linux -> build_linux_job | Windows -> build_windows_job | MacOS -> build_macOS_job)] in
   let env = [("SOLVER", "${{ matrix.solver }}"); ("OPAMBSROOT", "~/.cache/opam.${{ matrix.solver }}.cached")] in
-  let (fail_fast, matrix, _) = platform_ocaml_matrix ~fail_fast:false latest_ocaml in
+  let (fail_fast, matrix, _) = platform_ocaml_matrix ~fail_fast:false start_latests_ocaml in
   let matrix =
     (fail_fast, ("solver", ["z3"; "0install"])::matrix, [])
   in
@@ -413,7 +417,7 @@ let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
   let host = host_of_platform platform in
   let only_on target = only_on platform target in
   let needs = [analyse_job; (match platform with Linux -> build_linux_job | Windows -> build_windows_job | MacOS -> build_macOS_job)] in
-  let matrix = platform_ocaml_matrix ~fail_fast:false latest_ocaml in
+  let matrix = platform_ocaml_matrix ~fail_fast:false start_latests_ocaml in
   let ocamlv = "${{ matrix.ocamlv }}" in
   job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~needs ~matrix ("Upgrade-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
@@ -490,8 +494,8 @@ let main oc : unit =
   ++ analyse_job ~keys ~platforms:[Linux]
   @@ fun analyse_job -> cygwin_job ~analyse_job
   @@ fun cygwin_job -> main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux (4, 08)
-  @@ fun build_linux_job -> main_build_job ~analyse_job ~cygwin_job Windows latest_ocaml
-  @@ fun build_windows_job -> main_build_job ~analyse_job ~cygwin_job MacOS latest_ocaml
+  @@ fun build_linux_job -> main_build_job ~analyse_job ~cygwin_job Windows start_latests_ocaml
+  @@ fun build_windows_job -> main_build_job ~analyse_job ~cygwin_job MacOS start_latests_ocaml
   @@ fun build_macOS_job -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux
   @@ fun _ -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
   @@ fun _ -> cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam cold" Linux
