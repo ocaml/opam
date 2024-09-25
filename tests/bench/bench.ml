@@ -100,7 +100,8 @@ let () =
     time_cmd ~exit:0 (fmt "%s list --installed --short --safe --color=never ocp-indent ocp-index merlin" bin)
   in
   launch (fmt "%s switch create seven --empty" bin);
-  let time_show_no_depexts =
+  launch (fmt "%s install --fake dune" bin);
+  let time_show_installed =
     Gc.compact ();
     time_cmd ~exit:0 (fmt "%s show dune" bin)
   in
@@ -167,7 +168,7 @@ let () =
           "units": "secs"
         },
         {
-          "name": "opam show no depexts",
+          "name": "opam show of an installed package",
           "value": %f,
           "units": "secs"
         },
@@ -209,7 +210,7 @@ let () =
       time_install_check_installed
       time_install_check_not_installed
       time_list_installed_noninstalled_packages
-      time_show_no_depexts
+      time_show_installed
       time_show_with_depexts
       time_show_raw
       time_show_precise
