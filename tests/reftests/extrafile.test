@@ -604,3 +604,96 @@ The following actions will be performed:
 Successfully extracted to ${BASEDIR}/escape-good-md5.1
 ### test -f escape-good-md5.1/p.patch
 # Return code 1 #
+### : upgrades from 2.2 to 2.3 can trigger issues where a repository forgot to
+### : add the missing extra-files field, opam tells the user they should
+### : upgrade as the opam file changed (as extra-files was added automatically)
+### : then the build fails and upon fixing the error opam still says the
+### : package is to be rebuilt because the previous version of the opam file
+### : was stored in the install cache
+### opam switch create upgrade --empty
+### OPAMYES=1
+### <pkg:upgrade.1>
+opam-version: "2.0"
+patches: "something.patch"
+extra-files: [
+  ["something" "md5=60b725f10c9c85c70d97880dfe8191b3"]
+  ["something.patch" "md5=cfbe7fc8ca145cbd193a140c0824c40b"]
+]
+### <pkg:upgrade.1:something>
+a
+### <pkg:upgrade.1:something.patch>
+--- a/something
++++ b/something
+@@ -1 +1 @@
+-a
++b
+### opam install upgrade.1
+The following actions will be performed:
+=== install 1 package
+  - install upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed upgrade.1
+Done.
+### <REPO/packages/upgrade/upgrade.1/opam>
+opam-version: "2.0"
+patches: "something.patch"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam upgrade
+The following actions will be performed:
+=== recompile 1 package
+  - recompile upgrade 1 [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Patch file "${BASEDIR}/OPAM/upgrade/.opam-switch/build/upgrade.1/something.patch" not found.
+
+Not_found
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build upgrade 1
++- 
+- No changes have been performed
+# Return code 31 #
+### <REPO/packages/upgrade/upgrade.1/opam>
+opam-version: "2.0"
+patches: "something.patch"
+extra-files: [
+  ["something" "md5=60b725f10c9c85c70d97880dfe8191b3"]
+  ["something.patch" "md5=cfbe7fc8ca145cbd193a140c0824c40b"]
+]
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam show --raw upgrade.1
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+patches: "something.patch"
+extra-files: [
+  ["something" "md5=60b725f10c9c85c70d97880dfe8191b3"]
+  ["something.patch" "md5=cfbe7fc8ca145cbd193a140c0824c40b"]
+]
+### cat ${BASEDIR}/OPAM/upgrade/.opam-switch/packages/upgrade.1/opam
+opam-version: "2.0"
+patches: "something.patch"
+extra-files: [
+  ["something" "md5=60b725f10c9c85c70d97880dfe8191b3"]
+  ["something.patch" "md5=cfbe7fc8ca145cbd193a140c0824c40b"]
+]
+### opam upgrade
+The following actions will be performed:
+=== recompile 1 package
+  - recompile upgrade 1 [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   upgrade.1
+-> installed upgrade.1
+Done.

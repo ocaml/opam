@@ -105,6 +105,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test case showing a package mistakenly marked as to be reinstalled [#6213 @kit-ty-kate]
 
 ### Engine
 
