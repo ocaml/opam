@@ -22,6 +22,7 @@ users)
 ## Config report
 
 ## Actions
+  * Fix the install cache storing the wrong version of the opam file after a build failure [#6213 @kit-ty-kate]
 
 ## Install
 
