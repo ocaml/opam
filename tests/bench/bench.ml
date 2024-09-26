@@ -100,7 +100,7 @@ let () =
     time_cmd ~exit:0 (fmt "%s list --installed --short --safe --color=never ocp-indent ocp-index merlin" bin)
   in
   launch (fmt "%s switch create seven --empty" bin);
-  launch (fmt "%s install --fake dune" bin);
+  launch (fmt "%s install -y --fake dune" bin);
   let time_show_installed =
     Gc.compact ();
     time_cmd ~exit:0 (fmt "%s show dune" bin)
