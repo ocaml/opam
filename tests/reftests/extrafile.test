@@ -689,11 +689,5 @@ extra-files: [
   ["something.patch" "md5=cfbe7fc8ca145cbd193a140c0824c40b"]
 ]
 ### opam upgrade
-The following actions will be performed:
-=== recompile 1 package
-  - recompile upgrade 1 [upstream or system changes]
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   upgrade.1
--> installed upgrade.1
-Done.
+Already up-to-date.
+Nothing to do.

@@ -824,15 +824,45 @@ let parallel_apply t
 
   (* 2/ Display errors and finalize *)
 
-  OpamSwitchState.Installed_cache.save
-    (OpamPath.Switch.installed_opams_cache t.switch_global.root t.switch)
-    (OpamPackage.Set.fold (fun nv opams ->
-         let opam =
-           OpamSwitchState.opam t nv |>
-           OpamFile.OPAM.with_metadata_dir None
-         in
-         OpamPackage.Map.add nv opam opams)
-        t.installed OpamPackage.Map.empty);
+  let save_installed_cache failed =
+    OpamSwitchState.Installed_cache.save
+      (OpamPath.Switch.installed_opams_cache t.switch_global.root t.switch)
+      (OpamPackage.Set.fold (fun nv opams ->
+           let pkg_failed =
+             List.exists (function
+                 | `Fetch ps -> List.for_all (OpamPackage.equal nv) ps
+                 | `Build p
+                 | `Change (_, _, p)
+                 | `Install p
+                 | `Reinstall p
+                 | `Remove p -> OpamPackage.equal nv p)
+               failed
+           in
+           let add_to_opams opam =
+             let opam = OpamFile.OPAM.with_metadata_dir None opam in
+             OpamPackage.Map.add nv opam opams
+           in
+           if pkg_failed then
+             match OpamPackage.Map.find_opt nv t.installed_opams with
+             | None -> opams
+             | Some opam -> add_to_opams opam
+           else
+             add_to_opams (OpamSwitchState.opam t nv))
+          t.installed OpamPackage.Map.empty);
+  in
+  begin match action_results with
+  | `Exception _ | `Error Aborted -> ()
+  | `Error (Nothing_to_do | OK _) -> assert false
+  | `Error (Partial_error res) ->
+    let { actions_successes = _;
+          actions_errors;
+          actions_aborted;
+        } = res
+    in
+    save_installed_cache (List.map fst actions_errors @ actions_aborted)
+  | `Successful _ ->
+    save_installed_cache []
+  end;
 
   let cleanup_artefacts graph =
     PackageActionGraph.iter_vertex (function
