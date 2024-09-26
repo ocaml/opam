@@ -22,6 +22,7 @@ users)
 ## Config report
 
 ## Actions
+  * Fix the install cache storing the wrong version of the opam file after a build failure [#6213 @kit-ty-kate]
 
 ## Install
 
@@ -105,6 +106,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test case showing a package mistakenly marked as to be reinstalled [#6213 @kit-ty-kate]
 
 ### Engine
 
