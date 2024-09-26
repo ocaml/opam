@@ -76,20 +76,14 @@ build: "true"
 opam-version: "2.0"
 name: "upgrade"
 version: "1"
-build: "false"
+build: "true"
 => always-here.1 <=
 opam-version: "2.0"
 name: "always-here"
 version: "1"
 ### opam upgrade
-The following actions will be performed:
-=== recompile 1 package
-  - recompile upgrade 1 [upstream or system changes]
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   upgrade.1
--> installed upgrade.1
-Done.
+Already up-to-date.
+Nothing to do.
 ### opam-cache installed action-failure
 => upgrade.1 <=
 opam-version: "2.0"
@@ -319,9 +313,6 @@ opam-version: "2.0"
 opam-version: "2.0"
 name: "upgrade"
 version: "1"
-url {
-  src: "file:///inexistent/path"
-}
 => always-here.1 <=
 opam-version: "2.0"
 name: "always-here"
