@@ -114,6 +114,7 @@ users)
   * Move pin test to pin-legacy [#6135 @rjbou]
   * More exhaustive test for pin command: test different behaviour and cli options [#6135 @rjbou]
   * pin: add a test for erroneous first fetch done as local path on local VCS pinned packages [#6221 @rjbou]
+  * Add cache test for installed packages cache update after an action failure [#6213 @kit-ty-kate @rjbou]
 
 ### Engine
   * Update print file function [#6233 @rjbou]
