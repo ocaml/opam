@@ -71,6 +71,11 @@ ifneq ($(MANIFEST_ARCH),)
 	@cd Opam.Runtime.$(MANIFEST_ARCH) && $(LN_S) -f ../_build/install/default/bin/Opam.Runtime.$(MANIFEST_ARCH)/$(RUNTIME_GCC_S).dll .
 endif
 
+opam-stripped: $(DUNE_DEP) build-opam processed-opam.install
+	@cp -f _build/default/src/client/opamMain.exe "$@$(EXE)"
+	@chmod 755 "$@$(EXE)"
+	strip "$@$(EXE)"
+
 opam-installer: $(DUNE_DEP) build-opam-installer processed-opam-installer.install
 	@$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
