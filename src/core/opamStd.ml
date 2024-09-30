@@ -692,9 +692,27 @@ module OpamString = struct
   let rcut_at = cut_at_aux String.rindex
 
   let split s c =
-    (* old compat version (Re 1.2.0)
-       {[Re_str.split (Re_str.regexp (Printf.sprintf "[%c]+" c)) s]} *)
-    Re.(split (compile (rep1 (char c)))) s
+    let rec loop acc in_run slice_start len i s c =
+      if (i : int) < (len : int) then
+        if (String.get s i : char) = (c : char) then
+          if not in_run then
+            if (i : int) > (slice_start : int) then
+              loop (String.sub s slice_start (i - slice_start) :: acc)
+                true slice_start len (i + 1) s c
+            else
+              loop acc true slice_start len (i + 1) s c
+          else
+            loop acc in_run slice_start len (i + 1) s c
+        else if in_run then
+          loop acc false i len (i + 1) s c
+        else
+          loop acc in_run slice_start len (i + 1) s c
+      else if not in_run && (slice_start : int) < (len : int) then
+        String.sub s slice_start (len - slice_start) :: acc
+      else
+        acc
+    in
+    List.rev (loop [] false 0 (String.length s) 0 s c)
 
   let split_delim s c =
     let tokens = Re.(split_full (compile (char c)) s) in
