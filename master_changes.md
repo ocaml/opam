@@ -14,6 +14,7 @@ users)
   * Bump the version of opam to 2.4.0~alpha1~dev [#6204 @kit-ty-kate]
 
 ## Global CLI
+  * ◈ Add `opam admin compare-versions` to compare package versions for sanity checks [#6197 @mbarbin]
 
 ## Plugins
 
