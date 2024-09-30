@@ -1008,7 +1008,8 @@ module OpamSys = struct
         Hashtbl.add memo (cmd, arg) r;
         r
 
-  let uname = memo_command "uname"
+  let uname = lazy (OpamStubs.uname ())
+  let uname_cmd = memo_command "uname"
   let getconf = memo_command "getconf"
 
   let system =
@@ -1031,14 +1032,14 @@ module OpamSys = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-          match uname "-s" with
-          | Some "Darwin"    -> Darwin
-          | Some "Linux"     -> Linux
-          | Some "FreeBSD"   -> FreeBSD
-          | Some "OpenBSD"   -> OpenBSD
-          | Some "NetBSD"    -> NetBSD
-          | Some "DragonFly" -> DragonFly
-          | _                -> Unix
+          match (Lazy.force uname).sysname with
+          | "Darwin"    -> Darwin
+          | "Linux"     -> Linux
+          | "FreeBSD"   -> FreeBSD
+          | "OpenBSD"   -> OpenBSD
+          | "NetBSD"    -> NetBSD
+          | "DragonFly" -> DragonFly
+          | _           -> Unix
         end
       | "Win32"  -> Win32
       | "Cygwin" -> Cygwin

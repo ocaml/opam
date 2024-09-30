@@ -35,7 +35,7 @@ let normalise_arch raw =
 
 let poll_arch () =
   let raw = match Sys.os_type with
-    | "Unix" | "Cygwin" -> OpamStd.Sys.uname "-m"
+    | "Unix" | "Cygwin" -> Some (Lazy.force OpamStd.Sys.uname).machine
     | "Win32" ->
       begin match OpamStubs.getArchitecture () with
       | OpamStubs.AMD64 -> Some "x86_64"
@@ -74,7 +74,7 @@ let normalise_os raw =
 let poll_os () =
   let raw =
     match Sys.os_type with
-    | "Unix" -> OpamStd.Sys.uname "-s"
+    | "Unix" -> Some (Lazy.force OpamStd.Sys.uname).sysname
     | s -> norm s
   in
   match raw with
@@ -158,9 +158,9 @@ let poll_os_version () =
        Scanf.sscanf s "%_s@[ Version %s@]" norm
      with Scanf.Scan_failure _ | End_of_file -> None)
   | Some "freebsd" ->
-    OpamStd.Sys.uname "-U" >>= norm
+    OpamStd.Sys.uname_cmd "-U" >>= norm
   | _ ->
-    OpamStd.Sys.uname "-r" >>= norm
+    norm (Lazy.force OpamStd.Sys.uname).release
 let os_version = Lazy.from_fun poll_os_version
 
 let poll_os_family () =
