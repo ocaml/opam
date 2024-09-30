@@ -830,7 +830,7 @@ let check_command cli =
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg)
 
-let compare_versions_command_doc = "Compare 2 package versions"
+let compare_versions_command_doc = "Compare two package versions"
 let compare_versions_command cli =
   let operator : OpamFormula.relop option Term.t =
      let make_flag (relop : OpamFormula.relop) =
@@ -893,7 +893,7 @@ let compare_versions_command cli =
          then `Success
          else `False)
   in
-  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command ~cli OpamArg.(cli_from cli2_4) command ~doc ~man
     Term.(const cmd $ global_options cli $ version_arg 0 $ version_arg 1 $ operator)
 
 let pattern_list_arg =
