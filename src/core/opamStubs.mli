@@ -165,3 +165,12 @@ val getVersionInfo : string -> win32_version_info option
 
 val get_initial_environment : unit -> string list
 (** Windows only. Returns the environment which new processes would receive. *)
+
+type uname = {
+  sysname : string;
+  release : string;
+  machine : string;
+}
+
+val uname : unit -> uname
+(** Unix only. Returns info from uname(2) *)
