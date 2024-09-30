@@ -510,11 +510,12 @@ module Sys : sig
   (** Queried lazily *)
   val os: unit -> os
 
-  (** The output of the command "uname", with the given argument. Memoised. *)
-  val uname_cmd: string -> string option
+  (** The output of the command "uname -U". FreeBSD only. *)
+  val uname_freebsd_version: unit -> string option
 
-  (** The output of the command "getconf", with the given argument. Memoised. *)
-  val getconf: string -> string option
+  (** The output of the command "getconf LONG_BIT". *)
+  val getconf_long_bit: unit -> string option
+
   (** The memoized result of uname(2) *)
   val uname : OpamStubs.uname Lazy.t
 

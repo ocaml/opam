@@ -903,19 +903,18 @@ module OpamSys = struct
       let split = if clean then OpamString.split else OpamString.split_delim in
       split path path_sep
 
-  let with_process_in cmd args f =
+  let process_in cmd args =
     if Sys.win32 then
       assert false;
-    let path = split_path_variable (Env.get "PATH") in
-    let cmd =
-      List.find Sys.file_exists (List.map (fun d -> Filename.concat d cmd) path)
-    in
-    let ic = Unix.open_process_in (cmd^" "^args) in
+    let args = Array.of_list (cmd :: args) in
+    let env = Env.raw_env () in
     try
-      let r = f ic in
-      ignore (Unix.close_process_in ic) ; r
-    with exn ->
-      ignore (Unix.close_process_in ic) ; raise exn
+      let (ic, _, _) as p = Unix.open_process_args_full cmd args env in
+      let r = input_line ic in
+      match Unix.close_process_full p with
+      | Unix.WEXITED 0 -> Some r
+      | WEXITED _ | WSIGNALED _ | WSTOPPED _ -> None
+    with Unix.Unix_error _ | Sys_error _ | End_of_file -> None
 
   let tty_out = Unix.isatty Unix.stdout
 
@@ -934,20 +933,21 @@ module OpamSys = struct
   let get_terminal_columns () =
     let fallback = 80 in
     let cols =
-      try (* terminfo *)
-        with_process_in "tput" "cols"
-          (fun ic -> int_of_string (input_line ic))
+      match (* terminfo *)
+        Option.replace int_of_string_opt (process_in "tput" ["cols"])
       with
-      | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
+      | Some x -> x
+      | None ->
         try (* GNU stty *)
-          with_process_in "stty" "size"
-            (fun ic ->
-               match OpamString.split (input_line ic) ' ' with
-               | [_ ; v] -> int_of_string v
-               | _ -> failwith "stty")
+          begin match
+            Option.map (fun x -> OpamString.split x ' ')
+              (process_in "stty" ["size"])
+          with
+          | Some [_ ; v] -> int_of_string v
+          | _ -> failwith "stty"
+          end
         with
-        | Unix.Unix_error _ | Sys_error _ | Failure _
-        | End_of_file | Not_found -> fallback
+        | Failure _ -> fallback
     in
     if cols > 0 then cols else fallback
 
@@ -995,22 +995,9 @@ module OpamSys = struct
 
   let etc () = "/etc"
 
-  let memo_command =
-    let memo = Hashtbl.create 7 in
-    fun cmd arg ->
-      try Hashtbl.find memo (cmd, arg) with Not_found ->
-        let r =
-          try
-            with_process_in cmd arg
-              (fun ic -> Some (OpamString.strip (input_line ic)))
-          with Unix.Unix_error _ | Sys_error _ | Not_found -> None
-        in
-        Hashtbl.add memo (cmd, arg) r;
-        r
-
   let uname = lazy (OpamStubs.uname ())
-  let uname_cmd = memo_command "uname"
-  let getconf = memo_command "getconf"
+  let uname_freebsd_version () = process_in "uname" ["-U"]
+  let getconf_long_bit () = process_in "getconf" ["LONG_BIT"]
 
   let system =
     let system = Lazy.from_fun OpamStubs.getPathToSystem in
@@ -1120,12 +1107,11 @@ module OpamSys = struct
         Some (Unix.readlink (Filename.concat dir "exe"))
       with e ->
         fatal e;
-        try
-          with_process_in "ps"
-            (Printf.sprintf "-p %d -o comm= 2>/dev/null" ppid)
-            (fun ic -> Some (input_line ic))
+        match
+          process_in "ps" ["-p"; string_of_int ppid; "-o"; "comm="]
         with
-        | Unix.Unix_error _ | Sys_error _ | Failure _ | End_of_file | Not_found ->
+        | Some _ as x -> x
+        | None ->
             try
               let c = open_in_bin ("/proc/" ^ string_of_int ppid ^ "/cmdline") in
               begin try

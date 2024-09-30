@@ -56,7 +56,7 @@ let poll_arch () =
   | "Unix" | "Cygwin" ->
     (match normalised with
      | Some ("x86_64" | "arm64" | "ppc64" as arch) ->
-       (match OpamStd.Sys.getconf "LONG_BIT", arch with
+       (match OpamStd.Sys.getconf_long_bit (), arch with
         | Some "32", "x86_64" -> Some "x86_32"
         | Some "32", "arm64" -> Some "arm32"
         | Some "32", "ppc64" -> Some "ppc32"
@@ -158,7 +158,7 @@ let poll_os_version () =
        Scanf.sscanf s "%_s@[ Version %s@]" norm
      with Scanf.Scan_failure _ | End_of_file -> None)
   | Some "freebsd" ->
-    OpamStd.Sys.uname_cmd "-U" >>= norm
+    OpamStd.Sys.uname_freebsd_version () >>= norm
   | _ ->
     norm (Lazy.force OpamStd.Sys.uname).release
 let os_version = Lazy.from_fun poll_os_version
