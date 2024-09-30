@@ -991,20 +991,17 @@ module OpamSys = struct
 
   let etc () = "/etc"
 
-  let memo_command =
-    let memo = Hashtbl.create 7 in
-    fun cmd arg ->
-      try Hashtbl.find memo (cmd, arg) with Not_found ->
-        let r =
-          match process_in cmd [arg] with
-          | None -> None
-          | Some x -> Some (OpamString.strip x)
-        in
-        Hashtbl.add memo (cmd, arg) r;
-        r
+  let uname =
+    let uname = lazy (OpamStubs.uname ()) in
+    fun () ->
+      Lazy.force uname
 
-  let uname = memo_command "uname"
-  let getconf = memo_command "getconf"
+  (* We need to call [uname] here as the only way to get it
+     in C without calling a process or lookup files is to
+     use [__Freebsd_version] which is a define, so it is set
+     at compile time. *)
+  let get_freebsd_version () = process_in "uname" ["-U"]
+  let get_long_bit () = process_in "getconf" ["LONG_BIT"]
 
   let system =
     let system = Lazy.from_fun OpamStubs.getPathToSystem in
@@ -1026,14 +1023,14 @@ module OpamSys = struct
     let os = lazy (
       match Sys.os_type with
       | "Unix" -> begin
-          match uname "-s" with
-          | Some "Darwin"    -> Darwin
-          | Some "Linux"     -> Linux
-          | Some "FreeBSD"   -> FreeBSD
-          | Some "OpenBSD"   -> OpenBSD
-          | Some "NetBSD"    -> NetBSD
-          | Some "DragonFly" -> DragonFly
-          | _                -> Unix
+          match (uname ()).sysname with
+          | "Darwin"    -> Darwin
+          | "Linux"     -> Linux
+          | "FreeBSD"   -> FreeBSD
+          | "OpenBSD"   -> OpenBSD
+          | "NetBSD"    -> NetBSD
+          | "DragonFly" -> DragonFly
+          | _           -> Unix
         end
       | "Win32"  -> Win32
       | "Cygwin" -> Cygwin

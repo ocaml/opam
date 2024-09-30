@@ -510,11 +510,15 @@ module Sys : sig
   (** Queried lazily *)
   val os: unit -> os
 
-  (** The output of the command "uname", with the given argument. Memoised. *)
-  val uname: string -> string option
+  (** The output of the command "uname -U". FreeBSD only. Reasoning:
+      https://github.com/ocaml/opam/pull/4274#issuecomment-659280485 *)
+  val get_freebsd_version: unit -> string option
 
-  (** The output of the command "getconf", with the given argument. Memoised. *)
-  val getconf: string -> string option
+  (** The output of the command "getconf LONG_BIT". *)
+  val get_long_bit: unit -> string option
+
+  (** The memoized result of the uname function from the C standard library *)
+  val uname : unit -> OpamStubs.uname
 
   (** Append .exe (only if missing) to executable filenames on Windows *)
   val executable_name : string -> string
