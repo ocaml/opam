@@ -71,6 +71,7 @@ users)
 
 ## Build
   * Bump the requirement for dune to 2.8 [#6204 @kit-ty-kate]
+  * Fix the compilation of opam on Windows with OCaml >= 5.0 again [#6216 @kit-ty-kate]
 
 ## Infrastructure
 
