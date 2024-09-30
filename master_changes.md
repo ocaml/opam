@@ -145,6 +145,8 @@ users)
 ## opam-solver
 
 ## opam-format
+  * `OpamFormula.string_of_relop`: export function [#6197 @mbarbin]
+  * `OpamFormula.all_relop`: a list of all operators [#6197 @mbarbin]
 
 ## opam-core
   * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`: Harden the process calls to account for failures [#6230 @kit-ty-kate - fix #6215]
