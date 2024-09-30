@@ -8,9 +8,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include OpamStubsTypes
 include OpamWin32Stubs
-let getpid () = Int32.to_int (getCurrentProcessID ())
 
 external win_create_process : string -> string -> string option ->
                               Unix.file_descr -> Unix.file_descr -> Unix.file_descr -> int
