@@ -48,3 +48,4 @@ let getVersionInfo = that's_a_no_no
 let get_initial_environment = that's_a_no_no
 
 external get_stdout_ws_col : unit -> int = "opam_stdout_ws_col"
+external uname : unit -> uname = "opam_uname"

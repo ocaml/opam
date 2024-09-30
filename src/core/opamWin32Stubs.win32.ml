@@ -51,3 +51,4 @@ external get_initial_environment : unit -> string list = "OPAMW_CreateEnvironmen
 let that's_a_no_no _ = failwith "Unix only. This function isn't implemented."
 
 let get_stdout_ws_col = that's_a_no_no
+let uname = that's_a_no_no
