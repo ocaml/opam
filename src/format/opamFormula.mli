@@ -17,6 +17,13 @@ type relop = OpamParserTypes.FullPos.relop_kind (* = [ `Eq | `Neq | `Geq | `Gt |
 
 val compare_relop : relop -> relop -> int
 
+(** A list containing each available operator once. *)
+val all_relop : relop list
+
+(** Returns a string representing the operator in infix syntax, as
+    used in opam files (">", "=", etc.) *)
+val string_of_relop : relop -> string
+
 (** Version constraints for OPAM *)
 type version_constraint = relop * OpamPackage.Version.t
 

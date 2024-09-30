@@ -11,6 +11,8 @@
 
 type relop = [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]
 
+let all_relop = [ `Eq ; `Neq ; `Geq ; `Gt ; `Leq ; `Lt ]
+
 let neg_relop = function
   | `Eq -> `Neq
   | `Neq -> `Eq
