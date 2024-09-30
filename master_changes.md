@@ -74,6 +74,7 @@ users)
   * Bump the requirement for dune to 2.8 [#6204 @kit-ty-kate]
   * Bump the vendored version of dune to 3.16.0, cppo to 1.7.0 and extlib to 1.8.0 [#6223 @kit-ty-kate]
   * Fix compilation with OCaml 5.3 when using the vendored extlib by updating to the 5.3 compatible version (e.g. `make cold` or `./configure --with-vendored-deps`) [#6223 @kit-ty-kate]
+  * Fix the compilation of opam on Windows with OCaml >= 5.0 again [#6216 @kit-ty-kate]
 
 ## Infrastructure
 
