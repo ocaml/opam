@@ -396,9 +396,15 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
         | #OpamUrl.version_control -> true
         | _ -> false)
   in
+  let url_archive =
+    let open OpamStd.Option.Op in
+    t.url >>| OpamFile.URL.url >>| (fun u ->
+        OpamSystem.is_archive u.OpamUrl.path)
+  in
   let is_url_archive =
-    not (OpamFile.OPAM.has_flag Pkgflag_Conf t) &&
-    url_vcs = Some false
+    not (OpamFile.OPAM.has_flag Pkgflag_Conf t)
+    && url_vcs = Some false
+    && url_archive = Some true
   in
   let check_upstream = check_upstream && is_url_archive in
   let check_double compare to_str lst =
@@ -1001,7 +1007,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
               |> List.map OpamHash.to_string
               |> OpamStd.Format.pretty_list)])
           t.url)
-      (url_vcs = Some true
+      (url_vcs = Some true && url_archive = Some false
        && OpamStd.Option.Op.(t.url >>| fun u -> OpamFile.URL.checksum u <> [])
           = Some true);
     cond 68 `Warning
