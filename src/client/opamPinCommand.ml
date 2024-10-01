@@ -75,18 +75,15 @@ let get_source_definition ?version ?subpath ?locked st nv url =
     opam
   in
   let open OpamProcess.Job.Op in
-  let url =
-    let u = OpamFile.URL.url url in
-    match OpamUrl.local_dir u, u.OpamUrl.backend with
-    | Some dir, #OpamUrl.version_control ->
-      OpamFile.URL.with_url
-        (OpamUrl.of_string (OpamFilename.Dir.to_string dir))
-        url
-    | _, _ -> url
-  in
   OpamUpdate.fetch_dev_package url srcdir ?subpath nv @@| function
   | Not_available (_,s) -> raise (Fetch_Fail s)
   | Up_to_date _ | Result _ ->
+    let srcdir =
+      let u = OpamFile.URL.url url in
+      match OpamUrl.local_dir u, u.OpamUrl.backend with
+      | Some dir, #OpamUrl.version_control -> dir
+      | _, _ -> srcdir
+    in
     let srcdir = OpamFilename.SubPath.(srcdir /? subpath) in
     match OpamPinned.find_opam_file_in_source ?locked nv.name srcdir with
     | None -> None

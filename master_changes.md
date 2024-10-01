@@ -34,6 +34,7 @@ users)
 ## Config
 
 ## Pin
+  * [BUG] Fix first retrieval of local VCS pin done as local path [#6221 @rjbou - fix #5809]
 
 ## List
 
