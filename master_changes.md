@@ -105,6 +105,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add more tests for lint W59 [#6219 @rjbou]
 
 ### Engine
 
