@@ -13,14 +13,17 @@
 
 open Lib
 
+let latest_ocaml4 = "4.14.2"
+let latest_ocaml5 = "5.2.0" (* Add this number to ocamls below when the next version comes out *)
 let ocamls = [
   (* Fully supported versions *)
   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1";
-  "5.0.0"; "5.1.1"; "5.2.0";
+  "5.0.0"; "5.1.1";
 
   (* The last elements of the list after 4.14 will be used as default versions *)
-  "4.14.2";
+  latest_ocaml4; latest_ocaml5;
 ]
+let start_latests_ocaml = (4, 14)
 
 (* Entry point for the workflow. Workflows are specified as continuations where
    each job is passed as a continuation to the [workflow], terminated with
@@ -68,8 +71,6 @@ let end_workflow ~oc:_ ~workflow:_ = ()
 
 let ocamls =
   List.map (fun v -> Scanf.sscanf v "%u.%u.%u" (fun major minor _ -> ((major, minor), v))) ocamls
-
-let start_latests_ocaml = (4, 14)
 
 let platform_ocaml_matrix ?(dir=List.drop_while) ~fail_fast start_version =
   (fail_fast,
@@ -300,13 +301,32 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
   (* Intentionally fail fast, no need to run all build if there is a
    * problem in a given version; usually it is functions not defined in lower
    * versions of OCaml. *)
-  let (_fail_fast, matrix, _) = platform_ocaml_matrix ~fail_fast:true start_version in
   let (matrix, includes) =
     if platform = Windows then
-      (("host", ["x86_64-pc-cygwin"; "i686-w64-mingw32"; "x86_64-w64-mingw32"; "i686-pc-windows"; "x86_64-pc-windows"]) ::
-       ("build", ["x86_64-pc-cygwin"]) ::
-       matrix, [])
+      let matrix =
+        let ocaml4 = [
+          "x86_64-pc-cygwin";
+          "i686-w64-mingw32";
+          "x86_64-w64-mingw32";
+          "i686-pc-windows";
+          "x86_64-pc-windows"
+        ] in
+        let ocaml5 = [
+          "x86_64-w64-mingw32";
+          (* "x86_64-pc-windows"; 5.3 needed *)
+        ] in
+        let matrix_elem ocamlv hosts =
+          let elem ocaml host =
+            [("host", host); ("build", "x86_64-pc-cygwin"); ("ocamlv", ocaml)]
+          in
+          List.map (elem ocamlv) hosts
+        in
+        matrix_elem latest_ocaml4 ocaml4
+        @ matrix_elem latest_ocaml5 ocaml5
+      in
+      ([], matrix)
     else
+      let (_fail_fast, matrix, _) = platform_ocaml_matrix ~fail_fast:true start_version in
       (matrix, []) in
   let matrix = ((platform <> Windows), matrix, includes) in
   let needs = if platform = Windows then [analyse_job; cygwin_job] else [analyse_job] in
