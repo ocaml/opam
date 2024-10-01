@@ -90,7 +90,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### : pin with url
 ### opam pin add nip-git git+file://$BASEDIR/nip-git
 Package nip-git does not exist, create as a NEW package? [y/n] y
-[nip-git.dev] synchronised (file://${BASEDIR}/nip-git)
+[nip-git.dev] synchronised (git+file://${BASEDIR}/nip-git#master)
 nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
 
 The following actions will be performed:
@@ -936,9 +936,10 @@ opam-version: "2.0"
 build: "false"
 ### opam pin vcs-local ./vcs-local --no-action
 Package vcs-local does not exist, create as a NEW package? [y/n] y
-[vcs-local.dev] synchronised (file://${BASEDIR}/vcs-local)
+[vcs-local.dev] synchronised (git+file://${BASEDIR}/vcs-local#master)
 vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#master (version dev)
 ### test -f OPAM/vcs-local/.opam-switch/sources/vcs-local/untracked
+# Return code 1 #
 ### opam show vcs-local --field build:,url.src:
 build:   "false"
 url.src: "git+file://${BASEDIR}/vcs-local#master"

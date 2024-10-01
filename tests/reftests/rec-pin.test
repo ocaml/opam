@@ -536,13 +536,13 @@ Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
 [root-a-i-j_g.3] synchronised (no changes)
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version 3)
 Package root-a-i_g does not exist, create as a NEW package? [y/n] y
-[root-a-i_g.3] synchronised (directory /a/i in file://${BASEDIR}/pinnes)
+[root-a-i_g.3] synchronised (no changes)
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version 3)
 Package root-a_p does not exist, create as a NEW package? [y/n] y
 [root-a_p.3] synchronised (no changes)
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version 3)
 Package root_g does not exist, create as a NEW package? [y/n] y
-[root_g.3] synchronised (file://${BASEDIR}/pinnes)
+[root_g.3] synchronised (no changes)
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version 3)
 Package root-a-k_p does not exist, create as a NEW package? [y/n] y
 [root-a-k_p.3] synchronised (no changes)
@@ -1052,13 +1052,13 @@ Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
 [root-a-i-j_g.3] synchronised (no changes)
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version 3)
 Package root-a-i_g does not exist, create as a NEW package? [y/n] y
-[root-a-i_g.3] synchronised (directory /a/i in file://${BASEDIR}/pinnes)
+[root-a-i_g.3] synchronised (no changes)
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version 3)
 Package root-a_p does not exist, create as a NEW package? [y/n] y
 [root-a_p.3] synchronised (no changes)
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version 3)
 Package root_g does not exist, create as a NEW package? [y/n] y
-[root_g.3] synchronised (file://${BASEDIR}/pinnes)
+[root_g.3] synchronised (no changes)
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version 3)
 Package root-a-k_p does not exist, create as a NEW package? [y/n] y
 [root-a-k_p.3] synchronised (no changes)
