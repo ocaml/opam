@@ -852,6 +852,7 @@ ${BASEDIR}/lint.opam: Warnings.
 ### opam lint ./lint.opam --check-upstream
 ${BASEDIR}/lint.opam: Warnings.
            warning 59: url doesn't contain a checksum
+### # package with conf flag
 ### <lint.opam>
 opam-version: "2.0"
 synopsis: "A word"
@@ -864,7 +865,6 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 url { src:"an-archive.tgz" }
 flags: conf
-### # package with conf flag
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Errors.
              error 46: Package is flagged "conf" but has source, install or remove instructions
@@ -873,6 +873,7 @@ ${BASEDIR}/lint.opam: Errors.
 ${BASEDIR}/lint.opam: Errors.
              error 46: Package is flagged "conf" but has source, install or remove instructions
 # Return code 1 #
+### # package with git url
 ### <lint.opam>
 opam-version: "2.0"
 synopsis: "A word"
@@ -884,7 +885,57 @@ license: "ISC"
 dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 url { src:"git+https://a/repo" }
-### # package with git url
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### opam lint ./lint.opam --check-upstream
+${BASEDIR}/lint.opam: Passed.
+### # package with local url
+### <repo/stuff>
+something
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### <add-url.sh>
+basedir=$(echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g")
+cat << EOF >> lint.opam
+url { src:"file://$basedir/an-archive" }
+EOF
+### sh add-url.sh
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 59: url doesn't contain a checksum
+### opam lint ./lint.opam --check-upstream
+${BASEDIR}/lint.opam: Errors.
+           warning 59: url doesn't contain a checksum
+             error 60: Upstream check failed: "Source not found: ${BASEDIR}/an-archive"
+# Return code 1 #
+### # package with local archive url
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+### <add-url.sh>
+basedir=$(echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g")
+cat << EOF >> lint.opam
+url {
+  src:"file://$basedir/an-archive.tgz"
+  checksum: "md5=$(openssl md5 an-archive.tgz | cut -f2 -d' ')"
+  }
+EOF
+### sh add-url.sh
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Passed.
 ### opam lint ./lint.opam --check-upstream
