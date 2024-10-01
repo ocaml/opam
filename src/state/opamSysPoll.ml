@@ -130,7 +130,7 @@ let poll_os_distribution () =
   | Some "win32" ->
     let kind =
       OpamStd.Sys.get_windows_executable_variant
-        ?search_in_first:(OpamCoreConfig.(!r.cygbin)) "cygpath.exe" 
+        ?search_in_first:(OpamCoreConfig.(!r.cygbin)) "cygpath.exe"
     in
     begin match kind with
     | `Msys2 -> Some "msys2"
