@@ -117,7 +117,7 @@ users)
 
 ## Github Actions
   * Add OCaml 5.2.0 to the build matrix [#6216 @kit-ty-kate]
-  * Allow to have more than one OCaml default version to run on all jobs [#6216 @kit-ty-kate]
+  * Allow to have more than one OCaml default version to run all jobs and add 5.2 to the list of default versions together with 4.14 [#6216 @kit-ty-kate]
   * Bump 4.14 to the latest patch version (4.14.2) [#6216 @kit-ty-kate]
 
 ## Doc
