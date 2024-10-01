@@ -909,3 +909,36 @@ dev2
 ### :::::::::::::::::::::::
 ### :X: --current is in pin-legacy.test
 ### :::::::::::::::::::::::
+### :::::::::::::::::::::::
+### :C: Specific tests
+### :::::::::::::::::::::::
+### : In pin-legacy, there is
+### :  - :2: check no repin in case of double 'install .'
+### :  - :3: depext update
+### :  - :4: Test opam pin remove <pkg>.<version>
+### :  - :5: Test opam pin remove --all
+### :  - :6: Error retrieving git pin :
+### :  - :7: Parse error with future opam version field on pin
+### :C:a: git pin first retrieved as local
+### opam switch create vcs-local --empty
+### <pin:vcs-local/vcs-local.opam>
+opam-version: "2.0"
+### git -C vcs-local init -q --initial-branch=master
+### git -C vcs-local config core.autocrlf false
+### git -C vcs-local add vcs-local.opam
+### git -C vcs-local commit -qm 'init'
+### git -C vcs-local ls-files
+vcs-local.opam
+### <vcs-local/untracked>
+i shouldn't be retrieved
+### <pin:vcs-local/vcs-local.opam>
+opam-version: "2.0"
+build: "false"
+### opam pin vcs-local ./vcs-local --no-action
+Package vcs-local does not exist, create as a NEW package? [y/n] y
+[vcs-local.dev] synchronised (file://${BASEDIR}/vcs-local)
+vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#master (version dev)
+### test -f OPAM/vcs-local/.opam-switch/sources/vcs-local/untracked
+### opam show vcs-local --field build:,url.src:
+build:   "false"
+url.src: "git+file://${BASEDIR}/vcs-local#master"
