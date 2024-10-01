@@ -19,7 +19,7 @@ let ocamls = [
   "5.0.0"; "5.1.1"; "5.2.0";
 
   (* The last elements of the list after 4.14 will be used as default versions *)
-  "4.14.1";
+  "4.14.2";
 ]
 
 (* Entry point for the workflow. Workflows are specified as continuations where
