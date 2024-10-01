@@ -499,9 +499,6 @@ The following actions will be performed:
 -> installed nip-path.ved
 Done.
 ### opam pin edit nip-path
-[WARNING] The opam file didn't pass validation:
-           warning 59: url doesn't contain a checksum
-Proceed anyway ('no' will re-edit)? [y/n] y
 You can edit this file again with "opam pin edit nip-path", export it with "opam show nip-path --raw"
 Save the new opam file back to "${BASEDIR}/nip-path/nip-path.opam"? [y/n] y
 The following actions will be performed:
@@ -523,9 +520,6 @@ The following actions will be performed:
 # Return code 31 #
 ### opam pin add ./nip-path2 --edit
 Package nip-path2 does not exist, create as a NEW package? [y/n] y
-[WARNING] The opam file didn't pass validation:
-           warning 59: url doesn't contain a checksum
-Proceed anyway ('no' will re-edit)? [y/n] y
 You can edit this file again with "opam pin edit nip-path2", export it with "opam show nip-path2 --raw"
 nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
 

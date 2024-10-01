@@ -909,13 +909,9 @@ url { src:"file://$basedir/an-archive" }
 EOF
 ### sh add-url.sh
 ### opam lint ./lint.opam
-${BASEDIR}/lint.opam: Warnings.
-           warning 59: url doesn't contain a checksum
+${BASEDIR}/lint.opam: Passed.
 ### opam lint ./lint.opam --check-upstream
-${BASEDIR}/lint.opam: Errors.
-           warning 59: url doesn't contain a checksum
-             error 60: Upstream check failed: "Source not found: ${BASEDIR}/an-archive"
-# Return code 1 #
+${BASEDIR}/lint.opam: Passed.
 ### # package with local archive url
 ### <lint.opam>
 opam-version: "2.0"
