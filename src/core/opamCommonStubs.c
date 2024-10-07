@@ -37,6 +37,7 @@
 
 #if OCAML_VERSION < 50000
 #define caml_unix_access unix_access
+#define caml_uerror uerror
 #endif
 
 CAMLprim value opam_is_executable(value path)
@@ -58,6 +59,24 @@ CAMLprim value opam_is_executable(value path)
   caml_stat_free(p);
   CAMLreturn(Val_bool(ret == 0));
 }
+
+#ifndef _WIN32
+#include <sys/utsname.h>
+CAMLprim value opam_uname(value _unit) {
+  struct utsname buf;
+  value ret;
+
+  if (-1 == uname(&buf)) {
+    caml_uerror("uname", Nothing);
+  }
+  ret = caml_alloc(3, 0);
+  Store_field(ret, 0, caml_copy_string(buf.sysname));
+  Store_field(ret, 1, caml_copy_string(buf.release));
+  Store_field(ret, 2, caml_copy_string(buf.machine));
+
+  return ret;
+}
+#endif
 
 /* This is done here as it simplifies the dune file */
 #ifdef _WIN32
