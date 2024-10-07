@@ -909,12 +909,17 @@ module OpamSys = struct
     let args = Array.of_list (cmd :: args) in
     let env = Env.raw_env () in
     try
+      let path = split_path_variable (Env.get "PATH") in
+      let cmd =
+        List.find OpamStubs.is_executable
+          (List.map (fun d -> Filename.concat d cmd) path)
+      in
       let (ic, _, _) as p = Unix.open_process_args_full cmd args env in
       let r = input_line ic in
       match Unix.close_process_full p with
       | Unix.WEXITED 0 -> Some r
       | WEXITED _ | WSIGNALED _ | WSTOPPED _ -> None
-    with Unix.Unix_error _ | Sys_error _ | End_of_file -> None
+    with Unix.Unix_error _ | Sys_error _ | End_of_file | Not_found -> None
 
   let tty_out = Unix.isatty Unix.stdout
 
