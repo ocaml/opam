@@ -50,6 +50,7 @@ users)
 ## Source
 
 ## Lint
+  * [BUG] fix lint W59 with local urls that are not archives [#6219 @rjbou - fix #6218]
 
 ## Repository
 
@@ -107,6 +108,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add more tests for lint W59 [#6219 @rjbou]
 
 ### Engine
 
