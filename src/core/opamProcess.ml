@@ -281,7 +281,7 @@ let make_info ?code ?signal
 
   List.iter (fun (k,v) -> print k v) metadata;
   print     "path"         cwd;
-  print     "command"      (String.concat " " (cmd :: args));
+  print     "command"      (String.concat " " (List.map Filename.quote (cmd :: args)));
   print_opt "exit-code"    (OpamStd.Option.map string_of_int code);
   print_opt "signalled"    (OpamStd.Option.map string_of_int signal);
   print_opt "env-file"     env_file;

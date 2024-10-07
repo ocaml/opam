@@ -320,7 +320,7 @@ opam-version: "2.0"
 first  --
 ### ::: rsync - git :::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "'/usr/bin/git' 'fetch' '-q'" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -328,7 +328,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "'/usr/bin/git' 'fetch' '-q'" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -359,7 +359,7 @@ first  --
 first  --
 ### ::: git - git :::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "'/usr/bin/git' 'fetch' '-q'" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -367,7 +367,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "'/usr/bin/git' 'fetch' '-q'" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -486,7 +486,7 @@ opam-version: "2.0"
 first  --
 ### :::: rsync - git ::::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "'/usr/bin/git' 'fetch' '-q'" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -494,7 +494,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "'/usr/bin/git' 'fetch' '-q'" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -525,7 +525,7 @@ first  --
 first  --
 ### :::: git - git ::::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "'/usr/bin/git' 'fetch' '-q'" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -533,7 +533,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "'/usr/bin/git' 'fetch' '-q'" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper

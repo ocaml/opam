@@ -56,3 +56,6 @@ MD5_sha = 08bc953d9a26380bc220b05d680791fb
 
 URL_swhid_core = https://github.com/OCamlPro/swhid_core/archive/refs/tags/0.1.tar.gz
 MD5_swhid_core = 77d88d4b1d96261c866f140c64d89af8
+
+URL_astring = https://erratique.ch/software/astring/releases/astring-0.8.5.tbz
+MD5_astring = e148907c24157d1df43bec89b58b3ec8

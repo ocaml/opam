@@ -58,7 +58,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Could not synchronize ${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1 from "git+file://${BASEDIR}/use-submodule":
-        "git submodule update --init --recursive" exited with code 1
+        "'/usr/bin/git' 'submodule' 'update' '--init' '--recursive'" exited with code 1
 [ERROR] Failed to get sources of submodule.1: git+file://${BASEDIR}/use-submodule
 
 OpamSolution.Fetch_fail("git+file://${BASEDIR}/use-submodule")

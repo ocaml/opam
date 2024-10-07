@@ -35,6 +35,7 @@ depends: [
   "opam-repository" {= version}
   "re" {>= "1.10.0"}
   "cmdliner" {>= "1.1.0"}
+  "astring" {>= "0.8.0"}
   "dune" {>= "2.8.0"}
 ]
 conflicts: [

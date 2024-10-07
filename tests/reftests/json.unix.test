@@ -336,7 +336,7 @@ The following actions will be performed:
           "info": {
             "context": "currentv | linux/x86_64 |  | file://${BASEDIR}/REPO",
             "path": "${BASEDIR}/OPAM/json-empty/.opam-switch/build/ko.2",
-            "command": "${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh build false",
+            "command": "'${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh' 'build' 'false'",
             "exit-code": "1",
             "env-file": "${BASEDIR}/OPAM/log/ko.env",
             "output-file": "${BASEDIR}/OPAM/log/ko.out"
@@ -497,7 +497,7 @@ The former state can be restored with:
           "info": {
             "context": "currentv | linux/x86_64 |  | file://${BASEDIR}/REPO",
             "path": "${BASEDIR}/OPAM/json-empty/.opam-switch/build/ko.2",
-            "command": "${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh build false",
+            "command": "'${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh' 'build' 'false'",
             "exit-code": "1",
             "env-file": "${BASEDIR}/OPAM/log/ko.env",
             "output-file": "${BASEDIR}/OPAM/log/ko.out"
