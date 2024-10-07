@@ -107,6 +107,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Move pin test to pin-legacy [#6135 @rjbou]
 
 ### Engine
 
