@@ -113,6 +113,7 @@ users)
 ## Github Actions
 
 ## Doc
+  * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
 
 ## Security fixes
 

@@ -23,11 +23,11 @@ Then see the [Upgrade guide](Upgrade_guide.html) to check the changes.
 The quickest way to get the latest opam up and working is to run
 [this script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh):
 ```
-bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
+bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"
 ```
 or [this script](https://raw.githubusercontent.com/ocaml/opam/master/shell/install.ps1) on Windows using PowerShell:
 ```
-Invoke-Expression "& { $(Invoke-RestMethod https://raw.githubusercontent.com/ocaml/opam/master/shell/install.ps1) }"
+Invoke-Expression "& { $(Invoke-RestMethod https://opam.ocaml.org/install.ps1) }"
 ```
 
 This will simply check your architecture, download and install the proper
