@@ -109,7 +109,7 @@ opam
 root.ml
 ### opam pin foo-git-pin ./a-dev -y
 Package foo-git-pin does not exist, create as a NEW package? [y/n] y
-[foo-git-pin.dev] synchronised (file://${BASEDIR}/a-dev)
+[foo-git-pin.dev] synchronised (git+file://${BASEDIR}/a-dev#master)
 foo-git-pin is now pinned to git+file://${BASEDIR}/a-dev#master (version dev)
 
 The following actions will be performed:
@@ -117,7 +117,7 @@ The following actions will be performed:
   - install foo-git-pin dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved foo-git-pin.dev  (git+file://${BASEDIR}/a-dev#master)
+-> retrieved foo-git-pin.dev  (no changes)
 -> installed foo-git-pin.dev
 Done.
 ### cat OPAM/downloads-pin/lib/foo-git-pin-files | sort
@@ -128,7 +128,7 @@ root.ml
 ### :: dev-repo
 ### opam switch create downloads-devrepo --empty
 ### opam pin foo-git --dev-repo -y
-[foo-git.1] synchronised (file://${BASEDIR}/a-dev)
+[foo-git.1] synchronised (git+file://${BASEDIR}/a-dev)
 foo-git is now pinned to git+file://${BASEDIR}/a-dev (version 1)
 
 The following actions will be performed:
@@ -136,7 +136,7 @@ The following actions will be performed:
   - install foo-git 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved foo-git.1  (git+file://${BASEDIR}/a-dev)
+-> retrieved foo-git.1  (no changes)
 -> installed foo-git.1
 Done.
 ### cat OPAM/downloads-devrepo/lib/foo-git-files | sort
