@@ -1365,6 +1365,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pat-sub.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-pin-legacy)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff pin-legacy.test pin-legacy.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-pin-legacy)))
+
+(rule
+ (targets pin-legacy.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pin-legacy.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-pin)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

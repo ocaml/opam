@@ -1,401 +1,911 @@
 N0REP0
 ### OPAMYES=1
-### : --current option :
-### opam switch create pinning --empty
-### opam pin --current foo
-[ERROR] foo is not installed, invalid flag `--current'
-# Return code 2 #
-### <pkg:foo.1>
+### <add-pin.sh>
+nv=$1
+n=${nv%.*}
+v=${nv#*.}
+if [ "x$n" = "x$nv" ]; then
+  nv=$n
+  v=ved
+  nv=$n.$v
+fi
+git=""
+if [ $# -eq 2 ]; then
+  git=$2
+fi
+mkdir -p "$n"
+cat << EOF > "$n/$n.opam"
 opam-version:"2.0"
-build: [ "echo" "foo" ]
-### opam pin --current foo
-[ERROR] foo is not installed, invalid flag `--current'
-# Return code 2 #
-### opam install foo
-The following actions will be performed:
-=== install 1 package
-  - install foo 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed foo.1
-Done.
-### opam pin --current foo.2
-[ERROR] foo.2 is not installed (version 1 is), invalid flag `--current'
-# Return code 2 #
-### opam pin --current foo
-foo is now pinned locally (version 1)
-### opam unpin foo
-Ok, foo is no longer pinned locally (version 1)
-Nothing to do.
-### rm -rf REPO/packages/foo
+version: "$v"
+build: [ "test" "-f" "%{name}%.%{version}%.t" ]
+# bla
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://pkg@op.am"
+bug-reports: "https://nobug"
+EOF
+cat << EOF > "$n/$n.install"
+lib: ["$nv.t"]
+EOF
+echo piou >> "$n/$nv.t"
+if [ "x$git" = "xgit" ]; then
+  test -d "$n/.git" || git -C "./$n" init -q --initial-branch=master
+  git -C "./$n" config core.autocrlf false
+  git -C "./$n" add "$n.opam" "$nv.t" "$n.install"
+  git -C "./$n" commit -qm "add $nv package"
+fi
+### # local dir with git
+### sh add-pin.sh nip-git git
+### sh add-pin.sh nip-git2 git
+### sh add-pin.sh nip-git3 git
+### sh add-pin.sh nip-git4 git
+### # local dir with path
+### sh add-pin.sh nip-path
+### sh add-pin.sh nip-path2
+### sh add-pin.sh nip-path3
+### sh add-pin.sh nip-path4
+### # repo
+### <add-repo.sh>
+for nv in "$@" ; do
+  n=${nv%.*}
+  pre=REPO/packages/$n/$nv
+  mkdir -p "$pre/files"
+  cat << EOF > "$pre/files/$n.install"
+lib: ["$nv.t"]
+EOF
+  echo piou >> "$nv.t"
+  tar czf "$nv.tgz" "$nv.t"
+  MD5=$(openssl md5 "$nv.tgz" | cut -d' ' -f2)
+  XMD5=$(openssl md5 "$pre/files/$n.install" | cut -d' ' -f2)
+  basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/g"`
+  cat << EOF > "$pre/opam"
+opam-version:"2.0"
+build: [ "test" "-f" "%{name}%.%{version}%.t" ]
+dev-repo: "file://$basedir/$n"
+extra-files:
+  [ "$n.install" "md5=$XMD5" ]
+url {
+  src: "$nv.tgz"
+  checksum: "md5=$MD5"
+}
+EOF
+  sh add-pin.sh "$n"
+done
+### sh add-repo.sh nip-v.1 nip-v.2 nip-v.3
+### sh add-repo.sh nip.1 nip2.1 nip3.1
+### sh add-repo.sh no-url.1 no-url2.1
 ### opam update
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
-### opam list --available --repo=default
-# Packages matching: from-repository(default) & available
-# No matches found
-### opam list -A
-# Packages matching: any
-# Name # Installed # Synopsis
-foo    1
-### opam pin --current foo
-foo is now pinned locally (version 1)
-### : check no repin in case of double 'install .' :
-### <pin:nip/nip.opam>
-opam-version: "2.0"
-### opam install ./nip
-Package nip does not exist, create as a NEW package? [y/n] y
-nip is now pinned to file://${BASEDIR}/nip (version dev)
+### :::::::::::::::::::::::
+### :I: Pin targets
+### :::::::::::::::::::::::
+### opam switch create targets --empty
+### : pin with url
+### opam pin add nip-git git+file://$BASEDIR/nip-git
+Package nip-git does not exist, create as a NEW package? [y/n] y
+[nip-git.dev] synchronised (file://${BASEDIR}/nip-git)
+nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
+
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  - install nip-git ved (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved nip.dev  (file://${BASEDIR}/nip)
--> installed nip.dev
+-> installed nip-git.ved
 Done.
-### opam remove nip
+### opam pin add git+file://$BASEDIR/nip-git2
+Package nip-git2 does not exist, create as a NEW package? [y/n] y
+nip-git2 is now pinned to git+file://${BASEDIR}/nip-git2#master (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-git2.ved
+Done.
+### : pin add with a path
+### opam pin add nip-path ./nip-path
+Package nip-path does not exist, create as a NEW package? [y/n] y
+[nip-path.dev] synchronised (file://${BASEDIR}/nip-path)
+nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path.ved
+Done.
+### opam pin add ./nip-path2
+Package nip-path2 does not exist, create as a NEW package? [y/n] y
+nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path2.ved
+Done.
+### opam pin add $BASEDIR/nip-path3
+Package nip-path3 does not exist, create as a NEW package? [y/n] y
+nip-path3 is now pinned to file://${BASEDIR}/nip-path3 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path3 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path3.ved
+Done.
+### : pin add with version
+### opam pin add nip-v 2
+nip-v is now pinned to version 2
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-v 2 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip-v.2  (file://${BASEDIR}/nip-v.2.tgz)
+-> installed nip-v.2
+Done.
+### : pin add with --dev
+### opam pin add nip2 --dev
+[nip2.1] synchronised (file://${BASEDIR}/nip2)
+nip2 is now pinned to file://${BASEDIR}/nip2 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip2.ved
+Done.
+### opam pin add no-url --dev
+[no-url.1] synchronised (file://${BASEDIR}/no-url)
+no-url is now pinned to file://${BASEDIR}/no-url (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install no-url ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-url.ved
+Done.
+### : list
+### opam pin list
+nip-git.ved      git      git+file://${BASEDIR}/nip-git#master
+nip-git2.ved     git      git+file://${BASEDIR}/nip-git2#master
+nip-path.ved     rsync    file://${BASEDIR}/nip-path
+nip-path2.ved    rsync    file://${BASEDIR}/nip-path2
+nip-path3.ved    rsync    file://${BASEDIR}/nip-path3
+nip-v.2          version  2
+nip2.ved         rsync    file://${BASEDIR}/nip2
+no-url.ved       rsync    file://${BASEDIR}/no-url
+### find OPAM/targets/lib -name '*.t' | sort
+OPAM/targets/lib/nip-git/nip-git.ved.t
+OPAM/targets/lib/nip-git2/nip-git2.ved.t
+OPAM/targets/lib/nip-path/nip-path.ved.t
+OPAM/targets/lib/nip-path2/nip-path2.ved.t
+OPAM/targets/lib/nip-path3/nip-path3.ved.t
+OPAM/targets/lib/nip-v/nip-v.2.t
+OPAM/targets/lib/nip2/nip2.ved.t
+OPAM/targets/lib/no-url/no-url.ved.t
+### :::::::::::::::::::::::
+### :II: Pin kinds
+### :::::::::::::::::::::::
+### :II:1: -kind option
+### opam switch create kinds --empty
+### : path
+### opam pin add ./nip-git --kind path
+Package nip-git does not exist, create as a NEW package? [y/n] y
+nip-git is now pinned to file://${BASEDIR}/nip-git (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-git.ved
+Done.
+### opam pin add ./nip-path --kind path
+Package nip-path does not exist, create as a NEW package? [y/n] y
+nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path.ved
+Done.
+### : vcs
+### opam pin add ./nip-git2 --kind git
+Package nip-git2 does not exist, create as a NEW package? [y/n] y
+nip-git2 is now pinned to git+file://${BASEDIR}/nip-git2#master (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-git2.ved
+Done.
+### opam pin add ./nip-path2 --kind git | sed-cmd git | "128.*" -> "128"
+[ERROR] Command "git ls-files" failed:
+"git ls-files" exited with code 128
+# Return code 99 #
+### : auto
+### opam pin add ./nip-git3 --kind auto
+Package nip-git3 does not exist, create as a NEW package? [y/n] y
+nip-git3 is now pinned to git+file://${BASEDIR}/nip-git3#master (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git3 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-git3.ved
+Done.
+### opam pin add ./nip-path3 --kind auto
+Package nip-path3 does not exist, create as a NEW package? [y/n] y
+nip-path3 is now pinned to file://${BASEDIR}/nip-path3 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path3 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path3.ved
+Done.
+### : version
+### opam pin add nip 1 --kind version
+nip is now pinned to version 1
+
+The following actions will be performed:
+=== install 1 package
+  - install nip 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.1  (file://${BASEDIR}/nip.1.tgz)
+-> installed nip.1
+Done.
+### opam pin add nip2 --kind version
+opam: Ambiguous argument "nip2", if it is the pinning target, you must specify a package name first
+Usage: opam pin [OPTION]… [COMMAND] [ARG]…
+Try 'opam pin --help' or 'opam --help' for more information.
+# Return code 2 #
+### opam pin add nip2 ./nip2 --kind version
+Fatal error: Invalid character '/' in package version "./nip2"
+# Return code 99 #
+### opam pin add nip-git4 nip-git4 --kind version
+[ERROR] Package nip-git4 has no known version nip-git4 in the repositories
+# Return code 5 #
+### : none - virtual
+### opam pin add no-url 1 --kind none
+no-url is now pinned locally (version 1)
+
+The following actions will be performed:
+=== install 1 package
+  - install no-url 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of no-url.1 failed at "test -f no-url.1.t".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build no-url 1
++- 
+- No changes have been performed
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+# Return code 31 #
+### opam pin add no-url2 1 --kind none
+no-url2 is now pinned locally (version 1)
+
+The following actions will be performed:
+=== install 1 package
+  - install no-url2 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of no-url2.1 failed at "test -f no-url2.1.t".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build no-url2 1
++- 
+- No changes have been performed
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+# Return code 31 #
+### : list
+### opam pin list
+nip.1                         version           1
+nip-git.ved                   rsync             file://${BASEDIR}/nip-git
+nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#master
+nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#master
+nip-path.ved                  rsync             file://${BASEDIR}/nip-path
+nip-path3.ved                 rsync             file://${BASEDIR}/nip-path3
+no-url.1       (uninstalled)  local definition
+no-url2.1      (uninstalled)  local definition
+### find OPAM/kinds/lib -name '*.t' | sort
+OPAM/kinds/lib/nip-git/nip-git.ved.t
+OPAM/kinds/lib/nip-git2/nip-git2.ved.t
+OPAM/kinds/lib/nip-git3/nip-git3.ved.t
+OPAM/kinds/lib/nip-path/nip-path.ved.t
+OPAM/kinds/lib/nip-path3/nip-path3.ved.t
+OPAM/kinds/lib/nip/nip.1.t
+### # absence of virtual ones
+### ls OPAM/kinds/.opam-switch/sources | sort
+nip
+nip-git
+nip-git2
+nip-git3
+nip-path
+nip-path3
+### :II:1: OPAMPINKINDAUTO environment variable
+### opam switch create env-kinds --empty
+### : auto
+### OPAMPINKINDAUTO=1
+### opam pin add ./nip-git
+Package nip-git does not exist, create as a NEW package? [y/n] y
+nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-git.ved
+Done.
+### opam pin add ./nip-path
+Package nip-path does not exist, create as a NEW package? [y/n] y
+nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path.ved
+Done.
+### : disable auto
+### OPAMPINKINDAUTO=0
+### opam pin add ./nip-git2
+Package nip-git2 does not exist, create as a NEW package? [y/n] y
+nip-git2 is now pinned to file://${BASEDIR}/nip-git2 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-git2.ved
+Done.
+### opam pin add ./nip-path2
+Package nip-path2 does not exist, create as a NEW package? [y/n] y
+nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path2.ved
+Done.
+### : list
+### opam pin list
+nip-git.ved      git    git+file://${BASEDIR}/nip-git#master
+nip-git2.ved     rsync  file://${BASEDIR}/nip-git2
+nip-path.ved     rsync  file://${BASEDIR}/nip-path
+nip-path2.ved    rsync  file://${BASEDIR}/nip-path2
+### find OPAM/env-kinds/lib -name '*.t' | sort
+OPAM/env-kinds/lib/nip-git/nip-git.ved.t
+OPAM/env-kinds/lib/nip-git2/nip-git2.ved.t
+OPAM/env-kinds/lib/nip-path/nip-path.ved.t
+OPAM/env-kinds/lib/nip-path2/nip-path2.ved.t
+### OPAMPINKINDAUTO=1
+### :::::::::::::::::::::::
+### :III: Actions
+### :::::::::::::::::::::::
+### opam switch create actions --empty
+### opam pin add ./nip-git4 --no-action
+Package nip-git4 does not exist, create as a NEW package? [y/n] y
+nip-git4 is now pinned to git+file://${BASEDIR}/nip-git4#master (version ved)
+### opam pin add ./nip-path
+Package nip-path does not exist, create as a NEW package? [y/n] y
+nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path.ved
+Done.
+### opam pin add ./nip-path2
+Package nip-path2 does not exist, create as a NEW package? [y/n] y
+nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-path2.ved
+Done.
+### opam list
+# Packages matching: installed
+# Name    # Installed # Synopsis
+nip-path  ved         pinned to version ved at file://${BASEDIR}/nip-path
+nip-path2 ved         pinned to version ved at file://${BASEDIR}/nip-path2
+### opam pin list
+nip-git4.ved   (uninstalled)  git    git+file://${BASEDIR}/nip-git4#master
+nip-path.ved                  rsync  file://${BASEDIR}/nip-path
+nip-path2.ved                 rsync  file://${BASEDIR}/nip-path2
+### find OPAM/actions/lib -name '*.t' | sort
+OPAM/actions/lib/nip-path/nip-path.ved.t
+OPAM/actions/lib/nip-path2/nip-path2.ved.t
+### opam pin remove ./nip-git4
+Ok, nip-git4 is no longer pinned to git+file://${BASEDIR}/nip-git4#master (version ved)
+### opam pin remove ./nip-path --no-action
+Ok, nip-path is no longer pinned to file://${BASEDIR}/nip-path (version ved)
+### opam pin remove ./nip-path2
+Ok, nip-path2 is no longer pinned to file://${BASEDIR}/nip-path2 (version ved)
 The following actions will be performed:
 === remove 1 package
-  - remove nip dev (pinned)
+  - remove nip-path2 ved
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   nip.dev
+-> removed   nip-path2.ved
 Done.
-### opam install ./nip
-[nip.dev] synchronised (no changes)
+### opam list
+# Packages matching: installed
+# Name   # Installed # Synopsis
+nip-path ved         A word
+### opam pin list
+### find OPAM/actions/lib -name '*.t' | sort
+OPAM/actions/lib/nip-path/nip-path.ved.t
+### :::::::::::::::::::::::
+### :IV: pin --recursive and --subpath are in rec-pin.test
+### :::::::::::::::::::::::
+### :::::::::::::::::::::::
+### :V: Edit
+### :::::::::::::::::::::::
+### opam switch create edits --empty
+### OPAMEDITOR='sed -i.bak "s/%{version}%/not-here/g" '
+### opam pin add ./nip-path
+Package nip-path does not exist, create as a NEW package? [y/n] y
+nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
+
 The following actions will be performed:
 === install 1 package
-  - install nip dev (pinned)
+  - install nip-path ved (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved nip.dev  (file://${BASEDIR}/nip)
--> installed nip.dev
+-> installed nip-path.ved
 Done.
-### : depext update :
-### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
-### opam var --global os-family=dummy-success
-Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
-### <pin:bar/bar.opam>
-opam-version: "2.0"
-depends: "qux"
-depexts: [ "inexistant" ]
-### <add_pin_depends.sh>
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
-echo "pin-depends: [ \"qux.dev\" \"file://$basedir/qux\" ]" >> bar/bar.opam
-### sh add_pin_depends.sh
-### <pin:qux/qux.opam>
-opam-version: "2.0"
-depexts: [ "another-inexistant" ]
-### opam pin ./bar | '.*(/|\\|")echo(\.exe)?"? "' -> 'echo "'
-Package bar does not exist, create as a NEW package? [y/n] y
-The following additional pinnings are required by bar.dev:
-  - qux.dev at file://${BASEDIR}/qux
-Pin and install them? [y/n] y
-Package qux does not exist, create as a NEW package? [y/n] y
-[qux.dev] synchronised (no changes)
-qux is now pinned to file://${BASEDIR}/qux (version dev)
-bar is now pinned to file://${BASEDIR}/bar (version dev)
+### opam pin edit nip-path
+[WARNING] The opam file didn't pass validation:
+           warning 59: url doesn't contain a checksum
+Proceed anyway ('no' will re-edit)? [y/n] y
+You can edit this file again with "opam pin edit nip-path", export it with "opam show nip-path --raw"
+Save the new opam file back to "${BASEDIR}/nip-path/nip-path.opam"? [y/n] y
+The following actions will be performed:
+=== recompile 1 package
+  - recompile nip-path ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of nip-path.ved failed at "test -f nip-path.not-here.t".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build nip-path ved
++- 
+- No changes have been performed
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+# Return code 31 #
+### opam pin add ./nip-path2 --edit
+Package nip-path2 does not exist, create as a NEW package? [y/n] y
+[WARNING] The opam file didn't pass validation:
+           warning 59: url doesn't contain a checksum
+Proceed anyway ('no' will re-edit)? [y/n] y
+You can edit this file again with "opam pin edit nip-path2", export it with "opam show nip-path2 --raw"
+nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-path2 ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of nip-path2.ved failed at "test -f nip-path2.not-here.t".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build nip-path2 ved
++- 
+- No changes have been performed
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+# Return code 31 #
+### opam pin add ./nip-git --edit
+Package nip-git does not exist, create as a NEW package? [y/n] y
+You can edit this file again with "opam pin edit nip-git", export it with "opam show nip-git --raw"
+nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of nip-git.ved failed at "test -f nip-git.not-here.t".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build nip-git ved
++- 
+- No changes have been performed
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+# Return code 31 #
+### sh add-pin.sh nip-git git
+### sh add-pin.sh nip-path
+### sh add-pin.sh nip-path2
+### :::::::::::::::::::::::
+### :VI: Listing
+### :::::::::::::::::::::::
+### opam switch kinds
+### : pin list
+### opam pin list
+nip.1                         version           1
+nip-git.ved                   rsync             file://${BASEDIR}/nip-git
+nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#master
+nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#master
+nip-path.ved                  rsync             file://${BASEDIR}/nip-path
+nip-path3.ved                 rsync             file://${BASEDIR}/nip-path3
+no-url.1       (uninstalled)  local definition
+no-url2.1      (uninstalled)  local definition
+### : pin list --short
+### opam pin list --short
+nip
+nip-git
+nip-git2
+nip-git3
+nip-path
+nip-path3
+no-url
+no-url2
+### :::::::::::::::::::::::
+### :V: Scanning
+### :::::::::::::::::::::::
+### : pin scan
+### opam switch create scans --empty
+### opam pin scan ./nip-git | grep -v '^#'
+nip-git  ved        git+file://${BASEDIR}/nip-git#master  -
+### opam pin scan ./nip-path | grep -v '^#'
+nip-path  ved        file://${BASEDIR}/nip-path  -
+### mkdir lot_of_pkgs
+### sh -c "cp ./nip-*2/* lot_of_pkgs/"
+### sh -c "cp ./nip-*3/* lot_of_pkgs/"
+### opam pin scan ./lot_of_pkgs | grep -v '^#'
+nip-path3  ved        file://${BASEDIR}/lot_of_pkgs  -
+nip-path2  ved        file://${BASEDIR}/lot_of_pkgs  -
+nip-git3   ved        file://${BASEDIR}/lot_of_pkgs  -
+nip-git2   ved        file://${BASEDIR}/lot_of_pkgs  -
+### opam pin scan ./lot_of_pkgs --normalise
+nip-path3.ved^file://${BASEDIR}/lot_of_pkgs
+nip-path2.ved^file://${BASEDIR}/lot_of_pkgs
+nip-git3.ved^file://${BASEDIR}/lot_of_pkgs
+nip-git2.ved^file://${BASEDIR}/lot_of_pkgs
+### opam pin add nip-git2.ved^file://${BASEDIR}/lot_of_pkgs nip-git3.ved^file://${BASEDIR}/lot_of_pkgs | unordered
+This will pin the following packages: nip-git2, nip-git3. Continue? [y/n] y
+Package nip-git2 does not exist, create as a NEW package? [y/n] y
+[nip-git2.ved] synchronised (no changes)
+nip-git2 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
+Package nip-git3 does not exist, create as a NEW package? [y/n] y
+[nip-git3.ved] synchronised (no changes)
+nip-git3 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
 
 The following actions will be performed:
 === install 2 packages
-  - install bar dev (pinned)
-  - install qux dev (pinned)
-
-The following system packages will first need to be installed:
-    another-inexistant inexistant
-
-<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
-
-opam believes some required external dependencies are missing. opam can:
-> 1. Run echo to install them (may need root/sudo access)
-  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
-  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
-  4. Abort the installation
-
-[1/2/3/4] 1
-
-echo "another-inexistant" "inexistant"
-- another-inexistant inexistant
+  - install nip-git2 ved (pinned)
+  - install nip-git3 ved (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved bar.dev  (file://${BASEDIR}/bar)
--> retrieved qux.dev  (file://${BASEDIR}/qux)
--> installed qux.dev
--> installed bar.dev
+-> installed nip-git2.ved
+-> installed nip-git3.ved
 Done.
-### opam unpin bar qux
-Ok, qux is no longer pinned to file://${BASEDIR}/qux (version dev)
-Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
-[WARNING] Opam packages bar.dev and qux.dev depend on the following system packages that are no longer installed: another-inexistant inexistant
-The following actions will be performed:
-=== remove 2 packages
-  - remove bar dev
-  - remove qux dev
+### # shell on Cygwin ads a trialing `\r` in the middle of the string
+### sh -c 'opam pin add $(opam pin scan ./lot_of_pkgs --normalise | grep path | sed "s/\\r//g") ' | unordered
+This will pin the following packages: nip-path3, nip-path2. Continue? [y/n] y
+Package nip-path3 does not exist, create as a NEW package? [y/n] y
+[nip-path3.ved] synchronised (no changes)
+nip-path3 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
+Package nip-path2 does not exist, create as a NEW package? [y/n] y
+[nip-path2.ved] synchronised (no changes)
+nip-path2 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
 
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   bar.dev
--> removed   qux.dev
-Done.
-### opam install ./bar | '.*(/|\\|")echo(\.exe)?"? "' -> 'echo "'
-Package bar does not exist, create as a NEW package? [y/n] y
-The following additional pinnings are required by bar.dev:
-  - qux.dev at file://${BASEDIR}/qux
-Pin and install them? [y/n] y
-Package qux does not exist, create as a NEW package? [y/n] y
-[qux.dev] synchronised (no changes)
-qux is now pinned to file://${BASEDIR}/qux (version dev)
-bar is now pinned to file://${BASEDIR}/bar (version dev)
 The following actions will be performed:
 === install 2 packages
-  - install bar dev (pinned)
-  - install qux dev (pinned) [required by bar]
-
-The following system packages will first need to be installed:
-    another-inexistant inexistant
-
-<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
-
-opam believes some required external dependencies are missing. opam can:
-> 1. Run echo to install them (may need root/sudo access)
-  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
-  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
-  4. Abort the installation
-
-[1/2/3/4] 1
-
-echo "another-inexistant" "inexistant"
-- another-inexistant inexistant
+  - install nip-path2 ved (pinned)
+  - install nip-path3 ved (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved bar.dev  (file://${BASEDIR}/bar)
--> retrieved qux.dev  (file://${BASEDIR}/qux)
--> installed qux.dev
--> installed bar.dev
+-> installed nip-path2.ved
+-> installed nip-path3.ved
 Done.
-### : Test opam pin remove <pkg>.<version>
-### opam pin remove --no-action bar.dev
-Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
-### opam pin remove --no-action nip.wrong-version
-[ERROR] nip is pinned but not to version wrong-version. Skipping.
-# Return code 2 #
-### : Test opam pin remove --all
-### OPAMNODEPEXTS=1
-### opam pin add --no-action bar.dev ./bar
-[bar.dev] synchronised (file://${BASEDIR}/bar)
-bar is now pinned to file://${BASEDIR}/bar (version dev)
-### opam pin
-bar.dev    rsync             file://${BASEDIR}/bar
-foo.1      local definition
-nip.dev    rsync             file://${BASEDIR}/nip
-qux.dev    rsync             file://${BASEDIR}/qux
-### opam pin remove --no-action --all
-Ok, qux is no longer pinned to file://${BASEDIR}/qux (version dev)
-Ok, nip is no longer pinned to file://${BASEDIR}/nip (version dev)
-Ok, foo is no longer pinned locally (version 1)
-Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
-### opam pin
-### opam pin ./bar
-The following additional pinnings are required by bar.dev:
-  - qux.dev at file://${BASEDIR}/qux
-Pin and install them? [y/n] y
-[qux.dev] synchronised (no changes)
-qux is now pinned to file://${BASEDIR}/qux (version dev)
-bar is now pinned to file://${BASEDIR}/bar (version dev)
+### opam pin list
+nip-git2.ved     rsync  file://${BASEDIR}/lot_of_pkgs
+nip-git3.ved     rsync  file://${BASEDIR}/lot_of_pkgs
+nip-path2.ved    rsync  file://${BASEDIR}/lot_of_pkgs
+nip-path3.ved    rsync  file://${BASEDIR}/lot_of_pkgs
+### find OPAM/scans/lib -name '*.t' | sort
+OPAM/scans/lib/nip-git2/nip-git2.ved.t
+OPAM/scans/lib/nip-git3/nip-git3.ved.t
+OPAM/scans/lib/nip-path2/nip-path2.ved.t
+OPAM/scans/lib/nip-path3/nip-path3.ved.t
+### :::::::::::::::::::::::
+### :VI: with-version
+### :::::::::::::::::::::::
+### opam switch create versions --empty
+### : pin url with version
+### cp nip-path/nip-path.ved.t nip-path/nip-path.42.t
+### opam pin add file://$BASEDIR/nip-path --with-version 42
+Package nip-path does not exist, create as a NEW package? [y/n] y
+nip-path is now pinned to file://${BASEDIR}/nip-path (version 42)
 
-Already up-to-date.
-Nothing to do.
-### opam pin --current foo
-foo is now pinned locally (version 1)
-### opam pin
-bar.dev    rsync             file://${BASEDIR}/bar
-foo.1      local definition
-qux.dev    rsync             file://${BASEDIR}/qux
-### opam pin remove --all foo
-opam: opamMain.exe: Too many arguments.
-      Usage: opamMain.exe pin [OPTION]... remove PACKAGES...|TARGET
-      
-# Return code 2 #
-### opam pin remove --all
-Ok, qux is no longer pinned to file://${BASEDIR}/qux (version dev)
-Ok, foo is no longer pinned locally (version 1)
-Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
 The following actions will be performed:
-=== remove 3 packages
-  - remove bar dev
-  - remove foo 1
-  - remove qux dev
+=== install 1 package
+  - install nip-path 42 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   bar.dev
--> removed   foo.1
--> removed   qux.dev
+-> retrieved nip-path.42  (file://${BASEDIR}/nip-path)
+-> installed nip-path.42
 Done.
-### opam pin
-### : Error retrieving git pin :
-### mkdir pin-empty
-### git -C pin-empty init -q --initial-branch=master
-### git -C pin-empty config core.autocrlf false
-### <pin:pin-empty/opam>
+### : pin version with version
+### opam pin add nip-v 1 --with-version 2 --no-action
+[nip-v.2] synchronised (file://${BASEDIR}/nip-v.1.tgz)
+nip-v is now pinned to file://${BASEDIR}/nip-v.1.tgz (version 2)
+### opam pin add nip 1 --with-version 42 --no-action
+[nip.42] synchronised (file://${BASEDIR}/nip.1.tgz)
+[NOTE] No package definition found for nip.42: please complete the template
+[WARNING] The opam file didn't pass validation:
+             error 22: Some fields are present but empty; remove or fill them: "homepage", "license", "bug_reports"
+             error 57: Synopsis must not be empty
+           warning 59: url doesn't contain a checksum
+           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : ""
+Proceed anyway ('no' will re-edit)? [y/n] y
+You can edit this file again with "opam pin edit nip", export it with "opam show nip --raw"
+nip is now pinned to file://${BASEDIR}/nip.1.tgz (version 42)
+### opam pin list
+nip.42       (uninstalled)  rsync  file://${BASEDIR}/nip.1.tgz
+nip-path.42                 rsync  file://${BASEDIR}/nip-path
+nip-v.2      (uninstalled)  rsync  file://${BASEDIR}/nip-v.1.tgz
+### find OPAM/versions/lib -name '*.t' | sort
+OPAM/versions/lib/nip-path/nip-path.ved.t
+### :::::::::::::::::::::::
+### :VII: Linting
+### :::::::::::::::::::::::
+### <nip-empty/nip-empty.opam>
 opam-version: "2.0"
-### opam pin --no-action ./pin-empty
-[ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#master":
-        Git repository seems just initialized, try again after your first commit
-Could not retrieve some package sources, they will not be pinned nor installed:
-  - pin-empty:git+file://${BASEDIR}/pin-empty#master
+### <nip-empty2/nip-empty2.opam>
+opam-version: "2.0"
+### opam pin add nip-empty ./nip-empty
+Package nip-empty does not exist, create as a NEW package? [y/n] y
+[nip-empty.dev] synchronised (file://${BASEDIR}/nip-empty)
+[WARNING] Failed checks on nip-empty package definition from source at file://${BASEDIR}/nip-empty:
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+             error 57: Synopsis must not be empty
+           warning 68: Missing field 'license'
+nip-empty is now pinned to file://${BASEDIR}/nip-empty (version dev)
 
-Continue anyway? [y/n] y
-### opam pin
-### git -C pin-empty add -A
-### git -C pin-empty commit -qm 'opam'
-### opam pin --no-action ./pin-empty
-Package pin-empty does not exist, create as a NEW package? [y/n] y
-pin-empty is now pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
-### opam unpin pin-empty
-Ok, pin-empty is no longer pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
-### opam pin --no-action ./pin-empty#inexistant
-[ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#inexistant":
-        Branch inexistant not found
-Could not retrieve some package sources, they will not be pinned nor installed:
-  - pin-empty:git+file://${BASEDIR}/pin-empty#inexistant
+The following actions will be performed:
+=== install 1 package
+  - install nip-empty dev (pinned)
 
-Continue anyway? [y/n] y
-### opam pin
-### : Parse error with future opam version field on pin
-### :: just the opam version that is a future
-### <pin:pin-at-two-one/pin-at-two-one.opam>
-opam-version: "2.1"
-### opam install ./pin-at-two-one
-[ERROR] In ${BASEDIR}/pin-at-two-one/pin-at-two-one.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip-empty.dev  (file://${BASEDIR}/nip-empty)
+-> installed nip-empty.dev
+Done.
+### opam pin add ./nip-empty2
+Package nip-empty2 does not exist, create as a NEW package? [y/n] y
+nip-empty2 is now pinned to file://${BASEDIR}/nip-empty2 (version dev)
 
-[ERROR] Invalid opam file in pin-at-two-one source from file://${BASEDIR}/pin-at-two-one:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-two-one found.
-# Return code 5 #
-### OPAMSTRICT=0 opam install ./pin-at-two-one
-[ERROR] In ${BASEDIR}/pin-at-two-one/pin-at-two-one.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+The following actions will be performed:
+=== install 1 package
+  - install nip-empty2 dev (pinned)
 
-[ERROR] Invalid opam file in pin-at-two-one source from file://${BASEDIR}/pin-at-two-one:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-two-one found.
-# Return code 5 #
-### <pin:pin-at-two-two/pin-at-two-two.opam>
-opam-version: "2.2"
-### opam install ./pin-at-two-two
-[ERROR] In ${BASEDIR}/pin-at-two-two/pin-at-two-two.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip-empty2.dev  (file://${BASEDIR}/nip-empty2)
+-> installed nip-empty2.dev
+Done.
+### :::::::::::::::::::::::
+### :VIII: Updates
+### :::::::::::::::::::::::
+### opam switch create updates --empty
+### sh add-pin.sh nip-mixed.dev2
+### opam pin ./nip-mixed
+Package nip-mixed does not exist, create as a NEW package? [y/n] y
+nip-mixed is now pinned to file://${BASEDIR}/nip-mixed (version dev2)
 
-[ERROR] Invalid opam file in pin-at-two-two source from file://${BASEDIR}/pin-at-two-two:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-two-two found.
-# Return code 5 #
-### OPAMSTRICT=0 opam install ./pin-at-two-two
-[ERROR] In ${BASEDIR}/pin-at-two-two/pin-at-two-two.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+The following actions will be performed:
+=== install 1 package
+  - install nip-mixed dev2 (pinned)
 
-[ERROR] Invalid opam file in pin-at-two-two source from file://${BASEDIR}/pin-at-two-two:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-two-two found.
-# Return code 5 #
-### <pin:pin-at-two-three/pin-at-two-three.opam>
-opam-version: "2.3"
-### opam install ./pin-at-two-three
-[ERROR] In ${BASEDIR}/pin-at-two-three/pin-at-two-three.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-mixed.dev2
+Done.
+### sh add-pin.sh nip-mixed.dev3
+### opam pin nip-mixed
+[NOTE] Package nip-mixed is already pinned to file://${BASEDIR}/nip-mixed (version dev2).
+nip-mixed is now pinned to file://${BASEDIR}/nip-mixed (version dev3)
 
-[ERROR] Invalid opam file in pin-at-two-three source from file://${BASEDIR}/pin-at-two-three:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-two-three found.
-# Return code 5 #
-### OPAMSTRICT=0 opam install ./pin-at-two-three
-[ERROR] In ${BASEDIR}/pin-at-two-three/pin-at-two-three.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade nip-mixed dev2 to dev3 (pinned)
 
-[ERROR] Invalid opam file in pin-at-two-three source from file://${BASEDIR}/pin-at-two-three:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-two-three found.
-# Return code 5 #
-### <pin:pin-at-future/pin-at-future.opam>
-opam-version: "50.0"
-### opam install ./pin-at-future
-[ERROR] In ${BASEDIR}/pin-at-future/pin-at-future.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip-mixed.dev2
+-> installed nip-mixed.dev3
+Done.
+### sh add-pin.sh nip-mixed.dev4 git
+### opam pin nip-mixed
+[NOTE] Package nip-mixed is currently pinned to file://${BASEDIR}/nip-mixed (version dev3).
+nip-mixed is now pinned to git+file://${BASEDIR}/nip-mixed#master (version dev4)
 
-[ERROR] Invalid opam file in pin-at-future source from file://${BASEDIR}/pin-at-future:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-future found.
-# Return code 5 #
-### OPAMSTRICT=0 opam install ./pin-at-future
-[ERROR] In ${BASEDIR}/pin-at-future/pin-at-future.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade nip-mixed dev3 to dev4 (pinned)
 
-[ERROR] Invalid opam file in pin-at-future source from file://${BASEDIR}/pin-at-future:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-future found.
-# Return code 5 #
-### :: opam version is a future and there is a parse error
-### <junk.sh>
-echo GARBAGE>>"$1"
-### sh junk.sh pin-at-two-one/pin-at-two-one.opam
-### opam install ./pin-at-two-one
-[ERROR] At ${BASEDIR}/pin-at-two-one/pin-at-two-one.opam:11:0-11:0::
-        Parse error
-[ERROR] Strict mode: aborting
-# Return code 30 #
-### OPAMSTRICT=0 opam install ./pin-at-two-one
-[ERROR] At ${BASEDIR}/pin-at-two-one/pin-at-two-one.opam:11:0-11:0::
-        Parse error [skipped]
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip-mixed.dev4  (git+file://${BASEDIR}/nip-mixed#master)
+-> removed   nip-mixed.dev3
+-> installed nip-mixed.dev4
+Done.
+### sh add-pin.sh nip-mixed.dev1 git
+### git -C ./nip-mixed log --format="%s"
+"add nip-mixed.dev1 package"
+"add nip-mixed.dev4 package"
+### opam pin nip-mixed
+[NOTE] Package nip-mixed is already pinned to git+file://${BASEDIR}/nip-mixed#master (version dev4).
+nip-mixed is now pinned to git+file://${BASEDIR}/nip-mixed#master (version dev1)
 
-[ERROR] Invalid opam file in pin-at-two-one source from file://${BASEDIR}/pin-at-two-one:
-             error  2: File format error at line 11, column 0: Parse error
-[ERROR] No package named pin-at-two-one found.
-# Return code 5 #
-### sh junk.sh pin-at-two-two/pin-at-two-two.opam
-### opam install ./pin-at-two-two
-[ERROR] At ${BASEDIR}/pin-at-two-two/pin-at-two-two.opam:11:0-11:0::
-        Parse error
-[ERROR] Strict mode: aborting
-# Return code 30 #
-### OPAMSTRICT=0 opam install ./pin-at-two-two
-[ERROR] At ${BASEDIR}/pin-at-two-two/pin-at-two-two.opam:11:0-11:0::
-        Parse error [skipped]
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade nip-mixed dev4 to dev1 (pinned)
 
-[ERROR] Invalid opam file in pin-at-two-two source from file://${BASEDIR}/pin-at-two-two:
-             error  2: File format error at line 11, column 0: Parse error
-[ERROR] No package named pin-at-two-two found.
-# Return code 5 #
-### sh junk.sh pin-at-two-three/pin-at-two-three.opam
-### opam install ./pin-at-two-three
-[ERROR] At ${BASEDIR}/pin-at-two-three/pin-at-two-three.opam:11:0-11:0::
-        Parse error
-[ERROR] Strict mode: aborting
-# Return code 30 #
-### OPAMSTRICT=0 opam install ./pin-at-two-three
-[ERROR] At ${BASEDIR}/pin-at-two-three/pin-at-two-three.opam:11:0-11:0::
-        Parse error [skipped]
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip-mixed.dev4
+-> installed nip-mixed.dev1
+Done.
+### :::::::::::::::::::::::
+### :IX: opam file not committed
+### :::::::::::::::::::::::
+### opam switch create opamfiles --empty
+### : only pins
+### sh add-pin.sh nip-of.dev1 git
+### git -C ./nip-of rm nip-of.opam --cached -q
+### git -C ./nip-of commit -qm "remove opam file"
+### opam pin ./nip-of
+Package nip-of does not exist, create as a NEW package? [y/n] y
+nip-of is now pinned to git+file://${BASEDIR}/nip-of#master (version dev1)
 
-[ERROR] Invalid opam file in pin-at-two-three source from file://${BASEDIR}/pin-at-two-three:
-             error  2: File format error at line 11, column 0: Parse error
-[ERROR] No package named pin-at-two-three found.
-# Return code 5 #
-### sh junk.sh pin-at-future/pin-at-future.opam
-### opam install ./pin-at-future
-[ERROR] In ${BASEDIR}/pin-at-future/pin-at-future.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+The following actions will be performed:
+=== install 1 package
+  - install nip-of dev1 (pinned)
 
-[ERROR] Invalid opam file in pin-at-future source from file://${BASEDIR}/pin-at-future:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-future found.
-# Return code 5 #
-### OPAMSTRICT=0 opam install ./pin-at-future
-[ERROR] In ${BASEDIR}/pin-at-future/pin-at-future.opam:
-        unsupported or missing file format version; should be 2.0 or older [skipped]
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip-of.dev1  (no changes)
+-> installed nip-of.dev1
+Done.
+### opam show nip-of --field=version
+dev1
+### sh add-pin.sh nip-of.dev2 git
+### opam install ./nip-of
+[nip-of.dev1] synchronised (git+file://${BASEDIR}/nip-of#master)
+[nip-of] Conflicting update of the metadata from git+file://${BASEDIR}/nip-of#master.
+Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-of (there will be a backup)? [y/n] y
+User metadata backed up in ${BASEDIR}/OPAM/backup/nip-of.bak
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade nip-of dev1 to dev2 (pinned)
 
-[ERROR] Invalid opam file in pin-at-future source from file://${BASEDIR}/pin-at-future:
-             error  2: File format error: unsupported or missing file format version; should be 2.0 or older
-[ERROR] No package named pin-at-future found.
-# Return code 5 #
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip-of.dev1
+-> installed nip-of.dev2
+Done.
+### opam show nip-of --field=version
+dev2
+### sh add-pin.sh nip-of.dev3
+### git -C ./nip-of add nip-of.dev3.t
+### git -C ./nip-of commit -qm "add install file"
+### opam pin ./nip-of
+[NOTE] Package nip-of is already pinned to git+file://${BASEDIR}/nip-of#master (version dev2).
+nip-of is now pinned to git+file://${BASEDIR}/nip-of#master (version dev3)
+
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade nip-of dev2 to dev3 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip-of.dev3  (no changes)
+-> removed   nip-of.dev2
+-> installed nip-of.dev3
+Done.
+### opam show nip-of --field=version
+dev3
+### : only installs
+### sh add-pin.sh nip-fo.dev1 git
+### git -C ./nip-fo rm nip-fo.opam --cached -q
+### git -C ./nip-fo commit -qm "remove opam file"
+### opam install ./nip-fo
+Package nip-fo does not exist, create as a NEW package? [y/n] y
+nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#master (version dev1)
+The following actions will be performed:
+=== install 1 package
+  - install nip-fo dev1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip-fo.dev1  (git+file://${BASEDIR}/nip-fo#master)
+-> installed nip-fo.dev1
+Done.
+### opam show nip-fo --field=version
+dev1
+### sh add-pin.sh nip-fo.dev2 git
+### opam install ./nip-fo
+[nip-fo.dev1] synchronised (git+file://${BASEDIR}/nip-fo#master)
+[nip-fo] Conflicting update of the metadata from git+file://${BASEDIR}/nip-fo#master.
+Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-fo (there will be a backup)? [y/n] y
+User metadata backed up in ${BASEDIR}/OPAM/backup/nip-fo.bak
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade nip-fo dev1 to dev2 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip-fo.dev1
+-> installed nip-fo.dev2
+Done.
+### opam show nip-fo --field=version
+dev2
+### sh add-pin.sh nip-fo.dev3
+### git -C ./nip-fo add nip-fo.dev3.t
+### git -C ./nip-fo commit -qm "add install file"
+### opam install ./nip-fo
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/nip-fo (`--working-dir' not specified or specified with no argument).
+[nip-fo.dev2] synchronised (git+file://${BASEDIR}/nip-fo#master)
+The following actions will be performed:
+=== recompile 1 package
+  - recompile nip-fo dev2 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip-fo.dev2
+-> installed nip-fo.dev2
+Done.
+### opam show nip-fo --field=version
+dev2
+### :::::::::::::::::::::::
+### :X: --current is in pin-legacy.test
+### :::::::::::::::::::::::
