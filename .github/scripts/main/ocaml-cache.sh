@@ -146,8 +146,10 @@ EOF
   chmod +x "$OCAML_LOCAL/bin/ocamldoc"
 fi
 
-# Hand-over control to a separate script in case the branch being tested
-# updates this script, which will fail on Windows (since the script is "open"
-# and can't be overwritten)
-cp -pf .github/scripts/main/create-ocaml-cache.sh ../create-ocaml-cache.sh
-exec ../create-ocaml-cache.sh "$OCAML_BRANCH" "$PREFIX" "$EXE" "$OCAML_LOCAL" "$PLATFORM"
+make -C src_ext dune-local.stamp
+cd src_ext/dune-local
+ocaml boot/bootstrap.ml
+cp _boot/dune.exe "$PREFIX/bin/dune$EXE"
+cd ../..
+
+git clean -dfX
