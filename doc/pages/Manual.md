@@ -331,11 +331,11 @@ Here is a full example:
 #### Version-ordering
 
 > <a id="version-ordering">**Version Ordering**</a> follows the basics of the
-> [Debian definition](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version).
+> [Debian definition](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-version).
 >
 > It is basically "lexicographical order, with numbers handled
 > properly". In more detail (see the [Debian
-> page](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version)
+> page](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-version)
 > for full details):
 >
 > - Version strings are sliced into alternate, possibly empty non-digit / digit
