@@ -28,10 +28,6 @@ case "$1" in
     CONFIGURE_PREFIX="$PREFIX";;
 esac
 
-if [ -e "$OCAML_LOCAL/_build" ]; then
-  cp -a "$OCAML_LOCAL/_build" .
-fi
-
 ./configure --prefix $CONFIGURE_PREFIX --with-vendored-deps --with-mccs
 if [ "$OPAM_TEST" != "1" ]; then
   echo 'DUNE_PROFILE=dev' >> Makefile.config
