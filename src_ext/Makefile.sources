@@ -1,8 +1,8 @@
-URL_cppo = https://github.com/ocaml-community/cppo/archive/v1.6.9.tar.gz
-MD5_cppo = d23ffe85ac7dc8f0afd1ddf622770d09
+URL_cppo = https://github.com/ocaml-community/cppo/archive/refs/tags/v1.7.0.tar.gz
+MD5_cppo = 90f66810f73b115cc55e581a34bf7db9
 
-URL_extlib = https://github.com/ygrek/ocaml-extlib/releases/download/1.7.9/extlib-1.7.9.tar.gz
-MD5_extlib = f7ca7f1c82e15a99603b88f730fd7b8a
+URL_extlib = https://github.com/ygrek/ocaml-extlib/releases/download/1.8.0/extlib-1.8.0.tar.gz
+MD5_extlib = 43fb3bf2989671af1769147b1171d080
 
 URL_base64 = https://github.com/mirage/ocaml-base64/releases/download/v3.5.1/base64-3.5.1.tbz
 MD5_base64 = bfdd16aa8c136412878109df8791fc01
