@@ -116,6 +116,7 @@ users)
   * pin: add a test for erroneous first fetch done as local path on local VCS pinned packages [#6221 @rjbou]
 
 ### Engine
+  * Update print file function [#6233 @rjbou]
 
 ## Github Actions
   * Add OCaml 5.2.0 to the build matrix [#6216 @kit-ty-kate]
