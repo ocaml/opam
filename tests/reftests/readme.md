@@ -70,6 +70,11 @@ output...
   * `json-cat file`: print a human readable opam output json file, with
     replacement of some duration and temporary files names. meant to be used
     on opam generated json files.
+  * `opam-cache installed <switch> [nvs]`: print the content of installed
+    packages cache for switch `<switch>`. If `[nvs]` is specified, filter over
+    these package names or packages.
+  * `opam-cache repo [nvs]`: print the content of repository cache. If
+    `[nvs]` is specified, filter over these package names or packages.
 
 - if you need more shell power, create a script using <FILENAME> then run it.
   Or just use `sh -c`... but beware for compatibility.
