@@ -6,7 +6,7 @@ diff -Naur a/src/context_flags.ml b/src/context_flags.ml
      (if (Sys.win32 && Config.ccomp_type = "msvc")
       then ["\"/EHsc\""]
 -     else ["-Wall -Wextra -Wno-unused-parameter -x c++"]) @
-+     else ["-Wall -Wextra -Wno-unused-parameter -x c++ -std=c++11"]) @
++     else ["-Wall -Wextra -Wno-unused-parameter -x c++ -std=gnu++11"]) @
      (ifc useGLPK ["-DUSEGLPK"]) @
      (ifc useCOIN ["-DUSECOIN"]) @
      (ifc useCLP  ["-DUSECLP"]) @
