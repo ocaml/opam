@@ -297,6 +297,7 @@ val avoid_version : 'a switch_state -> package -> bool
 (** Handle a cache of the opam files of installed packages *)
 module Installed_cache: sig
   type t = OpamFile.OPAM.t OpamPackage.Map.t
+  val load: OpamFilename.t -> t option
   val save: OpamFilename.t -> t -> unit
   val remove: OpamFilename.t -> unit
 end
