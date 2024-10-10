@@ -639,14 +639,18 @@ dev-repo: "hg+https://pkg@op.am"
 bug-reports: "https://nobug"
 |} "<nofile>"
 
-let print_file ~filters reader names =
+let print_file ~filters ?(single_header=true) names_and_content =
   let files =
-    match names with
-    | [file] -> [reader file]
-    | files  ->
+    let with_name () =
       List.map
-        (fun f -> Printf.sprintf "=> %s <=\n%s" f (reader f))
-        files
+        (fun (name, content) ->
+           Printf.sprintf "=> %s <=\n%s" name content)
+        names_and_content
+    in
+    if single_header then with_name () else
+      match names_and_content with
+      | [name, content] -> [content]
+      | _ -> with_name ()
   in
   List.map (fun s -> OpamStd.String.split s '\n') files
   |> List.flatten
@@ -890,11 +894,16 @@ let run_test ?(vars=[]) ~opam t =
             vars bindings
         | Opamfile { files; filter } ->
           let files =
-            List.map (fun s -> Re.(replace_string (compile @@ str "$OPAMROOT")
-                                     ~by:opamroot s)) files
+            List.map (fun s ->
+                let name =
+                  Re.(replace_string (compile @@ str "$OPAMROOT")
+                        ~by:opamroot s)
+                in
+                name, print_opamfile name)
+              files
           in
-          print_file ~filters:(filter @ common_filters dir)
-            print_opamfile files;
+          let filters = filter @ common_filters dir in
+          print_file ~single_header:false ~filters files;
           vars
         | Json { files; filter } ->
           let files =
@@ -941,8 +950,17 @@ let run_test ?(vars=[]) ~opam t =
               OpamJson.to_string ~minify:false json ^ "\n"
             | None -> "# Return Error reading json\n"^content
           in
-          print_file ~filters:(filter @ common_filters ~opam dir @ json_filters)
-            to_string files;
+          let files =
+            List.map (fun s ->
+                let name =
+                  Re.(replace_string (compile @@ str "$OPAMROOT")
+                        ~by:opamroot s)
+                in
+                name, to_string name)
+              files
+          in
+          let filters = filter @ common_filters ~opam dir @ json_filters in
+          print_file ~single_header:false ~filters files;
           vars
         | Run {env; cmd; args; filter; output; unordered; sort} ->
           let silent = output <> None || unordered in
