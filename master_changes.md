@@ -117,6 +117,7 @@ users)
 
 ### Engine
   * Update print file function [#6233 @rjbou]
+  * Add `opam-cache` command, to display internal cache content in reftest [#6233 @rjbou]
 
 ## Github Actions
   * Add OCaml 5.2.0 to the build matrix [#6216 @kit-ty-kate]
