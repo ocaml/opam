@@ -260,6 +260,8 @@ let rec with_temp_dir f =
   (mkdir_p s;
    finally f s @@ fun () -> rm_rf s)
 
+type filter = (Re.t * filt_sort) list
+
 type command =
   | File_contents of string
   | Repo_pkg_file_contents of
@@ -267,14 +269,14 @@ type command =
       * [ `opam
         | `files of string (* file name *) ]
   | Pin_file_content of string
-  | Cat of { files: string list;
-             filter: (Re.t * filt_sort) list; }
+  | Opamfile of { files: string list;
+             filter: filter; }
   | Json of { files: string list;
-             filter: (Re.t * filt_sort) list; }
+             filter: filter; }
   | Run of { env: (string * string) list;
              cmd: string;
              args: string list; (* still escaped *)
-             filter: (Re.t * filt_sort) list;
+             filter: filter;
              output: string option;
              unordered: bool;
              sort: bool;}
@@ -475,7 +477,7 @@ module Parse = struct
     let args, unordered, sort, rewr, output = get_args_rewr [] args in
     match cmd with
     | Some "opam-cat" ->
-        Cat { files = args; filter = rewr; }
+        Opamfile { files = args; filter = rewr; }
     | Some "json-cat" ->
         Json { files = args; filter = rewr; }
     | Some cmd ->
@@ -886,7 +888,7 @@ let run_test ?(vars=[]) ~opam t =
                in
                (v, value) :: List.filter (fun (w, _) -> not (String.equal v w)) vars)
             vars bindings
-        | Cat { files; filter } ->
+        | Opamfile { files; filter } ->
           let files =
             List.map (fun s -> Re.(replace_string (compile @@ str "$OPAMROOT")
                                      ~by:opamroot s)) files
