@@ -363,3 +363,149 @@ Done.
     }
   ]
 }
+### :V:3: Cache cat
+### <OPER/repo>
+opam-version: "2.0"
+### <OPER/packages/foo/foo.2/opam>
+opam-version: "2.0"
+### <OPER/packages/un/un.2/opam>
+opam-version: "2.0"
+### <OPER/packages/deux/deux.2/opam>
+opam-version: "2.0"
+### opam switch create cache --empty
+### opam repository add oper ./OPER
+[oper] Initialised
+[NOTE] Repository oper has been added to the selections of switch cache only.
+       Run `opam repository add oper --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam install bar baz foo un deux
+The following actions will be performed:
+=== install 5 packages
+  - install bar  1
+  - install baz  1
+  - install deux 2
+  - install foo  2
+  - install un   2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+-> installed baz.1
+-> installed deux.2
+-> installed foo.2
+-> installed un.2
+Done.
+### :V:3: installed packages cache
+### opam-cache installed cache
+=> un.2 <=
+opam-version: "2.0"
+name: "un"
+version: "2"
+=> foo.2 <=
+opam-version: "2.0"
+name: "foo"
+version: "2"
+=> deux.2 <=
+opam-version: "2.0"
+name: "deux"
+version: "2"
+=> baz.1 <=
+opam-version: "2.0"
+name: "baz"
+version: "1"
+extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+=> bar.1 <=
+opam-version: "2.0"
+name: "bar"
+version: "1"
+extra-files: ["xf-bar" "md5=dbaf1ea561686374373dc7d154f3a0ff"]
+### opam-cache installed cache foo
+=> foo.2 <=
+opam-version: "2.0"
+name: "foo"
+version: "2"
+### opam-cache installed cache foo un
+=> un.2 <=
+opam-version: "2.0"
+name: "un"
+version: "2"
+=> foo.2 <=
+opam-version: "2.0"
+name: "foo"
+version: "2"
+### opam-cache installed cache inexistent
+### opam switch create cache2 --empty
+### opam-cache installed cache2
+Empty cache
+### opam-cache installed cache2 foo
+Empty cache
+### opam-cache installed cache3
+No cache
+### :V:3:b: repo cache
+### opam-cache repo
+=> oper:un.2 <=
+opam-version: "2.0"
+name: "un"
+version: "2"
+=> oper:foo.2 <=
+opam-version: "2.0"
+name: "foo"
+version: "2"
+=> oper:deux.2 <=
+opam-version: "2.0"
+name: "deux"
+version: "2"
+=> default:qux.1 <=
+opam-version: "2.0"
+name: "qux"
+version: "1"
+extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
+=> default:grault.1 <=
+opam-version: "2.0"
+name: "grault"
+version: "1"
+extra-files: [
+  ["file" "md5=00000000000000000000000000000000"]
+  ["xf-grault" "md5=9fd8d4d58e5fd899478b03ab24a11d00"]
+  ["xf-grault2" "md5=5c1ff559ac6490338d362978c058f44a"]
+]
+=> default:foo.1 <=
+opam-version: "2.0"
+name: "foo"
+version: "1"
+extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
+=> default:corge.1 <=
+opam-version: "2.0"
+name: "corge"
+version: "1"
+extra-files: ["xf-corge" "md5=71e14bfb95ec10cb60f3b6cafd908a08"]
+=> default:baz.1 <=
+opam-version: "2.0"
+name: "baz"
+version: "1"
+extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+=> default:bar.1 <=
+opam-version: "2.0"
+name: "bar"
+version: "1"
+extra-files: ["xf-bar" "md5=dbaf1ea561686374373dc7d154f3a0ff"]
+### opam-cache repo foo
+=> oper:foo.2 <=
+opam-version: "2.0"
+name: "foo"
+version: "2"
+=> default:foo.1 <=
+opam-version: "2.0"
+name: "foo"
+version: "1"
+extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
+### opam-cache repo un baz
+=> oper:un.2 <=
+opam-version: "2.0"
+name: "un"
+version: "2"
+=> default:baz.1 <=
+opam-version: "2.0"
+name: "baz"
+version: "1"
+extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+### opam-cache repo inexistent
