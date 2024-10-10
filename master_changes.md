@@ -131,6 +131,7 @@ users)
 ## opam-repository
 
 ## opam-state
+  * `OpamSwitchState.Installed_cache`: export `load` function [#6233 @rjbou]
 
 ## opam-solver
 
