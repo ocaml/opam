@@ -1613,20 +1613,18 @@ let internal_patch ~patch_filename ~dir diffs =
         raise (Internal_patch_error (fmt "Patch %S does not apply cleanly." patch_filename))
   in
   let apply diff = match diff.Patch.operation with
-    | Patch.Edit (src, dst) ->
-      let src = get_path src in
-      let dst = get_path dst in
-      if Sys.file_exists src then
-        let content = read src in
-        let content = patch ~file:src (Some content) diff in
-        write dst content;
-        if not (String.equal src dst) then
-          Unix.unlink src;
-      else
-        (* NOTE: GNU patch ignores when a file doesn't exist *)
-        let content = read dst in
-        let content = patch ~file:dst (Some content) diff in
-        write dst content
+    | Patch.Edit (file1, file2) ->
+      (* That seems to be the GNU patch behaviour *)
+      let file =
+        let file1 = get_path file1 in
+        if Sys.file_exists file1 then
+          file1
+        else
+          get_path file2
+      in
+      let content = read file in
+      let content = patch ~file:file (Some content) diff in
+      write file content;
     | Patch.Delete file ->
       let file = get_path file in
       (* TODO: apply the patch and check the file is empty *)
