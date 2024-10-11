@@ -869,19 +869,17 @@ module Tar = struct
   let match_ext file ext =
     List.exists (Filename.check_suffix file) ext
 
+  let get_archive_extension file =
+    OpamStd.List.find_map_opt (fun (ext, t) ->
+        if match_ext file ext then Some t else None)
+      extensions
+
   let get_type file =
-    let ext =
-      List.fold_left
-        (fun acc (ext, t) -> match acc with
-           | Some t -> Some t
-           | None   ->
-             if match_ext file ext
-             then Some t
-             else None)
-        None
-        extensions in
     if Sys.file_exists file then guess_type file
-    else ext
+    else get_archive_extension file
+
+  let is_archive_from_string f =
+    get_archive_extension f <> None
 
   let is_archive file =
     get_type file <> None
@@ -930,6 +928,11 @@ end
 
 module Zip = struct
 
+  let extension = "zip"
+
+  let is_archive_from_string file =
+    Filename.check_suffix file extension
+
   let is_archive f =
     if Sys.file_exists f then
       try
@@ -944,11 +947,15 @@ module Zip = struct
         | _ -> false
       with Sys_error _ | End_of_file -> false
     else
-      Filename.check_suffix f "zip"
+      is_archive_from_string f
 
   let extract_command file =
     Some (fun dir -> make_command "unzip" [ file; "-d"; dir ])
 end
+
+let is_archive_from_string file =
+  Tar.is_archive_from_string file
+  || Zip.is_archive_from_string file
 
 let is_archive file =
   Tar.is_archive file || Zip.is_archive file
