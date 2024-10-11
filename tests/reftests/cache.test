@@ -1,0 +1,319 @@
+N0REP0
+### :: Installed Cache update on action failure
+### : Origin
+### : upgrades from 2.2 to 2.3 can trigger issues where a repository forgot to
+### : add the missing extra-files field, opam tells the user they should
+### : upgrade as the opam file changed (as extra-files was added automatically)
+### : then the build fails and upon fixing the error opam still says the
+### : package is to be rebuilt because the previous version of the opam file
+### : was stored in the install cache
+### : The bug is seen on specific case : a package is already installed, and
+### : its update that doesn't remove it (fetch or build failure) update the
+### : cache with the wrong opam file, the one from repo state.
+### opam switch create action-failure --empty
+### OPAMYES=1
+### <pkg:always-here.1>
+opam-version: "2.0"
+### opam install always-here
+The following actions will be performed:
+=== install 1 package
+  - install always-here 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed always-here.1
+Done.
+### ::: Build
+### <pkg:upgrade.1>
+opam-version: "2.0"
+build: "true"
+### opam install upgrade.1
+The following actions will be performed:
+=== install 1 package
+  - install upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed upgrade.1
+Done.
+### <pkg:upgrade.1>
+opam-version: "2.0"
+build: "false"
+### opam upgrade
+The following actions will be performed:
+=== recompile 1 package
+  - recompile upgrade 1 [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of upgrade.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build upgrade 1
++- 
+- No changes have been performed
+# Return code 31 #
+### <pkg:upgrade.1>
+opam-version: "2.0"
+build: "true"
+### opam show --raw upgrade.1
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+build: "true"
+### cat ${BASEDIR}/OPAM/action-failure/.opam-switch/packages/upgrade.1/opam
+opam-version: "2.0"
+build: "true"
+### opam-cache repo upgrade
+=> default:upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+build: "true"
+### opam-cache installed action-failure
+=> upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+build: "true"
+=> always-here.1 <=
+opam-version: "2.0"
+name: "always-here"
+version: "1"
+### opam upgrade
+Already up-to-date.
+Nothing to do.
+### opam-cache installed action-failure
+=> upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+build: "true"
+=> always-here.1 <=
+opam-version: "2.0"
+name: "always-here"
+version: "1"
+### ::: Install
+### opam remove upgrade
+The following actions will be performed:
+=== remove 1 package
+  - remove upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   upgrade.1
+Done.
+### <pkg:upgrade.1>
+opam-version: "2.0"
+install: "true"
+### opam install upgrade
+The following actions will be performed:
+=== install 1 package
+  - install upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed upgrade.1
+Done.
+### opam-cache installed action-failure
+=> upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+install: "true"
+=> always-here.1 <=
+opam-version: "2.0"
+name: "always-here"
+version: "1"
+### <pkg:upgrade.1>
+opam-version: "2.0"
+install: "false"
+### opam install upgrade | grep -v import
+The following actions will be performed:
+=== recompile 1 package
+  - recompile upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   upgrade.1
+[ERROR] The installation of upgrade failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install upgrade 1
++- 
++- The following changes have been performed
+| - remove upgrade 1
++- 
+
+The former state can be restored with:
+Or you can retry to install your package selection with:
+    ${OPAM} install --restore
+# Return code 31 #
+### test -f ${BASEDIR}/OPAM/action-failure/.opam-switch/packages/upgrade.1/opam
+# Return code 1 #
+### opam-cache installed action-failure
+No cache
+### ::: Remove standalone
+### <pkg:upgrade.1>
+opam-version: "2.0"
+remove: "false"
+### opam install upgrade
+The following actions will be performed:
+=== install 1 package
+  - install upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed upgrade.1
+Done.
+### opam-cache installed action-failure
+=> upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+remove: "false"
+=> always-here.1 <=
+opam-version: "2.0"
+name: "always-here"
+version: "1"
+### opam remove upgrade | grep -v "   #" | '^\[WARNING] package uninstall script failed at .*' -> '[WARNING] package uninstall script failed'
+The following actions will be performed:
+=== remove 1 package
+  - remove upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[WARNING] package uninstall script failed
+
+Done.
+### test -f ${BASEDIR}/OPAM/action-failure/.opam-switch/packages/upgrade.1/opam
+# Return code 1 #
+### opam-cache installed action-failure
+No cache
+### ::: Remove on reinstall
+### <pkg:upgrade.1>
+opam-version: "2.0"
+### opam install upgrade
+The following actions will be performed:
+=== install 1 package
+  - install upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed upgrade.1
+Done.
+### opam-cache installed action-failure
+=> upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+=> always-here.1 <=
+opam-version: "2.0"
+name: "always-here"
+version: "1"
+### <pkg:upgrade.1>
+opam-version: "2.0"
+remove: "false"
+### opam upgrade
+The following actions will be performed:
+=== recompile 1 package
+  - recompile upgrade 1 [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   upgrade.1
+-> installed upgrade.1
+Done.
+### cat ${BASEDIR}/OPAM/action-failure/.opam-switch/packages/upgrade.1/opam
+opam-version: "2.0"
+remove: "false"
+### opam-cache installed action-failure
+=> upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+remove: "false"
+=> always-here.1 <=
+opam-version: "2.0"
+name: "always-here"
+version: "1"
+### <pkg:upgrade.1>
+opam-version: "2.0"
+### opam upgrade | grep -v "   #" | '^\[WARNING] package uninstall script failed at .*' -> '[WARNING] package uninstall script failed'
+The following actions will be performed:
+=== recompile 1 package
+  - recompile upgrade 1 [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[WARNING] package uninstall script failed
+
+-> installed upgrade.1
+Done.
+### cat ${BASEDIR}/OPAM/action-failure/.opam-switch/packages/upgrade.1/opam
+opam-version: "2.0"
+### opam-cache installed action-failure
+=> upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+=> always-here.1 <=
+opam-version: "2.0"
+name: "always-here"
+version: "1"
+### ::: Fetch
+### opam remove upgrade
+The following actions will be performed:
+=== remove 1 package
+  - remove upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   upgrade.1
+Done.
+### <pkg:upgrade.1>
+opam-version: "2.0"
+### opam install upgrade
+The following actions will be performed:
+=== install 1 package
+  - install upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed upgrade.1
+Done.
+### opam-cache installed action-failure
+=> upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+=> always-here.1 <=
+opam-version: "2.0"
+name: "always-here"
+version: "1"
+### <pkg:upgrade.1>
+opam-version: "2.0"
+url { src:"/inexistent/path" }
+### opam install upgrade | '"C:/' -> '"/' | ' C:/' -> ' /'
+The following actions will be performed:
+=== recompile 1 package
+  - recompile upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Failed to get sources of upgrade.1: /inexistent/path
+
+OpamSolution.Fetch_fail("/inexistent/path")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - fetch upgrade 1
++- 
+- No changes have been performed
+# Return code 40 #
+### cat ${BASEDIR}/OPAM/action-failure/.opam-switch/packages/upgrade.1/opam
+opam-version: "2.0"
+### opam-cache installed action-failure
+=> upgrade.1 <=
+opam-version: "2.0"
+name: "upgrade"
+version: "1"
+=> always-here.1 <=
+opam-version: "2.0"
+name: "always-here"
+version: "1"

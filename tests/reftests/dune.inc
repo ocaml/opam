@@ -147,6 +147,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:best-effort.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-cache)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff cache.test cache.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-cache)))
+
+(rule
+ (targets cache.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:cache.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-clean)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
