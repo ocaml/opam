@@ -133,7 +133,6 @@ let recommended_tools () =
 let required_tools ~sandboxing () =
   req_dl_tools () @
   [
-    ["diff"], None, None;
     ["patch"], None, Some patch_filter;
     ["gpatch"], None, Some gpatch_filter;
     ["tar"], None, Some tar_filter;
@@ -148,7 +147,8 @@ let required_tools ~sandboxing () =
 
 let required_packages_for_cygwin =
   [
-    "diffutils";
+    "diffutils"; (* TODO: not used internally anymore but used by many packages *)
+    "git"; (* XXX hg & mercurial ? *)
     "make";
     "patch";
     "tar";

@@ -19,9 +19,6 @@ some content
 ### : Internal repository storage as archive or plain directory :
 ### opam switch create tarring --empty
 ### opam update -vv | grep '^\+' | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
-+ diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
-+ patch "--version"
-+ patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${BASEDIR}/OPAM/repo/default)
 ### ls $OPAMROOT/repo | grep -v "cache"
 default
 lock
@@ -39,9 +36,6 @@ build: ["test" "-f" "baz"]
 some content
 ### sh hash.sh REPO foo.2
 ### opam update default -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
-+ diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
-+ patch "--version"
-+ patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${BASEDIR}/OPAM/repo/default)
 + tar "cfz" "${BASEDIR}/OPAM/repo/default.tar.gz.tmp" "-C" "${BASEDIR}/OPAM/repo" "default"
 ### ls $OPAMROOT/repo | grep -v "cache"
 default.tar.gz
@@ -80,9 +74,6 @@ some content
 ### sh hash.sh REPO foo.4
 ### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
-+ diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
-+ patch "--version"
-+ patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${OPAMTMP}/tarred)
 + tar "cfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz.tmp" "-C" "${OPAMTMP}" "tarred"
 ### opam install foo.4 -vv | grep '^\+' | sed-cmd test | sed-cmd tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
@@ -104,9 +95,6 @@ some content
 ### sh hash.sh REPO foo.5
 ### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
-+ diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
-+ patch "--version"
-+ patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${OPAMTMP}/tarred)
 ### opam install foo.5 -vv | grep '^\+' | sed-cmd test
 + test "-f" "quux" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.5)
 ### ls $OPAMROOT/repo | grep -v "cache"
