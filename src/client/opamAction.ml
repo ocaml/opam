@@ -368,7 +368,7 @@ let prepare_package_build env opam nv dir =
   let apply_patches ?(dryrun=false) () =
     let patch base =
       if dryrun then Done None else
-        OpamFilename.patch
+        OpamFilename.patch ~allow_unclean:true
           (dir // OpamFilename.Base.to_string base) dir
     in
     let rec aux = function

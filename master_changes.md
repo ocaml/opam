@@ -29,6 +29,9 @@ users)
 ## Install
 
 ## Build (package)
+  * Patches are now applied using the `patch` OCaml library instead of GNU Patch [#5892 @kit-ty-kate - fix #6019]
+  * ✘ Patches: Context diffs are not supported anymore, only Unified diffs are (including its git extensions) [#5892 @kit-ty-kate]
+  * ✘ Patches: Stop support of file permission changes via git extension to the unified diff specification [#5892 @kit-ty-kate - fix #3782]
 
 ## Remove
 
@@ -64,6 +67,7 @@ users)
   * [BUG] Do not show the not-up-to-date message with packages tagged with avoid-version [#6273 @kit-ty-kate - fix #6271]
   * [BUG] Fix a regression on `opam upgrade <package>` upgrading unrelated packages [#6373 @AltGr]
   * [BUG] Fix a regression on `opam upgrade --all <uninstalled-pkg>` not upgrading the whole switch [#6373 @kit-ty-kate]
+  * Updates are now applied using the `patch` OCaml library instead of the system GNU Patch and diff utilities [#5892 @kit-ty-kate - fix ocaml/setup-ocaml#933]
 
 ## Tree
 
@@ -82,6 +86,7 @@ users)
   * Update SWH API request [#6036 @rjbou]
   * Rework SWH fallback to have a more correct archive retrieval and more fine grained error handling [#6036 @rjbou - fix #5721]
   * Check that the repositories given to `opam repository remove` actually exist [#5014 @kit-ty-kate - fixes #5012]
+  * ✘ Symlinks in repositories are no longer supported [#5892 @kit-ty-kate]
 
 ## Lock
   * [BUG] Fix `pin-depends` for `with-*` dependencies [#5471 @rjbou - fix #5428]
@@ -99,6 +104,7 @@ users)
   * Lookup at `gpatch` before `patch` on macOS now that both homebrew and macports expose `gpatch` as `gpatch` since Homebrew/homebrew-core#174687 [#6255 @kit-ty-kate]
   * Relax lookup on OpenBSD to consider all installed packages [#6362 @semarie]
   * Speedup the detection of available system packages with pacman and brew [#6324 @kit-ty-kate]
+  * The system GNU Patch and diff are no longer runtime dependencies of opam [#5892 @kit-ty-kate]
 
 ## Format upgrade
 
