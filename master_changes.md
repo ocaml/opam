@@ -11,7 +11,6 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
-  * Bump the version of opam to 2.3.0~alpha2~dev [#6204 @kit-ty-kate]
 
 ## Global CLI
 
@@ -22,7 +21,6 @@ users)
 ## Config report
 
 ## Actions
-  * Fix the install cache storing the wrong version of the opam file after a build failure [#6213 @kit-ty-kate]
 
 ## Install
 
@@ -35,7 +33,6 @@ users)
 ## Config
 
 ## Pin
-  * [BUG] Fix first retrieval of local VCS pin done as local path [#6221 @rjbou - fix #5809]
 
 ## List
 
@@ -52,7 +49,6 @@ users)
 ## Source
 
 ## Lint
-  * [BUG] fix lint W59 with local urls that are not archives [#6219 @rjbou - fix #6218]
 
 ## Repository
 
@@ -73,17 +69,10 @@ users)
 ## VCS
 
 ## Build
-  * Bump the requirement for dune to 2.8 [#6204 @kit-ty-kate]
-  * Bump the vendored version of dune to 3.16.0, cppo to 1.7.0 and extlib to 1.8.0 [#6223 @kit-ty-kate]
-  * Fix compilation with OCaml 5.3 when using the vendored extlib by updating to the 5.3 compatible version (e.g. `make cold` or `./configure --with-vendored-deps`) [#6223 @kit-ty-kate]
-  * Fix the compilation of opam on Windows with OCaml >= 5.0 again [#6216 @kit-ty-kate]
 
 ## Infrastructure
 
 ## Release scripts
-  * Fix the release script after the bump of dune lang to 2.6 [#6204 @kit-ty-kate]
-  * Fix the release script after the introduction of opam\_core\_stubs [#6204 @kit-ty-kate]
-  * Improve the release script by ignoring interactive questions asked by the FreeBSD package manager [#6204 @kit-ty-kate]
 
 ## Install script
 
@@ -111,20 +100,10 @@ users)
 
 ## Reftests
 ### Tests
-  * Move pin test to pin-legacy [#6135 @rjbou]
-  * More exhaustive test for pin command: test different behaviour and cli options [#6135 @rjbou]
-  * pin: add a test for erroneous first fetch done as local path on local VCS pinned packages [#6221 @rjbou]
-  * Add cache test for installed packages cache update after an action failure [#6213 @kit-ty-kate @rjbou]
-  * Add more tests for lint W59 [#6219 @rjbou]
 
 ### Engine
-  * Update print file function [#6233 @rjbou]
-  * Add `opam-cache` command, to display internal cache content in reftest [#6233 @rjbou]
 
 ## Github Actions
-  * Add OCaml 5.2.0 to the build matrix [#6216 @kit-ty-kate]
-  * Allow to have more than one OCaml default version to run all jobs and add 5.2 to the list of default versions together with 4.14 [#6216 @kit-ty-kate]
-  * Bump 4.14 to the latest patch version (4.14.2) [#6216 @kit-ty-kate]
 
 ## Doc
 
@@ -136,13 +115,9 @@ users)
 ## opam-repository
 
 ## opam-state
-  * `OpamSwitchState.Installed_cache`: export `load` function [#6233 @rjbou]
 
 ## opam-solver
 
 ## opam-format
 
 ## opam-core
-  * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`: Harden the process calls to account for failures [#6230 @kit-ty-kate - fix #6215]
-  * `OpamStd.Sys.{uname,getconf}`: now accepts only one argument as parameter, as per their documentation [#6230 @kit-ty-kate]
-  * `OpamSystem`: add `is_archive_from_string` that does the same than `is_archive` but without looking at the file, only analysing the string (extension) [#6219 @rjbou]
