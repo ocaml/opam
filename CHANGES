@@ -3,6 +3,47 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.3.0~beta1:
+* Fix an opam 2.1 regression where the initial pin of a local VCS directory
+  would store untracked and ignored files. Those files would usually be
+  cleaned before building the package, however git submodules would not be
+  cleaned and would cause issues when paired with the new behaviour added in
+  2.3.0~alpha1 which makes opam error when git submodules fail to update
+  (was previously a warning) [#6221 @rjbou - fix #5809]
+* Fix a regression which would make opam crash on platforms where
+  `getconf LONG_BIT` is not available (e.g. OpenBSD)
+  [#6230 @kit-ty-kate - fix #6215]
+* Fix the installed packages internal cache, which was storing the wrong 
+  version of the opam file after a build failure. This could be triggered
+  easily for users with custom repositories with non-populated extra-files
+  [#6213 @kit-ty-kate]
+* Fix a regression in lint W59 with local urls that are not archives
+  [#6219 @rjbou - fix #6218]
+* Bump to lang dune to 2.8 and bump the requirement to dune >= 2.8, which was
+  actually required in the previous alpha release [#6204 @kit-ty-kate]
+* Bump the vendored version of dune to 3.16.0, cppo to 1.7.0 and extlib to 1.8.0
+  [#6223 @kit-ty-kate]
+* Fix compilation with OCaml 5.3 when using the vendored extlib by updating to
+  the 5.3 compatible version [#6223 @kit-ty-kate]
+* Fix the compilation of opam on Windows with OCaml >= 5.0 (again)
+  [#6216 @kit-ty-kate]
+* Fix the release script after the bump to dune lang 2.6 and the introduction of
+  `opam_core_stubs` [#6204 @kit-ty-kate]
+* Improve the release script by ignoring interactive questions asked by the
+  FreeBSD package manager [#6204 @kit-ty-kate]
+* Improve and extend the tests [#6135 #6221 #6213 #6219 @rjbou]
+* Improve the test infrastructure [#6233 #6233 #6216 @rjbou @kit-ty-kate]
+* API changes
+  * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`:
+    Harden the process calls to account for failures
+    [#6230 @kit-ty-kate - fix #6215]
+  * `OpamStd.Sys.{uname,getconf}`: now accepts only one argument as parameter,
+    as per their documentation [#6230 @kit-ty-kate]
+  * `OpamSwitchState.Installed_cache`: export `load` function [#6233 @rjbou]
+  * `OpamSystem`: add `is_archive_from_string` that does the same than
+    `is_archive` but without looking at the file, only analysing the string
+    (extension) [#6219 @rjbou]
+
 2.3.0~alpha1:
 * (*) When loading a repository, don't automatically populate `extra-files:`
   field with found files in `files/` [#5564 @rjbou]
