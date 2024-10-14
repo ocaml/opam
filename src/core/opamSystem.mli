@@ -233,8 +233,13 @@ val read_command_output: ?verbose:bool -> ?env:string array ->
 
 (** END *)
 
-(** Test whether the file is an archive, by looking as its extension *)
+(** Test whether the file is an archive, by looking at its magic number
+    if the file exists, otherwise by looking as its extension *)
 val is_archive: string -> bool
+
+(** Test whether the given path is an archive, only by looking at its
+    extension *)
+val is_archive_from_string: string -> bool
 
 (** [extract ~dir:dirname filename] extracts the archive [filename] into
     [dirname]. [dirname] should not exists and [filename] should

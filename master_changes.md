@@ -52,6 +52,7 @@ users)
 ## Source
 
 ## Lint
+  * [BUG] fix lint W59 with local urls that are not archives [#6219 @rjbou - fix #6218]
 
 ## Repository
 
@@ -114,6 +115,7 @@ users)
   * More exhaustive test for pin command: test different behaviour and cli options [#6135 @rjbou]
   * pin: add a test for erroneous first fetch done as local path on local VCS pinned packages [#6221 @rjbou]
   * Add cache test for installed packages cache update after an action failure [#6213 @kit-ty-kate @rjbou]
+  * Add more tests for lint W59 [#6219 @rjbou]
 
 ### Engine
   * Update print file function [#6233 @rjbou]
@@ -143,3 +145,4 @@ users)
 ## opam-core
   * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`: Harden the process calls to account for failures [#6230 @kit-ty-kate - fix #6215]
   * `OpamStd.Sys.{uname,getconf}`: now accepts only one argument as parameter, as per their documentation [#6230 @kit-ty-kate]
+  * `OpamSystem`: add `is_archive_from_string` that does the same than `is_archive` but without looking at the file, only analysing the string (extension) [#6219 @rjbou]
