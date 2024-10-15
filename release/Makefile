@@ -151,8 +151,8 @@ distclean: clean
 REMOTE_DIR = /tmp/opam-release
 REMOTE_MAKE = make
 REMOTE_SHELL = /bin/sh
-SSH = ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
-SCP = scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+SSH = sshpass -ppassword ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+SCP = sshpass -ppassword scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 remote: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	$(SSH) "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/$(OUTDIR)"
 	$(SCP) Makefile "$(REMOTE):$(REMOTE_DIR)/"
