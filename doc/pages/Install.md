@@ -39,7 +39,7 @@ pre-compiled binary, backup your opam data if from an older version, and run
 and run `sh install.sh`)
 
 We provide pre-compiled binaries for:
-- Linux (amd64, arm64, ppc64le, s390x, arm7, i686)
+- Linux (amd64, arm64, ppc64le, s390x, riscv64, armhf, i686)
 - macOS (amd64, arm64)
 - FreeBSD (amd64)
 - OpenBSD (amd64)
