@@ -86,6 +86,7 @@ make JOBS="${JOBS}" TAG="$TAG" armhf-linux
 make JOBS="${JOBS}" TAG="$TAG" arm64-linux
 make JOBS="${JOBS}" TAG="$TAG" ppc64le-linux
 make JOBS="${JOBS}" TAG="$TAG" s390x-linux
+make JOBS="${JOBS}" TAG="$TAG" riscv64-linux
 [ -f "${OUTDIR}/opam-$TAG-x86_64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=x86_64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
 [ -f "${OUTDIR}/opam-$TAG-arm64-macos" ] || make TAG="$TAG" JOBS="${JOBS}" macos-local MACOS_ARCH=arm64 REMOTE_DIR=opam-release-$TAG GIT_URL="$CWD/.."
 [ -d ./qemu-base-images ] || git clone https://gitlab.com/kit-ty-kate/qemu-base-images.git

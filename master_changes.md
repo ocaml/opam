@@ -74,6 +74,7 @@ users)
 
 ## Release scripts
   * Upgrade the Alpine Linux container where the Linux release binaries are built from Alpine 3.13 to 3.20 [#6237 @kit-ty-kate]
+  * Make the release script produce a Linux/riscv64 binary [#6237 @kit-ty-kate]
 
 ## Install script
 
