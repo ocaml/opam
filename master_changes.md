@@ -88,6 +88,7 @@ users)
 
 ## Install script
   * Add 2.3.0\~alpha1 to the install scripts [#6203 @kit-ty-kate]
+  * Add 2.3.0~beta1 to the install scripts [#6238 @rjbou]
 
 ## Admin
 
