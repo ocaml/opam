@@ -1,4 +1,4 @@
-FROM multiarch/alpine:%TARGET_TAG%
+FROM ghcr.io/kit-ty-kate/alpine:%TARGET_TAG%
 # May need configuration on the host:
 #    docker run --rm --privileged multiarch/qemu-user-static:register --reset
 LABEL Description="opam release builds" Vendor="OCamlPro" Version="1.0"

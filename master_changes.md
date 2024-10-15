@@ -85,6 +85,7 @@ users)
   * Fix the release script after the introduction of opam\_core\_stubs [#6204 @kit-ty-kate]
   * Improve the release script by ignoring interactive questions asked by the FreeBSD package manager [#6204 @kit-ty-kate]
   * Simplify the making of stripped binaries by introducing the `make opam-stripped` target [#6208 @kit-ty-kate]
+  * Upgrade the Alpine Linux container where the Linux release binaries are built from Alpine 3.13 to 3.20 [#6237 @kit-ty-kate]
 
 ## Install script
   * Add 2.3.0\~alpha1 to the install scripts [#6203 @kit-ty-kate]
