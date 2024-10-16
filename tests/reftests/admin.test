@@ -654,9 +654,83 @@ opam-version: "2.0"
 ### ::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ### :: Cache is tested in admin-cache.test ::
 ### ::::::::::::::::::::::::::::::::::::::::::::::::::::::
-### :
+### ::::::::::::::
+### :VII: Filter :
+### ::::::::::::::
+### rm -rf packages
+### <packages/cras/cras.1/opam>
+opam-version: "2.0"
+available: [ os = "linux" ]
+### <packages/elementum/elementum.1/opam>
+opam-version: "2.0"
+### <packages/ultrices/ultrices.1/opam>
+opam-version: "2.0"
+### <packages/diam/diam.1/opam>
+opam-version: "2.0"
+depends: [ "cras" | "massa" ]
+### <packages/maecenas/maecenas.1/opam>
+opam-version: "2.0"
+### <packages/ligula/consectetur.1/opam>
+opam-version: "2.0"
+### <packages/massa/massa.1/opam>
+opam-version: "2.0"
+available: [ os = "win32" ]
+### <packages/varius/varius.1/opam>
+opam-version: "2.0"
+available: false
+### opam admin list
+# Packages matching: available
+# Name      # Installed # Synopsis
+consectetur --
+cras        --
+diam        --
+elementum   --
+maecenas    --
+massa       --
+ultrices    --
+### opam admin filter --dry-run 'm*'
+The following 2 packages will be kept in the repository (6 packages will be REMOVED):
+maecenas.1 massa.1
+rm -rf ${BASEDIR}/packages/ligula/consectetur.1
+rm -rf ${BASEDIR}/packages/cras/cras.1
+rm -rf ${BASEDIR}/packages/diam/diam.1
+rm -rf ${BASEDIR}/packages/elementum/elementum.1
+rm -rf ${BASEDIR}/packages/ultrices/ultrices.1
+rm -rf ${BASEDIR}/packages/varius/varius.1
+### opam admin filter --dry-run 'm*' --remove
+The following 2 packages will be REMOVED from the repository (6 packages will be kept):
+maecenas.1 massa.1
+rm -rf ${BASEDIR}/packages/maecenas/maecenas.1
+rm -rf ${BASEDIR}/packages/massa/massa.1
+### opam admin filter --dry-run --available
+The following 7 packages will be kept in the repository (1 packages will be REMOVED):
+consectetur.1 cras.1 diam.1 elementum.1 maecenas.1 massa.1 ultrices.1
+rm -rf ${BASEDIR}/packages/varius/varius.1
+### opam admin filter --dry-run --resolve diam --environment 'os=win32'
+The following 2 packages will be kept in the repository (6 packages will be REMOVED):
+diam.1 massa.1
+rm -rf ${BASEDIR}/packages/ligula/consectetur.1
+rm -rf ${BASEDIR}/packages/cras/cras.1
+rm -rf ${BASEDIR}/packages/elementum/elementum.1
+rm -rf ${BASEDIR}/packages/maecenas/maecenas.1
+rm -rf ${BASEDIR}/packages/ultrices/ultrices.1
+rm -rf ${BASEDIR}/packages/varius/varius.1
+### opam admin filter --dry-run --resolve diam --environment 'os=linux'
+The following 2 packages will be kept in the repository (6 packages will be REMOVED):
+cras.1 diam.1
+rm -rf ${BASEDIR}/packages/ligula/consectetur.1
+rm -rf ${BASEDIR}/packages/elementum/elementum.1
+rm -rf ${BASEDIR}/packages/maecenas/maecenas.1
+rm -rf ${BASEDIR}/packages/massa/massa.1
+rm -rf ${BASEDIR}/packages/ultrices/ultrices.1
+rm -rf ${BASEDIR}/packages/varius/varius.1
+### opam admin filter --dry-run --available --environment 'os=linux'
+The following 6 packages will be kept in the repository (2 packages will be REMOVED):
+consectetur.1 cras.1 diam.1 elementum.1 maecenas.1 ultrices.1
+rm -rf ${BASEDIR}/packages/massa/massa.1
+rm -rf ${BASEDIR}/packages/varius/varius.1
 ### ::::::::::::::::::::::
-### :VII: Specific cases :
+### :C: Specific cases :
 ### ::::::::::::::::::::::
 ### : Package version comparison error (#5334)
 ### <packages/fail-5334/fail-5334.1/opam>
