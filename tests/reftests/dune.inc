@@ -819,6 +819,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:filter-operators.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-filter-variable-resolution)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff filter-variable-resolution.test filter-variable-resolution.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-filter-variable-resolution)))
+
+(rule
+ (targets filter-variable-resolution.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:filter-variable-resolution.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-git)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
