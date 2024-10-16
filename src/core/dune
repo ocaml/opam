@@ -19,7 +19,7 @@
   (wrapped     false))
 
 (rule
-  (deps opamWindows.c opamInject.c)
+  (deps opamWindows.c opamInject.c opamUnix.c)
   (action (copy# opamCommonStubs.c opam_stubs.c)))
 
 (rule

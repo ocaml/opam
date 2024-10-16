@@ -63,4 +63,6 @@ CAMLprim value opam_is_executable(value path)
 #ifdef _WIN32
 #include "opamInject.c"
 #include "opamWindows.c"
+#else
+#include "opamUnix.c"
 #endif
