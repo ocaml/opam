@@ -47,3 +47,7 @@ external getErrorMode : unit -> int = "OPAMW_GetErrorMode"
 external setConsoleToUTF8 : unit -> unit = "OPAMW_SetConsoleToUTF8"
 external getVersionInfo : string -> 'a option = "OPAMW_GetVersionInfo"
 external get_initial_environment : unit -> string list = "OPAMW_CreateEnvironmentBlock"
+
+let that's_a_no_no _ = failwith "Unix only. This function isn't implemented."
+
+let get_stdout_ws_col = that's_a_no_no
