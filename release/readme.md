@@ -70,6 +70,7 @@
 
 * a blog entry in opam.ocaml.org
 * a announcement in discuss.ocaml.org
+* update the link to the discuss post in the blog post
 * copy the blog entry from opam.ocaml.org for https://github.com/ocaml/ocaml.org/tree/main/data/changelog/opam
 * announce the release on the OCaml Discord server
 
