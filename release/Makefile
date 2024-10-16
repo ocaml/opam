@@ -9,6 +9,8 @@ FLEXDLLV = 0.43
 OCAML_URL = https://github.com/ocaml/ocaml/archive/refs/tags/$(OCAMLV).tar.gz
 FLEXDLL_URL = https://github.com/ocaml/flexdll/archive/refs/tags/$(FLEXDLLV).tar.gz
 
+ALPINE_VERSION = 3.20
+
 HOST_OS = $(shell uname -s | tr A-Z a-z | sed -e 's/_.*//' -e 's/darwin/macos/' -e 's/cygwin/windows/')
 HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
 OUTDIR = out/$(TAG)
@@ -22,6 +24,7 @@ armhf-linux: $(OUTDIR)/opam-$(VERSION)-armhf-linux
 arm64-linux: $(OUTDIR)/opam-$(VERSION)-arm64-linux
 ppc64le-linux: $(OUTDIR)/opam-$(VERSION)-ppc64le-linux
 s390x-linux: $(OUTDIR)/opam-$(VERSION)-s390x-linux
+riscv64-linux: $(OUTDIR)/opam-$(VERSION)-riscv64-linux
 
 $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	mkdir -p "$(OUTDIR)"
@@ -31,26 +34,27 @@ $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	rm -rf "$(OUTDIR)/opam-full-$(VERSION)"
 
 build/Dockerfile.x86_64-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/x86_64-v3.13/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/x86_64-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
 build/Dockerfile.i686-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/x86-v3.13/g' -e 's/%CONF%/-build i586-alpine-linux-musl/g' $^ >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/x86-v$(ALPINE_VERSION)/g' -e 's/%CONF%/-build i586-alpine-linux-musl/g' $^ >$@
 
 # Need to lie about gnueabihf instead of musleabihf, because of a ./configure bug
 build/Dockerfile.armhf-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/armv7-v3.13/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/armv7-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
 build/Dockerfile.arm64-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/arm64-v3.13/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/arm64-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
 build/Dockerfile.ppc64le-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/ppc64le-v3.13/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/ppc64le-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
 build/Dockerfile.s390x-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/s390x-v3.13/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/s390x-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
+build/Dockerfile.riscv64-linux: Dockerfile.in
+	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/riscv64-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
 
 
 build/%.image: build/Dockerfile.%
 	docker build -t opam-build-$* -f $^ build
 	touch $@
 
-# Actually, this is for alpine 3.13, and varies
 CLINKING_linux = \
 -Wl,-Bstatic \
 -lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
@@ -145,8 +149,8 @@ distclean: clean
 REMOTE_DIR = /tmp/opam-release
 REMOTE_MAKE = make
 REMOTE_SHELL = /bin/sh
-SSH = ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
-SCP = scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+SSH = sshpass -ppassword ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+SCP = sshpass -ppassword scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 remote: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	$(SSH) "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/$(OUTDIR)"
 	$(SCP) Makefile "$(REMOTE):$(REMOTE_DIR)/"
