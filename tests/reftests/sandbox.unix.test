@@ -19,11 +19,11 @@ build: [ "sh" "-c" "echo > $TMPDIR/ech" ]
 ### opam install echo | grep "^\(\\+\|-) " | sed-cmd echo
 + echo "SUCCESS" "|" "tee" "check-write" (CWD=${BASEDIR}/OPAM/sdbx/.opam-switch/build/echo.1)
 - SUCCESS | tee check-write
-### opam install option | grep "^\(\\+\|-) " | '- .*opamMain.exe' -> '- opam' | sed-cmd opam
+### opam install option | grep "^\(\\+\|-) " | sed-cmd opam
 + opam "option" "jobs=4" "--cli=2.1" (CWD=${BASEDIR}/OPAM/sdbx/.opam-switch/build/option.1)
 - 'opam option jobs=4 --cli=2.1' failed.
 - Fatal error:
-- opam: "open" failed on ${BASEDIR}/OPAM/config.lock: Read-only file system
+- ${OPAM}: "open" failed on ${BASEDIR}/OPAM/config.lock: Read-only file system
 - No changes have been performed
 # Return code 31 #
 ### opam install var | grep "^\(\\+\|-) " | sed-cmd opam
