@@ -882,6 +882,8 @@ let get_virtual_switch_state repo_root env =
     repo_name = OpamRepositoryName.of_string "local";
     repo_url = OpamUrl.empty;
     repo_trust = None;
+    repo_etag = None;
+    repo_last_modified = None;
   } in
   let repo_file = OpamRepositoryPath.repo repo_root in
   let repo_def = OpamFile.Repo.safe_read repo_file in

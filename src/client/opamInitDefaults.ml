@@ -168,7 +168,7 @@ let (@|) g f = OpamStd.Op.(g @* f) ()
 let init_config ?(sandboxing=true) () =
   I.empty |>
   I.with_repositories
-    [OpamRepositoryName.of_string "default", (repository_url, None)] |>
+    [OpamRepositoryName.of_string "default", (repository_url, None, None, None)] |>
   I.with_default_compiler default_compiler |>
   I.with_default_invariant default_invariant |>
   I.with_eval_variables eval_variables |>

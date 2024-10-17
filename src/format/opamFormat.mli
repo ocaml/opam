@@ -101,6 +101,13 @@ module V : sig
     (value list, 'b) t -> (value list, 'c) t -> (value list, 'd) t ->
     (value, 'a * 'b * 'c * 'd) t
 
+  (** Maps over five options (e.g. [v {op1} {op2} {op3} {op4} {op5}]) *)
+  val map_options_5 :
+    (value, 'a) t ->
+    (value list, 'b) t -> (value list, 'c) t -> (value list, 'd) t ->
+    (value list, 'e) t -> (value list, 'f) t ->
+    (value, 'a * 'b * 'c * 'd * 'e * 'f) t
+
   (** A pair is simply a list with two elements in the [value] type *)
   val map_pair :
     (value, 'a) t ->

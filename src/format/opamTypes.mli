@@ -176,9 +176,11 @@ type trust_anchors = {
 
 (** Repositories *)
 type repository = {
-  repo_name    : repository_name;
-  repo_url     : url;
-  repo_trust   : trust_anchors option;
+  repo_name          : repository_name;
+  repo_url           : url;
+  repo_trust         : trust_anchors option;
+  repo_etag          : string option;
+  repo_last_modified : string option;
 }
 
 (** {2 Variable-based filters} *)

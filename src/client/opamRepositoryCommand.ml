@@ -80,7 +80,8 @@ let add rt name url trust_anchors =
       (OpamUrl.to_string url)
   | None ->
     let repo = { repo_name = name; repo_url = url;
-                 repo_trust = trust_anchors; }
+                 repo_trust = trust_anchors;
+                 repo_etag = None; repo_last_modified = None; }
     in
     if OpamFilename.exists_dir (OpamRepositoryPath.root root name) ||
        OpamFilename.exists (OpamRepositoryPath.tar root name)

@@ -254,7 +254,7 @@ module InitConfig: sig
   include IO_FILE
 
   val opam_version: t -> opam_version
-  val repositories: t -> (repository_name * (url * trust_anchors option)) list
+  val repositories: t -> (repository_name * (url * trust_anchors option * string option * string option)) list
   val default_compiler: t -> formula
   val default_invariant: t -> formula
   val jobs: t -> int option
@@ -274,7 +274,7 @@ module InitConfig: sig
 
   val with_opam_version: opam_version -> t -> t
   val with_repositories:
-    (repository_name * (url * trust_anchors option)) list -> t -> t
+    (repository_name * (url * trust_anchors option * string option * string option)) list -> t -> t
   val with_default_compiler: formula -> t -> t
   val with_default_invariant: formula -> t -> t
   val with_jobs: int option -> t -> t
@@ -1028,7 +1028,7 @@ module Repo_config_legacy : sig
 end
 
 module Repos_config: sig
-  type t = (url * trust_anchors option) OpamRepositoryName.Map.t
+  type t = (url * trust_anchors option * string option * string option) OpamRepositoryName.Map.t
   include IO_FILE with type t := t
   module BestEffort: BestEffortRead with type t := t
 end

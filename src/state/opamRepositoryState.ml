@@ -164,10 +164,12 @@ let load lock_kind gt =
          load with best-effort (read-only)"
       (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
       (OpamVersion.to_string (OpamFile.Config.root_version));
-  let mk_repo name (url, ta) = {
+  let mk_repo name (url, ta, etag, last_modified) = {
     repo_name = name;
     repo_url = url;
     repo_trust = ta;
+    repo_etag = etag;
+    repo_last_modified = last_modified;
   } in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
   let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
@@ -280,7 +282,7 @@ let write_config rt =
   OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)
     (OpamRepositoryName.Map.filter_map (fun _ r ->
          if r.repo_url = OpamUrl.empty then None
-         else Some (r.repo_url, r.repo_trust))
+         else Some (r.repo_url, r.repo_trust, r.repo_etag, r.repo_last_modified))
         rt.repositories)
 
 let check_last_update () =

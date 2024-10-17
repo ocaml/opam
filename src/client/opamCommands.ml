@@ -478,7 +478,7 @@ let init cli =
     let repo =
       OpamStd.Option.map (fun url ->
           let repo_url = OpamUrl.parse ?backend:repo_kind ~from_file:false url in
-          { repo_name; repo_url; repo_trust = None })
+          { repo_name; repo_url; repo_trust = None; repo_etag = None; repo_last_modified = None })
         repo_url
     in
     let gt, rt, default_compiler =

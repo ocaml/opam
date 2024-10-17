@@ -1706,7 +1706,7 @@ module InitConfigSyntax = struct
 
   type t = {
     opam_version : opam_version;
-    repositories : (repository_name * (url * trust_anchors option)) list;
+    repositories : (repository_name * (url * trust_anchors option * string option * string option)) list;
     default_compiler : formula;
     default_invariant : formula;
     jobs : int option;
@@ -1795,22 +1795,26 @@ module InitConfigSyntax = struct
   }
 
   let pp_repository_def =
-    Pp.V.map_options_3
+    Pp.V.map_options_5
       (Pp.V.string -|
        Pp.of_module "repository" (module OpamRepositoryName))
       (Pp.singleton -| Pp.V.url)
       (Pp.map_list Pp.V.string)
       (Pp.opt @@
        Pp.singleton -| Pp.V.int -|
-       OpamPp.check ~name:"quorum" ~errmsg:"quorum must be >= 0" ((<=) 0)) -|
+       OpamPp.check ~name:"quorum" ~errmsg:"quorum must be >= 0" ((<=) 0))
+      (Pp.opt (Pp.singleton -| Pp.V.string))
+      (Pp.opt (Pp.singleton -| Pp.V.string)) -|
     Pp.pp
-      (fun ~pos:_ (name, url, fingerprints, quorum) ->
-         name, url,
-         match fingerprints with [] -> None | fingerprints ->
-           Some {fingerprints; quorum = OpamStd.Option.default 1 quorum})
-      (fun (name, url, ta) -> match ta with
-         | Some ta ->  name, url, ta.fingerprints, Some ta.quorum
-         | None -> name, url, [], None)
+      (fun ~pos:_ (name, url, fingerprints, quorum, etag, last_modified) ->
+         let ta =
+           match fingerprints with [] -> None | fingerprints ->
+             Some {fingerprints; quorum = OpamStd.Option.default 1 quorum}
+         in
+         (name, url, ta, etag, last_modified))
+      (fun (name, url, ta, etag, last_modified) -> match ta with
+         | Some ta -> (name, url, ta.fingerprints, Some ta.quorum, etag, last_modified)
+         | None -> (name, url, [], None, etag, last_modified))
 
   let fields =
     [
@@ -1821,8 +1825,8 @@ module InitConfigSyntax = struct
         with_repositories repositories
         (Pp.V.map_list ~depth:1 @@
          pp_repository_def -|
-         Pp.pp (fun ~pos:_ (name, url, ta) -> (name, (url, ta)))
-           (fun (name, (url, ta)) -> (name, url, ta)));
+         Pp.pp (fun ~pos:_ (name, url, ta, etag, last_modified) -> (name, (url, ta, etag, last_modified)))
+           (fun (name, (url, ta, etag, last_modified)) -> (name, url, ta, etag, last_modified)));
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
@@ -1963,7 +1967,7 @@ module Repos_configSyntax = struct
   let format_version = OpamVersion.of_string "2.0"
   let file_format_version = OpamVersion.of_string "2.0"
 
-  type t = (url * trust_anchors option) OpamRepositoryName.Map.t
+  type t = (url * trust_anchors option * string option * string option) OpamRepositoryName.Map.t
 
   let empty = OpamRepositoryName.Map.empty
 
@@ -1973,8 +1977,8 @@ module Repos_configSyntax = struct
       ((Pp.V.map_list ~depth:1 @@
         InitConfigSyntax.pp_repository_def -|
         Pp.pp
-          (fun ~pos:_ (name, url, ta) -> (name, (url, ta)))
-          (fun (name, (url, ta)) -> (name, url, ta))) -|
+          (fun ~pos:_ (name, url, ta, etag, last_modified) -> (name, (url, ta, etag, last_modified)))
+          (fun (name, (url, ta, etag, last_modified)) -> (name, url, ta, etag, last_modified))) -|
        Pp.of_pair "repository-url-list"
          OpamRepositoryName.Map.(of_list, bindings));
   ]
