@@ -17,6 +17,7 @@ PATH=$OPAM_LOCAL/bin:$OCAML_LOCAL/bin:$PATH; export PATH
 
 OPAM_COLD=${OPAM_COLD:-0}
 OPAM_TEST=${OPAM_TEST:-0}
+OPAM_DOC=${OPAM_DOC:-0}
 OPAM_UPGRADE=${OPAM_UPGRADE:-0}
 
 OPAM_REPO_MAIN=https://github.com/ocaml/opam-repository.git
@@ -42,7 +43,7 @@ fi
 
 # used only for TEST jobs
 init-bootstrap () {
-  if [ "$OPAM_TEST" = "1" ] || [ -n "$SOLVER" ]; then
+  if [ "$OPAM_TEST" = "1" ] || [ "$OPAM_DOC" = "1" ] || [ -n "$SOLVER" ]; then
     set -e
     export OPAMROOT=$OPAMBSROOT
     # The system compiler will be picked up
@@ -70,6 +71,9 @@ EOF
     # extlib is installed, since UChar.cmi causes problems with the search
     # order. See also the removal of uChar and uTF8 in src_ext/jbuild-extlib-src
     opam install . --deps-only
+    if [ "$OPAM_DOC" = "1" ]; then
+      opam install omd odoc
+    fi
 
     rm -f "$OPAMBSROOT"/log/*
   fi

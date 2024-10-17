@@ -408,6 +408,26 @@ let cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?
     ++ run "Test (basic)" ["bash -exu .github/scripts/main/test.sh"]
     ++ end_job f
 
+let doc_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?section runner ~oc ~workflow f =
+  let platform = os_of_platform runner in
+  let host = host_of_platform platform in
+  let only_on target = only_on platform target in
+  let needs = [analyse_job; (match platform with Linux -> build_linux_job | Windows -> build_windows_job | MacOS -> build_macOS_job)] in
+  let env = [("OPAM_DOC", "1")] in
+  let matrix = platform_ocaml_matrix ~fail_fast:false start_latests_ocaml in
+  let ocamlv = "${{ matrix.ocamlv }}" in
+  job ~oc ~workflow ?section ~runs_on:(Runner [platform]) ~env ~needs ~matrix ("Doc-" ^ name_of_platform platform)
+    ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
+    ++ run "Install man2html" ["sudo apt install man2html"]
+    ++ checkout ()
+    ++ cache Archives
+    ++ cache OCaml platform ocamlv host
+    ++ build_cache OCaml platform ocamlv host
+    ++ cache OpamBS ocamlv "doc"
+    ++ build_cache OpamBS ocamlv "doc"
+    ++ run "Compile" ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}"); ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}")] ["bash -exu .github/scripts/main/main.sh " ^ host]
+    ++ end_job f
+
 let solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?section runner ~oc ~workflow f =
   let platform = os_of_platform runner in
   (* TODO Windows steps not all here *)
@@ -519,6 +539,7 @@ let main oc : unit =
   @@ fun build_macOS_job -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux
   @@ fun _ -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
   @@ fun _ -> cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam cold" Linux
+  @@ fun _ -> doc_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile doc" Linux
   @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile solver backends" Linux
   @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
   @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux
