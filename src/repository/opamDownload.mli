@@ -25,7 +25,7 @@ val download:
   OpamUrl.t -> OpamFilename.Dir.t ->
   OpamFilename.t OpamProcess.job
 
-(** As [download], but with a specified output filename. *)
+(** As {!download}, but with a specified output filename. *)
 val download_as:
   ?quiet:bool -> ?validate:bool -> overwrite:bool -> ?compress:bool ->
   ?checksum:OpamHash.t ->

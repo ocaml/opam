@@ -40,8 +40,8 @@ val init:
  *   OpamFile.InitConfig.t *)
 
 (** Re-runs the extra tools checks, updates the configuration from [init_config]
-   (defaults to [OpamInitDefaults.init_config]) for the settings that are unset,
-   and updates all repositories *)
+   (defaults to {!OpamInitDefaults.init_config}) for the settings that are
+   unset, and updates all repositories *)
 val reinit:
   ?init_config:OpamFile.InitConfig.t -> interactive:bool -> ?dot_profile:filename ->
   ?update_config:bool -> ?env_hook:bool -> ?completion:bool -> ?inplace:bool ->
@@ -62,7 +62,7 @@ val install:
   ?depext_only:bool -> atom list ->
   rw switch_state
 
-(** Low-level version of [reinstall], bypassing the package name sanitization
+(** Low-level version of {!reinstall}, bypassing the package name sanitization
     and dev package update, and offering more control *)
 val install_t:
   rw switch_state ->
@@ -90,7 +90,7 @@ val check_installed:
 val reinstall:
   rw switch_state -> ?assume_built:bool -> atom list -> rw switch_state
 
-(** Low-level version of [reinstall], bypassing the package name sanitization
+(** Low-level version of {!reinstall}, bypassing the package name sanitization
     and dev package update, and offering more control *)
 val reinstall_t:
   rw switch_state -> ?ask:bool -> ?force:bool -> assume_built:bool -> atom list
@@ -114,7 +114,7 @@ val upgrade:
   ?formula:formula -> ?check:bool -> ?only_installed:bool ->
   all:bool -> atom list -> rw switch_state
 
-(** Low-level version of [upgrade], bypassing the package name sanitization and
+(** Low-level version of {!upgrade}, bypassing the package name sanitization and
    dev package update, and offering more control. [terse] avoids the verbose
    message when we are at a local maximum, but there are possible upgrades *)
 val upgrade_t:

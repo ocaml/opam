@@ -22,9 +22,10 @@ val packages_with_prefixes: dirname -> string option package_map
 
 (** {2 Repository backends} *)
 
-(** Update {i $opam/repo/$repo}. Raises [Failure] in case the update couldn't be
-    achieved. Returns [`No_changes] if the update did not bring any changes, and
-    [`Changes] otherwise. *)
+(** Update {i $opam/repo/$repo}. Returns [`No_changes] if the update did not
+    bring any changes, and [`Changes] otherwise.
+
+    @raise Failure in case the update couldn't be achieved. *)
 val update: repository -> dirname -> [`Changes | `No_changes] OpamProcess.job
 
 (** [pull_shared_tree ?cache_dir ?cache_url labels_dirnames checksums urls]
@@ -42,7 +43,7 @@ val pull_shared_tree:
   (string * OpamFilename.Dir.t * subpath option) list -> OpamHash.t list ->
   url list -> string download OpamProcess.job
 
-(* Same as [pull_shared_tree], but for a unique label/dirname.
+(* Same as {!pull_shared_tree}, but for a unique label/dirname.
    If [full_fetch] is set to false, VCS repository is retrieved with shallow
    history (by default, full history). *)
 val pull_tree:

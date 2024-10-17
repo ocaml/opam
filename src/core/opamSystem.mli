@@ -18,17 +18,18 @@ exception Command_not_found of string
 
 exception Permission_denied of string
 
-(** raise [Process_error] *)
+(** Raise exception {!Process_error} with the given [result] *)
 val process_error: OpamProcess.result -> 'a
 
-(** raise [Process_error] if the process didn't return 0 *)
+(** Raise exception {!Process_error} with the given [result]
+    if the process didn't return 0 *)
 val raise_on_process_error: OpamProcess.result -> unit
 
 (** Exception raised when a computation in the current process
     fails. *)
 exception Internal_error of string
 
-(** Raise [Internal_error] *)
+(** Raise exception {!Internal_error} with the given string format *)
 val internal_error: ('a, unit, string, 'b) format4 -> 'a
 
 (** [with_tmp_dir fn] executes [fn] creates a temporary directory and
@@ -171,9 +172,10 @@ val directories_with_links: string -> string list
     command and output will be displayed (at command end for the
     latter, if concurrent commands are running). [name] is used for
     naming log files. [text] is what is displayed in the status line
-    for this command. May raise Command_not_found, unless
-    [resolve_path] is set to false (in which case you can end up
-    with a process error instead) *)
+    for this command.
+
+    @raise Command_not_found, unless [resolve_path] is set to false (in which
+    case you can end up with a process error instead) *)
 val make_command:
   ?verbose:bool -> ?env:string array -> ?name:string -> ?text:string ->
   ?metadata:(string * string) list -> ?allow_stdin:bool -> ?stdout:string ->
@@ -286,9 +288,10 @@ exception Locked
 val release_all_locks: unit -> unit
 
 (** Acquires a lock on the given file.
-    Raises [Locked] if the lock can't be acquired and [dontblock] is set. Raises
-    [OpamStd.Sys.Exit] if [safe_mode] is set and a write lock is required. Also
-    raises Unix errors if the lock file can't be opened. *)
+
+    @raise Locked if the lock can't be acquired and [dontblock] is set
+    @raise OpamStd.Sys.Exit if [safe_mode] is set and a write lock is required.
+    @raise Unix.Unix_error if the lock file can't be opened. *)
 val flock: [< lock_flag ] -> ?dontblock:bool -> string -> lock
 
 (** Updates an existing lock to the given level. Raises the same exceptions as
@@ -308,7 +311,8 @@ val lock_isatleast: [< lock_flag ] -> lock -> bool
 (** Returns the current kind of the lock *)
 val get_lock_flag: lock -> lock_flag
 
-(** Returns the underlying fd for the lock or raises Not_found for `No_lock *)
+(** Returns the underlying fd for the lock
+    @raise Not_found for [`No_lock] *)
 val get_lock_fd: lock -> Unix.file_descr
 
 (** {2 Misc} *)
@@ -346,7 +350,7 @@ val print_stats: unit -> unit
 val register_printer: unit -> unit
 
 (** Initialises signal handlers, catch_break and some exception printers. The
-    lib may not perform properly without this if [Sys.catch_break] isn't set
+    lib may not perform properly without this if {!Sys.catch_break} isn't set
     and SIGPIPE isn't handled (with a no-op) *)
 val init: unit -> unit
 

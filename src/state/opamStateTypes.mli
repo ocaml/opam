@@ -54,7 +54,7 @@ type +'lock global_state = {
 
   root: OpamPath.t;
   (** The global opam root path (caution: this is stored here but some code may
-      rely on OpamStateConfig.root_dir ; in other words, multiple root handling
+      rely on {!OpamStateConfig.root_dir} ; in other words, multiple root handling
       isn't really supported at the moment) *)
 
   config: OpamFile.Config.t;
@@ -140,18 +140,18 @@ type +'lock switch_state = {
       initialised for otherwise available packages *)
 
   available_packages: package_set Lazy.t;
-  (** The set of available packages, filtered by their [available:] field *)
+  (** The set of available packages, filtered by their [available] field *)
 
   pinned: package_set;
   (** The set of pinned packages (their metadata, including pinning target, is
-      in [opams]) *)
+      in {!field:opams}) *)
 
   installed: package_set;
   (** The set of all installed packages *)
 
   installed_opams: OpamFile.OPAM.t package_map;
   (** The cached metadata of installed packages (may differ from the metadata
-      that is in [opams] for updated packages) *)
+      that is in {!field:opams} for updated packages) *)
 
   installed_roots: package_set;
   (** The set of packages explicitly installed by the user. Some of them may
@@ -164,7 +164,7 @@ type +'lock switch_state = {
   invalidated: package_set Lazy.t;
   (** The set of packages which are installed but no longer valid, e.g. because
       of removed system dependencies. Only packages which are unavailable end up
-      in this set, they are otherwise put in [reinstall]. *)
+      in this set, they are otherwise put in {!field:reinstall}. *)
 
   (* Missing: a cache for
      - switch-global and package variables
@@ -179,8 +179,9 @@ type provenance = [ `Env          (** Environment variable *)
 
 (** Pinned opam files informations *)
 
+(**/**)
 (* Opam file to pin informations.
-   [_topin_opamfile] and _topin_name_and_opamfile] are not meant to be used
+   {!_topin_opamfile} and {!_topin_name_and_opamfile} are not meant to be used
    directly ; use rather below defined types ;*)
 type 'url _topin_opamfile = {
   pin_file: OpamFile.OPAM.t OpamFile.t;
@@ -192,6 +193,8 @@ type ('name, 'url) _topin_name_and_opamfile = {
   pin_name: 'name;
   pin: 'url _topin_opamfile;
 }
+(**/**)
+
 type name_and_file = (name, unit) _topin_name_and_opamfile
 type name_and_file_w_url = (name, url) _topin_name_and_opamfile
 type nameopt_and_file = (name option, unit) _topin_name_and_opamfile

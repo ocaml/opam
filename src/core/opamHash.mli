@@ -41,7 +41,7 @@ val sort : t list -> t list
 
 val check_file: string -> t -> bool
 
-(** Like [check_file], but returns the actual mismatching hash of the file, or
+(** Like {!check_file}, but returns the actual mismatching hash of the file, or
     [None] in case of match *)
 val mismatch: string -> t -> t option
 

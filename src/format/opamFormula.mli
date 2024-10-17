@@ -35,7 +35,7 @@ val string_of_atom: atom -> string
 val short_string_of_atom: atom -> string
 
 (** Parses a package or atom, in a format similar to [short_string_of_atom].
-    @raise [Failure] if the format is incorrect *)
+    @raise Failure if the format is incorrect *)
 val atom_of_string: string -> atom
 
 (** Prints atoms as a conjunction ("&") using the short format *)
@@ -242,7 +242,7 @@ val of_conjunction: atom conjunction -> t
     is not a disjunction, then fail. *)
 val to_disjunction: t -> atom disjunction
 
-(** Like [to_disjunction], but accepts conjunctions within constraint formulas,
+(** Like {!to_disjunction}, but accepts conjunctions within constraint formulas,
     resolving them using the provided package set. Conjunctions between packages
     still raise [Failure]. *)
 val set_to_disjunction: OpamPackage.Set.t -> t -> atom disjunction

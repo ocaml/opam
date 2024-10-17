@@ -26,7 +26,7 @@ val lint:
   ?check_upstream:bool ->
   OpamFile.OPAM.t -> (int * [`Warning|`Error] * string) list
 
-(** Same as [lint], but operates on a file, which allows catching parse errors
+(** Same as {!lint}, but operates on a file, which allows catching parse errors
    too. [check_extra_files] defaults to a function that will look for a [files/]
    directory besides [filename]. [handle_dirname] is used for warning 4, and
    should be set when reading packages from a repository, so that package name
@@ -38,7 +38,7 @@ val lint_file:
   OpamFile.OPAM.t OpamFile.typed_file ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
-(** Same as [lint_file], but taking input from a channel. [check_extra_files]
+(** Same as {!lint_file}, but taking input from a channel. [check_extra_files]
    defaults to a function that will look for a [files/] directory besides
    [filename] *)
 val lint_channel:
@@ -48,7 +48,7 @@ val lint_channel:
   OpamFile.OPAM.t OpamFile.typed_file -> in_channel ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
-(** Like [lint_file], but takes the file contents as a string.
+(** Like {!lint_file}, but takes the file contents as a string.
    [check_extra_files] defaults to a function that will look for a [files/]
    directory besides [filename] *)
 val lint_string:
@@ -65,6 +65,7 @@ val warns_to_string: (int * [`Warning|`Error] * string) list -> string
 
 (** Utility function to construct a json of validation results.
     The format is as follow:
+    {[
     { "file"     : string <filename>,
       "result"   : string (passed | error | warning),
       "warnings" :
@@ -78,17 +79,18 @@ val warns_to_string: (int * [`Warning|`Error] * string) list -> string
           ...
         ]
     }
+    ]}
 *)
 val warns_to_json:
   ?filename:string -> (int * [`Warning|`Error] * string) list -> OpamJson.t
 
 (** Read the opam metadata from a given directory (opam file, with possible
     overrides from url and descr files).
-    Warning: use [read_repo_opam] instead for correctly reading files from
+    Warning: use {!read_repo_opam} instead for correctly reading files from
     repositories!*)
 val read_opam: dirname -> OpamFile.OPAM.t option
 
-(** Like [read_opam], but additionally fills in the [metadata_dir] info
+(** Like {!read_opam}, but additionally fills in the [metadata_dir] info
     correctly for the given repository. *)
 val read_repo_opam:
   repo_name:repository_name -> repo_root:dirname ->
@@ -101,7 +103,7 @@ val read_repo_opam:
 val add_aux_files:
   ?dir:dirname -> ?files_subdir_hashes:bool -> OpamFile.OPAM.t -> OpamFile.OPAM.t
 
-(** {2 Tools to manipulate the [OpamFile.OPAM.t] contents} *)
+(** {2 Tools to manipulate the {!OpamFile.OPAM.t} contents} *)
 val map_all_variables:
   (full_variable -> full_variable) -> OpamFile.OPAM.t -> OpamFile.OPAM.t
 

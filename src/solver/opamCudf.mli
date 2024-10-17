@@ -84,7 +84,7 @@ val get_final_universe:
 
 (** Compute the list of actions to match the difference between two
     universe. Remark: the result order is unspecified, ie. need to use
-    [atomic_actions] to get a solution which respects the
+    {!atomic_actions} to get a solution which respects the
     topological order induced by dependencies. *)
 val actions_of_diff:
   (Set.t * Set.t) -> Cudf.package atomic_action list
@@ -101,7 +101,7 @@ exception Cyclic_actions of Cudf.package action list list
     [reduce_actions] to reduce it to a graph including reinstall and
     up/down-grade actions.
 
-    May raise [Cyclic_actions]. *)
+    @raise Cyclic_actions *)
 val atomic_actions:
   simple_universe:Cudf.universe ->
   complete_universe:Cudf.universe ->
@@ -138,7 +138,7 @@ val resolve:
   Cudf_types.vpkg request ->
   (Cudf.universe, conflict) result
 
-(** Computes a list of actions to proceed from the result of [resolve].
+(** Computes a list of actions to proceed from the result of {!resolve}.
     Note however than the action list is not yet complete: the transitive closure
     of reinstallations is not yet completed, as it requires to fold over the
     dependency graph in considering the optional dependencies. *)
@@ -248,8 +248,8 @@ val string_of_explanation:
 val conflict_explanations_raw:
   package_set -> conflict -> explanation list * Action.t list list
 
-(** Properly concat a single conflict as returned by [conflict_explanations] for
-   display *)
+(** Properly concat a single conflict as returned by {!conflict_explanations}
+    for display *)
 val string_of_conflict:
   ?start_column:int -> string * string list * string list -> string
 
@@ -281,7 +281,7 @@ val packages: Cudf.universe -> Cudf.package list
 val to_cudf: Cudf.universe -> Cudf_types.vpkg request
   -> Cudf.preamble * Cudf.universe * Cudf.request
 
-(** Like [OpamTypesBase.action_contents] but return the single package of
+(** Like {!OpamTypesBase.action_contents} but return the single package of
     remove, install, reinstal, and change action *)
 val action_contents: 'a action -> 'a
 
