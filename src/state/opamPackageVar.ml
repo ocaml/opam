@@ -194,7 +194,7 @@ let build_id st opam =
       in
       let opam_hash =
         OpamHash.compute_from_string ~kind
-          (OpamFile.OPAM.write_to_string (OpamFile.OPAM.effective_part opam))
+          (OpamFile.OPAM.write_to_string (OpamFile.OPAM.effective_part (Some nv) opam))
       in
       let hash =
         OpamHash.compute_from_string ~kind
