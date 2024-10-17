@@ -1798,7 +1798,7 @@ module InitConfigSyntax = struct
     Pp.V.map_options_3
       (Pp.V.string -|
        Pp.of_module "repository" (module OpamRepositoryName))
-      (Pp.opt @@ Pp.singleton -| Pp.V.url)
+      (Pp.singleton -| Pp.V.url)
       (Pp.map_list Pp.V.string)
       (Pp.opt @@
        Pp.singleton -| Pp.V.int -|
@@ -1821,10 +1821,8 @@ module InitConfigSyntax = struct
         with_repositories repositories
         (Pp.V.map_list ~depth:1 @@
          pp_repository_def -|
-         Pp.pp (fun ~pos -> function
-             | (name, Some url, ta) -> (name, (url, ta))
-             | (_, None, _) -> Pp.bad_format ~pos "Missing repository URL")
-           (fun (name, (url, ta)) -> (name, Some url, ta)));
+         Pp.pp (fun ~pos:_ (name, url, ta) -> (name, (url, ta)))
+           (fun (name, (url, ta)) -> (name, url, ta)));
       "default-compiler", Pp.ppacc
         with_default_compiler default_compiler
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
@@ -1965,7 +1963,7 @@ module Repos_configSyntax = struct
   let format_version = OpamVersion.of_string "2.0"
   let file_format_version = OpamVersion.of_string "2.0"
 
-  type t = ((url * trust_anchors option) option) OpamRepositoryName.Map.t
+  type t = (url * trust_anchors option) OpamRepositoryName.Map.t
 
   let empty = OpamRepositoryName.Map.empty
 
@@ -1975,12 +1973,8 @@ module Repos_configSyntax = struct
       ((Pp.V.map_list ~depth:1 @@
         InitConfigSyntax.pp_repository_def -|
         Pp.pp
-          (fun ~pos:_ -> function
-             | (name, Some url, ta) -> name, Some (url, ta)
-             | (name, None, _) -> name, None)
-          (fun (name, def) -> match def with
-             | Some (url, ta) -> name, Some url, ta
-             | None -> name, None, None)) -|
+          (fun ~pos:_ (name, url, ta) -> (name, (url, ta)))
+          (fun (name, (url, ta)) -> (name, url, ta))) -|
        Pp.of_pair "repository-url-list"
          OpamRepositoryName.Map.(of_list, bindings));
   ]

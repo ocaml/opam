@@ -119,6 +119,7 @@ users)
   * download tool: Use fetch on DragonFlyBSD and ftp on NetBSD [#6305 @kit-ty-kate]
   * Prefer curl over any other download tools on every systems, if available [#6305 @kit-ty-kate]
   * Avoid issues when using wget2 where the requested url might return an html page instead of the expected content [#6303 @kit-ty-kate]
+  * Ensure each repositories stored in repos-config is associated with an URL [#6249 @kit-ty-kate]
 
 ## Internal: Windows
 
@@ -164,6 +165,7 @@ users)
 ## opam-format
   * `OpamFormula.string_of_relop`: export function [#6197 @mbarbin]
   * `OpamFormula.all_relop`: a list of all operators [#6197 @mbarbin]
+  * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
 
 ## opam-core
   * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`: Harden the process calls to account for failures [#6230 @kit-ty-kate - fix #6215]
