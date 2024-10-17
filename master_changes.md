@@ -95,6 +95,7 @@ users)
 ## Shell
 
 ## Internal
+  * Ensure each repositories stored in repos-config is associated with an URL [#6249 @kit-ty-kate]
 
 ## Internal: Windows
 
@@ -125,5 +126,6 @@ users)
 ## opam-solver
 
 ## opam-format
+  * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
 
 ## opam-core
