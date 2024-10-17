@@ -1885,10 +1885,7 @@ let init
           else config
         in
         OpamFile.Config.write config_f config;
-        let repos_config =
-          OpamRepositoryName.Map.of_list repos |>
-          OpamRepositoryName.Map.map OpamStd.Option.some
-        in
+        let repos_config = OpamRepositoryName.Map.of_list repos in
         OpamFile.Repos_config.write (OpamPath.repos_config root)
           repos_config;
 

@@ -164,16 +164,11 @@ let load lock_kind gt =
          load with best-effort (read-only)"
       (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
       (OpamVersion.to_string (OpamFile.Config.root_version));
-  let mk_repo name url_opt = {
+  let mk_repo name (url, ta) = {
     repo_name = name;
-    repo_url = OpamStd.Option.Op.((url_opt >>| fst) +! OpamUrl.empty);
-    repo_trust = OpamStd.Option.Op.(url_opt >>= snd);
+    repo_url = url;
+    repo_trust = ta;
   } in
-  let uncached =
-    (* Don't cache repositories without remote, as they should be editable
-       in-place *)
-    OpamRepositoryName.Map.filter (fun _ url -> url = None) repos_map
-  in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
   let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
   let repos_tmp = Hashtbl.create 23 in
@@ -211,22 +206,8 @@ let load lock_kind gt =
     rt
   in
   match Cache.load gt.root with
-  | Some (repofiles, opams) when OpamRepositoryName.Map.is_empty uncached ->
-    log "Cache found";
-    make_rt repofiles opams
   | Some (repofiles, opams) ->
-    log "Cache found, loading repositories without remote only";
-    OpamFilename.with_flock_upgrade `Lock_read lock @@ fun _ ->
-    let repofiles, opams =
-      OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
-          let repo = mk_repo name url in
-          let repo_def, repo_opams =
-            load_repo repo (get_root_raw gt.root repos_tmp name)
-          in
-          OpamRepositoryName.Map.add name repo_def defs,
-          OpamRepositoryName.Map.add name repo_opams opams)
-        uncached (repofiles, opams)
-    in
+    log "Cache found";
     make_rt repofiles opams
   | None ->
     log "No cache found";
@@ -297,7 +278,7 @@ let with_ lock gt f =
 
 let write_config rt =
   OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)
-    (OpamRepositoryName.Map.map (fun r ->
+    (OpamRepositoryName.Map.filter_map (fun _ r ->
          if r.repo_url = OpamUrl.empty then None
          else Some (r.repo_url, r.repo_trust))
         rt.repositories)
@@ -312,4 +293,3 @@ let check_last_update () =
     OpamConsole.note "It seems you have not updated your repositories \
                       for a while. Consider updating them with:\n%s\n"
       (OpamConsole.colorise `bold "opam update");
-
