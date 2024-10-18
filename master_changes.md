@@ -117,6 +117,7 @@ users)
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
   * Fix debian manual url fragment [#6231 @RyanGibb]
+  * Change example of non-letter in version ordering [#6252 @gridbugs]
 
 ## Security fixes
 

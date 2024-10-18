@@ -350,7 +350,7 @@ Here is a full example:
 >   1, which is the empty string `""`, is smaller than `"a"`.
 >
 > - For non-digit components, the ordering used is that letters are
->   always smaller than non-letters (for example `z` < `"#"`), while
+>   always smaller than non-letters (for example `z` < `"+"`), while
 >   non-letters are compared by ASCII order.
 >
 > - The `~` character is special as it sorts even before the end of sequence
