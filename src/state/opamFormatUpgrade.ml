@@ -563,7 +563,11 @@ let from_1_3_dev2_to_1_3_dev5 ~on_the_fly:_ root conf =
             OpamStd.Option.default
               (OpamFile.Descr.create
                  "Switch relying on a system-wide installation of OCaml")
-              (OpamFile.Descr.read_opt descr_f)
+              (if OpamFile.exists descr_f then
+                 Some (OpamFile.Descr.create
+                         (OpamSystem.read (OpamFile.to_string descr_f)))
+               else
+                 None)
           in
           let comp_opam =
             OpamFile.Comp.to_package comp (Some descr)

@@ -298,12 +298,11 @@ end
 (** Package descriptions: [$opam/descr/] *)
 module Descr: sig
 
-  include IO_FILE
+  type t
+
+  val empty : t
 
   val create: string -> t
-
-  (** Create an abstract description file from a string *)
-  val of_string: t typed_file -> string -> t
 
   (** Return the first line *)
   val synopsis: t -> string

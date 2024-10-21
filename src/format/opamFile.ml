@@ -186,10 +186,7 @@ end
     content. Formerly, (<repo>/packages/.../descr,
     <repo>/compilers/.../<v>.descr) *)
 
-module DescrIO = struct
-
-  let internal = "descr"
-  let format_version = OpamVersion.of_string "0"
+module Descr = struct
 
   type t = string * string
 
@@ -203,24 +200,6 @@ module DescrIO = struct
     | "" -> x ^ "\n"
     | y -> String.concat "" [x; "\n\n"; y; "\n"]
 
-  let of_channel _ ic =
-    let x =
-      try OpamStd.String.strip (input_line ic)
-      with End_of_file | Sys_error _ -> "" in
-    let y =
-      try OpamStd.String.strip (OpamSystem.string_of_channel ic)
-      with End_of_file | Sys_error _ -> ""
-    in
-    x, y
-
-  let to_channel _ oc (x,y) =
-    output_string oc x;
-    output_char oc '\n';
-    if y <> "" then
-      (output_char oc '\n';
-       output_string oc y;
-       output_char oc '\n')
-
   let create str =
     let head, tail =
       match OpamStd.String.cut_at str '\n' with
@@ -228,14 +207,6 @@ module DescrIO = struct
       | Some (h,t) -> h, t in
     OpamStd.String.strip head, OpamStd.String.strip tail
 
-  let of_string _ = create
-
-  let to_string _ = full
-
-end
-module Descr = struct
-  include DescrIO
-  include MakeIO(DescrIO)
 end
 
 (* module Comp_descr = Descr *)
@@ -3182,7 +3153,7 @@ module OPAMSyntax = struct
         Pp.V.os_constraint;
       "descr", no_cleanup Pp.ppacc_opt with_descr OpamStd.Option.none
         (Pp.V.string_tr -|
-         Pp.of_pair "descr" Descr.(of_string (), to_string ()));
+         Pp.of_pair "descr" Descr.(create, full));
       "extra-sources", no_cleanup Pp.ppacc_opt
         with_extra_sources OpamStd.Option.none
         (Pp.V.map_list ~depth:2 @@
