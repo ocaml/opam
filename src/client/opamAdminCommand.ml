@@ -335,15 +335,16 @@ let packages_with_prefixes repo_root packages =
 let check_opam_file_version_url has_error repo_root prefix nv opam =
   let min_opam_version = OpamVersion.of_string "2.0" in
   let url_file =
-    let ( // ) = OpamFilename.Op.( // ) in
-    OpamFile.(make
-                (OpamRepositoryPath.packages repo_root prefix nv // "url"))
+    let open OpamFilename.Op in
+    OpamFile.make
+      (OpamRepositoryPath.packages repo_root prefix nv // "url")
   in
+  let opam_version = opam.OpamFile.OPAM.opam_version in
   if OpamFile.exists url_file then
     (OpamConsole.warning "Not updating external URL file at %s"
        (OpamFile.to_string url_file);
      true)
-  else if OpamVersion.compare opam.OpamFile.OPAM.opam_version min_opam_version < 0 then
+  else if OpamVersion.compare opam_version min_opam_version < 0 then
     (OpamConsole.warning "OPAM version must be >= 2.0 at %s"
        (OpamFile.to_string (OpamRepositoryPath.opam repo_root prefix nv));
      true)

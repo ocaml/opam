@@ -428,12 +428,11 @@ let do_upgrade repo_root =
         in
         if opam <> opam0 then
           (OpamFile.OPAM.write_with_preserved_format opam_file opam;
-           let ( // ) = OpamFilename.Op.( // ) in
+           let open OpamFilename.Op in
+           let path = OpamRepositoryPath.packages repo_root prefix package in
            List.iter OpamFilename.remove [
-             OpamFile.(filename (make
-                                   (OpamRepositoryPath.packages repo_root prefix package // "descr")));
-             OpamFile.(filename (make
-                                   (OpamRepositoryPath.packages repo_root prefix package // "url")));
+             OpamFile.filename (OpamFile.make (path // "descr"));
+             OpamFile.filename (OpamFile.make (path // "url"));
            ];
            OpamConsole.status_line "Updated %s" (OpamFile.to_string opam_file))
     )
