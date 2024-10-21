@@ -331,12 +331,7 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
     let save_overlay opam =
       OpamFilename.mkdir overlay_dir;
       let opam_file = OpamPath.Switch.Overlay.opam root st.switch name in
-      List.iter OpamFilename.remove
-        OpamPath.Switch.Overlay.([
-            OpamFile.filename opam_file;
-            OpamFile.filename (url root st.switch name);
-            OpamFile.filename (descr root st.switch name);
-          ]);
+      OpamFilename.remove (OpamFile.filename opam_file);
       let files_dir = OpamPath.Switch.Overlay.files root st.switch name in
       OpamFilename.rmdir files_dir;
       let opam =

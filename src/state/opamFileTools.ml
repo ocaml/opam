@@ -1297,43 +1297,8 @@ let add_aux_files ?dir ?(files_subdir_hashes=false) opam =
   match dir with
   | None -> opam
   | Some dir ->
-    let (url_file: OpamFile.URL.t OpamFile.t) =
-      OpamFile.make (dir // "url")
-    in
-    let (descr_file: OpamFile.Descr.t OpamFile.t)  =
-      OpamFile.make (dir // "descr")
-    in
     let files_dir =
       OpamFilename.Op.(dir / "files")
-    in
-    let opam =
-      match OpamFile.OPAM.url opam, try_read OpamFile.URL.read_opt url_file with
-      | None, (Some url, None) -> OpamFile.OPAM.with_url url opam
-      | Some opam_url, (Some url, errs) ->
-        if url = opam_url && errs = None then
-          log "Duplicate definition of url in '%s' and opam file"
-            (OpamFile.to_string url_file)
-        else
-          OpamConsole.warning
-            "File '%s' ignored (conflicting url already specified in the \
-             'opam' file)"
-            (OpamFile.to_string url_file);
-        opam
-      | _, (_, Some err) ->
-        OpamFile.OPAM.with_format_errors (err :: opam.format_errors) opam
-      | _, (None, None) -> opam
-    in
-    let opam =
-      match OpamFile.OPAM.descr opam,
-            try_read OpamFile.Descr.read_opt descr_file with
-      | None, (Some descr, None) -> OpamFile.OPAM.with_descr descr opam
-      | Some _, (Some _, _) ->
-        log "Duplicate descr in '%s' and opam file"
-          (OpamFile.to_string descr_file);
-        opam
-      | _, (_, Some err) ->
-        OpamFile.OPAM.with_format_errors (err :: opam.format_errors) opam
-      | _, (None, None)  -> opam
     in
     let opam =
       let extra_files =
