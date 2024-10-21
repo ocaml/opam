@@ -24,10 +24,10 @@ exception Bad_format of bad_format
 exception Bad_format_list of bad_format list
 exception Bad_version of bad_format * OpamVersion.t option
 
-(** Raise [Bad_format]. *)
+(** Raise exception {!Bad_format}. *)
 val bad_format: ?pos:pos -> ('a, unit, string, 'b) format4 -> 'a
 
-(** Raise [Bad_version]. *)
+(** Raise exception {!Bad_version}. *)
 val bad_version: OpamVersion.t option -> ?pos:pos -> ('a, unit, string, 'b) format4 -> 'a
 
 val string_of_bad_format: ?file:string -> exn -> string

@@ -45,8 +45,8 @@ val lines_map :
 (** {3 Pps for the type [value], used by opam-syntax files ([opamfile])} *)
 
 module V : sig
-  (** These base converters raise [Unexpected] when not run on the right input
-      (which is then converted to [Bad_format] by the parser. *)
+  (** These base converters raise {!Unexpected} when not run on the right input
+      (which is then converted to {!Bad_format} by the parser. *)
 
   val bool : (value, bool) t
   val int : (value, int) t

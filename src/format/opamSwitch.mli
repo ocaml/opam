@@ -30,6 +30,6 @@ val get_root: OpamFilename.Dir.t -> t -> OpamFilename.Dir.t
 val external_dirname: string
 
 (** Returns an external switch handle from a directory name. Resolves to the
-    destination if [external_dirname] at the given dir is a symlink to another
-    [external_dirname]. *)
+    destination if {!external_dirname} at the given dir is a symlink to another
+    {!external_dirname}. *)
 val of_dirname: OpamFilename.Dir.t -> t

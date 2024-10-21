@@ -20,8 +20,8 @@ open OpamStateTypes
     recorded package changes print warnings and aren't copied. *)
 val copy_files_to_destdir: 'a switch_state -> dirname -> package_set -> unit
 
-(** Removes all files that may have been installed by [copy_files_to_destdir];
-    it's more aggressive than [OpamDirTrack.revert] and doesn't check if the
+(** Removes all files that may have been installed by {!copy_files_to_destdir};
+    it's more aggressive than {!OpamDirTrack.revert} and doesn't check if the
     files are current. *)
 val remove_files_from_destdir: 'a switch_state -> dirname -> package_set -> unit
 
@@ -39,7 +39,7 @@ val opams_of_dir:
   ?locked:string -> ?recurse:bool -> ?subpath:subpath ->
   OpamFilename.Dir.t -> name_and_file list
 
-(** Like [opam_of_dirs], but changes the pinning_url if needed. If given [url]
+(** Like {!opams_of_dir}, but changes the pinning_url if needed. If given [url]
     is local dir with vcs backend, and opam files not versioned, its pinning url
     is changed to rsync path-pin. If [ame_kind the_new_url] returns true,
     package information (name, opam file, new_url, subpath) are added to the
@@ -107,7 +107,7 @@ val simulate_autopin:
   'a switch_state * atom list
 
 (* Check sandboxing script call. If it errors or unattended output, disable
-   sandboxing by removing [OpamInitDefaults.sandbox_wrappers] commands in
+   sandboxing by removing {!OpamInitDefaults.sandbox_wrappers} commands in
    config file.
    Only one script is checked (init script default one), and tested on an
    `echo SUCCESS' call. *)

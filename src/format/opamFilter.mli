@@ -69,17 +69,18 @@ type env = full_variable -> variable_contents option
     self-reference [_] *)
 type fident = name option list * variable * (string * string) option
 
-(** Maps on all variables appearing in a filter. The case where package
-    variables are renamed differently and appear in a filter ident of the form
-    [%{pkg1+pkg2:var}%] is not supported and raises [Invalid_argument]. *)
+(** Maps on all variables appearing in a filter.
+
+    @raise Invalid_argument when package variables are renamed differently and
+    appear in a filter ident of the form [%{pkg1+pkg2:var}%] *)
 val map_variables: (full_variable -> full_variable) -> filter -> filter
 
 (** Same limitation as [map_variables] *)
 val map_variables_in_string:
   (full_variable -> full_variable) -> string -> string
 
-(** Does not handle rewriting the variables to different names (which can't be
-    expressed with a [fident] anymore), and raises [Invalid_argument] *)
+(** @raise Invalid_argument when rewriting the variables to different names
+    (which can't be expressed with a {!fident} anymore) *)
 val map_variables_in_fident:
   (full_variable -> full_variable) -> fident -> fident
 
@@ -88,12 +89,14 @@ val distribute_negations: ?neg:bool -> filter -> filter
 
 (** Rewrites string interpolations within a string. [default] is applied to the
     fident string (e.g. what's between [%{] and [}%]) when the expansion is
-    undefined. If unspecified, this raises [Failure].
+    undefined.
 
     With [partial], [default] defaults to the identity, and is otherwise
     expected to return a fident. In this case, the returned string is supposed
     to be expanded again (expansion results are escaped, escapes are otherwise
-    kept). This makes the function idempotent *)
+    kept). This makes the function idempotent.
+
+    @raise Failure if [default] is unspecified *)
 val expand_string:
   ?partial:bool -> ?default:(string -> string) -> env -> string -> string
 
@@ -101,20 +104,20 @@ val expand_string:
     expansions *)
 val unclosed_expansions: string -> ((int * int) * string) list
 
-(** Computes the value of a filter. May raise [Failure] if [default] isn't
-    provided *)
+(** Computes the value of a filter.
+    @raise Failure if [default] isn't provided *)
 val eval: ?default:variable_contents -> env -> filter -> variable_contents
 
-(** Like [eval] but casts the result to a bool. Raises [Invalid_argument] if
-    not a valid bool and no default supplied. *)
+(** Like {!eval} but casts the result to a bool.
+    @raise Invalid_argument if not a valid bool and no [default] supplied *)
 val eval_to_bool: ?default:bool -> env -> filter -> bool
 
-(** Same as [eval_to_bool], but takes an option as filter and returns always
+(** Same as {!eval_to_bool}, but takes an option as filter and returns always
     [true] on [None], [false] when the filter is [Undefined]. This is the
     most common behaviour for using "filters" for filtering *)
 val opt_eval_to_bool: env -> filter option -> bool
 
-(** Like [eval] but casts the result to a string *)
+(** Like {!eval} but casts the result to a string *)
 val eval_to_string: ?default:string -> env -> filter -> string
 
 (** Reduces what can be, keeps the rest unchanged *)
@@ -126,21 +129,21 @@ val ident_of_var: full_variable -> fident
 (** A fident accessor directly referring a variable with the given name *)
 val ident_of_string: string -> fident
 
-(** Resolves a filter ident. Like [eval], may raise Failure if no default is
-    provided *)
+(** Resolves a filter ident.
+    @raise Failure if no default is provided, like {!eval} *)
 val ident_value: ?default:variable_contents -> env -> fident -> variable_contents
 
-(** Like [ident_value], but casts the result to a string *)
+(** Like {!ident_value}, but casts the result to a string *)
 val ident_string: ?default:string -> env -> fident -> string
 
-(** Like [ident_value], but casts the result to a bool *)
+(** Like {!ident_value}, but casts the result to a bool *)
 val ident_bool: ?default:bool -> env -> fident -> bool
 
 val expand_interpolations_in_file_full: env -> src:filename -> dst:filename -> unit
-(** Same as [expand_interpolations_in_file] but allows to set the source [src] and
+(** Same as {!expand_interpolations_in_file} but allows to set the source [src] and
     destination [dst] files independently instead of implying [src] = [dst].in *)
 
-(** Rewrites [basename].in to [basename], expanding interpolations.
+(** Rewrites [basename.in] to [basename], expanding interpolations.
     If the first line begins ["opam-version:"], assumes that expansion of
     variables within strings should be properly escaped. In particular, this
     means that Windows paths should expand correctly when generating .config
@@ -170,8 +173,8 @@ val of_formula: ('a -> filter) -> 'a generic_formula -> filter
     doesn't resolve to a valid version, the constraint is dropped unless
     [default_version] is specified.
 
-    May raise, as other filter functions, if [default] is not provided and
-    filters don't resolve. *)
+    @raise Invalid_argument as other filter functions, if [default] is not
+    provided and filters don't resolve *)
 val filter_formula:
   ?default_version:version -> ?default:bool ->
   env -> filtered_formula -> formula
@@ -205,13 +208,13 @@ val filter_deps:
   formula
 
 (** The environment used in resolving the dependency filters, as per
-    [filter_deps]. *)
+    {!filter_deps}. *)
 val deps_var_env:
   build:bool -> post:bool -> ?test:bool -> ?doc:bool -> ?dev_setup:bool ->
   ?dev:bool ->
   env
 
-(** Like [OpamFormula.simplify_version_formula], but on filtered formulas
+(** Like {!OpamFormula.simplify_version_formula}, but on filtered formulas
     (filters are kept unchanged, but put in front) *)
 val simplify_extended_version_formula:
   condition -> condition option
@@ -221,8 +224,8 @@ val atomise_extended:
   (OpamPackage.Name.t * (filter * (relop * filter) option))
     OpamFormula.formula
 
-(* Uses [OpamFormula.sort] to sort on names, and sort version formulas with
-   [simplify_extended_version_formula]. *)
+(* Uses {!OpamFormula.sort} to sort on names, and sort version formulas with
+   {!simplify_extended_version_formula}. *)
 val sort_filtered_formula:
   ((name * condition) -> (name * condition) -> int) -> filtered_formula ->
   filtered_formula

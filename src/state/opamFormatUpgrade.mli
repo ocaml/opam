@@ -18,7 +18,7 @@ open OpamStateTypes
 (** Raised when the opam root has been updated to a newer format, and further
     action (opam init/update) is needed.
     [Upgrade_done conf reinit] specifies the new config file and a reinit
-    function to call instead of default (see [OpamCliMain.main_catch_all]). *)
+    function to call instead of default (see {!OpamCliMain.main_catch_all}). *)
 exception Upgrade_done of OpamFile.Config.t * (OpamFile.Config.t -> unit) option
 
 (** The latest version of the opam root format, that normal operation of this
@@ -54,7 +54,7 @@ val as_necessary_repo_switch_light_upgrade:
    to 2.1~rc one. Raises [Upgrade_done] (catched by main
    function) if an upgrade is done, otherwise do nothing.
    It is intend to be called after a config file that error with
-   [OpamPp.Bad_version] *)
+   {!OpamPp.Bad_version} *)
 val hard_upgrade_from_2_1_intermediates:
   ?reinit:(OpamFile.Config.t -> unit) -> ?global_lock: OpamSystem.lock ->
   dirname -> unit
@@ -71,7 +71,7 @@ val opam_file:
   ?quiet:bool -> ?filename:OpamFile.OPAM.t OpamFile.t ->
   OpamFile.OPAM.t -> OpamFile.OPAM.t
 
-(** Convert the comp file to an opam one, using [OpamFile.Comp.to_package] and
+(** Convert the comp file to an opam one, using {!OpamFile.Comp.to_package} and
     applying filter rewriting *)
 val comp_file:
   ?package:package -> ?descr:OpamFile.Descr.t -> OpamFile.Comp.t ->

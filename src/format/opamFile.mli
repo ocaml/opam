@@ -41,7 +41,8 @@ module type IO_FILE = sig
   (** Write some contents to a file *)
   val write: t typed_file -> t -> unit
 
-  (** Read file contents. Raise an error if the file does not exist. *)
+  (** Read file contents.
+      @raise OpamSystem.Internal_error if the file does not exist. *)
   val read: t typed_file -> t
 
   (** Returns [None] on non-existing file *)
@@ -60,7 +61,7 @@ module type IO_FILE = sig
 
 end
 
-(* Error less [IO_FILE] read functions. *)
+(* Error less {!IO_FILE} read functions. *)
 module type BestEffortRead = sig
   type t
   val read: t typed_file -> t

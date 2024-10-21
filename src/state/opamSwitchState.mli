@@ -22,7 +22,7 @@ val load:
 
     The repository state is automatically loaded if not provided.
 
-    The switch is selected, if not set, using [OpamStateConfig.get_switch] --
+    The switch is selected, if not set, using {!OpamStateConfig.get_switch} --
     which can fail if no switch is configured.
 
     Additionally, in case of a write lock, a backup is saved and a message is
@@ -150,12 +150,12 @@ val is_pinned: 'a switch_state -> name -> bool
     overlay metadata, and relying on the repo's data *)
 val is_version_pinned: 'a switch_state -> name -> bool
 
-(** The set of all "dev packages" (see [is_dev_package] for a definition) *)
+(** The set of all "dev packages" (see {!is_dev_package} for a definition) *)
 val dev_packages: 'a switch_state -> package_set
 
 (** Returns the local source mirror for the given package
-    ([OpamPath.Switch.sources] or [OpamPath.Switch.pinned_package], depending on
-    wether it's pinned). *)
+    ({!OpamPath.Switch.sources} or {!OpamPath.Switch.pinned_package}, depending
+    on wether it's pinned). *)
 val source_dir: 'a switch_state -> package -> dirname
 
 (** Returns the set of active external dependencies for the package, computed
@@ -167,20 +167,20 @@ val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
 (** Return the transitive dependency closures
     of a collection of packages.
 
-    @param depopts include optional dependencies (depopts: foo)
-    @param build include build dependencies (depends: foo {build})
-    @param post include post dependencies (depends: foo {post})
+    @param depopts include optional dependencies ([depopts: foo])
+    @param build include build dependencies ([depends: foo {build}])
+    @param post include post dependencies ([depends: foo {post}])
     @param installed only consider already-installed packages
-    @param unavaiable also consider unavailable packages.
-                      If the availability of packages hasn't been computed yet,
-                      setting this [false] can have a significant performance
-                      impact depending on the platform.
+    @param unavailable also consider unavailable packages
+                       If the availability of packages hasn't been computed yet,
+                       setting this [false] can have a significant performance
+                       impact depending on the platform.
 *)
 val dependencies:
   'a switch_state -> build:bool -> post:bool -> depopts:bool ->
   installed:bool -> unavailable:bool -> package_set -> package_set
 
-(** Same as [dependencies] but for reverse dependencies. *)
+(** Same as {!dependencies} but for reverse dependencies. *)
 val reverse_dependencies:
   'a switch_state -> build:bool -> post:bool -> depopts:bool ->
   installed:bool -> unavailable:bool -> package_set -> package_set
@@ -202,7 +202,7 @@ val conflicts_with: 'a switch_state -> package_set -> package_set -> package_set
 (** Put the package data in a form suitable for the solver, pre-computing some
     maps and sets. Packages in the [requested] set are the ones that will get
     affected by the global [build_test] and [build_doc] flags. [test] and [doc],
-    if unspecified, are taken from [OpamStateConfig.r]. [reinstall] marks
+    if unspecified, are taken from {!OpamStateConfig.r}.  [reinstall] marks
     package not considered current in the universe, and that should therefore be
     reinstalled. If unspecified, it is the packages marked in
     [switch_state.reinstall] that are present in [requested]. *)
@@ -231,7 +231,7 @@ val update_package_metadata:
     packages and available sets. *)
 val remove_package_metadata: package -> 'a switch_state -> 'a switch_state
 
-(** Like [update_package_metadata], but also ensures the package is pinned to
+(** Like {!update_package_metadata}, but also ensures the package is pinned to
     the given version. The version specified in the opam file, if any, takes
     precedence over the version of [package]. Also marks it for reinstall if
     changed. *)

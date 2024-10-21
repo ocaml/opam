@@ -55,7 +55,7 @@ module type S = sig
     ?cache_dir:dirname -> ?subpath:subpath -> dirname -> OpamHash.t option ->
     url -> filename option download OpamProcess.job
 
-  (** [pull_repo_update] fetches the remote update from [url] to the local
+  (** [fetch_repo_update] fetches the remote update from [url] to the local
       repository at [dirname], but does not apply it, allowing for further
       verifications. The file or directory returned is always temporary and
       should be cleaned up by the caller. *)
@@ -64,20 +64,20 @@ module type S = sig
     update OpamProcess.job
 
   (** [repo_update_complete dirname url] finalizes the update of the repository
-      after verification of the patch returned from [pull_repo_update] with
+      after verification of the patch returned from {!fetch_repo_update} with
       [Update_patch file] is applied. Version control systems, e.g. Mercurial,
       that track the state of the working directory automatically use this to
       update internal caches. *)
   val repo_update_complete: dirname -> url -> unit OpamProcess.job
 
   (** Return the (optional) revision of a given repository. Only useful for VCS
-      backends. Is not expected to work with [pull_repo_update], which doesn't
+      backends. Is not expected to work with [fetch_repo_update], which doesn't
       update the VCS commit information. *)
   val revision: dirname -> version option OpamProcess.job
 
-  (** Like [pull_url], except for locally-bound version control backends, where
+  (** Like {!pull_url}, except for locally-bound version control backends, where
       it should get the latest, uncommitted source. First, it performs a
-      [pull_url], then remove deleted files, and finally copy via rsync
+      {!pull_url}, then remove deleted files, and finally copy via rsync
       unversioned & modified-uncommitted files. *)
   val sync_dirty:
     ?subpath:subpath -> dirname -> url ->

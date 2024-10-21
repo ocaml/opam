@@ -15,7 +15,7 @@ open OpamTypes
 open OpamStateTypes
 
 (** Pins a package to the given version, and writes to disk. Returns the updated
-    state. The main difference with [source_pin] is that a definition overlay is
+    state. The main difference with {!source_pin} is that a definition overlay is
     not created. Therefore, the package must exist already. *)
 val version_pin: rw switch_state -> name -> version -> rw switch_state
 
@@ -31,7 +31,8 @@ exception Nothing_to_do
 
     If [force], don't abort even if the source can't be fetched from [target]
 
-    May raise [Aborted] or [Nothing_to_do]. *)
+    @raise Aborted
+    @raise Nothing_to_do *)
 val source_pin:
   rw switch_state -> name ->
   ?version:version -> ?edit:bool -> ?opam:OpamFile.OPAM.t -> ?quiet:bool ->

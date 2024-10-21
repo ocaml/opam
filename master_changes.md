@@ -119,11 +119,16 @@ users)
   * Fix debian manual url fragment [#6231 @RyanGibb]
   * Change example of non-letter in version ordering [#6252 @gridbugs]
   * Remove redundant `+` in version BNF definition (it is already present in `identchar`) [#6252 @rjbou]
+  * mli documentation: fix code blocks [#6150 @rjbou]
+  * mli documentation: fix code blocks, references [#6150 @rjbou]
+  * mli documentation: fix code blocks, references, add `@raise` tags [#6150 @rjbou]
+  * Unhide `OpamProcess` functions [#6150 @rjbou]
 
 ## Security fixes
 
 # API updates
 ## opam-client
+  * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
 
 ## opam-repository
 

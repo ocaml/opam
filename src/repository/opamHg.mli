@@ -9,7 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Mercurial repository backend (based on OpamVCS) *)
+(** Mercurial repository backend (based on {!OpamVCS}) *)
 
 module VCS: OpamVCS.VCS
 

@@ -38,7 +38,7 @@ val get_opam:
   set_opamroot:bool -> set_opamswitch:bool -> force_path:bool ->
   'a switch_state -> env
 
-(** Like [get_opam], but reads the cache file from the given opam root and
+(** Like {!get_opam}, but reads the cache file from the given opam root and
     switch instead of computing the environment from a switch state.
 
     With [base], apply the modifications to the specified base environment *)
@@ -47,7 +47,7 @@ val get_opam_raw:
   force_path:bool ->
   dirname -> switch -> env
 
-(** Like [get_opam_raw], but returns the list of updates instead of the new
+(** Like {!get_opam_raw}, but returns the list of updates instead of the new
     environment. *)
 val get_opam_raw_updates:
   set_opamroot:bool -> set_opamswitch:bool -> force_path:bool ->
@@ -69,10 +69,10 @@ val cygwin_non_shadowed_programs : string list
 
 (** Update an environment, including reverting opam changes that could have been
     previously applied (therefore, don't apply to an already updated env as
-    returned by e.g. [get_full]!) *)
+    returned by e.g. {!get_full}!) *)
 val add: env -> (spf_resolved, euok_internal) env_update list -> env
 
-(** Like [get_opam] computes environment modification by OPAM , but returns
+(** Like {!get_opam} computes environment modification by OPAM , but returns
     these [updates] instead of the new environment. *)
 val updates:
   set_opamroot:bool -> set_opamswitch:bool -> ?force_path:bool ->
@@ -140,8 +140,8 @@ val update_user_setup:
 val write_static_init_scripts:
   dirname -> ?completion:bool -> ?env_hook:bool -> ?inplace:bool -> unit -> unit
 
-(** Write into [OpamPath.hooks_dir] the given custom scripts (listed as
-    (filename, content)), normally provided by opamrc ([OpamFile.InitConfig]) *)
+(** Write into {!OpamPath.hooks_dir} the given custom scripts (listed as
+    (filename, content)), normally provided by opamrc ({!OpamFile.InitConfig}) *)
 val write_custom_init_scripts:
   dirname -> (string * string) list -> unit
 

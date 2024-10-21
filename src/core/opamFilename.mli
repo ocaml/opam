@@ -282,20 +282,22 @@ val find_in_parents: (Dir.t -> bool) ->  Dir.t -> Dir.t option
 
 (** {2 Locking} *)
 
-(** See [OpamSystem.flock]. Prefer the higher level [with_flock] functions when
+(** See {!OpamSystem.flock}.  Prefer the higher level [with_flock] functions when
     possible *)
 val flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t -> OpamSystem.lock
 
 (** Calls [f] while holding a lock file. Ensures the lock is properly released
-    on [f] exit. Raises [OpamSystem.Locked] if [dontblock] is set and the lock
-    can't be acquired. [f] is passed the file_descr of the lock. *)
+    on [f] exit. [f] is passed the file_descr of the lock.
+    @raise OpamSystem.Locked if [dontblock] is set and the lock
+    can't be acquired. *)
 val with_flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t ->
   (Unix.file_descr -> 'a) -> 'a
 
 (** Calls [f] with the file lock upgraded to at least [flag], then restores the
     previous lock level. Upgrade to [`Lock_write] should never be used in
-    blocking mode as it would deadlock. Raises [OpamSystem.Locked] (but keeps
-    the lock as is) if [dontblock] is set and the lock can't be upgraded. *)
+    blocking mode as it would deadlock.
+    @raise OpamSystem.Locked (but keeps the lock as is) if [dontblock] is set
+    and the lock can't be upgraded. *)
 val with_flock_upgrade:
   [< OpamSystem.actual_lock_flag ] -> ?dontblock:bool -> OpamSystem.lock -> (Unix.file_descr -> 'a) -> 'a
 

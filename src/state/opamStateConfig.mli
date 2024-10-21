@@ -96,8 +96,8 @@ val load: ?lock_kind: 'a lock -> dirname -> OpamFile.Config.t option
 val safe_load: ?lock_kind: 'a lock -> dirname -> OpamFile.Config.t
 
 (** Loads the config file from the OPAM root and updates default values for all
-    related OpamXxxConfig modules. Doesn't read the env yet, the [init]
-    functions should still be called afterwards. OpamFormat should be
+    related OpamXxxConfig modules. Doesn't read the env yet, the {!init}
+    functions should still be called afterwards. {!OpamFormatConfig} should be
     initialised beforehand, as it may impact the config file loading.
 
     Returns the config file that was found, if any *)
@@ -155,7 +155,7 @@ end
    It is necessary to handle opam root and switch upgrade from 2.1
    intermediates roots to 2.1: this allows a workaround for a bug in versions
    2.1~alpha which wrongly updated the declared switch versions, requiring that
-   we fix it during [OpamFormatUpgrade] from these specific intermediate
+   we fix it during {!OpamFormatUpgrade} from these specific intermediate
    versions, and at switch loading for that specific case. *)
 val downgrade_2_1_switch:
   OpamFile.Switch_config.t OpamFile.t -> OpamFile.Switch_config.t option
