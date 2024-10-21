@@ -165,3 +165,9 @@ val getVersionInfo : string -> win32_version_info option
 
 val get_initial_environment : unit -> string list
 (** Windows only. Returns the environment which new processes would receive. *)
+
+val get_stdout_ws_col : unit -> int
+(** Unix only. Returns the number of columns of the current terminal window
+    linked with stdout. If stdout isn't linked to any terminal
+    (e.g. redirection), then this function will return 0. A valid number
+    of columns should be strictly above 0. *)
