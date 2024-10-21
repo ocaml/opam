@@ -936,25 +936,16 @@ module OpamSys = struct
   )
 
   let get_terminal_columns () =
-    let fallback = 80 in
-    let cols =
-      match (* terminfo *)
-        Option.replace int_of_string_opt (process_in "tput" ["cols"])
-      with
-      | Some x -> x
-      | None ->
-        try (* GNU stty *)
-          begin match
-            Option.map (fun x -> OpamString.split x ' ')
-              (process_in "stty" ["size"])
-          with
-          | Some [_ ; v] -> int_of_string v
-          | _ -> failwith "stty"
-          end
-        with
-        | Failure _ -> fallback
-    in
-    if cols > 0 then cols else fallback
+    try int_of_string (Env.get "COLUMNS") with
+    | Not_found | Failure _ ->
+      let fallback = 80 in
+      let cols =
+        if tty_out then
+          OpamStubs.get_stdout_ws_col ()
+        else
+          fallback
+      in
+      if cols > 0 then cols else fallback
 
   let win32_get_console_width default_columns =
     try

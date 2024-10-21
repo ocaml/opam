@@ -29,6 +29,10 @@ users)
 
 ## Remove
 
+## UI
+  * [BUG] Fix the detection of the current terminal size [#6244 @kit-ty-kate - fix #6243]
+  * [BUG] Ensure the output of opam commands using a column style UI stay consistent accross environment by setting the number of columns to 80 if stdout is not a tty and if the `COLUMNS` env variable is not set [#6244 @kit-ty-kate]
+
 ## Switch
 
 ## Config
@@ -122,3 +126,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamStubs.get_stdout_ws_col`: new Unix-only function returning the number of columns of the current terminal window [#6244 @kit-ty-kate]
