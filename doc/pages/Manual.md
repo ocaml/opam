@@ -299,7 +299,7 @@ packages.
                     | "(" <version-formula> ")"
                     | <relop> <version>
 <relop>           ::= "=" | "!=" | "<" | "<=" | ">" | ">="
-<version>         ::= (") { <identchar> | "+" | "." | "~" }+ (")
+<version>         ::= (") { <identchar> | "." | "~" }+ (")
 ```
 
 Package names have the same restrictions as idents — only letter, digits, dash
