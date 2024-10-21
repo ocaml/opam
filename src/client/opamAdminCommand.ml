@@ -332,6 +332,24 @@ let packages_with_prefixes repo_root packages =
             (List.rev missing_pkgs)));
   pkgs_map
 
+let check_opam_file_version_url has_error repo_root prefix nv opam =
+  let min_opam_version = OpamVersion.of_string "2.0" in
+  let url_file =
+    let ( // ) = OpamFilename.Op.( // ) in
+    OpamFile.(make
+                (OpamRepositoryPath.packages repo_root prefix nv // "url"))
+  in
+  if OpamFile.exists url_file then
+    (OpamConsole.warning "Not updating external URL file at %s"
+       (OpamFile.to_string url_file);
+     true)
+  else if OpamVersion.compare opam.OpamFile.OPAM.opam_version min_opam_version < 0 then
+    (OpamConsole.warning "OPAM version must be >= 2.0 at %s"
+       (OpamFile.to_string (OpamRepositoryPath.opam repo_root prefix nv));
+     true)
+  else
+    has_error
+
 let update_extrafiles_command_doc =
   "Add extra-files to an opam repository."
 let update_extrafiles_command cli =
@@ -368,12 +386,7 @@ let update_extrafiles_command cli =
           let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
           let opam = OpamFile.OPAM.read opam_file in
           let has_error =
-            if OpamFile.exists (OpamRepositoryPath.url repo_root prefix nv) then
-              (OpamConsole.warning "Not updating external URL file at %s"
-                 (OpamFile.to_string
-                    (OpamRepositoryPath.url repo_root prefix nv));
-               true)
-            else has_error
+            check_opam_file_version_url has_error repo_root prefix nv opam
           in
           let files_dir = OpamRepositoryPath.files repo_root prefix nv in
           if OpamFilename.exists_dir files_dir then
@@ -552,11 +565,7 @@ let add_hashes_command cli =
           let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
           let opam = OpamFile.OPAM.read opam_file in
           let has_error =
-            if OpamFile.exists (OpamRepositoryPath.url repo_root prefix nv) then
-              (OpamConsole.warning "Not updating external URL file at %s"
-                 (OpamFile.to_string (OpamRepositoryPath.url repo_root prefix nv));
-               true)
-            else has_error
+            check_opam_file_version_url has_error repo_root prefix nv opam
           in
           let process_url has_error urlf =
             let hashes = OpamFile.URL.checksum urlf in

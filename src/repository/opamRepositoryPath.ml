@@ -44,12 +44,6 @@ let packages repo_root prefix nv =
 let opam repo_root prefix nv =
   packages repo_root prefix nv // "opam" |> OpamFile.make
 
-let descr repo_root prefix nv =
-  packages repo_root prefix nv // "descr" |> OpamFile.make
-
-let url repo_root prefix nv =
-  packages repo_root prefix nv // "url" |> OpamFile.make
-
 let files repo_root prefix nv =
   packages repo_root prefix nv / "files"
 
