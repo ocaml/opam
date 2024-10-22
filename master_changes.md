@@ -66,6 +66,7 @@ users)
 ## Opamfile
 
 ## External dependencies
+  * Lookup at `gpatch` before `patch` on macOS now that both homebrew and macports expose `gpatch` as `gpatch` since Homebrew/homebrew-core#174687 [#6255 @kit-ty-kate]
 
 ## Format upgrade
 
