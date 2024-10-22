@@ -24,11 +24,13 @@
   * no online account
   * yes, i want the limited experience
   * username: opam
-  * no password
+  * password: password
+  * 3 hints: just random or something
   * no location
   * no find my device
-  * send required diagnostic data
   * no improve inking & typing
+  * send required diagnostic data
+  * no advertising ID
   * no cortana
 * Open gpedit.msc and right-click on "Computer Configuration -> Administrative Templates -> Windows Components -> Windows Update -> Configure Automatic Updates", click Edit and in the new window click on Enabled and then select "2. Notify for download and auto install", click Apply and then Ok.
 * Start -> Power off
@@ -36,18 +38,11 @@
 * Answer yes to the "would you like to be discoverable on the network" prompt
 * Open the Settings app
   * "System -> Power & Sleep" and select "Never" on the "When plugged in, turn off after" drop-down menu
+  * Put the slider on "Best performance"
   * search for "Add an optional feature", then search for "OpenSSH" and install "OpenSSH Server"
 * Run services.msc
   * Double-click OpenSSH SSH Server then select Automatic from the Startup drop-down menu
   * Click Ok
-* Open cmd.exe as administrator and run "net start sshd", then "notepad C:/ProgramData/ssh/sshd_config"
-  * Uncomment and set:
-    * PermitEmptyPasswords yes
-    * PermitRootLogin yes
-    * PasswordAuthentication yes
-    * StrictMode no
-  * Save and close both applications
-* Open regedit.exe and set HKey_Local_Machine\SYSTEM\CurrentControlSet\Control\Lsa\LimitBlankPasswordUse to 0
 * Shutdown the computer using the startmenu button
 
 ## Github release
@@ -75,6 +70,7 @@
 
 * a blog entry in opam.ocaml.org
 * a announcement in discuss.ocaml.org
+* update the link to the discuss post in the blog post
 * copy the blog entry from opam.ocaml.org for https://github.com/ocaml/ocaml.org/tree/main/data/changelog/opam
 * announce the release on the OCaml Discord server
 
@@ -92,6 +88,6 @@
 ## Device requirements
 * Mac M1 or above with Rosetta2
 * >=70GB of disk space free
-* brew dependencies: git, gpg, qemu>=8.1.0, docker>=24.0.0
+* brew dependencies: git, gpg, qemu>=8.1.0 (avoid qemu 9.1.0, see https://gitlab.com/qemu-project/qemu/-/issues/2581), docker>=24.0.0, sshpass
 * opam repo with the tag fetched
 * Have the secret key available
