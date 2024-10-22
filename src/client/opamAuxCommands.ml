@@ -255,6 +255,28 @@ let autopin_aux st ?quiet ?recurse ?subpath ?locked
   let to_pin, atoms =
     resolve_locals ?quiet ?recurse ?subpath ?locked atom_or_local_list
   in
+  let atoms =
+    (* Ensure the atoms are set to their expected version *)
+    List.map (function
+        | name, None ->
+          begin match
+            List.find_opt
+              (fun {pin_name; _} -> OpamPackage.Name.equal pin_name name)
+              to_pin
+          with
+          | None -> (name, Some (`Eq, OpamPinCommand.default_version st name))
+          | Some {pin = {pin_file; _}; _} ->
+            let opam_file = OpamFile.OPAM.safe_read pin_file in
+            let v = match OpamFile.OPAM.version_opt opam_file with
+              | None -> OpamPinCommand.default_version st name
+              | Some v -> v
+            in
+            (name, Some (`Eq, v))
+          end
+        | (_, Some _) as atom -> atom
+        (* TODO: does autopin really need other forms of atoms than `Eq ? *)
+      ) atoms
+  in
   if to_pin = [] then
     atoms, to_pin, OpamPackage.Set.empty, OpamPackage.Set.empty
   else
