@@ -62,6 +62,7 @@ users)
 ## Clean
 
 ## Env
+  * Don't write empty environment update segments to variables.sh (`FOO += ""` no longer adds `FOO='':"$FOO"; export FOO;`) [#6198 @dra27]
 
 ## Opamfile
 
