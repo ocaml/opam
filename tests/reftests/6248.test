@@ -1,0 +1,254 @@
+6a44505c76c94ac5d2ad231b5259cdfe10b9970d
+### OPAMYES=1 OPAMSTRICT=0
+### git clone https://github.com/goblint/analyzer/
+Cloning into 'analyzer'...
+### opam switch create default --empty
+### opam install --deps-only --fake ./analyzer
+The following additional pinnings are required by goblint.1.1.1:
+  - goblint-cil.2.0.4 at git+https://github.com/goblint/cil.git#9f4fac450c02bc61a13717784515056b185794cd
+  - camlidl.1.12 at git+https://github.com/xavierleroy/camlidl.git#1c1e87e3f56c2c6b3226dd0af3510ef414b462d0
+  - apron.v0.9.15 at git+https://github.com/antoinemine/apron.git#418a217c7a70dae3f422678f3aaba38ae374d91a
+Pin and install them? [y/n] y
+[goblint-cil.2.0.4] synchronised (no changes)
+goblint-cil is now pinned to git+https://github.com/goblint/cil.git#9f4fac450c02bc61a13717784515056b185794cd (version 2.0.4)
+[camlidl.1.12] synchronised (no changes)
+camlidl is now pinned to git+https://github.com/xavierleroy/camlidl.git#1c1e87e3f56c2c6b3226dd0af3510ef414b462d0 (version 1.12)
+[apron.v0.9.15] synchronised (no changes)
+apron is now pinned to git+https://github.com/antoinemine/apron.git#418a217c7a70dae3f422678f3aaba38ae374d91a (version v0.9.15)
+The following actions will be faked:
+=== install 72 packages
+  - install angstrom              0.16.1         [required by uri]
+  - install arg-complete          0.1.0          [required by goblint]
+  - install astring               0.8.5          [required by fpath]
+  - install base-bigarray         base
+  - install base-domains          base
+  - install base-nnp              base
+  - install base-threads          base           [required by catapult]
+  - install base-unix             base           [required by fileutils, catapult, qcheck-core]
+  - install batteries             3.8.0          [required by goblint]
+  - install bigarray-compat       1.1.0          [required by ctypes]
+  - install bigstringaf           0.10.0         [required by angstrom]
+  - install bos                   0.2.1          [required by yaml]
+  - install camlp-streams         5.0.1          [required by batteries]
+  - install catapult              0.2            [required by goblint]
+  - install catapult-file         0.2            [required by goblint]
+  - install conf-autoconf         0.2            [required by cpu]
+  - install conf-gcc              1.0            [required by goblint]
+  - install conf-gmp              4              [required by goblint]
+  - install conf-perl             2              [required by goblint-cil]
+  - install conf-pkg-config       3              [required by zarith]
+  - install cppo                  1.7.0          [required by arg-complete, goblint-cil]
+  - install cpu                   2.0.0          [required by goblint]
+  - install csexp                 1.5.2          [required by dune-private-libs, dune-configurator]
+  - install cstruct               6.2.0          [required by hex]
+  - install ctypes                0.23.0         [required by yaml]
+  - install dune                  3.16.0         [required by goblint]
+  - install dune-build-info       3.16.0         [required by goblint]
+  - install dune-configurator     3.16.0         [required by goblint-cil, yaml]
+  - install dune-private-libs     3.16.0         [required by dune-site]
+  - install dune-site             3.16.0         [required by goblint]
+  - install dyn                   3.16.0         [required by dune-private-libs]
+  - install fileutils             0.6.4          [required by goblint]
+  - install fmt                   0.9.0          [required by bos]
+  - install fpath                 0.7.3          [required by goblint]
+  - install goblint-cil           2.0.4 (pinned) [required by goblint]
+  - install hex                   1.5.0          [required by json-data-encoding]
+  - install host-arch-arm64       1
+  - install host-system-other     1
+  - install integers              0.7.0          [required by ctypes]
+  - install json-data-encoding    1.0.1          [required by goblint]
+  - install jsonrpc               1.19.0         [required by goblint]
+  - install logs                  0.7.0          [required by bos]
+  - install num                   1.5-1          [required by batteries]
+  - install ocaml                 5.2.0          [required by goblint]
+  - install ocaml-base-compiler   5.2.0          [required by ocaml]
+  - install ocaml-compiler-libs   v0.17.0        [required by ppxlib]
+  - install ocaml-config          3              [required by ocaml]
+  - install ocaml-options-vanilla 1
+  - install ocaml-syntax-shims    1.0.0          [required by angstrom]
+  - install ocamlbuild            0.15.0         [required by fpath, uuidm]
+  - install ocamlfind             1.9.6          [required by fpath, batteries, uuidm]
+  - install ordering              3.16.0         [required by dyn, stdune]
+  - install pp                    1.2.0          [required by dune-private-libs]
+  - install ppx_derivers          1.2.1          [required by ppx_deriving]
+  - install ppx_deriving          6.0.3          [required by goblint]
+  - install ppx_deriving_hash     0.1.2          [required by goblint]
+  - install ppx_deriving_yojson   3.9.0          [required by goblint]
+  - install ppxlib                0.33.0         [required by ppx_deriving_hash]
+  - install qcheck-core           0.22           [required by goblint]
+  - install rresult               0.7.0          [required by bos]
+  - install seq                   base           [required by fileutils]
+  - install sexplib0              v0.17.0        [required by ppxlib]
+  - install sha                   1.15.4         [required by goblint]
+  - install stdlib-shims          0.3.0          [required by goblint-cil, fileutils, sha]
+  - install stdune                3.16.0         [required by dune-private-libs]
+  - install stringext             1.6.0          [required by uri]
+  - install topkg                 1.0.7          [required by fpath, uuidm]
+  - install uri                   4.4.0          [required by json-data-encoding]
+  - install uuidm                 0.9.9          [required by goblint]
+  - install yaml                  3.2.0          [required by goblint]
+  - install yojson                2.2.2          [required by goblint]
+  - install zarith                1.14           [required by goblint]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of base-bigarray.base
+Faking installation of base-threads.base
+Faking installation of base-unix.base
+Faking installation of conf-autoconf.0.2
+Faking installation of conf-gcc.1.0
+Faking installation of conf-gmp.4
+Faking installation of conf-perl.2
+Faking installation of conf-pkg-config.3
+Faking installation of host-arch-arm64.1
+Faking installation of host-system-other.1
+Faking installation of ocaml-base-compiler.5.2.0
+Faking installation of ocaml-config.3
+Faking installation of ocaml.5.2.0
+Faking installation of base-domains.base
+Faking installation of base-nnp.base
+Faking installation of dune.3.16.0
+Faking installation of bigarray-compat.1.1.0
+Faking installation of camlp-streams.5.0.1
+Faking installation of catapult.0.2
+Faking installation of catapult-file.0.2
+Faking installation of cppo.1.7.0
+Faking installation of arg-complete.0.1.0
+Faking installation of cpu.2.0.0
+Faking installation of csexp.1.5.2
+Faking installation of dune-build-info.3.16.0
+Faking installation of dune-configurator.3.16.0
+Faking installation of bigstringaf.0.10.0
+Faking installation of jsonrpc.1.19.0
+Faking installation of num.1.5-1
+Faking installation of ocaml-compiler-libs.v0.17.0
+Faking installation of ocaml-options-vanilla.1
+Faking installation of ocaml-syntax-shims.1.0.0
+Faking installation of angstrom.0.16.1
+Faking installation of ocamlbuild.0.15.0
+Faking installation of ocamlfind.1.9.6
+Faking installation of batteries.3.8.0
+Faking installation of ordering.3.16.0
+Faking installation of pp.1.2.0
+Faking installation of dyn.3.16.0
+Faking installation of ppx_derivers.1.2.1
+Faking installation of qcheck-core.0.22
+Faking installation of seq.base
+Faking installation of sexplib0.v0.17.0
+Faking installation of stdlib-shims.0.3.0
+Faking installation of fileutils.0.6.4
+Faking installation of integers.0.7.0
+Faking installation of ctypes.0.23.0
+Faking installation of ppxlib.0.33.0
+Faking installation of ppx_deriving.6.0.3
+Faking installation of ppx_deriving_hash.0.1.2
+Faking installation of sha.1.15.4
+Faking installation of stdune.3.16.0
+Faking installation of dune-private-libs.3.16.0
+Faking installation of dune-site.3.16.0
+Faking installation of stringext.1.6.0
+Faking installation of topkg.1.0.7
+Faking installation of astring.0.8.5
+Faking installation of fmt.0.9.0
+Faking installation of cstruct.6.2.0
+Faking installation of fpath.0.7.3
+Faking installation of hex.1.5.0
+Faking installation of logs.0.7.0
+Faking installation of rresult.0.7.0
+Faking installation of bos.0.2.1
+Faking installation of uri.4.4.0
+Faking installation of json-data-encoding.1.0.1
+Faking installation of uuidm.0.9.9
+Faking installation of yaml.3.2.0
+Faking installation of yojson.2.2.2
+Faking installation of ppx_deriving_yojson.3.9.0
+Faking installation of zarith.1.14
+Faking installation of goblint-cil.2.0.4
+Done.
+### opam install --check ./analyzer
+All dependencies installed
+### opam install --show --deps-only ./analyzer
+The following actions would be performed:
+=== install 1 package
+  - install ppx_blob 0.9.0 [required by goblint]
+### opam install --show --check --locked ./analyzer
+All dependencies installed
+### opam install --show --deps-only --locked ./analyzer
+The following actions would be performed:
+=== remove 3 packages
+  - remove    base-domains          base               [conflicts with ocaml]
+  - remove    ocaml-base-compiler   5.2.0              [conflicts with ocaml-config]
+  - remove    ocaml-options-vanilla 1                  [conflicts with ocaml-option-nnp, ocaml-option-flambda]
+=== downgrade 17 packages
+  - downgrade angstrom              0.16.1 to 0.16.0   [required by goblint]
+  - downgrade bigstringaf           0.10.0 to 0.9.1    [required by goblint]
+  - downgrade cppo                  1.7.0 to 1.6.9     [required by goblint]
+  - downgrade ctypes                0.23.0 to 0.22.0   [required by goblint]
+  - downgrade jsonrpc               1.19.0 to 1.17.0   [required by goblint]
+  - downgrade num                   1.5-1 to 1.5       [required by goblint]
+  - downgrade ocaml                 5.2.0 to 4.14.2    [required by goblint]
+  - downgrade ocaml-compiler-libs   v0.17.0 to v0.12.4 [required by goblint]
+  - downgrade ocaml-config          3 to 2             [required by goblint]
+  - downgrade ocamlbuild            0.15.0 to 0.14.3   [required by goblint]
+  - downgrade ppx_deriving          6.0.3 to 6.0.2     [required by goblint]
+  - downgrade ppx_deriving_yojson   3.9.0 to 3.8.0     [required by goblint]
+  - downgrade ppxlib                0.33.0 to 0.32.1   [required by goblint]
+  - downgrade qcheck-core           0.22 to 0.21.3     [required by goblint]
+  - downgrade sexplib0              v0.17.0 to v0.16.0 [required by goblint]
+  - downgrade uuidm                 0.9.9 to 0.9.8     [required by goblint]
+  - downgrade yojson                2.2.2 to 2.2.1     [required by goblint]
+=== recompile 42 packages
+  - recompile arg-complete          0.1.0              [uses cppo, dune]
+  - recompile astring               0.8.5              [uses ocaml]
+  - recompile base-nnp              base               [uses base-domains]
+  - recompile batteries             3.8.0              [uses ocaml]
+  - recompile bigarray-compat       1.1.0              [uses ocaml]
+  - recompile bos                   0.2.1              [uses ocaml]
+  - recompile camlp-streams         5.0.1              [uses ocaml]
+  - recompile catapult              0.2                [uses ocaml]
+  - recompile catapult-file         0.2                [uses ocaml]
+  - recompile cpu                   2.0.0              [uses ocaml]
+  - recompile csexp                 1.5.2              [uses ocaml]
+  - recompile cstruct               6.2.0              [uses ocaml]
+  - recompile dune                  3.16.0             [uses ocaml]
+  - recompile dune-build-info       3.16.0             [uses ocaml]
+  - recompile dune-configurator     3.16.0             [uses ocaml]
+  - recompile dune-private-libs     3.16.0             [uses ocaml]
+  - recompile dune-site             3.16.0             [uses dune]
+  - recompile dyn                   3.16.0             [uses ocaml]
+  - recompile fileutils             0.6.4              [uses ocaml]
+  - recompile fmt                   0.9.0              [uses ocaml]
+  - recompile fpath                 0.7.3              [uses ocaml]
+  - recompile goblint-cil           2.0.4 (pinned)     [uses ocaml]
+  - recompile hex                   1.5.0              [uses ocaml]
+  - recompile integers              0.7.0              [uses ocaml]
+  - recompile json-data-encoding    1.0.1              [uses ocaml]
+  - recompile logs                  0.7.0              [uses ocaml]
+  - recompile ocaml-syntax-shims    1.0.0              [uses ocaml]
+  - recompile ocamlfind             1.9.6              [uses ocaml]
+  - recompile ordering              3.16.0             [uses ocaml]
+  - recompile pp                    1.2.0              [uses ocaml]
+  - recompile ppx_derivers          1.2.1              [uses ocaml]
+  - recompile ppx_deriving_hash     0.1.2              [uses dune]
+  - recompile rresult               0.7.0              [uses ocaml]
+  - recompile seq                   base               [uses ocaml]
+  - recompile sha                   1.15.4             [uses ocaml]
+  - recompile stdlib-shims          0.3.0              [uses ocaml]
+  - recompile stdune                3.16.0             [uses ocaml]
+  - recompile stringext             1.6.0              [uses ocaml]
+  - recompile topkg                 1.0.7              [uses ocaml]
+  - recompile uri                   4.4.0              [uses angstrom]
+  - recompile yaml                  3.2.0              [uses ocaml]
+  - recompile zarith                1.14               [uses ocaml]
+=== install 12 packages
+  - install   apron                 v0.9.15 (pinned)   [required by goblint]
+  - install   base-bytes            base               [required by goblint]
+  - install   camlidl               1.12 (pinned)      [required by goblint]
+  - install   conf-findutils        1                  [required by goblint]
+  - install   conf-gmp-paths        1                  [required by goblint]
+  - install   conf-mpfr-paths       1                  [required by goblint]
+  - install   ez-conf-lib           2                  [required by goblint]
+  - install   mlgmpidl              1.3.0              [required by goblint]
+  - install   ocaml-option-flambda  1                  [required by goblint]
+  - install   ocaml-option-nnp      1                  [required by base-nnp, ocaml-variants]
+  - install   ocaml-variants        4.14.2+options     [required by goblint]
+  - install   ppx_blob              0.9.0              [required by goblint]

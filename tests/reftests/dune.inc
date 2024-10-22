@@ -1,5 +1,26 @@
 
 (rule
+ (alias reftest-6248)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
+ (action
+  (diff 6248.test 6248.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
+ (deps (alias reftest-6248)))
+
+(rule
+ (targets 6248.out)
+ (deps root-6a44505c76c94ac5d2ad231b5259cdfe10b9970d)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:6248.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-admin-cache)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
@@ -2137,6 +2158,27 @@
     (run %{bin:opam} init --root=%{targets}
            --no-setup --bypass-checks --no-opamrc --bare
            file://%{dep:opam-repo-3235916})))))
+
+(rule
+ (targets opam-archive-6a44505c76c94ac5d2ad231b5259cdfe10b9970d.tar.gz)
+ (action (run curl --silent -Lo %{targets} https://github.com/ocaml/opam-repository/archive/6a44505c76c94ac5d2ad231b5259cdfe10b9970d.tar.gz)))
+
+(rule
+  (targets opam-repo-6a44505c76c94ac5d2ad231b5259cdfe10b9970d)
+  (action
+   (progn
+    (run mkdir -p %{targets})
+    (run tar -C %{targets} -xzf %{dep:opam-archive-6a44505c76c94ac5d2ad231b5259cdfe10b9970d.tar.gz} --strip-components=1))))
+
+(rule
+  (targets root-6a44505c76c94ac5d2ad231b5259cdfe10b9970d)
+  (deps opam-root-version)
+  (action
+   (progn
+    (ignore-stdout
+    (run %{bin:opam} init --root=%{targets}
+           --no-setup --bypass-checks --no-opamrc --bare
+           file://%{dep:opam-repo-6a44505c76c94ac5d2ad231b5259cdfe10b9970d})))))
 
 (rule
  (targets opam-archive-7090735c.tar.gz)
