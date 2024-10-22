@@ -58,7 +58,7 @@ let sandbox_filter = FOr (linux_filter, macos_filter)
 
 let gpatch_filter =
   FOr (FOr (openbsd_filter, netbsd_filter),
-       FOr (freebsd_filter, dragonflybsd_filter))
+       FOr (freebsd_filter, FOr (dragonflybsd_filter, macos_filter)))
 let patch_filter = FNot gpatch_filter
 
 let gtar_filter = openbsd_filter
