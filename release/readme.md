@@ -53,6 +53,7 @@
 
 ## After release
 
+* Remove the milestone that has just been released and create a new milestone for the next version
 * Bump the version with a `~dev` at the end (e.g. `2.2.0~alpha~dev`)
 * Check if reftests needs an update
 
