@@ -69,6 +69,7 @@ CLINKING_macos = \
 
 CLINKING_openbsd = $(CLINKING_macos)
 CLINKING_freebsd = $(CLINKING_macos)
+CLINKING_netbsd = $(CLINKING_macos)
 
 CLINKING_windows = \
 -lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
@@ -83,6 +84,10 @@ CPATH=/usr/local/include: \
 LIBRARY_PATH=/usr/local/lib: \
 
 EXPORTS_freebsd = \
+CPATH=/usr/local/include: \
+LIBRARY_PATH=/usr/local/lib: \
+
+EXPORTS_netbsd = \
 CPATH=/usr/local/include: \
 LIBRARY_PATH=/usr/local/lib: \
 
