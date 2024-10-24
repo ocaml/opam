@@ -37,6 +37,7 @@
 
 #if OCAML_VERSION < 50000
 #define caml_unix_access unix_access
+#define caml_uerror uerror
 #endif
 
 CAMLprim value opam_is_executable(value path)
