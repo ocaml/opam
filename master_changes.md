@@ -129,6 +129,7 @@ users)
   * mli documentation: fix code blocks, references [#6150 @rjbou]
   * mli documentation: fix code blocks, references, add `@raise` tags [#6150 @rjbou]
   * Unhide `OpamProcess` functions [#6150 @rjbou]
+  * Fix a typo in the default man page [#6267 @fccm2]
 
 ## Security fixes
 
