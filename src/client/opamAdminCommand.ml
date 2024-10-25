@@ -830,6 +830,71 @@ let check_command cli =
   Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg)
 
+let compare_versions_command_doc = "Compare two package versions"
+let compare_versions_command cli =
+  let operator : OpamFormula.relop option Term.t =
+     let make_flag (relop : OpamFormula.relop) =
+       let flag_name =
+         match relop with
+         | `Eq -> "eq"
+         | `Neq -> "neq"
+         | `Geq -> "geq"
+         | `Gt -> "gt"
+         | `Leq -> "leq"
+         | `Lt -> "lt"
+       in
+       let doc = Printf.sprintf "assert V0 %s V1" (OpamFormula.string_of_relop relop) in
+       OpamArg.(cli_from cli2_4), Some relop, [ flag_name ], doc
+     in
+     OpamArg.mk_vflag ~cli None (List.map make_flag OpamFormula.all_relop)
+  in
+  let version_arg n =
+    let doc =
+      Arg.info
+        ~docv:(Printf.sprintf "V%d" n)
+        ~doc:"Package version to compare" []
+    in
+    Arg.(required & pos n (some OpamArg.package_version) None & doc)
+  in
+  let command = "compare-versions" in
+  let doc = compare_versions_command_doc in
+  let man = [
+    `S Manpage.s_description;
+    `P "This command compares 2 package versions. By default it outputs 'V0 OP \
+        V1' to the console with OP in {<,>,=} such that the equation holds. \
+        When an operator is supplied, the output is suppressed and the result \
+        of the comparison is checked against the provided operator: the command \
+        exits 0 if the comparison holds, and 1 otherwise. For example:";
+    `Pre "\n\
+          \\$ opam admin compare-versions 0.0.9 0.0.10\n\
+          0.0.9 < 0.0.10\n\
+          \n\
+          \\$ opam admin compare-versions 0.0.9 --lt 0.0.10\n\
+          [0]\n\
+          \n\
+          \\$ opam admin compare-versions 0.0.9 --eq 0.0.10\n\
+          [1]";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
+  ]
+  in
+  let cmd v0 v1 operator () =
+    match operator with
+    | None ->
+      let result = OpamPackage.Version.compare v0 v1 in
+      OpamConsole.formatted_msg "%s %s %s\n"
+        (OpamPackage.Version.to_string v0)
+        (if result < 0 then "<" else if result = 0 then "=" else ">")
+        (OpamPackage.Version.to_string v1)
+    | Some operator ->
+      OpamStd.Sys.exit_because
+        (if OpamFormula.eval_relop operator v0 v1
+         then `Success
+         else `False)
+  in
+  OpamArg.mk_command ~cli OpamArg.(cli_from cli2_4) command ~doc ~man
+    Term.(const cmd $ version_arg 0 $ version_arg 1 $ operator)
+
 let pattern_list_arg =
   OpamArg.arg_list "PATTERNS"
     "Package patterns with globs. matching against $(b,NAME) or \
@@ -1227,6 +1292,7 @@ let admin_subcommands cli =
     upgrade_command cli;
     lint_command cli;
     check_command cli;
+    compare_versions_command cli;
     list_command cli;
     filter_command cli;
     add_constraint_command cli;
