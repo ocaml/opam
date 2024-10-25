@@ -4442,7 +4442,7 @@ let default cli =
     `P "It has support for different remote repositories such as HTTP, rsync, \
         git, darcs and mercurial. Everything is installed within a local opam \
         directory, that can include multiple installation prefixes with \
-        different sets of intalled packages.";
+        different sets of installed packages.";
     `P "Use either $(b,opam <command> --help) or $(b,opam help <command>) \
         for more information on a specific command.";
     `S Manpage.s_commands;
