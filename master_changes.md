@@ -14,6 +14,7 @@ users)
   * Bump the version of opam to 2.4.0~alpha1~dev [#6204 @kit-ty-kate]
 
 ## Global CLI
+  * Add cli version 2.4 [#6268 @mbarbin @rjbou]
 
 ## Plugins
 
