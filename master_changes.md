@@ -43,6 +43,7 @@ users)
 ## Config
 
 ## Pin
+  * [NEW] Make it so pin list display the current revision of a pinned repository in a new column [#6274 @desumn - fix #5533]
 
 ## List
 

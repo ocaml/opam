@@ -182,9 +182,9 @@ The following actions will be performed:
 -> installed no-url.ved
 Done.
 ### : list
-### opam pin list
-nip-git.ved      git      git+file://${BASEDIR}/nip-git#master
-nip-git2.ved     git      git+file://${BASEDIR}/nip-git2#master
+### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
+nip-git.ved      git      git+file://${BASEDIR}/nip-git#master   (at HASH)
+nip-git2.ved     git      git+file://${BASEDIR}/nip-git2#master  (at HASH)
 nip-path.ved     rsync    file://${BASEDIR}/nip-path
 nip-path2.ved    rsync    file://${BASEDIR}/nip-path2
 nip-path3.ved    rsync    file://${BASEDIR}/nip-path3
@@ -332,11 +332,11 @@ The following actions will be performed:
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 31 #
 ### : list
-### opam pin list
+### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
 nip.1                         version           1
 nip-git.ved                   rsync             file://${BASEDIR}/nip-git
-nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#master
-nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#master
+nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#master  (at HASH)
+nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#master  (at HASH)
 nip-path.ved                  rsync             file://${BASEDIR}/nip-path
 nip-path3.ved                 rsync             file://${BASEDIR}/nip-path3
 no-url.1       (uninstalled)  local definition
@@ -407,8 +407,8 @@ The following actions will be performed:
 -> installed nip-path2.ved
 Done.
 ### : list
-### opam pin list
-nip-git.ved      git    git+file://${BASEDIR}/nip-git#master
+### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
+nip-git.ved      git    git+file://${BASEDIR}/nip-git#master  (at HASH)
 nip-git2.ved     rsync  file://${BASEDIR}/nip-git2
 nip-path.ved     rsync  file://${BASEDIR}/nip-path
 nip-path2.ved    rsync  file://${BASEDIR}/nip-path2
@@ -452,8 +452,8 @@ Done.
 # Name    # Installed # Synopsis
 nip-path  ved         pinned to version ved at file://${BASEDIR}/nip-path
 nip-path2 ved         pinned to version ved at file://${BASEDIR}/nip-path2
-### opam pin list
-nip-git4.ved   (uninstalled)  git    git+file://${BASEDIR}/nip-git4#master
+### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
+nip-git4.ved   (uninstalled)  git    git+file://${BASEDIR}/nip-git4#master  (at HASH)
 nip-path.ved                  rsync  file://${BASEDIR}/nip-path
 nip-path2.ved                 rsync  file://${BASEDIR}/nip-path2
 ### find OPAM/actions/lib -name '*.t' | sort
@@ -570,11 +570,11 @@ The following actions will be performed:
 ### :::::::::::::::::::::::
 ### opam switch kinds
 ### : pin list
-### opam pin list
+### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
 nip.1                         version           1
 nip-git.ved                   rsync             file://${BASEDIR}/nip-git
-nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#master
-nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#master
+nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#master  (at HASH)
+nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#master  (at HASH)
 nip-path.ved                  rsync             file://${BASEDIR}/nip-path
 nip-path3.ved                 rsync             file://${BASEDIR}/nip-path3
 no-url.1       (uninstalled)  local definition
