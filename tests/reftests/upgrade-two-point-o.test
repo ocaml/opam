@@ -28,12 +28,12 @@ STATE                           Inferred invariant: from base packages { i-am-co
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
-However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade i-am-compiler.2"), which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
 ### opam pin remove i-am-compiler
 Ok, i-am-compiler is no longer pinned locally (version 1)
 Nothing to do.
 ### opam upgrade --show-action
-Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
-However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Everything as up-to-date as possible
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade i-am-compiler.2"), which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.

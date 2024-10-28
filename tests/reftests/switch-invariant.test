@@ -60,8 +60,8 @@ Switch invariant: ["baz" {= "1"}]
 -> installed baz.1
 Done.
 ### opam upgrade -v
-Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
-However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+Everything as up-to-date as possible
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade bar.2"), which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
 ### <pkg:baz.1>
 opam-version: "2.0"

@@ -20,11 +20,11 @@ The following actions will be faked:
 Faking installation of a.1
 Done.
 ### opam upgrade a
-Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+Everything as up-to-date as possible
 
 The following packages are not being upgraded because the new versions conflict with other installed packages:
   - a.2
-However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade a.2"), which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
 ### <pkg:a.1.1>
 opam-version: "2.0"
@@ -77,11 +77,11 @@ The following actions will be faked:
 Faking installation of b.1
 Done.
 ### opam upgrade
-Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+Everything as up-to-date as possible
 
 The following packages are not being upgraded because the new versions conflict with other installed packages:
   - b.2
-However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade b.2"), which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
 ### opam upgrade b
 The following actions will be faked:
@@ -112,12 +112,12 @@ flags: avoid-version
 opam-version: "2.0"
 flags: avoid-version
 ### opam upgrade
-Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+Everything as up-to-date as possible
 
 The following packages are not being upgraded because the new versions conflict with other installed packages:
   - a.4
   - b.3
-However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade a.4"), which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
 ### opam upgrade b.3
 The following actions will be faked:
