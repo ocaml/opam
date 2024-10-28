@@ -299,8 +299,8 @@ module Cygwin = struct
       log "Downloading setup-x86_64.exe";
       if OpamConsole.disp_status_line () then
         OpamConsole.status_line "Downloading Cygwin setup from cygwin.com";
-      OpamDownload.download_as ~overwrite ?checksum url_setupexe dst @@+
-        fun () ->
+      OpamDownload.download_as ~etag:None ~last_modified:None ~overwrite ?checksum url_setupexe dst @@+
+        fun _was_downloaded ->
           OpamConsole.clear_status ();
           Done ()
     end

@@ -196,7 +196,7 @@ let do_upgrade repo_root =
                 let base = OpamFilename.Base.of_string "package.patch" in
                 OpamFilename.create dir base
               in
-              OpamDownload.download_as ~overwrite:false url f @@| fun () ->
+              OpamDownload.download_as ~etag:None ~last_modified:None ~overwrite:false url f @@| fun _was_downloaded ->
               let hash = OpamHash.compute (OpamFilename.to_string f) in
               Hashtbl.add url_md5 url hash;
               Some hash)),

@@ -20,26 +20,29 @@ let index_archive_name = "index.tar.gz"
 
 let remote_index_archive url = OpamUrl.Op.(url / index_archive_name)
 
-let sync_state name destdir url =
+let sync_state ~etag ~last_modified name destdir url =
   OpamFilename.with_tmp_dir_job @@ fun dir ->
   let local_index_archive = OpamFilename.Op.(dir // index_archive_name) in
-  OpamDownload.download_as ~quiet:true ~overwrite:true
+  OpamDownload.download_as ~quiet:true ~overwrite:true ~etag ~last_modified
     (remote_index_archive url)
     local_index_archive
-  @@+ fun () ->
-  List.iter OpamFilename.rmdir (OpamFilename.dirs destdir);
-  OpamProcess.Job.with_text
-    (Printf.sprintf "[%s: unpacking]"
-       (OpamConsole.colorise `green (OpamRepositoryName.to_string name))) @@
-  OpamFilename.extract_in_job local_index_archive destdir @@+ function
-    | None -> Done ()
+  @@+ fun was_downloaded ->
+  if was_downloaded then begin
+    List.iter OpamFilename.rmdir (OpamFilename.dirs destdir);
+    OpamProcess.Job.with_text
+      (Printf.sprintf "[%s: unpacking]"
+         (OpamConsole.colorise `green (OpamRepositoryName.to_string name))) @@
+    OpamFilename.extract_in_job local_index_archive destdir @@+ function
+    | None -> Done true
     | Some err -> raise err
+  end else
+    Done false
 
 module B = struct
 
   let name = `http
 
-  let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
+  let fetch_repo_update ~etag ~last_modified repo_name ?cache_dir:_ repo_root url =
     log "pull-repo-update";
     let quarantine =
       OpamFilename.Dir.(of_string (to_string repo_root ^ ".new"))
@@ -51,20 +54,23 @@ module B = struct
         Done (OpamRepositoryBackend.Update_err e))
     @@ fun () ->
     OpamRepositoryBackend.job_text repo_name "sync"
-      (sync_state repo_name quarantine url) @@+ fun () ->
-    if not (OpamFilename.exists_dir repo_root) ||
-       OpamFilename.dir_is_empty repo_root then
-      Done (OpamRepositoryBackend.Update_full quarantine)
-    else
-      OpamProcess.Job.finally finalise @@ fun () ->
-      OpamRepositoryBackend.job_text repo_name "diff"
-        (OpamRepositoryBackend.get_diff
-           (OpamFilename.dirname_dir repo_root)
-           (OpamFilename.basename_dir repo_root)
-           (OpamFilename.basename_dir quarantine))
-      @@| function
-      | None -> OpamRepositoryBackend.Update_empty
-      | Some patch -> OpamRepositoryBackend.Update_patch patch
+      (sync_state ~etag ~last_modified repo_name quarantine url) @@+ fun was_downloaded ->
+    if was_downloaded then begin
+      if not (OpamFilename.exists_dir repo_root) ||
+         OpamFilename.dir_is_empty repo_root then
+        Done (OpamRepositoryBackend.Update_full quarantine)
+      else
+        OpamProcess.Job.finally finalise @@ fun () ->
+        OpamRepositoryBackend.job_text repo_name "diff"
+          (OpamRepositoryBackend.get_diff
+             (OpamFilename.dirname_dir repo_root)
+             (OpamFilename.basename_dir repo_root)
+             (OpamFilename.basename_dir quarantine))
+        @@| function
+        | None -> OpamRepositoryBackend.Update_empty
+        | Some patch -> OpamRepositoryBackend.Update_patch patch
+    end else
+      Done OpamRepositoryBackend.Update_empty
 
   let repo_update_complete _ _ = Done ()
 

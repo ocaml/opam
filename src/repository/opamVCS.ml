@@ -41,7 +41,7 @@ module Make (VCS: VCS) = struct
 
   let name = VCS.name
 
-  let fetch_repo_update repo_name ?cache_dir repo_root repo_url =
+  let fetch_repo_update ~etag:_ ~last_modified:_ repo_name ?cache_dir repo_root repo_url =
     let full_fetch = false in
     if VCS.exists repo_root then
       OpamProcess.Job.catch (fun e -> Done (OpamRepositoryBackend.Update_err e))

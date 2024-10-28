@@ -60,6 +60,7 @@ module type S = sig
       verifications. The file or directory returned is always temporary and
       should be cleaned up by the caller. *)
   val fetch_repo_update:
+    etag:string option -> last_modified:string option ->
     repository_name -> ?cache_dir:dirname -> dirname -> url ->
     update OpamProcess.job
 

@@ -82,8 +82,10 @@ let fetch_from_cache =
     match url.OpamUrl.backend with
     | `http ->
       OpamDownload.download_as
+        ~etag:None ~last_modified:None
         ~quiet:true ~validate:false ~overwrite:true ~checksum
-        url file
+        url file @@+ fun _was_downloaded ->
+        Done ()
     | `rsync ->
       begin match OpamUrl.local_file url with
         | Some src ->
@@ -563,7 +565,7 @@ let cleanup_repo_update upd =
 let update repo repo_root =
   log "update %a" (slog OpamRepositoryBackend.to_string) repo;
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
-  B.fetch_repo_update repo.repo_name repo_root repo.repo_url @@+ function
+  B.fetch_repo_update ~etag:repo.repo_etag ~last_modified:repo.repo_last_modified repo.repo_name repo_root repo.repo_url @@+ function
   | Update_err e -> raise e
   | Update_empty ->
     log "update empty, no validation performed";

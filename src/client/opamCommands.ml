@@ -135,7 +135,7 @@ let get_init_config ~no_sandboxing ~no_default_config_file ~add_config_file =
         | Some f -> OpamFile.make f
         | None ->
           let f = OpamFilename.of_string (OpamSystem.temp_file "conf") in
-          OpamProcess.Job.run (OpamDownload.download_as ~overwrite:false url f);
+          let _was_downloaded = OpamProcess.Job.run (OpamDownload.download_as ~etag:None ~last_modified:None ~overwrite:false url f) in
           let hash = OpamHash.compute ~kind:`SHA256 (OpamFilename.to_string f) in
           if OpamConsole.confirm
               "Using configuration file from %s. \

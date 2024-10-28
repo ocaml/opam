@@ -28,9 +28,10 @@ val download:
 (** As [download], but with a specified output filename. *)
 val download_as:
   ?quiet:bool -> ?validate:bool -> overwrite:bool -> ?compress:bool ->
+  etag:string option -> last_modified:string option ->
   ?checksum:OpamHash.t ->
   OpamUrl.t -> OpamFilename.t ->
-  unit OpamProcess.job
+  bool OpamProcess.job
 
 
 (** Software Heritage fallback *)

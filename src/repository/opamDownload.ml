@@ -32,16 +32,27 @@ let curl_args =
     CString "--", None; (* End list of options; 5.0 1-Dec-1998 *)
     CIdent "url", None;
   ] in
-  fun ~with_mitigation ->
-    if with_mitigation then
-      (* --fail is as old as curl; though the assumption that it leads to exit
-         code 22 when there's an error is probably 5.3 21-Dec-1998 (prior to
-         that it led to exit code 21) *)
-      (CString "--fail", None) :: main_args
-    else
-      (CString "--write-out", None) ::
-      (CString "%%{http_code}\\n", None) :: (* 6.5 13-Mar-2000 *)
-      main_args
+  fun ~with_mitigation ~etag ~last_modified ->
+    let args =
+      if with_mitigation then
+        (* --fail is as old as curl; though the assumption that it leads to exit
+           code 22 when there's an error is probably 5.3 21-Dec-1998 (prior to
+           that it led to exit code 21) *)
+        (CString "--fail", None) :: main_args
+      else
+        (CString "--write-out", None) ::
+        (CString "%%{http_code}\\n", None) :: (* 6.5 13-Mar-2000 *)
+        main_args
+    in
+    let args = match etag with
+      | None -> args
+      | Some etag -> (CString "-H", None) :: (CString ("If-None-Match: "^etag), None) :: args
+    in
+    let args = match last_modified with
+      | None -> args
+      | Some last_modified -> (CString "-H", None) :: (CString ("If-Modified-Since: "^last_modified), None) :: args
+    in
+    args
 
 let wget_args = [
   CString "-t", None; CIdent "retry", None;
@@ -66,7 +77,7 @@ let ftp_args = [
 ]
 
 let download_args ~url ~out ~retry ?(with_curl_mitigation=false)
-                  ?checksum ~compress () =
+                  ?checksum ~compress ~etag ~last_modified () =
   let cmd, _ = Lazy.force OpamRepositoryConfig.(!r.download_tool) in
   let cmd =
     match cmd with
@@ -74,7 +85,7 @@ let download_args ~url ~out ~retry ?(with_curl_mitigation=false)
     | [(CIdent "fetch"), _] -> cmd @ fetch_args
     | [(CIdent "ftp"), _] -> cmd @ ftp_args
       (* Assume curl if the command is a single arg *)
-    | [_] -> cmd @ curl_args ~with_mitigation:with_curl_mitigation
+    | [_] -> cmd @ curl_args ~with_mitigation:with_curl_mitigation ~etag ~last_modified
     | _ -> cmd
   in
   OpamFilter.single_command (fun v ->
@@ -100,7 +111,7 @@ let download_args ~url ~out ~retry ?(with_curl_mitigation=false)
       | _ -> None)
     cmd
 
-let download_command_t ~with_curl_mitigation ~compress ?checksum ~url ~dst c =
+let download_command_t ~with_curl_mitigation ~compress ~etag ~last_modified ?checksum ~url ~dst c =
   let cmd, args =
     match
       download_args
@@ -110,6 +121,7 @@ let download_command_t ~with_curl_mitigation ~compress ?checksum ~url ~dst c =
         ~with_curl_mitigation
         ?checksum
         ~compress
+        ~etag ~last_modified
         ()
     with
     | cmd::args -> cmd, args
@@ -128,7 +140,7 @@ let tool_return redownload_command url ret =
       fail (Some "Download command failed",
                 Printf.sprintf "Download command failed: %s"
                   (OpamProcess.result_summary ret))
-    else Done ()
+    else Done true
   | _, `Curl ->
     if OpamProcess.is_failure ret then
       if ret.r_code = 43 then begin
@@ -149,7 +161,7 @@ let tool_return redownload_command url ret =
               fail (Some "curl failed",
                     Printf.sprintf "curl failed: %s"
                       (OpamProcess.result_summary ret))
-          else Done ()
+          else Done true
       end else
         fail (Some "curl failed", Printf.sprintf "curl failed: %s"
                 (OpamProcess.result_summary ret))
@@ -166,15 +178,16 @@ let tool_return redownload_command url ret =
           fail (Some ("curl error code " ^ code),
                 Printf.sprintf "curl: code %s while downloading %s"
                   code (OpamUrl.to_string url))
-        else Done ()
+        else if num = 304 then Done false
+        else Done true
 
-let download_command ~compress ?checksum ~url ~dst () =
-  let download_command = download_command_t ~compress ?checksum ~url ~dst in
+let download_command ~compress ~etag ~last_modified ?checksum ~url ~dst () =
+  let download_command = download_command_t ~compress ~etag ~last_modified ?checksum ~url ~dst in
   download_command ~with_curl_mitigation:false
   @@ tool_return download_command url
 
 let really_download
-    ?(quiet=false) ~overwrite ?(compress=false) ?checksum ?(validate=true)
+    ?(quiet=false) ~overwrite ?(compress=false) ~etag ~last_modified ?checksum ?(validate=true)
     ~url ~dst () =
   assert (url.OpamUrl.backend = `http);
   let tmp_dst = dst ^ ".part" in
@@ -191,37 +204,40 @@ let really_download
         log "Could not download file at %s." (OpamUrl.to_string url);
         raise e)
   @@ fun () ->
-  download_command ~compress ?checksum ~url ~dst:tmp_dst ()
-  @@+ fun () ->
-  if not (Sys.file_exists tmp_dst) then
-    fail (Some "Downloaded file not found",
-          "Download command succeeded, but resulting file not found")
-  else if Sys.file_exists dst && not overwrite then
-    OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
-  if validate &&
-     OpamRepositoryConfig.(!r.force_checksums <> Some false) then
-    OpamStd.Option.iter (fun cksum ->
-        if not (OpamHash.check_file tmp_dst cksum) then
-          fail (Some "Bad checksum",
-                    Printf.sprintf "Bad checksum, expected %s"
-                      (OpamHash.to_string cksum)))
-      checksum;
-  OpamSystem.mv tmp_dst dst;
-  Done ()
+  download_command ~compress ~etag ~last_modified ?checksum ~url ~dst:tmp_dst ()
+  @@+ fun was_downloaded ->
+  if was_downloaded then begin
+    if not (Sys.file_exists tmp_dst) then
+      fail (Some "Downloaded file not found",
+            "Download command succeeded, but resulting file not found")
+    else if Sys.file_exists dst && not overwrite then
+      OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
+    if validate &&
+       OpamRepositoryConfig.(!r.force_checksums <> Some false) then
+      OpamStd.Option.iter (fun cksum ->
+          if not (OpamHash.check_file tmp_dst cksum) then
+            fail (Some "Bad checksum",
+                  Printf.sprintf "Bad checksum, expected %s"
+                    (OpamHash.to_string cksum)))
+        checksum;
+    OpamSystem.mv tmp_dst dst;
+    Done true
+  end else
+    Done false
 
-let download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst =
+let download_as ?quiet ?validate ~overwrite ?compress ~etag ~last_modified ?checksum url dst =
   match OpamUrl.local_file url with
   | Some src ->
-    if src = dst then Done () else
+    if src = dst then Done true else
       (if OpamFilename.exists dst then
          if overwrite then OpamFilename.remove dst else
            OpamSystem.internal_error "The downloaded file will overwrite %s."
              (OpamFilename.to_string dst);
        OpamFilename.copy ~src ~dst;
-       Done ())
+       Done true)
   | None ->
     OpamFilename.(mkdir (dirname dst));
-    really_download ?quiet ~overwrite ?compress ?checksum ?validate
+    really_download ?quiet ~overwrite ?compress ~etag ~last_modified ?checksum ?validate
       ~url
       ~dst:(OpamFilename.to_string dst)
       ()
@@ -240,8 +256,8 @@ let download ?quiet ?validate ~overwrite ?compress ?checksum url dstdir =
   let dst =
     OpamFilename.(create dstdir (Base.of_string base))
   in
-  download_as ?quiet ?validate ~overwrite ?compress ?checksum url dst @@|
-  fun () -> dst
+  download_as ?quiet ?validate ~overwrite ?compress ~etag:None ~last_modified:None ?checksum url dst @@|
+  fun _was_downloaded -> dst
 
 
 (** Stdout output retrieval and post requests management *)
@@ -255,7 +271,7 @@ let check_post_tool () =
 let get_output ~post ?(args=[]) url =
   let cmd_args =
     download_args ~url ~out:"-" ~retry:OpamRepositoryConfig.(!r.retries)
-      ~compress:false ()
+      ~compress:false ~etag:None ~last_modified:None ()
     @ args
   in
   let cmd_args =
@@ -376,7 +392,7 @@ module SWHID = struct
                let hash = OpamSWHID.hash swhid in
                OpamFilename.with_tmp_dir_job @@ fun dir ->
                let archive =  OpamFilename.Op.(dir // hash) in
-               download_as ~overwrite:true url archive @@+ fun () ->
+               download_as ~etag:None ~last_modified:None ~overwrite:true url archive @@+ fun _was_downloaded ->
                let sources = OpamFilename.Op.(dir / "src") in
                OpamFilename.extract_job archive sources @@| function
                | Some e ->

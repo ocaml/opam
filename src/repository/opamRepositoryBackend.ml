@@ -26,6 +26,7 @@ module type S = sig
     ?cache_dir:dirname -> ?subpath:subpath -> dirname -> OpamHash.t option -> url ->
     filename option download OpamProcess.job
   val fetch_repo_update:
+    etag:string option -> last_modified:string option ->
     repository_name -> ?cache_dir:dirname -> dirname -> url ->
     update OpamProcess.job
   val repo_update_complete: dirname -> url -> unit OpamProcess.job
