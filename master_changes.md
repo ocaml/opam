@@ -33,6 +33,7 @@ users)
 ## UI
   * [BUG] Fix the detection of the current terminal size [#6244 @kit-ty-kate - fix #6243]
   * [BUG] Ensure the output of opam commands using a column style UI stay consistent accross environment by setting the number of columns to 80 if stdout is not a tty and if the `COLUMNS` env variable is not set [#6244 @kit-ty-kate]
+  * [BUG] opam upgrade: Do not show the not-up-to-date message with packages tagged with avoid-version [#6273 @kit-ty-kate - fix #6271]
 
 ## Switch
 
