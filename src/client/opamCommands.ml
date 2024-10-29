@@ -178,7 +178,8 @@ let init cli =
     `P "Initialise the opam state, or update opam init options";
     `P (Printf.sprintf
          "The $(b,init) command initialises a local \"opam root\" (by default, \
-          $(i,~%s.opam%s)) that holds opam's data and packages. This is a \
+          $(i,~%s.opam%s) unless overriden by $(i,--root) or the $(i,OPAMROOT) \
+          environment variable) that holds opam's data and packages. This is a \
           necessary step for normal operation of opam. The initial software \
           repositories are fetched, and an initial 'switch' can also be \
           installed, according to the configuration and options. These can be \

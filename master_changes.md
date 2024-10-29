@@ -132,6 +132,7 @@ users)
   * mli documentation: fix code blocks, references, add `@raise` tags [#6150 @rjbou]
   * Unhide `OpamProcess` functions [#6150 @rjbou]
   * Fix a typo in the default man page [#6267 @fccm2]
+  * Point users to ways to override the default opam root location in the opam init manpage [#6251 @kit-ty-kate]
 
 ## Security fixes
 
