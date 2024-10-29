@@ -112,6 +112,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Add depext job for depext test on Altlinux [#6277 @rjbou]
 
 ## Doc
 

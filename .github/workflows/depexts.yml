@@ -19,7 +19,7 @@ defaults:
 env:
   OPAMVERSION: 2.3.0
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
-  OPAM_REPO_SHA: 0c42e982f4cf97fc698132fb2a16b49524a26ab3
+  OPAM_REPO_SHA: 335860ac6bdab55d9d7376c827d68c361a4a30f9
 
 jobs:
   opam-cache:
@@ -56,6 +56,24 @@ jobs:
     - name: depexts actions alpine
       uses: ./.github/actions/alpine
       id: depexts-alpine
+
+  depexts-altlinux:
+    needs: opam-cache
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: opam binary cache
+      uses: actions/cache@v4
+      with:
+        path: binary/opam
+        key: binary-${{ env.OPAMVERSION }}
+    - name: generate action
+      run: |
+        bash .github/scripts/depexts/generate-actions.sh altlinux
+    - name: depexts actions altlinux
+      uses: ./.github/actions/altlinux
+      id: depexts-altlinux
 
   depexts-archlinux:
     needs: opam-cache
