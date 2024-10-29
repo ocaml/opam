@@ -146,18 +146,24 @@ let remove_file_t ?(with_log=true) file =
   with Unix.Unix_error _ as e ->
     internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
 
+let is_reg_dir dir =
+  match Unix.lstat dir with
+  | {Unix.st_kind = Unix.S_DIR; _} -> true
+  | {Unix.st_kind =
+       Unix.(S_REG | S_LNK | S_CHR | S_BLK | S_FIFO | S_SOCK); _} ->
+    false
+  | exception Unix.(Unix_error (ENOENT, _, _)) when Sys.win32 ->
+    (* This is usually caused by invalid symlinks extracted by a
+       Cygwin/MSYS2 tar. *)
+    false
+
 let rec remove_dir_t dir =
   let files = get_files dir in
   List.iter (fun file ->
       let file = Filename.concat dir file in
-      match Unix.lstat file with
-      | {Unix.st_kind = Unix.S_DIR; _} ->
+      if is_reg_dir file then
         remove_dir_t file
-      | {Unix.st_kind = Unix.(S_REG | S_LNK | S_CHR | S_BLK | S_FIFO | S_SOCK); _} ->
-        remove_file_t ~with_log:false file
-      | exception Unix.(Unix_error (ENOENT, _, _)) when Sys.win32 ->
-        (* This is usually caused by invalid symlinks extracted by a
-           Cygwin/MSYS2 tar. *)
+      else
         remove_file_t ~with_log:false file
     ) files;
   Unix.rmdir dir
@@ -165,7 +171,7 @@ let rec remove_dir_t dir =
 let remove_dir dir =
   log "rmdir %s" dir;
   if Sys.file_exists dir then begin
-    if Sys.is_directory dir then
+    if is_reg_dir dir then
       remove_dir_t dir
     else
       remove_file_t ~with_log:true dir
