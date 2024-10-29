@@ -31,6 +31,14 @@ RUN apk add $mainlibs $ocaml
 RUN apk add g++
 EOF
     ;;
+  altlinux)
+    cat >$dir/Dockerfile << EOF
+FROM alt
+RUN apt-get update
+RUN apt-get install -y $mainlibs $ocaml
+RUN apt-get install -y gcc-c++
+EOF
+    ;;
   archlinux)
 # no automake
     cat >$dir/Dockerfile << EOF
@@ -184,6 +192,10 @@ if [ $target = "alpine" ]; then
  test_depext conf-clang-format.1
  # conf-pandoc.0.1
 fi
+
+#if [ $target = "altlinux" ]; then
+#  test_depext xxx
+#fi
 
 if [ $target = "fedora" ]; then
  test_depext conf-emacs.1
