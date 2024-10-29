@@ -78,6 +78,9 @@ type t = {
                                 completion *)
 }
 
+val equal : t -> t -> bool
+val compare : t -> t -> int
+
 (** Process results *)
 type result = {
   r_code     : int;         (** Process exit code, or 256 on error *)
