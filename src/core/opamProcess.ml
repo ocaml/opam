@@ -254,6 +254,12 @@ type t = {
   p_tmp_files: string list;
 }
 
+let equal p1 p2 =
+  (p1.p_pid : int) = (p2.p_pid : int)
+
+let compare p1 p2 =
+  Int.compare p1.p_pid p2.p_pid
+
 let output_lines oc lines =
   List.iter (fun line ->
     output_string oc line;
