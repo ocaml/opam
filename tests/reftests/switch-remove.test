@@ -1,0 +1,10 @@
+N0REP0
+### :: Remove linked local switch
+### opam switch create foo --empty
+### opam switch link foo
+Directory ${BASEDIR} set to use switch foo.
+Just remove ${BASEDIR}/_opam to unlink.
+### opam switch remove .
+Fatal error:
+${OPAM}: "rmdir" failed on ${BASEDIR}/_opam: Not a directory
+# Return code 99 #
