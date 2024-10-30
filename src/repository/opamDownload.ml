@@ -41,7 +41,7 @@ let curl_args =
         (CString "--fail", None) :: main_args
       else
         (CString "--write-out", None) ::
-        (CString "%%{http_code}\\n", None) :: (* 6.5 13-Mar-2000 *)
+        (CString "%%header{last-modified}\\n%%header{etag}\\n%%{http_code}\\n", None) :: (* 6.5 13-Mar-2000 *)
         main_args
     in
     let args = match etag with
@@ -140,7 +140,7 @@ let tool_return redownload_command url ret =
       fail (Some "Download command failed",
                 Printf.sprintf "Download command failed: %s"
                   (OpamProcess.result_summary ret))
-    else Done true
+    else Done (`Was_downloaded (None, None))
   | _, `Curl ->
     if OpamProcess.is_failure ret then
       if ret.r_code = 43 then begin
@@ -161,25 +161,30 @@ let tool_return redownload_command url ret =
               fail (Some "curl failed",
                     Printf.sprintf "curl failed: %s"
                       (OpamProcess.result_summary ret))
-          else Done true
+          else Done (`Was_downloaded (None, None))
       end else
         fail (Some "curl failed", Printf.sprintf "curl failed: %s"
                 (OpamProcess.result_summary ret))
     else
-      match ret.OpamProcess.r_stdout with
+      match List.rev ret.OpamProcess.r_stdout with
       | [] ->
         fail (Some "curl empty response",
               Printf.sprintf "curl: empty response while downloading %s"
                 (OpamUrl.to_string url))
-      | l  ->
-        let code = List.hd (List.rev l) in
+      | code::etag::last_modified::_ ->
+        let etag = if etag = "" then None else Some etag in
+        let last_modified = if last_modified = "" then None else Some last_modified in
         let num = try int_of_string code with Failure _ -> 999 in
         if num >= 400 then
           fail (Some ("curl error code " ^ code),
                 Printf.sprintf "curl: code %s while downloading %s"
                   code (OpamUrl.to_string url))
-        else if num = 304 then Done false
-        else Done true
+        else if num = 304 then Done `Not_downloaded
+        else Done (`Was_downloaded (etag, last_modified))
+      | _ ->
+        fail (Some "unexpected curl response",
+              Printf.sprintf "curl: unexpected response while downloading %s"
+                (OpamUrl.to_string url))
 
 let download_command ~compress ~etag ~last_modified ?checksum ~url ~dst () =
   let download_command = download_command_t ~compress ~etag ~last_modified ?checksum ~url ~dst in
@@ -205,8 +210,8 @@ let really_download
         raise e)
   @@ fun () ->
   download_command ~compress ~etag ~last_modified ?checksum ~url ~dst:tmp_dst ()
-  @@+ fun was_downloaded ->
-  if was_downloaded then begin
+  @@+ function
+  | `Was_downloaded _ as was_downloaded ->
     if not (Sys.file_exists tmp_dst) then
       fail (Some "Downloaded file not found",
             "Download command succeeded, but resulting file not found")
@@ -221,20 +226,20 @@ let really_download
                     (OpamHash.to_string cksum)))
         checksum;
     OpamSystem.mv tmp_dst dst;
-    Done true
-  end else
-    Done false
+    Done was_downloaded
+  | `Not_downloaded ->
+    Done `Not_downloaded
 
 let download_as ?quiet ?validate ~overwrite ?compress ~etag ~last_modified ?checksum url dst =
   match OpamUrl.local_file url with
   | Some src ->
-    if src = dst then Done true else
+    if src = dst then Done (`Was_downloaded (None, None)) else
       (if OpamFilename.exists dst then
          if overwrite then OpamFilename.remove dst else
            OpamSystem.internal_error "The downloaded file will overwrite %s."
              (OpamFilename.to_string dst);
        OpamFilename.copy ~src ~dst;
-       Done true)
+       Done (`Was_downloaded (None, None)))
   | None ->
     OpamFilename.(mkdir (dirname dst));
     really_download ?quiet ~overwrite ?compress ~etag ~last_modified ?checksum ?validate

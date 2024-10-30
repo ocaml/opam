@@ -31,7 +31,7 @@ val download_as:
   etag:string option -> last_modified:string option ->
   ?checksum:OpamHash.t ->
   OpamUrl.t -> OpamFilename.t ->
-  bool OpamProcess.job
+  [`Was_downloaded of (string option * string option) | `Not_downloaded] OpamProcess.job
 
 
 (** Software Heritage fallback *)
