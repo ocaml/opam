@@ -95,6 +95,7 @@ users)
 ## Build
   * Upgrade to opam-file-format 2.2.0~alpha1 [#6321 @kit-ty-kate]
   * Add menhir to the list of vendored packages [#6321 @kit-ty-kate]
+  * Bump the vendored dune to 3.16.1 [#6192 @kit-ty-kate]
 
 ## Infrastructure
 
