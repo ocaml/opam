@@ -100,6 +100,7 @@ users)
   * Upgrade to opam-file-format 2.2.0~alpha1 [#6321 @kit-ty-kate]
   * Add menhir to the list of vendored packages [#6321 @kit-ty-kate]
   * Upgrade the vendored spdx\_licenses to 1.3.0 [#6370 @kit-ty-kate - fix #6369]
+  * Bump the vendored dune to 3.16.1 [#6192 @kit-ty-kate]
 
 ## Infrastructure
 
