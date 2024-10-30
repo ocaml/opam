@@ -123,6 +123,10 @@ users)
 
 ## Github Actions
   * Add a doc generation job under linux [#5349 @rjbou]
+  * Add OCaml 5.2.0 to the build matrix [#6216 @kit-ty-kate]
+  * Allow to have more than one OCaml default version to run all jobs and add 5.2 to the list of default versions together with 4.14 [#6216 @kit-ty-kate]
+  * Bump 4.14 to the latest patch version (4.14.2) [#6216 @kit-ty-kate]
+  * Add OCaml 5.3 to the build matrix [#6189 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
