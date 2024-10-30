@@ -129,7 +129,7 @@ Done.
 ["ocaml" {>= "4.05.0"}]
 ### opam upgrade
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
-However, you may "opam upgrade" these packages explicitly, which will ask permission to downgrade or uninstall the conflicting packages.
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade ocaml.4.10.0"), which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
 ### opam upgrade ocaml
 The following actions will be performed:

@@ -279,26 +279,29 @@ let upgrade_t
              ) latest OpamPackage.Map.empty
          in
 
-         if (OpamConsole.verbose ()) && not (OpamPackage.Set.is_empty unav) then
-           (OpamConsole.formatted_msg
-              "%s.\n\
-               The following newer versions couldn't be installed:\n"
-              hdmsg;
-            OpamConsole.msg "%s"
-              (OpamStd.Format.itemize (fun p ->
-                   Printf.sprintf "%s.%s: %s"
-                     (OpamConsole.colorise `bold
-                        (OpamPackage.name_to_string p))
-                     (OpamPackage.version_to_string p)
-                     (OpamSwitchState.unavailable_reason t
-                        ~default:"unavailable for unknown reasons (this may \
-                                  be a bug in opam)"
-                        (OpamPackage.name p,
-                         Atom (`Eq, OpamPackage.version p))))
-                  (OpamPackage.Set.elements unav)))
+         if not (OpamPackage.Set.is_empty unav) then
+           if OpamConsole.verbose () then
+             (OpamConsole.formatted_msg
+                "%s.\n\
+                 The following newer versions couldn't be installed:\n"
+                hdmsg;
+              OpamConsole.msg "%s"
+                (OpamStd.Format.itemize (fun p ->
+                     Printf.sprintf "%s.%s: %s"
+                       (OpamConsole.colorise `bold
+                          (OpamPackage.name_to_string p))
+                       (OpamPackage.version_to_string p)
+                       (OpamSwitchState.unavailable_reason t
+                          ~default:"unavailable for unknown reasons (this may \
+                                    be a bug in opam)"
+                          (OpamPackage.name p,
+                           Atom (`Eq, OpamPackage.version p))))
+                    (OpamPackage.Set.elements unav)))
+           else
+             OpamConsole.formatted_msg
+               "%s (run with --verbose to show unavailable upgrades).\n" hdmsg
          else
-           OpamConsole.formatted_msg
-             "%s (run with --verbose to show unavailable upgrades).\n" hdmsg;
+           OpamConsole.formatted_msg "%s\n" hdmsg;
          if not (OpamPackage.Set.is_empty unopt) then
            (let bullet =
               OpamConsole.(colorise `red
@@ -330,9 +333,11 @@ let upgrade_t
                  ) (OpamPackage.Set.elements unopt))
            );
          OpamConsole.formatted_msg
-           "However, you may \"opam upgrade\" these packages explicitly, \
+           "However, you may \"opam upgrade\" these packages explicitly \
+            at these versions (e.g. \"opam upgrade %s\"), \
             which will ask permission to downgrade or uninstall the \
-            conflicting packages.\n";
+            conflicting packages.\n"
+           (OpamPackage.to_string (OpamPackage.Set.choose notuptodate));
 
         )
     );
