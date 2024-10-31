@@ -92,6 +92,7 @@ users)
   * Add 2.3.0\~alpha1 to the install scripts [#6203 @kit-ty-kate]
   * Add 2.3.0\~beta1 to the install scripts [#6238 @rjbou]
   * Add opam 2.3.0\~beta2 to the install scripts [#6262 @kit-ty-kate]
+  * Add opam 2.3.0\~rc1 to the install scripts [#6282 @kit-ty-kate]
 
 ## Admin
   * ◈ Add `opam admin compare-versions` to compare package versions for sanity checks [#6197 @mbarbin]
