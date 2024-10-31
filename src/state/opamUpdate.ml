@@ -67,7 +67,7 @@ let repository rt repo =
     in
     OpamProcess.Job.with_text text @@
     OpamRepository.update r repo_root @@+ fun has_changes ->
-    let has_changes = if redirect then `Changes else has_changes in
+    let has_changes = if redirect then `Changes (None, None) else has_changes in
     if n <> max_loop && r = repo then
       (OpamConsole.warning "%s: Cyclic redirections, stopping."
          (OpamRepositoryName.to_string repo.repo_name);
@@ -99,7 +99,7 @@ let repository rt repo =
   | `No_changes ->
     log "Repository did not change: nothing to do.";
     Done None
-  | `Changes ->
+  | `Changes was_downloaded ->
     log "Repository has new changes";
     let repo_file = OpamFile.Repo.safe_read repo_file_path in
     let repo_file = OpamFile.Repo.with_root_url repo.repo_url repo_file in
@@ -145,6 +145,7 @@ let repository rt repo =
       else if OpamFilename.exists tarred_repo then
         (OpamFilename.move_dir ~src:repo_root ~dst:local_dir;
          OpamFilename.remove tarred_repo);
+      let repo = {repo with repo_etag = fst was_downloaded; repo_last_modified = snd was_downloaded} in
       Done (Some (
           (* Return an update function to make parallel execution possible *)
           fun rt ->

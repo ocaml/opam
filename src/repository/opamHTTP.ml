@@ -55,10 +55,10 @@ module B = struct
     @@ fun () ->
     OpamRepositoryBackend.job_text repo_name "sync"
       (sync_state ~etag ~last_modified repo_name quarantine url) @@+ function
-    | `Was_downloaded ->
+    | `Was_downloaded was_downloaded ->
       (if not (OpamFilename.exists_dir repo_root) ||
           OpamFilename.dir_is_empty repo_root then
-         Done (OpamRepositoryBackend.Update_full quarantine)
+         Done (OpamRepositoryBackend.Update_full (quarantine, was_downloaded))
        else
          OpamProcess.Job.finally finalise @@ fun () ->
          OpamRepositoryBackend.job_text repo_name "diff"
@@ -68,7 +68,7 @@ module B = struct
               (OpamFilename.basename_dir quarantine))
          @@| function
          | None -> OpamRepositoryBackend.Update_empty
-         | Some patch -> OpamRepositoryBackend.Update_patch patch)
+         | Some patch -> OpamRepositoryBackend.Update_patch (patch, was_downloaded))
     | `Not_downloaded ->
       Done OpamRepositoryBackend.Update_empty
 

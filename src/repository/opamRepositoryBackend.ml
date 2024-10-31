@@ -14,8 +14,8 @@ let log = OpamConsole.log "REPO_BACKEND"
 let slog = OpamConsole.slog
 
 type update =
-  | Update_full of dirname
-  | Update_patch of filename
+  | Update_full of dirname * (string option * string option)
+  | Update_patch of filename * (string option * string option)
   | Update_empty
   | Update_err of exn
 

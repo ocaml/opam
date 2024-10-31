@@ -176,7 +176,7 @@ module B = struct
     | Result _ ->
       if not (OpamFilename.exists_dir repo_root) ||
          OpamFilename.dir_is_empty repo_root then
-        Done (OpamRepositoryBackend.Update_full quarantine)
+        Done (OpamRepositoryBackend.Update_full (quarantine, (None, None)))
       else
         OpamProcess.Job.finally finalise @@ fun () ->
         OpamRepositoryBackend.job_text repo_name "diff" @@
@@ -186,7 +186,7 @@ module B = struct
           (OpamFilename.basename_dir quarantine)
         @@| function
         | None -> OpamRepositoryBackend.Update_empty
-        | Some p -> OpamRepositoryBackend.Update_patch p
+        | Some p -> OpamRepositoryBackend.Update_patch (p, (None, None))
 
   let repo_update_complete _ _ = Done ()
 

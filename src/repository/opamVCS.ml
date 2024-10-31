@@ -53,7 +53,7 @@ module Make (VCS: VCS) = struct
         (VCS.diff repo_root repo_url)
       @@| function
       | None -> OpamRepositoryBackend.Update_empty
-      | Some patch -> OpamRepositoryBackend.Update_patch patch
+      | Some patch -> OpamRepositoryBackend.Update_patch (patch, (None, None))
     else
       OpamProcess.Job.catch (fun e ->
           OpamFilename.rmdir repo_root;
@@ -70,7 +70,7 @@ module Make (VCS: VCS) = struct
       OpamProcess.Job.catch (fun e -> OpamFilename.rmdir tmpdir; raise e)
       @@ fun () ->
       VCS.reset_tree tmpdir repo_url @@| fun () ->
-      OpamRepositoryBackend.Update_full tmpdir
+      OpamRepositoryBackend.Update_full (tmpdir, (None, None))
 
   let repo_update_complete dirname url =
     VCS.patch_applied dirname url @@+ fun () ->
