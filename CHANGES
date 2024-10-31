@@ -3,6 +3,21 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.3.0~rc1:
+* Improve the release script by adding a NetBSD/x86_64 binary
+  [#6258 @kit-ty-kate]
+
+2.3.0~beta2:
+* Fix the detection of the current terminal size
+  [#6244 @kit-ty-kate - fix #6243]
+* Improve the release script by upgrading the platform building the Linux
+  binaries to Alpine 3.20, the FreeBSD binary to FreeBSD 14.1 and the
+  OpenBSD binary to OpenBSD 7.6 [#6237 @kit-ty-kate]
+* Make the release script produce a Linux/riscv64 binary [#6237 @kit-ty-kate]
+* API changes
+  * `OpamStubs.get_stdout_ws_col`: new Unix-only function returning the
+    number of columns of the current terminal window [#6244 @kit-ty-kate]
+
 2.3.0~beta1:
 * Fix an opam 2.1 regression where the initial pin of a local VCS directory
   would store untracked and ignored files. Those files would usually be
