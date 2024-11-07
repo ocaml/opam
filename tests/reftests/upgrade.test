@@ -128,7 +128,7 @@ Done.
 ### <pin:quux/quux.opam>
 opam-version: "2.0"
 ### opam install ./quux
-Package quux does not exist, create as a NEW package? [y/n] y
+Package quux does not exist, create as a NEW package? [Y/n] y
 quux is now pinned to file://${BASEDIR}/quux (version dev)
 The following actions will be performed:
 === install 1 package
@@ -304,8 +304,8 @@ version: "dev6"
 ### <pin:quux/quuux.opam>
 opam-version: "2.0"
 ### opam pin ./quux --no-action
-This will pin the following packages: quuux, quux. Continue? [y/n] y
-Package quuux does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: quuux, quux. Continue? [Y/n] y
+Package quuux does not exist, create as a NEW package? [Y/n] y
 quuux is now pinned to file://${BASEDIR}/quux (version dev)
 [NOTE] Package quux is already pinned to file://${BASEDIR}/quux (version dev5).
 quux is now pinned to file://${BASEDIR}/quux (version dev6)
@@ -343,7 +343,7 @@ build: [ "true" ]
 [quuux] Installing new package description from upstream file://${BASEDIR}/quux
 [quux] Installing new package description from upstream file://${BASEDIR}/quux
 
-quuux is not installed. Install it? [y/n] y
+quuux is not installed. Install it? [Y/n] y
 The following actions will be performed:
 === upgrade 1 package
   - upgrade quux  dev6 to dev7 (pinned)

@@ -26,7 +26,7 @@ snd branch
 ### git -C nip checkout fst-head
 Switched to branch 'fst-head'
 ### opam pin git+file://${BASEDIR}/nip#fst-head
-Package nip does not exist, create as a NEW package? [y/n] y
+Package nip does not exist, create as a NEW package? [Y/n] y
 nip is now pinned to git+file://${BASEDIR}/nip#fst-head (version dev)
 
 The following actions will be performed:

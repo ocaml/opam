@@ -590,7 +590,7 @@ Removed variable synopsis in global configuration
 Removed variable download-jobs in global configuration
 ### : when no switch is present
 ### opam switch remove var-option -y
-Switch var-option and all its packages will be wiped. Are you sure? [y/n] y
+Switch var-option and all its packages will be wiped. Are you sure? [Y/n] y
 ### opam var | ' +#.*' -> '' | " +[.]exe" -> "" | "opam-version.*" -> '\c'
 
 <><> Global opam variables ><><><><><><><><><><><><><><><><><><><><><><><><><><>

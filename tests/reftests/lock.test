@@ -21,7 +21,7 @@ it's here
 ### : simple lock file :
 ### opam switch create locking --empty
 ### opam pin -n ./tolock --with-version 1
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to file://${BASEDIR}/tolock (version 1)
 ### opam lock tolock
 [ERROR] Skipping tolock.1, dependencies are not satisfied in this switch, not installed packages are:
@@ -141,7 +141,7 @@ opam-version: "2.0"
 synopsis: "A word"
 version: "1"
 ### opam pin -n ./tolock --locked
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to file://${BASEDIR}/tolock (version 1)
 ### opam show --normalise tolock --field depends:,depopts:,conflicts:
 depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
@@ -177,7 +177,7 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock/tolock.opam --locked
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to file://${BASEDIR}/tolock (version 1)
 The following actions will be performed:
 === install 4 packages
@@ -206,7 +206,7 @@ Done.
 opam-version: "2.0"
 depends: "foo"
 ### opam pin -n old1
-Package oldlock does not exist, create as a NEW package? [y/n] y
+Package oldlock does not exist, create as a NEW package? [Y/n] y
 oldlock is now pinned to file://${BASEDIR}/old1 (version dev)
 ### opam lock oldlock
 Generated lock files for:
@@ -266,7 +266,7 @@ Done.
 opam-version: "2.0"
 depends: "foo"
 ### opam pin -n old2
-Package granpa does not exist, create as a NEW package? [y/n] y
+Package granpa does not exist, create as a NEW package? [Y/n] y
 granpa is now pinned to file://${BASEDIR}/old2 (version opam)
 ### opam lock granpa
 Generated lock files for:
@@ -326,7 +326,7 @@ Done.
 opam-version: "2.0"
 depends: "foo"
 ### opam pin -n old3
-Package ancestor does not exist, create as a NEW package? [y/n] y
+Package ancestor does not exist, create as a NEW package? [Y/n] y
 ancestor is now pinned to file://${BASEDIR}/old3 (version opam)
 ### opam lock ancestor
 Generated lock files for:
@@ -388,8 +388,8 @@ name: "silver"
 depends: "foo"
 ### # ERROR double silver
 ### opam pin -n old
-This will pin the following packages: silver, silver. Continue? [y/n] y
-Package silver does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: silver, silver. Continue? [Y/n] y
+Package silver does not exist, create as a NEW package? [Y/n] y
 silver is now pinned to file://${BASEDIR}/old (version dev)
 [NOTE] Package silver is already pinned to file://${BASEDIR}/old (version dev).
 silver is now pinned to file://${BASEDIR}/old (version dev)
@@ -536,7 +536,7 @@ tolock-scan  locked-version  file://${BASEDIR}/tolock-scan  -
 ### git -C tolock commit -qm "init"
 ### opam switch create locking3 --empty
 ### opam pin -n ./tolock --locked
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 ### opam show --normalise tolock --field depends:,depopts:,conflicts:
 depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
@@ -558,7 +558,7 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam pin ./tolock -n
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
 ### opam install ./tolock --show
 The following actions would be performed:
@@ -596,7 +596,7 @@ Done.
 ### git -C tolock commit -qm "opam file"
 ### opam switch create locking4 --empty
 ### opam pin -n ./tolock --locked
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 ### opam show --normalise tolock --field depends:,depopts:,conflicts:
 depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
@@ -618,7 +618,7 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam pin ./tolock -n
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
 ### opam install ./tolock --show
 The following actions would be performed:
@@ -656,7 +656,7 @@ Done.
 ### git -C tolock commit -qm "lock"
 ### opam switch create locking5 --empty
 ### opam pin -n ./tolock --locked
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 ### opam show --normalise tolock --field depends:,depopts:,conflicts:
 depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
@@ -678,7 +678,7 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam pin ./tolock -n
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
 ### opam install ./tolock --show
 The following actions would be performed:
@@ -720,7 +720,7 @@ The following actions will be performed:
 -> removed   tolock.1
 Done.
 ### opam install ./tolock --locked
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 The following actions will be performed:
 === install 1 package
@@ -749,7 +749,7 @@ The following actions will be performed:
 Done.
 ### : upgrade with lock :
 ### opam switch remove locking
-Switch locking and all its packages will be wiped. Are you sure? [y/n] y
+Switch locking and all its packages will be wiped. Are you sure? [Y/n] y
 ### opam switch create locking --empty
 ### rm -rf tolock
 ### <pin:tolock/tolock.opam>
@@ -758,7 +758,7 @@ version: "1"
 ### <pin:tolock/tolock.opam.locked>
 version: "l1"
 ### opam pin ./tolock --locked
-Package tolock does not exist, create as a NEW package? [y/n] y
+Package tolock does not exist, create as a NEW package? [Y/n] y
 tolock is now pinned to file://${BASEDIR}/tolock (version l1)
 
 The following actions will be performed:
@@ -775,7 +775,7 @@ version: "l2"
 <><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
 [tolock.l1] synchronised (file://${BASEDIR}/tolock)
 [tolock] Conflicting update of the metadata from file://${BASEDIR}/tolock.
-Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [y/n] y
+Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [Y/n] y
 User metadata backed up in ${BASEDIR}/OPAM/backup/tolock.bak
 Now run 'opam upgrade' to apply any package updates.
 ### opam show tolock --field=version,build --normalise
@@ -806,7 +806,7 @@ build: [ "echo" "locked" ]
 <><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
 [tolock.l2] synchronised (file://${BASEDIR}/tolock)
 [tolock] Conflicting update of the metadata from file://${BASEDIR}/tolock.
-Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [y/n] y
+Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [Y/n] y
 User metadata backed up in ${BASEDIR}/OPAM/backup/tolock.bak
 Now run 'opam upgrade' to apply any package updates.
 ### opam show tolock --field=version,build --normalise
@@ -832,7 +832,7 @@ version: "l4"
 <><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
 [tolock.l3] synchronised (file://${BASEDIR}/tolock)
 [tolock] Conflicting update of the metadata from file://${BASEDIR}/tolock.
-Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [y/n] y
+Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [Y/n] y
 User metadata backed up in ${BASEDIR}/OPAM/backup/tolock.bak
 Now run 'opam upgrade' to apply any package updates.
 ### opam show tolock --field=version,build --normalise
@@ -862,7 +862,7 @@ echo "]" >> tolock.install
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [tolock.l4] synchronised (file://${BASEDIR}/tolock)
 [tolock] Conflicting update of the metadata from file://${BASEDIR}/tolock.
-Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [y/n] y
+Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [Y/n] y
 User metadata backed up in ${BASEDIR}/OPAM/backup/tolock.bak
 
 The following actions will be performed:
@@ -1108,22 +1108,22 @@ pin-depends: [
 ### OPAMYES=1
 ### OPAMLOCKED=locked
 ### opam pin add -n goblint.dev ./goblint
-Package goblint does not exist, create as a NEW package? [y/n] y
+Package goblint does not exist, create as a NEW package? [Y/n] y
 [goblint.dev] synchronised (file://${BASEDIR}/goblint)
 The following additional pinnings are required by goblint.dev:
   - apron.v0.9.13 at git+https://github.com/antoinemine/apron.git#c852ebcc89e5cf4a5a3318e7c13c73e1756abb11
   - goblint-cil.1.8.2 at git+https://github.com/goblint/cil.git#a3c91aa6e8f946fec9a9a13361b051a73b12a65c
   - ppx_deriving.5.2.1 at git+https://github.com/ocaml-ppx/ppx_deriving.git#0a89b619f94cbbfc3b0fb3255ab4fe5bc77d32d6
-Pin and install them? [y/n] y
-Package apron does not exist, create as a NEW package? [y/n] y
+Pin and install them? [Y/n] y
+Package apron does not exist, create as a NEW package? [Y/n] y
 [apron.v0.9.13] synchronised (no changes)
 [WARNING] Failed checks on apron package definition from source at git+https://github.com/antoinemine/apron.git#c852ebcc89e5cf4a5a3318e7c13c73e1756abb11:
            warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : "LGPL-2.1 with linking exception"
 apron is now pinned to git+https://github.com/antoinemine/apron.git#c852ebcc89e5cf4a5a3318e7c13c73e1756abb11 (version v0.9.13)
-Package goblint-cil does not exist, create as a NEW package? [y/n] y
+Package goblint-cil does not exist, create as a NEW package? [Y/n] y
 [goblint-cil.1.8.2] synchronised (no changes)
 goblint-cil is now pinned to git+https://github.com/goblint/cil.git#a3c91aa6e8f946fec9a9a13361b051a73b12a65c (version 1.8.2)
-Package ppx_deriving does not exist, create as a NEW package? [y/n] y
+Package ppx_deriving does not exist, create as a NEW package? [Y/n] y
 [ppx_deriving.5.2.1] synchronised (no changes)
 ppx_deriving is now pinned to git+https://github.com/ocaml-ppx/ppx_deriving.git#0a89b619f94cbbfc3b0fb3255ab4fe5bc77d32d6 (version 5.2.1)
 goblint is now pinned to file://${BASEDIR}/goblint (version dev)

@@ -89,7 +89,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam switch create targets --empty
 ### : pin with url
 ### opam pin add nip-git git+file://$BASEDIR/nip-git
-Package nip-git does not exist, create as a NEW package? [y/n] y
+Package nip-git does not exist, create as a NEW package? [Y/n] y
 [nip-git.dev] synchronised (git+file://${BASEDIR}/nip-git#master)
 nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
 
@@ -101,7 +101,7 @@ The following actions will be performed:
 -> installed nip-git.ved
 Done.
 ### opam pin add git+file://$BASEDIR/nip-git2
-Package nip-git2 does not exist, create as a NEW package? [y/n] y
+Package nip-git2 does not exist, create as a NEW package? [Y/n] y
 nip-git2 is now pinned to git+file://${BASEDIR}/nip-git2#master (version ved)
 
 The following actions will be performed:
@@ -113,7 +113,7 @@ The following actions will be performed:
 Done.
 ### : pin add with a path
 ### opam pin add nip-path ./nip-path
-Package nip-path does not exist, create as a NEW package? [y/n] y
+Package nip-path does not exist, create as a NEW package? [Y/n] y
 [nip-path.dev] synchronised (file://${BASEDIR}/nip-path)
 nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
 
@@ -125,7 +125,7 @@ The following actions will be performed:
 -> installed nip-path.ved
 Done.
 ### opam pin add ./nip-path2
-Package nip-path2 does not exist, create as a NEW package? [y/n] y
+Package nip-path2 does not exist, create as a NEW package? [Y/n] y
 nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
 
 The following actions will be performed:
@@ -136,7 +136,7 @@ The following actions will be performed:
 -> installed nip-path2.ved
 Done.
 ### opam pin add $BASEDIR/nip-path3
-Package nip-path3 does not exist, create as a NEW package? [y/n] y
+Package nip-path3 does not exist, create as a NEW package? [Y/n] y
 nip-path3 is now pinned to file://${BASEDIR}/nip-path3 (version ved)
 
 The following actions will be performed:
@@ -207,7 +207,7 @@ OPAM/targets/lib/no-url/no-url.ved.t
 ### opam switch create kinds --empty
 ### : path
 ### opam pin add ./nip-git --kind path
-Package nip-git does not exist, create as a NEW package? [y/n] y
+Package nip-git does not exist, create as a NEW package? [Y/n] y
 nip-git is now pinned to file://${BASEDIR}/nip-git (version ved)
 
 The following actions will be performed:
@@ -218,7 +218,7 @@ The following actions will be performed:
 -> installed nip-git.ved
 Done.
 ### opam pin add ./nip-path --kind path
-Package nip-path does not exist, create as a NEW package? [y/n] y
+Package nip-path does not exist, create as a NEW package? [Y/n] y
 nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
 
 The following actions will be performed:
@@ -230,7 +230,7 @@ The following actions will be performed:
 Done.
 ### : vcs
 ### opam pin add ./nip-git2 --kind git
-Package nip-git2 does not exist, create as a NEW package? [y/n] y
+Package nip-git2 does not exist, create as a NEW package? [Y/n] y
 nip-git2 is now pinned to git+file://${BASEDIR}/nip-git2#master (version ved)
 
 The following actions will be performed:
@@ -246,7 +246,7 @@ Done.
 # Return code 99 #
 ### : auto
 ### opam pin add ./nip-git3 --kind auto
-Package nip-git3 does not exist, create as a NEW package? [y/n] y
+Package nip-git3 does not exist, create as a NEW package? [Y/n] y
 nip-git3 is now pinned to git+file://${BASEDIR}/nip-git3#master (version ved)
 
 The following actions will be performed:
@@ -257,7 +257,7 @@ The following actions will be performed:
 -> installed nip-git3.ved
 Done.
 ### opam pin add ./nip-path3 --kind auto
-Package nip-path3 does not exist, create as a NEW package? [y/n] y
+Package nip-path3 does not exist, create as a NEW package? [Y/n] y
 nip-path3 is now pinned to file://${BASEDIR}/nip-path3 (version ved)
 
 The following actions will be performed:
@@ -361,7 +361,7 @@ nip-path3
 ### : auto
 ### OPAMPINKINDAUTO=1
 ### opam pin add ./nip-git
-Package nip-git does not exist, create as a NEW package? [y/n] y
+Package nip-git does not exist, create as a NEW package? [Y/n] y
 nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
 
 The following actions will be performed:
@@ -372,7 +372,7 @@ The following actions will be performed:
 -> installed nip-git.ved
 Done.
 ### opam pin add ./nip-path
-Package nip-path does not exist, create as a NEW package? [y/n] y
+Package nip-path does not exist, create as a NEW package? [Y/n] y
 nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
 
 The following actions will be performed:
@@ -385,7 +385,7 @@ Done.
 ### : disable auto
 ### OPAMPINKINDAUTO=0
 ### opam pin add ./nip-git2
-Package nip-git2 does not exist, create as a NEW package? [y/n] y
+Package nip-git2 does not exist, create as a NEW package? [Y/n] y
 nip-git2 is now pinned to file://${BASEDIR}/nip-git2 (version ved)
 
 The following actions will be performed:
@@ -396,7 +396,7 @@ The following actions will be performed:
 -> installed nip-git2.ved
 Done.
 ### opam pin add ./nip-path2
-Package nip-path2 does not exist, create as a NEW package? [y/n] y
+Package nip-path2 does not exist, create as a NEW package? [Y/n] y
 nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
 
 The following actions will be performed:
@@ -423,10 +423,10 @@ OPAM/env-kinds/lib/nip-path2/nip-path2.ved.t
 ### :::::::::::::::::::::::
 ### opam switch create actions --empty
 ### opam pin add ./nip-git4 --no-action
-Package nip-git4 does not exist, create as a NEW package? [y/n] y
+Package nip-git4 does not exist, create as a NEW package? [Y/n] y
 nip-git4 is now pinned to git+file://${BASEDIR}/nip-git4#master (version ved)
 ### opam pin add ./nip-path
-Package nip-path does not exist, create as a NEW package? [y/n] y
+Package nip-path does not exist, create as a NEW package? [Y/n] y
 nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
 
 The following actions will be performed:
@@ -437,7 +437,7 @@ The following actions will be performed:
 -> installed nip-path.ved
 Done.
 ### opam pin add ./nip-path2
-Package nip-path2 does not exist, create as a NEW package? [y/n] y
+Package nip-path2 does not exist, create as a NEW package? [Y/n] y
 nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
 
 The following actions will be performed:
@@ -488,7 +488,7 @@ OPAM/actions/lib/nip-path/nip-path.ved.t
 ### opam switch create edits --empty
 ### OPAMEDITOR='sed -i.bak "s/%{version}%/not-here/g" '
 ### opam pin add ./nip-path
-Package nip-path does not exist, create as a NEW package? [y/n] y
+Package nip-path does not exist, create as a NEW package? [Y/n] y
 nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
 
 The following actions will be performed:
@@ -500,7 +500,7 @@ The following actions will be performed:
 Done.
 ### opam pin edit nip-path
 You can edit this file again with "opam pin edit nip-path", export it with "opam show nip-path --raw"
-Save the new opam file back to "${BASEDIR}/nip-path/nip-path.opam"? [y/n] y
+Save the new opam file back to "${BASEDIR}/nip-path/nip-path.opam"? [Y/n] y
 The following actions will be performed:
 === recompile 1 package
   - recompile nip-path ved (pinned)
@@ -519,7 +519,7 @@ The following actions will be performed:
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 31 #
 ### opam pin add ./nip-path2 --edit
-Package nip-path2 does not exist, create as a NEW package? [y/n] y
+Package nip-path2 does not exist, create as a NEW package? [Y/n] y
 You can edit this file again with "opam pin edit nip-path2", export it with "opam show nip-path2 --raw"
 nip-path2 is now pinned to file://${BASEDIR}/nip-path2 (version ved)
 
@@ -541,7 +541,7 @@ The following actions will be performed:
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 31 #
 ### opam pin add ./nip-git --edit
-Package nip-git does not exist, create as a NEW package? [y/n] y
+Package nip-git does not exist, create as a NEW package? [Y/n] y
 You can edit this file again with "opam pin edit nip-git", export it with "opam show nip-git --raw"
 nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
 
@@ -612,11 +612,11 @@ nip-path2.ved^file://${BASEDIR}/lot_of_pkgs
 nip-git3.ved^file://${BASEDIR}/lot_of_pkgs
 nip-git2.ved^file://${BASEDIR}/lot_of_pkgs
 ### opam pin add nip-git2.ved^file://${BASEDIR}/lot_of_pkgs nip-git3.ved^file://${BASEDIR}/lot_of_pkgs | unordered
-This will pin the following packages: nip-git2, nip-git3. Continue? [y/n] y
-Package nip-git2 does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: nip-git2, nip-git3. Continue? [Y/n] y
+Package nip-git2 does not exist, create as a NEW package? [Y/n] y
+Package nip-git3 does not exist, create as a NEW package? [Y/n] y
 [nip-git2.ved] synchronised (no changes)
 nip-git2 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
-Package nip-git3 does not exist, create as a NEW package? [y/n] y
 [nip-git3.ved] synchronised (no changes)
 nip-git3 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
 
@@ -631,11 +631,11 @@ The following actions will be performed:
 Done.
 ### # shell on Cygwin ads a trialing `\r` in the middle of the string
 ### sh -c 'opam pin add $(opam pin scan ./lot_of_pkgs --normalise | grep path | sed "s/\\r//g") ' | unordered
-This will pin the following packages: nip-path3, nip-path2. Continue? [y/n] y
-Package nip-path3 does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: nip-path3, nip-path2. Continue? [Y/n] y
+Package nip-path3 does not exist, create as a NEW package? [Y/n] y
+Package nip-path2 does not exist, create as a NEW package? [Y/n] y
 [nip-path3.ved] synchronised (no changes)
 nip-path3 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
-Package nip-path2 does not exist, create as a NEW package? [y/n] y
 [nip-path2.ved] synchronised (no changes)
 nip-path2 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
 
@@ -665,7 +665,7 @@ OPAM/scans/lib/nip-path3/nip-path3.ved.t
 ### : pin url with version
 ### cp nip-path/nip-path.ved.t nip-path/nip-path.42.t
 ### opam pin add file://$BASEDIR/nip-path --with-version 42
-Package nip-path does not exist, create as a NEW package? [y/n] y
+Package nip-path does not exist, create as a NEW package? [Y/n] y
 nip-path is now pinned to file://${BASEDIR}/nip-path (version 42)
 
 The following actions will be performed:
@@ -688,7 +688,7 @@ nip-v is now pinned to file://${BASEDIR}/nip-v.1.tgz (version 2)
              error 57: Synopsis must not be empty
            warning 59: url doesn't contain a checksum
            warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : ""
-Proceed anyway ('no' will re-edit)? [y/n] y
+Proceed anyway ('no' will re-edit)? [Y/n] y
 You can edit this file again with "opam pin edit nip", export it with "opam show nip --raw"
 nip is now pinned to file://${BASEDIR}/nip.1.tgz (version 42)
 ### opam pin list
@@ -705,7 +705,7 @@ opam-version: "2.0"
 ### <nip-empty2/nip-empty2.opam>
 opam-version: "2.0"
 ### opam pin add nip-empty ./nip-empty
-Package nip-empty does not exist, create as a NEW package? [y/n] y
+Package nip-empty does not exist, create as a NEW package? [Y/n] y
 [nip-empty.dev] synchronised (file://${BASEDIR}/nip-empty)
 [WARNING] Failed checks on nip-empty package definition from source at file://${BASEDIR}/nip-empty:
              error 23: Missing field 'maintainer'
@@ -725,7 +725,7 @@ The following actions will be performed:
 -> installed nip-empty.dev
 Done.
 ### opam pin add ./nip-empty2
-Package nip-empty2 does not exist, create as a NEW package? [y/n] y
+Package nip-empty2 does not exist, create as a NEW package? [Y/n] y
 nip-empty2 is now pinned to file://${BASEDIR}/nip-empty2 (version dev)
 
 The following actions will be performed:
@@ -742,7 +742,7 @@ Done.
 ### opam switch create updates --empty
 ### sh add-pin.sh nip-mixed.dev2
 ### opam pin ./nip-mixed
-Package nip-mixed does not exist, create as a NEW package? [y/n] y
+Package nip-mixed does not exist, create as a NEW package? [Y/n] y
 nip-mixed is now pinned to file://${BASEDIR}/nip-mixed (version dev2)
 
 The following actions will be performed:
@@ -804,7 +804,7 @@ Done.
 ### git -C ./nip-of rm nip-of.opam --cached -q
 ### git -C ./nip-of commit -qm "remove opam file"
 ### opam pin ./nip-of
-Package nip-of does not exist, create as a NEW package? [y/n] y
+Package nip-of does not exist, create as a NEW package? [Y/n] y
 nip-of is now pinned to git+file://${BASEDIR}/nip-of#master (version dev1)
 
 The following actions will be performed:
@@ -821,7 +821,7 @@ dev1
 ### opam install ./nip-of
 [nip-of.dev1] synchronised (git+file://${BASEDIR}/nip-of#master)
 [nip-of] Conflicting update of the metadata from git+file://${BASEDIR}/nip-of#master.
-Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-of (there will be a backup)? [y/n] y
+Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-of (there will be a backup)? [Y/n] y
 User metadata backed up in ${BASEDIR}/OPAM/backup/nip-of.bak
 The following actions will be performed:
 === upgrade 1 package
@@ -856,7 +856,7 @@ dev3
 ### git -C ./nip-fo rm nip-fo.opam --cached -q
 ### git -C ./nip-fo commit -qm "remove opam file"
 ### opam install ./nip-fo
-Package nip-fo does not exist, create as a NEW package? [y/n] y
+Package nip-fo does not exist, create as a NEW package? [Y/n] y
 nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#master (version dev1)
 The following actions will be performed:
 === install 1 package
@@ -872,7 +872,7 @@ dev1
 ### opam install ./nip-fo
 [nip-fo.dev1] synchronised (git+file://${BASEDIR}/nip-fo#master)
 [nip-fo] Conflicting update of the metadata from git+file://${BASEDIR}/nip-fo#master.
-Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-fo (there will be a backup)? [y/n] y
+Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-fo (there will be a backup)? [Y/n] y
 User metadata backed up in ${BASEDIR}/OPAM/backup/nip-fo.bak
 The following actions will be performed:
 === upgrade 1 package
@@ -929,7 +929,7 @@ i shouldn't be retrieved
 opam-version: "2.0"
 build: "false"
 ### opam pin vcs-local ./vcs-local --no-action
-Package vcs-local does not exist, create as a NEW package? [y/n] y
+Package vcs-local does not exist, create as a NEW package? [Y/n] y
 [vcs-local.dev] synchronised (git+file://${BASEDIR}/vcs-local#master)
 vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#master (version dev)
 ### test -f OPAM/vcs-local/.opam-switch/sources/vcs-local/untracked

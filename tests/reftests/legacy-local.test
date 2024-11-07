@@ -15,7 +15,7 @@ cp "packages/$ARCHIVE" "$CACHEDIR/$MD5"
 ### rmdir REPO/packages
 ### opam repo add test REPO --set-default --yes
 "file://${BASEDIR}/REPO" doesn't contain a "packages" directory.
-Is it really the directory of your repo? [y/n] y
+Is it really the directory of your repo? [Y/n] y
 [test] Initialised
 [WARNING] The repository 'test' at file://${BASEDIR}/REPO doesn't have a 'repo' file, and might not be compatible with this version of opam.
 [NOTE] Repository at file://${BASEDIR}/REPO doesn't define its version, assuming it's 1.2.
@@ -1257,8 +1257,8 @@ ocaml.system
 P1.1
 P2.1
 ### opam switch remove test test2 --yes
-Switch test and all its packages will be wiped. Are you sure? [y/n] y
-Switch test2 and all its packages will be wiped. Are you sure? [y/n] y
+Switch test and all its packages will be wiped. Are you sure? [Y/n] y
+Switch test2 and all its packages will be wiped. Are you sure? [Y/n] y
 ### : LIST :
 ### opam list -A
 # Packages matching: any

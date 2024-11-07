@@ -80,7 +80,7 @@ The following actions would be performed:
   - upgrade bar 1 to 2
   - upgrade foo 1 to 2 [required by bar]
 ### opam reinstall baz
-baz is not installed. Install it? [y/n] y
+baz is not installed. Install it? [Y/n] y
 The following actions will be performed:
 === install 1 package
   - install baz 1

@@ -14,7 +14,7 @@ versionned
 new!
 ### opam switch create inplace --empty
 ### opam pin ./ongoing -n
-Package ongoing does not exist, create as a NEW package? [y/n] y
+Package ongoing does not exist, create as a NEW package? [Y/n] y
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 ### opam install ongoing -v | sed-cmd test | sed-cmd cat | sed-cmd touch
 

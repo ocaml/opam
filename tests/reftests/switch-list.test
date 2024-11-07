@@ -91,7 +91,7 @@ Done.
 # Name # Installed # Synopsis
 b      1
 ### opam switch remove display
-Switch display and all its packages will be wiped. Are you sure? [y/n] y
+Switch display and all its packages will be wiped. Are you sure? [Y/n] y
 ### ::::::::::::::::::
 ### <pkg:b.1>
 opam-version: "2.0"
@@ -129,7 +129,7 @@ Done.
 # Name # Installed # Synopsis
 b      1
 ### opam switch remove display
-Switch display and all its packages will be wiped. Are you sure? [y/n] y
+Switch display and all its packages will be wiped. Are you sure? [Y/n] y
 ### :::::::::::::::::::
 ### opam switch create display --package b
 

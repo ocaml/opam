@@ -61,18 +61,18 @@ lib: ["root-b_g.t"]
 ### git -C ./pinnes commit -qm "fst"
 ### opam switch create devnull --empty
 ### opam pin -n --recursive pinnes
-This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [y/n] y
-Package root_g does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [Y/n] y
+Package root_g does not exist, create as a NEW package? [Y/n] y
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version dev)
-Package root-a_p does not exist, create as a NEW package? [y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version dev)
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version dev)
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version dev)
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version dev)
-Package root-b_g does not exist, create as a NEW package? [y/n] y
+Package root-b_g does not exist, create as a NEW package? [Y/n] y
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version dev)
 ### opam list -s
 ### opam pin
@@ -92,10 +92,14 @@ Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version d
 ### opam list -s
 ### opam pin
 ### opam pin  --recursive pinnes | unordered
-This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [y/n] y
-Package root_g does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [Y/n] y
+Package root_g does not exist, create as a NEW package? [Y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
+Package root-b_g does not exist, create as a NEW package? [Y/n] y
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version dev)
-Package root-a_p does not exist, create as a NEW package? [y/n] y
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version dev)
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version dev)
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version dev)
@@ -103,10 +107,6 @@ root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version dev)
 -> retrieved root-a-k_p.dev  (directory /a/k in file://${BASEDIR}/pinnes)
 -> retrieved root-a_p.dev  (directory /a in file://${BASEDIR}/pinnes)
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
-Package root-b_g does not exist, create as a NEW package? [y/n] y
 
 The following actions will be performed:
 === install 6 packages
@@ -168,7 +168,7 @@ Done.
 # Packages matching: any & installed
 # No matches found
 ### opam install ./pinnes | unordered
-Package root_g does not exist, create as a NEW package? [y/n] y
+Package root_g does not exist, create as a NEW package? [Y/n] y
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version dev)
 The following actions will be performed:
 === install 1 package
@@ -183,7 +183,7 @@ root_g
 ### opam pin
 root_g.dev    git  git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath a | unordered
-Package root-a_p does not exist, create as a NEW package? [y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version dev)
 -> retrieved root-a_p.dev  (directory /a in file://${BASEDIR}/pinnes)
 The following actions will be performed:
@@ -200,7 +200,7 @@ root_g
 root-a_p.dev    rsync  directory /a in file://${BASEDIR}/pinnes
 root_g.dev      git    git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath b | unordered
-Package root-b_g does not exist, create as a NEW package? [y/n] y
+Package root-b_g does not exist, create as a NEW package? [Y/n] y
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version dev)
 -> retrieved root-b_g.dev  (directory /b in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
@@ -219,7 +219,7 @@ root-a_p.dev    rsync  directory /a in file://${BASEDIR}/pinnes
 root-b_g.dev    git    directory /b in git+file://${BASEDIR}/pinnes#master
 root_g.dev      git    git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath a/i | unordered
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version dev)
 -> retrieved root-a-i_g.dev  (directory /a/i in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
@@ -240,7 +240,7 @@ root-a_p.dev      rsync  directory /a in file://${BASEDIR}/pinnes
 root-b_g.dev      git    directory /b in git+file://${BASEDIR}/pinnes#master
 root_g.dev        git    git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath a/i/j | unordered
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version dev)
 -> retrieved root-a-i-j_g.dev  (directory /a/i/j in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
@@ -263,7 +263,7 @@ root-a_p.dev        rsync  directory /a in file://${BASEDIR}/pinnes
 root-b_g.dev        git    directory /b in git+file://${BASEDIR}/pinnes#master
 root_g.dev          git    git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath a/k | unordered
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version dev)
 -> retrieved root-a-k_p.dev  (directory /a/k in file://${BASEDIR}/pinnes)
 The following actions will be performed:
@@ -451,14 +451,14 @@ Done.
 ### opam list -s
 ### opam pin
 ### opam pin ./pinnes --subpath a --recursive -n
-This will pin the following packages: root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p. Continue? [y/n] y
-Package root-a_p does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p. Continue? [Y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version 2)
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version 2)
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version 2)
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version 2)
 ### opam pin
 root-a-i-j_g.2  (uninstalled)  git    directory /a/i/j in git+file://${BASEDIR}/pinnes#master
@@ -528,23 +528,23 @@ root-a-i_g.2^git+file://${BASEDIR}/pinnes#master^a/i
 root-a_p.2^file://${BASEDIR}/pinnes^a
 root_g.2^git+file://${BASEDIR}/pinnes#master
 ### opam pin -n --with-version 3 root-b_g.2^git+file://${BASEDIR}/pinnes#master^b root-a-i-j_g.2^git+file://${BASEDIR}/pinnes#master^a/i/j root-a-i_g.2^git+file://${BASEDIR}/pinnes#master^a/i root-a_p.2^file://${BASEDIR}/pinnes^a root_g^git+file://${BASEDIR}/pinnes#master root-a-k_p.2^file://${BASEDIR}/pinnes^a/k
-This will pin the following packages: root-b_g, root-a-i-j_g, root-a-i_g, root-a_p, root_g, root-a-k_p. Continue? [y/n] y
-Package root-b_g does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: root-b_g, root-a-i-j_g, root-a-i_g, root-a_p, root_g, root-a-k_p. Continue? [Y/n] y
+Package root-b_g does not exist, create as a NEW package? [Y/n] y
 [root-b_g.3] synchronised (no changes)
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version 3)
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
 [root-a-i-j_g.3] synchronised (no changes)
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version 3)
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
 [root-a-i_g.3] synchronised (no changes)
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version 3)
-Package root-a_p does not exist, create as a NEW package? [y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
 [root-a_p.3] synchronised (no changes)
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version 3)
-Package root_g does not exist, create as a NEW package? [y/n] y
+Package root_g does not exist, create as a NEW package? [Y/n] y
 [root_g.3] synchronised (no changes)
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version 3)
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
 [root-a-k_p.3] synchronised (no changes)
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version 3)
 ### opam pin
@@ -578,7 +578,7 @@ root_g.3        (uninstalled)  git    git+file://${BASEDIR}/pinnes#master
 ### : ./b/root-b_g.opam.locked
 ### rm -rf pinnes
 ### opam switch remove devnull
-Switch devnull and all its packages will be wiped. Are you sure? [y/n] y
+Switch devnull and all its packages will be wiped. Are you sure? [Y/n] y
 ### OPAMLOCKED=locked
 ### <pin:pinnes/root_g.opam>
 build: [ "false" ]
@@ -610,18 +610,18 @@ version: "l1"
 ### git -C ./pinnes commit -qm "fst"
 ### opam switch create devnull --empty
 ### opam pin -n --recursive pinnes
-This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [y/n] y
-Package root_g does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [Y/n] y
+Package root_g does not exist, create as a NEW package? [Y/n] y
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version l1)
-Package root-a_p does not exist, create as a NEW package? [y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version l1)
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version l1)
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version l1)
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version l1)
-Package root-b_g does not exist, create as a NEW package? [y/n] y
+Package root-b_g does not exist, create as a NEW package? [Y/n] y
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version l1)
 ### opam list -s
 ### opam pin
@@ -641,10 +641,14 @@ Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version l
 ### opam list -s
 ### opam pin
 ### opam pin  --recursive pinnes | unordered
-This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [y/n] y
-Package root_g does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [Y/n] y
+Package root_g does not exist, create as a NEW package? [Y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
+Package root-b_g does not exist, create as a NEW package? [Y/n] y
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version l1)
-Package root-a_p does not exist, create as a NEW package? [y/n] y
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version l1)
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version l1)
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version l1)
@@ -652,10 +656,6 @@ root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version l1)
 -> retrieved root-a-k_p.l1  (directory /a/k in file://${BASEDIR}/pinnes)
 -> retrieved root-a_p.l1  (directory /a in file://${BASEDIR}/pinnes)
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
-Package root-b_g does not exist, create as a NEW package? [y/n] y
 
 The following actions will be performed:
 === install 6 packages
@@ -704,7 +704,7 @@ Done.
 ### opam list -s
 ### opam pin
 ### opam install ./pinnes | unordered
-Package root_g does not exist, create as a NEW package? [y/n] y
+Package root_g does not exist, create as a NEW package? [Y/n] y
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version l1)
 The following actions will be performed:
 === install 1 package
@@ -719,7 +719,7 @@ root_g
 ### opam pin
 root_g.l1    git  git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath a | unordered
-Package root-a_p does not exist, create as a NEW package? [y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version l1)
 -> retrieved root-a_p.l1  (directory /a in file://${BASEDIR}/pinnes)
 The following actions will be performed:
@@ -736,7 +736,7 @@ root_g
 root-a_p.l1    rsync  directory /a in file://${BASEDIR}/pinnes
 root_g.l1      git    git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath b | unordered
-Package root-b_g does not exist, create as a NEW package? [y/n] y
+Package root-b_g does not exist, create as a NEW package? [Y/n] y
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version l1)
 -> retrieved root-b_g.l1  (directory /b in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
@@ -755,7 +755,7 @@ root-a_p.l1    rsync  directory /a in file://${BASEDIR}/pinnes
 root-b_g.l1    git    directory /b in git+file://${BASEDIR}/pinnes#master
 root_g.l1      git    git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath a/i | unordered
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version l1)
 -> retrieved root-a-i_g.l1  (directory /a/i in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
@@ -776,7 +776,7 @@ root-a_p.l1      rsync  directory /a in file://${BASEDIR}/pinnes
 root-b_g.l1      git    directory /b in git+file://${BASEDIR}/pinnes#master
 root_g.l1        git    git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath a/i/j | unordered
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version l1)
 -> retrieved root-a-i-j_g.l1  (directory /a/i/j in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
@@ -799,7 +799,7 @@ root-a_p.l1        rsync  directory /a in file://${BASEDIR}/pinnes
 root-b_g.l1        git    directory /b in git+file://${BASEDIR}/pinnes#master
 root_g.l1          git    git+file://${BASEDIR}/pinnes#master
 ### opam install ./pinnes --subpath a/k | unordered
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version l1)
 -> retrieved root-a-k_p.l1  (directory /a/k in file://${BASEDIR}/pinnes)
 The following actions will be performed:
@@ -964,14 +964,14 @@ The following actions will be performed:
 -> removed   root_g.l2
 Done.
 ### opam pin ./pinnes --subpath a --recursive -n
-This will pin the following packages: root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p. Continue? [y/n] y
-Package root-a_p does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p. Continue? [Y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version l2)
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version l2)
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version l2)
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version l2)
 ### opam pin
 root-a-i-j_g.l2  (uninstalled)  git    directory /a/i/j in git+file://${BASEDIR}/pinnes#master
@@ -1044,22 +1044,22 @@ root-a-i_g.l2^git+file://${BASEDIR}/pinnes#master^a/i
 root-a_p.l2^file://${BASEDIR}/pinnes^a
 root_g.l2^git+file://${BASEDIR}/pinnes#master
 ### opam pin --with-version 3 root-b_g^git+file://${BASEDIR}/pinnes#master^b root-a-i-j_g^git+file://${BASEDIR}/pinnes#master^a/i/j root-a-i_g^git+file://${BASEDIR}/pinnes#master^a/i root-a_p^file://${BASEDIR}/pinnes^a root_g^git+file://${BASEDIR}/pinnes#master root-a-k_p^file://${BASEDIR}/pinnes^a/k -n
-This will pin the following packages: root-b_g, root-a-i-j_g, root-a-i_g, root-a_p, root_g, root-a-k_p. Continue? [y/n] y
-Package root-b_g does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: root-b_g, root-a-i-j_g, root-a-i_g, root-a_p, root_g, root-a-k_p. Continue? [Y/n] y
+Package root-b_g does not exist, create as a NEW package? [Y/n] y
 [root-b_g.3] synchronised (no changes)
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version 3)
-Package root-a-i-j_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i-j_g does not exist, create as a NEW package? [Y/n] y
 [root-a-i-j_g.3] synchronised (no changes)
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version 3)
-Package root-a-i_g does not exist, create as a NEW package? [y/n] y
+Package root-a-i_g does not exist, create as a NEW package? [Y/n] y
 [root-a-i_g.3] synchronised (no changes)
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version 3)
-Package root-a_p does not exist, create as a NEW package? [y/n] y
+Package root-a_p does not exist, create as a NEW package? [Y/n] y
 [root-a_p.3] synchronised (no changes)
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version 3)
-Package root_g does not exist, create as a NEW package? [y/n] y
+Package root_g does not exist, create as a NEW package? [Y/n] y
 [root_g.3] synchronised (no changes)
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version 3)
-Package root-a-k_p does not exist, create as a NEW package? [y/n] y
+Package root-a-k_p does not exist, create as a NEW package? [Y/n] y
 [root-a-k_p.3] synchronised (no changes)
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version 3)

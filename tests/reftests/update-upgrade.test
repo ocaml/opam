@@ -146,7 +146,7 @@ opam-version: "2.0"
 ### <pin:quux/quux.opam>
 opam-version: "2.0"
 ### opam install ./quux
-Package quux does not exist, create as a NEW package? [y/n] y
+Package quux does not exist, create as a NEW package? [Y/n] y
 quux is now pinned to file://${BASEDIR}/quux (version dev)
 The following actions will be performed:
 === install 1 package
@@ -313,7 +313,7 @@ quux   ${BASEDIR}/OPAM/upgrading/lib/quux ${BASEDIR}/OPAM/upgrading/lib/quux/fic
 opam-version: "2.0"
 depends:"quux"
 ### opam install ./quux-rdep
-Package quux-rdep does not exist, create as a NEW package? [y/n] y
+Package quux-rdep does not exist, create as a NEW package? [Y/n] y
 quux-rdep is now pinned to file://${BASEDIR}/quux-rdep (version dev)
 The following actions will be performed:
 === install 1 package
@@ -432,7 +432,7 @@ versionned
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "init"
 ### opam pin ./ongoing
-Package ongoing does not exist, create as a NEW package? [y/n] y
+Package ongoing does not exist, create as a NEW package? [Y/n] y
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 
 The following actions will be performed:
