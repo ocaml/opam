@@ -824,12 +824,13 @@ let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
       then
         (formatted_msg "%sn\n" prompt; false)
       else
-        short_user_input ~prompt ~default:(if default then 'y' else 'n')
+        short_user_input ~prompt ~default:' '
         (function
-        | "y" | "yes" -> Some true
-        | "n" | "no" -> Some false
-        | "\027" -> Some false (* echap *)
-        | _  -> None))
+          | " " -> Some default
+          | "y" | "yes" -> Some true
+          | "n" | "no" -> Some false
+          | "\027" -> Some false (* echap *)
+          | _  -> None))
     fmt
 
 let read fmt =
