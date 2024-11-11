@@ -727,7 +727,7 @@ let short_user_input ~prompt ?default ?on_eof f =
   let on_eof = OpamStd.Option.Op.(on_eof ++ default) in
   let prompt () = match default with
     | Some x when OpamStd.Sys.tty_out ->
-      msg "%s%s" prompt x;
+      msg "%s%c" prompt x;
       left_1_char ();
       carriage_delete ();
       (match List.rev (OpamStd.String.split prompt '\n') with
@@ -741,7 +741,7 @@ let short_user_input ~prompt ?default ?on_eof f =
       let rec loop () =
         prompt ();
         let input = match String.lowercase_ascii (read_line ()) with
-          | "" -> default
+          | "" -> Option.map (String.make 1) default
           | s -> Some s
         in
         match OpamStd.Option.Op.(input >>= f) with
@@ -761,7 +761,7 @@ let short_user_input ~prompt ?default ?on_eof f =
           if nr < 1 then raise End_of_file
           else String.uncapitalize_ascii (Bytes.sub_string buf 0 nr)
         with
-        | "\n" -> default
+        | "\n" -> Option.map (String.make 1) default
         | s -> Some s
         | exception Unix.Unix_error (Unix.EINTR,_,_) -> None
         | exception Unix.Unix_error _ -> raise End_of_file
@@ -790,8 +790,8 @@ let short_user_input ~prompt ?default ?on_eof f =
     match on_eof with
     | None -> OpamStd.Exn.finalise End_of_file (fun () -> msg "\n")
     | Some d ->
-      msg "%s\n" d;
-      match f d with
+      msg "%c\n" d;
+      match f (String.make 1 d) with
       | Some a -> a
       | None -> assert false
 
@@ -799,7 +799,7 @@ let pause fmt =
   if OpamStd.Sys.tty_in then
     Printf.ksprintf (fun s ->
         let prompt = OpamStd.Format.reformat s in
-        short_user_input ~prompt ~default:""
+        short_user_input ~prompt ~default:' '
         (function
         | "\027" -> OpamStd.Sys.exit_because `Aborted
         | _ -> Some ()))
@@ -824,7 +824,7 @@ let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
       then
         (formatted_msg "%sn\n" prompt; false)
       else
-        short_user_input ~prompt ~default:(if default then "y" else "n")
+        short_user_input ~prompt ~default:(if default then 'y' else 'n')
         (function
         | "y" | "yes" -> Some true
         | "n" | "no" -> Some false
@@ -969,11 +969,11 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
   let options_nums =
     let option_of_index n =
       (* NOTE: 1..9 (starts at ASCII 49) & a..z (starts at ASCII 97) *)
-      (String.make 1 (char_of_int (if n < 9 then n+49 else (n-9)+97)))
+      char_of_int (if n < 9 then n+49 else (n-9)+97)
     in
     List.mapi (fun n (ans, _) -> ans, option_of_index n) options
   in
-  let nums_options = List.map (fun (a, n) -> n, a) options_nums in
+  let nums_options = List.map (fun (a, n) -> String.make 1 n, a) options_nums in
   let rec prev_option a0 = function
     | (a,_)::[] -> a
     | (a,_)::((a1,_)::_ as r) -> if a1 = a0 then a else prev_option a0 r
@@ -984,7 +984,7 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
       OpamStd.List.concat_map "" ~right:"\n" (fun (ans, n) ->
           Printf.ksprintf (OpamStd.Format.reformat ~indent:5) "%s %s. %s\n"
             (if ans = default then ">" else " ")
-            (colorise `blue n)
+            (colorise `blue (String.make 1 n))
             (OpamStd.(List.assoc Compare.equal ans options)))
         options_nums
     in
@@ -999,7 +999,7 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
     let nlines = List.length Re.(all (compile (char '\n')) text) in
     msg "%s" text;
     let select a =
-      msg "%s\n" OpamStd.(List.assoc Compare.equal a options_nums); a
+      msg "%c\n" OpamStd.(List.assoc Compare.equal a options_nums); a
     in
     let default_s = OpamStd.(List.assoc Compare.equal default options_nums) in
     let no_s = OpamStd.(List.assoc Compare.equal no options_nums) in
