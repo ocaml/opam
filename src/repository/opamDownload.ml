@@ -471,58 +471,64 @@ module SWHID = struct
       | _, `Curl ->
         check_liveness () @@+ fun alive ->
         if alive then
-          (* Add a global modifier and/or command for default answering *)
-          if OpamConsole.confirm ~default:false
-              "Source %s is not available. Do you want to try to retrieve it \
-               from Software Heritage cache (https://www.softwareheritage.org)? \
-               It may take few minutes."
-              (OpamConsole.colorise `underline
-                 (OpamUrl.to_string (OpamFile.URL.url urlf))) then
-            (log "SWH fallback for %s"
-               (OpamUrl.to_string (OpamFile.URL.url urlf));
-             get_url ?max_tries swhid @@+ function
-             | Not_available _ as error -> Done error
-             | Up_to_date _ -> assert false
-             | Result url ->
-               let hash = OpamSWHID.hash swhid in
-               OpamFilename.with_tmp_dir_job @@ fun dir ->
-               let archive =  OpamFilename.Op.(dir // hash) in
-               download_as ~overwrite:true url archive @@+ fun () ->
-               let sources = OpamFilename.Op.(dir / "src") in
-               OpamFilename.extract_job archive sources @@| function
-               | Some e ->
-                 Not_available (
-                   Some (fallback_err "archive extraction failure"),
-                   fallback_err "archive extraction failure %s"
-                     (match e with
-                      | Failure s -> s
-                      | OpamSystem.Process_error pe ->
-                        OpamProcess.string_of_result pe
-                      | e -> Printexc.to_string e))
-               | None ->
-                 (match OpamSWHID.compute sources with
-                  | None ->
-                    Not_available (
-                      Some (fallback_err "can't check archive validity"),
-                      fallback_err
-                        "error on swhid computation, can't check its validity")
-                  | Some computed ->
-                    if String.equal computed hash then
-                      (List.iter (fun (_nv, dst, _sp) ->
-                           (* add a text *)
-                           OpamFilename.copy_dir ~src:sources ~dst)
-                          dirnames;
-                       Result (Some "SWH fallback"))
-                    else
-                      Not_available (
-                        Some (fallback_err "archive not valid"),
-                        fallback_err
-                          "archive corrupted, opam file swhid %S vs computed %S"
-                          hash computed)))
-          else
-            Done (Not_available
-                    (Some (fallback_err "skip retrieval"),
-                     fallback_err "retrieval refused by user"))
+          (log "API is working";
+           (* Add a global modifier and/or command for default answering *)
+           if OpamConsole.confirm ~default:false
+               "Source %s is not available. Do you want to try to retrieve it \
+                from Software Heritage cache (https://www.softwareheritage.org)? \
+                It may take few minutes."
+               (OpamConsole.colorise `underline
+                  (OpamUrl.to_string (OpamFile.URL.url urlf))) then
+             (log "SWH fallback for %s with %s"
+                (OpamStd.Format.pretty_list
+                   (List.map (fun (nv,_,_) -> nv) dirnames))
+                (OpamSWHID.to_string swhid);
+              get_url ?max_tries swhid @@+ function
+              | Not_available _ as error -> Done error
+              | Up_to_date _ -> assert false
+              | Result url ->
+                log "Downloading %s for %s" (OpamSWHID.to_string swhid)
+                  (OpamStd.Format.pretty_list
+                     (List.map (fun (nv,_,_) -> nv) dirnames));
+                let hash = OpamSWHID.hash swhid in
+                OpamFilename.with_tmp_dir_job @@ fun dir ->
+                let archive =  OpamFilename.Op.(dir // hash) in
+                download_as ~overwrite:true url archive @@+ fun () ->
+                let sources = OpamFilename.Op.(dir / "src") in
+                OpamFilename.extract_job archive sources @@| function
+                | Some e ->
+                  Not_available (
+                    Some (fallback_err "archive extraction failure"),
+                    fallback_err "archive extraction failure %s"
+                      (match e with
+                       | Failure s -> s
+                       | OpamSystem.Process_error pe ->
+                         OpamProcess.string_of_result pe
+                       | e -> Printexc.to_string e))
+                | None ->
+                  (match OpamSWHID.compute sources with
+                   | None ->
+                     Not_available (
+                       Some (fallback_err "can't check archive validity"),
+                       fallback_err
+                         "error on swhid computation, can't check its validity")
+                   | Some computed ->
+                     if String.equal computed hash then
+                       (List.iter (fun (_nv, dst, _sp) ->
+                            (* add a text *)
+                            OpamFilename.copy_dir ~src:sources ~dst)
+                           dirnames;
+                        Result (Some "SWH fallback"))
+                     else
+                       Not_available (
+                         Some (fallback_err "archive not valid"),
+                         fallback_err
+                           "archive corrupted, opam file swhid %S vs computed %S"
+                           hash computed)))
+           else
+             Done (Not_available
+                     (Some (fallback_err "skip retrieval"),
+                      fallback_err "retrieval refused by user")))
         else
           Done (Not_available
                   (Some (fallback_err "unreachable"),
