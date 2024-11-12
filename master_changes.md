@@ -67,6 +67,7 @@ users)
   * Remove wget support for Software Heritage fallback [#6036 @rjbou - fix #5721]
   * [BUG] Fix SWH liveness check [#6036 @rjbou - fix #5721]
   * Update SWH API request [#6036 @rjbou]
+  * Rework SWH fallback to have a more correct archive retrieval and more fine grained error handling [#6036 @rjbou - fix #5721]
 
 ## Lock
 
