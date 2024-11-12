@@ -18,7 +18,7 @@ some content
 ### sh hash.sh REPO foo.1
 ### : Internal repository storage as archive or plain directory :
 ### opam switch create tarring --empty
-### opam update -vv | grep '^\+' | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
+### opam update -vv | grep '^\+' | sed-cmd diff | sed-cmd patch | sed-cmd gpatch | '\+ gpatch ' -> '+ patch ' | 'patch-[^"]+' -> 'patch'
 + diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
 + patch "--version"
 + patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${BASEDIR}/OPAM/repo/default)
@@ -38,7 +38,7 @@ build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.2/files/baz>
 some content
 ### sh hash.sh REPO foo.2
-### opam update default -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
+### opam update default -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | sed-cmd gpatch | '\+ gpatch ' -> '+ patch ' | 'patch-[^"]+' -> 'patch'
 + diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
 + patch "--version"
 + patch "-p1" "-i" "${BASEDIR}/OPAM/log/patch" (CWD=${BASEDIR}/OPAM/repo/default)
@@ -78,7 +78,7 @@ build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.4/files/baz>
 some content
 ### sh hash.sh REPO foo.4
-### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
+### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | sed-cmd gpatch | '\+ gpatch ' -> '+ patch ' | 'patch-[^"]+' -> 'patch'
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
 + diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
 + patch "--version"
@@ -102,7 +102,7 @@ build: ["test" "-f" "quux"]
 ### <REPO/packages/foo/foo.5/files/quux>
 some content
 ### sh hash.sh REPO foo.5
-### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | 'patch-[^"]+' -> 'patch'
+### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff | sed-cmd patch | sed-cmd gpatch | '\+ gpatch ' -> '+ patch ' | 'patch-[^"]+' -> 'patch'
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
 + diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
 + patch "--version"
