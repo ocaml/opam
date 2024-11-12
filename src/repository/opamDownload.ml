@@ -129,8 +129,51 @@ let download_command_t ~with_curl_mitigation ~compress ?checksum ~url ~dst c =
   OpamSystem.make_command ~allow_stdin:false ~stdout cmd args @@> c
 
 let tool_return redownload_command url ret =
+  let code_from_header std =
+    let re =
+      Re.(compile @@ seq [
+          bos; rep space;
+          str "HTTP/"; rep1 @@ diff any space; space;
+          group @@ repn digit 3 (Some 3)
+        ]) in
+    List.filter_map (fun l ->
+        try
+          let r =
+            Re.(Group.get (exec re l) 1)
+          in
+          let code = int_of_string r in
+          if code < 400 then None else Some code
+        with Failure _ -> None
+           | Not_found -> None
+      ) std
+  in
   let open OpamProcess in
   match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
+  | [(CIdent "wget"), _], `Default ->
+    (match ret.OpamProcess.r_code with
+     | 0 -> (* Http respose < 400 *)
+       Done `ok
+     | 8 -> (* Http response > 400 *)
+       let http_answers =
+         code_from_header ret.OpamProcess.r_stderr
+       in
+       (match http_answers with
+        | code::_ -> Done (`http_error code)
+        | [] ->
+          Done (`fail (Some "wget empty response",
+                       Printf.sprintf "curl: empty response while downloading %s"
+                         (OpamUrl.to_string url))))
+     | _ -> (* Another error *)
+       (* 1   Generic error code.
+          2   Parse error---for instance, when parsing command-line options
+          3   File I/O error.
+          4   Network failure.
+          5   SSL verification failure.
+          6   Username/password authentication failure.
+          7   Protocol errors. *)
+       Done (`fail (Some "wget command error",
+                    Printf.sprintf "wget error: %s"
+                      (OpamProcess.result_summary ret))))
   | _, `Default ->
     if OpamProcess.is_failure ret then
       Done (`fail (Some "Download command failed",
@@ -157,12 +200,15 @@ let tool_return redownload_command url ret =
       (redownload_command ~with_curl_mitigation:true @@ function ret ->
            if OpamProcess.is_failure ret then
              if ret.r_code = 22 then
-               (* If this broken version of curl persists for some time, it is
-                  relatively straightforward to parse the http response code from
-                  the message, as it hasn't changed. *)
-               Done (`fail (Some "curl failed owing to a server-side issue",
-                            Printf.sprintf "curl failed with server-side error: %s"
-                              (OpamProcess.result_summary ret)))
+               match code_from_header ret.r_stdout with
+               | code::_ -> Done (`http_error code)
+               | [] ->
+                 (* If this broken version of curl persists for some time, it is
+                    relatively straightforward to parse the http response code from
+                    the message, as it hasn't changed. *)
+                 Done (`fail (Some "curl failed owing to a server-side issue",
+                              Printf.sprintf "curl failed with server-side error: %s"
+                                (OpamProcess.result_summary ret)))
              else
                Done (`fail (Some "curl failed",
                             Printf.sprintf "curl failed: %s"
