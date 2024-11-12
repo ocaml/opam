@@ -750,6 +750,51 @@ fi
 xsudo install -m 755 "$TMP/$OPAM_BIN" "$BINDIR/opam"
 echo "## opam $VERSION installed to $BINDIR"
 
+# Handle AppArmor which makes it impossible to use bwrap (e.g. Ubuntu >= 24.04)
+if [ -d /etc/apparmor.d ] && [ "$(aa-enabled 2> /dev/null)" = Yes ]; then
+  cat << EOF > /tmp/opam-local.aa.tmp
+# This profile allows everything and only exists to give the
+# application a name instead of having the label "unconfined"
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile opam-local "$BINDIR/opam" flags=(unconfined) {
+  userns,
+
+  # Site-specific additions and overrides. See local/README for details.
+  include if exists <local/opam-local>
+}
+EOF
+
+  SKIP_APPARMOR=0
+  if [ -e /etc/apparmor.d/opam-local ]; then
+    if diff -q /tmp/opam-local.aa.tmp /etc/apparmor.d/opam-local; then
+      SKIP_APPARMOR=1
+    else
+      echo "## The opam-local AppArmor profile already exists and differs from the expected content."
+      printf "Would you like to overwrite it? [Y/n] "
+      read R
+      case "$R" in
+      ""|"y"|"Y"|"yes")
+        ;;
+      *)
+        SKIP_APPARMOR=1;;
+      esac
+    fi
+  fi
+
+  if [ "$SKIP_APPARMOR" = 0 ]; then
+    xsudo mv /tmp/opam-local.aa.tmp /etc/apparmor.d/opam-local
+    xsudo chmod 644 /etc/apparmor.d/opam-local
+    xsudo chown root:root /etc/apparmor.d/opam-local
+    xsudo apparmor_parser -a /etc/apparmor.d/opam-local
+    echo "AppArmor profile successfully added."
+  else
+    echo "Warning: Please make sure an AppArmor profile exists for opam. See /tmp/opam-local.aa.tmp"
+  fi
+fi
+
 if [ ! "$FRESH" = 1 ]; then
     echo "## Converting the opam root format & updating"
     "$BINDIR/opam" init --reinit -ni
