@@ -124,6 +124,7 @@ users)
 
 ## Github Actions
   * Add a doc generation job under linux [#5349 @rjbou]
+  * Add depext job for depext test on Altlinux [#6277 @rjbou]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]

@@ -56,6 +56,24 @@ jobs:
       uses: ./.github/actions/alpine
       id: depexts-alpine
 
+  depexts-altlinux:
+    needs: opam-cache
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: opam binary cache
+      uses: actions/cache@v4
+      with:
+        path: binary/opam
+        key: binary-${{ env.OPAMVERSION }}
+    - name: generate action
+      run: |
+        bash .github/scripts/depexts/generate-actions.sh altlinux
+    - name: depexts actions altlinux
+      uses: ./.github/actions/altlinux
+      id: depexts-altlinux
+
   depexts-archlinux:
     needs: opam-cache
     runs-on: ubuntu-latest
