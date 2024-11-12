@@ -88,9 +88,9 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + curl "--another-args" "3"
-[ERROR] Failed to get sources of foo.1: curl error code ***The curl is a lie*** [args: --another-args 3]
+[ERROR] Failed to get sources of foo.1: curl error ***The curl is a lie*** [args: --another-args 3]
 
-OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: code ***The curl is a lie*** [args: --another-args 3] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: error ***The curl is a lie*** [args: --another-args 3] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -108,9 +108,9 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + curl "--write-out" "%{http_code}\n" "--retry" "3" "--retry-delay" "2" "--user-agent" "opam/current" "-L" "-o" "${OPAMTMP}/v1.0.0.tar.gz.part" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
-[ERROR] Failed to get sources of foo.1: curl error code ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${OPAMTMP}/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz]
+[ERROR] Failed to get sources of foo.1: curl error ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${OPAMTMP}/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz]
 
-OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: code ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${OPAMTMP}/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: error ***The curl is a lie*** [args: --write-out %{http_code}\n --retry 3 --retry-delay 2 --user-agent opam/current -L -o ${OPAMTMP}/v1.0.0.tar.gz.part -- https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -128,9 +128,9 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [foo.1: http]
 + curl "--another-args" "3"
-[ERROR] Failed to get sources of foo.1: curl error code ***The curl is a lie*** [args: --another-args 3]
+[ERROR] Failed to get sources of foo.1: curl error ***The curl is a lie*** [args: --another-args 3]
 
-OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: code ***The curl is a lie*** [args: --another-args 3] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
+OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz (curl: error ***The curl is a lie*** [args: --another-args 3] while downloading https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz)")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
