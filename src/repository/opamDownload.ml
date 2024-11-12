@@ -129,56 +129,64 @@ let download_command_t ~with_curl_mitigation ~compress ?checksum ~url ~dst c =
   OpamSystem.make_command ~allow_stdin:false ~stdout cmd args @@> c
 
 let tool_return redownload_command url ret =
+  let open OpamProcess in
   match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
   | _, `Default ->
     if OpamProcess.is_failure ret then
-      fail (Some "Download command failed",
-                Printf.sprintf "Download command failed: %s"
-                  (OpamProcess.result_summary ret))
-    else Done ()
+      Done (`fail (Some "Download command failed",
+                   Printf.sprintf "Download command failed: %s"
+                     (OpamProcess.result_summary ret)))
+    else Done `ok
   | _, `Curl ->
-    if OpamProcess.is_failure ret then
-      if ret.r_code = 43 then begin
-        (* Code 43 is CURLE_BAD_FUNCTION_ARGUMENT (7.1 7-Aug-2000). This should
-           never be encountered using the curl binary, so we assume that it's
-           a manifestation of curl/curl#13845 (see also #6120). *)
-        log "Attempting to mitigate curl/curl#13845";
-        redownload_command ~with_curl_mitigation:true @@ function ret ->
-          if OpamProcess.is_failure ret then
-            if ret.r_code = 22 then
-              (* If this broken version of curl persists for some time, it is
-                 relatively straightforward to parse the http response code from
-                 the message, as it hasn't changed. *)
-              fail (Some "curl failed owing to a server-side issue",
-                    Printf.sprintf "curl failed with server-side error: %s"
-                      (OpamProcess.result_summary ret))
-            else
-              fail (Some "curl failed",
-                    Printf.sprintf "curl failed: %s"
-                      (OpamProcess.result_summary ret))
-          else Done ()
-      end else
-        fail (Some "curl failed", Printf.sprintf "curl failed: %s"
-                (OpamProcess.result_summary ret))
-    else
-      match ret.OpamProcess.r_stdout with
-      | [] ->
-        fail (Some "curl empty response",
-              Printf.sprintf "curl: empty response while downloading %s"
-                (OpamUrl.to_string url))
-      | l  ->
-        let code = List.hd (List.rev l) in
-        let num = try int_of_string code with Failure _ -> 999 in
-        if num >= 400 then
-          fail (Some ("curl error code " ^ code),
-                Printf.sprintf "curl: code %s while downloading %s"
-                  code (OpamUrl.to_string url))
-        else Done ()
+    match ret with
+    | { r_code = 0 ; r_stdout = []; _ } ->
+      Done (`fail (Some "curl empty response",
+                   Printf.sprintf "curl: empty response while downloading %s"
+                     (OpamUrl.to_string url)))
+    | { r_code = 0 ; r_stdout = (_::_ as l); _ } ->
+      let code = List.hd (List.rev l) in
+      let num = try int_of_string code with Failure _ -> 999 in
+      if num >= 400 then
+        Done (`http_error num)
+      else Done `ok
+    | { r_code = 43; _ } ->
+      (* Code 43 is CURLE_BAD_FUNCTION_ARGUMENT (7.1 7-Aug-2000). This should
+         never be encountered using the curl binary, so we assume that it's
+         a manifestation of curl/curl#13845 (see also #6120). *)
+      log "Attempting to mitigate curl/curl#13845";
+      (redownload_command ~with_curl_mitigation:true @@ function ret ->
+           if OpamProcess.is_failure ret then
+             if ret.r_code = 22 then
+               (* If this broken version of curl persists for some time, it is
+                  relatively straightforward to parse the http response code from
+                  the message, as it hasn't changed. *)
+               Done (`fail (Some "curl failed owing to a server-side issue",
+                            Printf.sprintf "curl failed with server-side error: %s"
+                              (OpamProcess.result_summary ret)))
+             else
+               Done (`fail (Some "curl failed",
+                            Printf.sprintf "curl failed: %s"
+                              (OpamProcess.result_summary ret)))
+           else Done `ok)
+    | _ -> (* code <> 0 / 43 *)
+      Done (`fail (Some "curl failed",
+                   Printf.sprintf "curl failed: %s"
+                     (OpamProcess.result_summary ret)))
 
-let download_command ~compress ?checksum ~url ~dst () =
+let download_command_http_error ~compress ?checksum ~url ~dst () =
   let download_command = download_command_t ~compress ?checksum ~url ~dst in
   download_command ~with_curl_mitigation:false
   @@ tool_return download_command url
+
+let download_command ~compress ?checksum ~url ~dst () =
+  download_command_http_error ~compress ?checksum ~url ~dst ()
+  @@| function
+  | `ok -> ()
+  | `http_error code ->
+    fail (Some ("HTTP error code " ^ string_of_int code),
+          Printf.sprintf "code %d while downloading %s"
+            code (OpamUrl.to_string url))
+  | `fail (s,l) -> fail (s,l)
 
 let really_download
     ?(quiet=false) ~overwrite ?(compress=false) ?checksum ?(validate=true)
