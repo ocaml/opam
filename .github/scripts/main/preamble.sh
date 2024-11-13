@@ -12,6 +12,7 @@ OCAML_LOCAL=$CACHE/ocaml-local
 OPAM_LOCAL=$CACHE/opam-local
 if [ "$RUNNER_OS" = 'macOS' ]; then
   PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+  PATH="/opt/homebrew/opt/gpatch/libexec/gnubin:$PATH"
 fi
 PATH=$OPAM_LOCAL/bin:$OCAML_LOCAL/bin:$PATH; export PATH
 
