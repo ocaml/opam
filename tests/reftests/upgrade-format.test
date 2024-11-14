@@ -109,7 +109,7 @@ Faking installation of re.1.9.0
 Faking installation of opam-core.2.0.7
 Done.
 ### opam pin add git+https://github.com/ocaml/opam.git#59a71e3cf1 -yn
-This will pin the following packages: opam-client, opam-core, opam-devel, opam-format, opam-installer, opam-repository, opam-solver, opam-state. Continue? [y/n] y
+This will pin the following packages: opam-client, opam-core, opam-devel, opam-format, opam-installer, opam-repository, opam-solver, opam-state. Continue? [Y/n] y
 opam-client is now pinned to git+https://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)
 [NOTE] Package opam-core is currently pinned to file://${BASEDIR} (version 2.0.7).
 opam-core is now pinned to git+https://github.com/ocaml/opam.git#59a71e3cf1 (version 2.1.0~beta3)

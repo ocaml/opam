@@ -91,7 +91,7 @@ root.ml
 ### :: pinning
 ### opam switch create downloads-pin --empty
 ### opam pin foo-arch-pin arch.tgz -y
-Package foo-arch-pin does not exist, create as a NEW package? [y/n] y
+Package foo-arch-pin does not exist, create as a NEW package? [Y/n] y
 [foo-arch-pin.dev] synchronised (file://${BASEDIR}/arch.tgz)
 foo-arch-pin is now pinned to file://${BASEDIR}/arch.tgz (version dev)
 
@@ -108,7 +108,7 @@ files
 opam
 root.ml
 ### opam pin foo-git-pin ./a-dev -y
-Package foo-git-pin does not exist, create as a NEW package? [y/n] y
+Package foo-git-pin does not exist, create as a NEW package? [Y/n] y
 [foo-git-pin.dev] synchronised (git+file://${BASEDIR}/a-dev#master)
 foo-git-pin is now pinned to git+file://${BASEDIR}/a-dev#master (version dev)
 

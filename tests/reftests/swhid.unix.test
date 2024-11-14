@@ -86,7 +86,7 @@ The following actions will be performed:
   - install snappy-swhid-dir 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Source https://fake.exe/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/n] y
+Source https://fake.exe/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/N] y
 -> retrieved snappy-swhid-dir.2  (SWH fallback)
 -> installed snappy-swhid-dir.2
 Done.
@@ -108,7 +108,7 @@ The following actions will be performed:
   - install snappy-swhid-dir 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Source https://fake.exe/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/n] y
+Source https://fake.exe/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/N] y
 -> retrieved snappy-swhid-dir.2  (SWH fallback)
 -> installed snappy-swhid-dir.2
 Done.
@@ -129,7 +129,7 @@ The following actions will be performed:
   - install snappy-swhid-ko 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Source https://fake.exe/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/n] y
+Source https://fake.exe/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/N] y
 [ERROR] Failed to get sources of snappy-swhid-ko.2: SWH fallback: Unknown swhid
 
 OpamSolution.Fetch_fail("SWH fallback: Unknown swhid")

@@ -81,7 +81,7 @@ Remaining directories and files:
   - ${BASEDIR}/OPAM/clean/lib/things/second
   - ${BASEDIR}/OPAM/clean/lib/things
 
-Remove them? [y/n] y
+Remove them? [Y/n] y
 ### opam install things
 The following actions will be performed:
 === install 1 package
@@ -100,7 +100,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 While removing things.1: these files have been modified since installation:
   - bin/first
-Remove them anyway? [y/n] n
+Remove them anyway? [y/N] n
 -> removed   things.1
 Done.
 ### opam clean --untracked
@@ -108,7 +108,7 @@ Cleaning up switch clean
 Remaining files:
   - ${BASEDIR}/OPAM/clean/bin/first
 
-Remove them? [y/n] y
+Remove them? [Y/n] y
 ### : Clean of sources directory :
 ### <waste/file>
 yes, i'm a file

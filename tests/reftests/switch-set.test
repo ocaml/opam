@@ -63,12 +63,12 @@ Would select opam switch -.
 ### opam switch show
 ${BASEDIR}
 ### opam switch remove . --yes
-Switch ${BASEDIR} and all its packages will be wiped. Are you sure? [y/n] y
+Switch ${BASEDIR} and all its packages will be wiped. Are you sure? [Y/n] y
 ### # removed switch
 ### opam switch foo
 ### opam switch bar
 ### opam switch remove foo --yes
-Switch foo and all its packages will be wiped. Are you sure? [y/n] y
+Switch foo and all its packages will be wiped. Are you sure? [Y/n] y
 ### opam switch -
 Selecting opam switch -.
 ### opam switch - --show

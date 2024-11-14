@@ -59,7 +59,7 @@ FMT_UPG                         Light config upgrade, from 2.0 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [y/n] y
+Continue? [Y/n] y
 [NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
            opam option jobs=1 --global
 Format upgrade done.
@@ -80,7 +80,7 @@ FMT_UPG                         Light config upgrade, from 2.1 to  current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1 to version  current which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [y/n] y
+Continue? [Y/n] y
 [NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
            opam option jobs=1 --global
 Format upgrade done.

@@ -812,8 +812,8 @@ let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
       if OpamCoreConfig.(!r.safe_mode) then false else
       let prompt =
         Printf.ksprintf OpamStd.Format.reformat "%s [%s/%s] " s
-          (colorise' (`blue :: if default then [`underline] else []) "y")
-          (colorise' (`blue :: if default then [] else [`underline]) "n")
+          (colorise `blue (if default then "Y" else "y"))
+          (colorise `blue (if default then "n" else "N"))
       in
       if OpamCoreConfig.answer_is `unsafe_yes ||
          not require_unsafe_yes && OpamCoreConfig.answer_is_yes ()

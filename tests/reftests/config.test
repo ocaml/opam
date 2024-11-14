@@ -101,7 +101,7 @@ opam-version: "2.0"
 ### opam repository add second ./REPO2 --this-switch
 [second] Initialised
 ### opam pin pinned-package -y
-Package pinned-package does not exist, create as a NEW package? [y/n] y
+Package pinned-package does not exist, create as a NEW package? [Y/n] y
 pinned-package is now pinned to file://${BASEDIR}/pinned-package (version dev)
 
 The following actions will be performed:

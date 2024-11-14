@@ -448,7 +448,7 @@ first  --
 [default] Initialised
 ### opam repository remove oper oper3 --all
 ### opam switch remove repos -y
-Switch repos and all its packages will be wiped. Are you sure? [y/n] y
+Switch repos and all its packages will be wiped. Are you sure? [Y/n] y
 ### OPAMREPOSITORYTARRING=1
 ### rm -rf OPER OPER2 OPER3
 ### <OPER/repo>

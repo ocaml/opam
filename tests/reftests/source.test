@@ -81,7 +81,7 @@ The following actions will be performed:
 === install 1 package
   - install pandore 3 (pinned)
 
-Proceed with 1 installation? [y/n] n
+Proceed with 1 installation? [Y/n] n
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 10 #
 ### find pandore.3 | unordered
@@ -106,7 +106,7 @@ pandore.3/src
 pandore.3/src/src.ml
 ### rm -rf pandore.3
 ### opam switch remove phantom -y
-Switch phantom and all its packages will be wiped. Are you sure? [y/n] y
+Switch phantom and all its packages will be wiped. Are you sure? [Y/n] y
 ### opam source pandore
 Successfully extracted to ${BASEDIR}/pandore.3
 ### : Full retrieval of git history when --dev is given :

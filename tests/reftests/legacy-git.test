@@ -1317,8 +1317,8 @@ ocaml.system
 P1.1
 P2.1
 ### opam switch remove test test2 --yes
-Switch test and all its packages will be wiped. Are you sure? [y/n] y
-Switch test2 and all its packages will be wiped. Are you sure? [y/n] y
+Switch test and all its packages will be wiped. Are you sure? [Y/n] y
+Switch test2 and all its packages will be wiped. Are you sure? [Y/n] y
 ### : LIST :
 ### opam list -A
 # Packages matching: any

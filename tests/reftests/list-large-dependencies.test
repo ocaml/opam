@@ -307,7 +307,7 @@ phylogenetics.0.0.0
 available: !?force-unav
 flags: compiler
 ### opam switch create ${BASEDIR}/test-not-in-repo --yes
-Package test-not-in-repo does not exist, create as a NEW package? [y/n] y
+Package test-not-in-repo does not exist, create as a NEW package? [Y/n] y
 test-not-in-repo is now pinned to file://${BASEDIR}/test-not-in-repo (version dev)
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>

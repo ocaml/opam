@@ -389,11 +389,11 @@ Faking installation of ocaml.4.12.0
 Faking installation of ocaml-options-vanilla.1
 Done.
 ### OPAMVAR_os=linux opam pin resto/ --with-version=0.6.1 --show --yes | unordered
-This will pin the following packages: ezresto-directory, ezresto, resto-acl, resto-client, resto-cohttp-client, resto-cohttp-self-serving-client, resto-cohttp-server, resto-cohttp, resto-directory, resto-json, resto-lwt, resto-self-serving-client, resto-server, resto. Continue? [y/n] y
-Package resto-client does not exist, create as a NEW package? [y/n] y
-Package resto-lwt does not exist, create as a NEW package? [y/n] y
-Package resto-self-serving-client does not exist, create as a NEW package? [y/n] y
-Package resto-server does not exist, create as a NEW package? [y/n] y
+This will pin the following packages: ezresto-directory, ezresto, resto-acl, resto-client, resto-cohttp-client, resto-cohttp-self-serving-client, resto-cohttp-server, resto-cohttp, resto-directory, resto-json, resto-lwt, resto-self-serving-client, resto-server, resto. Continue? [Y/n] y
+Package resto-client does not exist, create as a NEW package? [Y/n] y
+Package resto-lwt does not exist, create as a NEW package? [Y/n] y
+Package resto-self-serving-client does not exist, create as a NEW package? [Y/n] y
+Package resto-server does not exist, create as a NEW package? [Y/n] y
 ezresto-directory is now pinned to file://${BASEDIR}/resto (version 0.6.1)
 ezresto is now pinned to file://${BASEDIR}/resto (version 0.6.1)
 resto-acl is now pinned to file://${BASEDIR}/resto (version 0.6.1)

@@ -11,7 +11,7 @@ versionned
 ### git -C ./ongoing commit -qm "init"
 ### opam switch create working-dir --empty
 ### opam pin ./ongoing
-Package ongoing does not exist, create as a NEW package? [y/n] y
+Package ongoing does not exist, create as a NEW package? [Y/n] y
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 
 The following actions will be performed:
@@ -242,7 +242,7 @@ opam-version:"2.0"
 opam-version: "2.0"
 depends: ["qux"]
 ### opam install ./ongoing --working-dir
-Package ongoing does not exist, create as a NEW package? [y/n] y
+Package ongoing does not exist, create as a NEW package? [Y/n] y
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 [ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
 The following actions will be performed:

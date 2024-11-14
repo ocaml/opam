@@ -50,7 +50,7 @@ foo is now pinned locally (version 1)
 ### <pin:nip/nip.opam>
 opam-version: "2.0"
 ### opam install ./nip
-Package nip does not exist, create as a NEW package? [y/n] y
+Package nip does not exist, create as a NEW package? [Y/n] y
 nip is now pinned to file://${BASEDIR}/nip (version dev)
 The following actions will be performed:
 === install 1 package
@@ -96,11 +96,11 @@ echo "pin-depends: [ \"qux.dev\" \"file://$basedir/qux\" ]" >> bar/bar.opam
 opam-version: "2.0"
 depexts: [ "another-inexistant" ]
 ### opam pin ./bar | '.*(/|\\|")echo(\.exe)?"? "' -> 'echo "'
-Package bar does not exist, create as a NEW package? [y/n] y
+Package bar does not exist, create as a NEW package? [Y/n] y
 The following additional pinnings are required by bar.dev:
   - qux.dev at file://${BASEDIR}/qux
-Pin and install them? [y/n] y
-Package qux does not exist, create as a NEW package? [y/n] y
+Pin and install them? [Y/n] y
+Package qux does not exist, create as a NEW package? [Y/n] y
 [qux.dev] synchronised (no changes)
 qux is now pinned to file://${BASEDIR}/qux (version dev)
 bar is now pinned to file://${BASEDIR}/bar (version dev)
@@ -146,11 +146,11 @@ The following actions will be performed:
 -> removed   qux.dev
 Done.
 ### opam install ./bar | '.*(/|\\|")echo(\.exe)?"? "' -> 'echo "'
-Package bar does not exist, create as a NEW package? [y/n] y
+Package bar does not exist, create as a NEW package? [Y/n] y
 The following additional pinnings are required by bar.dev:
   - qux.dev at file://${BASEDIR}/qux
-Pin and install them? [y/n] y
-Package qux does not exist, create as a NEW package? [y/n] y
+Pin and install them? [Y/n] y
+Package qux does not exist, create as a NEW package? [Y/n] y
 [qux.dev] synchronised (no changes)
 qux is now pinned to file://${BASEDIR}/qux (version dev)
 bar is now pinned to file://${BASEDIR}/bar (version dev)
@@ -212,7 +212,7 @@ Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
 ### opam pin ./bar
 The following additional pinnings are required by bar.dev:
   - qux.dev at file://${BASEDIR}/qux
-Pin and install them? [y/n] y
+Pin and install them? [Y/n] y
 [qux.dev] synchronised (no changes)
 qux is now pinned to file://${BASEDIR}/qux (version dev)
 bar is now pinned to file://${BASEDIR}/bar (version dev)
@@ -260,12 +260,12 @@ opam-version: "2.0"
 Could not retrieve some package sources, they will not be pinned nor installed:
   - pin-empty:git+file://${BASEDIR}/pin-empty#master
 
-Continue anyway? [y/n] y
+Continue anyway? [Y/n] y
 ### opam pin
 ### git -C pin-empty add -A
 ### git -C pin-empty commit -qm 'opam'
 ### opam pin --no-action ./pin-empty
-Package pin-empty does not exist, create as a NEW package? [y/n] y
+Package pin-empty does not exist, create as a NEW package? [Y/n] y
 pin-empty is now pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
 ### opam unpin pin-empty
 Ok, pin-empty is no longer pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
@@ -275,7 +275,7 @@ Ok, pin-empty is no longer pinned to git+file://${BASEDIR}/pin-empty#master (ver
 Could not retrieve some package sources, they will not be pinned nor installed:
   - pin-empty:git+file://${BASEDIR}/pin-empty#inexistant
 
-Continue anyway? [y/n] y
+Continue anyway? [Y/n] y
 ### opam pin
 ### :::::::::::::::::::::::
 ### :7: Parse error with future opam version field on pin
