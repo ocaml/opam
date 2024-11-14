@@ -1,0 +1,7 @@
+N0REP0
+### :: Remove linked local switch
+### opam switch create foo --empty
+### opam switch link foo
+Directory ${BASEDIR} set to use switch foo.
+Just remove ${BASEDIR}/_opam to unlink.
+### opam switch remove .

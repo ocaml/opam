@@ -1764,6 +1764,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-list.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-switch-remove)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff switch-remove.test switch-remove.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-switch-remove)))
+
+(rule
+ (targets switch-remove.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-remove.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-switch-set)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
