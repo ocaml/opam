@@ -3,6 +3,9 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.3.0:
+* (no difference compared to 2.3.0~rc1)
+
 2.3.0~rc1:
 * Improve the release script by adding a NetBSD/x86_64 binary
   [#6258 @kit-ty-kate]
