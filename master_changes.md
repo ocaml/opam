@@ -86,6 +86,7 @@ users)
 ## VCS
 
 ## Build
+  * Add `re` as a dependency of `opam-repository` [#6036 @rjbou]
 
 ## Infrastructure
 
