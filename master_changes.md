@@ -59,6 +59,7 @@ users)
 ## Lint
 
 ## Repository
+  * Accurately tag `curl` download command when loaded from global config file [#6270 @rjbou]
 
 ## Lock
 
