@@ -19,6 +19,7 @@ users)
 ## Plugins
 
 ## Init
+  * [BUG] Fix the detection of `ZDOTDIR` when using `zsh` [#6299 @acasta-yhliu - fix #6281]
 
 ## Config report
 

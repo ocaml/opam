@@ -1162,7 +1162,11 @@ module OpamSys = struct
     match shell with
     | SH_fish ->
       Some (List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"])
-    | SH_zsh  -> Some (home ".zshrc")
+    | SH_zsh  ->
+      let zsh_home f = 
+        try Filename.concat (Env.get "ZDOTDIR") f
+        with Not_found -> home f in 
+      Some (zsh_home ".zshrc")
     | SH_bash ->
       let shell =
         (try
