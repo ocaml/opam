@@ -436,7 +436,7 @@ let migrate_extrafiles_command cli =
   let hash_type_arg =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["hash"]
       "HASH_ALGO" "The hash, or hashes to be added"
-      (Arg.some OpamArg.hash_kinds) None
+      OpamArg.hash_kinds `SHA256
   in
   let packages =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["p";"packages"]
@@ -444,17 +444,21 @@ let migrate_extrafiles_command cli =
       Arg.(list OpamArg.package) []
   in
   let local_dir_arg =
-    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["local-extra-sources"] "DIR"
-      "Name of the local directory where to put the extra-files. They will be \
-       put into DIR/patches/<pkgname>/<pkgname.version>/filenameYY"
-      OpamArg.dirname (OpamFilename.Dir.of_string "~/devel/opam-source-archives")
+    let doc =
+      Arg.info ~docv:"DIR"
+        ~doc:"Name of the local directory where to put the extra-files. \
+              They will be put into \
+              DIR/patches/<pkgname>/<pkgname.version>/filenameYY" []
+    in
+    Arg.(required & pos 0 (some OpamArg.dirname) None & doc)
   and url_prefix_arg =
-    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["url-prefix"] "URL"
-      "Prefix of the URL to emit into extra-sources."
-      Arg.string "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/"
+    let doc =
+      Arg.info ~docv:"URL"
+        ~doc:"Prefix of the URL to emit into extra-sources." []
+    in
+    Arg.(required & pos 1 (some string) None & doc)
   in
-  let cmd global_options hash_type packages local_dir url_prefix () =
-    let kind = OpamStd.Option.default `SHA256 hash_type in
+  let cmd global_options kind packages local_dir url_prefix () =
     OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
     let pkg_prefixes = packages_with_prefixes repo_root packages in
