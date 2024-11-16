@@ -343,13 +343,10 @@ let update_extrafiles_command cli =
         field as requested."
   ]
   in
-  let hash_kinds = [`MD5; `SHA256; `SHA512] in
   let hash_type_arg =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["hash"]
       "HASH_ALGO" "The hash, or hashes to be added"
-      Arg.(some (enum
-                   (List.map (fun k -> OpamHash.string_of_kind k, k)
-                      hash_kinds))) None
+      (Arg.some OpamArg.hash_kinds) None
   in
   let packages =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["p";"packages"]
@@ -438,12 +435,9 @@ let add_hashes_command cli =
         in <opamroot>/download-cache/hash-cache for subsequent runs.";
   ]
   in
-  let hash_kinds = [`MD5; `SHA256; `SHA512] in
   let hash_types_arg =
     OpamArg.nonempty_arg_list "HASH_ALGO" "The hash, or hashes to be added"
-      (Arg.enum
-         (List.map (fun k -> OpamHash.string_of_kind k, k)
-            hash_kinds))
+      OpamArg.hash_kinds
   in
   let packages =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_1) ["p";"packages"]

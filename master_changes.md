@@ -218,6 +218,7 @@ users)
 ## opam-client
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
   * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
+  * `OpamArg.hash_kinds`: was added [#5960 @kit-ty-kate]
   * `OpamRepositoryCommand.switch_repos`: expose the function [#5014 @kit-ty-kate]
 
 ## opam-repository
