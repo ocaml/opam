@@ -343,13 +343,10 @@ let update_extrafiles_command cli =
         field as requested."
   ]
   in
-  let hash_kinds = [`MD5; `SHA256; `SHA512] in
   let hash_type_arg =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["hash"]
       "HASH_ALGO" "The hash, or hashes to be added"
-      Arg.(some (enum
-                   (List.map (fun k -> OpamHash.string_of_kind k, k)
-                      hash_kinds))) None
+      (Arg.some OpamArg.hash_kinds) None
   in
   let packages =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["p";"packages"]
@@ -436,13 +433,10 @@ let migrate_extrafiles_command cli =
         extra-files fields to extra-source as requested."
   ]
   in
-  let hash_kinds = [`MD5; `SHA256; `SHA512] in
   let hash_type_arg =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["hash"]
       "HASH_ALGO" "The hash, or hashes to be added"
-      Arg.(some (enum
-                   (List.map (fun k -> OpamHash.string_of_kind k, k)
-                      hash_kinds))) None
+      (Arg.some OpamArg.hash_kinds) None
   in
   let packages =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["p";"packages"]
@@ -548,12 +542,9 @@ let add_hashes_command cli =
         in <opamroot>/download-cache/hash-cache for subsequent runs.";
   ]
   in
-  let hash_kinds = [`MD5; `SHA256; `SHA512] in
   let hash_types_arg =
     OpamArg.nonempty_arg_list "HASH_ALGO" "The hash, or hashes to be added"
-      (Arg.enum
-         (List.map (fun k -> OpamHash.string_of_kind k, k)
-            hash_kinds))
+      OpamArg.hash_kinds
   in
   let packages =
     OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_1) ["p";"packages"]
@@ -565,7 +556,7 @@ let add_hashes_command cli =
       "Replace the existing hashes rather than adding to them"
   in
   let create_hash_tables hash_cache_dir =
-    let t = Hashtbl.create (List.length hash_kinds) in
+    let t = Hashtbl.create (List.length OpamHash.all_kinds) in
     List.iter (fun k1 ->
         List.iter (fun k2 ->
             if k1 <> k2 then (
@@ -584,9 +575,9 @@ let add_hashes_command cli =
                | _ -> failwith ("Bad cache at "^OpamFile.to_string cache_file));
               Hashtbl.add t (k1,k2) (cache_file, t_mapping);
             ))
-          hash_kinds
+          OpamHash.all_kinds
       )
-      hash_kinds;
+      OpamHash.all_kinds;
     t
   in
   let save_hashes hash_tables =
