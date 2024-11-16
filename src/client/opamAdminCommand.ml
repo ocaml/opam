@@ -455,7 +455,7 @@ let add_hashes_command cli =
       "Replace the existing hashes rather than adding to them"
   in
   let create_hash_tables hash_cache_dir =
-    let t = Hashtbl.create (List.length hash_kinds) in
+    let t = Hashtbl.create (List.length OpamHash.all_kinds) in
     List.iter (fun k1 ->
         List.iter (fun k2 ->
             if k1 <> k2 then (
@@ -474,9 +474,9 @@ let add_hashes_command cli =
                | _ -> failwith ("Bad cache at "^OpamFile.to_string cache_file));
               Hashtbl.add t (k1,k2) (cache_file, t_mapping);
             ))
-          hash_kinds
+          OpamHash.all_kinds
       )
-      hash_kinds;
+      OpamHash.all_kinds;
     t
   in
   let save_hashes hash_tables =
