@@ -438,24 +438,24 @@ let migrate_extrafiles_command cli =
   in
   let hash_kinds = [`MD5; `SHA256; `SHA512] in
   let hash_type_arg =
-    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["hash"]
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["hash"]
       "HASH_ALGO" "The hash, or hashes to be added"
       Arg.(some (enum
                    (List.map (fun k -> OpamHash.string_of_kind k, k)
                       hash_kinds))) None
   in
   let packages =
-    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["p";"packages"]
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["p";"packages"]
       "PACKAGES" "Only add extra files for the given packages"
       Arg.(list OpamArg.package) []
   in
   let local_dir_arg =
-    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["local-extra-sources"] "DIR"
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["local-extra-sources"] "DIR"
       "Name of the local directory where to put the extra-files. They will be \
        put into DIR/patches/<pkgname>/<pkgname.version>/filenameYY"
       OpamArg.dirname (OpamFilename.Dir.of_string "~/devel/opam-source-archives")
   and url_prefix_arg =
-    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["url-prefix"] "URL"
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_4) ["url-prefix"] "URL"
       "Prefix of the URL to emit into extra-sources."
       Arg.string "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/"
   in
@@ -533,9 +533,8 @@ let migrate_extrafiles_command cli =
     if has_error then OpamStd.Sys.exit_because `Sync_error
     else OpamStd.Sys.exit_because `Success
   in
-  OpamArg.mk_command  ~cli OpamArg.(cli_from cli2_2) command ~doc ~man
+  OpamArg.mk_command ~cli OpamArg.(cli_from cli2_4) command ~doc ~man
     Term.(const cmd $ global_options cli $ hash_type_arg $ packages $ local_dir_arg $ url_prefix_arg)
-
 
 let add_hashes_command_doc =
   "Add archive hashes to an opam repository."
