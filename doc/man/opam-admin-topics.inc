@@ -144,17 +144,17 @@
   (section man)
   (package opam)
   (files
-    opam-admin-help.1 
-    opam-admin-migrate-extrafiles.1 
-    opam-admin-update-extrafiles.1 
-    opam-admin-add-hashes.1 
-    opam-admin-add-constraint.1 
-    opam-admin-filter.1 
-    opam-admin-list.1 
-    opam-admin-compare-versions.1 
-    opam-admin-check.1 
-    opam-admin-lint.1 
-    opam-admin-upgrade.1 
-    opam-admin-cache.1 
-    opam-admin-make.1 
+    opam-admin-help.1
+    opam-admin-migrate-extrafiles.1
+    opam-admin-update-extrafiles.1
+    opam-admin-add-hashes.1
+    opam-admin-add-constraint.1
+    opam-admin-filter.1
+    opam-admin-list.1
+    opam-admin-compare-versions.1
+    opam-admin-check.1
+    opam-admin-lint.1
+    opam-admin-upgrade.1
+    opam-admin-cache.1
+    opam-admin-make.1
     opam-admin-index.1))
