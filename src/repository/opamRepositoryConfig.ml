@@ -60,8 +60,8 @@ let default = {
       let curl = "curl", `Curl in
       let tools =
         match os with
-        | FreeBSD | DragonFly -> ["fetch", `Default; curl]
-        | OpenBSD | NetBSD -> ["ftp", `Default; curl]
+        | FreeBSD | DragonFly -> [curl; "fetch", `Default]
+        | OpenBSD | NetBSD -> [curl; "ftp", `Default]
         | Linux | Darwin | Cygwin | Win32
         | Unix | Other _ -> [curl; "wget", `Default]
       in
