@@ -116,6 +116,7 @@ users)
 
 ## Internal
   * Make `curl` the default download tool instead of `wget` on macOS [#6304 @kit-ty-kate]
+  * download tool: Use fetch on DragonFlyBSD and ftp on NetBSD [#6305 @kit-ty-kate]
 
 ## Internal: Windows
 

@@ -60,9 +60,10 @@ let default = {
       let curl = "curl", `Curl in
       let tools =
         match os with
-        | FreeBSD -> ["fetch", `Default; curl]
-        | OpenBSD -> ["ftp", `Default; curl]
-        | _ -> [curl; "wget", `Default]
+        | FreeBSD | DragonFly -> ["fetch", `Default; curl]
+        | OpenBSD | NetBSD -> ["ftp", `Default; curl]
+        | Linux | Darwin | Cygwin | Win32
+        | Unix | Other _ -> [curl; "wget", `Default]
       in
       let cmd, kind =
         List.find (fun (c,_) -> OpamSystem.resolve_command c <> None) tools
