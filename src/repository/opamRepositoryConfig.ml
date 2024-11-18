@@ -53,6 +53,7 @@ type 'a options_fun =
   'a
 
 let default = {
+  (* Keep synchronised with [OpamInitDefaults.req_dl_tools] *)
   download_tool = lazy (
     let os = OpamStd.Sys.os () in
     try

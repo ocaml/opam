@@ -96,6 +96,7 @@ let req_dl_tools () =
   let msg =
     Some "A download tool is required, check env variables OPAMCURL or OPAMFETCH"
   in
+  (* Keep synchronised with [OpamRepositoryConfig.default] *)
   let default =
     [
       ["curl"; "wget"], msg, Some not_open_free_bsd_filter;
