@@ -59,8 +59,7 @@ let default = {
       let curl = "curl", `Curl in
       let tools =
         match os with
-        | Darwin  -> ["wget", `Default; curl]
-        | FreeBSD -> ["fetch", `Default ; curl]
+        | FreeBSD -> ["fetch", `Default; curl]
         | OpenBSD -> ["ftp", `Default; curl]
         | _ -> [curl; "wget", `Default]
       in
