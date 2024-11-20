@@ -114,21 +114,23 @@ Done.
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.07.0"] "new system compiler" ]
-### opam init --no-setup --bypass-checks default REPO/ --config opamrc | grep -v Cygwin
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc -c ocaml-system | grep -v Cygwin
 Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-system)
+<><> Creating initial switch 'ocaml-system' (invariant ["ocaml-system"]) ><><><>
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml" {>= "4.05.0"}]
+Switch invariant: ["ocaml-system"]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml-system.4.07.0
 -> installed ocaml.4.07.0
 Done.
+### opam switch set-invariant --formula '["ocaml" {>= "4.05.0"}]'
+The switch invariant was set to ["ocaml" {>= "4.05.0"}]
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
 ### opam upgrade
@@ -159,7 +161,7 @@ No configuration file found, using built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 ### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current' | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
-default-compiler: ["ocaml-system" "ocaml-base-compiler"]
+default-compiler: ["ocaml-base-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
@@ -311,12 +313,12 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-system)
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler)
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed ocaml-system.4.07.0
--> installed ocaml.4.07.0
+-> installed ocaml-base-compiler.4.10.0
+-> installed ocaml.4.10.0
 Done.

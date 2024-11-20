@@ -20,6 +20,7 @@ users)
 
 ## Init
   * [BUG] Fix the detection of `ZDOTDIR` when using `zsh` [#6299 @acasta-yhliu - fix #6281]
+  * Remove `ocaml-system` from the list of default compilers [#6307 @kit-ty-kate - fix #3509]
 
 ## Config report
 
