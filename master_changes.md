@@ -20,6 +20,7 @@ users)
 
 ## Init
   * [BUG] Fix the detection of `ZDOTDIR` when using `zsh` [#6299 @acasta-yhliu - fix #6281]
+  * Remove `ocaml-system` from the list of default compilers [#6307 @kit-ty-kate - fix #3509]
 
 ## Config report
 
@@ -178,6 +179,7 @@ users)
   * Add a test showing the behaviour of `opam upgrade` with packages flagged with `avoid-version`/`deprecated` [#6273 @kit-ty-kate]
   * Add a test showing the behaviour when a pin depend is unpinned [#6380 @rjbou]
   * Add a test to ensure `opam upgrade <pkg>` will not upgrade unrelated things [#6373 @kit-ty-kate]
+  * Add a test in init to show ocaml system compiler selection behaviour [#6307 @kit-ty-kate @rjbou]
 
 ### Engine
 
