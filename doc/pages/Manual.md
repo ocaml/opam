@@ -800,6 +800,13 @@ some specifics of the repository. It has the following optional fields:
 * <a id="repofield-announce">`announce: [ <string> { <filter> } ... ]`</a>:
   Messages that will be printed to the user on initialisation or update of this
   repository, with optional conditions.
+* <a id="repofield-stamp">`stamp: <string>`</a>:
+  A string referring to the commit hash or timestamp of the current state of
+  the repository. For example if the repository source originally comes from
+  a git repository but is distributed through a http endpoint, that http
+  server could distribute a `repo` file, whose `stamp` field could refer
+  to the commit hash linked to the current state of the repository delivered
+  in tar.gz format.
 
 #### opamrc
 

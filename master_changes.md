@@ -144,6 +144,7 @@ users)
   * Unhide `OpamProcess` functions [#6150 @rjbou]
   * Fix a typo in the default man page [#6267 @fccm2]
   * Point users to ways to override the default opam root location in the opam init manpage [#6251 @kit-ty-kate]
+  * Manual: Document the stamp field from repo files [#6306 @kit-ty-kate]
 
 ## Security fixes
 
