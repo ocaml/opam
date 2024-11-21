@@ -43,6 +43,7 @@ users)
 ## Config
 
 ## Pin
+  * Don't ask confirmation when pinning an unknown package (absent from repositories) [#6309 @kit-ty-kate]
 
 ## List
 
