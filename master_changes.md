@@ -43,6 +43,7 @@ users)
 ## Config
 
 ## Pin
+  * Don't ask confirmation when pinning a new package [#6309 @kit-ty-kate]
 
 ## List
 
