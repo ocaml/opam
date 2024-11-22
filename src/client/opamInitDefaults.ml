@@ -48,8 +48,9 @@ let openbsd_filter = os_filter "openbsd"
 let freebsd_filter = os_filter "freebsd"
 let netbsd_filter = os_filter "netbsd"
 let dragonflybsd_filter = os_filter "dragonfly"
-let not_open_free_bsd_filter =
-  FNot (FOr (openbsd_filter,  freebsd_filter))
+let not_bsd_filter =
+  FNot (FOr (FOr (openbsd_filter, netbsd_filter),
+             FOr (freebsd_filter, dragonflybsd_filter)))
 let win32_filter = os_filter "win32"
 let not_win32_filter =
   FOp (FIdent ([], OpamVariable.of_string "os", None), `Neq, FString "win32")
@@ -99,9 +100,9 @@ let req_dl_tools () =
   (* Keep synchronised with [OpamRepositoryConfig.default] *)
   let default =
     [
-      ["curl"; "wget"], msg, Some not_open_free_bsd_filter;
-      ["fetch"], msg, Some freebsd_filter;
-      ["ftp"], msg, Some openbsd_filter
+      (* BSDs have download tools (fetch or ftp) that are part of the
+         base system so there is no need to check for those tools. *)
+      ["curl"; "wget"], msg, Some not_bsd_filter;
     ]
   in
   let open OpamStd.Option.Op in
