@@ -44,6 +44,13 @@ let curl_args =
       main_args
 
 let wget_args = [
+  (* wget2 by default has
+     Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+     which makes some servers return an html page instead of the expected
+     content. This is the case for the Software Heritage REST API.
+     Using "Accept: */*" makes it on par with curl
+  *)
+  CString "--header=Accept: */*", None;
   CString "-t", None; CIdent "retry", None;
   CString "-O", None; CIdent "out", None;
   CString "-U", None; user_agent, None;
