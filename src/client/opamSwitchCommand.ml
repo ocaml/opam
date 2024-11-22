@@ -658,6 +658,42 @@ let show () =
   OpamConsole.msg "%s\n"
     (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
 
+(* Duplicate from OpamCommands.clean *)
+let clean st =
+  let switch = st.switch in
+  let root = st.switch_global.root in
+  let cleandir d =
+    try OpamFilename.cleandir d
+    with OpamSystem.Internal_error _ -> ()
+  in
+  let rmdir d =
+    try OpamFilename.rmdir d
+    with OpamSystem.Internal_error _ -> ()
+  in
+  cleandir (OpamPath.Switch.backup_dir root switch);
+  cleandir (OpamPath.Switch.build_dir root switch);
+  cleandir (OpamPath.Switch.remove_dir root switch);
+  cleandir (OpamPath.Switch.extra_files_dir root switch);
+  let pinning_overlay_dirs =
+    List.map
+      (fun nv -> OpamPath.Switch.Overlay.package root switch nv.name)
+      (OpamPackage.Set.elements st.pinned)
+  in
+  List.iter (fun d ->
+      if not (List.mem d pinning_overlay_dirs) then rmdir d)
+    (OpamFilename.dirs (OpamPath.Switch.Overlay.dir root switch));
+  let keep_sources_dir =
+    OpamPackage.Set.elements
+      (OpamPackage.Set.union st.pinned
+         (OpamPackage.Set.filter (OpamSwitchState.is_dev_package st)
+            st.installed))
+    |> List.map (OpamSwitchState.source_dir st)
+  in
+  OpamFilename.dirs (OpamPath.Switch.sources_dir root switch) |>
+  List.iter (fun d ->
+      if not (List.mem d keep_sources_dir) then rmdir d)
+
+(* TODO add dry run support *)
 let reinstall init_st =
   let switch = init_st.switch in
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
@@ -668,21 +704,35 @@ let reinstall init_st =
   let pkg_dirs =
     List.filter ((<>) opam_subdir) (OpamFilename.dirs switch_root)
   in
-  List.iter OpamFilename.cleandir pkg_dirs;
-  List.iter OpamFilename.remove (OpamFilename.files switch_root);
-  OpamFilename.cleandir (OpamPath.Switch.config_dir gt.root switch);
-  OpamFilename.cleandir (OpamPath.Switch.installed_opams gt.root switch);
-  let st =
-    { init_st with
-      installed = OpamPackage.Set.empty;
-      installed_roots = OpamPackage.Set.empty;
-      reinstall = lazy OpamPackage.Set.empty; }
-  in
-  import_t { OpamFile.SwitchExport.
-             selections = OpamSwitchState.selections init_st;
-             extra_files = OpamHash.Map.empty;
-             overlays = OpamPackage.Name.Map.empty; }
-    st
+  clean init_st;
+  let temp_dir = OpamFilename.mk_tmp_dir () in
+  log "storing switch %a in %a"
+  (slog OpamSwitch.to_string) switch
+  (slog OpamFilename.Dir.to_string) temp_dir;
+  OpamFilename.copy_dir
+    ~src:switch_root
+    ~dst:temp_dir;
+  try
+    List.iter OpamFilename.cleandir pkg_dirs;
+    List.iter OpamFilename.remove (OpamFilename.files switch_root);
+    OpamFilename.cleandir (OpamPath.Switch.config_dir gt.root switch);
+    OpamFilename.cleandir (OpamPath.Switch.installed_opams gt.root switch);
+    let st =
+      { init_st with
+        installed = OpamPackage.Set.empty;
+        installed_roots = OpamPackage.Set.empty;
+        reinstall = lazy OpamPackage.Set.empty; }
+    in
+    import_t { OpamFile.SwitchExport.
+               selections = OpamSwitchState.selections init_st;
+               extra_files = OpamHash.Map.empty;
+               overlays = OpamPackage.Name.Map.empty; }
+      st
+  with e ->
+    OpamStd.Exn.finalise e @@ fun () ->
+    OpamConsole.error "Failure during switch reinstall, rolling back to previous state";
+    OpamFilename.cleandir switch_root;
+    OpamFilename.copy_dir ~src:temp_dir ~dst:switch_root
 
 let import st ?deps_only filename =
   let import_str = match filename with
