@@ -816,3 +816,43 @@ GARBAGE
 ### opam show two-three --raw
 [ERROR] No package matching two-three found
 # Return code 5 #
+### : Repo config with no url repo
+### opam switch create nourl --empty
+### opam repo remove --all repo versions
+### <nourl/repo>
+opam-version: "2.0"
+### <nourl/packages/no/no.1/opam>
+opam-version: "2.0"
+### cat OPAM/repo/repos-config
+opam-version: "2.0"
+### opam repo --all
+# Repository # Url # Switches(rank)
+### opam repo add nourl ./nourl --this-switch
+[nourl] Initialised
+### opam repo --all | grep -v '^#'
+# Repository # Url                                                   # Switches(rank)
+nourl        file://${BASEDIR}/nourl nourl
+### opam list -A
+# Packages matching: any
+# Name # Installed # Synopsis
+no     --
+### <OPAM/repo/repos-config>
+opam-version: "2.0"
+repositories: [ "nourl" ]
+### opam repo --all
+# Repository # Url    # Switches(rank)
+nourl        https:// nourl
+### <nourl/packages/yes/yes.1/opam>
+opam-version: "2.0"
+### opam update nourl
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+### opam list -A
+# Packages matching: any
+# Name # Installed # Synopsis
+no     --
+### sh -c "rm OPAM/repo/state-*.cache"
+### opam list -A
+# Packages matching: any
+# Name # Installed # Synopsis
+no     --
