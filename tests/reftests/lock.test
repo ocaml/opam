@@ -1258,10 +1258,10 @@ pin-depends: [
 ]
 ### <tolock/content>
 it's here
-### <pin:opam>
+### <pin:opam-file>
 opam-version: "2.0"
 version: "dev"
-### OPAMEDITOR="cp -f ${BASEDIR}/opam"
+### OPAMEDITOR="cp -f ${BASEDIR}/opam-file"
 ### opam install ./tolock --with-test --with-doc
 Package tolock does not exist, create as a NEW package? [Y/n] y
 The following additional pinnings are required by tolock.dev:
