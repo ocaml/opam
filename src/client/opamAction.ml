@@ -643,7 +643,7 @@ let make_command st opam ?dir ?text_command (cmd, args) =
     let cmd, args = OpamStd.Option.default (cmd, args) text_command in
     OpamProcess.make_command_text name ~args cmd
   in
-  let context =
+  let context = lazy begin
     let open OpamStd.Option.Op in
     String.concat " | " [
       OpamVersion.(to_string current);
@@ -684,7 +684,7 @@ let make_command st opam ?dir ?text_command (cmd, args) =
           OpamUrl.to_string repo.repo_url ^
           OpamStd.Option.to_string (fun s -> "#"^s) stamp
     ]
-  in
+  end in
   OpamSystem.make_command ~env ~name ?dir ~text
     ~resolve_path:OpamStateConfig.(not !r.dryrun)
     ~metadata:["context", context]
