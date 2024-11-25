@@ -491,13 +491,6 @@ and source_pin
       version, None
   in
 
-  if not (OpamPackage.has_name st.packages name) &&
-     not (OpamConsole.confirm
-            "Package %s does not exist, create as a %s package?"
-            (OpamPackage.Name.to_string name)
-            (OpamConsole.colorise `bold "NEW"))
-  then raise Aborted;
-
   (match OpamStd.Option.map OpamFile.URL.url cur_urlf, target_url with
    | Some u, Some target when OpamUrl.(
        u.transport <> target.transport ||
