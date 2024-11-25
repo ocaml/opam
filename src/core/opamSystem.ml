@@ -1576,12 +1576,12 @@ let gpatch = lazy begin
   in
   let default_cmd, other_cmds =
     match OpamStd.Sys.os () with
+    | Darwin
     | DragonFly
     | FreeBSD
     | NetBSD
     | OpenBSD -> ("gpatch", ["patch"])
     | Cygwin
-    | Darwin
     | Linux
     | Unix
     | Win32
