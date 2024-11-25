@@ -442,11 +442,11 @@ check_sha512() {
     OPAM_BIN_LOC="$1"
     if command -v openssl > /dev/null; then
         sha512_devnull="cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
-        sha512_check=`openssl sha512 2>&1 < /dev/null | cut -f 2 -d ' '`
-        if [ "x$sha512_devnull" = "x$sha512_check" ]; then
-            sha512=`openssl sha512 "$OPAM_BIN_LOC" 2> /dev/null | cut -f 2 -d ' '`
-            check=`bin_sha512`
-            test "x$sha512" = "x$check"
+        sha512_check=$(openssl sha512 2>&1 < /dev/null | cut -f 2 -d ' ')
+        if [ "$sha512_devnull" = "$sha512_check" ]; then
+            sha512=$(openssl sha512 "$OPAM_BIN_LOC" 2> /dev/null | cut -f 2 -d ' ')
+            check=$(bin_sha512)
+            test "$sha512" = "$check"
         else
             echo "openssl 512 option not handled, binary integrity check can't be performed."
             return 0
@@ -514,11 +514,11 @@ if [ -z "$NOBACKUP" ] && [ ! "$FRESH" = 1 ] && [ -z "$RESTORE" ]; then
 fi
 
 xsudo() {
-    local CMD=$1; shift
-    local DST
+    CMD=$1; shift
+    DST=
     for DST in "$@"; do : ; done
 
-    local DSTDIR=$(dirname "$DST")
+    DSTDIR=$(dirname "$DST")
     if [ ! -w "$DSTDIR" ]; then
         if command -v sudo > /dev/null ; then
             SUDO=sudo
@@ -530,7 +530,7 @@ xsudo() {
             exit 1
         fi
         echo "Write access to '$DSTDIR' required, using '$SUDO'."
-        echo "Command: $CMD $@"
+        echo "Command: $CMD $*"
         if [ "$CMD" = "install" ]; then
             "$SUDO" "$CMD" -g 0 -o root "$@"
         else
@@ -551,8 +551,8 @@ if [ -n "$RESTORE" ]; then
         exit 1
     fi
     if [ "$NOBACKUP" = 1 ]; then
-        printf "## This will clear $OPAM and $OPAMROOT. Continue ? [Y/n] "
-        read R
+        printf "## This will clear %s and %s. Continue ? [Y/n] " "$OPAM" "$OPAMROOT"
+        read -r R
         case "$R" in
             ""|"y"|"Y"|"yes")
                 xsudo rm -f "$OPAM"
@@ -565,7 +565,7 @@ if [ -n "$RESTORE" ]; then
     fi
     xsudo mv "$OPAM_BAK" "$OPAM"
     mv "$OPAMROOT_BAK" "$OPAMROOT"
-    printf "## Opam $RESTORE and its root were restored."
+    printf "## Opam %s and its root were restored." "$RESTORE"
     if [ "$NOBACKUP" = 1 ]; then echo
     else echo " Opam $OPAMV was backed up."
     fi
@@ -583,16 +583,16 @@ if [ -n "$EXISTING_OPAM" ]; then
 fi
 
 while true; do
-    printf "## Where should it be installed ? [$DEFAULT_BINDIR] "
-    read BINDIR
+    printf "## Where should it be installed ? [%s] " "$DEFAULT_BINDIR"
+    read -r BINDIR
     if [ -z "$BINDIR" ]; then BINDIR="$DEFAULT_BINDIR"; fi
 
     if [ -d "$BINDIR" ]; then break
     else
         if [ "${BINDIR#\~/}" != "$BINDIR" ] ; then
             RES_BINDIR="$HOME/${BINDIR#\~/}"
-            printf "## '$BINDIR' resolves to '$RES_BINDIR', do you confirm [Y/n] "
-            read R
+            printf "## '%s' resolves to '%s', do you confirm [Y/n] " "$BINDIR" "$RES_BINDIR"
+            read -r R
             case "$R" in
                 ""|"y"|"Y"|"yes")
                    BINDIR="$RES_BINDIR"
@@ -602,8 +602,8 @@ while true; do
                    ;;
             esac
         fi
-        printf "## $BINDIR does not exist. Create ? [Y/n] "
-        read R
+        printf "## %s does not exist. Create ? [Y/n] " "$BINDIR"
+        read -r R
         case "$R" in
             ""|"y"|"Y"|"yes")
             xsudo mkdir -p "$BINDIR"
@@ -617,15 +617,15 @@ if [ -e "$EXISTING_OPAM" ]; then
         xsudo rm -f "$EXISTING_OPAM"
     else
         xsudo mv "$EXISTING_OPAM" "$EXISTING_OPAM.$EXISTING_OPAMV"
-        echo "## $EXISTING_OPAM backed up as $(basename $EXISTING_OPAM).$EXISTING_OPAMV"
+        echo "## $EXISTING_OPAM backed up as $(basename "$EXISTING_OPAM").$EXISTING_OPAMV"
     fi
 fi
 
 if [ -d "$OPAMROOT" ]; then
     if [ "$FRESH" = 1 ]; then
         if [ "$NOBACKUP" = 1 ]; then
-            printf "## This will clear $OPAMROOT. Continue ? [Y/n] "
-            read R
+            printf "## This will clear %s. Continue ? [Y/n] " "$OPAMROOT"
+            read -r R
             case "$R" in
                 ""|"y"|"Y"|"yes")
                     rm -rf "$OPAMROOT";;
@@ -633,11 +633,11 @@ if [ -d "$OPAMROOT" ]; then
             esac
         else
             mv "$OPAMROOT" "$OPAMROOT.$EXISTING_OPAMV"
-            echo "## $OPAMROOT backed up as $(basename $OPAMROOT).$EXISTING_OPAMV"
+            echo "## $OPAMROOT backed up as $(basename "$OPAMROOT").$EXISTING_OPAMV"
         fi
         echo "## opam $VERSION installed. Please run 'opam init' to get started"
     elif [ ! "$NOBACKUP" = 1 ]; then
-        echo "## Backing up $OPAMROOT to $(basename $OPAMROOT).$EXISTING_OPAMV (this may take a while)"
+        echo "## Backing up $OPAMROOT to $(basename "$OPAMROOT").$EXISTING_OPAMV (this may take a while)"
         if [ -e "$OPAMROOT.$EXISTING_OPAMV" ]; then
             echo "ERROR: there is already a backup at $OPAMROOT.$EXISTING_OPAMV"
             echo "Please move it away or run with --no-backup"
@@ -650,7 +650,7 @@ if [ -d "$OPAMROOT" ]; then
             exit 1
         fi
         cp -a "$OPAMROOT" "$OPAMROOT.$EXISTING_OPAMV"
-        echo "## $OPAMROOT backed up as $(basename $OPAMROOT).$EXISTING_OPAMV"
+        echo "## $OPAMROOT backed up as $(basename "$OPAMROOT").$EXISTING_OPAMV"
     fi
     rm -f "$OPAMROOT"/repo/*/*.tar.gz*
 fi

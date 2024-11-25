@@ -114,6 +114,7 @@ users)
 ## Client
 
 ## Shell
+  * Make `shell/install.sh` more robust, using shellcheck [#6313 @ElectreAAS @kit-ty-kate]
 
 ## Internal
   * Make `curl` the default download tool instead of `wget` on macOS [#6304 @kit-ty-kate]
