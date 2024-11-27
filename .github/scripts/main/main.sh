@@ -127,6 +127,9 @@ if [ "$OPAM_TEST" = "1" ]; then
   fi
   cd $CACHE/opam-rt
   git fetch origin
+  if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && git ls-remote --exit-code origin "$GITHUB_PR_USER/$BRANCH" ; then
+    BRANCH=$GITHUB_PR_USER/$BRANCH
+  fi
   if git ls-remote --exit-code origin $BRANCH ; then
     if git branch | grep -q $BRANCH; then
       git checkout $BRANCH

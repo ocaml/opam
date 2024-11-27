@@ -282,6 +282,7 @@ jobs:
       fail-fast: false
     env:
       OPAM_TEST: 1
+      GITHUB_PR_USER: ${{ github.event.pull_request.user.login }}
     steps:
     - name: Checkout tree
       uses: actions/checkout@v4
@@ -336,6 +337,7 @@ jobs:
       fail-fast: false
     env:
       OPAM_TEST: 1
+      GITHUB_PR_USER: ${{ github.event.pull_request.user.login }}
     steps:
     - name: Install gnu coreutils
       run: brew install coreutils gpatch
