@@ -100,22 +100,6 @@ The following actions will be performed:
 Done.
 ### opam clean -c
 Clearing cache of downloaded files
-### opam option download-command=wget
-Set to 'wget' the field download-command in global configuration
-### opam install snappy-swhid-dir -v | grep -v '^Processing'
-The following actions will be performed:
-=== install 1 package
-  - install snappy-swhid-dir 2
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Source https://fake.exe/url.tar.gz is not available. Do you want to try to retrieve it from Software Heritage cache (https://www.softwareheritage.org)? It may take few minutes. [y/N] y
--> retrieved snappy-swhid-dir.2  (SWH fallback)
--> installed snappy-swhid-dir.2
-Done.
-### opam clean -c
-Clearing cache of downloaded files
-### opam option download-command=curl
-Set to 'curl' the field download-command in global configuration
 ### <pkg:snappy-swhid-ko.2>
 opam-version: "2.0"
 url {
@@ -152,7 +136,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Failed to get sources of snappy-swhid-ko.2: SWH fallback: no retrieval
 
-OpamSolution.Fetch_fail("SWH fallback: Download tool permitting post request (wget and curl) not set as download tool")
+OpamSolution.Fetch_fail("SWH fallback: Curl is required for Software Heritage fallback")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>

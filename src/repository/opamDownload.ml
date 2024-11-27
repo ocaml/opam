@@ -253,12 +253,6 @@ let download ?quiet ?validate ~overwrite ?compress ?checksum url dstdir =
 
 (** Stdout output retrieval and post requests management *)
 
-let post_tools = ["wget"; "curl"]
-let check_post_tool () =
-  match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
-  | [(CIdent cmd), _], _ -> List.mem cmd post_tools
-  | _ -> false
-
 let get_output ~post ?(args=[]) url =
   let cmd_args =
     download_args ~url ~out:"-" ~retry:OpamRepositoryConfig.(!r.retries)
@@ -319,9 +313,8 @@ module SWHID = struct
     | Some out ->
       Some (String.concat "" out)
     | None ->
-      OpamConsole.error "Software Heritage fallback needs %s or %s installed"
-        (OpamConsole.colorise `underline "curl")
-        (OpamConsole.colorise `underline "wget");
+      OpamConsole.error "Software Heritage fallback needs %s installed"
+        (OpamConsole.colorise `underline "curl");
       None
 
   let get_dir hash =
@@ -365,7 +358,8 @@ module SWHID = struct
     match OpamFile.URL.swhid urlf with
     | None -> Done (Result None)
     | Some swhid ->
-      if check_post_tool () then
+      match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
+      | _, `Curl ->
         check_liveness () @@+ fun alive ->
         if alive then
           (* Add a global modifier and/or command for default answering *)
@@ -424,10 +418,8 @@ module SWHID = struct
           Done (Not_available
                   (Some (fallback_err "unreachable"),
                    fallback_err "network failure or API down"))
-      else
+      | _ ->
         Done (Not_available
                 (Some (fallback_err "no retrieval"),
-                 fallback_err "Download tool permitting post request (%s) not \
-                 set as download tool"
-                   (OpamStd.Format.pretty_list post_tools)))
+                 fallback_err "Curl is required for Software Heritage fallback"))
 end
