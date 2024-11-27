@@ -43,6 +43,7 @@ users)
 ## Config
 
 ## Pin
+  * [NEW] Make it so pin list display the current revision of a pinned repository in a new column [#6274 @desumn - fix #5533]
 
 ## List
 
@@ -137,6 +138,7 @@ users)
 ## Github Actions
   * Add a doc generation job under linux [#5349 @rjbou]
   * Update the github action scripts now that homebrew renamed the GNU patch binary to gpatch [#6296 @kit-ty-kate]
+  * Add branch scheme `username/branch` for opam-rt specific branch to use [#6274 @rjbou]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]

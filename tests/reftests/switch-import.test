@@ -93,8 +93,8 @@ The following actions will be performed:
 -> removed   nip.dev
 -> installed nip.dev
 Done.
-### opam pin
-nip.dev    git  git+file://${BASEDIR}/nip#snd-head
+### opam pin | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
+nip.dev    git  git+file://${BASEDIR}/nip#snd-head  (at HASH)
 ### opam list nip --installed --columns=name,installed-files --normalise | grep -v '^#'
 nip    ${BASEDIR}/OPAM/twice/lib/snd.out
 ### opam switch import twice.snd.xp --switch tierce
@@ -106,8 +106,8 @@ The following actions will be performed:
 -> retrieved nip.dev  (git+file://${BASEDIR}/nip#snd-head)
 -> installed nip.dev
 Done.
-### opam pin
-nip.dev    git  git+file://${BASEDIR}/nip#snd-head
+### opam pin | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
+nip.dev    git  git+file://${BASEDIR}/nip#snd-head  (at HASH)
 ### opam list nip --installed --columns=name,installed-files --normalise --switch tierce | grep -v '^#'
 nip    ${BASEDIR}/OPAM/tierce/lib/snd.out
 ### opam switch create test-switch-export-freeze --empty

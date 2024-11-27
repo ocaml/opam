@@ -3199,7 +3199,10 @@ let pin_doc = "Pin a given package to a specific version or source."
 let pin ?(unpin_only=false) cli =
   let doc = pin_doc in
   let commands = [
-    cli_original, "list", `list, [], "Lists pinned packages.";
+    cli_original, "list", `list, [], 
+    "Lists pinned packages. \
+     If the source is a remote repository, \
+     displays the hash representing its state.";
     cli_from cli2_1, "scan", `scan, ["DIR"],
     "Lists available packages to pin in directory.";
     cli_original, "add", `add, ["PACKAGE"; "TARGET"],
