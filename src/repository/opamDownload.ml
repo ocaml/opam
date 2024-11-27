@@ -37,6 +37,7 @@ let curl_args =
       (* --fail is as old as curl; though the assumption that it leads to exit
          code 22 when there's an error is probably 5.3 21-Dec-1998 (prior to
          that it led to exit code 21) *)
+      (CString "--show-headers", None) ::
       (CString "--fail", None) :: main_args
     else
       (CString "--write-out", None) ::
@@ -53,6 +54,7 @@ let wget_args = [
   CString "--header=Accept: */*", None;
   CString "-t", None; CIdent "retry", None;
   CString "-O", None; CIdent "out", None;
+  CString "--server-response", None; (* Get the HTTP responde to parse error code *)
   CString "-U", None; user_agent, None;
   CString "--", None; (* End list of options *)
   CIdent "url", None;
