@@ -58,6 +58,16 @@ module type SIG = sig
   exception Cyclic of G.V.t list list
 end
 
+let gc_compact () =
+  let get_heap () =
+    let {Gc.heap_words; _} = Gc.quick_stat () in
+    heap_words * Sys.word_size / 8 / 1024 / 1024
+  in
+  let before = get_heap () in
+  Gc.compact ();
+  let after = get_heap () in
+  log "GC compact (heap %d MB -> %d MB)" before after
+
 module Make (G : G) = struct
 
   module G = G
@@ -91,6 +101,8 @@ module Make (G : G) = struct
       in
       default :: defined
     in
+
+    let gc_compacted = ref false in
 
     if G.has_cycle g then (
       let sccs = G.scc_list g in
@@ -264,28 +276,31 @@ module Make (G : G) = struct
             (get_slots nslots n)
         in
         run_seq_command nslots ready n cmd
-      else
-      (* Wait for a process to end *)
-      let processes =
-        M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running []
-      in
-      let process, result =
-        if dry_run then
-          OpamProcess.dry_wait_one (List.map fst processes)
-        else try match processes with
-          | [p,_] -> p, OpamProcess.wait p
-          | _ -> OpamProcess.wait_one (List.map fst processes)
-        with e -> fail (fst (snd (List.hd processes))) e
-      in
-      let n,cont = OpamStd.(List.assoc Compare.equal process processes) in
-      log "Collected task for job %a (ret:%d)"
-        (slog (string_of_int @* V.hash)) n result.OpamProcess.r_code;
-      let next =
-        try cont result with e ->
-          OpamProcess.cleanup result;
-          fail n e in
-      OpamProcess.cleanup result;
-      run_seq_command nslots ready n next
+      else (
+        (* Wait for a process to end *)
+        if not !gc_compacted then
+          (gc_compact ();
+           gc_compacted := true);
+        let processes =
+          M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running []
+        in
+        let process, result =
+          if dry_run then
+            OpamProcess.dry_wait_one (List.map fst processes)
+          else try match processes with
+            | [p,_] -> p, OpamProcess.wait p
+            | _ -> OpamProcess.wait_one (List.map fst processes)
+            with e -> fail (fst (snd (List.hd processes))) e
+        in
+        let n,cont = OpamStd.(List.assoc Compare.equal process processes) in
+        log "Collected task for job %a (ret:%d)"
+          (slog (string_of_int @* V.hash)) n result.OpamProcess.r_code;
+        let next =
+          try cont result with e ->
+            OpamProcess.cleanup result;
+            fail n e in
+        OpamProcess.cleanup result;
+        run_seq_command nslots ready n next)
     in
     let roots =
       G.fold_vertex

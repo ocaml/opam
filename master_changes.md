@@ -120,6 +120,7 @@ users)
   * Prefer curl over any other download tools on every systems, if available [#6305 @kit-ty-kate]
   * Avoid issues when using wget2 where the requested url might return an html page instead of the expected content [#6303 @kit-ty-kate]
   * Ensure each repositories stored in repos-config is associated with an URL [#6249 @kit-ty-kate]
+  * Run `Gc.compact` in OpamParallel, when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
 
 ## Internal: Windows
 
@@ -174,3 +175,4 @@ users)
   * `OpamStubs.get_stdout_ws_col`: new Unix-only function returning the number of columns of the current terminal window [#6244 @kit-ty-kate]
   * `OpamSystem`: add `is_archive_from_string` that does the same than `is_archive` but without looking at the file, only analysing the string (extension) [#6219 @rjbou]
   * `OpamSystem.remove_dir`: do not fail with an exception when directory is a symbolic link [#6276 @btjorge @rjbou - fix #6275]
+  * `OpamParallel.*.{map,reduce,iter}`: Run `Gc.compact` when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
