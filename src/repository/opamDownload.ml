@@ -261,6 +261,12 @@ let download ?quiet ?validate ~overwrite ?compress ?checksum url dstdir =
 
 (** Stdout output retrieval and post requests management *)
 
+let post_tools = ["wget"; "curl"]
+let check_post_tool () =
+  match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
+  | [(CIdent cmd), _], _ -> List.mem cmd post_tools
+  | _ -> false
+
 let get_output ~post ?(args=[]) url =
   let cmd_args =
     (* should we read from output or redirect in a file ? *)
@@ -472,8 +478,7 @@ module SWHID = struct
     match OpamFile.URL.swhid urlf with
     | None -> Done (Result None)
     | Some swhid ->
-      match Lazy.force OpamRepositoryConfig.(!r.download_tool) with
-      | _, `Curl ->
+      if check_post_tool () then
         check_liveness () @@+ fun alive ->
         if alive then
           (log "API is working";
@@ -538,8 +543,10 @@ module SWHID = struct
           Done (Not_available
                   (Some (fallback_err "unreachable"),
                    fallback_err "network failure or API down"))
-      | _ ->
+      else
         Done (Not_available
                 (Some (fallback_err "no retrieval"),
-                 fallback_err "Curl is required for Software Heritage fallback"))
+                 fallback_err "Download tool permitting post request (%s) not \
+                 set as download tool"
+                   (OpamStd.Format.pretty_list post_tools)))
 end
