@@ -2421,7 +2421,10 @@ let repository cli =
       `Ok ()
     | Some `remove, names ->
       let names = List.map OpamRepositoryName.of_string names in
-      let rm = List.filter (fun n -> not (List.mem n names)) in
+      let rm =
+        List.filter (fun n ->
+            not (List.exists (OpamRepositoryName.equal n) names))
+      in
       let full_wipe = List.mem `All scope in
       let global = global || full_wipe in
       let gt =
