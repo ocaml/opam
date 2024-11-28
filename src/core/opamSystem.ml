@@ -81,10 +81,18 @@ let real_path p =
 let temp_basename prefix =
   Printf.sprintf "%s-%d-%06x" prefix (OpamStubs.getpid ()) (Random.int 0xFFFFFF)
 
-let rec mk_temp_dir ?(prefix="opam") () =
-  let s = Filename.get_temp_dir_name () / temp_basename prefix in
+let temp_name ?dir ?(prefix="opam") () =
+  let tmpdir =
+    match dir with
+    | Some d -> d
+    | None -> Filename.get_temp_dir_name ()
+  in
+  tmpdir / (temp_basename prefix)
+
+let rec mk_temp_dir ?prefix () =
+  let s = temp_name ?prefix () in
   if Sys.file_exists s then
-    mk_temp_dir ~prefix ()
+    mk_temp_dir ?prefix ()
   else
     real_path s
 
@@ -203,7 +211,7 @@ let rec temp_file ?(auto_clean=true) ?dir prefix =
     | None   -> OpamCoreConfig.(!r.log_dir)
     | Some d -> d in
   mkdir temp_dir;
-  let file = temp_dir / temp_basename prefix in
+  let file = temp_name ~dir:temp_dir ~prefix () in
   if Hashtbl.mem temp_files file then
     temp_file ~auto_clean ?dir prefix
   else (
