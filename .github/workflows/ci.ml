@@ -492,6 +492,7 @@ let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
          "done";
        ]
     ++ run "Hygiene" ~cond:(Or[Predicate(true, Contains("steps.files.outputs.modified", "configure.ac"));
+                               Predicate(true, Contains("steps.files.outputs.modified", "shell/install.sh"));
                                Predicate(true, Contains("steps.files.outputs.all", "src_ext"));
                                Predicate(true, Contains("steps.files.outputs.all", ".github/workflows"))])
                      ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}");

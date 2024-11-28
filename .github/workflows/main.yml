@@ -671,5 +671,5 @@ jobs:
       env:
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
         PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
-      if: contains(steps.files.outputs.modified, 'configure.ac') || contains(steps.files.outputs.all, 'src_ext') || contains(steps.files.outputs.all, '.github/workflows')
+      if: contains(steps.files.outputs.modified, 'configure.ac') || contains(steps.files.outputs.modified, 'shell/install.sh') || contains(steps.files.outputs.all, 'src_ext') || contains(steps.files.outputs.all, '.github/workflows')
       run: bash -exu .github/scripts/main/hygiene.sh
