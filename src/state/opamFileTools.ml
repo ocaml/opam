@@ -1098,6 +1098,21 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        "Field 'extra-files' contains path with '..'"
        ~detail:relative
        (relative <> []));
+    (let missing =
+       let pkgs =
+         List.map fst t.pin_depends
+         |> OpamPackage.Set.of_list
+         |> OpamPackage.names_of_packages
+       in
+       OpamPackage.Name.Set.diff pkgs all_depends
+       |> OpamPackage.Name.Set.elements
+       |> List.map OpamPackage.Name.to_string
+     in
+     cond 74 `Warning
+       "Field 'pin-depends' contains packages that are neither in 'depends' nor in \
+        'depopts'"
+       ~detail:missing
+       (missing <> []));
   ]
   in
   format_errors @
