@@ -71,6 +71,7 @@ users)
   * [NEW] Add options `--require-checksums` and `--no-checksums` to harmonise with `opam install` [#5563 @rjbou]
 
 ## Lint
+  * [NEW] Add W74 to detect `pin-depends` packages that are neither present in the `depends` nor `depopts` field [#6317 @rjbou - fix #5795]
 
 ## Repository
   * Accurately tag `curl` download command when loaded from global config file [#6270 @rjbou]
