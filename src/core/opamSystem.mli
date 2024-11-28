@@ -33,7 +33,7 @@ exception Internal_error of string
 val internal_error: ('a, unit, string, 'b) format4 -> 'a
 
 (** [with_tmp_dir fn] executes [fn] creates a temporary directory and
-    passes its name to [fn]. The directory is alwasy removed on completion. *)
+    passes its name to [fn]. The directory is always removed on completion. *)
 val with_tmp_dir: (string -> 'a) -> 'a
 
 (** [in_tmp_dir fn] executes [fn] in a temporary directory. *)
@@ -41,6 +41,14 @@ val in_tmp_dir: (unit -> 'a) -> 'a
 
 (** Runs a job with a temp dir that is cleaned up afterwards *)
 val with_tmp_dir_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
+
+(** [with_tmp_file fn] creates a file name in temporary directory and
+    passes it to [fn]. The file is always removed on completion. *)
+val with_tmp_file: (string -> 'a) -> 'a
+
+(** Runs a job with a file in temporary directory that is cleaned up afterwards
+    *)
+val with_tmp_file_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
 
 (** Returns true if the default verbose level for base commands (cp, mv, etc.)
     is reached *)

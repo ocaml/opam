@@ -412,6 +412,26 @@ let with_tmp_dir_job fjob =
   mkdir dir;
   OpamProcess.Job.finally (fun () -> remove_dir dir) (fun () -> fjob dir)
 
+let rec with_tmp_file fn =
+  let file = temp_name () in
+  if Sys.file_exists file then
+    with_tmp_file fn
+  else
+    try
+      let e = fn file in
+      remove_file file;
+      e
+    with e ->
+      OpamStd.Exn.finalise e @@ fun () ->
+      remove_file file
+
+let rec with_tmp_file_job fjob =
+  let file = temp_name () in
+  if Sys.file_exists file then
+    with_tmp_file_job fjob
+  else
+    OpamProcess.Job.finally (fun () -> remove_file file) (fun () -> fjob file)
+
 let remove file =
   if (try Sys2.is_directory file with Sys_error _ -> false) then
     remove_dir file
