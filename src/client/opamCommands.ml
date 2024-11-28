@@ -3232,7 +3232,7 @@ let pin ?(unpin_only=false) cli =
      its version and source URL. Using the format $(i,NAME.VERSION) will \
      update the version in the opam file in advance of editing, without \
      changing the actual target. The chosen editor is determined from \
-     environment variables $(b,OPAM_EDITOR), $(b,VISUAL) or $(b,EDITOR), in \
+     environment variables $(b,OPAMEDITOR), $(b,VISUAL) or $(b,EDITOR), in \
      order.";
   ] in
   let man = [
