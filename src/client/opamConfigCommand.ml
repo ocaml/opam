@@ -130,6 +130,16 @@ let print_sexp_env output env =
   aux env;
   output ")\n"
 
+let print_raw_env output env =
+  let rec aux = function
+    | [] -> ()
+    | (k, v, _) :: r ->
+      if name_not_in_env k r then
+        Printf.ksprintf output "%s=%s\n" k v;
+      aux r
+  in
+  aux env
+
 let rec print_fish_env output env =
   let set_arr_cmd ?(modf=fun x -> x) k v =
     let v = modf @@ OpamStd.String.split v ':' in
@@ -182,7 +192,7 @@ let print_without_cr s =
     output_string stdout s;
     flush stdout
 
-let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
+let print_eval_env ~csh ~env_format ~fish ~pwsh ~cmd env =
   let env = (env : OpamTypes.env :> (string * string * string option) list) in
   let output_normally = OpamConsole.msg "%s" in
   let never_with_cr =
@@ -191,18 +201,22 @@ let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
     else
       output_normally
   in
-  if sexp then
+  match env_format with
+  | Some `sexp ->
     print_sexp_env output_normally env
-  else if csh then
-    print_csh_env never_with_cr env
-  else if fish then
-    print_fish_env never_with_cr env
-  else if pwsh then
-    print_pwsh_env output_normally env
-  else if cmd then
-    print_cmd_env output_normally env
-  else
-    print_env never_with_cr env
+  | Some `raw ->
+    print_raw_env output_normally env
+  | None ->
+    if csh then
+      print_csh_env never_with_cr env
+    else if fish then
+      print_fish_env never_with_cr env
+    else if pwsh then
+      print_pwsh_env output_normally env
+    else if cmd then
+      print_cmd_env output_normally env
+    else
+      print_env never_with_cr env
 
 let check_writeable l =
   let map_writeable ({OpamTypes.envu_op; _} as update) =
@@ -330,7 +344,7 @@ let ensure_env gt switch =
   ignore (ensure_env_aux gt switch)
 
 let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
-    ~csh ~sexp ~fish ~pwsh ~cmd ~inplace_path =
+    ~csh ~env_format ~fish ~pwsh ~cmd ~inplace_path =
   log "config-env";
   let opamroot_not_current =
     let current = gt.root in
@@ -370,7 +384,7 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
   let env =
     ensure_env_aux ~set_opamroot ~set_opamswitch ~force_path gt switch
   in
-  print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env
+  print_eval_env ~csh ~env_format ~fish ~pwsh ~cmd env
 [@@ocaml.warning "-16"]
 
 let subst gt fs =
