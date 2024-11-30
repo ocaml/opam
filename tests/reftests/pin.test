@@ -680,7 +680,7 @@ Done.
 ### opam pin add nip-v 1 --with-version 2 --no-action
 [nip-v.2] synchronised (file://${BASEDIR}/nip-v.1.tgz)
 nip-v is now pinned to file://${BASEDIR}/nip-v.1.tgz (version 2)
-### opam pin add nip 1 --with-version 42 --no-action
+### OPAMEDITOR=touch opam pin add nip 1 --with-version 42 --no-action --edit
 [nip.42] synchronised (file://${BASEDIR}/nip.1.tgz)
 [NOTE] No package definition found for nip.42: please complete the template
 [WARNING] The opam file didn't pass validation:
@@ -1377,27 +1377,13 @@ opam-version: "2.0"
 ### opam pin pkg-with-typo ./missing-opam --no-action
 [NOTE] Package pkg-with-typo does not exist in opam repositories registered in the current switch.
 [pkg-with-typo.dev] synchronised (file://${BASEDIR}/missing-opam)
-[NOTE] No package definition found for pkg-with-typo.dev: please complete the template
-iNvAlId ${BASEDIR}/OPAM/missing-opam/.opam-switch/overlay/pkg-with-typo/opam_
-[WARNING] The opam file didn't pass validation:
-             error 22: Some fields are present but empty; remove or fill them: "homepage", "license", "bug_reports"
-             error 57: Synopsis must not be empty
-           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : ""
-Proceed anyway ('no' will re-edit)? [Y/n] y
-You can edit this file again with "opam pin edit pkg-with-typo", export it with "opam show pkg-with-typo --raw"
-pkg-with-typo is now pinned to file://${BASEDIR}/missing-opam (version dev)
+[ERROR] No valid package definition found for pkg-with-typo
+# Return code 5 #
 ### opam pin pkg-with-typo ./missing-opam
-[NOTE] Package pkg-with-typo is already pinned to file://${BASEDIR}/missing-opam (version dev).
+[NOTE] Package pkg-with-typo does not exist in opam repositories registered in the current switch.
 [pkg-with-typo.dev] synchronised (no changes)
-pkg-with-typo is now pinned to file://${BASEDIR}/missing-opam (version dev)
-
-[ERROR] Package conflict!
-  * Missing dependency:
-    - pkg-with-typo -> specify-dependencies-here
-    unknown package
-
-[NOTE] Pinning command successful, but your installed packages may be out of sync.
-# Return code 20 #
+[ERROR] No valid package definition found for pkg-with-typo
+# Return code 5 #
 ### :C:g:2: missing opam file in pin depends without the package in dependencies
 ### <pin:missing-opam/pkg.opam>
 opam-version: "2.0"
@@ -1409,24 +1395,8 @@ The following additional pinnings are required by pkg.dev:
 Pin and install them? [Y/n] y
 [NOTE] Package pin-pkg does not exist in opam repositories registered in the current switch.
 [pin-pkg.dev] synchronised (no changes)
-[NOTE] No package definition found for pin-pkg.dev: please complete the template
-iNvAlId ${BASEDIR}/OPAM/missing-opam/.opam-switch/overlay/pin-pkg/opam_
-[WARNING] The opam file didn't pass validation:
-             error 22: Some fields are present but empty; remove or fill them: "homepage", "license", "bug_reports"
-             error 57: Synopsis must not be empty
-           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : ""
-Proceed anyway ('no' will re-edit)? [Y/n] y
-You can edit this file again with "opam pin edit pin-pkg", export it with "opam show pin-pkg --raw"
-pin-pkg is now pinned to file://${BASEDIR}/missing-opam (version dev)
-pkg is now pinned to file://${BASEDIR}/missing-opam (version dev)
-
-[ERROR] Package conflict!
-  * Missing dependency:
-    - pin-pkg -> specify-dependencies-here
-    unknown package
-
-[NOTE] Pinning command successful, but your installed packages may be out of sync.
-# Return code 20 #
+[ERROR] No valid package definition found for pin-pkg
+# Return code 5 #
 ### :C:g:3: missing opam file in pin depends with package in dependencies
 ### <pin:missing-opam/pkg.opam>
 opam-version: "2.0"
@@ -1435,36 +1405,25 @@ depends: [
 ]
 ### sh ./pin-depends.sh missing-opam/pkg.opam pin-pkg.dev missing-opam
 ### opam pin ./missing-opam
-[NOTE] Package pkg is already pinned to file://${BASEDIR}/missing-opam (version dev).
-pkg is now pinned to file://${BASEDIR}/missing-opam (version dev)
-
-[ERROR] Package conflict!
-  * Missing dependency:
-    - pkg -> pin-pkg -> specify-dependencies-here
-    unknown package
-
-[NOTE] Pinning command successful, but your installed packages may be out of sync.
-# Return code 20 #
+[NOTE] Package pkg does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by pkg.dev:
+  - pin-pkg.dev at file://${BASEDIR}/missing-opam
+Pin and install them? [Y/n] y
+[NOTE] Package pin-pkg does not exist in opam repositories registered in the current switch.
+[pin-pkg.dev] synchronised (no changes)
+[ERROR] No valid package definition found for pin-pkg
+# Return code 5 #
 ### :C:g:4: special case where the name of the pin-depend matches the name of the package itself (recursive)
 ### <pin:missing-opam/pkg.opam>
 opam-version: "2.0"
 ### sh ./pin-depends.sh missing-opam/pkg.opam pkg.dev missing-opam/empty-dir
 ### mkdir missing-opam/empty-dir
 ### opam pin ./missing-opam
-[NOTE] Package pkg is already pinned to file://${BASEDIR}/missing-opam (version dev).
+[NOTE] Package pkg does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by pkg.dev:
   - pkg.dev at file://${BASEDIR}/missing-opam/empty-dir
 Pin and install them? [Y/n] y
-[NOTE] Package pkg is currently pinned to file://${BASEDIR}/missing-opam (version dev).
+[NOTE] Package pkg does not exist in opam repositories registered in the current switch.
 [pkg.dev] synchronised (no changes)
-pkg is now pinned to file://${BASEDIR}/missing-opam/empty-dir (version dev)
-pkg is now pinned to file://${BASEDIR}/missing-opam (version dev)
-
-The following actions will be performed:
-=== install 1 package
-  - install pkg dev (pinned)
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved pkg.dev  (file://${BASEDIR}/missing-opam)
--> installed pkg.dev
-Done.
+[ERROR] No valid package definition found for pkg
+# Return code 5 #
