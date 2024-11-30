@@ -109,6 +109,9 @@ comp-b 4
 ### opam switch list-available comp-b.2 --all
 # Listing available compilers from repositories: default
 # No matches found
+### opam switch list-available comp-b.1 comp-b.2 --all
+# Listing available compilers from repositories: default
+# No matches found
 ### <pkg:comp_c.1>
 opam-version: "2.0"
 flags: compiler
