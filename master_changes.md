@@ -208,6 +208,7 @@ users)
   * Add pin test to show stored overlay opam files [#6209 @rjbou]
   * Add show test to highlight precedence of opam file selection and check that if an opam file is given it is always this one that is taken [#6209 @rjbou]
   * Add a reftest showing the effect of env updates containing empty strings on `variables.sh` [#6198 @kit-ty-kate]
+  * Add tests showing behaviour of `opam pin` when confronted with a missing opam description [#6319 @kit-ty-kate]
 
 ### Engine
 
