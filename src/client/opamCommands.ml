@@ -2904,7 +2904,7 @@ let switch cli =
       in
       let all_compilers =
         OpamListCommand.filter ~base:compilers st
-          (OpamFormula.ands (List.map (fun f -> OpamFormula.Atom f) filters))
+          (OpamFormula.ors (List.map (fun f -> OpamFormula.Atom f) filters))
       in
       let compilers =
         if all then
@@ -3199,7 +3199,7 @@ let pin_doc = "Pin a given package to a specific version or source."
 let pin ?(unpin_only=false) cli =
   let doc = pin_doc in
   let commands = [
-    cli_original, "list", `list, [], 
+    cli_original, "list", `list, [],
     "Lists pinned packages. \
      If the source is a remote repository, \
      displays the hash representing its state.";
