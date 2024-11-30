@@ -149,3 +149,7 @@ comp_c 1
 # Name # Version # Synopsis
 comp_c 1
 comp_c 2
+### : show the behaviour of list-available with several arguments
+### opam switch list-available "comp-*" "comp_*"
+# Listing available compilers from repositories: default
+# No matches found
