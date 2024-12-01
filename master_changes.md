@@ -154,6 +154,7 @@ users)
   * Manual: Document the stamp field from repo files [#6306 @kit-ty-kate]
   * Fix typo in pin edit man page doc [#6315 @shym]
   * Clarify documentation for `enable` pseudo-variable [#5659 @gridbugs]
+  * Manual: add information when flags (`avoid-version`, `deprecated`) were introduced [#6320 @hannesm]
 
 ## Security fixes
 

@@ -1154,11 +1154,12 @@ files.
       [solver criteria](#configfield-solver-criteria). This can be useful for
       beta releases, or to discourage installation of releases with known bugs.
       Note that this behaviour is disabled when a flagged version of the package
-      is already installed.
+      is already installed. This was introduced in opam 2.1.
     - <a id="opamflag-deprecated">`deprecated`</a>: this flag is equivalent to
       [`avoid-version`](#opamflag-avoid-version) except for the addition of a
       deprecation message after the package is installed as well as marked as
-      deprecated in the solution shown to the user upon installation.
+      deprecated in the solution shown to the user upon installation. This was
+      introduced in opam 2.2.
 
 - <a id="opamfield-features">
   `features: [ <ident> { <pkgname> { <filtered-package-formula> } ... } { <string> } ... ]`
