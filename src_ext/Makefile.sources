@@ -32,7 +32,7 @@ URL_0install-solver = https://github.com/0install/0install/releases/download/v2.
 MD5_0install-solver = 030edc9b1d3676c06d51397ffb5a737d
 
 URL_opam-file-format = https://github.com/kit-ty-kate/opam-file-format/archive/menhir.tar.gz
-MD5_opam-file-format = ee0ae73225e3f96d1dd39b18fb1c1730
+MD5_opam-file-format = 2022c793459f4b78f1a4ba0790187eca
 
 include Makefile.dune
 
