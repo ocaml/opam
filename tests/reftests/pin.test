@@ -934,7 +934,7 @@ url.src: "git+file://${BASEDIR}/vcs-local#master"
 ### <pin-depends.sh>
 #!/bin/sh
 set -eu
-basedir=$(echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/g")
+basedir=$(echo "$BASEDIR" | sed 's/\\/\\\\\\\\/g')
 cat << EOF >> "$1"
 pin-depends: [
   ["$2" "file://$basedir/$3"]
