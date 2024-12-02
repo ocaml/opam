@@ -124,4 +124,17 @@ please run dune exec --root=. -- ./ci.exe from .github/workflows and fixup the c
 fi
 (set +x ; echo -en "::endgroup::check workflow generation\r") 2>/dev/null
 
+###
+# Shellcheck
+###
+
+(set +x ; echo -en "::group::check shell scripts using shellcheck\r") 2>/dev/null
+if shellcheck shell/install.sh ; then
+  (set +x; echo "shell/install.sh: OK") 2>/dev/null
+else
+  (set +x; echo -e "shell/install.sh: \e[31mERROR\e[0m") 2>/dev/null
+  ERROR=1
+fi
+(set +x ; echo -en "::endgroup::check shell scripts using shellcheck\r") 2>/dev/null
+
 exit $ERROR
