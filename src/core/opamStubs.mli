@@ -171,3 +171,14 @@ val get_stdout_ws_col : unit -> int
     linked with stdout. If stdout isn't linked to any terminal
     (e.g. redirection), then this function will return 0. A valid number
     of columns should be strictly above 0. *)
+
+type uname = {
+  sysname : string; (** uname -s *)
+  release : string; (** uname -r *)
+  machine : string; (** uname -m *)
+}
+(** A subset of the [struct utsname] C structure, as modified by uname(2),
+    converted to OCaml datatypes. *)
+
+val uname : unit -> uname
+(** Unix only. Returns info from uname(2) *)
