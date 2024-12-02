@@ -39,7 +39,7 @@ users)
 
 ## Switch
   * [BUG] Fix `opam switch remove <dir>` failure when it is a linked switch [#6276 @btjorge - fix #6275]
-  * Fix `opam switch list-available` when given several arguments [#6318 @kit-ty-kate]
+  * [BUG] Fix `opam switch list-available` when given several arguments [#6318 @kit-ty-kate]
 
 ## Config
 
