@@ -99,16 +99,25 @@ comp-b 3
 comp-b 4
 ### opam switch list-available comp-b.1
 # Listing available compilers from repositories: default
-# No matches found
+# Name # Version # Synopsis
+comp-b 1
 ### opam switch list-available comp-b.1 --all
 # Listing available compilers from repositories: default
-# No matches found
+# Name # Version # Synopsis
+comp-b 1
 ### opam switch list-available comp-b.2
 # Listing available compilers from repositories: default
 # No matches found
+[NOTE] Some compilers have been hidden (e.g. pre-releases). If you want to display them, run: 'opam switch list-available --all'
 ### opam switch list-available comp-b.2 --all
 # Listing available compilers from repositories: default
-# No matches found
+# Name # Version # Synopsis
+comp-b 2
+### opam switch list-available comp-b.1 comp-b.2 --all
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-b 1
+comp-b 2
 ### <pkg:comp_c.1>
 opam-version: "2.0"
 flags: compiler
