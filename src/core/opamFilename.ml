@@ -266,6 +266,12 @@ let exists filename =
 let opt_file filename =
   if exists filename then Some filename else None
 
+let with_tmp_file fn =
+  OpamSystem.with_tmp_file (fun file -> fn (of_string file))
+
+let with_tmp_file_job fjob =
+  OpamSystem.with_tmp_file_job (fun file -> fjob (of_string file))
+
 let with_contents fn filename =
   fn (read filename)
 
