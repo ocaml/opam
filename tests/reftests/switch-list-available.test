@@ -149,3 +149,15 @@ comp_c 1
 # Name # Version # Synopsis
 comp_c 1
 comp_c 2
+### : show the behaviour of list-available with several arguments
+### opam switch list-available "comp-*" "comp_*"
+# Listing available compilers from repositories: default
+# Name # Version # Synopsis
+comp-a 1
+comp-b 1
+comp_c 1
+comp-a 2
+comp-a 3
+comp-a 4
+comp-b 4
+[NOTE] Some compilers have been hidden (e.g. pre-releases). If you want to display them, run: 'opam switch list-available --all'
