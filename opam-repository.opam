@@ -31,4 +31,5 @@ depends: [
   "ocaml" {>= "4.08.0"}
   "opam-format" {= version}
   "dune" {>= "2.8.0"}
+  "re" {>= "1.10.0"}
 ]

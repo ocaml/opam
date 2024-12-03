@@ -65,6 +65,11 @@ users)
 
 ## Repository
   * Accurately tag `curl` download command when loaded from global config file [#6270 @rjbou]
+  * Remove wget support for Software Heritage fallback [#6036 @rjbou]
+  * [BUG] Fix SWH archive cooking request for wget [#6036 @rjbou - fix #5721]
+  * [BUG] Fix SWH liveness check [#6036 @rjbou]
+  * Update SWH API request [#6036 @rjbou]
+  * Rework SWH fallback to have a more correct archive retrieval and more fine grained error handling [#6036 @rjbou]
 
 ## Lock
 
@@ -84,6 +89,7 @@ users)
 ## VCS
 
 ## Build
+  * Add `re` as a dependency of `opam-repository` [#6036 @rjbou]
 
 ## Infrastructure
 
@@ -170,6 +176,9 @@ users)
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
 
 ## opam-repository
+  * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
+  * `OpamDownload.get_output`: use long form for `curl` `POST` request option [#6036 @rjbou]
+  * `OpamDownload.download`: more fine grained HTTP request error code detection for curl [#6036 @rjbou]
 
 ## opam-state
 
