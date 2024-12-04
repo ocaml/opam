@@ -139,6 +139,7 @@ users)
 
 ## Benchmarks
   * Add benchmarks for `opam show` [#6212 @kit-ty-kate]
+  * Add benchmarks for `OpamStd.String.split` [#6212 @kit-ty-kate]
 
 ## Reftests
 ### Tests
