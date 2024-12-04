@@ -1412,6 +1412,17 @@ let lock_suffix ?section cli =
     "Set locked files suffix to $(i,SUFFIX)."
     Arg.(string) ("locked")
 
+(* Checksums options *)
+let no_checksums ?section cli from_cli =
+  mk_flag ~cli from_cli ?section ["no-checksums"]
+    "Do not verify the checksum of downloaded archives.\
+     This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to \"true\"."
+let require_checksums ?section cli from_cli =
+  mk_flag ~cli from_cli ?section ["require-checksums"]
+    "Reject the installation of packages that don't provide a checksum for\
+     the upstream archives.  This is equivalent to setting \
+     $(b,\\$OPAMREQUIRECHECKSUMS) to \"true\"."
+
 (* Options common to all build commands *)
 let build_option_section = "PACKAGE BUILD OPTIONS"
 let man_build_option_section =
@@ -1440,14 +1451,8 @@ let build_options cli =
        affects packages that are explicitly listed on the command-line. \
        This is equivalent to setting $(b,\\$OPAMINPLACEBUILD) to \"true\"."
   in
-  let no_checksums =
-    mk_flag ~cli cli_original ~section ["no-checksums"]
-      "Do not verify the checksum of downloaded archives.\
-       This is equivalent to setting $(b,\\$OPAMNOCHECKSUMS) to \"true\"." in
-  let req_checksums =
-    mk_flag ~cli cli_original ~section ["require-checksums"]
-      "Reject the installation of packages that don't provide a checksum for the upstream archives. \
-       This is equivalent to setting $(b,\\$OPAMREQUIRECHECKSUMS) to \"true\"." in
+  let no_checksums = no_checksums ~section cli cli_original in
+  let req_checksums = require_checksums ~section cli cli_original in
   let build_test =
     mk_flag_replaced ~cli ~section [
       cli_between cli2_0 cli2_1 ~replaced:"--with-test", ["build-test"];
