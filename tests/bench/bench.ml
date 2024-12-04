@@ -117,6 +117,21 @@ let () =
     Gc.compact ();
     time_cmd ~exit:0 (fmt "%s show --raw conf-llvm.14.0.6" bin)
   in
+  let time_OpamStd_String_split =
+    Gc.compact ();
+    let lines =
+      let ic = Stdlib.open_in_bin "/home/opam/all-opam-content" in
+      let rec loop files =
+        match Stdlib.input_line ic with
+        | file -> loop (file :: files)
+        | exception End_of_file -> files
+      in
+      loop []
+    in
+    let before = Unix.gettimeofday () in
+    List.iter (fun line -> ignore (OpamStd.String.split line ' ')) lines;
+    Unix.gettimeofday () -. before
+  in
   let json = fmt {|{
   "results": [
     {
@@ -186,6 +201,11 @@ let () =
           "name": "opam show --raw pkgname.version",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "OpamStd.String.split",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -214,6 +234,7 @@ let () =
       time_show_with_depexts
       time_show_raw
       time_show_precise
+      time_OpamStd_String_split
       bin_size
   in
   print_endline json
