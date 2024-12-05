@@ -588,20 +588,26 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
          number of packages not found. *)
       run_command ~discard_err:true pacman ["-Si"]
       |> snd
-      |> List.fold_left (fun (avail, provides, latest) l ->
-          match OpamStd.String.split l ' ' with
-          | "Name"::":"::p::_ ->
-            p +++ avail, provides, Some (OpamSysPkg.of_string p)
-          | "Provides"::":"::"None"::[] -> avail, provides, latest
-          | "Provides"::":"::pkgs ->
-            let ps = OpamSysPkg.Set.of_list (List.map package_provided pkgs) in
-            let provides =
-              match latest with
-              | Some p -> OpamSysPkg.Map.add p ps provides
-              | None -> provides (* Bad pacman output ?? *)
-            in
-            ps ++ avail, provides, None
-          | _ -> avail, provides, latest)
+      |> List.fold_left (fun ((avail, provides, latest) as acc) l ->
+          if OpamStd.String.starts_with ~prefix:"Name" l then
+            match OpamStd.String.split l ' ' with
+            | "Name"::":"::p::_ ->
+              p +++ avail, provides, Some (OpamSysPkg.of_string p)
+            | _ -> acc
+          else if OpamStd.String.starts_with ~prefix:"Provides" l then
+            match OpamStd.String.split l ' ' with
+            | "Provides"::":"::"None"::[] -> acc
+            | "Provides"::":"::pkgs ->
+              let ps = OpamSysPkg.Set.of_list (List.map package_provided pkgs) in
+              let provides =
+                match latest with
+                | Some p -> OpamSysPkg.Map.add p ps provides
+                | None -> provides (* Bad pacman output ?? *)
+              in
+              ps ++ avail, provides, None
+            | _ -> acc
+          else
+            acc)
         (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
       |> (fun (a,p,_) -> a,p)
     in
@@ -682,7 +688,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
           try (* package name *)
             Re.(Group.get (exec pkg_name l) 1), false, instavail
           with Not_found ->
-            if l.[2] != ' ' then (* only version field is after two spaces *)
+            if l.[2] <> ' ' then (* only version field is after two spaces *)
               pkg, false, instavail
             else if l = "    lib/apk/db/installed" then
               (* from https://git.alpinelinux.org/apk-tools/tree/src/database.c#n58 *)
@@ -693,7 +699,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
               with Not_found -> None
             in
             pkg, installed, add_pkg pkg repo installed instavail)
-        ("", false,  OpamSysPkg.Set.(empty, empty))
+        ("", false, OpamSysPkg.Set.(empty, empty))
       |> (fun (_,_, instavail) -> instavail)
     in
     compute_sets sys_installed ~sys_available
@@ -755,7 +761,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       *)
       run_query_command "apt-cache"
         ["search"; names_re (); "--names-only"; "--full"]
-      |> List.fold_left (fun (avail, provides, latest) l ->
+      |> List.fold_left (fun ((avail, provides, latest) as acc) l ->
           if OpamStd.String.starts_with ~prefix:"Package: " l then
             let p = String.sub l 9 (String.length l - 9) in
             p +++ avail, provides, Some (OpamSysPkg.of_string p)
@@ -769,7 +775,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
              | Some p -> OpamSysPkg.Map.add p ps provides
              | None -> provides (* Bad apt-cache output ?? *)),
             None
-          else avail, provides, latest)
+          else acc)
         (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
       |> (fun (a,p,_) -> a,p)
     in
@@ -864,10 +870,9 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> List.fold_left (fun res s ->
           List.fold_left (fun res spkg ->
               let parse_fullname pkg =
-                match List.rev (String.split_on_char '/' pkg) with
-                | [] -> assert false (* split_on_char is guaranteed to never return [] *)
-                | [pkg] -> [pkg]
-                | simple_name::_ -> [pkg; simple_name]
+                match OpamStd.String.rcut_at pkg '/' with
+                | None -> [pkg]
+                | Some (_, simple_name) -> [pkg; simple_name]
               in
               match OpamStd.String.cut_at spkg '@' with
               | Some (n,_v) -> parse_fullname n@parse_fullname spkg@res
