@@ -95,7 +95,7 @@ add_ccache_mount() {
 }
 
 add_dune_cache_mount() {
-  local dune_cache=${XDG_CACHE_HOME:-$HOME/.cache}/dune
+  local dune_cache=${DUNE_CACHE_ROOT:-${XDG_CACHE_HOME:-$HOME/.cache}/dune}
   mount_linked_cache "$dune_cache"
 }
 
