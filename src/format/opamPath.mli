@@ -362,13 +362,6 @@ module Switch: sig
         $meta/overlay/$name.$version/opam_} *)
     val tmp_opam: t -> switch -> name -> OpamFile.OPAM.t OpamFile.t
 
-    (** URL overlay: {i
-        $meta/overlay/$name.$version/url} *)
-    val url: t -> switch -> name -> OpamFile.URL.t OpamFile.t
-
-    (** Descr orverlay *)
-    val descr: t -> switch -> name -> OpamFile.Descr.t OpamFile.t
-
     (** Files overlay *)
     val files: t -> switch -> name -> dirname
   end

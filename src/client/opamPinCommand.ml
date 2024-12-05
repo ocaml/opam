@@ -259,12 +259,6 @@ let edit st ?version name =
     |  Some o when OpamFile.OPAM.equal opam o ->
       (OpamConsole.msg "Package metadata unchanged.\n"; st)
     | _ ->
-      (* Remove obsolete auxiliary files, in case *)
-      OpamFilename.remove
-        (OpamFile.filename (path OpamPath.Switch.Overlay.url));
-      OpamFilename.remove
-        (OpamFile.filename (path OpamPath.Switch.Overlay.descr));
-
       let opam_extra =
         OpamStd.Option.default [] @@ OpamFile.OPAM.extra_files opam
       in
