@@ -72,6 +72,7 @@ users)
   * Rework SWH fallback to have a more correct archive retrieval and more fine grained error handling [#6036 @rjbou - fix #5721]
 
 ## Lock
+  * [BUG] Fix `pin-depends` for `with-*` dependencies [#5471 @rjbou - fix #5428]
 
 ## Clean
 
