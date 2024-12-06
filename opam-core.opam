@@ -30,6 +30,7 @@ depends: [
   "sha" {>= "1.13"}
   "jsonm"
   "swhid_core"
+  "patch" {>= "1.0.1"}
   "uutf"
   (("host-system-mingw" {os = "win32" & os-distribution != "cygwinports"} &
     "conf-mingw-w64-gcc-i686" {os = "win32" & os-distribution != "cygwinports"} &
