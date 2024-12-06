@@ -85,6 +85,7 @@ users)
 ## Format upgrade
 
 ## Sandbox
+  * Respect the `DUNE_CACHE_ROOT` environment variable if it exists [#6326 @smorimoto]
 
 ## VCS
 
