@@ -46,6 +46,7 @@ users)
 
 ## Pin
   * [NEW] Make it so pin list display the current revision of a pinned repository in a new column [#6274 @desumn - fix #5533]
+  * [BUG] Fail when trying to pin a package whose definition could not be found instead of forcing interactive edition (e.g. this could happen when making a typo in the package name of a pin-depends) [#6319 @kit-ty-kate - fix ocaml/setup-ocaml#902]
 
 ## List
 
