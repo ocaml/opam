@@ -652,7 +652,7 @@ jobs:
         enableCrossOsArchive: true
     - name: Get changed files
       id: files
-      uses: Ana06/get-changed-files@v2.2.0
+      uses: Ana06/get-changed-files@v2.3.0
     - name: Changed files list
       run: |
         for changed_file in ${{ steps.files.outputs.modified }}; do
