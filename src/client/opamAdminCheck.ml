@@ -405,7 +405,8 @@ let get_obsolete univ opams =
       if is_obsolete then acc ++ pkgs else acc)
     aggregates PkgSet.empty
 
-let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
+let check ~with_test ~with_doc ~with_dev_setup
+    ~quiet ~installability ~cycles ~obsolete repo_root =
   let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
   let opams =
     OpamPackage.Map.fold (fun nv prefix acc ->
@@ -421,7 +422,7 @@ let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
   in
   let univ =
     get_universe
-      ~with_test:(not ignore_test) ~with_doc:(not ignore_test) ~with_dev_setup:false ~dev:false
+      ~with_test ~with_doc ~with_dev_setup ~dev:false
       opams
   in
 
