@@ -85,6 +85,7 @@ users)
 ## Format upgrade
 
 ## Sandbox
+  * Fix sandboxing support in NixOS [#6333 @kit-ty-kate]
 
 ## VCS
 
