@@ -1135,6 +1135,7 @@ let shell_opt ?section cli validity =
     None,"csh",SH_csh;
     None,"zsh",SH_zsh;
     None,"fish",SH_fish;
+    None,"nu",SH_nu;
     Some cli2_2,"pwsh",SH_pwsh Powershell_pwsh;
     Some cli2_2,"cmd",SH_cmd;
     Some cli2_2,"powershell",SH_pwsh Powershell

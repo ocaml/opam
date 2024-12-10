@@ -868,6 +868,8 @@ let opam_env_invocation ?root ?switch ?(set_opamswitch=false) shell =
       Printf.sprintf " \"--%s=%s\"" argname
     | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish ->
       Printf.sprintf " '--%s=%s'" argname
+    | SH_nu ->
+      Printf.sprintf " '--%s=%s'" argname
     in
     if filepath_needs_quote pathval then
       quoted pathval
@@ -917,24 +919,25 @@ let eval_string gt ?(set_opamswitch=false) switch =
 
 (** The shells for which we generate init scripts (bash and sh are the same
     entry) *)
-let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd ]
+let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd ; SH_nu]
 
 let complete_file = function
   | SH_sh | SH_bash -> Some "complete.sh"
   | SH_zsh -> Some "complete.zsh"
-  | SH_csh | SH_fish | SH_pwsh _ | SH_cmd -> None
+  | SH_csh | SH_fish | SH_pwsh _ | SH_cmd | SH_nu-> None
 
 let env_hook_file = function
   | SH_sh | SH_bash -> Some "env_hook.sh"
   | SH_zsh -> Some "env_hook.zsh"
   | SH_csh -> Some "env_hook.csh"
   | SH_fish -> Some "env_hook.fish"
-  | SH_pwsh _ | SH_cmd -> None
+  | SH_pwsh _ | SH_cmd | SH_nu -> None
 
 let variables_file = function
   | SH_sh | SH_bash | SH_zsh -> "variables.sh"
   | SH_csh -> "variables.csh"
   | SH_fish -> "variables.fish"
+  | SH_nu -> "variables.nu"
   | SH_pwsh _ -> "variables.ps1"
   | SH_cmd -> "variables.cmd"
 
@@ -943,13 +946,14 @@ let init_file = function
   | SH_zsh -> "init.zsh"
   | SH_csh -> "init.csh"
   | SH_fish -> "init.fish"
+  | SH_nu -> "init.nu"
   | SH_pwsh _ -> "init.ps1"
   | SH_cmd -> "init.cmd"
 
 let complete_script = function
   | SH_sh | SH_bash -> Some OpamScript.complete
   | SH_zsh -> Some OpamScript.complete_zsh
-  | SH_csh | SH_fish -> None
+  | SH_csh | SH_fish | SH_nu -> None
   | SH_pwsh _ | SH_cmd -> None
 
 let env_hook_script_base = function
@@ -957,7 +961,7 @@ let env_hook_script_base = function
   | SH_zsh -> Some OpamScript.env_hook_zsh
   | SH_csh -> Some OpamScript.env_hook_csh
   | SH_fish -> Some OpamScript.env_hook_fish
-  | SH_pwsh _ | SH_cmd -> None
+  | SH_pwsh _ | SH_cmd | SH_nu -> None
 
 let export_in_shell shell =
   let make_comment comment_opt =
@@ -993,6 +997,9 @@ let export_in_shell shell =
       Printf.sprintf "%sset -gx %s %s;\n"
         (make_comment comment) k v
   in
+  let nu (k,v,comment) =
+      Printf.sprintf "load-env (opam env %s  %s %s)\n" (make_comment comment) k v
+  in
   let pwsh (k,v,comment) =
     Printf.sprintf "%s$env:%s=%s\n"
       (make_comment comment) k v in
@@ -1005,6 +1012,7 @@ let export_in_shell shell =
   match shell with
   | SH_zsh | SH_bash | SH_sh -> sh
   | SH_fish -> fish
+  | SH_nu   -> nu
   | SH_csh -> csh
   | SH_pwsh _ -> pwsh
   | SH_cmd -> cmd
@@ -1030,6 +1038,8 @@ let source root shell f =
   | SH_fish ->
     let fname = unix_transform ~using_backslashes:true () in
     Printf.sprintf "test -r '%s' && source '%s' > /dev/null 2> /dev/null; or true\n" fname fname
+  | SH_nu ->
+    Printf.sprintf "%s:TODO" fname 
   | SH_sh | SH_bash ->
     let fname = unix_transform () in
     Printf.sprintf "test -r '%s' && . '%s' > /dev/null 2> /dev/null || true\n"
@@ -1065,6 +1075,8 @@ let if_interactive_script shell t e =
     Printf.sprintf "if ( $?prompt ) then\n  %s%sendif\n" t @@ ielse e
   | SH_fish ->
     Printf.sprintf "if status is-interactive\n  %s%send\n" t @@ ielse e
+  | SH_nu ->
+    Printf.sprintf "%sTODO%s" t @@ ielse e
   | SH_cmd ->
     Printf.sprintf "echo %%cmdcmdline%% | find /i \"%%~0\" >nul\nif errorlevel 1 (\n%s%s)\n" t @@ ielse_cmd e
   | SH_pwsh _ ->
