@@ -109,6 +109,7 @@ users)
 
 ## Admin
   * ◈ Add `opam admin compare-versions` to compare package versions for sanity checks [#6197 @mbarbin]
+  * [BUG] Fix `opam admin check` in the presence of the `with-dev-setup` variable [#6331 @kit-ty-kate - fix #6329]
 
 ## Opam installer
 

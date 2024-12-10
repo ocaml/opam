@@ -11,7 +11,7 @@
 open OpamTypes
 open OpamPackage.Set.Op
 
-let env ~with_test ~with_doc ~dev nv v =
+let env ~with_test ~with_doc ~with_dev_setup ~dev nv v =
   match OpamVariable.Full.scope v,
         OpamVariable.(to_string (Full.variable v))
   with
@@ -27,10 +27,12 @@ let env ~with_test ~with_doc ~dev nv v =
     Some (B dev)
   | OpamVariable.Full.Global, "with-doc" ->
     Some (B with_doc)
+  | OpamVariable.Full.Global, "with-dev-setup" ->
+    Some (B with_dev_setup)
   | _ -> None
 
-let get_universe ~with_test ~with_doc ~dev opams =
-  let env = env ~with_test ~with_doc ~dev in
+let get_universe ~with_test ~with_doc ~with_dev_setup ~dev opams =
+  let env = env ~with_test ~with_doc ~with_dev_setup ~dev in
   let packages = OpamPackage.keys opams in
   {
     u_packages = packages;
@@ -419,7 +421,7 @@ let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
   in
   let univ =
     get_universe
-      ~with_test:(not ignore_test) ~with_doc:(not ignore_test) ~dev:false
+      ~with_test:(not ignore_test) ~with_doc:(not ignore_test) ~with_dev_setup:false ~dev:false
       opams
   in
 
