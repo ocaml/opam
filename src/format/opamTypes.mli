@@ -321,7 +321,7 @@ type pin_kind = [ `version | OpamUrl.backend ]
 (** Shell compatibility modes *)
 type powershell_host = OpamStd.Sys.powershell_host = Powershell_pwsh | Powershell
 type shell = OpamStd.Sys.shell =
-  | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_pwsh of powershell_host
+  | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_nu | SH_pwsh of powershell_host
   | SH_cmd
 
 (** {2 Generic command-line definitions with filters} *)

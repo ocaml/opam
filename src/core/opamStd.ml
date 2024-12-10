@@ -936,7 +936,7 @@ module OpamSys = struct
     fun () -> Lazy.force os
 
   type powershell_host = Powershell_pwsh | Powershell
-  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_nu
     | SH_pwsh of powershell_host | SH_cmd
 
   let all_shells =
@@ -944,6 +944,7 @@ module OpamSys = struct
      SH_zsh;
      SH_csh;
      SH_fish;
+     SH_nu;
      SH_pwsh Powershell_pwsh;
      SH_pwsh Powershell;
      SH_cmd]
@@ -958,6 +959,7 @@ module OpamSys = struct
     | "zsh"  -> Some SH_zsh
     | "bash" -> Some SH_bash
     | "fish" -> Some SH_fish
+    | "nu"   -> Some SH_nu
     | "pwsh" -> Some (SH_pwsh Powershell_pwsh)
     | "dash"
     | "sh"   -> Some SH_sh
@@ -1078,6 +1080,8 @@ module OpamSys = struct
     match shell with
     | SH_fish ->
       Some (List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"])
+    | SH_nu ->
+      Some (List.fold_left Filename.concat (home ".config") ["nushell"; "env.nu"])
     | SH_zsh  ->
       let zsh_home f =
         try Filename.concat (Env.get "ZDOTDIR") f
