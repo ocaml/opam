@@ -81,6 +81,7 @@ users)
 
 ## External dependencies
   * Add apt-rpm/ALTLinux family support for depext [#6207 @RiderALT]
+  * Speedup the detection of available system packages with pacman and brew [#6324 @kit-ty-kate]
 
 ## Format upgrade
 
