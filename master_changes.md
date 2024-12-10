@@ -79,6 +79,7 @@ users)
 ## Install script
 
 ## Admin
+  * [BUG] Fix `opam admin check` in the presence of the `with-dev-setup` variable [#6331 @kit-ty-kate - fix #6329]
 
 ## Opam installer
 
