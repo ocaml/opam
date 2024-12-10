@@ -323,9 +323,12 @@ vars                --          A word
 ### :::::::::::::
 ### opam admin check
 Checking installability of every package. This may take a few minutes...
-Fatal error:
-Invalid_argument("filter_deps")
-# Return code 99 #
+[ERROR] These packages are not installable (2):
+        ocaml-system.1.2 risus.1
+Summary: out of 21 packages (18 distinct names)
+- 2 uninstallable roots
+
+# Return code 1 #
 ### : index :
 ### opam admin index
 Generating urls.txt...
