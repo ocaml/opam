@@ -11,7 +11,7 @@
 open OpamTypes
 open OpamPackage.Set.Op
 
-let env ~with_test ~with_doc ~with_dev_setup ~dev nv v =
+let env nv v =
   match OpamVariable.Full.scope v,
         OpamVariable.(to_string (Full.variable v))
   with
@@ -22,17 +22,16 @@ let env ~with_test ~with_doc ~with_dev_setup ~dev nv v =
   | OpamVariable.Full.Global, "opam-version" ->
     Some (S OpamVersion.(to_string current))
   | OpamVariable.Full.Global, "with-test" ->
-    Some (B with_test)
+    Some (B false)
   | OpamVariable.Full.Global, "dev" ->
-    Some (B dev)
+    Some (B false)
   | OpamVariable.Full.Global, "with-doc" ->
-    Some (B with_doc)
+    Some (B false)
   | OpamVariable.Full.Global, "with-dev-setup" ->
-    Some (B with_dev_setup)
+    Some (B false)
   | _ -> None
 
-let get_universe ~with_test ~with_doc ~with_dev_setup ~dev opams =
-  let env = env ~with_test ~with_doc ~with_dev_setup ~dev in
+let get_universe opams =
   let packages = OpamPackage.keys opams in
   {
     u_packages = packages;
@@ -405,7 +404,7 @@ let get_obsolete univ opams =
       if is_obsolete then acc ++ pkgs else acc)
     aggregates PkgSet.empty
 
-let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
+let check ~quiet ~installability ~cycles ~obsolete repo_root =
   let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
   let opams =
     OpamPackage.Map.fold (fun nv prefix acc ->
@@ -419,11 +418,7 @@ let check ~quiet ~installability ~cycles ~obsolete ~ignore_test repo_root =
       pkg_prefixes
       OpamPackage.Map.empty
   in
-  let univ =
-    get_universe
-      ~with_test:(not ignore_test) ~with_doc:(not ignore_test) ~with_dev_setup:false ~dev:false
-      opams
-  in
+  let univ = get_universe opams in
 
   (* Installability check *)
   let unav_roots, uninstallable =
