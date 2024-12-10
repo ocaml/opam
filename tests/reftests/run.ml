@@ -207,7 +207,7 @@ let command
     List.iter print_endline out;
   let out = String.concat "\n" out in
   if not (List.mem ret allowed_codes) then
-    raise (Command_failure (ret, String.concat " " (cmd :: args), out))
+    raise (Command_failure (ret, OpamProcess.string_of_cmd cmd args, out))
   else
     out
 
