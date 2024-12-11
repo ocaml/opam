@@ -130,16 +130,18 @@ if [ "$OPAM_TEST" = "1" ]; then
   if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && git ls-remote --exit-code origin "$GITHUB_PR_USER/$BRANCH" ; then
     BRANCH=$GITHUB_PR_USER/$BRANCH
   fi
-  if git ls-remote --exit-code origin $BRANCH ; then
-    if git branch | grep -q $BRANCH; then
-      git checkout $BRANCH
-      git reset --hard origin/$BRANCH
-    else
-      git checkout -b $BRANCH origin/$BRANCH
-    fi
+  if git ls-remote --exit-code origin "$BRANCH"; then
+    OPAM_RT_BRANCH=$BRANCH
+  elif [ "$GITHUB_EVENT_NAME" = pull_request ] && git ls-remote --exit-code origin "$GITHUB_BASE_REF"; then
+    OPAM_RT_BRANCH=$GITHUB_BASE_REF
   else
-    git checkout master
-    git reset --hard origin/master
+    OPAM_RT_BRANCH=master
+  fi
+  if git branch | grep -q "$OPAM_RT_BRANCH"; then
+    git checkout "$OPAM_RT_BRANCH"
+    git reset --hard "origin/$OPAM_RT_BRANCH"
+  else
+    git checkout -b "$OPAM_RT_BRANCH" "origin/$OPAM_RT_BRANCH"
   fi
 
   test -d _opam || opam switch create . --no-install --formula '"ocaml-system"'
