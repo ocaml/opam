@@ -104,6 +104,7 @@ users)
 ## Reftests
 ### Tests
   * Extend the tests on opam admin to include packages using builtin global variables [#6331 @kit-ty-kate]
+  * Extend the tests on opam admin check by including all the arguments [#6331 @kit-ty-kate @rjbou]
 
 ### Engine
 
