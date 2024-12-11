@@ -273,6 +273,14 @@ depends: "lorem" { < "1" }
 ### <packages/non/non.1/opam>
 opam-version: "2.0"
 depends: "lorem"
+### <packages/vars/vars.1/opam>
+opam-version: "2.0"
+depends: [
+  "lorem" {with-test}
+  "ipsum" {with-doc}
+  "dolor" {with-dev-setup}
+  "sit" {dev}
+]
 ### <add-content.sh>
 for op in `ls packages/*/*/opam`; do
   grep -q synopsis $op || echo 'synopsis: "A word"' >> $op
@@ -309,17 +317,15 @@ ocaml-variants      --          A word
 risus               --
 sed                 --          A word
 sit                 --          A word
+vars                --          A word
 ### :::::::::::::
 ### :III: check :
 ### :::::::::::::
 ### opam admin check
 Checking installability of every package. This may take a few minutes...
-[ERROR] These packages are not installable (2):
-        ocaml-system.1.2 risus.1
-Summary: out of 20 packages (17 distinct names)
-- 2 uninstallable roots
-
-# Return code 1 #
+Fatal error:
+Invalid_argument("filter_deps")
+# Return code 99 #
 ### : index :
 ### opam admin index
 Generating urls.txt...
@@ -331,6 +337,9 @@ packages/
 packages/base-comp/
 packages/base-comp/base-comp.base/
 packages/base-comp/base-comp.base/opam
+packages/vars/
+packages/vars/vars.1/
+packages/vars/vars.1/opam
 packages/risus/
 packages/risus/risus.1/
 packages/risus/risus.1/opam
@@ -434,6 +443,7 @@ opam-version: "2.0"
 depends: "lorem"
 ### opam admin add-constraint lorem<1.2
 [WARNING] In package adipiscing.1, updated constraint lorem {< "1.2" & > "2"} cannot be satisfied, not updating (use `--force' to update anyway)
+[WARNING] In package vars.1, updated constraint lorem {< "1.2" & with-test & > "1.2"} cannot be satisfied, not updating (use `--force' to update anyway)
 ### opam show --just-file ./packages/non/non.1/opam --field depends
 "lorem" {< "1.2"}
 ### opam show --just-file ./packages/sed/sed.1/opam --field depends
@@ -460,6 +470,7 @@ depends: "lorem"
 ### opam admin add-constraint lorem=1.2
 [WARNING] In package adipiscing.1, updated constraint lorem {= "1.2" & > "2"} cannot be satisfied, not updating (use `--force' to update anyway)
 [WARNING] In package sed.1, updated constraint lorem {= "1.2" & < "1"} cannot be satisfied, not updating (use `--force' to update anyway)
+[WARNING] In package vars.1, updated constraint lorem {= "1.2" & < "1.2" & with-test & > "1.2"} cannot be satisfied, not updating (use `--force' to update anyway)
 ### opam show --just-file ./packages/non/non.1/opam --field depends
 "lorem" {= "1.2"}
 ### opam show --just-file ./packages/sed/sed.1/opam --field depends
