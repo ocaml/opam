@@ -1,0 +1,31 @@
+name: Submit opam package to WinGet community repository
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  publish-winget:
+    name: Publish to winget repository
+    runs-on: windows-latest
+    steps:
+      - name: Sync winget-pkgs fork
+        # TODO: Replace <repo-owner> with the owner of the fork
+        run: gh repo sync <repo-owner>/winget-pkgs -b master
+        env:
+          GH_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
+      - name: Submit package using wingetcreate
+        run: |
+          # WinGet PackageIdentifier
+          $packageId = "OCaml.opam"
+
+          # Fetching latest stable release from GitHub API
+          $github = Invoke-RestMethod -uri "https://api.github.com/repos/ocaml/opam/releases"
+          $targetRelease = $github | Where-Object {$_.prerelease -eq $false} | Select-Object -First 1
+          $installerUrl = $targetRelease | Select-Object -ExpandProperty assets -First 1 | Where-Object -Property name -match 'opam-.*-x86_64-windows\.exe$' | Select-Object -ExpandProperty browser_download_url
+          $packageVersion = $targetRelease.tag_name.Trim("v")
+
+          # Update package using wingetcreate
+          Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+          .\wingetcreate.exe update $packageId --version $packageVersion --urls "$installerUrl|x64" --submit --token "${{ secrets.WINGET_GITHUB_TOKEN }}"
