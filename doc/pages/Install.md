@@ -58,7 +58,7 @@ sudo install <downloaded file> /usr/local/bin/opam
 > you can use pre-built [Docker images for various
 > configurations](https://hub.docker.com/r/ocaml/opam).
 
-## Using your distribution's package system
+## Using your system's package manager
 
 This is generally the recommended way, **when available and up-to-date** (you
 can check [here](Distribution.html) the latest
@@ -198,6 +198,14 @@ The opam package for [guix](https://www.gnu.org/software/guix/) can be installed
 ```
 # Guix
 guix install opam
+```
+
+#### Windows
+
+[![badge](https://repology.org/badge/version-for-repo/winget/opam.svg)](https://repology.org/project/opam/versions)
+
+```
+winget install Git.Git OCaml.opam
 ```
 
 ## From Sources
