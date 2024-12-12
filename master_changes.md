@@ -86,6 +86,7 @@ users)
 
 ## Sandbox
   * Respect the `DUNE_CACHE_ROOT` environment variable if it exists [#6326 @smorimoto]
+  * Fix sandboxing support in NixOS [#6333 @kit-ty-kate]
 
 ## VCS
 
