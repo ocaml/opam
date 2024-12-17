@@ -333,6 +333,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
   let host = host_of_platform platform in
   job ~oc ~workflow ~runs_on:(Runner [runner]) ?shell ?section ~needs ~matrix ("Build-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
+    ++ only_on Linux (run "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
     ++ only_on Windows (git_lf_checkouts ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-cygwin"))) ~shell:"cmd" ~title:"Configure LF checkout for Cygwin" ())
     ++ checkout ()
     ++ only_on Windows (cache ~cond:(Predicate(true, Compare("matrix.build", "x86_64-pc-cygwin"))) Cygwin)
@@ -384,6 +385,7 @@ let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macO
     ++ only_on MacOS (install_sys_packages ["coreutils"; "gpatch"] ~descr:"Install gnu coreutils" [MacOS])
     ++ checkout ()
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
+    ++ only_on Linux (run "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
     ++ cache Archives
     ++ cache OCaml platform ocamlv host
     ++ build_cache OCaml platform ocamlv host
@@ -402,6 +404,7 @@ let cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?
   let needs = [analyse_job; (match platform with Linux -> build_linux_job | Windows -> build_windows_job | MacOS -> build_macOS_job)] in
   job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~env:[("OPAM_COLD", "1")] ~needs ("Cold-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
+    ++ only_on Linux (run "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
     ++ checkout ()
     ++ cache Archives
     ++ run "Cold" [
@@ -420,6 +423,7 @@ let doc_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?s
   let ocamlv = "${{ matrix.ocamlv }}" in
   job ~oc ~workflow ?section ~runs_on:(Runner [platform]) ~env ~needs ~matrix ("Doc-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
+    ++ only_on Linux (run "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
     ++ run "Install man2html" ["sudo apt install man2html"]
     ++ checkout ()
     ++ cache Archives
@@ -444,6 +448,7 @@ let solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
   let ocamlv = "${{ matrix.ocamlv }}" in
   job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~env ~needs ~matrix ("Solvers-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
+    ++ only_on Linux (run "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
     ++ checkout ()
     ++ cache Archives
     ++ cache OCaml platform ocamlv host
@@ -463,6 +468,7 @@ let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
   let ocamlv = "${{ matrix.ocamlv }}" in
   job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~needs ~matrix ("Upgrade-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
+    ++ only_on Linux (run "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
     ++ checkout ()
     ++ cache Opam12Root
     ++ cache OCaml platform ocamlv host
