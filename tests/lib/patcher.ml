@@ -82,7 +82,13 @@ let generate_patch () =
   Printf.eprintf "Before patch state of c:\n";
   print_directory ".";
   flush stdout;
-  if Sys.command "patch -p1 -i ../output.patch" <> 0 then (Printf.eprintf "patch application failed\n%!"; exit 2);
+  let gpatch =
+    if Sys.command "sh -c \"command -v gpatch > /dev/null 2> /dev/null\"" = 0 then
+      "gpatch"
+    else
+      "patch"
+  in
+  if Sys.command (gpatch^" -p1 -i ../output.patch") <> 0 then (Printf.eprintf "patch application failed\n%!"; exit 2);
   Printf.eprintf "After patch state of c:\n";
   print_directory ".";
   OpamSystem.chdir Filename.parent_dir_name

@@ -247,6 +247,8 @@ jobs:
         ocamlv: [ 4.14.2, 5.2.0 ]
       fail-fast: true
     steps:
+    - name: Install GNU patch
+      run: brew install gpatch
     - name: Checkout tree
       uses: actions/checkout@v4
     - name: src_ext/archives and opam-repository Cache

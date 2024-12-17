@@ -81,6 +81,7 @@ users)
 
 ## External dependencies
   * Add apt-rpm/ALTLinux family support for depext [#6207 @RiderALT]
+  * Lookup at `gpatch` before `patch` on macOS now that both homebrew and macports expose `gpatch` as `gpatch` since Homebrew/homebrew-core#174687 [#6255 @kit-ty-kate]
 
 ## Format upgrade
 
