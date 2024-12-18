@@ -14,6 +14,9 @@
 open OpamTypes
 open OpamStateTypes
 
+(** Returns the repository names registered in the given switch *)
+val switch_repos : 'a repos_state -> OpamSwitch.t -> OpamRepositoryName.t list
+
 (** List the selected repositories in the global default and/or selected
     switches. *)
 val list:
