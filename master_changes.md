@@ -70,6 +70,7 @@ users)
   * [BUG] Fix SWH liveness check [#6036 @rjbou - fix #5721]
   * Update SWH API request [#6036 @rjbou]
   * Rework SWH fallback to have a more correct archive retrieval and more fine grained error handling [#6036 @rjbou - fix #5721]
+  * Check that the repositories given to `opam repository remove` actually exist [#5014 @kit-ty-kate - fixes #5012]
 
 ## Lock
 
@@ -81,6 +82,7 @@ users)
 
 ## External dependencies
   * Add apt-rpm/ALTLinux family support for depext [#6207 @RiderALT]
+  * Lookup at `gpatch` before `patch` on macOS now that both homebrew and macports expose `gpatch` as `gpatch` since Homebrew/homebrew-core#174687 [#6255 @kit-ty-kate]
 
 ## Format upgrade
 
@@ -144,6 +146,8 @@ users)
 ## Test
 
 ## Benchmarks
+  * Add benchmarks for `opam show` [#6212 @kit-ty-kate]
+  * Add benchmarks for `OpamStd.String.split` [#6212 @kit-ty-kate]
 
 ## Reftests
 ### Tests
@@ -182,6 +186,7 @@ users)
 ## opam-client
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
   * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
+  * `OpamRepositoryCommand.switch_repos`: expose the function [#5014 @kit-ty-kate]
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
@@ -198,6 +203,7 @@ users)
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
 
 ## opam-core
+  * `OpamStd.List.split`: Improve performance [#6210 @kit-ty-kate]
   * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`: Harden the process calls to account for failures [#6230 @kit-ty-kate - fix #6215]
   * `OpamStd.Sys.getconf`: was removed, replaced by `get_long_bit` [#6217 @kit-ty-kate]
   * `OpamStd.Sys.get_long_bit`: was added, which returns the output of the `getconf LONG_BIT` command [#6217 @kit-ty-kate]
