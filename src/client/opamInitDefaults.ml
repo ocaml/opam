@@ -130,7 +130,7 @@ let recommended_tools () =
   [
     [make], None, None;
     ["cc"], None, Some not_win32_filter;
-    ["xz"], None, None;
+    ["xz"], None, Some not_win32_filter;
   ]
 
 let required_tools ~sandboxing () =
