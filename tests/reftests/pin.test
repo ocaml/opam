@@ -292,7 +292,6 @@ Fatal error: Invalid character '/' in package version "./nip2"
 # Return code 5 #
 ### : none - virtual
 ### opam pin add no-url 1 --kind none
-no-url is now pinned locally (version 1)
 
 The following actions will be performed:
 === install 1 package
@@ -312,7 +311,6 @@ The following actions will be performed:
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 31 #
 ### opam pin add no-url2 1 --kind none
-no-url2 is now pinned locally (version 1)
 
 The following actions will be performed:
 === install 1 package
@@ -755,7 +753,6 @@ Done.
 ### sh add-pin.sh nip-mixed.dev3
 ### opam pin nip-mixed
 [NOTE] Package nip-mixed is already pinned to file://${BASEDIR}/nip-mixed (version dev2).
-nip-mixed is now pinned to file://${BASEDIR}/nip-mixed (version dev3)
 
 The following actions will be performed:
 === upgrade 1 package
@@ -785,7 +782,6 @@ Done.
 "add nip-mixed.dev4 package"
 ### opam pin nip-mixed
 [NOTE] Package nip-mixed is already pinned to git+file://${BASEDIR}/nip-mixed#master (version dev4).
-nip-mixed is now pinned to git+file://${BASEDIR}/nip-mixed#master (version dev1)
 
 The following actions will be performed:
 === downgrade 1 package
@@ -838,7 +834,6 @@ dev2
 ### git -C ./nip-of commit -qm "add install file"
 ### opam pin ./nip-of
 [NOTE] Package nip-of is already pinned to git+file://${BASEDIR}/nip-of#master (version dev2).
-nip-of is now pinned to git+file://${BASEDIR}/nip-of#master (version dev3)
 
 The following actions will be performed:
 === upgrade 1 package
@@ -1019,7 +1014,6 @@ The following additional pinnings are required by dep1.dev:
 Pin and install them? [Y/n] y
 [dep2.2] synchronised (no changes)
 dep2 is now pinned to file://${BASEDIR}/dep2 (version 2)
-dep1 is now pinned to file://${BASEDIR}/dep1 (version dev)
 
 The following actions will be performed:
 === recompile 1 package
