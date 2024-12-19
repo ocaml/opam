@@ -392,7 +392,6 @@ This will pin the following packages: silver, silver. Continue? [y/n] y
 Package silver does not exist, create as a NEW package? [y/n] y
 silver is now pinned to file://${BASEDIR}/old (version dev)
 [NOTE] Package silver is already pinned to file://${BASEDIR}/old (version dev).
-silver is now pinned to file://${BASEDIR}/old (version dev)
 ### opam lock silver
 Generated lock files for:
   - silver.dev: ${BASEDIR}/silver.opam.locked
@@ -574,7 +573,6 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock --locked
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/tolock (`--working-dir' not specified or specified with no argument).
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
@@ -634,7 +632,6 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock --locked
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/tolock (`--working-dir' not specified or specified with no argument).
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
@@ -694,7 +691,6 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock --locked
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
 === install 4 packages

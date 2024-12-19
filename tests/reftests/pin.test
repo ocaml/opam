@@ -443,7 +443,6 @@ opam-version: "2.0"
 depends: "dependency" {= "1"}
 ### ::: behaviour when the package is not pinned
 ### opam install ./pin-change
-pin-change is now pinned to git+file://${BASEDIR}/pin-change#master (version dev)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
 [pin-change.dev] synchronised (no changes)
 The following actions will be performed:
