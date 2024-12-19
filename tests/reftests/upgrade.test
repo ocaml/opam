@@ -308,7 +308,6 @@ This will pin the following packages: quuux, quux. Continue? [Y/n] y
 [NOTE] Package quuux does not exist in opam repositories registered in the current switch.
 quuux is now pinned to file://${BASEDIR}/quux (version dev)
 [NOTE] Package quux is already pinned to file://${BASEDIR}/quux (version dev5).
-quux is now pinned to file://${BASEDIR}/quux (version dev6)
 ### opam upgrade ./quux --installed
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
