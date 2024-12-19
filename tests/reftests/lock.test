@@ -386,12 +386,9 @@ Done.
 opam-version: "2.0"
 name: "silver"
 depends: "foo"
-### # ERROR double silver
+### : Make sure silver isn't pinned twice
 ### opam pin -n old
-This will pin the following packages: silver, silver. Continue? [Y/n] y
 Package silver does not exist, create as a NEW package? [Y/n] y
-silver is now pinned to file://${BASEDIR}/old (version dev)
-[NOTE] Package silver is already pinned to file://${BASEDIR}/old (version dev).
 silver is now pinned to file://${BASEDIR}/old (version dev)
 ### opam lock silver
 Generated lock files for:
