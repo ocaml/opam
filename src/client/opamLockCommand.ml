@@ -96,8 +96,7 @@ let select_packages atom_locs st =
                atoms
            in
            if missing <> [] then
-             (OpamConsole.error_and_exit
-                `Aborted
+             OpamConsole.error_and_exit `Not_found
                 "Skipping %s, dependencies are not satisfied in this switch, \
                  not installed packages are:\n%s"
                 (OpamPackage.to_string nv)
