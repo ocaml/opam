@@ -97,7 +97,7 @@ let select_packages atom_locs st =
            in
            if missing <> [] then
              (OpamConsole.error_and_exit `Not_found
-              " error The following required packages %s and dependencies %s are missing: "
+              " error: The following required packages %s and dependencies %s are missing: "
                 (OpamStd.Format.itemize OpamFormula.string_of_atom missing)
                 (OpamPackage.to_string nv);
               acc)
