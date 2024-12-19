@@ -96,12 +96,13 @@ let select_packages atom_locs st =
                atoms
            in
            if missing <> [] then
-             (OpamConsole.error_and_exit
-                "Skipping %s, dependencies are not satisfied in this switch, \
-                 not installed packages are:\n%s"
-                (OpamPackage.to_string nv)
-                (OpamStd.Format.itemize OpamFormula.string_of_atom missing);
-              acc)
+            (OpamConsole.error_and_exit `Not_found
+              "Operation aborted: 
+              Dependencies for %s required in the current switch are not met. \  
+              \nPlease ensure the following packages are installed:\n%s"
+              (OpamPackage.to_string nv)
+              (OpamStd.Format.itemize OpamFormula.string_of_atom missing);
+          acc)
            else
              OpamPackage.Set.add nv acc)
          names OpamPackage.Set.empty
