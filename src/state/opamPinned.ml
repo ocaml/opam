@@ -193,9 +193,8 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
       in
       List.fold_left
         (fun acc d ->
-           if OpamFilename.(basename_dir d = Base.of_string "opam") ||
-              OpamStd.String.ends_with ~suffix:".opam"
-                (OpamFilename.Dir.to_string d)
+           if OpamStd.String.ends_with ~suffix:".opam"
+               (OpamFilename.Dir.to_string d)
            then
              match OpamFilename.opt_file OpamFilename.Op.(d//"opam") with
              | None -> acc

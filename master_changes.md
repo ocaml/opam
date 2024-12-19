@@ -46,6 +46,7 @@ users)
 
 ## Pin
   * [NEW] Make it so pin list display the current revision of a pinned repository in a new column [#6274 @desumn - fix #5533]
+  * [BUG] Stop double pin of packages located in ./opam/opam [#6343 @kit-ty-kate - fix #6342]
 
 ## List
 
