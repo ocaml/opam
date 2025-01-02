@@ -1117,7 +1117,7 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
     | `AsAdmin cmd, Some ("linux" | "unix" | "freebsd" | "netbsd" | "dragonfly" | "macos") when not_root ->
       if OpamSystem.resolve_command "sudo" = None then
         "su",
-        ["root"; "-c"; Printf.sprintf "%S" (String.concat " " (cmd::args))]
+        ["root"; "-c"; Printf.sprintf "%S" (OpamProcess.string_of_cmd cmd args)]
       else
         "sudo", cmd::args
     | (`AsUser cmd | `AsAdmin cmd), _ -> cmd, args
@@ -1127,7 +1127,7 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
   | code ->
     Printf.ksprintf failwith
       "failed with exit code %d at command:\n    %s"
-      code (String.concat " " (cmd::args))
+      code (OpamProcess.string_of_cmd cmd args)
 
 let install ?env config packages =
   if OpamSysPkg.Set.is_empty packages then
