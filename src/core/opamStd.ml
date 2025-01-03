@@ -461,7 +461,15 @@ module Option = struct
   end
 end
 
+module OpamChar = struct
 
+  (* TODO: Replace by Stdlib.Char.Ascii.is_space
+     (to be introduced in OCaml 5.4) *)
+  let is_whitespace = function
+    | ' ' | '\t' | '\r' | '\n' -> true
+    | _ -> false
+
+end
 
 module OpamString = struct
 
@@ -512,26 +520,22 @@ module OpamString = struct
           raise Not_found in
       g i
 
-  let is_whitespace = function
-    | ' ' | '\t' | '\r' | '\n' -> true
-    | _ -> false
-
   let strip str =
     let p = ref 0 in
     let l = String.length str in
-    while !p < l && is_whitespace (String.unsafe_get str !p) do
+    while !p < l && OpamChar.is_whitespace (String.unsafe_get str !p) do
       incr p;
     done;
     let p = !p in
     let l = ref (l - 1) in
-    while !l >= p && is_whitespace (String.unsafe_get str !l) do
+    while !l >= p && OpamChar.is_whitespace (String.unsafe_get str !l) do
       decr l;
     done;
     String.sub str p (!l - p + 1)
 
   let strip_right str =
     let rec aux i =
-      if i < 0 || not (is_whitespace str.[i]) then i else aux (i-1)
+      if i < 0 || not (OpamChar.is_whitespace str.[i]) then i else aux (i-1)
     in
     let l = String.length str in
     let i = aux (l-1) in
@@ -1782,6 +1786,7 @@ module Config = struct
 end
 
 module List = OpamList
+module Char = OpamChar
 module String = OpamString
 module Sys = OpamSys
 module Format = OpamFormat
