@@ -233,6 +233,12 @@ module List : sig
   val pick: ('a -> bool) -> 'a list -> 'a option * 'a list
 end
 
+module Char : sig
+
+  val is_whitespace : char -> bool
+
+end
+
 module String : sig
 
   (** {3 Collections} *)
