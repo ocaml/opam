@@ -260,6 +260,12 @@ module List : sig
   val fold_left_map: ('s -> 'a -> ('s * 'b)) -> 's -> 'a list -> 's * 'b list
 end
 
+module Char : sig
+
+  val is_whitespace : char -> bool
+
+end
+
 module String : sig
 
   (** {3 Collections} *)

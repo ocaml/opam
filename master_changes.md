@@ -204,6 +204,7 @@ users)
 
 ## opam-core
   * `OpamStd.List.split`: Improve performance [#6210 @kit-ty-kate]
+  * `OpamStd.Char`: Create the module and export `is_whitespace` [#5492 @kit-ty-kate]
   * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`: Harden the process calls to account for failures [#6230 @kit-ty-kate - fix #6215]
   * `OpamStd.Sys.getconf`: was removed, replaced by `get_long_bit` [#6217 @kit-ty-kate]
   * `OpamStd.Sys.get_long_bit`: was added, which returns the output of the `getconf LONG_BIT` command [#6217 @kit-ty-kate]
