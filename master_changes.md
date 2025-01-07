@@ -51,6 +51,7 @@ users)
 ## List
 
 ## Show
+  * Display the version number of packages flagged with avoid-version/deprecated gray [#6358 @kit-ty-kate - fix #6354]
 
 ## Var/Option
 

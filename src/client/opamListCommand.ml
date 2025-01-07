@@ -520,7 +520,14 @@ let version_color st nv =
   in
   if OpamPackage.Set.mem nv st.installed then [`bold;`magenta] else
     (if OpamPackage.Map.mem nv installed then [`bold] else []) @
-    (if is_available nv then [] else [`crossed;`red])
+    (if is_available nv then
+       match OpamSwitchState.opam_opt st nv with
+       | Some opam when
+           OpamFile.OPAM.has_flag Pkgflag_AvoidVersion opam ||
+           OpamFile.OPAM.has_flag Pkgflag_Deprecated opam ->
+         [`gray]
+       | None | Some _ -> []
+     else [`crossed;`red])
 
 let mini_field_printer ?(prettify=false) ?(normalise=false) =
   let module OpamPrinter = OpamPrinter.FullPos in
