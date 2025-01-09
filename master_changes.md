@@ -96,6 +96,7 @@ users)
   * Upgrade to opam-file-format 2.2.0~alpha1 [#6321 @kit-ty-kate]
   * Add menhir to the list of vendored packages [#6321 @kit-ty-kate]
   * Bump the vendored dune to 3.16.1 [#6192 @kit-ty-kate]
+  * Fix compilation on macOS with OCaml 5.3 by bumping the vendored mccs to 1.1+19 [#6192 @kit-ty-kate]
 
 ## Infrastructure
 
