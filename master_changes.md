@@ -179,6 +179,7 @@ users)
   * Clarify documentation for `enable` pseudo-variable [#5659 @gridbugs]
   * Manual: add information when flags (`avoid-version`, `deprecated`) were introduced [#6320 @hannesm]
   * Add winget command for installing opam [#6338 @tobil4sk]
+  * Fix broken link to non-existing archlinux community repo [#6361 @juergenhoetzel]
 
 ## Security fixes
 

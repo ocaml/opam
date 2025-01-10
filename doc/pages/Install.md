@@ -68,7 +68,7 @@ available release per distribution). Here is a list of supported distributions:
 
 [![badge](https://repology.org/badge/version-for-repo/arch/opam.svg)](https://repology.org/project/opam/versions)
 
-The [opam](https://www.archlinux.org/packages/community/x86_64/opam/)
+The [opam](https://www.archlinux.org/packages/extra/x86_64/opam/)
 package is available in the official distribution. To install it simply run:
 
 ```
