@@ -22,8 +22,8 @@ MD5_cudf = ed8fea314d0c6dc0d8811ccf860c53dd
 URL_dose3 = https://gitlab.com/irill/dose3/-/archive/7.0.0/dose3-7.0.0.tar.gz
 MD5_dose3 = bc99cbcea8fca29dca3ebbee54be45e1
 
-URL_mccs = https://github.com/ocaml-opam/ocaml-mccs/releases/download/1.1+18/mccs-1.1+18.tar.gz
-MD5_mccs = 3fd6f609a02f3357f57570750fcacde0
+URL_mccs = https://github.com/ocaml-opam/ocaml-mccs/releases/download/1.1+19/mccs-1.1+19.tar.gz
+MD5_mccs = f852da188bf7de20e64be2fce0e48e0a
 
 URL_opam-0install-cudf = https://github.com/ocaml-opam/opam-0install-cudf/releases/download/v0.5.0/opam-0install-cudf-0.5.0.tar.gz
 MD5_opam-0install-cudf = 75419722aa839f518a25cae1b3c6efd4
