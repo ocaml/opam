@@ -162,6 +162,7 @@ users)
   * Update the github action scripts now that homebrew renamed the GNU patch binary to gpatch [#6296 @kit-ty-kate]
   * Add branch scheme `username/branch` for opam-rt specific branch to use [#6274 @rjbou]
   * Check `shell/install.sh` using `shellcheck` [#6313 @kit-ty-kate]
+  * Fix the alpine depexts test [#6363 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
