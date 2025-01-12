@@ -163,6 +163,7 @@ users)
   * Add branch scheme `username/branch` for opam-rt specific branch to use [#6274 @rjbou]
   * Check `shell/install.sh` using `shellcheck` [#6313 @kit-ty-kate]
   * Fix the alpine depexts test [#6363 @kit-ty-kate]
+  * Speedup the gentoo depexts test [#6363 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
