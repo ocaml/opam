@@ -386,7 +386,6 @@ Done.
 opam-version: "2.0"
 name: "silver"
 depends: "foo"
-### : Make sure silver isn't pinned twice
 ### opam pin -n old
 Package silver does not exist, create as a NEW package? [Y/n] y
 silver is now pinned to file://${BASEDIR}/old (version dev)
