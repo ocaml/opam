@@ -974,7 +974,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     compute_sets sys_installed
   | Openbsd ->
     let sys_installed =
-      run_query_command "pkg_info" ["-mqP"]
+      run_query_command "pkg_info" ["-qP"]
       |> package_set_of_pkgpath
     in
     compute_sets sys_installed
