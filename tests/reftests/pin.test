@@ -937,3 +937,13 @@ vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#master (version dev)
 ### opam show vcs-local --field build:,url.src:
 build:   "false"
 url.src: "git+file://${BASEDIR}/vcs-local#master"
+### :C:b: double pinning when the opam file is opam/opam
+### <pin:double/opam/opam>
+opam-version: "2.0"
+name: "double"
+### opam pin -n double
+This will pin the following packages: double, double. Continue? [Y/n] y
+Package double does not exist, create as a NEW package? [Y/n] y
+double is now pinned to file://${BASEDIR}/double (version dev)
+[NOTE] Package double is already pinned to file://${BASEDIR}/double (version dev).
+double is now pinned to file://${BASEDIR}/double (version dev)

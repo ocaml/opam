@@ -154,6 +154,7 @@ users)
   * Add switch removal test: failure on removal linked switch [#6276 @btjorge]
   * Extend the tests on opam admin to include packages using builtin global variables [#6331 @kit-ty-kate]
   * Extend the tests on opam admin check by including all the arguments [#6331 @kit-ty-kate @rjbou]
+  * Add double pinning test in case of opam/opam opam file [#6343 @rjbou]
 
 ### Engine
 
