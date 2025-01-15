@@ -83,6 +83,7 @@ users)
 ## External dependencies
   * Add apt-rpm/ALTLinux family support for depext [#6207 @RiderALT]
   * Lookup at `gpatch` before `patch` on macOS now that both homebrew and macports expose `gpatch` as `gpatch` since Homebrew/homebrew-core#174687 [#6255 @kit-ty-kate]
+  * Relax lookup on OpenBSD to consider all installed packages [#6362 @semarie]
 
 ## Format upgrade
 
@@ -162,6 +163,8 @@ users)
   * Update the github action scripts now that homebrew renamed the GNU patch binary to gpatch [#6296 @kit-ty-kate]
   * Add branch scheme `username/branch` for opam-rt specific branch to use [#6274 @rjbou]
   * Check `shell/install.sh` using `shellcheck` [#6313 @kit-ty-kate]
+  * Fix the alpine depexts test [#6363 @kit-ty-kate]
+  * Speedup the gentoo depexts test [#6363 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
@@ -179,6 +182,7 @@ users)
   * Clarify documentation for `enable` pseudo-variable [#5659 @gridbugs]
   * Manual: add information when flags (`avoid-version`, `deprecated`) were introduced [#6320 @hannesm]
   * Add winget command for installing opam [#6338 @tobil4sk]
+  * Fix broken link to non-existing archlinux community repo [#6361 @juergenhoetzel]
 
 ## Security fixes
 
