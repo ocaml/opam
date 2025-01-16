@@ -682,17 +682,9 @@ Done.
 nip-v is now pinned to file://${BASEDIR}/nip-v.1.tgz (version 2)
 ### opam pin add nip 1 --with-version 42 --no-action
 [nip.42] synchronised (file://${BASEDIR}/nip.1.tgz)
-[NOTE] No package definition found for nip.42: please complete the template
-[WARNING] The opam file didn't pass validation:
-             error 22: Some fields are present but empty; remove or fill them: "homepage", "license", "bug_reports"
-             error 57: Synopsis must not be empty
-           warning 59: url doesn't contain a checksum
-           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : ""
-Proceed anyway ('no' will re-edit)? [Y/n] y
-You can edit this file again with "opam pin edit nip", export it with "opam show nip --raw"
-nip is now pinned to file://${BASEDIR}/nip.1.tgz (version 42)
+[ERROR] No valid package definition found
+# Return code 5 #
 ### opam pin list
-nip.42       (uninstalled)  rsync  file://${BASEDIR}/nip.1.tgz
 nip-path.42                 rsync  file://${BASEDIR}/nip-path
 nip-v.2      (uninstalled)  rsync  file://${BASEDIR}/nip-v.1.tgz
 ### find OPAM/versions/lib -name '*.t' | sort
@@ -937,3 +929,67 @@ vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#master (version dev)
 ### opam show vcs-local --field build:,url.src:
 build:   "false"
 url.src: "git+file://${BASEDIR}/vcs-local#master"
+### : behaviour of opam pin when confronted with a missing opam description
+### OPAMEDITOR="echo iNvAlId "
+### <pin-depends.sh>
+#!/bin/sh
+set -eu
+basedir=$(echo "$BASEDIR" | sed 's/\\/\\\\\\\\/g')
+cat << EOF >> "$1"
+pin-depends: [
+  ["$2" "file://$basedir/$3"]
+]
+EOF
+### <pin:missing-opam/pkg.opam>
+opam-version: "2.0"
+### opam pin pkg-with-typo ./missing-opam --no-action
+Package pkg-with-typo does not exist, create as a NEW package? [Y/n] y
+[pkg-with-typo.dev] synchronised (file://${BASEDIR}/missing-opam)
+[ERROR] No valid package definition found
+# Return code 5 #
+### opam pin pkg-with-typo ./missing-opam
+Package pkg-with-typo does not exist, create as a NEW package? [Y/n] y
+[pkg-with-typo.dev] synchronised (no changes)
+[ERROR] No valid package definition found
+# Return code 5 #
+### <pin:missing-opam/pkg.opam>
+opam-version: "2.0"
+### sh ./pin-depends.sh missing-opam/pkg.opam pin-pkg.dev missing-opam
+### opam pin ./missing-opam
+Package pkg does not exist, create as a NEW package? [Y/n] y
+The following additional pinnings are required by pkg.dev:
+  - pin-pkg.dev at file://${BASEDIR}/missing-opam
+Pin and install them? [Y/n] y
+Package pin-pkg does not exist, create as a NEW package? [Y/n] y
+[pin-pkg.dev] synchronised (no changes)
+[ERROR] No valid package definition found
+# Return code 5 #
+### <pin:missing-opam/pkg.opam>
+opam-version: "2.0"
+depends: [
+  "pin-pkg"
+]
+### sh ./pin-depends.sh missing-opam/pkg.opam pin-pkg.dev missing-opam
+### opam pin ./missing-opam
+Package pkg does not exist, create as a NEW package? [Y/n] y
+The following additional pinnings are required by pkg.dev:
+  - pin-pkg.dev at file://${BASEDIR}/missing-opam
+Pin and install them? [Y/n] y
+Package pin-pkg does not exist, create as a NEW package? [Y/n] y
+[pin-pkg.dev] synchronised (no changes)
+[ERROR] No valid package definition found
+# Return code 5 #
+### : special case where the name of the pin-depend matches the name of the package itself (recursive)
+### <pin:missing-opam/pkg.opam>
+opam-version: "2.0"
+### sh ./pin-depends.sh missing-opam/pkg.opam pkg.dev missing-opam/empty-dir
+### mkdir missing-opam/empty-dir
+### opam pin ./missing-opam
+Package pkg does not exist, create as a NEW package? [Y/n] y
+The following additional pinnings are required by pkg.dev:
+  - pkg.dev at file://${BASEDIR}/missing-opam/empty-dir
+Pin and install them? [Y/n] y
+Package pkg does not exist, create as a NEW package? [Y/n] y
+[pkg.dev] synchronised (no changes)
+[ERROR] No valid package definition found
+# Return code 5 #
