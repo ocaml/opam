@@ -1610,6 +1610,8 @@ let internal_patch ~patch_filename ~dir diffs =
         x
       | None -> assert false
       | exception _ ->
+        OpamStd.Option.iter (write (file^".orig")) content;
+        write (file^".rej") (Format.asprintf "%a" Patch.pp diff);
         raise (Internal_patch_error (fmt "Patch %S does not apply cleanly." patch_filename))
   in
   let apply diff = match diff.Patch.operation with
