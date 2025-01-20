@@ -506,6 +506,7 @@ let field_of_string ~raw =
     | Some f -> Field f
     | None -> OpamConsole.error_and_exit `Bad_arguments "No printer for %S" s
 
+(* NOTE: upon changes, please update the man page section in opamCommands.ml *)
 let version_color st nv =
   let installed = (* (in any switch) *)
     OpamGlobalState.installed_versions st.switch_global nv.name
