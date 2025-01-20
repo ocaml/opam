@@ -209,6 +209,7 @@ users)
   * Fix broken link to non-existing archlinux community repo [#6361 @juergenhoetzel]
   * Document the meaning of colored version numbers in the manpage of `opam show` [#6358 @kit-ty-kate]
   * Add an explanation of how plugins work to the manual [#5627 @kit-ty-kate]
+  * Improve the installation documentation [#6372 @kit-ty-kate]
 
 ## Security fixes
 
