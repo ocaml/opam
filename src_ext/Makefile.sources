@@ -42,8 +42,8 @@ MD5_seq = de05d9dedd492fa4e3c0c87bc2792475
 URL_stdlib-shims = https://github.com/ocaml/stdlib-shims/releases/download/0.3.0/stdlib-shims-0.3.0.tbz
 MD5_stdlib-shims = 09db7af8b4a3a96048a61cb6ae2496ef
 
-URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.2.0/spdx_licenses-1.2.0.tar.gz
-MD5_spdx_licenses = b581124aeebd7facb856d8b942cb58a5
+URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.3.0/spdx_licenses-1.3.0.tar.gz
+MD5_spdx_licenses = 7e9a0c48d477c900ccb5a0ec9a402118
 
 URL_uutf = https://erratique.ch/software/uutf/releases/uutf-1.0.3.tbz
 MD5_uutf = a308285514259d20b48abc92f00a3708
