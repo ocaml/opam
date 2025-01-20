@@ -11,6 +11,7 @@
 type kind = [ `MD5 | `SHA256 | `SHA512 ]
 
 let default_kind = `MD5
+let all_kinds = [`MD5; `SHA256; `SHA512]
 
 type t = kind * string
 

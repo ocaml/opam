@@ -15,6 +15,9 @@ type t
 
 val kind: t -> kind
 
+(** The list of all the possible values of kind *)
+val all_kinds : kind list
+
 (** The value of the hash, as a string of hexadecimal characters *)
 val contents: t -> string
 
