@@ -342,18 +342,6 @@ depends: "lectus"
 ### # by default, the check does installability & cycle check
 ### opam admin check
 Checking installability of every package. This may take a few minutes...
-[ERROR] These packages are not installable (3):
-        ocaml-system.1.2 risus.1 suspendisse.1
-[ERROR] Dependency cycles detected:
-  * lectus = 1 -> dignissim = 1
-  * lectus = 1 -> tortor = 1
-Summary: out of 25 packages (22 distinct names)
-- 3 uninstallable roots
-- 3 packages part of dependency cycles
-
-# Return code 1 #
-### opam admin check -i
-Checking installability of every package. This may take a few minutes...
 [ERROR] These packages are not installable (2):
         ocaml-system.1.2 risus.1
 [ERROR] Dependency cycles detected:
@@ -365,14 +353,6 @@ Summary: out of 25 packages (22 distinct names)
 # Return code 1 #
 ### opam admin check --installability
 Checking installability of every package. This may take a few minutes...
-[ERROR] These packages are not installable (3):
-        ocaml-system.1.2 risus.1 suspendisse.1
-Summary: out of 25 packages (22 distinct names)
-- 3 uninstallable roots
-
-# Return code 1 #
-### opam admin check --installability -i
-Checking installability of every package. This may take a few minutes...
 [ERROR] These packages are not installable (2):
         ocaml-system.1.2 risus.1
 Summary: out of 25 packages (22 distinct names)
@@ -381,27 +361,12 @@ Summary: out of 25 packages (22 distinct names)
 # Return code 1 #
 ### opam admin check --obsolete
 [ERROR] Obsolete packages detected:
-  - lorem 2.0
-Summary: out of 25 packages (22 distinct names)
-- 1 obsolete packages
-
-# Return code 1 #
-### opam admin check --obsolete -i
-[ERROR] Obsolete packages detected:
   - lorem 1.0, 2.0
 Summary: out of 25 packages (22 distinct names)
 - 2 obsolete packages
 
 # Return code 1 #
 ### opam admin check --cycles
-[ERROR] Dependency cycles detected:
-  * lectus = 1 -> dignissim = 1
-  * lectus = 1 -> tortor = 1
-Summary: out of 25 packages (22 distinct names)
-- 3 packages part of dependency cycles
-
-# Return code 1 #
-### opam admin check --cycles -i
 [ERROR] Dependency cycles detected:
   * lectus = 1 -> tortor = 1
 Summary: out of 25 packages (22 distinct names)

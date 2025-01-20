@@ -25,7 +25,6 @@ val cycle_check: universe -> package_set * formula list list
     sets are empty. *)
 val check:
   quiet:bool -> installability:bool -> cycles:bool -> obsolete:bool ->
-  ignore_test:bool ->
   dirname -> package_set * package_set * package_set * package_set * package_set
 
 (** Returns a subset of "obsolete" packages, i.e. packages for which a strictly
