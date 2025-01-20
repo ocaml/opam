@@ -193,7 +193,7 @@ type text_style =
   [ `bold
   | `underline
   | `crossed
-  | `black
+  | `gray
   | `red
   | `green
   | `yellow
@@ -206,7 +206,7 @@ let style_code (c: text_style) = match c with
   | `bold      -> "01"
   | `underline -> "04"
   | `crossed   -> "09"
-  | `black     -> "30"
+  | `gray      -> "90"
   | `red       -> "31"
   | `green     -> "32"
   | `yellow    -> "33"
