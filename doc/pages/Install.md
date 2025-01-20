@@ -85,13 +85,11 @@ yay -S opam-git
 
 #### Debian
 
-[![badge](https://repology.org/badge/version-for-repo/debian_stable/opam.svg)](https://repology.org/project/opam/versions) [![badge](https://repology.org/badge/version-for-repo/debian_testing/opam.svg)](https://repology.org/project/opam/versions) [![badge](https://repology.org/badge/version-for-repo/debian_unstable/opam.svg)](https://repology.org/project/opam/versions)
+[![badge](https://repology.org/badge/version-for-repo/debian_unstable/opam.svg)](https://repology.org/project/opam/versions)
+[![badge](https://repology.org/badge/version-for-repo/debian_13/opam.svg)](https://repology.org/project/opam/versions)
+[![badge](https://repology.org/badge/version-for-repo/debian_12/opam.svg)](https://repology.org/project/opam/versions)
 
-Binary packages of opam are available for the
-[stable](http://packages.debian.org/jessie/opam),
-[testing](http://packages.debian.org/stretch/opam) and
-[unstable](http://packages.debian.org/sid/opam) distributions, from the official
-repositories. You should be set with:
+Binary [packages of opam are available in Debian from the official repositories](http://packages.debian.org/sid/opam). You should be set with: 
 
 ```
 apt-get install opam
