@@ -506,6 +506,7 @@ let field_of_string ~raw =
     | Some f -> Field f
     | None -> OpamConsole.error_and_exit `Bad_arguments "No printer for %S" s
 
+(* NOTE: upon changes, please update the man page section in opamCommands.ml *)
 let version_color st nv =
   let installed = (* (in any switch) *)
     OpamGlobalState.installed_versions st.switch_global nv.name
@@ -520,7 +521,14 @@ let version_color st nv =
   in
   if OpamPackage.Set.mem nv st.installed then [`bold;`magenta] else
     (if OpamPackage.Map.mem nv installed then [`bold] else []) @
-    (if is_available nv then [] else [`crossed;`red])
+    (if is_available nv then
+       match OpamSwitchState.opam_opt st nv with
+       | Some opam when
+           OpamFile.OPAM.has_flag Pkgflag_AvoidVersion opam ||
+           OpamFile.OPAM.has_flag Pkgflag_Deprecated opam ->
+         [`gray]
+       | None | Some _ -> []
+     else [`crossed;`red])
 
 let mini_field_printer ?(prettify=false) ?(normalise=false) =
   let module OpamPrinter = OpamPrinter.FullPos in
