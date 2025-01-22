@@ -59,6 +59,7 @@ users)
 
 ## Update / Upgrade
   * [BUG] Do not show the not-up-to-date message with packages tagged with avoid-version [#6273 @kit-ty-kate - fix #6271]
+  * [BUG] Fix a regression on `opam upgrade <package>` upgrading unrelated packages [#6373 @AltGr]
 
 ## Tree
 

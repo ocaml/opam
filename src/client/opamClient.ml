@@ -113,7 +113,7 @@ let compute_upgrade_t
         | Some nv -> not (OpamPackage.Set.mem nv (Lazy.force t.available_packages)))
       atoms
   in
-  let criteria = if to_install = [] then `Upgrade else `Default in
+  let criteria = if to_install = [] && all then `Upgrade else `Default in
   if all then
     names,
     OpamSolution.resolve t Upgrade

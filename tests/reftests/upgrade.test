@@ -432,7 +432,6 @@ Done.
 => Note: This package is deprecated.
 ### :::::::::::::::::::::::
 ### : Make sure opam upgrade <pkg> only tries to upgrade <pkg> and not anything else
-### : TODO: broken
 ### :::::::::::::::::::::::
 ### opam upgrade
 Already up-to-date.
@@ -448,8 +447,7 @@ depends: "foo"
 opam-version: "2.0"
 ### opam upgrade --show foo
 The following actions would be performed:
-=== upgrade 2 packages
-  - upgrade baz 1 to 2 [uses foo]
+=== upgrade 1 package
   - upgrade foo 3 to 4
 ### opam upgrade --show -a foo
 The following actions would be performed:
@@ -469,9 +467,8 @@ The following actions would be performed:
   - upgrade foo 3 to 4
 ### opam upgrade --show baz
 The following actions would be performed:
-=== upgrade 2 packages
+=== upgrade 1 package
   - upgrade baz 1 to 2
-  - upgrade foo 3 to 4 [required by baz]
 ### opam upgrade --show -a baz
 The following actions would be performed:
 === upgrade 3 packages
@@ -496,16 +493,16 @@ The following actions would be performed:
   - upgrade foo 3 to 4
 ### opam upgrade baz
 The following actions will be performed:
-=== upgrade 2 packages
+=== upgrade 1 package
   - upgrade baz 1 to 2
-  - upgrade foo 3 to 4 [required by baz]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   baz.1
--> removed   foo.3
--> installed foo.4
 -> installed baz.2
 Done.
 ### opam upgrade --show foo
-Already up-to-date.
-Nothing to do.
+The following actions would be performed:
+=== recompile 1 package
+  - recompile baz 2      [uses foo]
+=== upgrade 1 package
+  - upgrade   foo 3 to 4
