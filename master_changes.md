@@ -100,6 +100,8 @@ users)
   * Upgrade to opam-file-format 2.2.0~alpha1 [#6321 @kit-ty-kate]
   * Add menhir to the list of vendored packages [#6321 @kit-ty-kate]
   * Upgrade the vendored spdx\_licenses to 1.3.0 [#6370 @kit-ty-kate - fix #6369]
+  * Bump the vendored dune to 3.16.1 [#6192 @kit-ty-kate]
+  * Fix compilation on macOS with OCaml 5.3 by bumping the vendored mccs to 1.1+19 [#6192 @kit-ty-kate]
 
 ## Infrastructure
 
@@ -172,6 +174,8 @@ users)
   * Check `shell/install.sh` using `shellcheck` [#6313 @kit-ty-kate]
   * Fix the alpine depexts test [#6363 @kit-ty-kate]
   * Speedup the gentoo depexts test [#6363 @kit-ty-kate]
+  * Add OCaml 5.3 to the build matrix [#6192 @kit-ty-kate]
+  * Add OCaml 5.3/MSVC to the build matrix [#6192 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
