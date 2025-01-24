@@ -1,3 +1,11 @@
+---
+slug: External_solvers.html
+order: 7
+title: External Solvers
+description: |
+  How to use external solvers with Opam.
+---
+
 # External Solvers
 
 Resolving package installations in the presence of dependencies and conflicts is

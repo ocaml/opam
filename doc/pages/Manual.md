@@ -1,3 +1,11 @@
+---
+slug: Manual.html
+order: 9
+title: Manual
+description: |
+  The Opam manal.
+---
+
 <style type="text/css"><!--
   .opam {font-family: Tahoma,Verdana,sans-serif; font-size: 110%; font-weight: lighter; line-height: 90.9%}
 --></style>

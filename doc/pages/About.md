@@ -1,3 +1,11 @@
+---
+slug: About.html
+order: 10
+title: About
+description: |
+  History and background of Opam.
+---
+
 # opam
 
 ## A little bit of History

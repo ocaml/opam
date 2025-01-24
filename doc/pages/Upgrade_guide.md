@@ -1,3 +1,11 @@
+---
+slug: Upgrade_guide
+order: 1
+title: Upgrade from 1.2 to 2.0
+description: |
+  A quick introduction to using opam in your OCaml development workflow.
+---
+
 # Quick upgrade guide from opam 1.2 to opam 2.0
 
 This guide is not a complete list of changes, but it highlights changes that
