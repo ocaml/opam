@@ -56,6 +56,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Failure when rebuilding a package owing to upstream changes no longer marks the package as successfully installed [#5922 @dra27]
 
 ## Tree
 
