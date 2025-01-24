@@ -122,7 +122,7 @@ let compute_upgrade_t
        ~upgrade:to_upgrade
        ~deprequest:(OpamFormula.to_atom_formula formula)
        ?all:(if all then Some [] else None)
-       ~criteria:(if to_install = [] && all then `Upgrade else `Default)
+       ~criteria:(if all then `Upgrade else `Default)
        ())
 
 let print_requested requested formula =

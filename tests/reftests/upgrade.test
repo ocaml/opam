@@ -483,6 +483,10 @@ The following actions would be performed:
 ### opam upgrade --show -a uninstalled
 uninstalled is not installed. Install it? [Y/n] y
 The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar         2 to 3
+  - upgrade baz         1 to 2 [uses foo]
+  - upgrade foo         3 to 4
 === install 1 package
   - install uninstalled 1
 ### opam upgrade --show
