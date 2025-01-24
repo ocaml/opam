@@ -196,6 +196,8 @@ users)
   * Fix broken link to non-existing archlinux community repo [#6361 @juergenhoetzel]
   * Document the meaning of colored version numbers in the manpage of `opam show` [#6358 @kit-ty-kate]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
