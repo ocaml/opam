@@ -105,10 +105,15 @@ let default = {
   build_doc = false;
   dev_setup = false;
   dryrun = false;
-  makecmd = lazy OpamStd.Sys.(
-      match os () with
-      | FreeBSD | OpenBSD | NetBSD | DragonFly -> "gmake"
-      | _ -> "make"
+  makecmd = lazy (
+      OpamFilename.with_tmp_dir (fun dir ->
+          let open OpamFilename.Op in
+          OpamFilename.write (dir // "GNUmakefile") "all: ; printf make > output\n";
+          OpamFilename.write (dir // "Makefile") "all: ; printf gmake > output\n";
+          match OpamProcess.run (OpamSystem.make_command ~allow_stdin:false ~dir:(OpamFilename.Dir.to_string dir) "make" []) with
+          | {OpamProcess.r_code = 0; _} -> OpamFilename.read (dir // "output")
+          | _ -> failwith "TODO"
+        )
     );
   ignore_constraints_on = OpamPackage.Name.Set.empty;
   unlock_base = false;
