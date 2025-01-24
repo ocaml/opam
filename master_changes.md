@@ -65,6 +65,8 @@ users)
   * [NEW] Add options `--require-checksums` and `--no-checksums` to harmonise with `opam install` [#5563 @rjbou]
 
 ## Lint
+  * Relax warning 41 not to trigger on uses of package variables which are guarded by a package:installed filter [#5927 @dra27]
+  * Relax error 31 not to trigger on packages mentioned in depends and depopts in a conjunction with packages with a filter [#5928 @dra27]
 
 ## Repository
   * Accurately tag `curl` download command when loaded from global config file [#6270 @rjbou]
