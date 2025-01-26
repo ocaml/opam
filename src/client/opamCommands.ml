@@ -4409,7 +4409,9 @@ let lock cli =
     let pkg_done =
       OpamPackage.Set.fold (fun nv msgs ->
           let opam = OpamSwitchState.opam st nv in
-          let locked = OpamLockCommand.lock_opam ~only_direct st opam in
+          let locked = try OpamLockCommand.lock_opam ~only_direct st opam 
+          with e -> exit 1
+          in
           let locked_fname =
             OpamFilename.add_extension
               (OpamFilename.of_string (OpamPackage.name_to_string nv))
