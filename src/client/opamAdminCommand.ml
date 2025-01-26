@@ -761,11 +761,6 @@ let check_command cli =
         are supposed to be available. By default, all checks are run."
   ]
   in
-  let ignore_test_arg =
-    OpamArg.mk_flag ~cli OpamArg.cli_original ["ignore-test-doc";"i"]
-      "By default, $(b,{with-test}) and $(b,{with-doc}) dependencies are \
-       included. This ignores them, and makes the test more tolerant."
-  in
   let print_short_arg =
     OpamArg.mk_flag ~cli OpamArg.cli_original ["s";"short"]
       "Only output a list of uninstallable packages"
@@ -782,7 +777,7 @@ let check_command cli =
     OpamArg.mk_flag ~cli OpamArg.cli_original ["obsolete"]
       "Analyse for obsolete packages"
   in
-  let cmd global_options ignore_test print_short
+  let cmd global_options print_short
       installability cycles obsolete () =
     OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
@@ -793,7 +788,7 @@ let check_command cli =
     in
     let pkgs, unav_roots, uninstallable, cycle_packages, obsolete =
       OpamAdminCheck.check
-        ~quiet:print_short ~installability ~cycles ~obsolete ~ignore_test
+        ~quiet:print_short ~installability ~cycles ~obsolete
         repo_root
     in
     let all_ok =
@@ -827,7 +822,7 @@ let check_command cli =
     OpamStd.Sys.exit_because (if all_ok then `Success else `False)
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
-  Term.(const cmd $ global_options cli $ ignore_test_arg $ print_short_arg
+  Term.(const cmd $ global_options cli $ print_short_arg
         $ installability_arg $ cycles_arg $ obsolete_arg)
 
 let compare_versions_command_doc = "Compare two package versions"

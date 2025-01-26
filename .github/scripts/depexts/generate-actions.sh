@@ -76,6 +76,8 @@ FROM gentoo/portage as portage
 FROM gentoo/stage3
 # copy the entire portage volume in
 COPY --from=portage /var/db/repos/gentoo /var/db/repos/gentoo
+RUN getuto
+RUN echo 'FEATURES="getbinpkg"' >> /etc/portage/make.conf
 RUN emerge -qv $mainlibs
 EOF
     ;;

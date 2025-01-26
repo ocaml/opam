@@ -46,10 +46,12 @@ users)
 
 ## Pin
   * [NEW] Make it so pin list display the current revision of a pinned repository in a new column [#6274 @desumn - fix #5533]
+  * [BUG] Stop double pin of packages located in ./opam/opam [#6343 @kit-ty-kate - fix #6342]
 
 ## List
 
 ## Show
+  * Display the version number of packages flagged with avoid-version/deprecated gray [#6358 @kit-ty-kate - fix #6354]
 
 ## Var/Option
 
@@ -83,6 +85,8 @@ users)
 ## External dependencies
   * Add apt-rpm/ALTLinux family support for depext [#6207 @RiderALT]
   * Lookup at `gpatch` before `patch` on macOS now that both homebrew and macports expose `gpatch` as `gpatch` since Homebrew/homebrew-core#174687 [#6255 @kit-ty-kate]
+  * Relax lookup on OpenBSD to consider all installed packages [#6362 @semarie]
+  * Speedup the detection of available system packages with pacman and brew [#6324 @kit-ty-kate]
 
 ## Format upgrade
 
@@ -95,6 +99,9 @@ users)
 ## Build
   * Upgrade to opam-file-format 2.2.0~alpha1 [#6321 @kit-ty-kate]
   * Add menhir to the list of vendored packages [#6321 @kit-ty-kate]
+  * Upgrade the vendored spdx\_licenses to 1.3.0 [#6370 @kit-ty-kate - fix #6369]
+  * Bump the vendored dune to 3.16.1 [#6192 @kit-ty-kate]
+  * Fix compilation on macOS with OCaml 5.3 by bumping the vendored mccs to 1.1+19 [#6192 @kit-ty-kate]
 
 ## Infrastructure
 
@@ -116,6 +123,8 @@ users)
 ## Admin
   * ◈ Add `opam admin compare-versions` to compare package versions for sanity checks [#6197 @mbarbin]
   * [BUG] Fix `opam admin check` in the presence of the `with-dev-setup` variable [#6331 @kit-ty-kate - fix #6329]
+  * ✘ The `-i`/`--ignore-test-doc` argument has been removed from `opam admin check` [#6335 @kit-ty-kate]
+  * ✘ `opam admin check` now sets `with-test` and `with-doc` to `false` instead of `true` [#6335 @kit-ty-kate]
 
 ## Opam installer
 
@@ -154,6 +163,7 @@ users)
   * Add switch removal test: failure on removal linked switch [#6276 @btjorge]
   * Extend the tests on opam admin to include packages using builtin global variables [#6331 @kit-ty-kate]
   * Extend the tests on opam admin check by including all the arguments [#6331 @kit-ty-kate @rjbou]
+  * Add double pinning test in case of opam/opam opam file [#6343 @rjbou]
 
 ### Engine
 
@@ -162,6 +172,10 @@ users)
   * Update the github action scripts now that homebrew renamed the GNU patch binary to gpatch [#6296 @kit-ty-kate]
   * Add branch scheme `username/branch` for opam-rt specific branch to use [#6274 @rjbou]
   * Check `shell/install.sh` using `shellcheck` [#6313 @kit-ty-kate]
+  * Fix the alpine depexts test [#6363 @kit-ty-kate]
+  * Speedup the gentoo depexts test [#6363 @kit-ty-kate]
+  * Add OCaml 5.3 to the build matrix [#6192 @kit-ty-kate]
+  * Add OCaml 5.3/MSVC to the build matrix [#6192 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
@@ -179,6 +193,8 @@ users)
   * Clarify documentation for `enable` pseudo-variable [#5659 @gridbugs]
   * Manual: add information when flags (`avoid-version`, `deprecated`) were introduced [#6320 @hannesm]
   * Add winget command for installing opam [#6338 @tobil4sk]
+  * Fix broken link to non-existing archlinux community repo [#6361 @juergenhoetzel]
+  * Document the meaning of colored version numbers in the manpage of `opam show` [#6358 @kit-ty-kate]
 
 ## Security fixes
 
@@ -203,6 +219,7 @@ users)
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
 
 ## opam-core
+  * `OpamConsole`: Replace `black` text style (unused and not very readable) by `gray` [#6358 @kit-ty-kate]
   * `OpamStd.List.split`: Improve performance [#6210 @kit-ty-kate]
   * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`: Harden the process calls to account for failures [#6230 @kit-ty-kate - fix #6215]
   * `OpamStd.Sys.getconf`: was removed, replaced by `get_long_bit` [#6217 @kit-ty-kate]

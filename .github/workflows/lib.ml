@@ -110,7 +110,7 @@ let find_need need = Hashtbl.find jobs need
 let emit_runs_on ~oc runs_on =
   let runner_of_platform (type a) (platform : a platform) =
     match platform with
-    | Windows -> "windows-2019"
+    | Windows -> "windows-2022"
     | MacOS
     | Linux as platform -> os_name_of_platform platform ^ "-latest"
     | Specific (platform, version) -> os_name_of_platform platform ^ "-" ^ version

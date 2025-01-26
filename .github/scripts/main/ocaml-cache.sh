@@ -45,10 +45,12 @@ case "$HOST" in
 esac
 
 FLEXDLL_VERSION=0.43
+MINGW_W64_VERSION=12.0.0
 
 curl -sLO "https://github.com/ocaml/ocaml/archive/refs/tags/${OCAML_VERSION}.tar.gz"
 if [[ $PLATFORM = 'Windows' ]] ; then
   curl -sLO "https://github.com/ocaml/flexdll/archive/refs/tags/$FLEXDLL_VERSION.tar.gz"
+  curl -sLO "https://github.com/mingw-w64/mingw-w64/archive/refs/tags/v${MINGW_W64_VERSION}.tar.gz"
 fi
 
 tar -xzf "$OCAML_VERSION.tar.gz"
@@ -72,6 +74,11 @@ if [[ $PLATFORM = 'Windows' ]] ; then
   tar -xzf ../$FLEXDLL_VERSION.tar.gz
   rm -rf flexdll
   mv "flexdll-$FLEXDLL_VERSION" flexdll
+
+  tar -xzf "../v${MINGW_W64_VERSION}.tar.gz"
+  rm -rf winpthreads
+  mv "mingw-w64-${MINGW_W64_VERSION}/mingw-w64-libraries/winpthreads" winpthreads
+  rm -rf "mingw-w64-${MINGW_W64_VERSION}"
 fi
 
 if [[ $PLATFORM = 'macOS' ]]; then
@@ -115,7 +122,7 @@ if [[ $OPAM_TEST -ne 1 ]] ; then
   fi
 fi
 
-if ! ./configure --prefix "$PREFIX"$HOST --with-vendored-deps ${CONFIGURE_SWITCHES:-} ; then
+if ! ./configure --prefix "$PREFIX"$HOST ${CONFIGURE_SWITCHES:-} ; then
   echo
   echo -e "[\e[31mERROR\e[0m] OCaml's configure script failed"
   (set +x ; echo -en "::group::config.log contents\r") 2>/dev/null

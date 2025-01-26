@@ -26,7 +26,7 @@ val disp_status_line: unit -> bool
 (** Settable attributes for ANSI terminal output. Nesting is generally not
     handled. *)
 type text_style =
-  [ `black
+  [ `gray
   | `blue
   | `bold
   | `crossed

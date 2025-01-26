@@ -921,7 +921,18 @@ let show cli =
         available packages as well as a short description for each.";
     `P "Paths to package definition files or to directories containing package \
         definitions can also be specified, in which case the corresponding \
-        metadata will be shown."
+        metadata will be shown.";
+    `P "Note: on terminal supporting it, version numbers can be colored the \
+        following ways:";
+    `Noblank;
+    `I ("-", "Magenta and bold: versions installed the current switch");
+    `Noblank;
+    `I ("-", "Bold: versions installed in other switches");
+    `Noblank;
+    `I ("-", "Red and crossed: versions not available on the current platform");
+    `Noblank;
+    `I ("-", "Gray: versions tagged with the $(i,avoid-version) or \
+              $(i,deprecated) flag");
   ] in
   let fields =
     mk_opt ~cli cli_original ["f";"field"] "FIELDS"
