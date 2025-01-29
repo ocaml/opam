@@ -10,11 +10,6 @@ jobs:
     name: Publish to winget repository
     runs-on: windows-latest
     steps:
-      - name: Sync winget-pkgs fork
-        # TODO: Replace <repo-owner> with the owner of the fork
-        run: gh repo sync <repo-owner>/winget-pkgs -b master
-        env:
-          GH_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
       - name: Submit package using wingetcreate
         run: |
           # WinGet PackageIdentifier
