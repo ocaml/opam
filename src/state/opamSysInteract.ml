@@ -1107,17 +1107,20 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_
   | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
   | Nix ->
     (match switch with
-    | None ->
-        log "Nix depext must be passed switch";
-        [], None
-    | Some switch ->
-    let dir = OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) switch in
-    let drvFile = OpamFilename.create dir (OpamFilename.basename (OpamFilename.raw "env.nix")) in
-    let packages = String.concat " "
-      (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l)
-      OpamSysPkg.Set.Op.(sys_packages ++ required) [])
-    in
-    let contents =
+     | None ->
+       log "Nix depext must be passed switch";
+       [], None
+     | Some switch ->
+       let dir = OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) switch in
+       let drvFile =
+         OpamFilename.create dir
+           (OpamFilename.basename (OpamFilename.raw "env.nix"))
+       in
+       let packages = String.concat " "
+           (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l)
+              OpamSysPkg.Set.Op.(sys_packages ++ required) [])
+       in
+       let contents =
 {|{ pkgs ? import <nixpkgs> {} }:
 with pkgs;
 stdenv.mkDerivation {
@@ -1138,9 +1141,15 @@ echo "PATH	+=	$PATH	Nix" >> "$out"
   preferLocalBuild = true;
 }
 |} in
-    OpamFilename.write drvFile contents;
-    let envFile = OpamFilename.create dir (OpamFilename.basename (OpamFilename.raw "nix.env")) |> OpamFilename.to_string in
-    [`AsUser "nix-build", [ OpamFilename.to_string drvFile; "--out-link"; envFile ] ], None)
+       OpamFilename.write drvFile contents;
+       let envFile =
+         OpamFilename.create dir
+           (OpamFilename.basename (OpamFilename.raw "nix.env"))
+         |> OpamFilename.to_string
+       in
+       [`AsUser "nix-build",
+        [ OpamFilename.to_string drvFile; "--out-link"; envFile ] ],
+       None)
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
@@ -1148,7 +1157,10 @@ let install_packages_commands ?env switch config sys_packages ~required =
   fst (install_packages_commands_t ?env switch config sys_packages ~required)
 
 let package_manager_name ?env switch config =
-  match install_packages_commands ?env switch config OpamSysPkg.Set.empty ~required:OpamSysPkg.Set.empty with
+  match
+    install_packages_commands ?env switch config OpamSysPkg.Set.empty
+      ~required:OpamSysPkg.Set.empty
+  with
   | ((`AsAdmin pkgman | `AsUser pkgman), _) :: _ -> pkgman
   | [] -> assert false
 
@@ -1227,7 +1239,8 @@ let repo_enablers ?(env=OpamVariable.Map.empty) config =
   if family ~env () <> Centos then None else
   let (needed, _, _) =
     packages_status ~env config (OpamSysPkg.raw_set
-                       (OpamStd.String.Set.singleton "epel-release")) ~old_packages:OpamSysPkg.Set.empty
+                                   (OpamStd.String.Set.singleton "epel-release"))
+      ~old_packages:OpamSysPkg.Set.empty
   in
   if OpamSysPkg.Set.is_empty needed then None
   else

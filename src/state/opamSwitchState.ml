@@ -201,7 +201,10 @@ let depexts_status_of_packages_raw
   in
   let syspkg_set = syspkg_set -- bypass in
   let ret =
-    match OpamSysInteract.packages_status ?env global_config syspkg_set ~old_packages:old_syspkg_set with
+    match
+      OpamSysInteract.packages_status ?env global_config syspkg_set
+        ~old_packages:old_syspkg_set
+    with
     | avail, required, not_found ->
       let avail, not_found =
         if OpamStateConfig.(!r.no_depexts) then
@@ -1263,9 +1266,10 @@ let update_pin nv opam st =
   || OpamSysPkg.Set.is_empty (depexts st nv)
   then st else
   let sys_packages = lazy (
+    let old_packages = OpamPackage.Set.singleton nv in
     OpamPackage.Map.union (fun _ n -> n)
       (Lazy.force st.sys_packages)
-      (depexts_status_of_packages st (OpamPackage.Set.singleton nv) ~old_packages:(OpamPackage.Set.singleton nv))
+      (depexts_status_of_packages st old_packages ~old_packages)
   ) in
   let available_packages = lazy (
     OpamPackage.Set.filter (fun nv -> depexts_unavailable st nv = None)

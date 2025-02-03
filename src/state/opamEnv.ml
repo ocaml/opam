@@ -678,7 +678,9 @@ let updates_common ~set_opamroot ~set_opamswitch root switch =
 let updates_nix st =
   match OpamSysPoll.os_family st.switch_global.global_variables with
   | Some "nixos" ->
-    OpamFilename.create (OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) st.switch) (OpamFilename.basename (OpamFilename.raw "nix.env"))
+    OpamFilename.create
+      (OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) st.switch)
+      (OpamFilename.basename (OpamFilename.raw "nix.env"))
     |> OpamFile.make
     |> OpamFile.Environment.read_opt
     |> Option.fold ~none:[] ~some:(List.map resolve_separator_and_format)

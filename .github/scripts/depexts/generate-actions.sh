@@ -132,11 +132,11 @@ EOF
 # we can't `nix-env -i binutils`
 # https://github.com/NixOS/nix/issues/10587
 if [ $target == "nix" ]; then
-	cat >>$dir/Dockerfile << EOF
+  cat >>$dir/Dockerfile << EOF
 RUN nix-shell -p binutils --run "/usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps"
 EOF
 else
-	cat >>$dir/Dockerfile << EOF
+  cat >>$dir/Dockerfile << EOF
 RUN /usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps
 EOF
 fi
@@ -147,11 +147,11 @@ COPY entrypoint.sh /opam/entrypoint.sh
 EOF
 
 if [ $target == "nix" ]; then
-	cat >>$dir/Dockerfile << EOF
+  cat >>$dir/Dockerfile << EOF
 ENTRYPOINT ["nix-shell", "-p", "binutils", "--run", "/opam/entrypoint.sh"]
 EOF
 else
-	cat >>$dir/Dockerfile << EOF
+  cat >>$dir/Dockerfile << EOF
 ENTRYPOINT ["/opam/entrypoint.sh"]
 EOF
 fi
@@ -178,7 +178,7 @@ make
 EOF
 
 if [ $target == "nix" ]; then
-	cat >>$dir/entrypoint.sh << EOF
+  cat >>$dir/entrypoint.sh << EOF
 ./opam var --global os-family=nixos
 ./opam var --global os-distribution=nixos
 
