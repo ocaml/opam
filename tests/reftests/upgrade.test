@@ -384,3 +384,57 @@ Done.
 # Packages matching: name-match(quux) & installed
 # Name # Installed files
 quux   ${BASEDIR}/OPAM/upgrading/lib/quux ${BASEDIR}/OPAM/upgrading/lib/quux/fichier
+### ::::::::::::::::::
+### : opam upgrade should not offer packages flagged with avoid-version
+### ::::::::::::::::::
+### <pkg:avoid-version.1>
+opam-version: "2.0"
+### <pkg:avoid-version.2>
+opam-version: "2.0"
+flags: avoid-version
+### <pkg:avoid-version.3>
+opam-version: "2.0"
+flags: deprecated
+### opam install avoid-version
+The following actions will be performed:
+=== install 1 package
+  - install avoid-version 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed avoid-version.1
+Done.
+### opam upgrade
+Everything as up-to-date as possible
+
+The following packages are not being upgraded because the new versions conflict with other installed packages:
+  - avoid-version.3
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade avoid-version.3"), which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### opam upgrade avoid-version
+Everything as up-to-date as possible
+
+The following packages are not being upgraded because the new versions conflict with other installed packages:
+  - avoid-version.3
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade avoid-version.3"), which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### opam install avoid-version.2
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade avoid-version 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   avoid-version.1
+-> installed avoid-version.2
+Done.
+### opam upgrade
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade avoid-version 2 to 3 (deprecated)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   avoid-version.2
+-> installed avoid-version.3
+Done.
+
+<><> avoid-version.3 installed successfully <><><><><><><><><><><><><><><><><><>
+=> Note: This package is deprecated.

@@ -166,6 +166,7 @@ users)
   * Extend the tests on opam admin check by including all the arguments [#6331 @kit-ty-kate @rjbou]
   * Add double pinning test in case of opam/opam opam file [#6343 @rjbou]
   * Make sure `download.test` does not fail due to a checksum collision in the download cache [#6378 @kit-ty-kate]
+  * Add a test showing the behaviour of `opam upgrade` with packages flagged with `avoid-version`/`deprecated` [#6273 @kit-ty-kate]
 
 ### Engine
 
