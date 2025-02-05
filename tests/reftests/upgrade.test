@@ -128,7 +128,7 @@ Done.
 ### <pin:quux/quux.opam>
 opam-version: "2.0"
 ### opam install ./quux
-Package quux does not exist, create as a NEW package? [Y/n] y
+[NOTE] Package quux does not exist in opam repositories registered in the current switch.
 quux is now pinned to file://${BASEDIR}/quux (version dev)
 The following actions will be performed:
 === install 1 package
@@ -305,7 +305,7 @@ version: "dev6"
 opam-version: "2.0"
 ### opam pin ./quux --no-action
 This will pin the following packages: quuux, quux. Continue? [Y/n] y
-Package quuux does not exist, create as a NEW package? [Y/n] y
+[NOTE] Package quuux does not exist in opam repositories registered in the current switch.
 quuux is now pinned to file://${BASEDIR}/quux (version dev)
 [NOTE] Package quux is already pinned to file://${BASEDIR}/quux (version dev5).
 quux is now pinned to file://${BASEDIR}/quux (version dev6)
