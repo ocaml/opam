@@ -178,6 +178,8 @@ echo "}" >> "$file"
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
+### opam clean -c
+Clearing cache of downloaded files
 ### opam install foo --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd rsync | sed-cmd tar | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/"
 The following actions will be performed:
 === install 1 package
@@ -251,6 +253,8 @@ url {
   src: "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
   checksum: "md5=c9c157af4229fbb45d3f59f0d6d75dbe"
 }
+### opam clean -c
+Clearing cache of downloaded files
 ### opam install baz --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd wget | sed-cmd tar | "${OPAMVERSION}" -> "current" | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/" | grep -v "OPAM[/\\]log"
 The following actions will be performed:
 === install 1 package
