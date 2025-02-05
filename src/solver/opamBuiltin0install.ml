@@ -123,7 +123,7 @@ let parse_criteria criteria =
   in
   parse default (OpamCudfCriteria.of_string criteria)
 
-let call ~criteria ?timeout:_ (preamble, universe, request) =
+let call ~criteria ?timeout:_ ?tolerance:_ (preamble, universe, request) =
   let {
     drop_installed_packages;
     prefer_oldest;

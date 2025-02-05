@@ -81,6 +81,7 @@ users)
 ## Clean
 
 ## Env
+  * Add the `OPAMSOLVERTOLERANCE` environment variable to allow users to fix solver timeouts for good [#5510 @kit-ty-kate - fix #3230]
 
 ## Opamfile
 
