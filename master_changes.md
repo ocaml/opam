@@ -196,6 +196,7 @@ users)
   * Add winget command for installing opam [#6338 @tobil4sk]
   * Fix broken link to non-existing archlinux community repo [#6361 @juergenhoetzel]
   * Document the meaning of colored version numbers in the manpage of `opam show` [#6358 @kit-ty-kate]
+  * Add an explanation of how plugins work to the manual [#5627 @kit-ty-kate]
 
 ## Security fixes
 
