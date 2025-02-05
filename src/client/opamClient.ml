@@ -202,9 +202,27 @@ let upgrade_t
         else OpamPackage.packages_of_names t.installed requested
       in
       let latest =
-        OpamPackage.Name.Set.fold (fun name acc ->
-            OpamPackage.Set.add (OpamPackage.max_version t.packages name) acc)
-          (OpamPackage.names_of_packages to_check)
+        OpamPackage.Set.fold (fun pkg acc ->
+            let name = OpamPackage.name pkg in
+            let pkgs = OpamPackage.packages_of_name t.packages name in
+            let latest =
+              OpamPackage.Set.fold (fun pkg latest ->
+                  if OpamPackage.compare latest pkg < 0 then
+                    let opam = OpamPackage.Map.find pkg t.opams in
+                    let avoid_version =
+                      List.exists (function
+                          | Pkgflag_AvoidVersion | Pkgflag_Deprecated -> true
+                          | Pkgflag_LightUninstall | Pkgflag_Verbose
+                          | Pkgflag_Plugin | Pkgflag_Compiler
+                          | Pkgflag_Conf | Pkgflag_Unknown _ -> false)
+                        (OpamFile.OPAM.flags opam)
+                    in
+                    if avoid_version then latest else pkg
+                  else latest)
+                pkgs pkg
+            in
+            OpamPackage.Set.add latest acc)
+          to_check
           OpamPackage.Set.empty in
       let notuptodate = latest -- to_check in
       if OpamPackage.Set.is_empty notuptodate then
