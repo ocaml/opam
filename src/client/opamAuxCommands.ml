@@ -494,12 +494,6 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
     else
       OpamUpdate.dev_packages st ~working_dir:OpamPackage.Set.empty already_pinned
   in
-  let st =
-    if OpamClientConfig.(!r.ignore_pin_depends) then st else
-      OpamPackage.Set.fold (fun nv st ->
-          OpamPinCommand.handle_pin_depends st nv (OpamSwitchState.opam st nv))
-        (OpamPackage.Set.union pins already_pinned_set) st
-  in
   st, atoms
 
 let check_and_revert_sandboxing root config =
