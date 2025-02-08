@@ -944,3 +944,94 @@ name: "double"
 ### opam pin -n double
 [NOTE] Package double does not exist in opam repositories registered in the current switch.
 double is now pinned to file://${BASEDIR}/double (version dev)
+### :C:c: pin depends and unpin dependency
+### opam switch create pin-depends --empty
+### <pin:dep1/dep1.opam>
+opam-version: "2.0"
+depends: [ "dep2" "dep3"]
+### <add-pin-depends.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> dep1/dep1.opam << EOF
+pin-depends: [
+  [ "dep2.2" "file://$basedir/dep2" ]
+  [ "dep3.2" "file://$basedir/dep3" ]
+]
+EOF
+### sh add-pin-depends.sh
+### <pkg:dep2.1>
+opam-version: "2.0"
+### <pin:dep2/dep2.opam>
+opam-version: "2.0"
+### <pin:dep3/dep3.opam>
+opam-version: "2.0"
+### <pin:other/other.opam>
+opam-version: "2.0"
+### opam pin ./dep1
+[NOTE] Package dep1 does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by dep1.dev:
+  - dep2.2 at file://${BASEDIR}/dep2
+  - dep3.2 at file://${BASEDIR}/dep3
+Pin and install them? [Y/n] y
+[dep2.2] synchronised (no changes)
+dep2 is now pinned to file://${BASEDIR}/dep2 (version 2)
+[NOTE] Package dep3 does not exist in opam repositories registered in the current switch.
+[dep3.2] synchronised (no changes)
+dep3 is now pinned to file://${BASEDIR}/dep3 (version 2)
+dep1 is now pinned to file://${BASEDIR}/dep1 (version dev)
+
+The following actions will be performed:
+=== install 3 packages
+  - install dep1 dev (pinned)
+  - install dep2 2 (pinned)
+  - install dep3 2 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved dep1.dev  (file://${BASEDIR}/dep1)
+-> retrieved dep2.2  (file://${BASEDIR}/dep2)
+-> installed dep2.2
+-> retrieved dep3.2  (file://${BASEDIR}/dep3)
+-> installed dep3.2
+-> installed dep1.dev
+Done.
+### opam pin -s
+dep1
+dep2
+dep3
+### opam unpin dep2
+Ok, dep2 is no longer pinned to file://${BASEDIR}/dep2 (version 2)
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade dep2 2 to 1
+=== recompile 1 package
+  - recompile dep1 dev (pinned) [uses dep2]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved dep1.dev  (no changes)
+-> removed   dep1.dev
+-> removed   dep2.2
+-> installed dep2.1
+-> installed dep1.dev
+Done.
+### opam pin ./dep1
+[NOTE] Package dep1 is already pinned to file://${BASEDIR}/dep1 (version dev).
+The following additional pinnings are required by dep1.dev:
+  - dep2.2 at file://${BASEDIR}/dep2
+Pin and install them? [Y/n] y
+[dep2.2] synchronised (no changes)
+dep2 is now pinned to file://${BASEDIR}/dep2 (version 2)
+dep1 is now pinned to file://${BASEDIR}/dep1 (version dev)
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile dep1 dev (pinned)
+=== upgrade 1 package
+  - upgrade   dep2 1 to 2 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved dep1.dev  (no changes)
+-> retrieved dep2.2  (file://${BASEDIR}/dep2)
+-> removed   dep1.dev
+-> removed   dep2.1
+-> installed dep2.2
+-> installed dep1.dev
+Done.
