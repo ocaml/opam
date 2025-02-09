@@ -175,6 +175,7 @@ users)
   * Add a test showing the behaviour of `opam upgrade` with packages flagged with `avoid-version`/`deprecated` [#6273 @kit-ty-kate]
   * Add a test showing the behaviour when a pin depend is unpinned [#6380 @rjbou]
   * Add a test to ensure `opam upgrade <pkg>` will not upgrade unrelated things [#6373 @kit-ty-kate]
+  * Add a test showing the behaviour of `opam init` in presence of an available system compiler [#6307 @kit-ty-kate]
 
 ### Engine
 

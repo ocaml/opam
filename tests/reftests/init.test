@@ -301,3 +301,22 @@ wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "ma
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
 repositories: "norepo" {"file://${BASEDIR}/REPO"}
+### : ocaml-system is not chosen by default even if a system OCaml compiler is available
+### rm -rf $OPAMROOT
+### <opamrc>
+eval-variables: [ sys-ocaml-version ["echo" "4.07.0"] "new system compiler" ]
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc | grep -v Cygwin
+Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-system)
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {>= "4.05.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-system.4.07.0
+-> installed ocaml.4.07.0
+Done.
