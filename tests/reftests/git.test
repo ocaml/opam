@@ -21,7 +21,7 @@ mkdir -p REPO/packages/submodule/submodule.1
 ESCAPED_BASEDIR=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 cat > REPO/packages/submodule/submodule.1/opam << EOF
 opam-version: "2.0"
-build: ["ls" "vendor/some-file"]
+build: ["cat" "vendor/some-file"]
 url {
   src: "git+file://${ESCAPED_BASEDIR}/use-submodule"
 }
@@ -42,6 +42,7 @@ The following actions will be performed:
 -> retrieved submodule.1  (git+file://${BASEDIR}/use-submodule)
 -> installed submodule.1
 Done.
+### cp -r ./submodule ./submodule.bak
 ### rm -r ./submodule
 ### opam remove submodule
 The following actions will be performed:
@@ -70,3 +71,35 @@ OpamSolution.Fetch_fail("git+file://${BASEDIR}/use-submodule")
 +- 
 - No changes have been performed
 # Return code 40 #
+### ::::::::::::::::::::::::::::::::::::::::::::::
+### : Submodules should be re-fetched when they are outdated / haven't been fetched correctly
+### ::::::::::::::::::::::::::::::::::::::::::::::
+### mv ./submodule.bak ./submodule
+### opam install submodule
+The following actions will be performed:
+=== install 1 package
+  - install submodule 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved submodule.1  (no changes)
+[ERROR] The compilation of submodule.1 failed at "cat vendor/some-file".
+
+##% output ###
+# cat: vendor/some-file: No such file or directory
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build submodule 1
++- 
+- No changes have been performed
+# Return code 31 #
+### : Simulate corruption / --working-dir
+### <OPAM/submodule/.opam-switch/sources/submodule.1/vendor/some-file>
+changed content
+### opam update --dev
+### opam reinstall -v submodule
+submodule is not installed. Install it? [Y/n] n
+'${OPAM} reinstall -v submodule' failed.
+# Return code 10 #
