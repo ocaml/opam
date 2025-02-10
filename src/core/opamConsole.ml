@@ -473,17 +473,6 @@ let rollback_terminal nlines =
     Printf.printf "\027[A"
   done
 
-let left_1_char =
-  let left_1_char_unix () = Printf.printf "\027[D%!" in
-  if Sys.win32 then
-    let f = lazy (
-      match get_win32_console_shim `stdout Mode with
-      | Shim -> fun () -> () (* unimplemented *)
-      | VT100 force -> fun () -> force (); left_1_char_unix ()
-    ) in
-    fun () -> Lazy.force f ()
-  else left_1_char_unix
-
 let displaying_status = ref false
 
 let clear_status_unix () =
@@ -725,17 +714,7 @@ let header_error fmt =
 (* Reads a single char from the user when possible, a line otherwise *)
 let short_user_input ~prompt ?default ?on_eof f =
   let on_eof = OpamStd.Option.Op.(on_eof ++ default) in
-  let prompt () = match default with
-    | Some x when OpamStd.Sys.tty_out ->
-      msg "%s%s" prompt x;
-      left_1_char ();
-      carriage_delete ();
-      (match List.rev (OpamStd.String.split prompt '\n') with
-       | lastline::_ -> print_string lastline
-       | [] -> ())
-    | _ ->
-      print_string prompt; flush stdout
-  in
+  let prompt () = print_string prompt; flush stdout in
   try
     if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
       let rec loop () =
