@@ -1288,7 +1288,6 @@ let initialise_msys2 root =
         OpamConsole.error_and_exit `Aborted "MSYS2 failed to initialise"
     | `No ->
       OpamConsole.pause "Standing by, press enter to continue when done.";
-      OpamConsole.msg "\n"
     | `Ignore ->
       ()
     | `Quit ->
