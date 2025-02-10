@@ -748,9 +748,9 @@ let short_user_input ~prompt ?default ?on_eof f =
       match input with
       | None -> loop ()
       | Some i -> match f i with
-        | Some a ->
-          if String.length i > 0 && i.[0] <> '\027' then print_endline i;
-          a
+        | Some a when String.length i > 0 && i.[0] = '\027' ->
+          print_newline (); a
+        | Some a -> print_endline i; a
         | None -> loop ()
     in
     let attr = tcgetattr stdin in
@@ -780,7 +780,7 @@ let pause fmt =
         let prompt = OpamStd.Format.reformat s in
         short_user_input ~prompt ~default:""
         (function
-        | "\027" -> OpamStd.Sys.exit_because `Aborted
+        | "\027" -> print_newline (); OpamStd.Sys.exit_because `Aborted
         | _ -> Some ()))
       fmt
   else
