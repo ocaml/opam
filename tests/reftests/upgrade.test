@@ -430,3 +430,83 @@ Done.
 
 <><> avoid-version.3 installed successfully <><><><><><><><><><><><><><><><><><>
 => Note: This package is deprecated.
+### :::::::::::::::::::::::
+### : Make sure opam upgrade <pkg> only tries to upgrade <pkg> and not anything else
+### :::::::::::::::::::::::
+### opam upgrade
+Already up-to-date.
+Nothing to do.
+### <pkg:foo.4>
+opam-version: "2.0"
+### <pkg:bar.3>
+opam-version: "2.0"
+### <pkg:baz.2>
+opam-version: "2.0"
+depends: "foo"
+### <pkg:uninstalled.1>
+opam-version: "2.0"
+### opam upgrade --show foo
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade foo 3 to 4
+### opam upgrade --show -a foo
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar 2 to 3
+  - upgrade baz 1 to 2 [uses foo]
+  - upgrade foo 3 to 4
+### opam upgrade --show bar
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade bar 2 to 3
+### opam upgrade --show -a bar
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar 2 to 3
+  - upgrade baz 1 to 2 [uses foo]
+  - upgrade foo 3 to 4
+### opam upgrade --show baz
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade baz 1 to 2
+### opam upgrade --show -a baz
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar 2 to 3
+  - upgrade baz 1 to 2
+  - upgrade foo 3 to 4 [required by baz]
+### opam upgrade --show uninstalled
+uninstalled is not installed. Install it? [Y/n] y
+The following actions would be performed:
+=== install 1 package
+  - install uninstalled 1
+### opam upgrade --show -a uninstalled
+uninstalled is not installed. Install it? [Y/n] y
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar         2 to 3
+  - upgrade baz         1 to 2 [uses foo]
+  - upgrade foo         3 to 4
+=== install 1 package
+  - install uninstalled 1
+### opam upgrade --show
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar 2 to 3
+  - upgrade baz 1 to 2
+  - upgrade foo 3 to 4
+### opam upgrade baz
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade baz 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   baz.1
+-> installed baz.2
+Done.
+### opam upgrade --show foo
+The following actions would be performed:
+=== recompile 1 package
+  - recompile baz 2      [uses foo]
+=== upgrade 1 package
+  - upgrade   foo 3 to 4
