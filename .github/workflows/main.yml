@@ -98,8 +98,8 @@ jobs:
       shell: cmd
       run: .github\scripts\cygwin.cmd x86_64-pc-cygwin D:\Cache\cygwin create
     - name: Cygwin info
-      shell: cmd
-      run: D:\cygwin\bin\bash.exe -lc "uname -a ; command -v uname"
+      shell: D:\cygwin\bin\bash.exe {0}
+      run: uname -a ; command -v uname
 
 ####
 # Build
