@@ -154,6 +154,7 @@ users)
   * Avoid issues when using wget2 where the requested url might return an html page instead of the expected content [#6303 @kit-ty-kate]
   * Ensure each repositories stored in repos-config is associated with an URL [#6249 @kit-ty-kate]
   * Run `Gc.compact` in OpamParallel, when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
+  * Avoid polymorphic comparison functions in `OpamListCommand` [#6381 @kit-ty-kate]
 
 ## Internal: Unix
   * Use a C stub to call the `uname` function from the C standard library instead of calling the `uname` POSIX command [#6217 @kit-ty-kate]
