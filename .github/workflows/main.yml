@@ -97,6 +97,9 @@ jobs:
       if: steps.cygwin64.outputs.cache-hit != 'true'
       shell: cmd
       run: .github\scripts\cygwin.cmd x86_64-pc-cygwin D:\Cache\cygwin create
+    - name: Cygwin info
+      shell: cmd
+      run: D:\cygwin\usr\bin\uname.exe -a
 
 ####
 # Build

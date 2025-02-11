@@ -287,6 +287,7 @@ let cygwin_job ~analyse_job ~oc ~workflow f =
     ++ cache ~check_only:true Cygwin
     ++ checkout ~cond:(Predicate(true, CacheMiss cygwin64.id)) ()
     ++ build_cache Cygwin
+    ++ run ~shell:"cmd" "Cygwin info" [{|D:\cygwin\usr\bin\uname.exe -a|}]
     ++ end_job f
 
 let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~workflow f =
