@@ -342,6 +342,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
     ++ cache Archives
     ++ cache OCaml platform "${{ matrix.ocamlv }}" host
     ++ only_on Windows (unpack_cygwin "${{ matrix.build }}" "${{ matrix.host }}")
+    ++ only_on Windows (run "Cygwin info" ["uname -a"])
     ++ build_cache OCaml platform "${{ matrix.ocamlv }}" host
     ++ run "Build" ["bash -exu .github/scripts/main/main.sh " ^ host]
     ++ not_on Windows (run "Test (basic)" ["bash -exu .github/scripts/main/test.sh"])
