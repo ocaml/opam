@@ -97,9 +97,6 @@ jobs:
       if: steps.cygwin64.outputs.cache-hit != 'true'
       shell: cmd
       run: .github\scripts\cygwin.cmd x86_64-pc-cygwin D:\Cache\cygwin create
-    - name: Cygwin info
-      shell: D:\cygwin\bin\bash.exe {0}
-      run: uname -a
 
 ####
 # Build
@@ -208,6 +205,9 @@ jobs:
     - name: Unpack Cygwin
       shell: cmd
       run: .github\scripts\cygwin.cmd ${{ matrix.build }} D:\Cache\cygwin ${{ matrix.host }}
+    - name: Cygwin info
+      shell: cmd
+      run: D:\cygwin\usr\bin\uname.exe -a
     - name: Unpack OCaml ${{ matrix.ocamlv }}
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
     - name: Build

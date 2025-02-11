@@ -287,7 +287,6 @@ let cygwin_job ~analyse_job ~oc ~workflow f =
     ++ cache ~check_only:true Cygwin
     ++ checkout ~cond:(Predicate(true, CacheMiss cygwin64.id)) ()
     ++ build_cache Cygwin
-    ++ run ~shell:"cmd" "Cygwin info" [{|D:\cygwin\usr\bin\uname.exe -a|}]
     ++ end_job f
 
 let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~workflow f =
@@ -343,6 +342,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
     ++ cache Archives
     ++ cache OCaml platform "${{ matrix.ocamlv }}" host
     ++ only_on Windows (unpack_cygwin "${{ matrix.build }}" "${{ matrix.host }}")
+    ++ only_on Windows (run "Cygwin info" ~shell:"cmd" [{|D:\cygwin\usr\bin\uname.exe -a|}])
     ++ build_cache OCaml platform "${{ matrix.ocamlv }}" host
     ++ run "Build" ["bash -exu .github/scripts/main/main.sh " ^ host]
     ++ not_on Windows (run "Test (basic)" ["bash -exu .github/scripts/main/test.sh"])
