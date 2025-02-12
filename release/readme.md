@@ -38,6 +38,7 @@
 * finalise the release (publish)
 * add hashes in `install.sh` and `install.ps1` (and check signatures)
 * bring the changes to the changelog (CHANGES) from the branch of the release to the `master` branch
+* Update doc/pages/Install.md
 * publish opam packages in opam-repository (use `opam publish --pre-release` if this is not a stable version)
 * update versions (and messages, if necessary) in https://github.com/ocaml/opam-repository/blob/master/repo
 
