@@ -10,6 +10,7 @@
 
 open OpamTypes
 
+exception Dependency_Unsatisfied of string
 
 let select_packages atom_locs st =
   let st, atoms =
@@ -102,6 +103,7 @@ let select_packages atom_locs st =
                 (OpamPackage.to_string nv)
                 (OpamStd.Format.itemize OpamFormula.string_of_atom missing);
               acc)
+              raise Dependency_Unsatisfied (OpamPackage.to_string nv)
            else
              OpamPackage.Set.add nv acc)
          names OpamPackage.Set.empty
