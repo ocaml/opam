@@ -102,8 +102,7 @@ let select_packages atom_locs st =
                  not installed packages are:\n%s"
                 (OpamPackage.to_string nv)
                 (OpamStd.Format.itemize OpamFormula.string_of_atom missing);
-                raise (Dependency_Unsatisfied (OpamPackage.to_string nv));
-              acc)
+                raise (Dependency_Unsatisfied (OpamPackage.to_string nv)))
            else
              OpamPackage.Set.add nv acc)
          names OpamPackage.Set.empty
