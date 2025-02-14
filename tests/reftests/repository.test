@@ -18,7 +18,7 @@ some content
 ### sh hash.sh REPO foo.1
 ### : Internal repository storage as archive or plain directory :
 ### opam switch create tarring --empty
-### opam update -vv
+### opam update -vv | grep '^\+'
 ### ls $OPAMROOT/repo | grep -v "cache"
 default
 lock
