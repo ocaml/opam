@@ -610,9 +610,9 @@ depends: ["b" "installed-local-core"]
 opam-version: "2.0"
 depends: "a"
 ### opam install ./dir
-Package installed-local does not exist, create as a NEW package? [Y/n] y
+[NOTE] Package installed-local does not exist in opam repositories registered in the current switch.
 installed-local is now pinned to file://${BASEDIR}/dir (version dev)
-Package installed-local-core does not exist, create as a NEW package? [Y/n] y
+[NOTE] Package installed-local-core does not exist in opam repositories registered in the current switch.
 installed-local-core is now pinned to file://${BASEDIR}/dir (version dev)
 The following actions will be performed:
 === install 2 packages

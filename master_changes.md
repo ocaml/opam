@@ -36,6 +36,7 @@ users)
   * [BUG] Ensure the output of opam commands using a column style UI stay consistent accross environment by setting the number of columns to 80 if stdout is not a tty and if the `COLUMNS` env variable is not set [#6244 @kit-ty-kate]
   * Improve the messages when a package is not up-to-date on opam upgrade [#6272 @kit-ty-kate - fix #6270]
   * Use a non-underline uppercase character to denotate the default when asking a question [#6289 @hannesm @kit-ty-kate - fix #6288]
+  * Do not pre-write the answer to questions with the default anwser [#6376 @kit-ty-kate]
 
 ## Switch
   * [BUG] Fix `opam switch remove <dir>` failure when it is a linked switch [#6276 @btjorge - fix #6275]
@@ -47,6 +48,8 @@ users)
 ## Pin
   * [NEW] Make it so pin list display the current revision of a pinned repository in a new column [#6274 @desumn - fix #5533]
   * [BUG] Stop double pin of packages located in ./opam/opam [#6343 @kit-ty-kate - fix #6342]
+  * Don't ask confirmation when pinning an unknown package (absent from repositories) [#6309 @kit-ty-kate @rjbou - fix #3199]
+  * [BUG] Do not ask to install pin-depends twice [#6375 @kit-ty-kate - fix #6374]
 
 ## List
 
@@ -56,6 +59,9 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * [BUG] Do not show the not-up-to-date message with packages tagged with avoid-version [#6273 @kit-ty-kate - fix #6271]
+  * [BUG] Fix a regression on `opam upgrade <package>` upgrading unrelated packages [#6373 @AltGr]
+  * [BUG] Fix a regression on `opam upgrade --all <uninstalled-pkg>` not upgrading the whole switch [#6373 @kit-ty-kate]
 
 ## Tree
 
@@ -79,6 +85,7 @@ users)
 ## Clean
 
 ## Env
+  * Add the `OPAMSOLVERTOLERANCE` environment variable to allow users to fix solver timeouts for good [#5510 @kit-ty-kate - fix #3230]
 
 ## Opamfile
 
@@ -164,6 +171,10 @@ users)
   * Extend the tests on opam admin to include packages using builtin global variables [#6331 @kit-ty-kate]
   * Extend the tests on opam admin check by including all the arguments [#6331 @kit-ty-kate @rjbou]
   * Add double pinning test in case of opam/opam opam file [#6343 @rjbou]
+  * Make sure `download.test` does not fail due to a checksum collision in the download cache [#6378 @kit-ty-kate]
+  * Add a test showing the behaviour of `opam upgrade` with packages flagged with `avoid-version`/`deprecated` [#6273 @kit-ty-kate]
+  * Add a test showing the behaviour when a pin depend is unpinned [#6380 @rjbou]
+  * Add a test to ensure `opam upgrade <pkg>` will not upgrade unrelated things [#6373 @kit-ty-kate]
 
 ### Engine
 
@@ -176,6 +187,8 @@ users)
   * Speedup the gentoo depexts test [#6363 @kit-ty-kate]
   * Add OCaml 5.3 to the build matrix [#6192 @kit-ty-kate]
   * Add OCaml 5.3/MSVC to the build matrix [#6192 @kit-ty-kate]
+  * Add a test making sure `opam init` works in the absence of `OPAMROOT` [#5663 @kit-ty-kate]
+  * Show Cygwin version info after loading it from the cache [#6383 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
@@ -195,6 +208,8 @@ users)
   * Add winget command for installing opam [#6338 @tobil4sk]
   * Fix broken link to non-existing archlinux community repo [#6361 @juergenhoetzel]
   * Document the meaning of colored version numbers in the manpage of `opam show` [#6358 @kit-ty-kate]
+  * Add an explanation of how plugins work to the manual [#5627 @kit-ty-kate]
+  * Improve the installation documentation [#6372 @kit-ty-kate]
 
 ## Security fixes
 
@@ -220,6 +235,7 @@ users)
 
 ## opam-core
   * `OpamConsole`: Replace `black` text style (unused and not very readable) by `gray` [#6358 @kit-ty-kate]
+  * `OpamConsole.pause`: Ensure the function always prints a newline character at the end [#6376 @kit-ty-kate]
   * `OpamStd.List.split`: Improve performance [#6210 @kit-ty-kate]
   * `OpamStd.Sys.{get_terminal_columns,uname,getconf,guess_shell_compat}`: Harden the process calls to account for failures [#6230 @kit-ty-kate - fix #6215]
   * `OpamStd.Sys.getconf`: was removed, replaced by `get_long_bit` [#6217 @kit-ty-kate]

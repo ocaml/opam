@@ -150,6 +150,7 @@ The following sequence of commands tries to install as much packages as possible
 opam update
 opam switch create . ocaml-base-compiler.$(VERSION)
 export OPAMSOLVERTIMEOUT=3600
+export OPAMSOLVERTOLERANCE=1.0
 opam list --available -s | xargs opam install --best-effort --yes
 # Be patient
 ```

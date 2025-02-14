@@ -1215,7 +1215,6 @@ let install_sys_packages ~map_sysmap ~confirm env config sys_packages t =
       OpamConsole.msg "\n";
       print_command sys_packages;
       OpamConsole.pause "Standing by, press enter to continue when done.";
-      OpamConsole.msg "\n";
       check_again t sys_packages
     | `Ignore -> bypass t
     | `Quit -> give_up_msg (); OpamStd.Sys.exit_because `Aborted

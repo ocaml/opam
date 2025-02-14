@@ -1595,9 +1595,12 @@ let call_external_solver ~version_map univ req =
       let msg =
         Printf.sprintf
           "Sorry, resolution of the request timed out.\n\
-           Try to specify a more precise request, use a different solver, or \
-           increase the allowed time by setting OPAMSOLVERTIMEOUT to a bigger \
+           Try to specify a more precise request, use a different solver, \
+           increase the tolerance for unoptimized solutions by setting \
+           OPAMSOLVERTOLERANCE to a bigger value (currently, it is set to %.1f) \
+           or increase the allowed time by setting OPAMSOLVERTIMEOUT to a bigger \
            value (currently, it is set to %.1f seconds)."
+          OpamSolverConfig.(OpamStd.Option.default 0. !r.solver_tolerance)
           OpamSolverConfig.(OpamStd.Option.default 0. !r.solver_timeout)
       in
       raise (Solver_failure msg)

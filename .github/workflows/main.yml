@@ -205,6 +205,8 @@ jobs:
     - name: Unpack Cygwin
       shell: cmd
       run: .github\scripts\cygwin.cmd ${{ matrix.build }} D:\Cache\cygwin ${{ matrix.host }}
+    - name: Cygwin info
+      run: uname -a
     - name: Unpack OCaml ${{ matrix.ocamlv }}
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
     - name: Build

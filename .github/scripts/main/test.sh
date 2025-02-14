@@ -26,3 +26,9 @@ eval $(opam env)
 opam install lwt
 opam list
 opam config report
+
+# Make sure opam init (including the sandbox script) works in the absence of OPAMROOT
+unset OPAMROOT
+rm -r ~/.opam
+opam init --bare -vvv
+rm -r ~/.opam

@@ -128,7 +128,7 @@ Done.
 ### <pin:quux/quux.opam>
 opam-version: "2.0"
 ### opam install ./quux
-Package quux does not exist, create as a NEW package? [Y/n] y
+[NOTE] Package quux does not exist in opam repositories registered in the current switch.
 quux is now pinned to file://${BASEDIR}/quux (version dev)
 The following actions will be performed:
 === install 1 package
@@ -305,7 +305,7 @@ version: "dev6"
 opam-version: "2.0"
 ### opam pin ./quux --no-action
 This will pin the following packages: quuux, quux. Continue? [Y/n] y
-Package quuux does not exist, create as a NEW package? [Y/n] y
+[NOTE] Package quuux does not exist in opam repositories registered in the current switch.
 quuux is now pinned to file://${BASEDIR}/quux (version dev)
 [NOTE] Package quux is already pinned to file://${BASEDIR}/quux (version dev5).
 quux is now pinned to file://${BASEDIR}/quux (version dev6)
@@ -384,3 +384,129 @@ Done.
 # Packages matching: name-match(quux) & installed
 # Name # Installed files
 quux   ${BASEDIR}/OPAM/upgrading/lib/quux ${BASEDIR}/OPAM/upgrading/lib/quux/fichier
+### ::::::::::::::::::
+### : opam upgrade should not offer packages flagged with avoid-version
+### ::::::::::::::::::
+### <pkg:avoid-version.1>
+opam-version: "2.0"
+### <pkg:avoid-version.2>
+opam-version: "2.0"
+flags: avoid-version
+### <pkg:avoid-version.3>
+opam-version: "2.0"
+flags: deprecated
+### opam install avoid-version
+The following actions will be performed:
+=== install 1 package
+  - install avoid-version 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed avoid-version.1
+Done.
+### opam upgrade
+Already up-to-date.
+Nothing to do.
+### opam upgrade avoid-version
+Already up-to-date.
+Nothing to do.
+### opam install avoid-version.2
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade avoid-version 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   avoid-version.1
+-> installed avoid-version.2
+Done.
+### opam upgrade
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade avoid-version 2 to 3 (deprecated)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   avoid-version.2
+-> installed avoid-version.3
+Done.
+
+<><> avoid-version.3 installed successfully <><><><><><><><><><><><><><><><><><>
+=> Note: This package is deprecated.
+### :::::::::::::::::::::::
+### : Make sure opam upgrade <pkg> only tries to upgrade <pkg> and not anything else
+### :::::::::::::::::::::::
+### opam upgrade
+Already up-to-date.
+Nothing to do.
+### <pkg:foo.4>
+opam-version: "2.0"
+### <pkg:bar.3>
+opam-version: "2.0"
+### <pkg:baz.2>
+opam-version: "2.0"
+depends: "foo"
+### <pkg:uninstalled.1>
+opam-version: "2.0"
+### opam upgrade --show foo
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade foo 3 to 4
+### opam upgrade --show -a foo
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar 2 to 3
+  - upgrade baz 1 to 2 [uses foo]
+  - upgrade foo 3 to 4
+### opam upgrade --show bar
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade bar 2 to 3
+### opam upgrade --show -a bar
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar 2 to 3
+  - upgrade baz 1 to 2 [uses foo]
+  - upgrade foo 3 to 4
+### opam upgrade --show baz
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade baz 1 to 2
+### opam upgrade --show -a baz
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar 2 to 3
+  - upgrade baz 1 to 2
+  - upgrade foo 3 to 4 [required by baz]
+### opam upgrade --show uninstalled
+uninstalled is not installed. Install it? [Y/n] y
+The following actions would be performed:
+=== install 1 package
+  - install uninstalled 1
+### opam upgrade --show -a uninstalled
+uninstalled is not installed. Install it? [Y/n] y
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar         2 to 3
+  - upgrade baz         1 to 2 [uses foo]
+  - upgrade foo         3 to 4
+=== install 1 package
+  - install uninstalled 1
+### opam upgrade --show
+The following actions would be performed:
+=== upgrade 3 packages
+  - upgrade bar 2 to 3
+  - upgrade baz 1 to 2
+  - upgrade foo 3 to 4
+### opam upgrade baz
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade baz 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   baz.1
+-> installed baz.2
+Done.
+### opam upgrade --show foo
+The following actions would be performed:
+=== recompile 1 package
+  - recompile baz 2      [uses foo]
+=== upgrade 1 package
+  - upgrade   foo 3 to 4

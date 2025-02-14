@@ -186,6 +186,16 @@ let environment_variables =
          "change the time allowance of the solver. Default is %.1f, set to 0 \
           for unlimited. Note that all solvers may not support this option."
          (OpamStd.Option.default 0. OpamSolverConfig.(default.solver_timeout)));
+      "SOLVERTOLERANCE", cli_from cli2_4, (fun v -> SOLVERTOLERANCE (env_float v)),
+      (Printf.sprintf
+         "changes the tolerance towards the solver choosing an unoptimized \
+          solution (i.e. might pull outdated packages). Typical values range \
+          from 0.0 (best solution known to the solver) to 1.0 (unoptimized \
+          solution). Default is %.1f. This option is useful in case the solver \
+          can't find a solution in a reasonable time \
+          (see $(b,\\$OPAMSOLVERTIMEOUT)). Note that all solvers may not \
+          support this option."
+         (OpamStd.Option.default 0. OpamSolverConfig.default.solver_tolerance));
       "UPGRADECRITERIA", cli_original,
       (fun v -> UPGRADECRITERIA (env_string v)),
       "specifies user $(i,preferences) for dependency solving when performing \

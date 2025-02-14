@@ -113,27 +113,16 @@ let compute_upgrade_t
         | Some nv -> not (OpamPackage.Set.mem nv (Lazy.force t.available_packages)))
       atoms
   in
-  let criteria = if to_install = [] then `Upgrade else `Default in
-  if all then
-    names,
-    OpamSolution.resolve t Upgrade
-      ~requested:packages
-      ~reinstall:(Lazy.force t.reinstall)
-      (OpamSolver.request
-         ~install:to_install
-         ~upgrade:to_upgrade
-         ~deprequest:(OpamFormula.to_atom_formula formula)
-         ~all:[]
-         ~criteria ())
-  else
   names,
   OpamSolution.resolve t Upgrade
     ~requested:packages
+    ?reinstall:(if all then Some (Lazy.force t.reinstall) else None)
     (OpamSolver.request
        ~install:to_install
        ~upgrade:to_upgrade
        ~deprequest:(OpamFormula.to_atom_formula formula)
-       ~criteria
+       ?all:(if all then Some [] else None)
+       ~criteria:(if all then `Upgrade else `Default)
        ())
 
 let print_requested requested formula =
@@ -202,9 +191,27 @@ let upgrade_t
         else OpamPackage.packages_of_names t.installed requested
       in
       let latest =
-        OpamPackage.Name.Set.fold (fun name acc ->
-            OpamPackage.Set.add (OpamPackage.max_version t.packages name) acc)
-          (OpamPackage.names_of_packages to_check)
+        OpamPackage.Set.fold (fun pkg acc ->
+            let name = OpamPackage.name pkg in
+            let pkgs = OpamPackage.packages_of_name t.packages name in
+            let latest =
+              OpamPackage.Set.fold (fun pkg latest ->
+                  if OpamPackage.compare latest pkg < 0 then
+                    let opam = OpamPackage.Map.find pkg t.opams in
+                    let avoid_version =
+                      List.exists (function
+                          | Pkgflag_AvoidVersion | Pkgflag_Deprecated -> true
+                          | Pkgflag_LightUninstall | Pkgflag_Verbose
+                          | Pkgflag_Plugin | Pkgflag_Compiler
+                          | Pkgflag_Conf | Pkgflag_Unknown _ -> false)
+                        (OpamFile.OPAM.flags opam)
+                    in
+                    if avoid_version then latest else pkg
+                  else latest)
+                pkgs pkg
+            in
+            OpamPackage.Set.add latest acc)
+          to_check
           OpamPackage.Set.empty in
       let notuptodate = latest -- to_check in
       if OpamPackage.Set.is_empty notuptodate then
@@ -1281,7 +1288,6 @@ let initialise_msys2 root =
         OpamConsole.error_and_exit `Aborted "MSYS2 failed to initialise"
     | `No ->
       OpamConsole.pause "Standing by, press enter to continue when done.";
-      OpamConsole.msg "\n"
     | `Ignore ->
       ()
     | `Quit ->
