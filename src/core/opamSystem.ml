@@ -1590,7 +1590,7 @@ let translate_patch ~dir orig corrected =
 
 exception Internal_patch_error of string
 
-let internal_patch ~patch_filename ~dir diffs =
+let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
   let fmt = Printf.sprintf in
   let get_path file =
     let dir = real_path dir in
@@ -1603,6 +1603,8 @@ let internal_patch ~patch_filename ~dir diffs =
     match Patch.patch ~cleanly:true content diff with
     | Some x -> x
     | None -> assert false
+    | exception _ when not allow_unclean ->
+      raise (Internal_patch_error (fmt "Patch %S does not apply cleanly." patch_filename))
     | exception _ ->
       match Patch.patch ~cleanly:false content diff with
       | Some x ->
@@ -1642,7 +1644,7 @@ let internal_patch ~patch_filename ~dir diffs =
   in
   List.iter apply diffs
 
-let patch ?(preprocess=true) ~dir p =
+let patch ?(preprocess=true) ~allow_unclean ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
@@ -1657,7 +1659,7 @@ let patch ?(preprocess=true) ~dir p =
   let content = read p' in
   try
     let diffs = Patch.parse ~p:1 content in
-    internal_patch ~patch_filename:p ~dir diffs;
+    internal_patch ~allow_unclean ~patch_filename:p ~dir diffs;
     Done None
   with exn -> Done (Some exn)
 
