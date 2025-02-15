@@ -22,7 +22,7 @@ type command = private {
   cmd_stdout: string option;
   cmd_verbose: bool option;
   cmd_name: string option;
-  cmd_metadata: (string * string) list option;
+  cmd_metadata: (string * string) list Lazy.t option;
 }
 
 (** Builds a shell command for later execution.
@@ -40,7 +40,7 @@ val command:
   ?env:string array ->
   ?verbose:bool ->
   ?name:string ->
-  ?metadata:(string*string) list ->
+  ?metadata:(string * string) list Lazy.t ->
   ?dir:string ->
   ?allow_stdin:bool ->
   ?stdout:string ->
@@ -71,19 +71,22 @@ type t = {
   p_stderr : string option; (** stderr dump file *)
   p_env    : string option; (** dump environment variables *)
   p_info   : string option; (** dump process info *)
-  p_metadata: (string * string) list; (** Metadata associated to the process *)
+  p_metadata: (string * string) list Lazy.t; (** Metadata associated to the process *)
   p_verbose: bool;          (** whether output of the process should be
                                 displayed *)
   p_tmp_files: string list; (** temporary files that should be cleaned up upon
                                 completion *)
 }
 
+val equal : t -> t -> bool
+val compare : t -> t -> int
+
 (** Process results *)
 type result = {
   r_code     : int;         (** Process exit code, or 256 on error *)
   r_signal   : int option;  (** Signal received if the processed was killed *)
   r_duration : float;       (** Process duration *)
-  r_info     : (string * string) list; (** Process info *)
+  r_info     : (string * string) list Lazy.t; (** Process info *)
   r_stdout   : string list; (** Content of stdout dump file *)
   r_stderr   : string list; (** Content of stderr dump file *)
   r_cleanup  : string list; (** List of files to clean-up *)

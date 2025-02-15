@@ -292,7 +292,7 @@ module Make (G : G) = struct
             | _ -> OpamProcess.wait_one (List.map fst processes)
             with e -> fail (fst (snd (List.hd processes))) e
         in
-        let n,cont = OpamStd.(List.assoc Compare.equal process processes) in
+        let n,cont = OpamStd.List.assoc OpamProcess.equal process processes in
         log "Collected task for job %a (ret:%d)"
           (slog (string_of_int @* V.hash)) n result.OpamProcess.r_code;
         let next =

@@ -186,8 +186,8 @@ val directories_with_links: string -> string list
     case you can end up with a process error instead) *)
 val make_command:
   ?verbose:bool -> ?env:string array -> ?name:string -> ?text:string ->
-  ?metadata:(string * string) list -> ?allow_stdin:bool -> ?stdout:string ->
-  ?dir:string -> ?resolve_path:bool ->
+  ?metadata:(string * string) list Lazy.t -> ?allow_stdin:bool ->
+  ?stdout:string -> ?dir:string -> ?resolve_path:bool ->
   string -> string list -> OpamProcess.command
 
 (** OLD COMMAND API, DEPRECATED *)
@@ -222,14 +222,15 @@ val apply_cygpath: string -> string
 (** [command cmd] executes the command [cmd] in the correct OPAM
     environment. *)
 val command: ?verbose:bool -> ?env:string array -> ?name:string ->
-  ?metadata:(string * string) list -> ?allow_stdin:bool ->
+  ?metadata:(string * string) list Lazy.t -> ?allow_stdin:bool ->
   command -> unit
 
 (** [commands cmds] executes the commands [cmds] in the correct OPAM
     environment. It stops whenever one command fails unless [keep_going] is set
     to [true]. In this case, the first error is re-raised at the end. *)
 val commands: ?verbose:bool -> ?env:string array -> ?name:string ->
-  ?metadata:(string * string) list -> ?keep_going:bool -> command list -> unit
+  ?metadata:(string * string) list Lazy.t -> ?keep_going:bool ->
+  command list -> unit
 
 (** [read_command_output cmd] executes the command [cmd] in the
     correct OPAM environment and return the lines from output if the command
@@ -238,7 +239,7 @@ val commands: ?verbose:bool -> ?env:string array -> ?name:string ->
     It returns stdout and stder combiend, unless [ignore_stderr] is st to true.
     *)
 val read_command_output: ?verbose:bool -> ?env:string array ->
-  ?metadata:(string * string) list ->  ?allow_stdin:bool ->
+  ?metadata:(string * string) list Lazy.t -> ?allow_stdin:bool ->
   ?ignore_stderr:bool -> command -> string list
 
 (** END *)

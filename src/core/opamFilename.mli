@@ -63,7 +63,8 @@ val env_of_list: (string * string) list -> string array
 
 (** Execute a list of commands in a given directory *)
 val exec: Dir.t -> ?env:(string * string) list -> ?name:string ->
-  ?metadata:(string * string) list -> ?keep_going:bool -> string list list -> unit
+  ?metadata:(string * string) list Lazy.t -> ?keep_going:bool ->
+  string list list -> unit
 
 (** Move a directory *)
 val move_dir: src:Dir.t -> dst:Dir.t -> unit
