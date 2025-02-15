@@ -60,5 +60,5 @@ MD5_swhid_core = 77d88d4b1d96261c866f140c64d89af8
 URL_menhir = https://gitlab.inria.fr/fpottier/menhir/-/archive/20240715/archive.tar.gz
 MD5_menhir = d39a8943fe1be28199e5ec1f4133504c
 
-URL_patch = https://github.com/kit-ty-kate/patch/archive/88247d9f1fdeb0fa370160b44e99a5d8289d62a7.tar.gz
-MD5_patch = 62d7f418ebd0ddb347db097850d4c20f
+URL_patch = https://github.com/kit-ty-kate/patch/archive/cfc167d68084d9e742e74c9bb22c18ea1221e483.tar.gz
+MD5_patch = 9d1ead73e678fa2f51a70a933b0bf017
