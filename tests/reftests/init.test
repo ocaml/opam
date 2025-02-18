@@ -67,6 +67,8 @@ depends: [ "ocaml" {= "4.10.0" & post} ]
 flags: compiler
 conflict-class: "ocaml-core-compiler"
 ### :---:
+### :I: Default compiler selection
+### :I:1: No system compiler
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["false"] "no system compiler" ]
@@ -87,6 +89,7 @@ Switch invariant: ["ocaml" {>= "4.05.0"}]
 Done.
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
+### :I:2: system compiler not compliant with default invariant
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.02.3"] "old system compiler" ]
@@ -107,6 +110,7 @@ Switch invariant: ["ocaml" {>= "4.05.0"}]
 Done.
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
+### :I:3: System compiler = 4.07.0, should be selected default
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.07.0"] "new system compiler" ]
@@ -146,8 +150,8 @@ The following actions will be performed:
 -> installed ocaml-base-compiler.4.10.0
 -> installed ocaml.4.10.0
 Done.
-### : Init with config file :
-### :: default setup ::
+### :II: Init with config file :
+### :II:a: default setup ::
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup default REPO/ | grep -v Cygwin
 No configuration file found, using built-in defaults.
@@ -168,7 +172,7 @@ swh-fallback: false
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### :: full configured opamrc ::
+### :II:b: full configured opamrc ::
 ### rm -rf $OPAMROOT
 ### <opamrc>
 opam-version: "2.0"
