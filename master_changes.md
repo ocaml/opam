@@ -133,6 +133,7 @@ users)
   * ✘ The `-i`/`--ignore-test-doc` argument has been removed from `opam admin check` [#6335 @kit-ty-kate]
   * ✘ `opam admin check` now sets `with-test` and `with-doc` to `false` instead of `true` [#6335 @kit-ty-kate]
   * Enforce repository root check for all command [#6385 @rjbou]
+  * Add an upgrade advice is the repository is 1.2 version, for all command except upgrade [#6385 @rjbou]
 
 ## Opam installer
 

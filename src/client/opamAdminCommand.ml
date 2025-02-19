@@ -16,13 +16,33 @@ open Cmdliner
 
 type command = unit Cmdliner.Term.t * Cmdliner.Cmd.info
 
-let checked_repo_root () =
+let repo_version_lt repo_root v =
+  let v' =
+    let open OpamStd.Option.Op in
+    (OpamFile.Repo.read_opt
+       (OpamRepositoryPath.repo repo_root)
+     >>= OpamFile.Repo.opam_version)
+    +! (OpamVersion.of_string "1.2")
+  in
+  if OpamVersion.compare v v' > 0 then Some v' else None
+
+let checked_repo_root ?(check=true)() =
   let repo_root = OpamFilename.cwd () in
   if not (OpamFilename.exists_dir (OpamRepositoryPath.packages_dir repo_root))
   then
     OpamConsole.error_and_exit `Bad_arguments
       "No repository found in current directory.\n\
        Please make sure there is a \"packages%s\" directory" OpamArg.dir_sep;
+  (if check then
+     let default_current = "2.0" in
+     match repo_version_lt repo_root
+             (OpamVersion.of_string default_current) with
+     | Some v ->
+       OpamConsole.warning
+         "The repository is at version %s, \
+          please consider upgrading to %s with 'opam admin upgrade'"
+         (OpamVersion.to_string v) default_current
+     | None -> ());
   repo_root
 
 let global_options cli =
@@ -646,7 +666,7 @@ let upgrade_command cli =
   in
   let cmd global_options clear_cache create_mirror () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = checked_repo_root () in
+    let repo_root = checked_repo_root ~check:false () in
     if clear_cache then OpamAdminRepoUpgrade.clear_cache ()
     else match create_mirror with
       | None ->
