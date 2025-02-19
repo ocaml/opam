@@ -76,7 +76,7 @@ let index_command cli =
   in
   let cmd global_options urls_txt () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = checked_repo_root ()  in
+    let repo_root = checked_repo_root () in
     let repo_file = OpamRepositoryPath.repo repo_root in
     let repo_def =
       match OpamFile.Repo.read_opt repo_file with
@@ -755,10 +755,11 @@ let upgrade_command cli =
   in
   let cmd global_options clear_cache create_mirror () =
     OpamArg.apply_global_options cli global_options;
+    let repo_root = checked_repo_root () in
     if clear_cache then OpamAdminRepoUpgrade.clear_cache ()
     else match create_mirror with
       | None ->
-        OpamAdminRepoUpgrade.do_upgrade (OpamFilename.cwd ());
+        OpamAdminRepoUpgrade.do_upgrade repo_root;
         if OpamFilename.exists (OpamFilename.of_string "index.tar.gz") ||
            OpamFilename.exists (OpamFilename.of_string "urls.txt")
         then
@@ -766,7 +767,7 @@ let upgrade_command cli =
             "Indexes need updating: you should now run:\n\
              \n\
             \  opam admin index"
-      | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror (OpamFilename.cwd ()) m
+      | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror repo_root m
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $
@@ -811,7 +812,7 @@ let lint_command cli =
   in
   let cmd global_options short list incl excl ign warn_error () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = OpamFilename.cwd () in
+    let repo_root = checked_repo_root () in
     if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
     then
         OpamConsole.error_and_exit `Bad_arguments
@@ -1123,6 +1124,7 @@ let list_command cli =
       global_options package_selection disjunction state_selection
       package_listing env packages () =
     OpamArg.apply_global_options cli global_options;
+    let repo_root = checked_repo_root () in
     let format =
       let force_all_versions =
         match packages with
@@ -1149,7 +1151,7 @@ let list_command cli =
               List.map (fun x -> Atom x) package_selection);
       ]
     in
-    let st = get_virtual_switch_state (OpamFilename.cwd ()) env in
+    let st = get_virtual_switch_state repo_root env in
     if not format.OpamListCommand.short && filter <> OpamFormula.Empty then
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
@@ -1190,7 +1192,7 @@ let filter_command cli =
       global_options package_selection disjunction state_selection env
       remove dryrun packages () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = OpamFilename.cwd () in
+    let repo_root = checked_repo_root () in
     let pattern_selector = OpamListCommand.pattern_selector packages in
     let join =
       if disjunction then OpamFormula.ors else OpamFormula.ands
