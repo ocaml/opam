@@ -1,10 +1,8 @@
 N0REP0
-### mv REPO OPER
-### opam repository set-url default OPER/ --set-default
-[default] Initialised
 ### : create repo
+### rm -rf REPO
 ### <repo>
-opam-version: "1.2"
+opam-version: "2.0"
 ### <packages/ipsum/ipsum.1/opam>
 opam-version: "2.0"
 ### <packages/dolor/dolor.1/opam>
@@ -242,7 +240,7 @@ amet : md5 : exists, link to sha512
 amet : sha256 : exists, link to sha512
 amet : sha512 : exists
 ### ::::::::::::::::::::::::::::::::::::
-### :IV: add a other hashes afterwards :
+### :IV: add another hashes afterwards :
 ### ::::::::::::::::::::::::::::::::::::
 ### : ipsum : only md5 then adding sha512
 ### : dolor : md5 & sha256 then adding sha512

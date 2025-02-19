@@ -120,6 +120,7 @@ users)
 
 ## Admin
   * Enforce repository root check for all command [#6385 @rjbou]
+  * Add an upgrade advice if the repository is 1.2 version, for all command except upgrade [#6385 @rjbou]
 
 ## Opam installer
 
