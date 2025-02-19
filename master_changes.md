@@ -132,6 +132,7 @@ users)
   * [BUG] Fix `opam admin check` in the presence of the `with-dev-setup` variable [#6331 @kit-ty-kate - fix #6329]
   * ✘ The `-i`/`--ignore-test-doc` argument has been removed from `opam admin check` [#6335 @kit-ty-kate]
   * ✘ `opam admin check` now sets `with-test` and `with-doc` to `false` instead of `true` [#6335 @kit-ty-kate]
+  * Enforce repository root check for all command [#6385 @rjbou]
 
 ## Opam installer
 
