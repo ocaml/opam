@@ -119,6 +119,7 @@ users)
   * Add 2.4.1 to the install scripts [#6617 @kit-ty-kate]
 
 ## Admin
+  * Enforce repository root check for all command [#6385 @rjbou]
 
 ## Opam installer
 
