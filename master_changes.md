@@ -183,6 +183,7 @@ users)
   * Add a test showing the behaviour of `opam upgrade` when faced with empty but present `build`/`run-test`/`install`/`build` field [#6505 @kit-ty-kate]
   * Add a test for `git remote`'s exit code 2 [#6422 @rjbou]
   * Add a test showing how `OPAMFETCH` is parsed [#5492 @kit-ty-kate]
+  * Add a test in admin to test repository version upgrade advice [#6385 @rjbou]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
