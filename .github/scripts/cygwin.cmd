@@ -90,9 +90,10 @@ if "%1" equ "x86_64-pc-cygwin" (
   set CYGWIN_PACKAGES=
 )
 
+:: TODO: Remove the explicit version set for diffutils when https://debbugs.gnu.org/cgi/bugreport.cgi?bug=76452 is fixed
 :: libicu-devel is needed until an alternative to the uconv call in MungeSymlinks
 :: is found
-set CYGWIN_PACKAGES=make,patch,curl,diffutils,tar,unzip,git,gcc-g++,libicu-devel%CYGWIN_PACKAGES%
+set CYGWIN_PACKAGES=make,patch,curl,diffutils=3.10-1,tar,unzip,git,gcc-g++,libicu-devel%CYGWIN_PACKAGES%
 :: xxd is needed for reftests
 set CYGWIN_PACKAGES=xxd,%CYGWIN_PACKAGES%
 
