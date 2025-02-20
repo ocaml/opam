@@ -2093,22 +2093,21 @@ module Repos_configSyntax = struct
         | Section ({ section_kind={pelem="repo";_}; section_name=Some _; _ }) ->
           false
         | _ -> true)
-    -| Pp.pp
-      (fun ~pos (_items_fields, items_section) ->
-         Pp.parse ~pos
-           (sections -| Pp.I.show_errors ~name ?condition ())
-           items_section)
-      (fun map ->
-         [], Pp.print sections (map, []))
-     (*
-     Pp.map_pair
-       (Pp.I.fields ~name ~empty fields
-        -| Pp.I.show_errors ~name ?condition ())
-       (sections
-        -| Pp.I.show_errors ~name ?condition ())
-     -| Pp.pp (fun ~pos:_ (fields, sections) -> ...)
-       (fun t -> fields, sections)
-     *)
+    -| Pp.map_pair
+      (* we need to keep the fields parser in order to display
+         unknown field errors *)
+      (let condition =
+         (* we need to propagate the BestEffort condition value *)
+         OpamStd.Option.map (fun cond -> fun () -> cond empty) condition
+       in
+       Pp.I.fields ~name ~empty:() []
+       -| Pp.I.show_errors ~name ?condition ()
+       -| Pp.pp (fun ~pos:_ _ -> ()) (fun () -> ())
+      )
+      (sections
+       -| Pp.I.show_errors ~name ?condition ())
+    -| Pp.pp (fun ~pos:_ (_, map) -> map)
+      (fun t -> (), t)
 
   let pp = pp_cond ()
 
