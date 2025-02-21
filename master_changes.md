@@ -126,6 +126,7 @@ users)
   * Fix the nixos depexts tests (git is now already installed in the nix docker image) [#6652 @kit-ty-kate]
   * Ensure every part of the scripts are run with `set -ue` [#6648 @kit-ty-kate]
   * Only run the `get-changed-files` action when in a PR [#6582 @kit-ty-kate]
+  * Add a CI job to test reverse dependencies of opam. Track and report dependency and build failures, hard-failing only on maintained packages. [#6394 @rjbou @arozovyk]
   * Enhance changed files job dependant handling [#6394 @rjbou]
 
 ## Doc

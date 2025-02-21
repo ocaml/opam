@@ -483,6 +483,35 @@ let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
     ++ run "Test (upgrade)" ["bash -exu .github/scripts/main/upgrade.sh"]
     ++ end_job f
 
+let depends_job ~analyse_job ~build_linux_job ?section runner ~oc ~workflow f =
+  let platform = os_of_platform runner in
+  let host = host_of_platform platform in
+  let only_on target = only_on platform target in
+  let needs = [analyse_job; build_linux_job ] in
+  let env = [("OPAM_DEPENDS", "1")] in
+  let matrix = platform_ocaml_matrix ~fail_fast:false start_latests_ocaml in
+  let ocamlv = "${{ matrix.ocamlv }}" in
+  let fail_if_dependent = ["opam-publish"; "opam-rt"; "opam-build"; "opam-test"] in
+  let cond = Predicate(false, Compare("steps.files.outputs.all", "")) in
+  job ~oc ~workflow ?section ~runs_on:(Runner [platform]) ~env ~needs ~matrix
+    ("Depends-" ^ name_of_platform platform)
+  ++ checkout ()
+  ++ changed_files ~withs:[ "filter", Literal ["src/**/*.mli"] ] ()
+  ++ cache ~cond Archives
+  ++ only_on Linux (run ~cond "Install bubblewrap" ["sudo apt install bubblewrap"])
+  ++ only_on Linux (run ~cond "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
+  ++ cache ~cond OCaml platform ocamlv host
+  ++ build_cache ~cond OCaml platform ocamlv host
+  ++ cache ~cond OpamBS ocamlv "depends"
+  ++ build_cache ~cond OpamBS ocamlv "depends"
+  ++ run ~cond "Compile" ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}");
+                               ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}");
+                               ("GITHUB_PR_USER", "${{ github.event.pull_request.user.login }}");
+                               ("JOB_URL", "${{ steps.get-job-id.outputs.job_url }}");
+                               ("FAIL_IF_DEPENDENT", String.concat " " fail_if_dependent)]
+    ["bash -exu .github/scripts/main/main.sh " ^ host]
+  ++ end_job f
+
 let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
   let cond = Predicate(false, Compare("steps.files.outputs.all", "")) in
   let withs = [ "filter", Literal [ "configure.ac"; "shell/install.sh"; "src_ext/**"; ".github/workflows/**"] ] in
@@ -515,7 +544,7 @@ let main oc : unit =
     ("OPAM12CACHE", "~/.cache/opam1.2/cache");
     (* These should be identical to the values in appveyor.yml *)
     ("OPAM_REPO", "https://github.com/ocaml/opam-repository.git");
-    ("OPAM_TEST_REPO_SHA", "e9ce8525130a382fac004612302b2f2268f4188c");
+    ("OPAM_TEST_REPO_SHA", "3dab8c734b15bf2b5c1d8b99bb134f51361a6bee");
     ("OPAM_REPO_SHA", "e9ce8525130a382fac004612302b2f2268f4188c");
     ("SOLVER", "");
     (* Cygwin configuration *)
@@ -545,6 +574,7 @@ let main oc : unit =
   @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux
   @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
   @@ fun _ -> hygiene_job ~analyse_job (Specific (Linux, "22.04"))
+  @@ fun _ -> depends_job ~analyse_job ~build_linux_job Linux
   @@ fun _ -> end_workflow
 
 let () =

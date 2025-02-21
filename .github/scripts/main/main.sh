@@ -12,7 +12,7 @@ unset-dev-version () {
 export OCAMLRUNPARAM=b
 
 (set +x ; echo -en "::group::build opam\r") 2>/dev/null
-if [[ "$OPAM_TEST" -eq 1 ]] || [[ "$OPAM_DOC" -eq 1 ]] ; then
+if [[ "$OPAM_TEST" -eq 1 ]] || [[ "$OPAM_DOC" -eq 1 ]] || [[ "$OPAM_DEPENDS" -eq 1 ]] ; then
   export OPAMROOT=$OPAMBSROOT
   # If the cached root is newer, regenerate a binary compatible root
   opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
@@ -162,7 +162,83 @@ if [ "$OPAM_TEST" = "1" ]; then
 
   # opam lib pins defined in opam-rt are ignored as there is a local pin
   opam pin . -yn --ignore-pin-depends
-  opam install opam-rt --deps-only opam-devel.to-test
+  opam install opam-rt --deps-only opam-devel
   opam exec -- make || { opam reinstall opam-client -y; opam exec -- make; }
   (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
+fi
+
+test_project () {
+  url=$1
+  project=$2
+
+  (set +x; echo -en "::group::depends-$project\r") 2>/dev/null
+  opam pin "$url" --kind git -yn
+  for pkg_name in $(opam show . -f name); do
+    echo "Installing dependencies for $pkg_name"
+    deps_code=0
+    opam install "$pkg_name" --deps-only || deps_code=$?
+    if [ $deps_code -ne 0 ]; then
+      echo "Dependency installation failed for $pkg_name"
+      DEPENDS_ERRORS="$DEPENDS_ERRORS $pkg_name"
+    else
+      echo "Installing opam-client and $pkg_name"
+      opam install opam-client
+      code=0
+      opam install "$pkg_name" || code=$?
+      if [ $code -ne 0 ]; then
+        LIB_ERRORS="$LIB_ERRORS $project"
+        echo -e "\e[31mErrors while installing $pkg_name\e[0m";
+      fi
+    fi
+  done
+  (set +x ; echo -en "::endgroup::depends-$project\r") 2>/dev/null
+}
+
+if [ "$OPAM_DEPENDS" = "1" ]; then
+  DEPENDS_ERRORS=""
+  LIB_ERRORS=""
+  OCAMLVER=$(ocamlc -version)
+
+  (set +x; echo -en "::group::depends\r") 2>/dev/null
+  VERSION="2.4.1"
+  opam_libs=$(opam show . -f name 2>/dev/null)
+  depends_on=$(echo "$opam_libs" | sed "s/\$/.${VERSION}/" | paste -sd, -)
+  packages=$(opam list --or --depends-on "$depends_on" --columns name | tail -n +3)
+  set +x
+  for exclude in $opam_libs; do
+    packages=$(echo "$packages" | grep -vF "$exclude")
+  done
+  set -x
+
+  for pkg in $packages; do
+    dev_repo=$(opam show "$pkg" -f dev-repo 2>/dev/null)
+    dev_repo=$(echo "$dev_repo" | sed -E 's/^"//;s/"$//;s/^git\+//;s/\.git$//')
+
+    if [[ -n "$dev_repo" ]]; then
+      prepare_project "$dev_repo" "$pkg"
+      test_project "$dev_repo" "$pkg"
+    fi
+  done
+
+  if [ -n "$DEPENDS_ERRORS" ]; then
+    echo -e "\e[31mErrors detected in dependencies of $DEPENDS_ERRORS\e[0m";
+  fi
+
+  if [ -n "$LIB_ERRORS" ]; then
+    FAIL=()
+    set +x
+    for critical in $FAIL_IF_DEPENDENT; do
+      if echo "$LIB_ERRORS" | grep -Fq "$critical"; then
+        FAIL+=("$critical")
+      fi
+    done
+    set -x
+    echo "Packages tested: $packages"
+    if [ -n "${FAIL[*]}" ]; then
+      echo "::error ::${FAIL[*]} is broken"
+      exit 1
+    fi
+  fi
+
+  (set +x ; echo -en "::endgroup::depends\r") 2>/dev/null
 fi
