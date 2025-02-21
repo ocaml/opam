@@ -12,7 +12,7 @@ unset-dev-version () {
 export OCAMLRUNPARAM=b
 
 (set +x ; echo -en "::group::build opam\r") 2>/dev/null
-if [[ "$OPAM_TEST" -eq 1 ]] || [[ "$OPAM_DOC" -eq 1 ]] ; then
+if [[ "$OPAM_TEST" -eq 1 ]] || [[ "$OPAM_DOC" -eq 1 ]] || [[ "$OPAM_DEPENDS" -eq 1 ]] ; then
   export OPAMROOT=$OPAMBSROOT
   # If the cached root is newer, regenerate a binary compatible root
   opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
@@ -163,4 +163,45 @@ if [ "$OPAM_TEST" = "1" ]; then
   opam install opam-rt --deps-only opam-devel.to-test
   make || { opam reinstall opam-client -y; make; }
   (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
+fi
+
+test_project () {
+  org=$1
+  project=$2
+  ignore_depends=$3
+  make_cmd=$4
+
+  ignore=""
+  if [ $ignore_depends -eq 1 ]; then
+    ignore="--ignore-pin-depends"
+  fi
+
+  (set +x; echo -en "::group::depends-$project\r") 2>/dev/null
+  prepare_project "$org" "$project"
+  set +e
+  opam pin . -yn $ignore
+  opam install "$project" --deps-only opam-client.to-test
+  $make_cmd || { opam reinstall opam-client -y; $make_cmd; }
+  code=$?
+  if [ $code -ne 0 ]; then
+    DEPENDS_ERRORS="$DEPENDS_ERRORS $project"
+  fi
+  set -e
+  (set +x ; echo -en "::endgroup::depends-$project\r") 2>/dev/null
+}
+
+if [ "$OPAM_DEPENDS" = "1" ]; then
+
+  DEPENDS_ERRORS=""
+  (set +x; echo -en "::group::depends\r") 2>/dev/null
+
+  test_project "ocaml-opam" "opam-publish" 0 "make"
+  test_project "AltGr" "opam-bundle" 0 "make"
+  test_project "ocamlpro" "opam-custom-install" 1 "dune build"
+
+  if [ -n "$DEPENDS_ERRORS" ]; then
+    echo -e "\e[31mErrors detected in plugins $DEPENDS_ERRORS\e[0m";
+    echo 1
+  fi
+  (set +x ; echo -en "::endgroup::depends\r") 2>/dev/null
 fi
