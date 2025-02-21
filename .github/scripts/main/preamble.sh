@@ -42,7 +42,7 @@ else
   OPAM_REPO_CACHE=$OPAM_REPO_MAIN
 fi
 
-# used only for TEST jobs
+# used only for TEST and DOC jobs
 init-bootstrap () {
   if [ "$OPAM_TEST" = "1" ] || [ "$OPAM_DOC" = "1" ] || [ -n "$SOLVER" ]; then
     export OPAMROOT=$OPAMBSROOT
