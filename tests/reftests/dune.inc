@@ -1932,27 +1932,6 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:upgrade-format.test} %{read-lines:testing-env}))))
 
 (rule
- (alias reftest-upgrade-two-point-o)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
- (action
-  (diff upgrade-two-point-o.test upgrade-two-point-o.out)))
-
-(alias
- (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
- (deps (alias reftest-upgrade-two-point-o)))
-
-(rule
- (targets upgrade-two-point-o.out)
- (deps root-N0REP0)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
- (package opam)
- (action
-  (with-stdout-to
-   %{targets}
-   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:upgrade-two-point-o.test} %{read-lines:testing-env}))))
-
-(rule
  (alias reftest-upgrade)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

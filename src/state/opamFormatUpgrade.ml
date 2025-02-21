@@ -352,7 +352,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
 
 (* Global state changes that need to be propagated *)
 let gtc_none = { gtc_repo = false; gtc_switch = false }
-let _gtc_repo = { gtc_repo = true; gtc_switch = false }
+let gtc_repo = { gtc_repo = true; gtc_switch = false }
 let _gtc_switch = { gtc_repo = false; gtc_switch = true }
 let _gtc_both = { gtc_repo = true; gtc_switch = true }
 
@@ -770,7 +770,10 @@ let from_1_3_dev7_to_2_0_alpha ~on_the_fly:_ root conf =
   in
   OpamFile.Repos_config.write (OpamPath.repos_config root)
     (OpamRepositoryName.Map.of_list
-       (List.map (fun (_, r, u) -> r, (u,None)) prio_repositories));
+       (List.map (fun (_, repo_name, repoc_url) ->
+            repo_name,
+            OpamFile.Repos_config.{repoc_url; repoc_trust = None})
+           prio_repositories));
   let prio_repositories =
     List.stable_sort (fun (prio1, _, _) (prio2, _, _) -> prio2 - prio1)
       prio_repositories
@@ -1147,6 +1150,32 @@ let v2_2 = OpamVersion.of_string "2.2"
 
 let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 
+let v2_3 = OpamVersion.of_string "2.3"
+
+let from_2_2_to_2_3 ~on_the_fly:_ _ conf = conf, gtc_none
+
+let v2_4 = OpamVersion.of_string "2.4"
+
+let from_2_3_to_2_4 ~on_the_fly root conf =
+  (if on_the_fly then
+     OpamConsole.error_and_exit `Internal_error
+       "This 2.4 upgrade should be a hard upgrade");
+  let f = OpamPath.repos_config root in
+  OpamStd.Option.iter (fun old_repoconfig ->
+      let repos =
+        OpamRepositoryName.Map.map (fun old_repo ->
+            let OpamFile.Repos_config_Legacy.{repoc_url; repoc_trust} =
+              old_repo
+            in
+            OpamFile.Repos_config.{repoc_url; repoc_trust})
+          old_repoconfig
+      in
+      OpamFile.Repos_config.write f repos)
+    (OpamFile.Repos_config_Legacy.BestEffort.read_opt
+       (OpamFile.make
+          (OpamFile.filename f)));
+  conf, gtc_repo
+
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
@@ -1156,7 +1185,7 @@ let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 
 let latest_version = OpamFile.Config.root_version
 
-let latest_hard_upgrade = (* to *) v2_0_beta5
+let latest_hard_upgrade = (* to *) v2_4
 
 (* intermediate roots that need a hard upgrade when upgrading from them *)
 let v2_1_intermediate_roots = [
@@ -1218,9 +1247,11 @@ let as_necessary ?reinit requested_lock global_lock root config =
     let is_2_1_intermediate_root =
       List.exists (OpamVersion.equal root_version) v2_1_intermediate_roots
     in
+    (* As last hard upgrade is > 2.1~rc, we no more need that selection.
     let latest_hard_upgrade =
       if is_2_1_intermediate_root then v2_1_rc else latest_hard_upgrade
     in
+    *)
     (if is_2_1_intermediate_root then [
         v2_1_alpha,  from_2_0_to_2_1_alpha;
         v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
@@ -1244,6 +1275,8 @@ let as_necessary ?reinit requested_lock global_lock root config =
       v2_2_alpha,  from_2_1_to_2_2_alpha;
       v2_2_beta,   from_2_2_alpha_to_2_2_beta;
       v2_2,        from_2_2_beta_to_2_2;
+      v2_3,        from_2_2_to_2_3;
+      v2_4,        from_2_3_to_2_4;
     ]
     |> List.filter (fun (v,_) ->
         OpamVersion.compare root_version v < 0)

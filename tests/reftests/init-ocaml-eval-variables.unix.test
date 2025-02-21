@@ -7,6 +7,9 @@ let opamroot = Sys.getenv "OPAMROOT"
 let opam_version = Printf.sprintf "opam-version: %S"
 let opam_version_2_0 = opam_version "2.0"
 let opam_version_2_1 = opam_version "2.1"
+let repos_config = Printf.sprintf {|opam-version: "2.0"
+repositories: "default" {"file://%s/REPO"}
+|} (Sys.getenv "BASEDIR")
 let repo = {|repositories: "default"|}
 let depext = {|
 depext: true
@@ -33,6 +36,10 @@ let _ =
   let content = get_files Sys.argv.(1) in
   let fd = open_out name in
   List.iter (fun l -> output_string fd (l^"\n")) content;
+  close_out fd;
+  let rcname = Filename.concat (Filename.concat opamroot "repo") "repos-config" in
+  let fd = open_out rcname in
+  output_string fd repos_config;
   close_out fd
 ### rm -rf "$OPAMROOT"
 ### ::::::::::::::::::::::::::
@@ -55,15 +62,24 @@ eval-variables: [sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on 
 ### # rw global state
 ### opam option jobs=4 | " ${OPAMROOTVERSION}($|,)" -> " current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         Light config upgrade, from 2.0 to current
+FMT_UPG                         Hard config upgrade, from 2.0 to current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.0 to version current which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Perform the update and continue? [Y/n] y
 [NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
            opam option jobs=1 --global
 Format upgrade done.
-Set to '4' the field jobs in global configuration
+
+<><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
+Update done, please now retry your command.
+# Return code 10 #
 ### opam-cat $OPAMROOT/config | grep eval-variables
 eval-variables: [[sys-ocaml-system ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/system: //p'"] "Target system of the OCaml compiler present on your system"] [sys-ocaml-libc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/^os_type: Win32/msvc/p;s/^os_type: .*/libc/p'"] "Host C Runtime Library type of the OCaml compiler present on your system"] [sys-ocaml-cc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/^ccomp_type: //p'"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-arch ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/i386/i686/;s/amd64/x86_64/;s/^architecture: //p'"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"]]
 ### rm "$OPAMROOT/config"
@@ -76,14 +92,23 @@ eval-variables: [[sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> " current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-FMT_UPG                         Light config upgrade, from 2.1 to  current
+FMT_UPG                         Hard config upgrade, from 2.1 to  current
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1 to version  current which can't be reverted.
 You may want to back it up before going further.
 
-Continue? [Y/n] y
+Perform the update and continue? [Y/n] y
 [NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
            opam option jobs=1 --global
 Format upgrade done.
-Set to '4' the field jobs in global configuration
+
+<><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
+Update done, please now retry your command.
+# Return code 10 #
 ### opam-cat $OPAMROOT/config | grep eval-variables
 eval-variables: [[sys-ocaml-system ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/system: //p'"] "Target system of the OCaml compiler present on your system"] [sys-ocaml-version ["ocamlc" "-vnum"] "OCaml version present on your system independently of opam, if any"] [sys-ocaml-arch ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/i386/i686/;s/amd64/x86_64/;s/^architecture: //p'"] "Target architecture of the OCaml compiler present on your system"] [sys-ocaml-cc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/^ccomp_type: //p'"] "Host C Compiler type of the OCaml compiler present on your system"] [sys-ocaml-libc ["sh" "-c" "ocamlc -config 2>/dev/null | tr -d '/r' | sed -n -e 's/^os_type: Win32/msvc/p;s/^os_type: .*/libc/p'"] "Host C Runtime Library type of the OCaml compiler present on your system"]]
