@@ -196,6 +196,8 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
   (set +x; echo -en "::group::depends\r") 2>/dev/null
 
   test_project "ocaml-opam" "opam-publish" 0 "make"
+  test_project "AltGr" "opam-bundle" 0 "make"
+  test_project "ocamlpro" "opam-custom-install" 1 "dune build"
 
   if [ -n "$DEPENDS_ERRORS" ]; then
     echo -e "\e[31mErrors detected in plugins $DEPENDS_ERRORS\e[0m";
