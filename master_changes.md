@@ -111,6 +111,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Add a CI job to test reverse dependencies of opam. Track and report dependency and build failures, hard-failing only on maintained packages. Post a summary of results as a comment on the pull request. [#6394 @arozovyk] 
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
