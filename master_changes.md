@@ -133,6 +133,8 @@ users)
   * [BUG] Fix `opam admin check` in the presence of the `with-dev-setup` variable [#6331 @kit-ty-kate - fix #6329]
   * ✘ The `-i`/`--ignore-test-doc` argument has been removed from `opam admin check` [#6335 @kit-ty-kate]
   * ✘ `opam admin check` now sets `with-test` and `with-doc` to `false` instead of `true` [#6335 @kit-ty-kate]
+  * Enforce repository root check for all command [#6385 @rjbou]
+  * Add an upgrade advice is the repository is 1.2 version, for all command except upgrade [#6385 @rjbou]
 
 ## Opam installer
 
@@ -176,6 +178,7 @@ users)
   * Add a test showing the behaviour of `opam upgrade` with packages flagged with `avoid-version`/`deprecated` [#6273 @kit-ty-kate]
   * Add a test showing the behaviour when a pin depend is unpinned [#6380 @rjbou]
   * Add a test to ensure `opam upgrade <pkg>` will not upgrade unrelated things [#6373 @kit-ty-kate]
+  * Add a test in admin to test repository version upgrade advice [#6385 @rjbou]
 
 ### Engine
 
