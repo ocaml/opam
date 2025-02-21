@@ -122,7 +122,6 @@ prepare_project () {
   fi
 
   test -d _opam || opam switch create . --no-install --formula '"ocaml-system"'
-  eval $(opam env)
   opam pin "$GITHUB_WORKSPACE" -yn --with-version to-test
 }
 
@@ -161,7 +160,7 @@ if [ "$OPAM_TEST" = "1" ]; then
   # opam lib pins defined in opam-rt are ignored as there is a local pin
   opam pin . -yn --ignore-pin-depends
   opam install opam-rt --deps-only opam-devel.to-test
-  make || { opam reinstall opam-client -y; make; }
+  opam exec -- make || { opam reinstall opam-client -y; opam exec -- make; }
   (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
 fi
 
@@ -181,7 +180,7 @@ test_project () {
   set +e
   opam pin . -yn $ignore
   opam install "$project" --deps-only opam-client.to-test
-  $make_cmd || { opam reinstall opam-client -y; $make_cmd; }
+  opam exec -- $make_cmd || { opam reinstall opam-client -y; opam exec -- $make_cmd; }
   code=$?
   if [ $code -ne 0 ]; then
     DEPENDS_ERRORS="$DEPENDS_ERRORS $project"
