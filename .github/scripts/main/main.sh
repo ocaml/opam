@@ -200,7 +200,7 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
 
   if [ -n "$DEPENDS_ERRORS" ]; then
     echo -e "\e[31mErrors detected in plugins $DEPENDS_ERRORS\e[0m";
-    echo 1
+    exit 1
   fi
   (set +x ; echo -en "::endgroup::depends\r") 2>/dev/null
 fi
