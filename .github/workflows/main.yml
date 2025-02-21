@@ -742,4 +742,5 @@ jobs:
       env:
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
         PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
+        GITHUB_PR_USER: ${{ github.event.pull_request.user.login }}
       run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu

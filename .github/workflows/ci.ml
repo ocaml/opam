@@ -497,7 +497,7 @@ let depends_job ~analyse_job ~build_linux_job ?section runner ~oc ~workflow f =
     ++ build_cache OCaml platform ocamlv host
     ++ cache OpamBS ocamlv "depends"
     ++ build_cache OpamBS ocamlv "depends"
-    ++ run "Compile" ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}"); ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}")] ["bash -exu .github/scripts/main/main.sh " ^ host]
+    ++ run "Compile" ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}"); ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}"); ("GITHUB_PR_USER", "${{ github.event.pull_request.user.login }}")] ["bash -exu .github/scripts/main/main.sh " ^ host]
     ++ end_job f
 
 let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
