@@ -272,7 +272,7 @@ val remove_suffix: Base.t -> t -> string
 
 (** Apply a patch in a directory. If [preprocess] is set to false, there is no
     CRLF translation. Returns [None] on success, the process error otherwise *)
-val patch: ?preprocess:bool -> t -> Dir.t -> exn option OpamProcess.job
+val patch: ?preprocess:bool -> allow_unclean:bool -> t -> Dir.t -> exn option OpamProcess.job
 
 (** Create an empty file *)
 val touch: t -> unit
