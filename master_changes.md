@@ -81,6 +81,7 @@ users)
   * Check that the repositories given to `opam repository remove` actually exist [#5014 @kit-ty-kate - fixes #5012]
 
 ## Lock
+  * [BUG] Fix `pin-depends` for `with-*` dependencies [#5471 @rjbou - fix #5428]
 
 ## Clean
 
