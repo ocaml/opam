@@ -1012,6 +1012,7 @@ maintainer: "maint@tain.er"
 license: "ISC"
 dev-repo: "git+file://./../to@li.nt"
 bug-reports: "https://nobug"
+depends: "pinned"
 url {
   src:"file://./my/url/path"
   checksum: "md5=00000000000000000000000000000000"
@@ -1265,6 +1266,126 @@ ${BASEDIR}/lint.opam: Errors.
              error 53: Mismatching 'extra-files:' field: "./relative/path", "/absolute/../relative/path", "/absolute/path", "extra-files..patch.patch"
              error 73: Field 'extra-files' contains path with '..': "/absolute/../relative/path"
 # Return code 1 #
+### : E74: Field 'pin-depends' contains packages that are neither in 'depends' nor in 'depopts'
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+pin-depends: [
+  [ "foo.1" "file:///some/path" ]
+  [ "bar.1" "file:///some/path" ]
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 74: Field 'pin-depends' contains packages that are neither in 'depends' nor in 'depopts': "foo", "bar"
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: [ "foo" ]
+pin-depends: [
+  [ "foo.1" "file:///some/path" ]
+  [ "bar.1" "file:///some/path" ]
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 74: Field 'pin-depends' contains packages that are neither in 'depends' nor in 'depopts': "bar"
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depopts: [ "bar" ]
+pin-depends: [
+  [ "foo.1" "file:///some/path" ]
+  [ "bar.1" "file:///some/path" ]
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Warnings.
+           warning 74: Field 'pin-depends' contains packages that are neither in 'depends' nor in 'depopts': "foo"
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: [ "foo" "oof" ]
+depopts: [ "bar" "rab" ]
+pin-depends: [
+  [ "foo.1" "file:///some/path" ]
+  [ "bar.1" "file:///some/path" ]
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: [ "foo" ]
+pin-depends: [
+  [ "foo.1" "file:///some/path" ]
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depopts: [ "bar" ]
+pin-depends: [
+  [ "bar.1" "file:///some/path" ]
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "ISC"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+depends: [ "foo" { = "1" } ]
+pin-depends: [
+  [ "foo.2" "file:///some/path" ]
+]
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
 ### :::::::::::::::::::::
 ### : Test parse errors :
 ### :::::::::::::::::::::
