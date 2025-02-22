@@ -1,0 +1,384 @@
+N0REP0
+### rm -r REPO
+### <foo>
+FOO
+### <bar>
+BAR
+### <repo>
+opam-version: "2.0"
+### <generate.sh>
+pkgs="lorem ipsum dolor"
+for n in $pkgs; do
+  for v in 1 2; do
+    pre=packages/$n/$n.$v
+    mkdir -p $pre
+    echo 'opam-version: "2.0"' > $pre/opam
+  done
+done
+
+pre=packages/ipsum/ipsum.1
+echo 'extra-files: [ "foo" ]' >> $pre/opam
+mkdir $pre/files
+cp foo $pre/files/foo
+
+pre=packages/dolor/dolor.1
+cat >> $pre/opam << EOF
+extra-files: [ "bar" ]
+extra-source "baz" {
+  src: "https://anoth.er/url/baz"
+  checksum: "md5=0000000000000000000000000000000"
+}
+EOF
+mkdir $pre/files
+cp bar $pre/files/bar
+
+pre=packages/dolor/dolor.2
+echo 'extra-files: [[ "foo" ] [ "bar" ]]' >> $pre/opam
+mkdir $pre/files
+cp foo $pre/files/foo
+cp bar $pre/files/bar
+### sh generate.sh
+### opam admin list
+# Packages matching: available
+# Name # Installed # Synopsis
+dolor  --
+ipsum  --
+lorem  --
+### opam-cat packages/lorem/lorem.1/opam
+opam-version: "2.0"
+### opam-cat packages/lorem/lorem.2/opam
+opam-version: "2.0"
+### opam-cat packages/ipsum/ipsum.1/opam
+extra-files: ["foo"]
+opam-version: "2.0"
+### opam-cat packages/ipsum/ipsum.2/opam
+opam-version: "2.0"
+### opam-cat packages/dolor/dolor.1/opam
+extra-files: ["bar"]
+opam-version: "2.0"
+extra-source "baz" {
+src: "https://anoth.er/url/baz"
+checksum: "md5=0000000000000000000000000000000"
+}
+### opam-cat packages/dolor/dolor.2/opam
+extra-files: [["foo"] ["bar"]]
+opam-version: "2.0"
+### : required arguments
+### opam admin migrate-extrafiles
+opam admin: required arguments DIR, URL are missing
+Usage: opam admin migrate-extrafiles [--hash=HASH_ALGO] [--packages=PACKAGES] [OPTION]… DIR URL
+Try 'opam admin migrate-extrafiles --help' or 'opam admin --help' for more information.
+# Return code 2 #
+### opam admin migrate-extrafiles ./migrated
+opam admin: required argument URL is missing
+Usage: opam admin migrate-extrafiles [--hash=HASH_ALGO] [--packages=PACKAGES] [OPTION]… DIR URL
+Try 'opam admin migrate-extrafiles --help' or 'opam admin --help' for more information.
+# Return code 2 #
+### #opam admin migrate-extrafiles https://an.url/prefix ./migrated
+### : migrate all
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/lorem/lorem.2/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/ipsum/ipsum.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+extra-source "foo" {
+src: "https://an.url/prefix/patches/ipsum/ipsum.1/foo"
+checksum: "sha256=HASH"
+}
+### opam-cat packages/ipsum/ipsum.2/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/dolor/dolor.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+extra-source "bar" {
+src: "https://an.url/prefix/patches/dolor/dolor.1/bar"
+checksum: "sha256=HASH"
+}
+extra-source "baz" {
+src: "https://anoth.er/url/baz"
+checksum: "md5=0000000000000000000000000000000"
+}
+### opam-cat packages/dolor/dolor.2/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+extra-source "bar" {
+src: "https://an.url/prefix/patches/dolor/dolor.2/bar"
+checksum: "sha256=HASH"
+}
+extra-source "foo" {
+src: "https://an.url/prefix/patches/dolor/dolor.2/foo"
+checksum: "sha256=HASH"
+}
+### find migrated | sort
+migrated
+migrated/patches
+migrated/patches/dolor
+migrated/patches/dolor/dolor.1
+migrated/patches/dolor/dolor.1/bar
+migrated/patches/dolor/dolor.2
+migrated/patches/dolor/dolor.2/bar
+migrated/patches/dolor/dolor.2/foo
+migrated/patches/ipsum
+migrated/patches/ipsum/ipsum.1
+migrated/patches/ipsum/ipsum.1/foo
+### rm -rf migrated packages
+### : select only some packages
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix --packages ipsum,dolor.2
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/lorem/lorem.2/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/ipsum/ipsum.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+extra-source "foo" {
+src: "https://an.url/prefix/patches/ipsum/ipsum.1/foo"
+checksum: "sha256=HASH"
+}
+### opam-cat packages/ipsum/ipsum.2/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/dolor/dolor.1/opam | '=[0-9a-f]{64}' -> =HASH
+extra-files: ["bar"]
+opam-version: "2.0"
+extra-source "baz" {
+src: "https://anoth.er/url/baz"
+checksum: "md5=0000000000000000000000000000000"
+}
+### opam-cat packages/dolor/dolor.2/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+extra-source "bar" {
+src: "https://an.url/prefix/patches/dolor/dolor.2/bar"
+checksum: "sha256=HASH"
+}
+extra-source "foo" {
+src: "https://an.url/prefix/patches/dolor/dolor.2/foo"
+checksum: "sha256=HASH"
+}
+### find migrated | sort
+migrated
+migrated/patches
+migrated/patches/dolor
+migrated/patches/dolor/dolor.2
+migrated/patches/dolor/dolor.2/bar
+migrated/patches/dolor/dolor.2/foo
+migrated/patches/ipsum
+migrated/patches/ipsum/ipsum.1
+migrated/patches/ipsum/ipsum.1/foo
+### rm -rf migrated packages
+### : choose hash
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix --hash sha512
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/lorem/lorem.2/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/ipsum/ipsum.1/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+extra-source "foo" {
+src: "https://an.url/prefix/patches/ipsum/ipsum.1/foo"
+checksum: "sha512=HASH"
+}
+### opam-cat packages/ipsum/ipsum.2/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/dolor/dolor.1/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+extra-source "bar" {
+src: "https://an.url/prefix/patches/dolor/dolor.1/bar"
+checksum: "sha512=HASH"
+}
+extra-source "baz" {
+src: "https://anoth.er/url/baz"
+checksum: "md5=0000000000000000000000000000000"
+}
+### opam-cat packages/dolor/dolor.2/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+extra-source "bar" {
+src: "https://an.url/prefix/patches/dolor/dolor.2/bar"
+checksum: "sha512=HASH"
+}
+extra-source "foo" {
+src: "https://an.url/prefix/patches/dolor/dolor.2/foo"
+checksum: "sha512=HASH"
+}
+### find migrated | sort
+migrated
+migrated/patches
+migrated/patches/dolor
+migrated/patches/dolor/dolor.1
+migrated/patches/dolor/dolor.1/bar
+migrated/patches/dolor/dolor.2
+migrated/patches/dolor/dolor.2/bar
+migrated/patches/dolor/dolor.2/foo
+migrated/patches/ipsum
+migrated/patches/ipsum/ipsum.1
+migrated/patches/ipsum/ipsum.1/foo
+### rm -rf migrated packages
+### : all args
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix --hash sha512 --packages ipsum.1,dolor
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/lorem/lorem.2/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/ipsum/ipsum.1/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+extra-source "foo" {
+src: "https://an.url/prefix/patches/ipsum/ipsum.1/foo"
+checksum: "sha512=HASH"
+}
+### opam-cat packages/ipsum/ipsum.2/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+### opam-cat packages/dolor/dolor.1/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+extra-source "bar" {
+src: "https://an.url/prefix/patches/dolor/dolor.1/bar"
+checksum: "sha512=HASH"
+}
+extra-source "baz" {
+src: "https://anoth.er/url/baz"
+checksum: "md5=0000000000000000000000000000000"
+}
+### opam-cat packages/dolor/dolor.2/opam | '=[0-9a-f]{128}' -> =HASH
+opam-version: "2.0"
+extra-source "bar" {
+src: "https://an.url/prefix/patches/dolor/dolor.2/bar"
+checksum: "sha512=HASH"
+}
+extra-source "foo" {
+src: "https://an.url/prefix/patches/dolor/dolor.2/foo"
+checksum: "sha512=HASH"
+}
+### find migrated | sort
+migrated
+migrated/patches
+migrated/patches/dolor
+migrated/patches/dolor/dolor.1
+migrated/patches/dolor/dolor.1/bar
+migrated/patches/dolor/dolor.2
+migrated/patches/dolor/dolor.2/bar
+migrated/patches/dolor/dolor.2/foo
+migrated/patches/ipsum
+migrated/patches/ipsum/ipsum.1
+migrated/patches/ipsum/ipsum.1/foo
+### rm -rf migrated packages
+### : several trailing '/'
+### <generate.sh>
+n=lorem
+v=1
+pre=packages/$n/$n.$v
+mkdir -p $pre
+cat > $pre/opam << EOF
+opam-version: "2.0"
+extra-files: [ "foo" ]
+EOF
+mkdir -p $pre/files
+cp foo $pre/files/foo
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix/
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+extra-source "foo" {
+src: "https://an.url/prefix/patches/lorem/lorem.1/foo"
+checksum: "sha256=HASH"
+}
+### rm -rf migrated packages
+### :--:
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix//
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+extra-source "foo" {
+src: "https://an.url/prefix//patches/lorem/lorem.1/foo"
+checksum: "sha256=HASH"
+}
+### rm -rf migrated packages
+### : wrong checksum
+### <generate.sh>
+n=lorem
+v=1
+pre=packages/$n/$n.$v
+mkdir -p $pre
+cat > $pre/opam << EOF
+opam-version: "2.0"
+extra-files: [ "foo" "md5=000000000000000000000000000000000000000"]
+EOF
+mkdir -p $pre/files
+cp foo $pre/files/foo
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix/
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+extra-source "foo" {
+src: "https://an.url/prefix/patches/lorem/lorem.1/foo"
+checksum: "sha256=HASH"
+}
+### rm -rf migrated packages
+### : empty files dir
+### <generate.sh>
+n=lorem
+v=1
+pre=packages/$n/$n.$v
+mkdir -p $pre
+cat > $pre/opam << EOF
+opam-version: "2.0"
+extra-files: [ "foo" ]
+EOF
+mkdir -p $pre/files
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix/
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{64}' -> =HASH
+extra-files: ["foo"]
+opam-version: "2.0"
+### rm -rf migrated packages
+### : extra files not in opam file
+### <generate.sh>
+n=lorem
+v=1
+pre=packages/$n/$n.$v
+mkdir -p $pre
+cat > $pre/opam << EOF
+opam-version: "2.0"
+EOF
+mkdir -p $pre/files
+cp foo $pre/files/foo
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix/
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+extra-source "foo" {
+src: "https://an.url/prefix/patches/lorem/lorem.1/foo"
+checksum: "sha256=HASH"
+}
+### rm -rf migrated packages
+### : external extrafiles
+### <generate.sh>
+n=lorem
+v=1
+pre=packages/$n/$n.$v
+mkdir -p $pre
+cat > $pre/opam << EOF
+opam-version: "2.0"
+extra-files: ["https://y.et/another/url"]
+EOF
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix/
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{64}' -> =HASH
+extra-files: ["https://y.et/another/url"]
+opam-version: "2.0"
+### rm -rf migrated packages
+### : old url file presence
+### <generate.sh>
+n=lorem
+v=1
+pre=packages/$n/$n.$v
+mkdir -p $pre
+echo 'opam-version: "2.0"' > $pre/opam
+echo 'extra-files: [ "foo" ]' > $pre/url
+mkdir -p $pre/files
+### sh generate.sh
+### opam admin migrate-extrafiles ./migrated https://an.url/prefix/
+[WARNING] Not updating external URL file at ${BASEDIR}/packages/lorem/lorem.1/url, consider upgrading your repository with 'opam admin upgrade'
+# Return code 40 #
+### opam-cat packages/lorem/lorem.1/opam | '=[0-9a-f]{64}' -> =HASH
+opam-version: "2.0"
+### rm -rf migrated packages
