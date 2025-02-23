@@ -17,7 +17,7 @@ open OpamTypes
 
 val rsync_dirs: ?args:string list -> ?exclude_vcdirs:bool ->
   OpamUrl.t -> OpamFilename.Dir.t ->
-  OpamFilename.Dir.t download OpamProcess.job
+  unit download OpamProcess.job
 val rsync_file: ?args:string list ->
   OpamUrl.t -> OpamFilename.t ->
-  OpamFilename.t download OpamProcess.job
+  unit download OpamProcess.job

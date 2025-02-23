@@ -874,7 +874,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
            in
            OpamLocal.rsync_file url filename
            @@| function
-           | Up_to_date f | Result f -> check_checksum f
+           | Up_to_date () | Result () -> check_checksum filename
            | Not_available (_,src) ->
              Some ("Source not found: "^src)
      in
