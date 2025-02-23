@@ -16,7 +16,7 @@ open OpamTypes
 (** Repository local path: {i $opam/repo/<name>} *)
 val root: dirname -> repository_name -> OpamRepositoryRoot.Dir.t
 
-val tar: dirname -> repository_name -> filename
+val tar: dirname -> repository_name -> OpamRepositoryRoot.Tar.t
 
 (** Prefix where to store the downloaded files cache: {i $opam/download-cache}.
     Warning, this is relative to the opam root, not a repository root. *)

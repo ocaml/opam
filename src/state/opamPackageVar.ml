@@ -351,3 +351,4 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     with Exit -> None
   in
   contents
+

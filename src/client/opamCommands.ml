@@ -2506,10 +2506,10 @@ let repository cli =
       let rt0 = rt in
       let backup =
         let tar = OpamRepositoryPath.tar gt.root name in
-        if OpamFilename.exists tar then
-          (let target = OpamFilename.create tmp_dir (OpamFilename.basename tar) in
-           OpamFilename.copy ~src:tar ~dst:target;
-           fun () -> OpamFilename.copy ~src:target ~dst:tar)
+        if OpamRepositoryRoot.Tar.exists tar then
+          (let target = OpamRepositoryRoot.Tar.backup ~tmp_dir tar in
+           OpamRepositoryRoot.Tar.copy ~src:tar ~dst:target;
+           fun () -> OpamRepositoryRoot.Tar.copy ~src:target ~dst:tar)
         else
           (let dir = OpamRepositoryPath.root gt.root name in
            if not (OpamRepositoryRoot.Dir.exists dir) then
@@ -4041,11 +4041,11 @@ let lint cli =
             in
             let warnings =
               if warnings_sel = [] then warnings else
-              List.map (fun ((n, _, s) as warn) ->
-                  match OpamStd.IntMap.find_opt n warnings_sel_map with
-                  | Some `EnableError -> (n, `Error, s)
-                  | Some (`Disable | `Enable) | None -> warn)
-                warnings
+                List.map (fun ((n, _, s) as warn) ->
+                    match OpamStd.IntMap.find_opt n warnings_sel_map with
+                    | Some `EnableError -> (n, `Error, s)
+                    | Some (`Disable | `Enable) | None -> warn)
+                  warnings
             in
             if short then
               (if warnings <> [] then
@@ -4339,7 +4339,7 @@ let clean cli =
              (OpamRepositoryName.to_string r);
            rmdir
              (OpamRepositoryRoot.Dir.to_dir (OpamRepositoryPath.root root r));
-           rm (OpamRepositoryPath.tar root r))
+           rm (OpamRepositoryRoot.Tar.to_file (OpamRepositoryPath.tar root r)))
          unused_repos;
        let repos_config =
          OpamRepositoryName.Map.filter

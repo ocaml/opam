@@ -82,7 +82,7 @@ let add rt name url trust_anchors =
                  repo_trust = trust_anchors; }
     in
     if OpamRepositoryRoot.Dir.exists (OpamRepositoryPath.root root name) ||
-       OpamFilename.exists (OpamRepositoryPath.tar root name)
+       OpamRepositoryRoot.Tar.exists (OpamRepositoryPath.tar root name)
     then
       OpamConsole.error_and_exit `Bad_arguments
         "Invalid repository name, %s exists"
@@ -107,7 +107,7 @@ let remove rt name =
   OpamRepositoryState.Cache.save rt;
   OpamRepositoryRoot.Dir.remove
     (OpamRepositoryPath.root rt.repos_global.root name);
-  OpamFilename.remove
+  OpamRepositoryRoot.Tar.remove
     (OpamRepositoryPath.tar rt.repos_global.root name);
   rt
 
@@ -121,7 +121,7 @@ let set_url rt name url trust_anchors =
   in
   OpamRepositoryRoot.Dir.remove
     (OpamRepositoryPath.root rt.repos_global.root name);
-  OpamFilename.remove
+  OpamRepositoryRoot.Tar.remove
     (OpamRepositoryPath.tar rt.repos_global.root name);
   let repo = { repo with repo_url = url; repo_trust = trust_anchors; } in
   update_repos_config rt (OpamRepositoryName.Map.add name repo rt.repositories)
@@ -261,6 +261,7 @@ let update_with_auto_upgrade rt repo_names =
              let repo_root = OpamRepositoryState.get_repo_root rt r in
              let repo_root = match repo_root with
                | OpamRepositoryRoot.Dir x -> x
+               | OpamRepositoryRoot.Tar _ -> assert false (* TODO *)
              in
              OpamAdminRepoUpgrade.do_upgrade repo_root;
              if r.repo_url.OpamUrl.backend = `http &&

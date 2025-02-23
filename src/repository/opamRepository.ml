@@ -517,10 +517,16 @@ let apply_repo_update repo repo_root = function
       (slog OpamRepositoryRoot.to_string) d;
     OpamRepositoryRoot.remove repo_root;
     if OpamRepositoryRoot.is_symlink d then
-      (OpamRepositoryRoot.copy ~src:d ~dst:repo_root;
-       OpamRepositoryRoot.remove d)
-    else
-      OpamRepositoryRoot.move ~src:d ~dst:repo_root;
+      let job = OpamRepositoryRoot.copy ~src:d ~dst:repo_root in
+      match OpamProcess.Job.run job with
+      | None -> OpamRepositoryRoot.remove d
+      | Some exn -> raise exn
+    else (
+      let job = OpamRepositoryRoot.move ~src:d ~dst:repo_root in
+      match OpamProcess.Job.run job with
+      | None -> ()
+      | Some exn -> raise exn
+    );
     OpamConsole.msg "[%s] Initialised\n"
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name));
@@ -537,6 +543,7 @@ let apply_repo_update repo repo_root = function
       OpamRepositoryRoot.patch ~allow_unclean:false (`Patch_diffs diffs)
         repo_root
     in
+    (* TODO 6625 comment from rebase: does this removal shoudn't also be odne when there is an error ? or is it cleaned somewhere else ? *)
     if not (OpamConsole.debug ()) then OpamFilename.remove f;
     (match patch_result with
      | Ok diffs -> Done diffs

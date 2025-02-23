@@ -21,6 +21,15 @@ let slog = OpamConsole.slog
 let safe_read_repo_file = function
   | OpamRepositoryRoot.Dir dir ->
     OpamFile.Repo.safe_read (OpamRepositoryPath.repo dir)
+  | OpamRepositoryRoot.Tar tar ->
+    let exception Found of string in
+    try
+      OpamTar.fold_reg_files (fun () filename content ->
+          if filename = "/repo" then
+            raise (Found content);
+        ) () (Unix.openfile (OpamRepositoryRoot.Tar.to_string tar) [Unix.O_RDONLY] 0);
+      OpamFile.Repo.empty
+    with Found content -> OpamFile.Repo.read_from_string content
 
 let eval_redirect gt repo repo_root =
   if repo.repo_url.OpamUrl.backend <> `http then None else
@@ -126,9 +135,11 @@ let repository rt repo =
             msg)
       (OpamFile.Repo.announce repo_file);
     let tarred_repo = OpamRepositoryPath.tar gt.root repo.repo_name in
-    let _local_dir = OpamRepositoryPath.root gt.root repo.repo_name in
+    let local_dir = OpamRepositoryPath.root gt.root repo.repo_name in
     let opams =
       match repo_root with
+      | OpamRepositoryRoot.Tar tar ->
+        OpamRepositoryState.load_opams_from_tar_gz repo.repo_name tar
       | OpamRepositoryRoot.Dir dir ->
         match diffs with
         | [] ->
@@ -137,8 +148,11 @@ let repository rt repo =
     in
     begin match repo_root with
     | OpamRepositoryRoot.Dir _ ->
-      if OpamFilename.exists tarred_repo then
-        OpamFilename.remove tarred_repo;
+      if OpamRepositoryRoot.Tar.exists tarred_repo then
+        OpamRepositoryRoot.Tar.remove tarred_repo;
+    | OpamRepositoryRoot.Tar _ ->
+      if OpamRepositoryRoot.Dir.exists local_dir then
+        OpamRepositoryRoot.Dir.remove local_dir;
     end;
     Done (Some (
         (* Return an update function to make parallel execution possible *)

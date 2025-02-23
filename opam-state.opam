@@ -30,6 +30,8 @@ build: [
 depends: [
   "ocaml" {>= "4.08.0"}
   "opam-repository" {= version}
+  "tar" {>= "3.3.0"}
+  "checkseum" {>= "0.5.2"}
   "re" {>= "1.9.0"}
   "spdx_licenses" {>= "1.0.0"}
   "patch" {>= "3.0.0"}

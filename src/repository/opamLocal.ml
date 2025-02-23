@@ -147,6 +147,7 @@ module B = struct
   let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
     log "pull-repo-update";
     match repo_root with
+    | OpamRepositoryRoot.Tar _ -> assert false
     | OpamRepositoryRoot.Dir repo_root ->
       let quarantine = OpamRepositoryRoot.Dir.quarantine repo_root in
       let finalise () = OpamRepositoryRoot.Dir.remove quarantine in
@@ -158,6 +159,7 @@ module B = struct
         (match OpamUrl.local_dir url with
          | Some dir ->
            let dir = OpamRepositoryRoot.Dir.of_dir dir in
+           (* TODO 6625 to check, maybe rebase error *)
            OpamRepositoryRoot.Dir.copy_except_vcs ~src:dir ~dst:quarantine;
            (* fixme: Would be best to symlink, but at the moment our filename api
               isn't able to cope properly with the symlinks afterwards
@@ -165,6 +167,7 @@ module B = struct
            Done (Result ())
          | None ->
            if OpamRepositoryRoot.Dir.exists repo_root then
+           (* TODO 6625 check, maybe rebase error*)
              OpamRepositoryRoot.Dir.copy_except_vcs ~src:repo_root ~dst:quarantine
            else
              OpamRepositoryRoot.Dir.make quarantine;
