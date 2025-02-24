@@ -299,6 +299,8 @@ val warn_selector: (int * [`Enable | `Disable | `EnableError]) list Arg.conv
 
 val opamlist_columns: OpamListCommand.output_format list Arg.conv
 
+val hash_kinds : OpamHash.kind Arg.conv
+
 (** {2 Subcommands} *)
 
 type 'a subcommand = validity * string * 'a * string list * string

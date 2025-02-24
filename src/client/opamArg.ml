@@ -1068,6 +1068,10 @@ let opamlist_columns =
   in
   parse, print
 
+let hash_kinds =
+  Arg.enum
+    (List.map (fun k -> OpamHash.string_of_kind k, k) OpamHash.all_kinds)
+
 let mk_flag ~cli validity ?(section=Manpage.s_options) flags name =
   mk_flag ~cli validity ~section flags name
 

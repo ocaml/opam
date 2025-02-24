@@ -21,6 +21,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:admin-cache.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-admin-migrate-extrafiles)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff admin-migrate-extrafiles.test admin-migrate-extrafiles.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-admin-migrate-extrafiles)))
+
+(rule
+ (targets admin-migrate-extrafiles.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:admin-migrate-extrafiles.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-admin)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
