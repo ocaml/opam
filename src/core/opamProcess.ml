@@ -208,7 +208,7 @@ type command = {
   cmd_stdout: string option;
   cmd_verbose: bool option;
   cmd_name: string option;
-  cmd_metadata: (string * string) list option;
+  cmd_metadata: (string * string) list Lazy.t option;
 }
 
 let string_of_command c = String.concat " " (c.cmd::c.args)
@@ -249,10 +249,16 @@ type t = {
   p_stderr : string option;
   p_env    : string option;
   p_info   : string option;
-  p_metadata: (string * string) list;
+  p_metadata: (string * string) list Lazy.t;
   p_verbose: bool;
   p_tmp_files: string list;
 }
+
+let equal p1 p2 =
+  (p1.p_pid : int) = (p2.p_pid : int)
+
+let compare p1 p2 =
+  Int.compare p1.p_pid p2.p_pid
 
 let output_lines oc lines =
   List.iter (fun line ->
@@ -328,7 +334,8 @@ let create_process_env =
     environment can also be overridden if [env] is set. The environment
     which is used to run the process is recorded into [env_file] (if
     set). *)
-let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stderr_file ?env ?(metadata=[]) ?dir
+let create ?info_file ?env_file ?(allow_stdin=not Sys.win32)
+    ?stdout_file ?stderr_file ?env ?(metadata=Lazy.from_val []) ?dir
     ~verbose ~tmp_files cmd args =
   let nothing () = () in
   let tee f =
@@ -388,7 +395,9 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
     | Some f ->
       let chan = open_out f in
       let info =
-        make_info ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file ~metadata () in
+        make_info ~cmd ~args ~cwd ~env_file ~stdout_file ~stderr_file
+          ~metadata:(Lazy.force metadata) ()
+      in
       output_string chan (string_of_info info);
       close_out chan in
 
@@ -478,7 +487,7 @@ type result = {
   r_code     : int;
   r_signal   : int option;
   r_duration : float;
-  r_info     : (string * string) list;
+  r_info     : (string * string) list Lazy.t;
   r_stdout   : string list;
   r_stderr   : string list;
   r_cleanup  : string list;
@@ -488,7 +497,7 @@ let empty_result = {
   r_code = 0;
   r_signal = None;
   r_duration = 0.;
-  r_info = [];
+  r_info = Lazy.from_val [];
   r_stdout = [];
   r_stderr = [];
   r_cleanup = [];
@@ -574,7 +583,7 @@ let dry_run_background c = {
   p_stderr = None;
   p_env    = None;
   p_info   = None;
-  p_metadata = OpamStd.Option.default [] c.cmd_metadata;
+  p_metadata = OpamStd.Option.default (Lazy.from_val []) c.cmd_metadata;
   p_verbose = is_verbose_command c;
   p_tmp_files = [];
 }
@@ -606,7 +615,7 @@ let set_verbose_f, print_verbose_f, isset_verbose_f, stop_verbose_f =
     (* implem relies on sigalrm, not implemented on win32.
        This will fall back to buffered output. *)
     if Sys.win32 then () else
-    let files = OpamStd.List.sort_nodup compare files in
+    let files = OpamStd.List.sort_nodup String.compare files in
     let ics =
       List.map
         (open_in_gen [Open_nonblock;Open_rdonly;Open_text;Open_creat] 0o600)
@@ -652,10 +661,12 @@ let exit_status p return =
      if p.p_stdout <> p.p_stderr then
      List.iter verbose_print_out stderr;
      flush Stdlib.stdout);
-  let info =
+  let info = lazy begin
     make_info ?code ?signal
-      ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd ~metadata:p.p_metadata
-      ~env_file:p.p_env ~stdout_file:p.p_stdout ~stderr_file:p.p_stderr () in
+      ~cmd:p.p_name ~args:p.p_args ~cwd:p.p_cwd
+      ~metadata:(Lazy.force p.p_metadata) ~env_file:p.p_env
+      ~stdout_file:p.p_stdout ~stderr_file:p.p_stderr ()
+  end in
   {
     r_code     = OpamStd.Option.default 256 code;
     r_signal   = signal;
@@ -819,7 +830,7 @@ let string_of_result ?(color=`yellow) r =
     print str;
     Buffer.add_char b '\n' in
 
-  print (string_of_info ~color r.r_info);
+  print (string_of_info ~color (Lazy.force r.r_info));
 
   if r.r_stdout <> [] then
     if r.r_stderr = r.r_stdout then
@@ -843,7 +854,7 @@ let string_of_result ?(color=`yellow) r =
 
 let result_summary r =
   Printf.sprintf "%S exited with code %d%s"
-    (try OpamStd.List.assoc String.equal "command" r.r_info
+    (try OpamStd.List.assoc String.equal "command" (Lazy.force r.r_info)
      with Not_found -> "command")
     r.r_code
     (if r.r_code = 0 then "" else

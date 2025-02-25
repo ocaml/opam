@@ -294,7 +294,8 @@ module Json = struct
       `O [ ("process-error",
             `O ([ ("code", `String (string_of_int r_code));
                   ("duration", `Float r_duration);
-                  ("info", `O (lmap (fun (k,v) -> (k, `String v)) r_info)); ]
+                  ("info", `O (lmap (fun (k,v) -> (k, `String v))
+                                 (Lazy.force r_info))); ]
                 @ if OpamCoreConfig.(!r.merged_output) then
                   [("output", `A (lmap (fun s -> `String s) r_stdout))]
                 else
