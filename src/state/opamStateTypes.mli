@@ -191,6 +191,7 @@ type 'url _topin_opamfile = {
 }
 type ('name, 'url) _topin_name_and_opamfile = {
   pin_name: 'name;
+  pin_opam: OpamFile.OPAM.t Lazy.t;
   pin: 'url _topin_opamfile;
 }
 (**/**)
