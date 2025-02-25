@@ -33,12 +33,13 @@ let string_of_pinned ?(subpath_prefix=true) opam =
        url)
     (bold (OpamPackage.Version.to_string (OpamFile.OPAM.version opam)))
 
-let read_opam_file_for_pinning ?locked ?(quiet=false) name f url =
+let read_opam_file_for_pinning
+    ?locked ?(quiet=false) name f ?(opam = OpamFile.OPAM.safe_read f) url =
   let opam0 =
     let dir = OpamFilename.dirname (OpamFile.filename f) in
     let opam =
       (OpamFormatUpgrade.opam_file_with_aux ~quiet ~dir ~files:false
-         ~filename:f) (OpamFile.OPAM.safe_read f)
+         ~filename:f) opam
     in
     if opam = OpamFile.OPAM.empty then None else Some opam
   in
