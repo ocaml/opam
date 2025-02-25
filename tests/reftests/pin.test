@@ -1035,3 +1035,35 @@ The following actions will be performed:
 -> installed dep2.2
 -> installed dep1.dev
 Done.
+### : opam install . --deps-only not selecting the good version
+### <pkg:simcomp.1>
+opam-version: "2.0"
+flags: compiler
+### opam switch create simulate-pin simcomp
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["simcomp"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed simcomp.1
+Done.
+### <pin:sim/sim.opam>
+opam-version: "2.0"
+version: "2.0"
+depends: "deps-sim" { = "2" }
+conflicts: "simcomp"
+### <pkg:sim.1>
+opam-version: "2.0"
+depends: "deps-sim" { = "1" }
+### <pkg:deps-sim.1>
+opam-version: "2.0"
+### <pkg:deps-sim.2>
+opam-version: "2.0"
+### opam install ./sim --deps-only
+The following actions will be performed:
+=== install 1 package
+  - install deps-sim 1 [required by sim]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed deps-sim.1
+Done.
