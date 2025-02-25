@@ -570,7 +570,6 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock --locked
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/tolock (`--working-dir' not specified or specified with no argument).
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
@@ -630,7 +629,6 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock --locked
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/tolock (`--working-dir' not specified or specified with no argument).
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
@@ -690,7 +688,6 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock --locked
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
 === install 4 packages
