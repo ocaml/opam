@@ -67,6 +67,8 @@ depends: [ "ocaml" {= "4.10.0" & post} ]
 flags: compiler
 conflict-class: "ocaml-core-compiler"
 ### :---:
+### :I: Default compiler selection
+### :I:1: No system compiler
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["false"] "no system compiler" ]
@@ -87,6 +89,7 @@ Switch invariant: ["ocaml" {>= "4.05.0"}]
 Done.
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
+### :I:2: system compiler not compliant with default invariant
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.02.3"] "old system compiler" ]
@@ -107,6 +110,7 @@ Switch invariant: ["ocaml" {>= "4.05.0"}]
 Done.
 ### opam switch invariant
 ["ocaml" {>= "4.05.0"}]
+### :I:3: Base compiler should be selected default
 ### rm -rf ${OPAMROOT}
 ### <opamrc>
 eval-variables: [ sys-ocaml-version ["echo" "4.07.0"] "new system compiler" ]
@@ -116,38 +120,40 @@ Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 
-<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-system)
+<><> Creating initial switch 'default' (invariant ["ocaml" {>= "4.05.0"}] - initially with ocaml-base-compiler)
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: ["ocaml" {>= "4.05.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.4.10.0
+-> installed ocaml.4.10.0
+Done.
+### opam switch invariant
+["ocaml" {>= "4.05.0"}]
+### :I:4: ocaml-system explicit selection
+### rm -rf $OPAMROOT
+### <opamrc>
+eval-variables: [ sys-ocaml-version ["echo" "4.07.0"] "new system compiler" ]
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc -c ocaml-system | grep -v Cygwin
+Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'ocaml-system' (invariant ["ocaml-system"]) ><><><>
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-system"]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml-system.4.07.0
 -> installed ocaml.4.07.0
 Done.
 ### opam switch invariant
-["ocaml" {>= "4.05.0"}]
-### opam upgrade
-Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
-However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade ocaml.4.10.0"), which will ask permission to downgrade or uninstall the conflicting packages.
-Nothing to do.
-### opam upgrade ocaml
-The following actions will be performed:
-=== remove 1 package
-  - remove  ocaml-system        4.07.0           [conflicts with ocaml-base-compiler]
-=== upgrade 1 package
-  - upgrade ocaml               4.07.0 to 4.10.0
-=== install 1 package
-  - install ocaml-base-compiler 4.10.0           [required by ocaml]
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   ocaml.4.07.0
--> removed   ocaml-system.4.07.0
--> installed ocaml-base-compiler.4.10.0
--> installed ocaml.4.10.0
-Done.
-### : Init with config file :
-### :: default setup ::
+["ocaml-system"]
+### :II: Init with config file :
+### :II:a: default setup ::
 ### rm -rf $OPAMROOT
 ### opam init --bypass-checks --bare --no-setup default REPO/ | grep -v Cygwin
 No configuration file found, using built-in defaults.
@@ -155,7 +161,7 @@ No configuration file found, using built-in defaults.
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
 ### opam-cat $OPAMROOT/config | 'opam-root-version: "${OPAMROOTVERSION}"' -> 'opam-root-version: current' | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
-default-compiler: ["ocaml-system" "ocaml-base-compiler"]
+default-compiler: ["ocaml-base-compiler"]
 default-invariant: ["ocaml" {>= "4.05.0"}]
 depext: true
 depext-cannot-install: false
@@ -168,7 +174,7 @@ swh-fallback: false
 wrap-build-commands: ["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
 wrap-install-commands: ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
-### :: full configured opamrc ::
+### :II:b: full configured opamrc ::
 ### rm -rf $OPAMROOT
 ### <opamrc>
 opam-version: "2.0"
