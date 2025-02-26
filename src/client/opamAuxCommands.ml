@@ -393,6 +393,18 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
   } in
   st, local_packages
 
+let simulate_pinned_atoms pins atoms =
+  (* Simulate pinning functions return atoms with no versions constraint, we
+     only update those to ensure that this pinned version is taken as the
+     switch state is not updated. *)
+  List.map (function
+      | (_name, Some _) as a -> a
+      | (name, None) as a ->
+        match OpamPackage.package_of_name_opt pins name with
+        | Some pkg -> (name, Some (`Eq, OpamPackage.version pkg))
+        | None -> a)
+    atoms
+
 let simulate_autopin st ?quiet ?(for_view=false) ?locked ?recurse ?subpath
     atom_or_local_list =
   let atoms, to_pin, obsolete_pins, already_pinned_set =
@@ -424,7 +436,7 @@ let simulate_autopin st ?quiet ?(for_view=false) ?locked ?recurse ?subpath
         OpamConsole.note "The following may not reflect the above pinnings (their \
                           package definitions are not available at this stage)";
         OpamConsole.msg "\n"));
-  st, atoms
+  st, simulate_pinned_atoms pins atoms
 
 let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
     atom_or_local_list =
@@ -494,7 +506,7 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
     else
       OpamUpdate.dev_packages st ~working_dir:OpamPackage.Set.empty already_pinned
   in
-  st, atoms
+  st, simulate_pinned_atoms pins atoms
 
 let check_and_revert_sandboxing root config =
   let sdbx_wrappers =

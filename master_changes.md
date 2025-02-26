@@ -51,6 +51,7 @@ users)
   * [BUG] Stop double pin of packages located in ./opam/opam [#6343 @kit-ty-kate - fix #6342]
   * Don't ask confirmation when pinning an unknown package (absent from repositories) [#6309 @kit-ty-kate @rjbou - fix #3199]
   * [BUG] Do not ask to install pin-depends twice [#6375 @kit-ty-kate - fix #6374]
+  * [BUG] Ensure the right versions (the pinned one) of packages are used when simulating pinning [#6256 @rjbou @kit-ty-kate - fix #6248 #6379]
 
 ## List
 
