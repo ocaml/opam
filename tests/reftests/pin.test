@@ -1060,10 +1060,11 @@ opam-version: "2.0"
 ### <pkg:deps-sim.2>
 opam-version: "2.0"
 ### opam install ./sim --deps-only
-The following actions will be performed:
-=== install 1 package
-  - install deps-sim 1 [required by sim]
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - (invariant) -> simcomp
+    - deps-of-sim
+    You can temporarily relax the switch invariant with `--update-invariant'
 
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed deps-sim.1
-Done.
+No solution found, exiting
+# Return code 20 #
