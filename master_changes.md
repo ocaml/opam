@@ -38,6 +38,7 @@ users)
   * Improve the messages when a package is not up-to-date on opam upgrade [#6272 @kit-ty-kate - fix #6270]
   * Use a non-underline uppercase character to denotate the default when asking a question [#6289 @hannesm @kit-ty-kate - fix #6288]
   * Do not pre-write the answer to questions with the default anwser [#6376 @kit-ty-kate]
+  * Display Windows NTSTATUS exit codes in hex [#6401 @dra27 @MisterDA]
 
 ## Switch
   * [BUG] Fix `opam switch remove <dir>` failure when it is a linked switch [#6276 @btjorge - fix #6275]
