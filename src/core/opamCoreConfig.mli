@@ -33,6 +33,7 @@ module E : sig
     val confirmlevel: unit -> OpamStd.Config.answer option
     val debug: unit -> int option
     val logs: unit -> string option
+    val safe: unit -> bool option
     val yes: unit -> bool option
 end
 

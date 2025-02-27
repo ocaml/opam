@@ -36,32 +36,12 @@ Processing  1/3: [varos.dev: rsync]
 -> retrieved varos.dev  (file://${BASEDIR}/varos)
 Processing  2/3: [varos: make all]
 + make "all" (CWD=${BASEDIR}/OPAM/varos/.opam-switch/build/varos.dev)
-- Fatal error:
-- ${OPAM}: "open" failed on ${BASEDIR}/OPAM/log/log-809688-c518ec.out: Read-only file system
-- echo 
-- 
+- echo n/a
+- n/a
 - ${OPAM} var os-version --safe
-- Fatal error:
-- ${OPAM}: "open" failed on ${BASEDIR}/OPAM/log/log-809690-7328ea.out: Read-only file system
-- make: *** [Makefile:3: all] Error 99
-[ERROR] The compilation of varos.dev failed at "make all".
-
-##% output ###
-# Fatal error:
-# ${OPAM}: "open" failed on ${BASEDIR}/OPAM/log/log-809688-c518ec.out: Read-only file system
-# echo 
-# 
-# ${OPAM} var os-version --safe
-# Fatal error:
-# ${OPAM}: "open" failed on ${BASEDIR}/OPAM/log/log-809690-7328ea.out: Read-only file system
-# make: *** [Makefile:3: all] Error 99
-
-
-
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - build varos dev
-+- 
-- No changes have been performed
-'${OPAM} install varos -v' failed.
-# Return code 31 #
+- n/a
+- echo done
+- done
+-> compiled  varos.dev
+-> installed varos.dev
+Done.
