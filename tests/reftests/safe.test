@@ -1,0 +1,67 @@
+N0REP0
+### OPAMYES=1
+### :I: opam log dir and safe mode
+### <pin:varos/varos.opam>
+opam-version: "2.0"
+build: [
+  [make "all"]
+  [make "test"] {with-test}
+]
+### <cat-makefile.sh>
+f=$1
+cat > $f << EOF
+all:
+	echo \$(shell ${OPAM} var os-version --safe)
+	${OPAM} var os-version --safe
+	echo done
+EOF
+### sh cat-makefile.sh varos/Makefile
+### opam switch create varos --empty
+### # opam install foo bar
+### opam pin ./varos -n
+[NOTE] Package varos does not exist in opam repositories registered in the current switch.
+varos is now pinned to file://${BASEDIR}/varos (version dev)
+### opam install varos -v | sed-cmd make
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [varos.dev: rsync]
+[varos.dev] synchronised (no changes)
+
+The following actions will be performed:
+=== install 1 package
+  - install varos dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/3: [varos.dev: rsync]
+-> retrieved varos.dev  (file://${BASEDIR}/varos)
+Processing  2/3: [varos: make all]
++ make "all" (CWD=${BASEDIR}/OPAM/varos/.opam-switch/build/varos.dev)
+- Fatal error:
+- ${OPAM}: "open" failed on ${BASEDIR}/OPAM/log/log-809688-c518ec.out: Read-only file system
+- echo 
+- 
+- ${OPAM} var os-version --safe
+- Fatal error:
+- ${OPAM}: "open" failed on ${BASEDIR}/OPAM/log/log-809690-7328ea.out: Read-only file system
+- make: *** [Makefile:3: all] Error 99
+[ERROR] The compilation of varos.dev failed at "make all".
+
+##% output ###
+# Fatal error:
+# ${OPAM}: "open" failed on ${BASEDIR}/OPAM/log/log-809688-c518ec.out: Read-only file system
+# echo 
+# 
+# ${OPAM} var os-version --safe
+# Fatal error:
+# ${OPAM}: "open" failed on ${BASEDIR}/OPAM/log/log-809690-7328ea.out: Read-only file system
+# make: *** [Makefile:3: all] Error 99
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build varos dev
++- 
+- No changes have been performed
+'${OPAM} install varos -v' failed.
+# Return code 31 #
