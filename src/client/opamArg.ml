@@ -107,8 +107,10 @@ let environment_variables =
        backups. This skips some finalisers and may also help to get more \
        reliable backtraces.";
       "LOGS", cli_original, (fun v -> LOGS (env_string v)),
-      ("$(i,logdir) sets log directory, default is a temporary directory in \
-       " ^ (if Sys.win32 then "%TEMP%" else "/tmp"));
+      (Printf.sprintf
+         "$(i,logdir) sets log directory, default 'log' directory in opam root\
+          if opam is initialise, temporary directory in %s otherwise"
+         (if Sys.win32 then "%TEMP%" else "/tmp"));
       "MERGEOUT", cli_original, (fun v -> MERGEOUT (env_bool v)),
       "merge process outputs, stderr on stdout.";
       "NO", cli_original, (fun v -> NO (env_bool v)),
