@@ -842,10 +842,12 @@ let string_of_result ?(color=`yellow) r =
   Buffer.contents b
 
 let result_summary r =
-  Printf.sprintf "%S exited with code %d%s"
+  Printf.sprintf "%S exited with code %s%s"
     (try OpamStd.List.assoc String.equal "command" r.r_info
      with Not_found -> "command")
-    r.r_code
+    (if Sys.win32 && r.r_code < 0 then
+       Printf.sprintf "0x%08lx" (Int32.of_int r.r_code)
+     else string_of_int r.r_code)
     (if r.r_code = 0 then "" else
      match r.r_stderr, r.r_stdout with
      | [e], _ | [], [e] -> Printf.sprintf " \"%s\"" e
