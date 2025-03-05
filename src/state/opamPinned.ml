@@ -140,8 +140,11 @@ let check_locked ?locked default =
        locked, Some ext)
 
 let find_opam_file_in_source ?locked name dir =
+(* OpamConsole.error "find : %s in %s" (OpamPackage.Name.to_string name) (OpamFilename.Dir.to_string dir); *)
   let opt =
-    OpamStd.List.find_opt OpamFilename.exists
+    OpamStd.List.find_opt
+(*     (fun f -> OpamConsole.note "....%s -> %B" (OpamFilename.to_string f) (OpamFilename.exists f); OpamFilename.exists f) *)
+    OpamFilename.exists
       (possible_definition_filenames dir name)
   in
   opt
