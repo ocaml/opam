@@ -1247,39 +1247,60 @@ depends: [
   "a-doc-dep" {with-doc}
 ]
 build: [ "test" "-f" "content" ]
+### <add-pindepends.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> tolock/tolock.opam << EOF
 pin-depends: [
-  [ "a-simple-dep.dev" "git+https://github.com/dbuenzli/cmdliner#f239981642a" ]
-  [ "a-test-dep.dev"   "git+https://github.com/dbuenzli/cmdliner#1de361182ab" ]
-  [ "a-doc-dep.dev"    "git+https://github.com/dbuenzli/cmdliner#e8f8890fe48" ]
+  [ "a-simple-dep.dev" "git+file://$basedir/simple-dep" ]
+  [ "a-test-dep.dev"   "git+file://$basedir/test-dep" ]
+  [ "a-doc-dep.dev"    "git+file://$basedir/doc-dep" ]
 ]
+EOF
+### sh add-pindepends.sh
 ### <tolock/content>
 it's here
-### <pin:opam-file>
+### : -- :
+### mkdir simple-dep
+### git -C simple-dep init -q --initial-branch=master
+### git -C simple-dep config core.autocrlf false
+### <pin:simple-dep/a-simple-dep.opam>
 opam-version: "2.0"
 version: "dev"
-### OPAMEDITOR="cp -f ${BASEDIR}/opam-file"
+### git -C simple-dep add a-simple-dep.opam
+### git -C simple-dep commit -qm "simple"
+### mkdir doc-dep
+### git -C doc-dep init -q --initial-branch=master
+### git -C doc-dep config core.autocrlf false
+### <pin:doc-dep/a-doc-dep.opam>
+opam-version: "2.0"
+version: "dev"
+### git -C doc-dep add a-doc-dep.opam
+### git -C doc-dep commit -qm "doc"
+### mkdir test-dep
+### git -C test-dep init -q --initial-branch=master
+### git -C test-dep config core.autocrlf false
+### <pin:test-dep/a-test-dep.opam>
+opam-version: "2.0"
+version: "dev"
+### git -C test-dep add a-test-dep.opam
+### git -C test-dep commit -qm "test"
+### : -- :
 ### opam install ./tolock --with-test --with-doc
 [NOTE] Package tolock does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by tolock.dev:
-  - a-simple-dep.dev at git+https://github.com/dbuenzli/cmdliner#f239981642a
-  - a-test-dep.dev at git+https://github.com/dbuenzli/cmdliner#1de361182ab
-  - a-doc-dep.dev at git+https://github.com/dbuenzli/cmdliner#e8f8890fe48
+  - a-simple-dep.dev at git+file://${BASEDIR}/simple-dep
+  - a-test-dep.dev at git+file://${BASEDIR}/test-dep
+  - a-doc-dep.dev at git+file://${BASEDIR}/doc-dep
 Pin and install them? [Y/n] y
 [NOTE] Package a-simple-dep does not exist in opam repositories registered in the current switch.
 [a-simple-dep.dev] synchronised (no changes)
-[NOTE] No package definition found for a-simple-dep.dev: please complete the template
-You can edit this file again with "opam pin edit a-simple-dep", export it with "opam show a-simple-dep --raw"
-a-simple-dep is now pinned to git+https://github.com/dbuenzli/cmdliner#f239981642a (version dev)
+a-simple-dep is now pinned to git+file://${BASEDIR}/simple-dep (version dev)
 [NOTE] Package a-test-dep does not exist in opam repositories registered in the current switch.
 [a-test-dep.dev] synchronised (no changes)
-[NOTE] No package definition found for a-test-dep.dev: please complete the template
-You can edit this file again with "opam pin edit a-test-dep", export it with "opam show a-test-dep --raw"
-a-test-dep is now pinned to git+https://github.com/dbuenzli/cmdliner#1de361182ab (version dev)
+a-test-dep is now pinned to git+file://${BASEDIR}/test-dep (version dev)
 [NOTE] Package a-doc-dep does not exist in opam repositories registered in the current switch.
 [a-doc-dep.dev] synchronised (no changes)
-[NOTE] No package definition found for a-doc-dep.dev: please complete the template
-You can edit this file again with "opam pin edit a-doc-dep", export it with "opam show a-doc-dep --raw"
-a-doc-dep is now pinned to git+https://github.com/dbuenzli/cmdliner#e8f8890fe48 (version dev)
+a-doc-dep is now pinned to git+file://${BASEDIR}/doc-dep (version dev)
 tolock is now pinned to file://${BASEDIR}/tolock (version dev)
 The following actions will be performed:
 === install 5 packages
@@ -1290,17 +1311,17 @@ The following actions will be performed:
   - install tolock       dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved a-doc-dep.dev  (no changes)
 -> installed a-doc-dep.dev
--> retrieved a-simple-dep.dev  (no changes)
 -> installed a-simple-dep.dev
--> retrieved a-test-dep.dev  (no changes)
 -> installed a-test-dep.dev
 -> installed foo.2
 -> retrieved tolock.dev  (file://${BASEDIR}/tolock)
 -> installed tolock.dev
 Done.
-### opam lock tolock
+### opam lock tolock --keep-local
+[NOTE] Dependency a-doc-dep.dev is pinned to local target git+file://${BASEDIR}/doc-dep, keeping it.
+[NOTE] Dependency a-simple-dep.dev is pinned to local target git+file://${BASEDIR}/simple-dep, keeping it.
+[NOTE] Dependency a-test-dep.dev is pinned to local target git+file://${BASEDIR}/test-dep, keeping it.
 Generated lock files for:
   - tolock.dev: ${BASEDIR}/tolock.opam.locked
 ### opam-cat tolock.opam.locked
@@ -1315,7 +1336,7 @@ license: "MIT"
 maintainer: "maint@tain.er"
 name: "tolock"
 opam-version: "2.0"
-pin-depends: [["a-doc-dep.dev" "git+https://github.com/dbuenzli/cmdliner#e8f8890fe48"] ["a-simple-dep.dev" "git+https://github.com/dbuenzli/cmdliner#f239981642a"] ["a-test-dep.dev" "git+https://github.com/dbuenzli/cmdliner#1de361182ab"]]
+pin-depends: [["a-doc-dep.dev" "git+file://${BASEDIR}/doc-dep"] ["a-simple-dep.dev" "git+file://${BASEDIR}/simple-dep"] ["a-test-dep.dev" "git+file://${BASEDIR}/test-dep"]]
 synopsis: "A word"
 version: "dev"
 ### : Keep local pins as pin-depends
