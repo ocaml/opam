@@ -1322,11 +1322,29 @@ The following actions will be performed:
 -> installed tolock.dev
 Done.
 ### opam lock tolock --keep-local
-[ERROR] Command "/usr/bin/git remote get-url origin" failed:
-"/usr/bin/git remote get-url origin" exited with code 2 "error: No such remote 'origin'"
-# Return code 99 #
+[ERROR] Can't retrieve remote informations for a-doc-dep.dev
+[NOTE] Dependency a-doc-dep.dev is pinned to local target git+file://${BASEDIR}/pindep#doc, keeping it.
+[ERROR] Can't retrieve remote informations for a-simple-dep.dev
+[NOTE] Dependency a-simple-dep.dev is pinned to local target git+file://${BASEDIR}/pindep#simple, keeping it.
+[ERROR] Can't retrieve remote informations for a-test-dep.dev
+[NOTE] Dependency a-test-dep.dev is pinned to local target git+file://${BASEDIR}/pindep#test, keeping it.
+Generated lock files for:
+  - tolock.dev: ${BASEDIR}/tolock.opam.locked
 ### opam-cat tolock.opam.locked
-# tolock.opam.locked not found
+authors: "the testing team"
+bug-reports: "https://nobug"
+build: ["test" "-f" "content"]
+depends: ["a-doc-dep" {= "dev" & with-doc} "a-simple-dep" {= "dev"} "a-test-dep" {= "dev" & with-test} "foo" {= "2"}]
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "tolock"
+opam-version: "2.0"
+pin-depends: [["a-doc-dep.dev" "git+file://${BASEDIR}/pindep#doc"] ["a-simple-dep.dev" "git+file://${BASEDIR}/pindep#simple"] ["a-test-dep.dev" "git+file://${BASEDIR}/pindep#test"]]
+synopsis: "A word"
+version: "dev"
 ### : Keep local pins as pin-depends
 ### <pin:local-one/local-one.opam>
 opam-version: "2.0"
