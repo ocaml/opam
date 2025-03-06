@@ -138,6 +138,7 @@ The following actions will be performed:
 -> installed nip.dev
 Done.
 ### opam lock nip
-[ERROR] Command "/usr/bin/git remote get-url origin" failed:
-"/usr/bin/git remote get-url origin" exited with code 2 "error: No such remote 'origin'"
-# Return code 99 #
+[ERROR] Can't retrieve remote informations for dep-nip.dev
+[WARNING] Dependency dep-nip.dev is pinned to local target git+file://${BASEDIR}/dep-nip#master
+Generated lock files for:
+  - nip.dev: ${BASEDIR}/nip.opam.locked

@@ -77,6 +77,7 @@ users)
 ## Repository
 
 ## Lock
+  * [BUG] Fix opam lock error on pinned packages with no remote [#6422 @rjbou]
 
 ## Clean
 
@@ -94,6 +95,7 @@ users)
 
 ## VCS
   * Check the status of git submodules when checking if a repository is up-to-date [#6132 @kit-ty-kate]
+  * [BUG] Fix `git remote get-url` failure, add handling for exit code 2 [#6422 @rjbou]
 
 ## Build
   * Update the dependency constraint on `patch` to now require its stable version [#6663 @kit-ty-kate]
