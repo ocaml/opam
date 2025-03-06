@@ -30,5 +30,6 @@ build: [
 depends: [
   "ocaml" {>= "4.08.0"}
   "opam-format" {= version}
+  "patch" {>= "3.0.0~alpha1"}
   "dune" {>= "2.8.0"}
 ]
