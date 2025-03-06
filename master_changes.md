@@ -60,6 +60,7 @@ users)
 ## Repository
 
 ## Lock
+  * [BUG] Fix opam lock error on pinned packages with no remote [#6422 @rjbou]
 
 ## Clean
 
@@ -74,6 +75,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * [BUG] Fix `git remote get-url` failure, add handling for exit code 2 [#6422 @rjbou]
 
 ## Build
 
