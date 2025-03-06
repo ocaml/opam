@@ -227,6 +227,7 @@ users)
   * `OpamArg.hash_kinds`: was added [#5960 @kit-ty-kate]
   * `OpamRepositoryCommand.switch_repos`: expose the function [#5014 @kit-ty-kate]
   * `OpamLockCommand.lock_opam`: add `~keep_local` argument to add local pins to pin-depends (and not resolve them) [#6411 @rjbou]
+  * `OpamLockCommand.lock_opam`: make the `?only_direct` argument non-optional [#6411 @kit-ty-kate]
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]

@@ -27,5 +27,5 @@ val select_packages:
     resolved to a distant url and they are all added with their local path in
     'pin_depends:' field. *)
 val lock_opam:
-  ?only_direct:bool -> keep_local:bool ->
+  only_direct:bool -> keep_local:bool ->
   'a switch_state -> OpamFile.OPAM.t -> OpamFile.OPAM.t

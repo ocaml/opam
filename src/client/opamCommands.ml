@@ -4407,7 +4407,7 @@ let lock cli =
   let lock_suffix = OpamArg.lock_suffix cli in
   let keep_local_flag =
     mk_flag ~cli (cli_from cli2_4) ["keep-local"]
-      "Do not discard local pins from pin-depends."
+      "Keep local pin paths in 'pin-depends:' field."
   in
   let lock global_options only_direct lock_suffix keep_local atom_locs () =
     apply_global_options cli global_options;

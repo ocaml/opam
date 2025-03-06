@@ -128,7 +128,7 @@ let get_git_url url nv dir =
        (OpamPackage.to_string nv);
      None)
 
-let lock_opam ?(only_direct=false) ~keep_local st opam =
+let lock_opam ~only_direct ~keep_local st opam =
   let nv = OpamFile.OPAM.package opam in
   (* Depends *)
   let all_depends =
