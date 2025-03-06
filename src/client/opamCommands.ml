@@ -4392,9 +4392,10 @@ let lock cli =
         fixed and the same filter is on all dependencies that are added from \
         them";
     `P "- $(i,pin-depends) are kept and new ones are added if in the \
-        dependencies some packages are pinned ";
+        dependencies some packages are pinned";
     `P "- pins are resolved: if a package is locally pinned, opam tries to get \
-        its remote url and branch, and sets this as the target URL";
+        its remote url and branch, and sets this as the target URL; otherwise \
+        it ignore them. You can use $(i,--keep-local) to keep the local urls.";
     `S Manpage.s_arguments;
     `S Manpage.s_options;
   ]
@@ -4404,7 +4405,11 @@ let lock cli =
       "Only lock direct dependencies, rather than the whole dependency tree."
   in
   let lock_suffix = OpamArg.lock_suffix cli in
-  let lock global_options only_direct lock_suffix atom_locs () =
+  let keep_local_flag =
+    mk_flag ~cli (cli_from cli2_4) ["keep-local"]
+      "Do not discard local pins from pin-depends."
+  in
+  let lock global_options only_direct lock_suffix keep_local atom_locs () =
     apply_global_options cli global_options;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_none gt @@ fun st ->
@@ -4420,7 +4425,9 @@ let lock cli =
     let pkg_done =
       OpamPackage.Set.fold (fun nv msgs ->
           let opam = OpamSwitchState.opam st nv in
-          let locked = OpamLockCommand.lock_opam ~only_direct st opam in
+          let locked =
+            OpamLockCommand.lock_opam ~only_direct ~keep_local st opam
+          in
           let locked_fname =
             OpamFilename.add_extension
               (OpamFilename.of_string (OpamPackage.name_to_string nv))
@@ -4443,7 +4450,7 @@ let lock cli =
   in
   mk_command  ~cli (cli_from cli2_1) "lock" ~doc ~man
     Term.(const lock $global_options cli $only_direct_flag $lock_suffix
-          $atom_or_local_list)
+          $keep_local_flag $atom_or_local_list)
 
 (* HELP *)
 let help =

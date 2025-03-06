@@ -128,7 +128,7 @@ let get_git_url url nv dir =
        (OpamPackage.to_string nv);
      None)
 
-let lock_opam ?(only_direct=false) st opam =
+let lock_opam ?(only_direct=false) ~keep_local st opam =
   let nv = OpamFile.OPAM.package opam in
   (* Depends *)
   let all_depends =
@@ -292,6 +292,11 @@ let lock_opam ?(only_direct=false) st opam =
         | None -> acc
         | Some u ->
           match OpamUrl.local_dir u with
+          | Some _ when keep_local ->
+            OpamConsole.note
+              "Dependency %s is pinned to local target %s, keeping it."
+              (OpamPackage.to_string nv) (OpamUrl.to_string u);
+            (nv, u) :: acc
           | Some d ->
             let local_warn () =
               OpamConsole.warning "Dependency %s is pinned to local target %s"

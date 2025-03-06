@@ -85,6 +85,7 @@ users)
 
 ## Lock
   * [BUG] Fix `pin-depends` for `with-*` dependencies [#5471 @rjbou - fix #5428]
+  * [NEW] Add `--keep-local` to keep local pins url in `pin-depends` field [#6411 @rjbou - fix #4897]
 
 ## Clean
 
@@ -225,6 +226,7 @@ users)
   * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
   * `OpamArg.hash_kinds`: was added [#5960 @kit-ty-kate]
   * `OpamRepositoryCommand.switch_repos`: expose the function [#5014 @kit-ty-kate]
+  * `OpamLockCommand.lock_opam`: add `~keep_local` argument to add local pins to pin-depends (and not resolve them) [#6411 @rjbou]
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]

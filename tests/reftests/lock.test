@@ -1318,3 +1318,43 @@ opam-version: "2.0"
 pin-depends: [["a-doc-dep.dev" "git+https://github.com/dbuenzli/cmdliner#e8f8890fe48"] ["a-simple-dep.dev" "git+https://github.com/dbuenzli/cmdliner#f239981642a"] ["a-test-dep.dev" "git+https://github.com/dbuenzli/cmdliner#1de361182ab"]]
 synopsis: "A word"
 version: "dev"
+### : Keep local pins as pin-depends
+### <pin:local-one/local-one.opam>
+opam-version: "2.0"
+### <pin:local-two/local-two.opam>
+opam-version: "2.0"
+### <pkg:distant-x.1>
+opam-version: "2.0"
+depends: [ "local-one" "local-two" ]
+### opam switch create locality --empty
+### opam pin ./local-one -n
+[NOTE] Package local-one does not exist in opam repositories registered in the current switch.
+local-one is now pinned to file://${BASEDIR}/local-one (version dev)
+### opam pin ./local-two -n
+[NOTE] Package local-two does not exist in opam repositories registered in the current switch.
+local-two is now pinned to file://${BASEDIR}/local-two (version dev)
+### opam install distant-x
+The following actions will be performed:
+=== install 3 packages
+  - install distant-x 1
+  - install local-one dev (pinned) [required by distant-x]
+  - install local-two dev (pinned) [required by distant-x]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-one.dev  (file://${BASEDIR}/local-one)
+-> installed local-one.dev
+-> retrieved local-two.dev  (file://${BASEDIR}/local-two)
+-> installed local-two.dev
+-> installed distant-x.1
+Done.
+### opam lock distant-x --keep-local
+[NOTE] Dependency local-one.dev is pinned to local target file://${BASEDIR}/local-one, keeping it.
+[NOTE] Dependency local-two.dev is pinned to local target file://${BASEDIR}/local-two, keeping it.
+Generated lock files for:
+  - distant-x.1: ${BASEDIR}/distant-x.opam.locked
+### opam-cat distant-x.opam.locked
+depends: ["local-one" {= "dev"} "local-two" {= "dev"}]
+name: "distant-x"
+opam-version: "2.0"
+pin-depends: [["local-one.dev" "file://${BASEDIR}/local-one"] ["local-two.dev" "file://${BASEDIR}/local-two"]]
+version: "1"
