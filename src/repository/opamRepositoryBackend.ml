@@ -144,22 +144,16 @@ let get_diff parent_dir dir1 dir2 =
           | None, Some {Unix.st_kind = Unix.S_DIR; _}
           | Some {Unix.st_kind = Unix.S_DIR; _}, Some {Unix.st_kind = Unix.S_DIR; _} ->
             aux diffs file1 file2
-          | Some {Unix.st_kind = Unix.S_LNK; _}, None
-          | None, Some {Unix.st_kind = Unix.S_LNK; _}
-          | Some {Unix.st_kind = Unix.S_LNK; _}, Some {Unix.st_kind = Unix.S_LNK; _} ->
-            assert false (* TODO *)
-          | Some {Unix.st_kind = Unix.S_REG; _}, Some {Unix.st_kind = Unix.S_DIR; _} ->
-            assert false (* TODO *)
           | Some {Unix.st_kind = Unix.S_DIR; _}, Some {Unix.st_kind = Unix.S_REG; _} ->
-            assert false (* TODO *)
-          | Some {Unix.st_kind = Unix.S_REG; _}, Some {Unix.st_kind = Unix.S_LNK; _} ->
-            assert false (* TODO *)
-          | Some {Unix.st_kind = Unix.S_LNK; _}, Some {Unix.st_kind = Unix.S_REG; _} ->
-            assert false (* TODO *)
-          | Some {Unix.st_kind = Unix.S_LNK; _}, Some {Unix.st_kind = Unix.S_DIR; _} ->
-            assert false (* TODO *)
-          | Some {Unix.st_kind = Unix.S_DIR; _}, Some {Unix.st_kind = Unix.S_LNK; _} ->
-            assert false (* TODO *)
+            let content2 = Option.map (readfile parent_dir) file2 in
+            let diffs = add_to_diffs None content2 diffs in
+            aux diffs file1 None
+          | Some {Unix.st_kind = Unix.S_REG; _}, Some {Unix.st_kind = Unix.S_DIR; _} ->
+            let diffs = aux diffs None file2 in
+            let content1 = Option.map (readfile parent_dir) file1 in
+            add_to_diffs content1 None diffs
+          | Some {Unix.st_kind = Unix.S_LNK; _}, _ | _, Some {Unix.st_kind = Unix.S_LNK; _} ->
+            failwith "Symlinks are unsupported"
           | Some {Unix.st_kind = Unix.S_CHR; _}, _ | _, Some {Unix.st_kind = Unix.S_CHR; _} ->
             failwith "Character devices are unsupported"
           | Some {Unix.st_kind = Unix.S_BLK; _}, _ | _, Some {Unix.st_kind = Unix.S_BLK; _} ->

@@ -1631,7 +1631,6 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
       write file content;
     | Patch.Delete file ->
       let file = get_path file in
-      (* TODO: apply the patch and check the file is empty *)
       Unix.unlink file
     | Patch.Create file ->
       let file = get_path file in
