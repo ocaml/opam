@@ -21,5 +21,11 @@ val select_packages:
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
   'a switch_state -> 'a switch_state * package_set
 
-(** Returns the locked opam file, according its depends, depopts, and pins. *)
-val lock_opam: ?only_direct:bool -> 'a switch_state -> OpamFile.OPAM.t -> OpamFile.OPAM.t
+(** Returns the locked opam file, according its depends, depopts, and pins.
+    If [only_direct] is set to true, it only adds direct dependencies specified
+    in the opam file. If [keep_local] is set to true, local pins are not
+    resolved to a distant url and they are all added with their local path in
+    'pin_depends:' field. *)
+val lock_opam:
+  only_direct:bool -> keep_local:bool ->
+  'a switch_state -> OpamFile.OPAM.t -> OpamFile.OPAM.t
