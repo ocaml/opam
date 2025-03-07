@@ -151,6 +151,7 @@ users)
 ## opam-repository
 
 ## opam-state
+  * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
 
 ## opam-solver
 
