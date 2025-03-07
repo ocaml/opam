@@ -10,7 +10,7 @@
 
 open OpamTypes
 
-let log = OpamConsole.log "REPO_BACKEND"
+let log ?level fmt = OpamConsole.log "REPO_BACKEND" ?level fmt
 let slog = OpamConsole.slog
 
 type update =
@@ -73,25 +73,111 @@ let job_text name label =
        (OpamConsole.colorise `green (OpamRepositoryName.to_string name))
        label)
 
+let getfiles parent_dir dir =
+  let dir = Filename.concat (OpamFilename.Dir.to_string parent_dir) dir in
+  OpamSystem.get_files dir
+
+let get_files_for_diff parent_dir dir1 dir2 = match dir1, dir2 with
+  | None, None -> assert false
+  | Some dir, None ->
+    List.map (fun file -> Patch.Delete (Filename.concat dir file)) (getfiles parent_dir dir)
+  | None, Some dir ->
+    List.map (fun file -> Patch.Create (Filename.concat dir file)) (getfiles parent_dir dir)
+  | Some dir1, Some dir2 ->
+    let files1 = List.fast_sort String.compare (getfiles parent_dir dir1) in
+    let files2 = List.fast_sort String.compare (getfiles parent_dir dir2) in
+    let rec aux acc files1 files2 = match files1, files2 with
+      | (file1::files1 as orig1), (file2::files2 as orig2) ->
+        let cmp = String.compare file1 file2 in
+        if cmp = 0 then
+          aux (Patch.Edit (Filename.concat dir1 file1, Filename.concat dir2 file2) :: acc) files1 files2
+        else if cmp < 0 then
+          aux (Patch.Delete (Filename.concat dir1 file1) :: acc) files1 orig2
+        else
+          aux (Patch.Create (Filename.concat dir2 file2) :: acc) orig1 files2
+      | file1::files1, [] ->
+        aux (Patch.Delete (Filename.concat dir1 file1) :: acc) files1 []
+      | [], file2::files2 ->
+        aux (Patch.Create (Filename.concat dir2 file2) :: acc) [] files2
+      | [], [] ->
+        acc
+    in
+    aux [] files1 files2
+
+let readfile parent_dir file =
+  let file = Filename.concat (OpamFilename.Dir.to_string parent_dir) file in
+  OpamSystem.read file
+
+let lstat parent_dir file =
+  let file = Filename.concat (OpamFilename.Dir.to_string parent_dir) file in
+  Unix.lstat file
+
 let get_diff parent_dir dir1 dir2 =
+  let chrono = OpamConsole.timer () in
   log "diff: %a/{%a,%a}"
     (slog OpamFilename.Dir.to_string) parent_dir
     (slog OpamFilename.Base.to_string) dir1
     (slog OpamFilename.Base.to_string) dir2;
-  let patch = OpamSystem.temp_file ~auto_clean: false "patch" in
-  let patch_file = OpamFilename.of_string patch in
-  let finalise () = OpamFilename.remove patch_file in
-  OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
-  OpamSystem.make_command
-    ~verbose:OpamCoreConfig.(!r.verbose_level >= 2)
-    ~dir:(OpamFilename.Dir.to_string parent_dir) ~stdout:patch
-    "diff"
-    [ "-ruaN";
-      OpamFilename.Base.to_string dir1;
-      OpamFilename.Base.to_string dir2; ]
-  @@> function
-  | { OpamProcess.r_code = 0; _ } -> finalise(); Done None
-  | { OpamProcess.r_code = 1; _ } as r ->
-    OpamProcess.cleanup ~force:true r;
+  let rec aux diffs dir1 dir2 =
+    let files = get_files_for_diff parent_dir dir1 dir2 in
+    let diffs =
+      List.fold_left (fun diffs operation ->
+          let file1, file2 = match operation with
+            | Patch.Delete filename -> (Some filename, None)
+            | Patch.Create filename -> (None, Some filename)
+            | Patch.Edit (file1, file2)
+            | Patch.Rename_only (file1, file2) -> (Some file1, Some file2)
+          in
+          let add_to_diffs content1 content2 diffs =
+            match Patch.diff operation content1 content2 with
+            | None -> diffs
+            | Some diff -> diff :: diffs
+          in
+          match OpamStd.Option.map (lstat parent_dir) file1, OpamStd.Option.map (lstat parent_dir) file2 with
+          | Some {Unix.st_kind = Unix.S_REG; _}, None
+          | None, Some {Unix.st_kind = Unix.S_REG; _}
+          | Some {Unix.st_kind = Unix.S_REG; _}, Some {Unix.st_kind = Unix.S_REG; _} ->
+            let content1 = Option.map (readfile parent_dir) file1 in
+            let content2 = Option.map (readfile parent_dir) file2 in
+            add_to_diffs content1 content2 diffs
+          | Some {Unix.st_kind = Unix.S_DIR; _}, None
+          | None, Some {Unix.st_kind = Unix.S_DIR; _}
+          | Some {Unix.st_kind = Unix.S_DIR; _}, Some {Unix.st_kind = Unix.S_DIR; _} ->
+            aux diffs file1 file2
+          | Some {Unix.st_kind = Unix.S_DIR; _}, Some {Unix.st_kind = Unix.S_REG; _} ->
+            let content2 = Option.map (readfile parent_dir) file2 in
+            let diffs = add_to_diffs None content2 diffs in
+            aux diffs file1 None
+          | Some {Unix.st_kind = Unix.S_REG; _}, Some {Unix.st_kind = Unix.S_DIR; _} ->
+            let diffs = aux diffs None file2 in
+            let content1 = Option.map (readfile parent_dir) file1 in
+            add_to_diffs content1 None diffs
+          | Some {Unix.st_kind = Unix.S_LNK; _}, _ | _, Some {Unix.st_kind = Unix.S_LNK; _} ->
+            failwith "Symlinks are unsupported"
+          | Some {Unix.st_kind = Unix.S_CHR; _}, _ | _, Some {Unix.st_kind = Unix.S_CHR; _} ->
+            failwith "Character devices are unsupported"
+          | Some {Unix.st_kind = Unix.S_BLK; _}, _ | _, Some {Unix.st_kind = Unix.S_BLK; _} ->
+            failwith "Block devices are unsupported"
+          | Some {Unix.st_kind = Unix.S_FIFO; _}, _ | _, Some {Unix.st_kind = Unix.S_FIFO; _} ->
+            failwith "Named pipes are unsupported"
+          | Some {Unix.st_kind = Unix.S_SOCK; _}, _ | _, Some {Unix.st_kind = Unix.S_SOCK; _} ->
+            failwith "Sockets are unsupported"
+          | None, None -> assert false)
+        diffs files
+    in
+    diffs
+  in
+  match
+    aux []
+      (Some (OpamFilename.Base.to_string dir1))
+      (Some (OpamFilename.Base.to_string dir2))
+  with
+  | [] ->
+    log "Internal diff (empty) done in %.2fs." (chrono ());
+    Done None
+  | diffs ->
+    log "Internal diff (non-empty) done in %.2fs." (chrono ());
+    let patch = OpamSystem.temp_file ~auto_clean: false "patch" in
+    let patch_file = OpamFilename.of_string patch in
+    OpamFilename.write patch_file (Format.asprintf "%a" Patch.pp_list diffs);
     Done (Some patch_file)
-  | r -> OpamSystem.process_error r
