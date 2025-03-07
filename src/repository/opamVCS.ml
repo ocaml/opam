@@ -102,8 +102,7 @@ module Make (VCS: VCS) = struct
        Done (Result None))
 
   let revision repo_root =
-    VCS.revision repo_root @@+ fun r ->
-    Done (OpamStd.Option.map OpamPackage.Version.of_string r)
+    VCS.revision repo_root
 
   let sync_dirty ?subpath repo_root repo_url =
     let filter_subpath files =
