@@ -666,8 +666,7 @@ let make_command st opam ?dir ?text_command (cmd, args) =
           let rev = OpamProcess.Job.run (OpamRepository.revision src u) in
           Printf.sprintf "pinned(%s%s)"
             (OpamUrl.to_string_w_subpath (OpamFile.URL.subpath url) u)
-            (OpamStd.Option.to_string
-               (fun r -> "#"^OpamPackage.Version.to_string r) rev)
+            (OpamStd.Option.to_string (fun r -> "#"^r) rev)
       else
         match
           OpamRepositoryState.find_package_opt st.switch_repos

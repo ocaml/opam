@@ -29,7 +29,7 @@ module type S = sig
     repository_name -> ?cache_dir:dirname -> dirname -> url ->
     update OpamProcess.job
   val repo_update_complete: dirname -> url -> unit OpamProcess.job
-  val revision: dirname -> version option OpamProcess.job
+  val revision: dirname -> string option OpamProcess.job
   val sync_dirty:
     ?subpath:subpath -> dirname -> url -> filename option download OpamProcess.job
   val get_remote_url:
