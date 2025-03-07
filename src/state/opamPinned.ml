@@ -226,9 +226,11 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
          (* Ignore empty files *)
          if (Unix.stat (OpamFilename.to_string f)).Unix.st_size = 0 then None
          else
+           let file = OpamFile.make f in
            Some { pin_name = name_of_opam_filename ?locked d f;
+                  pin_opam = lazy (OpamFile.OPAM.safe_read file);
                   pin = {
-                    pin_file = OpamFile.make f;
+                    pin_file = file;
                     pin_locked = locked;
                     pin_subpath =
                       OpamStd.Option.map OpamFilename.SubPath.of_string subpath;
