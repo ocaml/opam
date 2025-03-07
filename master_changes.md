@@ -107,6 +107,7 @@ users)
   * Fix sandboxing support in NixOS [#6333 @kit-ty-kate]
 
 ## VCS
+  * [BUG] Fix `git remote get-url` failure, add handling for exit code 2 [#6412 @rjbou]
 
 ## Build
   * Upgrade to opam-file-format 2.2.0~alpha1 [#6321 @kit-ty-kate]

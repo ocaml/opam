@@ -1247,39 +1247,63 @@ depends: [
   "a-doc-dep" {with-doc}
 ]
 build: [ "test" "-f" "content" ]
+### <add-pindepends.sh>
+cat >> tolock/tolock.opam << EOF
 pin-depends: [
-  [ "a-simple-dep.dev" "git+https://github.com/dbuenzli/cmdliner#f239981642a" ]
-  [ "a-test-dep.dev"   "git+https://github.com/dbuenzli/cmdliner#1de361182ab" ]
-  [ "a-doc-dep.dev"    "git+https://github.com/dbuenzli/cmdliner#e8f8890fe48" ]
+  [ "a-simple-dep.dev" "git+file://$BASEDIR/pindep#simple" ]
+  [ "a-test-dep.dev"   "git+file://$BASEDIR/pindep#test" ]
+  [ "a-doc-dep.dev"    "git+file://$BASEDIR/pindep#doc" ]
 ]
+EOF
+### sh add-pindepends.sh
 ### <tolock/content>
 it's here
 ### <pin:opam-file>
 opam-version: "2.0"
 version: "dev"
-### OPAMEDITOR="cp -f ${BASEDIR}/opam-file"
+### : -- :
+### mkdir pindep
+### git -C pindep init -q --initial-branch=master
+### git -C pindep config core.autocrlf false
+### git -C pindep commit -qm "init" --allow-empty
+### git -C pindep checkout -b simple master
+Switched to a new branch 'simple'
+### <pin:pindep/a-simple-dep.opam>
+opam-version: "2.0"
+version: "dev"
+### git -C pindep add a-simple-dep.opam
+### git -C pindep commit -qm "simple"
+### git -C pindep checkout -b test master
+Switched to a new branch 'test'
+### <pin:pindep/a-test-dep.opam>
+opam-version: "2.0"
+version: "dev"
+### git -C pindep add a-test-dep.opam
+### git -C pindep commit -qm "test"
+### git -C pindep checkout -b doc master
+Switched to a new branch 'doc'
+### <pin:pindep/a-doc-dep.opam>
+opam-version: "2.0"
+version: "dev"
+### git -C pindep add a-doc-dep.opam
+### git -C pindep commit -qm "doc"
+### : -- :
 ### opam install ./tolock --with-test --with-doc
 [NOTE] Package tolock does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by tolock.dev:
-  - a-simple-dep.dev at git+https://github.com/dbuenzli/cmdliner#f239981642a
-  - a-test-dep.dev at git+https://github.com/dbuenzli/cmdliner#1de361182ab
-  - a-doc-dep.dev at git+https://github.com/dbuenzli/cmdliner#e8f8890fe48
+  - a-simple-dep.dev at git+file://${BASEDIR}/pindep#simple
+  - a-test-dep.dev at git+file://${BASEDIR}/pindep#test
+  - a-doc-dep.dev at git+file://${BASEDIR}/pindep#doc
 Pin and install them? [Y/n] y
 [NOTE] Package a-simple-dep does not exist in opam repositories registered in the current switch.
 [a-simple-dep.dev] synchronised (no changes)
-[NOTE] No package definition found for a-simple-dep.dev: please complete the template
-You can edit this file again with "opam pin edit a-simple-dep", export it with "opam show a-simple-dep --raw"
-a-simple-dep is now pinned to git+https://github.com/dbuenzli/cmdliner#f239981642a (version dev)
+a-simple-dep is now pinned to git+file://${BASEDIR}/pindep#simple (version dev)
 [NOTE] Package a-test-dep does not exist in opam repositories registered in the current switch.
 [a-test-dep.dev] synchronised (no changes)
-[NOTE] No package definition found for a-test-dep.dev: please complete the template
-You can edit this file again with "opam pin edit a-test-dep", export it with "opam show a-test-dep --raw"
-a-test-dep is now pinned to git+https://github.com/dbuenzli/cmdliner#1de361182ab (version dev)
+a-test-dep is now pinned to git+file://${BASEDIR}/pindep#test (version dev)
 [NOTE] Package a-doc-dep does not exist in opam repositories registered in the current switch.
 [a-doc-dep.dev] synchronised (no changes)
-[NOTE] No package definition found for a-doc-dep.dev: please complete the template
-You can edit this file again with "opam pin edit a-doc-dep", export it with "opam show a-doc-dep --raw"
-a-doc-dep is now pinned to git+https://github.com/dbuenzli/cmdliner#e8f8890fe48 (version dev)
+a-doc-dep is now pinned to git+file://${BASEDIR}/pindep#doc (version dev)
 tolock is now pinned to file://${BASEDIR}/tolock (version dev)
 The following actions will be performed:
 === install 5 packages
@@ -1290,17 +1314,20 @@ The following actions will be performed:
   - install tolock       dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved a-doc-dep.dev  (no changes)
 -> installed a-doc-dep.dev
--> retrieved a-simple-dep.dev  (no changes)
 -> installed a-simple-dep.dev
--> retrieved a-test-dep.dev  (no changes)
 -> installed a-test-dep.dev
 -> installed foo.2
 -> retrieved tolock.dev  (file://${BASEDIR}/tolock)
 -> installed tolock.dev
 Done.
-### opam lock tolock
+### opam lock tolock --keep-local
+[ERROR] Can't retrieve remote informations for a-doc-dep.dev
+[NOTE] Dependency a-doc-dep.dev is pinned to local target git+file://${BASEDIR}/pindep#doc, keeping it.
+[ERROR] Can't retrieve remote informations for a-simple-dep.dev
+[NOTE] Dependency a-simple-dep.dev is pinned to local target git+file://${BASEDIR}/pindep#simple, keeping it.
+[ERROR] Can't retrieve remote informations for a-test-dep.dev
+[NOTE] Dependency a-test-dep.dev is pinned to local target git+file://${BASEDIR}/pindep#test, keeping it.
 Generated lock files for:
   - tolock.dev: ${BASEDIR}/tolock.opam.locked
 ### opam-cat tolock.opam.locked
@@ -1315,7 +1342,7 @@ license: "MIT"
 maintainer: "maint@tain.er"
 name: "tolock"
 opam-version: "2.0"
-pin-depends: [["a-doc-dep.dev" "git+https://github.com/dbuenzli/cmdliner#e8f8890fe48"] ["a-simple-dep.dev" "git+https://github.com/dbuenzli/cmdliner#f239981642a"] ["a-test-dep.dev" "git+https://github.com/dbuenzli/cmdliner#1de361182ab"]]
+pin-depends: [["a-doc-dep.dev" "git+file://${BASEDIR}/pindep#doc"] ["a-simple-dep.dev" "git+file://${BASEDIR}/pindep#simple"] ["a-test-dep.dev" "git+file://${BASEDIR}/pindep#test"]]
 synopsis: "A word"
 version: "dev"
 ### : Keep local pins as pin-depends
