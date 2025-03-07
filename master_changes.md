@@ -48,6 +48,7 @@ users)
 ## Show
 
 ## Var/Option
+  * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
 
 ## Update / Upgrade
 

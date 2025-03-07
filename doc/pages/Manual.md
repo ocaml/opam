@@ -561,8 +561,10 @@ the package being defined.
   a hash identifying the precise package version and metadata, and that of all
   its dependencies
 - <a id="pkgvar-opamfile">`opamfile`</a>:
-  if the package is installed, path of its opam file, from opam internals,
-  otherwise not defined
+  if the package is installed or pinned it is the path to the internally
+  stored opam file, otherwise, if the package exists, it is the path to
+  a newly created opam file in a directory under the system temporary
+  directory (see `Stdlib.Filename.get_temp_dir_name`)
 
 Extra variables can be defined by any package at installation time, using a
 [`<pkgname>.config`](#lt-pkgname-gt-config) file with a
