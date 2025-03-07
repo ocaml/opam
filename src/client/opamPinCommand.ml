@@ -771,7 +771,7 @@ let list st ~short =
           let color, rev =
             match OpamProcess.Job.run (OpamRepository.revision srcdir url) with
             | None -> (`red, "error while fetching current revision")
-            | Some ver -> (`magenta, OpamPackage.Version.to_string ver)
+            | Some ver -> (`magenta, ver)
           in
           Some (Printf.sprintf "(at %s)" (OpamConsole.colorise color (rev)))
         | _ -> None

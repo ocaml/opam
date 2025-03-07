@@ -70,7 +70,7 @@ val pull_file_to_cache:
 val cache_file: dirname -> OpamHash.t -> filename
 
 (** Get the optional revision associated to a backend (git hash, etc.). *)
-val revision: dirname -> url -> version option OpamProcess.job
+val revision: dirname -> url -> string option OpamProcess.job
 
 (** Get the version-control branch for that url. Only applicable for local,
     version controlled URLs. Returns [None] in other cases. *)

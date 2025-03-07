@@ -552,7 +552,7 @@ let freeze_url src_dir nv url =
         (OpamUrl.to_string url_t)
     | Some hash ->
       OpamFile.URL.with_url
-        { url_t with hash = Some (OpamPackage.Version.to_string hash) }
+        { url_t with hash = Some hash }
         url)
   | `http ->
     (match OpamFile.URL.checksum url with
