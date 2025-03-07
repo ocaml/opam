@@ -42,7 +42,11 @@ val to_path: t -> string list
 (** Sorts the list from best hash (SHA512, ...) to weakest (..., MD5) *)
 val sort : t list -> t list
 
+(** Compute the hash of the file and check it *)
 val check_file: string -> t -> bool
+
+(** Compute the hash of the string and check it *)
+val check_string: string -> t -> bool
 
 (** Like {!check_file}, but returns the actual mismatching hash of the file, or
     [None] in case of match *)

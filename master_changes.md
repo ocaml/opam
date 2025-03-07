@@ -171,6 +171,7 @@ users)
   * `OpamCompat.Map.filter_map`: was added [#6442 @kit-ty-kate]
   * `OpamCompat.MAP`: was added [#6442 @kit-ty-kate]
   * `OpamCompat.String.{starts_with,ends_with,for_all,fold_left}`: were added [#6442 @kit-ty-kate]
+  * `OpamHash.check_string`: was added [#6661 @kit-ty-kate]
   * `OpamStd.List.fold_left_map`: was moved to `OpamCompat.List.fold_left_map` [#6442 @kit-ty-kate]
   * `OpamStd.List.{cons,find_opt,filter_map}`: were removed. Use `Stdlib.List` instead. [#6442 @kit-ty-kate]
   * `OpamStd.Op.{(@@),(|>)}`: were removed. Use `Stdlib` instead. [#6442 @kit-ty-kate]
