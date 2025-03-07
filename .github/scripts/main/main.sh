@@ -12,7 +12,7 @@ unset-dev-version () {
 export OCAMLRUNPARAM=b
 
 (set +x ; echo -en "::group::build opam\r") 2>/dev/null
-if [[ "$OPAM_TEST" -eq 1 ]] || [[ "$OPAM_DOC" -eq 1 ]] ; then
+if [[ "$OPAM_TEST" -eq 1 ]] || [[ "$OPAM_DOC" -eq 1 ]] || [[ "$OPAM_DEPENDS" -eq 1 ]] ; then
   export OPAMROOT=$OPAMBSROOT
   # If the cached root is newer, regenerate a binary compatible root
   opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
@@ -91,6 +91,40 @@ if [[ "$OPAM_DOC" -eq 1 ]]; then
   echo '::endgroup::checking generated files'
 fi
 
+prepare_project () {
+  # warning, perform a cd
+  org=$1
+  project=$2
+
+  url="https://github.com/$org/$project"
+  dir="$CACHE/$project"
+
+  if [ ! -d "$CACHE/$project" ]; then
+    git clone "$url" "$dir"
+  fi
+  cd "$dir"
+  git fetch origin
+  if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && git ls-remote --exit-code origin "$GITHUB_PR_USER/$BRANCH" ; then
+    BRANCH=$GITHUB_PR_USER/$BRANCH
+  fi
+  if git ls-remote --exit-code origin "$BRANCH"; then
+    PR_BRANCH=$BRANCH
+  elif [ "$GITHUB_EVENT_NAME" = pull_request ] && git ls-remote --exit-code origin "$GITHUB_BASE_REF"; then
+    PR_BRANCH=$GITHUB_BASE_REF
+  else
+    PR_BRANCH=master
+  fi
+  if git branch | grep -q "$PR_BRANCH"; then
+    git checkout "$PR_BRANCH"
+    git reset --hard "origin/$PR_BRANCH"
+  else
+    git checkout -b "$PR_BRANCH" "origin/$PR_BRANCH"
+  fi
+
+  test -d _opam || opam switch create . --no-install --formula '"ocaml-system"'
+  opam pin "$GITHUB_WORKSPACE" -yn --with-version to-test
+}
+
 if [ "$OPAM_TEST" = "1" ]; then
   # test if an upgrade is needed
   set +e
@@ -121,35 +155,52 @@ if [ "$OPAM_TEST" = "1" ]; then
 
   # Compile and run opam-rt
   (set +x ; echo -en "::group::opam-rt\r") 2>/dev/null
-  opamrt_url="https://github.com/ocaml-opam/opam-rt"
-  if [ ! -d $CACHE/opam-rt ]; then
-    git clone $opamrt_url  $CACHE/opam-rt
-  fi
-  cd $CACHE/opam-rt
-  git fetch origin
-  if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && git ls-remote --exit-code origin "$GITHUB_PR_USER/$BRANCH" ; then
-    BRANCH=$GITHUB_PR_USER/$BRANCH
-  fi
-  if git ls-remote --exit-code origin "$BRANCH"; then
-    OPAM_RT_BRANCH=$BRANCH
-  elif [ "$GITHUB_EVENT_NAME" = pull_request ] && git ls-remote --exit-code origin "$GITHUB_BASE_REF"; then
-    OPAM_RT_BRANCH=$GITHUB_BASE_REF
-  else
-    OPAM_RT_BRANCH=master
-  fi
-  if git branch | grep -q "$OPAM_RT_BRANCH"; then
-    git checkout "$OPAM_RT_BRANCH"
-    git reset --hard "origin/$OPAM_RT_BRANCH"
-  else
-    git checkout -b "$OPAM_RT_BRANCH" "origin/$OPAM_RT_BRANCH"
-  fi
+  prepare_project "ocaml-opam" "opam-rt"
 
-  test -d _opam || opam switch create . --no-install --formula '"ocaml-system"'
-  eval $(opam env)
-  opam pin $GITHUB_WORKSPACE -yn --with-version to-test
   # opam lib pins defined in opam-rt are ignored as there is a local pin
   opam pin . -yn --ignore-pin-depends
   opam install opam-rt --deps-only opam-devel.to-test
-  make || { opam reinstall opam-client -y; make; }
+  opam exec -- make || { opam reinstall opam-client -y; opam exec -- make; }
   (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
+fi
+
+test_project () {
+  org=$1
+  project=$2
+  ignore_depends=$3
+  make_cmd=$4
+
+  ignore=""
+  if [ $ignore_depends -eq 1 ]; then
+    ignore="--ignore-pin-depends"
+  fi
+
+  (set +x; echo -en "::group::depends-$project\r") 2>/dev/null
+  prepare_project "$org" "$project"
+  set +e
+  opam pin . -yn $ignore
+  opam install "$project" --deps-only opam-client.to-test
+  opam exec -- $make_cmd || { opam reinstall opam-client -y; opam exec -- $make_cmd; }
+  code=$?
+  if [ $code -ne 0 ]; then
+    DEPENDS_ERRORS="$DEPENDS_ERRORS $project"
+  fi
+  set -e
+  (set +x ; echo -en "::endgroup::depends-$project\r") 2>/dev/null
+}
+
+if [ "$OPAM_DEPENDS" = "1" ]; then
+
+  DEPENDS_ERRORS=""
+  (set +x; echo -en "::group::depends\r") 2>/dev/null
+
+  test_project "ocaml-opam" "opam-publish" 0 "make"
+  test_project "AltGr" "opam-bundle" 0 "make"
+  test_project "ocamlpro" "opam-custom-install" 1 "dune build"
+
+  if [ -n "$DEPENDS_ERRORS" ]; then
+    echo -e "\e[31mErrors detected in plugins $DEPENDS_ERRORS\e[0m";
+    exit 1
+  fi
+  (set +x ; echo -en "::endgroup::depends\r") 2>/dev/null
 fi
