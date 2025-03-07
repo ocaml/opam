@@ -521,6 +521,10 @@ module Option = struct
     | None, None -> true
     | _ , _  -> false
 
+  let equal_some f v1 = function
+    | None -> false
+    | Some v2 -> f v1 v2
+
   let to_string ?(none="") f = function
     | Some x -> f x
     | None -> none

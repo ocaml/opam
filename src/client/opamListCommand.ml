@@ -348,7 +348,7 @@ let apply_selector ~base st = function
       base
   | Tag t ->
     OpamPackage.Set.filter (fun nv ->
-        get_opam st nv |> List.mem t @* OpamFile.OPAM.tags)
+        get_opam st nv |> List.exists (String.equal t) @* OpamFile.OPAM.tags)
       base
   | From_repository repos ->
     let rt = st.switch_repos in
@@ -358,7 +358,8 @@ let apply_selector ~base st = function
         let packages =
           OpamPackage.keys (OpamRepositoryName.Map.find r rt.repo_opams)
         in
-        if List.mem r repos then OpamPackage.Set.union packages (aux rl)
+        if List.exists (OpamRepositoryName.equal r) repos
+        then OpamPackage.Set.union packages (aux rl)
         else OpamPackage.Set.diff (aux rl) packages
     in
     aux (OpamSwitchState.repos_list st)
@@ -383,12 +384,13 @@ let apply_selector ~base st = function
              OpamStd.String.Map.exists
                (fun f -> function
                   | OpamDirTrack.Removed -> false
-                  | _ -> rel_name = f)
+                  | _ -> rel_name = (f : string))
                changes)
            (OpamFilename.files (OpamPath.Switch.install_dir root switch))
        in
        let selections =
-         if switch = st.switch then OpamSwitchState.selections st
+         if OpamSwitch.equal switch st.switch then
+           OpamSwitchState.selections st
          else
            OpamSwitchState.load_selections ~lock_kind:`Lock_none
              st.switch_global switch
@@ -504,7 +506,7 @@ let field_of_string ~raw =
     try
       OpamStd.List.assoc String.equal s names_fields
     with Not_found ->
-    match OpamStd.List.find_opt (fun x -> s = x) opam_fields with
+    match OpamStd.List.find_opt (String.equal s) opam_fields with
     | Some f -> Field f
     | None -> OpamConsole.error_and_exit `Bad_arguments "No printer for %S" s
 
@@ -569,7 +571,10 @@ let detail_printer ?prettify ?normalise ?(sort=false) st nv =
     (match OpamPinned.package_opt st nv.name with
      | Some nv ->
        let opam = get_opam st nv in
-       if Some opam = OpamPackage.Map.find_opt nv st.repos_package_index then
+       if
+         OpamStd.Option.equal_some OpamFile.OPAM.equal
+           opam (OpamPackage.Map.find_opt nv st.repos_package_index)
+       then
          Printf.sprintf "pinned to version %s"
            (OpamPackage.Version.to_string nv.version % [`blue])
        else
