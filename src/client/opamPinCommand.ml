@@ -68,38 +68,40 @@ let get_source_definition ?version ?subpath ?locked st nv url =
   let root = st.switch_global.root in
   let internal_pindir = OpamPath.Switch.pinned_package root st.switch nv.name in
   let fix opam =
-    OpamFile.OPAM.with_url url @@
-    (match version with
-     | Some v -> OpamFile.OPAM.with_version v
-     | None -> fun o -> o) @@
-    opam
+    let opam = OpamFile.OPAM.with_url url opam in
+    match version with
+    | Some v -> OpamFile.OPAM.with_version v opam
+    | None -> opam
   in
   let open OpamProcess.Job.Op in
   OpamUpdate.fetch_dev_package url internal_pindir ?subpath nv @@+ function
   | Not_available (_,s) -> raise (Fetch_Fail s)
-  | Up_to_date _ | Result _ ->
-    let opam_dir_lookup () =
+  | Up_to_date () | Result () ->
+    let srcdir =
       let u = OpamFile.URL.url url in
-      match OpamUrl.local_dir u, u.OpamUrl.backend with
-      | Some dir, #OpamUrl.version_control ->
-        let get_branch d =
-          let url = OpamUrl.of_string (OpamFilename.Dir.to_string d) in
-          OpamRepository.revision d
-            { url with
-              OpamUrl.transport = u.transport;
-              backend = u.backend}
-        in
-        get_branch dir @@+ fun local_branch ->
-        get_branch internal_pindir @@| fun distant_branch ->
-        (match local_branch, distant_branch with
-         | Some l, Some d when String.equal l d -> dir
-         | Some _, Some _ -> internal_pindir
-         | None, Some _ -> internal_pindir
-         | Some _, None -> dir
-         | None, None -> dir)
-      | _, _ ->  Done (internal_pindir)
+      match u.OpamUrl.backend with
+      | #OpamUrl.version_control ->
+        (match OpamUrl.local_dir u with
+         | Some dir ->
+           let get_branch d =
+             let url = OpamUrl.of_string (OpamFilename.Dir.to_string d) in
+             OpamRepository.revision d
+               { url with
+                 OpamUrl.transport = u.transport;
+                 backend = u.backend }
+           in
+           get_branch dir @@+ fun local_branch ->
+           get_branch internal_pindir @@| fun distant_branch ->
+           (match local_branch, distant_branch with
+            | Some l, Some d when String.equal l d -> dir
+            | Some _, Some _ -> internal_pindir
+            | None, Some _ -> internal_pindir
+            | Some _, None -> dir
+            | None, None -> dir)
+         | None -> Done internal_pindir)
+      | `http | `rsync -> Done internal_pindir
     in
-    opam_dir_lookup () @@| fun srcdir ->
+    srcdir @@| fun srcdir ->
     let srcdir = OpamFilename.SubPath.(srcdir /? subpath) in
     match OpamPinned.find_opam_file_in_source ?locked nv.name srcdir with
     | None -> None
@@ -471,7 +473,6 @@ and source_pin
     (slog (OpamStd.Option.to_string OpamPackage.Version.to_string)) version
     (slog (OpamStd.Option.to_string ~none:"none"
              (OpamUrl.to_string_w_subpath subpath))) target_url;
-(*              OpamConsole.error "I have opam_opt : %s" (OpamStd.Option.to_string OpamFile.OPAM.write_to_string opam_opt); *)
  (* let installed_version =
     try
       Some (OpamPackage.version
@@ -551,7 +552,6 @@ and source_pin
            (OpamStd.Option.to_string OpamUrl.to_string target_url)
            (OpamStd.Format.itemize (fun x -> x) [err]));
   in
-(*              OpamConsole.error "Source def I have opam_opt : %s" (OpamStd.Option.to_string OpamFile.OPAM.write_to_string opam_opt); *)
   let opam_opt = opam_opt >>| OpamFormatUpgrade.opam_file in
 
   let nv =
