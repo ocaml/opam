@@ -777,7 +777,7 @@ The following actions will be performed:
 -> installed test.1
 Done.
 ### opam var test:opamfile
-${BASEDIR}/OPAM/repo/default/packages/test/test.1/opam
+${BASEDIR}/OPAM/var-opamfile/.opam-switch/packages/test.1/opam
 ### :c: not present in the repo but installed
 ### rm REPO/packages/test/test.1/opam
 ### opam update
@@ -823,4 +823,4 @@ The following actions will be performed:
 -> installed pinned-opamfile-test.dev
 Done.
 ### opam var pinned-opamfile-test:opamfile
-${BASEDIR}/OPAM/var-opamfile/.opam-switch/overlay/pinned-opamfile-test/opam
+${BASEDIR}/OPAM/var-opamfile/.opam-switch/packages/pinned-opamfile-test.dev/opam

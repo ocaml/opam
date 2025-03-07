@@ -308,20 +308,14 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "dev", Some opam -> Some (bool (is_dev_package st opam))
     | "build-id", Some opam -> Option.map string (build_id st opam)
     | "opamfile", Some opam ->
-      (* Opamfile path is retrieved from overlay directory for pinned packages,
-         or from temporary repository in /tmp *)
-      let repos_roots reponame =
-        match Hashtbl.find st.switch_repos.repos_tmp reponame with
-        | lazy repo_root -> repo_root
-        | exception Not_found ->
-          OpamRepositoryPath.root st.switch_global.root reponame
-      in
-      OpamFile.OPAM.get_metadata_dir ~repos_roots opam
-      |> Option.map (fun d ->
-          OpamFilename.Op.(d//"opam")
-          |> OpamFilename.to_string
-          |> string
-        )
+      let nv = get_nv opam in
+      if OpamPackage.Set.mem nv st.installed then
+        OpamPath.Switch.installed_opam st.switch_global.root st.switch nv
+        |> OpamFile.to_string
+        |> string
+        |> Option.some
+      else
+        None
     | _, _ -> None
   in
   let make_package_local v =
