@@ -935,7 +935,7 @@ vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#master (version dev)
 ### test -f OPAM/vcs-local/.opam-switch/sources/vcs-local/untracked
 # Return code 1 #
 ### opam show vcs-local --field build:,url.src:
-build:   "false"
+build:
 url.src: "git+file://${BASEDIR}/vcs-local#master"
 ### :C:b: double pinning when the opam file is opam/opam
 ### <pin:double/opam/opam>
