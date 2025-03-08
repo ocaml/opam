@@ -935,7 +935,7 @@ vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#master (version dev)
 ### test -f OPAM/vcs-local/.opam-switch/sources/vcs-local/untracked
 # Return code 1 #
 ### opam show vcs-local --field build:,url.src:
-build:   "false"
+build:
 url.src: "git+file://${BASEDIR}/vcs-local#master"
 ### :C:b: double pinning when the opam file is opam/opam
 ### <pin:double/opam/opam>
@@ -1035,3 +1035,41 @@ The following actions will be performed:
 -> installed dep2.2
 -> installed dep1.dev
 Done.
+### :C:d: local directory pinned with non selected branch
+### mkdir local
+### git -C local init -q --initial-branch=master
+### git -C local config core.autocrlf false
+### git -C local commit -qm "init" --allow-empty
+### git -C local checkout -b fst master
+Switched to a new branch 'fst'
+### <pin:local/fst.opam>
+opam-version: "2.0"
+synopsis: "I'm the first package"
+### git -C local add fst.opam
+### git -C local commit -qm "fst"
+### git -C local checkout -b snd master
+Switched to a new branch 'snd'
+### <pin:local/snd.opam>
+opam-version: "2.0"
+synopsis: "I'm the second package"
+### git -C local add snd.opam
+### git -C local commit -qm "snd"
+### git -C local checkout fst
+Switched to branch 'fst'
+### opam switch create local-magic --empty
+### git -C local branch --show-current
+fst
+### opam pin fst ./local#fst -n
+[NOTE] Package fst does not exist in opam repositories registered in the current switch.
+[fst.dev] synchronised (git+file://${BASEDIR}/local#fst)
+fst is now pinned to git+file://${BASEDIR}/local#fst (version dev)
+### opam show fst --field synopsis
+I'm the first package
+### git -C local branch --show-current
+fst
+### opam pin snd ./local#snd -n
+[NOTE] Package snd does not exist in opam repositories registered in the current switch.
+[snd.dev] synchronised (git+file://${BASEDIR}/local#snd)
+snd is now pinned to git+file://${BASEDIR}/local#snd (version dev)
+### opam show snd --field synopsis
+I'm the second package

@@ -99,7 +99,7 @@ let index_command cli =
         let module VCS = (val OpamRepository.find_backend_by_kind vcs) in
         match OpamProcess.Job.run (VCS.revision repo_root) with
         | None -> date ()
-        | Some hash -> OpamPackage.Version.to_string hash
+        | Some hash -> hash
     in
     let repo_def = OpamFile.Repo.with_stamp repo_stamp repo_def in
     OpamFile.Repo.write repo_file repo_def;
