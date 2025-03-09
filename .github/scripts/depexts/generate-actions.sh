@@ -108,7 +108,7 @@ EOF
     cat > "$dir/Dockerfile" << EOF
 FROM nixos/nix
 RUN nix-channel --update
-RUN nix-env -iA nixpkgs.gnum4 nixpkgs.git nixpkgs.rsync nixpkgs.patch nixpkgs.bzip2 nixpkgs.gnumake nixpkgs.wget nixpkgs.ocaml nixpkgs.ocamlPackages.ocaml-compiler-libs nixpkgs.unzip nixpkgs.gcc nixpkgs.diffutils nixpkgs.patch nixpkgs.getconf nixpkgs.gnused
+RUN nix-env -iA nixpkgs.gnum4 nixpkgs.git nixpkgs.rsync nixpkgs.patch nixpkgs.bzip2 nixpkgs.gnumake nixpkgs.wget nixpkgs.ocaml nixpkgs.ocamlPackages.ocaml-compiler-libs nixpkgs.unzip nixpkgs.gcc nixpkgs.diffutils nixpkgs.patch nixpkgs.getconf nixpkgs.gnused nixpkgs.gawk
 EOF
 esac
 
