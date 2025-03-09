@@ -129,34 +129,11 @@ RUN echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
 RUN /usr/bin/opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
 RUN echo 'archive-mirrors: "https://opam.ocaml.org/cache"' >> \$OPAMROOT/config
 RUN /usr/bin/opam switch create this-opam --formula='$OCAML_INVARIANT'
-EOF
-
-# we can't `nix-env -i binutils`
-# https://github.com/NixOS/nix/issues/10587
-if [ $target == "nix" ]; then
-  cat >>$dir/Dockerfile << EOF
-RUN nix-shell -p binutils --run "/usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps"
-EOF
-else
-  cat >>$dir/Dockerfile << EOF
 RUN /usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps
-EOF
-fi
-
-cat >>$dir/Dockerfile << EOF
 RUN /usr/bin/opam clean -as --logs
 COPY entrypoint.sh /opam/entrypoint.sh
-EOF
-
-if [ $target == "nix" ]; then
-  cat >>$dir/Dockerfile << EOF
-ENTRYPOINT ["nix-shell", "-p", "binutils", "--run", "/opam/entrypoint.sh"]
-EOF
-else
-  cat >>$dir/Dockerfile << EOF
 ENTRYPOINT ["/opam/entrypoint.sh"]
 EOF
-fi
 
 ### Generate the entrypoint
 cat >$dir/entrypoint.sh << EOF
@@ -179,7 +156,7 @@ make
 
 EOF
 
-if [ $target == "nix" ]; then
+if [ $target = "nix" ]; then
   cat >>$dir/entrypoint.sh << EOF
 ./opam var --global os-family=nixos
 ./opam var --global os-distribution=nixos
