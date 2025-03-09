@@ -1180,19 +1180,22 @@ let get_depexts ?(force=false) ?(recover=false) t ~new_packages ~all_packages =
     print_depext_msg (avail, nf);
     avail, required
 
-let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config t =
+let install_sys_packages ~st_conv ~map_sysmap ~confirm ~sys_packages ~required env config t =
   let rec entry_point t sys_packages required =
     if OpamClientConfig.(!r.fake) then
       (print_command sys_packages; t)
     else if OpamFile.Config.depext_run_installs config then
-      if confirm then menu t sys_packages required else auto_install t sys_packages required
+      if confirm then
+        menu t sys_packages required
+      else
+        auto_install t sys_packages required
     else
       manual_install t sys_packages
   and menu t sys_packages required =
     let answer =
       let pkgman =
         OpamConsole.colorise `yellow
-          (OpamSysInteract.package_manager_name ~env t config)
+          (OpamSysInteract.package_manager_name ~env (st_conv t) config)
       in
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
         "opam believes some required external dependencies are missing. opam \
@@ -1228,7 +1231,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
       OpamSysInteract.Cygwin.check_setup ~update:false;
     let commands =
       OpamSysInteract.install_packages_commands ~env
-        t config sys_packages ~required
+        (st_conv t) config sys_packages ~required
       |> List.map (fun ((`AsAdmin c | `AsUser c), a) -> c::a)
     in
     OpamConsole.formatted_msg
@@ -1260,7 +1263,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
       if OpamSysPoll.os_distribution env = Some "cygwin" then
         OpamSysInteract.Cygwin.check_setup ~update:true;
       OpamSysInteract.install ~env
-        t config sys_packages ~required; (* handles dry_run *)
+        (st_conv t) config sys_packages ~required; (* handles dry_run *)
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
@@ -1319,7 +1322,6 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
 let install_depexts ?(force_depext=false) ?(confirm=true) t
     ~new_packages ~all_packages =
   let map_sysmap f t =
-    let t = Option.get t in
     let sys_packages =
       OpamPackage.Set.fold (fun nv sys_map ->
           match OpamPackage.Map.find_opt nv sys_map with
@@ -1332,7 +1334,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t
         new_packages
         (Lazy.force t.sys_packages)
     in
-    Some { t with sys_packages = lazy sys_packages }
+    { t with sys_packages = lazy sys_packages }
   in
   let confirm =
     confirm && not (OpamSysInteract.Cygwin.is_internal t.switch_global.config)
@@ -1343,12 +1345,11 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t
   in
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in
-  Option.get
-    (install_sys_packages ~map_sysmap ~confirm
-       env config ~sys_packages ~required (Some t))
+  install_sys_packages ~st_conv:OpamStd.Option.some ~map_sysmap ~confirm
+    env config ~sys_packages ~required t
 
 let install_sys_packages ~confirm =
-  install_sys_packages ~map_sysmap:(fun _ t -> t) ~confirm
+  install_sys_packages ~st_conv:Fun.id ~map_sysmap:(fun _ t -> t) ~confirm
 
 (* Apply a solution *)
 let apply ?ask t ~requested ?print_requested ?add_roots
