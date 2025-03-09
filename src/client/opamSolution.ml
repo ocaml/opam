@@ -1194,8 +1194,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
     let answer =
       let pkgman =
         OpamConsole.colorise `yellow
-          (OpamSysInteract.package_manager_name ~env
-             (Option.map (fun t -> t.switch) t) config)
+          (OpamSysInteract.package_manager_name ~env t config)
       in
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
         "opam believes some required external dependencies are missing. opam \
@@ -1231,7 +1230,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
       OpamSysInteract.Cygwin.check_setup ~update:false;
     let commands =
       OpamSysInteract.install_packages_commands ~env
-        (Option.map (fun t -> t.switch) t) config sys_packages ~required
+        t config sys_packages ~required
       |> List.map (fun ((`AsAdmin c | `AsUser c), a) -> c::a)
     in
     OpamConsole.formatted_msg
@@ -1263,7 +1262,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
       if OpamSysPoll.os_distribution env = Some "cygwin" then
         OpamSysInteract.Cygwin.check_setup ~update:true;
       OpamSysInteract.install ~env
-        (Option.map (fun t -> t.switch) t) config sys_packages ~required; (* handles dry_run *)
+        t config sys_packages ~required; (* handles dry_run *)
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;

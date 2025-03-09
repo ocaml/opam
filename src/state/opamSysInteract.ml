@@ -1024,7 +1024,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages ~old_packages 
 
 (* Install *)
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_packages ~required =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) st config sys_packages ~required =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
@@ -1115,12 +1115,12 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_
      "-Su"::"--noconfirm"::packages], None
   | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
   | Nix ->
-    (match switch with
+    (match st with
      | None ->
        log "Nix depext must be passed switch";
        [], None
-     | Some switch ->
-       let dir = OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) switch in
+     | Some (st : _ OpamStateTypes.switch_state) ->
+       let dir = OpamPath.Switch.meta st.switch_global.root st.switch in
        let drvFile =
          OpamFilename.create dir
            (OpamFilename.basename (OpamFilename.raw "env.nix"))
@@ -1151,23 +1151,20 @@ echo "PATH	+=	$PATH	Nix" >> "$out"
 }
 |} in
        OpamFilename.write drvFile contents;
-       let envFile =
-         OpamFilename.create dir
-           (OpamFilename.basename (OpamFilename.raw "nix.env"))
-         |> OpamFilename.to_string
-       in
+       let envFile = OpamPath.Switch.nix_env st.switch_global.root st.switch in
        [`AsUser "nix-build",
-        [ OpamFilename.to_string drvFile; "--out-link"; envFile ] ],
+        [ OpamFilename.to_string drvFile;
+          "--out-link"; OpamFile.to_string envFile ] ],
        None)
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
-let install_packages_commands ?env switch config sys_packages ~required =
-  fst (install_packages_commands_t ?env switch config sys_packages ~required)
+let install_packages_commands ?env st config sys_packages ~required =
+  fst (install_packages_commands_t ?env st config sys_packages ~required)
 
-let package_manager_name ?env switch config =
+let package_manager_name ?env st config =
   match
-    install_packages_commands ?env switch config OpamSysPkg.Set.empty
+    install_packages_commands ?env st config OpamSysPkg.Set.empty
       ~required:OpamSysPkg.Set.empty
   with
   | ((`AsAdmin pkgman | `AsUser pkgman), _) :: _ -> pkgman
@@ -1194,11 +1191,11 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install ?env switch config packages ~required =
+let install ?env st config packages ~required =
   if OpamSysPkg.Set.is_empty packages && OpamSysPkg.Set.is_empty required then
     log "Nothing to install"
   else
-    let commands, vars = install_packages_commands_t ?env switch config packages ~required in
+    let commands, vars = install_packages_commands_t ?env st config packages ~required in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
