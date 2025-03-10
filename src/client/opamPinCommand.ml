@@ -68,22 +68,15 @@ let get_source_definition ?version ?subpath ?locked st nv url =
   let root = st.switch_global.root in
   let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
   let fix opam =
-    OpamFile.OPAM.with_url url @@
-    (match version with
-     | Some v -> OpamFile.OPAM.with_version v
-     | None -> fun o -> o) @@
-    opam
+    let opam = OpamFile.OPAM.with_url url opam in
+    match version with
+    | Some v -> OpamFile.OPAM.with_version v opam
+    | None -> opam
   in
   let open OpamProcess.Job.Op in
   OpamUpdate.fetch_dev_package url srcdir ?subpath nv @@| function
   | Not_available (_,s) -> raise (Fetch_Fail s)
-  | Up_to_date _ | Result _ ->
-    let srcdir =
-      let u = OpamFile.URL.url url in
-      match OpamUrl.local_dir u, u.OpamUrl.backend with
-      | Some dir, #OpamUrl.version_control -> dir
-      | _, _ -> srcdir
-    in
+  | Up_to_date () | Result () ->
     let srcdir = OpamFilename.SubPath.(srcdir /? subpath) in
     match OpamPinned.find_opam_file_in_source ?locked nv.name srcdir with
     | None -> None
@@ -771,7 +764,7 @@ let list st ~short =
           let color, rev =
             match OpamProcess.Job.run (OpamRepository.revision srcdir url) with
             | None -> (`red, "error while fetching current revision")
-            | Some ver -> (`magenta, OpamPackage.Version.to_string ver)
+            | Some ver -> (`magenta, ver)
           in
           Some (Printf.sprintf "(at %s)" (OpamConsole.colorise color (rev)))
         | _ -> None

@@ -183,6 +183,7 @@ users)
   * Add a test showing the behaviour when a pin depend is unpinned [#6380 @rjbou]
   * Add a test to ensure `opam upgrade <pkg>` will not upgrade unrelated things [#6373 @kit-ty-kate]
   * Add a test in init to show ocaml system compiler selection behaviour [#6307 @kit-ty-kate @rjbou]
+  * Add a test showing the behaviour of `opam pin add ./local-vcs#some-other-branch` [#6409 @rjbou]
 
 ### Engine
 
@@ -234,6 +235,8 @@ users)
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
   * `OpamDownload.get_output`: use long form for `curl` `POST` request option [#6036 @rjbou]
   * `OpamDownload.download`: more fine grained HTTP request error code detection for curl [#6036 @rjbou]
+  * `OpamRepository.revision`: now returns a `string` instead of a `version` [#6409 @kit-ty-kate]
+  * `OpamRepositoryBackend.S.revision`: now returns a `string` instead of a `version` [#6409 @kit-ty-kate]
 
 ## opam-state
   * `OpamStateConfig`: Make the `?lock_kind` parameters non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]

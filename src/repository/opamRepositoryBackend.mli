@@ -73,7 +73,7 @@ module type S = sig
   (** Return the (optional) revision of a given repository. Only useful for VCS
       backends. Is not expected to work with [fetch_repo_update], which doesn't
       update the VCS commit information. *)
-  val revision: dirname -> version option OpamProcess.job
+  val revision: dirname -> string option OpamProcess.job
 
   (** Like {!pull_url}, except for locally-bound version control backends, where
       it should get the latest, uncommitted source. First, it performs a

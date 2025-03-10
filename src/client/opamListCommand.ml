@@ -638,8 +638,7 @@ let detail_printer ?prettify ?normalise ?(sort=false) st nv =
       OpamSwitchState.url st nv >>| OpamFile.URL.url >>= fun url ->
       OpamSwitchState.source_dir st nv |>
       OpamFilename.opt_dir >>= fun srcdir ->
-      OpamProcess.Job.run (OpamRepository.revision srcdir url) >>|
-      OpamPackage.Version.to_string
+      OpamProcess.Job.run (OpamRepository.revision srcdir url)
     in
     OpamStd.Option.default "" hash_opt
   | Raw -> OpamFile.OPAM.write_to_string (get_opam st nv)
