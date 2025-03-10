@@ -935,7 +935,7 @@ vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#master (version dev)
 ### test -f OPAM/vcs-local/.opam-switch/sources/vcs-local/untracked
 # Return code 1 #
 ### opam show vcs-local --field build:,url.src:
-build:   "false"
+build:
 url.src: "git+file://${BASEDIR}/vcs-local#master"
 ### :C:b: double pinning when the opam file is opam/opam
 ### <pin:double/opam/opam>
@@ -1070,13 +1070,6 @@ fst
 ### opam pin snd ./local#snd -n
 [NOTE] Package snd does not exist in opam repositories registered in the current switch.
 [snd.dev] synchronised (git+file://${BASEDIR}/local#snd)
-[NOTE] No package definition found for snd.dev: please complete the template
-[WARNING] The opam file didn't pass validation:
-             error 22: Some fields are present but empty; remove or fill them: "homepage", "license", "bug_reports"
-             error 57: Synopsis must not be empty
-           warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : ""
-Proceed anyway ('no' will re-edit)? [Y/n] y
-You can edit this file again with "opam pin edit snd", export it with "opam show snd --raw"
 snd is now pinned to git+file://${BASEDIR}/local#snd (version dev)
 ### opam show snd --field synopsis
-
+I'm the second package
