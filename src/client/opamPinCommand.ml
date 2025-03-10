@@ -68,11 +68,10 @@ let get_source_definition ?version ?subpath ?locked st nv url =
   let root = st.switch_global.root in
   let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
   let fix opam =
-    OpamFile.OPAM.with_url url @@
-    (match version with
-     | Some v -> OpamFile.OPAM.with_version v
-     | None -> fun o -> o) @@
-    opam
+    let opam = OpamFile.OPAM.with_url url opam in
+    match version with
+    | Some v -> OpamFile.OPAM.with_version v opam
+    | None -> opam
   in
   let open OpamProcess.Job.Op in
   OpamUpdate.fetch_dev_package url srcdir ?subpath nv @@| function
