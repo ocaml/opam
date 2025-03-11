@@ -1220,7 +1220,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Macports -> Some (`AsAdmin "port", ["sync"])
     | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])
     | Netbsd -> None
-    | Nix -> None
+    | Nix -> Some (`AsUser "nix-channel", ["--update"])
     | Openbsd -> None
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
   in
