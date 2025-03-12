@@ -1849,10 +1849,17 @@ let init
           OpamStd.Sys.exit_because `Aborted);
       try
         (* Create the content of ~/.opam/config *)
-        let repos = match repo with
-          | Some r -> [r.repo_name, (r.repo_url, r.repo_trust)]
-          | None -> OpamFile.InitConfig.repositories init_config
-        in
+        let repos =
+          let open OpamFile.Repos_config in
+          match repo with
+        | Some r ->
+            [r.repo_name,
+           {repoc_url = r.repo_url; repoc_trust = r.repo_trust}]
+        | None ->
+            List.map (fun (n,(u,t)) ->
+              n, {repoc_url = u; repoc_trust = t})
+            ( OpamFile.InitConfig.repositories init_config)
+          in
         let config =
           update_with_init_config
             OpamFile.Config.(with_opam_root_version root_version empty)

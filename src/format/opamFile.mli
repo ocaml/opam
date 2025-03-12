@@ -1028,8 +1028,22 @@ module Repo_config_legacy : sig
   include IO_FILE with type t := t
 end
 
+module Repos_config_Legacy: sig
+  type repo = {
+    repoc_url: url;
+    repoc_trust: trust_anchors option;
+  }
+  type t = repo OpamRepositoryName.Map.t
+  include IO_FILE with type t := t
+  module BestEffort: BestEffortRead with type t := t
+end
+
 module Repos_config: sig
-  type t = (url * trust_anchors option) OpamRepositoryName.Map.t
+  type repo = {
+    repoc_url: url;
+    repoc_trust: trust_anchors option;
+  }
+  type t = repo OpamRepositoryName.Map.t
   include IO_FILE with type t := t
   module BestEffort: BestEffortRead with type t := t
 end

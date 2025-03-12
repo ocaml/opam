@@ -826,34 +826,34 @@ nourl        file://${BASEDIR}/nourl nourl
 no     --
 ### <OPAM/repo/repos-config>
 opam-version: "2.0"
-repositories: [ "nourl" ]
+repo "nourl" { }
 ### opam repo --all
 [WARNING] Errors in ${BASEDIR}/OPAM/repo/repos-config, some fields have been ignored:
-            - At ${BASEDIR}/OPAM/repo/repos-config:2:16-2:23::
-              expected url
+            - In ${BASEDIR}/OPAM/repo/repos-config:
+              missing URL
 
 # Repository # Url # Switches(rank)
 ### <nourl/packages/yes/yes.1/opam>
 opam-version: "2.0"
 ### opam update nourl
 [WARNING] Errors in ${BASEDIR}/OPAM/repo/repos-config, some fields have been ignored:
-            - At ${BASEDIR}/OPAM/repo/repos-config:2:16-2:23::
-              expected url
+            - In ${BASEDIR}/OPAM/repo/repos-config:
+              missing URL
 
 [ERROR] Unknown repositories or installed packages: nourl
 # Return code 40 #
 ### opam list -A
 [WARNING] Errors in ${BASEDIR}/OPAM/repo/repos-config, some fields have been ignored:
-            - At ${BASEDIR}/OPAM/repo/repos-config:2:16-2:23::
-              expected url
+            - In ${BASEDIR}/OPAM/repo/repos-config:
+              missing URL
 
 # Packages matching: any
 # No matches found
 ### sh -c "rm OPAM/repo/state-*.cache"
 ### opam list -A
 [WARNING] Errors in ${BASEDIR}/OPAM/repo/repos-config, some fields have been ignored:
-            - At ${BASEDIR}/OPAM/repo/repos-config:2:16-2:23::
-              expected url
+            - In ${BASEDIR}/OPAM/repo/repos-config:
+              missing URL
 
 # Packages matching: any
 # No matches found
