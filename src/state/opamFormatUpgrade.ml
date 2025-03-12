@@ -1151,11 +1151,13 @@ let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
    * If it is an hard upgrade, performs repo & switch upgrade in upgrade
+   * [Should not happen] If it is an hard upgrade, performs repo & switch upgrade in upgrade
      function.
 *)
 
 let latest_version = OpamFile.Config.root_version
 
+(* Note to dev: try as possible to not change that value *)
 let latest_hard_upgrade = (* to *) v2_0_beta5
 
 (* intermediate roots that need a hard upgrade when upgrading from them *)
