@@ -38,17 +38,22 @@ val as_necessary:
   OpamFile.Config.t ->
   OpamFile.Config.t * gt_changes
 
-(* [as_necessary_repo_switch_light_upgrade lock kind gt] write upgraded global
-   config file with the root bump if an on-the-fly upgrade of global state
-   was performed there is remaining upgrade on repository or switch layers, and
-   there is a write lock required. It only writes global config file, repo &
-   switch config are written when needed during opam operations.  [lock] is the
-   current global lock, [kind] is [`Repo | `Switch], from where the function is
-   called (repo or switch state load), [gt] the on-the-fly upgraded global
-   state.
- *)
-val as_necessary_repo_switch_light_upgrade:
-  'a lock -> [`Repo | `Switch] -> 'b global_state -> unit
+(* [as_necessary_repo lock gt] does the upgrades at repo level. [lock] is the
+   required lock for repo state and gt the on-the-fly upgraded global lock. If
+   [lock] is none or read, it will perform an on-the-fly upgrade of repos-config
+   and return it. if [lock] is a write lock, it locks opam root and perform and
+   apply all needed upgrades (write global, repo & state config if needed).
+   At global state loading, [as_necessary] is called, so this function will do
+   the upgrades only if there is a known on-the-fly upgrade done by
+   [as_necessary]. Otherwise, it is an no-op and returns None. *)
+val as_necessary_repo:
+  'a lock -> 'b global_state -> OpamFile.Repos_config.t option
+
+(* As [as_necessay_repo] but acts on a given [switch]. In case of write [lock]
+   and upgrade that need to be done, it applies modification to all switches
+   (as well as global and repo config). *)
+val as_necessary_switch:
+  'a lock -> switch -> 'b global_state -> OpamFile.Switch_config.t option
 
 (* Try to launch a hard upgrade from 2;1 alpha's & beta's root
    to 2.1~rc one. Raises [Upgrade_done] (catched by main

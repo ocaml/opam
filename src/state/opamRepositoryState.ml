@@ -155,10 +155,13 @@ let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
 let load lock_kind gt =
-  OpamFormatUpgrade.as_necessary_repo_switch_light_upgrade lock_kind `Repo gt;
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
-  let repos_map = OpamStateConfig.Repos.safe_read ~lock_kind gt in
+  let repos_map =
+    match OpamFormatUpgrade.as_necessary_repo lock_kind gt with
+    | Some repos_map -> repos_map
+    | None -> OpamStateConfig.Repos.safe_read ~lock_kind gt
+  in
   if OpamStateConfig.is_newer_than_self ~lock_kind gt then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"
