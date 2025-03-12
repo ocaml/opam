@@ -1150,12 +1150,26 @@ let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
-   * If it is an hard upgrade, performs repo & switch upgrade in upgrade
-     function.
+   * [Should not happen] If it is an hard upgrade, performs repo & switch
+     upgrade in upgrade function.
 *)
 
 let latest_version = OpamFile.Config.root_version
 
+(* Development notes:
+   opam differentiates two kinds of format upgrade - "Hard" upgrades, which
+   must be written straight to disk, and "Light" upgrades, which can be
+   performed in-memory, and don't have to be written immediately.
+   This distinction was added in opam 2.1, as it allows users of a _newer_
+   version of opam-state to _read_ an opam root which is still being maintained
+   by an _older_ version of opam (for example, it allows a program compiled with
+   opam-state 2.1.0 to load the global configuration of an opam 2.0 user's root
+   without forcing the upgrade of that root to 2.1).
+
+   Essentially, a "Hard" upgrade is used where the change is difficult (or even
+   impossible) to perform in-memory. We try our hardest to keep all format
+   upgrades "Light" - i.e. the aim is that this version below should never
+   change. *)
 let latest_hard_upgrade = (* to *) v2_0_beta5
 
 (* intermediate roots that need a hard upgrade when upgrading from them *)
