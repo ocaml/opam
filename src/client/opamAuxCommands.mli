@@ -31,7 +31,9 @@ val url_with_local_branch: url -> url
 
 (** From an in-source opam file, return the corresponding package name if it can
     be found, and the corresponding source directory *)
-val name_and_dir_of_opam_file: ?locked:string -> filename -> name option * dirname
+val name_and_dir_of_opam_file:
+  ?locked:string -> filename ->
+  name option * OpamFile.OPAM.t Lazy.t * dirname
 
 (** From a directory, retrieve its opam files and returns packages name, opam
     file and subpath option *)
