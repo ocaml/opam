@@ -236,6 +236,8 @@ users)
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
   * `OpamDownload.get_output`: use long form for `curl` `POST` request option [#6036 @rjbou]
   * `OpamDownload.download`: more fine grained HTTP request error code detection for curl [#6036 @rjbou]
+  * `OpamRepository.revision`: now returns a `string` instead of a `version` [#6409 @kit-ty-kate]
+  * `OpamRepositoryBackend.S.revision`: now returns a `string` instead of a `version` [#6409 @kit-ty-kate]
 
 ## opam-state
   * `OpamStateConfig`: Make the `?lock_kind` parameters non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
