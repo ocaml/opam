@@ -52,6 +52,7 @@ users)
   * [BUG] Stop double pin of packages located in ./opam/opam [#6343 @kit-ty-kate - fix #6342]
   * Don't ask confirmation when pinning an unknown package (absent from repositories) [#6309 @kit-ty-kate @rjbou - fix #3199]
   * [BUG] Do not ask to install pin-depends twice [#6375 @kit-ty-kate - fix #6374]
+  * [BUG] Ensure the right versions (the pinned one) of packages are used when simulating pinning [#6256 @rjbou @kit-ty-kate - fix #6248 #6379]
 
 ## List
 
@@ -183,6 +184,7 @@ users)
   * Add a test showing the behaviour when a pin depend is unpinned [#6380 @rjbou]
   * Add a test to ensure `opam upgrade <pkg>` will not upgrade unrelated things [#6373 @kit-ty-kate]
   * Add a test in init to show ocaml system compiler selection behaviour [#6307 @kit-ty-kate @rjbou]
+  * Add a test showing simulated pinning does not propagate version information [#6256 @rjbou]
 
 ### Engine
 
