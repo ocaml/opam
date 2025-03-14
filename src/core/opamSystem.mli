@@ -125,6 +125,9 @@ val read: string -> string
     advisory write lock to prevent concurrent reads or writes) *)
 val write: string -> string -> unit
 
+(** [get_files dir] returns the list of files inside the directory [dir]. *)
+val get_files : string -> string list
+
 (** [remove filename] removes [filename]. Works whether [filename] is
     a file or a directory *)
 val remove: string -> unit
@@ -328,7 +331,7 @@ val get_lock_fd: lock -> Unix.file_descr
 (** Apply a patch file in the current directory. If [preprocess] is set to
     false, there is no CRLF translation. Returns the error if the patch didn't
     apply. *)
-val patch: ?preprocess:bool -> dir:string -> string -> exn option OpamProcess.job
+val patch: ?preprocess:bool -> allow_unclean:bool -> dir:string -> string -> exn option OpamProcess.job
 
 (** Returns the end-of-line encoding style for the given file. [None] means that
     either the encoding of line endings is mixed, or the file contains no line
