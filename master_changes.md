@@ -102,6 +102,8 @@ users)
   * Speedup the detection of available system packages with pacman and brew [#6324 @kit-ty-kate]
 
 ## Format upgrade
+  * Add a note about to enforce no more upgrading last hard upgrade version (2.0.0~beta5), as far as possible. [#6416 @rjbou]
+  * Complete upgrade mechanism to permit on the fly upgrade and write upgrade from repo and switch level [#6416 @rjbou]
 
 ## Sandbox
   * Respect the `DUNE_CACHE_ROOT` environment variable if it exists [#6326 @smorimoto]
