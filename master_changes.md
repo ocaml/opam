@@ -27,6 +27,8 @@ users)
 ## Actions
 
 ## Install
+  * Fix `opam install <local_dir>` not updating and storing pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
+  * Fix `opam install --deps-only/--show-action <local_dir>` not updating (without storing) pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
 
 ## Build (package)
 
@@ -186,6 +188,7 @@ users)
   * Add a test in init to show ocaml system compiler selection behaviour [#6307 @kit-ty-kate @rjbou]
   * Add a test showing simulated pinning does not propagate version information [#6256 @rjbou]
   * Untie lock with pin depend test from OPAMEDITOR behaviour [#6412 @rjbou]
+  * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
 
 ### Engine
 

@@ -2215,9 +2215,6 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   in
   let pkg_reinstall =
     if assume_built then OpamPackage.Set.of_list pkg_skip
-    else if deps_only then OpamPackage.Set.empty
-    (* NOTE: As we only install dependency packages, there are no intersections
-       between t.reinstall and pkg_skip *)
     else Lazy.force t.reinstall %% OpamPackage.Set.of_list pkg_skip
   in
   (* Add the packages to the list of package roots and display a
