@@ -1,0 +1,339 @@
+
+----------------------
+ Test 1: normal
+----------------------
+
+*** SETUP ***
++ first/
++ first/diff-dir-plus-fst
++ first/diff-dir-plus-fst/fst
+  > foo
++ first/diff-dir-plus-snd
++ first/diff-dir-plus-snd/fst
+  > foo
+  > bar
++ first/diff-file
+  > foo
++ first/diff-file-plus-fst
+  > foo
+  > bar
++ first/diff-file-plus-snd
+  > foo
++ first/dir-only-fst
++ first/dir-only-fst/fst
+  > foo
++ first/file-only-fst
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/diff-dir-plus-fst
++ second/diff-dir-plus-fst/fst
+  > foo
+  > bar
++ second/diff-dir-plus-snd
++ second/diff-dir-plus-snd/fst
+  > foo
++ second/diff-file
+  > bar
++ second/diff-file-plus-fst
+  > foo
++ second/diff-file-plus-snd
+  > foo
+  > bar
++ second/file-only-snd
+  > foo
++ second/same-file
+  > foo
+
+*** DIFF ***
+--- first/diff-dir-plus-fst/fst
++++ second/diff-dir-plus-fst/fst
+@@ -2,0 +2,1 @@
++bar
+--- first/diff-dir-plus-snd/fst
++++ second/diff-dir-plus-snd/fst
+@@ -2,1 +2,0 @@
+-bar
+--- first/diff-file
++++ second/diff-file
+@@ -1,1 +1,1 @@
+-foo
++bar
+--- first/diff-file-plus-fst
++++ second/diff-file-plus-fst
+@@ -2,1 +2,0 @@
+-bar
+--- first/diff-file-plus-snd
++++ second/diff-file-plus-snd
+@@ -2,0 +2,1 @@
++bar
+--- first/dir-only-fst/fst
++++ /dev/null
+@@ -1,1 +0,0 @@
+-foo
+--- first/file-only-fst
++++ /dev/null
+@@ -1,1 +0,0 @@
+-foo
+--- /dev/null
++++ second/file-only-snd
+@@ -0,0 +1,1 @@
++foo
+
+*** PATCHED ***
++ first/
++ first/diff-dir-plus-fst
++ first/diff-dir-plus-fst/fst
+  > foo
+  > bar
++ first/diff-dir-plus-snd
++ first/diff-dir-plus-snd/fst
+  > foo
++ first/diff-file
+  > bar
++ first/diff-file-plus-fst
+  > foo
++ first/diff-file-plus-snd
+  > foo
+  > bar
++ first/dir-only-fst
++ first/file-only-snd
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/diff-dir-plus-fst
++ second/diff-dir-plus-fst/fst
+  > foo
+  > bar
++ second/diff-dir-plus-snd
++ second/diff-dir-plus-snd/fst
+  > foo
++ second/diff-file
+  > bar
++ second/diff-file-plus-fst
+  > foo
++ second/diff-file-plus-snd
+  > foo
+  > bar
++ second/file-only-snd
+  > foo
++ second/same-file
+  > foo
+
+
+----------------------
+ Test 2: diff file/dir error
+----------------------
+
+*** SETUP ***
++ first/
++ first/file-fst-dir-snd
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/file-fst-dir-snd
++ second/file-fst-dir-snd/fst
+  > foo
++ second/same-file
+  > foo
+
+*** DIFF ***
+ERROR: Change from a regular file to a directory is unsupported
+
+----------------------
+ Test 3: diff dir/file error
+----------------------
+
+*** SETUP ***
++ first/
++ first/dir-fst-file-snd
++ first/dir-fst-file-snd/fst
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/dir-fst-file-snd
+  > foo
++ second/same-file
+  > foo
+
+*** DIFF ***
+ERROR: Change from a directory to a regular file is unsupported
+
+----------------------
+ Test 4: symlink fst
+----------------------
+
+*** SETUP ***
++ first/
++ first/linked-file-fst
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/linked-file-fst
+  > foo
++ second/same-file
+  > foo
+
+*** DIFF ***
+ERROR: Symlinks are unsupported
+
+----------------------
+ Test 5: symlink snd
+----------------------
+
+*** SETUP ***
++ first/
++ first/linked-file-snd
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/linked-file-snd
+  > bar
++ second/same-file
+  > foo
+
+*** DIFF ***
+ERROR: Symlinks are unsupported
+
+----------------------
+ Test 6: hardlink fst
+----------------------
+
+*** SETUP ***
++ first/
++ first/hardlinked-file-fst
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/hardlinked-file-fst
+  > foo
++ second/same-file
+  > foo
+
+*** DIFF ***
+--- first/hardlinked-file-fst
++++ second/hardlinked-file-fst
+@@ -1,1 +1,1 @@
+-bar
++foo
+
+*** PATCHED ***
++ first/
++ first/hardlinked-file-fst
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/hardlinked-file-fst
+  > foo
++ second/same-file
+  > foo
+
+
+----------------------
+ Test 7: hardlink snd
+----------------------
+
+*** SETUP ***
++ first/
++ first/hardlinked-file-snd
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/hardlinked-file-snd
+  > foo
++ second/same-file
+  > foo
+
+*** DIFF ***
+No diff
+
+----------------------
+ Test 8: patch error garbage
+----------------------
+
+*** SETUP ***
++ first/
++ first/diff-file
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/diff-file
+  > bar
++ second/same-file
+  > foo
+
+*** GIVEN DIFF ***
+something in
+the file
+that is not
+patch format
+
+*** PATCHED ***
++ first/
++ first/diff-file
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/diff-file
+  > bar
++ second/same-file
+  > foo
+
+
+----------------------
+ Test 9: patch truncated
+----------------------
+
+*** SETUP ***
++ first/
++ first/diff-file
+  > foo
++ first/diff-file-plus-fst
+  > foo
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/diff-file
+  > bar
++ second/diff-file-plus-fst
+  > foo
++ second/same-file
+  > foo
+
+*** GIVEN DIFF ***
+--- first/diff-file
++++ second/diff-file
+@@ -1,1 +1,1 @@
+-foo
++bar
+--- first/diff-fi
+
+*** PATCHED ***
++ first/
++ first/diff-file
+  > bar
++ first/diff-file-plus-fst
+  > foo
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/diff-file
+  > bar
++ second/diff-file-plus-fst
+  > foo
++ second/same-file
+  > foo
+

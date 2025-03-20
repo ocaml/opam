@@ -174,6 +174,7 @@ users)
 ## Internal: Windows
 
 ## Test
+  * Add a library test for the new OCaml implementation of patch and diff [#5892 @rjbou]
 
 ## Benchmarks
   * Add benchmarks for `opam show` [#6212 @kit-ty-kate]
