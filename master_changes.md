@@ -222,6 +222,8 @@ users)
   * Add an explanation of how plugins work to the manual [#5627 @kit-ty-kate]
   * Improve the installation documentation [#6372 @kit-ty-kate]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
