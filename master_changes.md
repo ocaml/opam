@@ -113,6 +113,8 @@ users)
   * Relax lookup on OpenBSD to consider all installed packages [#6362 @semarie]
   * Speedup the detection of available system packages with pacman and brew [#6324 @kit-ty-kate]
   * The system GNU Patch and diff are no longer runtime dependencies of opam [#5892 @kit-ty-kate - fix #6052]
+  * Change probing tool for SUSE-based distributions from `zypper` to `rpm` [#6464 @kit-ty-kate]
+  * Disable the detection of available system packages on SUSE-based distributions [#6464 @kit-ty-kate]
 
 ## Format upgrade
 
@@ -277,6 +279,7 @@ users)
   * `OpamStateConfig`: Make the `?lock_kind` parameters non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
   * `OpamSwitchState.load_selections`: Make the `?lock_kind` parameter non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
   * `OpamSysInteract.Cygwin.check_setup`: unexpose the function [#6467 @kit-ty-kate]
+  * `OpamSysInteract.package_status`: SUSE-based distributions now uses `rpm` instead of `zypper` and no longer return an `available` set of system packages [#6464 @kit-ty-kate]
 
 ## opam-solver
 
