@@ -700,7 +700,10 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
        >python3-pip-wheel
     *)
     let sys_installed =
-      run_query_command "rpm" ["-qa"; "--qf"; "%{NAME}\\n"]
+      (* NOTE: In practice %{PROVIDES} seems to always contains %{NAME}
+         but this behaviour isn't documented, so just to be sure, it is
+         safer to add %{NAME} anyway. *)
+      run_query_command "rpm" ["-qa"; "--qf"; "%{NAME}\\n[%{PROVIDES}\\n]"]
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
