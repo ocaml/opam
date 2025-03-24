@@ -785,8 +785,9 @@ let installed_packages_t ?(env=OpamVariable.Map.empty) config packages =
          slower to parse due to the extra number of package name but
          allows to detect virtual packages such as python3. *)
       run_query_command "rpm" ["-qa"; "--qf"; "%{NAME}\\n[%{PROVIDES}\\n]"]
-      |> List.map OpamSysPkg.of_string
-      |> OpamSysPkg.Set.of_list
+      |> List.fold_left (fun acc name ->
+          OpamSysPkg.Set.add (OpamSysPkg.of_string name) acc)
+        OpamSysPkg.Set.empty
     in
     get_relevant sys_installed
   | Cygwin ->
