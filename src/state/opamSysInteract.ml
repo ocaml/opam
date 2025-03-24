@@ -779,7 +779,12 @@ let installed_packages_t ?(env=OpamVariable.Map.empty) config packages =
        >python3-pip-wheel
     *)
     let sys_installed =
-      run_query_command "rpm" ["-qa"; "--qf"; "%{NAME}\\n"]
+      (* NOTE: In practice %{PROVIDES} seems to always contains %{NAME}
+         but this behaviour isn't documented, so just to be sure, it is
+         safer to add %{NAME} anyway. Using %{PROVIDES}% is a little bit
+         slower to parse due to the extra number of package name but
+         allows to detect virtual packages such as python3. *)
+      run_query_command "rpm" ["-qa"; "--qf"; "%{NAME}\\n[%{PROVIDES}\\n]"]
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
