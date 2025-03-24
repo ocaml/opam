@@ -704,8 +704,9 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
          but this behaviour isn't documented, so just to be sure, it is
          safer to add %{NAME} anyway. *)
       run_query_command "rpm" ["-qa"; "--qf"; "%{NAME}\\n[%{PROVIDES}\\n]"]
-      |> List.map OpamSysPkg.of_string
-      |> OpamSysPkg.Set.of_list
+      |> List.fold_left (fun acc name ->
+          OpamSysPkg.Set.add (OpamSysPkg.of_string name) acc)
+        OpamSysPkg.Set.empty
     in
     compute_sets sys_installed
   | Cygwin ->
