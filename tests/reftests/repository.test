@@ -18,8 +18,7 @@ some content
 ### sh hash.sh REPO foo.1
 ### : Internal repository storage as archive or plain directory :
 ### opam switch create tarring --empty
-### opam update -vv | grep '^\+' | sed-cmd diff
-+ diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
+### opam update -vv | grep '^\+'
 ### ls $OPAMROOT/repo | grep -v "cache"
 default
 lock
@@ -36,8 +35,7 @@ build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.2/files/baz>
 some content
 ### sh hash.sh REPO foo.2
-### opam update default -vv | grep '^\+' | sed-cmd tar | sed-cmd diff
-+ diff "-ruaN" "default" "default.new" (CWD=${BASEDIR}/OPAM/repo)
+### opam update default -vv | grep '^\+' | sed-cmd tar
 + tar "cfz" "${BASEDIR}/OPAM/repo/default.tar.gz.tmp" "-C" "${BASEDIR}/OPAM/repo" "default"
 ### ls $OPAMROOT/repo | grep -v "cache"
 default.tar.gz
@@ -74,9 +72,8 @@ build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.4/files/baz>
 some content
 ### sh hash.sh REPO foo.4
-### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff
+### opam update -vv | grep '^\+' | sed-cmd tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
-+ diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
 + tar "cfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz.tmp" "-C" "${OPAMTMP}" "tarred"
 ### opam install foo.4 -vv | grep '^\+' | sed-cmd test | sed-cmd tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
@@ -96,9 +93,8 @@ build: ["test" "-f" "quux"]
 ### <REPO/packages/foo/foo.5/files/quux>
 some content
 ### sh hash.sh REPO foo.5
-### opam update -vv | grep '^\+' | sed-cmd tar | sed-cmd diff
+### opam update -vv | grep '^\+' | sed-cmd tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
-+ diff "-ruaN" "tarred" "tarred.new" (CWD=${OPAMTMP})
 ### opam install foo.5 -vv | grep '^\+' | sed-cmd test
 + test "-f" "quux" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.5)
 ### ls $OPAMROOT/repo | grep -v "cache"

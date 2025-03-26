@@ -126,7 +126,6 @@ let recommended_tools () =
 let required_tools ~sandboxing () =
   req_dl_tools () @
   [
-    ["diff"], None, None;
     ["tar"], None, Some tar_filter;
     ["gtar"], None, Some gtar_filter;
     ["unzip"], None, None;
@@ -139,7 +138,6 @@ let required_tools ~sandboxing () =
 
 let required_packages_for_cygwin =
   [
-    "diffutils";
     "make";
     "tar";
     "unzip";

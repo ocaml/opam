@@ -125,6 +125,10 @@ val read: string -> string
     advisory write lock to prevent concurrent reads or writes) *)
 val write: string -> string -> unit
 
+(** [get_files dir] returns the list of files (without prefix) inside the
+    directory [dir]. *)
+val get_files : string -> string list
+
 (** [remove filename] removes [filename]. Works whether [filename] is
     a file or a directory *)
 val remove: string -> unit
