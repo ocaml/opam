@@ -1670,7 +1670,7 @@ let patch ?(preprocess=true) ~allow_unclean ~dir p =
   try
     let diffs = Patch.parse ~p:1 content in
     internal_patch ~allow_unclean ~patch_filename:p ~dir diffs;
-    if not (OpamConsole.debug ()) then Sys.remove p';
+    if preprocess && not (OpamConsole.debug ()) then Sys.remove p';
     None
   with exn -> Some exn
 

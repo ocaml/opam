@@ -275,5 +275,6 @@ users)
   * `OpamSystem.remove_dir`: do not fail with an exception when directory is a symbolic link [#6276 @btjorge @rjbou - fix #6275]
   * `OpamSystem.patch`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
   * `OpamSystem.patch`: a named-parameter `~allow_unclean` was added [#5892 @kit-ty-kate]
+  * `OpamSystem.patch`: do not remove the original patch file if called with `~preprocess:false` [#5892 @kit-ty-kate]
   * `OpamParallel.*.{map,reduce,iter}`: Run `Gc.compact` when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
   * `OpamSystem`, `OpamFilename`: add `with_tmp_file` and `with_tmp_file_job` function, that create a file name in temporary directory and removes it at the end of the call [#6036 @rjbou]
