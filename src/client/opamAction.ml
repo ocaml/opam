@@ -367,18 +367,18 @@ let prepare_package_build env opam nv dir =
 
   let apply_patches ?(dryrun=false) () =
     let patch base =
-      if dryrun then Done None else
-        OpamFilename.patch
+      if dryrun then None else
+        OpamFilename.patch ~allow_unclean:true
           (dir // OpamFilename.Base.to_string base) dir
     in
     let rec aux = function
-      | [] -> Done []
+      | [] -> []
       | (patchname,filter)::rest ->
         if OpamFilter.opt_eval_to_bool env filter then
           (print_apply patchname;
-           patch patchname @@+ function
+           match patch patchname with
            | None -> aux rest
-           | Some err -> aux rest @@| fun e -> (patchname, err) :: e)
+           | Some err -> (patchname, err) :: aux rest)
         else aux rest
     in
     aux patches
@@ -390,63 +390,57 @@ let prepare_package_build env opam nv dir =
   in
   if OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.fake) then
     (List.iter print_subst (OpamFile.OPAM.substs opam);
-     apply_patches ~dryrun:true ()) @@| fun _ -> None
+     let _ : _ list = apply_patches ~dryrun:true () in
+     None)
   else
-  let subst_errs =
-    OpamFilename.in_dir dir  @@ fun () ->
-    List.fold_left (fun errs f ->
-        try
-          print_subst f;
-          OpamFilter.expand_interpolations_in_file env f;
-          errs
-        with e -> (f, e)::errs)
-      [] subst_patches
-  in
-
-  (* Apply the patches *)
-  let text =
-    OpamProcess.make_command_text (OpamPackage.Name.to_string nv.name) "patch"
-  in
-  OpamProcess.Job.with_text text (apply_patches ())
-  @@+ fun patching_errors ->
-
-  (* Substitute the configuration files. We should be in the right
-     directory to get the correct absolute path for the
-     substitution files (see [OpamFilter.expand_interpolations_in_file] and
-     [OpamFilename.of_basename]. *)
-  let subst_errs =
-    OpamFilename.in_dir dir @@ fun () ->
-    List.fold_left (fun errs f ->
-        try
-          print_subst f;
-          OpamFilter.expand_interpolations_in_file env f;
-          errs
-        with e -> (f, e)::errs)
-      subst_errs subst_others
-  in
-  if patching_errors <> [] || subst_errs <> [] then
-    let msg =
-      (if patching_errors <> [] then
-         Printf.sprintf "These patches didn't apply at %s:\n%s"
-           (OpamFilename.Dir.to_string dir)
-           (OpamStd.Format.itemize
-              (fun (f,err) ->
-                 Printf.sprintf "%s: %s"
-                   (OpamFilename.Base.to_string f) (Printexc.to_string err))
-              patching_errors)
-       else "") ^
-      (if subst_errs <> [] then
-         Printf.sprintf "String expansion failed for these files:\n%s"
-           (OpamStd.Format.itemize
-              (fun (b,err) ->
-                 Printf.sprintf "%s.in: %s" (OpamFilename.Base.to_string b)
-                   (Printexc.to_string err))
-           subst_errs)
-       else "")
+    let subst_errs =
+      OpamFilename.in_dir dir  @@ fun () ->
+      List.fold_left (fun errs f ->
+          try
+            print_subst f;
+            OpamFilter.expand_interpolations_in_file env f;
+            errs
+          with e -> (f, e)::errs)
+        [] subst_patches
     in
-    Done (Some (Failure msg))
-  else
-    Done None
+    let patching_errors = apply_patches () in
+    (* Substitute the configuration files. We should be in the right
+       directory to get the correct absolute path for the
+       substitution files (see [OpamFilter.expand_interpolations_in_file] and
+       [OpamFilename.of_basename]. *)
+    let subst_errs =
+      OpamFilename.in_dir dir @@ fun () ->
+      List.fold_left (fun errs f ->
+          try
+            print_subst f;
+            OpamFilter.expand_interpolations_in_file env f;
+            errs
+          with e -> (f, e)::errs)
+        subst_errs subst_others
+    in
+    if patching_errors <> [] || subst_errs <> [] then
+      let msg =
+        (if patching_errors <> [] then
+           Printf.sprintf "These patches didn't apply at %s:\n%s"
+             (OpamFilename.Dir.to_string dir)
+             (OpamStd.Format.itemize
+                (fun (f,err) ->
+                   Printf.sprintf "%s: %s"
+                     (OpamFilename.Base.to_string f) (Printexc.to_string err))
+                patching_errors)
+         else "") ^
+        (if subst_errs <> [] then
+           Printf.sprintf "String expansion failed for these files:\n%s"
+             (OpamStd.Format.itemize
+                (fun (b,err) ->
+                   Printf.sprintf "%s.in: %s" (OpamFilename.Base.to_string b)
+                     (Printexc.to_string err))
+                subst_errs)
+         else "")
+      in
+      Some (Failure msg)
+    else
+      None
 
 let prepare_package_source st nv dir =
   log "prepare_package_source: %a at %a"
@@ -517,7 +511,7 @@ let prepare_package_source st nv dir =
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
     check_extra_files |> function Some _ as err -> Done err | None ->
       let opam = OpamSwitchState.opam st nv in
-      prepare_package_build (OpamPackageVar.resolve ~opam st) opam nv dir
+      Done (prepare_package_build (OpamPackageVar.resolve ~opam st) opam nv dir)
 
 let compilation_env t opam =
   let build_env =

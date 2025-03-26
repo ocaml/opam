@@ -40,7 +40,7 @@ val prepare_package_source:
     of `prepare_package_source`, without requiring a switch and
     without handling extra downloads. *)
 val prepare_package_build:
-  OpamFilter.env -> OpamFile.OPAM.t -> package -> dirname -> exn option OpamProcess.job
+  OpamFilter.env -> OpamFile.OPAM.t -> package -> dirname -> exn option
 
 (** [build_package t build_dir pkg] builds the package [pkg] within [build_dir].
     Returns [None] on success, [Some exn] on error.

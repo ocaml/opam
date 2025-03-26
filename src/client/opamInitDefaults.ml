@@ -52,11 +52,6 @@ let not_win32_filter =
   FOp (FIdent ([], OpamVariable.of_string "os", None), `Neq, FString "win32")
 let sandbox_filter = FOr (linux_filter, macos_filter)
 
-let gpatch_filter =
-  FOr (FOr (openbsd_filter, netbsd_filter),
-       FOr (freebsd_filter, FOr (dragonflybsd_filter, macos_filter)))
-let patch_filter = FNot gpatch_filter
-
 let gtar_filter = openbsd_filter
 let tar_filter = FNot gtar_filter
 
@@ -132,8 +127,6 @@ let required_tools ~sandboxing () =
   req_dl_tools () @
   [
     ["diff"], None, None;
-    ["patch"], None, Some patch_filter;
-    ["gpatch"], None, Some gpatch_filter;
     ["tar"], None, Some tar_filter;
     ["gtar"], None, Some gtar_filter;
     ["unzip"], None, None;
@@ -148,7 +141,6 @@ let required_packages_for_cygwin =
   [
     "diffutils";
     "make";
-    "patch";
     "tar";
     "unzip";
     "rsync";

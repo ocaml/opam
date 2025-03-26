@@ -271,8 +271,12 @@ val remove_prefix_dir: Dir.t -> Dir.t -> string
 val remove_suffix: Base.t -> t -> string
 
 (** Apply a patch in a directory. If [preprocess] is set to false, there is no
-    CRLF translation. Returns [None] on success, the process error otherwise *)
-val patch: ?preprocess:bool -> t -> Dir.t -> exn option OpamProcess.job
+    CRLF translation. Returns [None] on success, the process error otherwise.
+
+    @param allow_unclean decides if applying a patch on a directory which
+    differs slightly from the one described in the patch file is allowed.
+    Allowing unclean applications imitates the default behaviour of GNU Patch. *)
+val patch: ?preprocess:bool -> allow_unclean:bool -> t -> Dir.t -> exn option
 
 (** Create an empty file *)
 val touch: t -> unit

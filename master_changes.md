@@ -29,6 +29,9 @@ users)
 ## Install
 
 ## Build (package)
+  * Patches are now applied using the `patch` OCaml library instead of GNU Patch [#5892 @kit-ty-kate - fix #6019 #6052]
+  * ✘ Patches: Context diffs are not supported anymore, only Unified diffs are (including its git extensions) [#5892 @kit-ty-kate]
+  * ✘ Patches: Stop support of file permission changes via git extension to the unified diff specification [#5892 @kit-ty-kate - fix #3782]
 
 ## Remove
 
@@ -65,6 +68,7 @@ users)
   * [BUG] Do not show the not-up-to-date message with packages tagged with avoid-version [#6273 @kit-ty-kate - fix #6271]
   * [BUG] Fix a regression on `opam upgrade <package>` upgrading unrelated packages [#6373 @AltGr]
   * [BUG] Fix a regression on `opam upgrade --all <uninstalled-pkg>` not upgrading the whole switch [#6373 @kit-ty-kate]
+  * Updates are now applied using the `patch` OCaml library instead of the system GNU Patch [#5892 @kit-ty-kate - fix ocaml/setup-ocaml#933 #6052]
 
 ## Tree
 
@@ -100,6 +104,7 @@ users)
   * Lookup at `gpatch` before `patch` on macOS now that both homebrew and macports expose `gpatch` as `gpatch` since Homebrew/homebrew-core#174687 [#6255 @kit-ty-kate]
   * Relax lookup on OpenBSD to consider all installed packages [#6362 @semarie]
   * Speedup the detection of available system packages with pacman and brew [#6324 @kit-ty-kate]
+  * The system GNU Patch is no longer runtime dependency of opam [#5892 @kit-ty-kate - fix #6052]
 
 ## Format upgrade
 
@@ -226,6 +231,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamAction.prepare_package_build`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
   * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
   * `OpamArg.hash_kinds`: was added [#5960 @kit-ty-kate]
@@ -254,6 +260,8 @@ users)
 ## opam-core
   * `OpamConsole`: Replace `black` text style (unused and not very readable) by `gray` [#6358 @kit-ty-kate]
   * `OpamConsole.pause`: Ensure the function always prints a newline character at the end [#6376 @kit-ty-kate]
+  * `OpamFilename.patch`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
+  * `OpamFilename.patch`: a named-parameter `~allow_unclean` was added [#5892 @kit-ty-kate]
   * `OpamHash.all_kinds`: was added, which returns the list of all possible values of `OpamHash.kind` [#5960 @kit-ty-kate]
   * `OpamStd.List.split`: Improve performance [#6210 @kit-ty-kate]
   * `OpamStd.Option.equal_some`: was added, which tests equality of an option with a value [#6381 @kit-ty-kate]
@@ -265,5 +273,7 @@ users)
   * `OpamStubs.get_stdout_ws_col`: new Unix-only function returning the number of columns of the current terminal window [#6244 @kit-ty-kate]
   * `OpamSystem`: add `is_archive_from_string` that does the same than `is_archive` but without looking at the file, only analysing the string (extension) [#6219 @rjbou]
   * `OpamSystem.remove_dir`: do not fail with an exception when directory is a symbolic link [#6276 @btjorge @rjbou - fix #6275]
+  * `OpamSystem.patch`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
+  * `OpamSystem.patch`: a named-parameter `~allow_unclean` was added [#5892 @kit-ty-kate]
   * `OpamParallel.*.{map,reduce,iter}`: Run `Gc.compact` when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
   * `OpamSystem`, `OpamFilename`: add `with_tmp_file` and `with_tmp_file_job` function, that create a file name in temporary directory and removes it at the end of the call [#6036 @rjbou]
