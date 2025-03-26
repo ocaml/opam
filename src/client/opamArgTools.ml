@@ -708,12 +708,15 @@ type 'a default = [> `default of string] as 'a
 
 let mk_subcommands_with_default ~cli commands =
   let enum_with_default_valrem sl =
-    let parse, print = Arg.enum sl in
-    let parse s =
-      match parse s with
-      | `Ok x -> `Ok (x)
-      | _ -> `Ok (Valid (`default s)) in
-    parse, print
+    let conv = Arg.enum sl in
+    let parser s =
+      match Arg.Conv.parser conv s with
+      | Ok x -> Ok x
+      | Error _ -> Ok (Valid (`default s))
+    in
+    let pp = Arg.Conv.pp conv in
+    let docv = Arg.Conv.docv conv in
+    Arg.Conv.make ~parser ~pp ~docv ()
   in
   mk_subcommands_aux ~cli enum_with_default_valrem commands
 

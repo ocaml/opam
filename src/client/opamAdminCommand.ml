@@ -1378,12 +1378,12 @@ let help =
     | None       -> `Help (`Pager, None)
     | Some topic ->
       let topics = "topics" :: cmds in
-      let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
-      match conv topic with
-      | `Error e -> `Error (false, e)
-      | `Ok t when t = "topics" ->
+      let conv = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+      match Arg.Conv.parser conv topic with
+      | Error e -> `Error (false, e)
+      | Ok t when t = "topics" ->
           List.iter (OpamConsole.msg "%s\n") cmds; `Ok ()
-      | `Ok t -> `Help (man_format, Some t) in
+      | Ok t -> `Help (man_format, Some t) in
 
   Term.(ret (const help $Arg.man_format $Term.choice_names $topic)),
   Cmd.info "help" ~doc ~man

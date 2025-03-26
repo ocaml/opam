@@ -456,7 +456,11 @@ let run () =
   let to_new_cmdliner_api (term, info) = Cmd.v info term in
   let default, default_info = default in
   let commands = List.map to_new_cmdliner_api commands in
-  match Cmd.eval_value ~catch:false ~argv (Cmd.group ~default default_info commands) with
+  let env = function
+    | "CMDLINER_LEGACY_PREFIXES" -> Some "true"
+    | key -> Sys.getenv_opt key
+  in
+  match Cmd.eval_value ~env ~catch:false ~argv (Cmd.group ~default default_info commands) with
   | Error _ -> exit (OpamStd.Sys.get_exit_code `Bad_arguments)
   | Ok _    -> exit (OpamStd.Sys.get_exit_code `Success)
 
