@@ -202,6 +202,7 @@ users)
   * Add tests for `--keep-build-dir` and `OPAMKEEPBUILDDIR` [#6436 @rjbou @kit-ty-kate]
   * Add admin filter subcommand test [#6166 @rjbou]
   * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
+  * Add pin test to show stored overlay opam files [#6209 @rjbou]
 
 ### Engine
 

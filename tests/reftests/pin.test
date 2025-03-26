@@ -1138,3 +1138,194 @@ depends: "dependency" {= "3"}
 Nothing to do.
 ### opam pin | '\(at [a-f0-9]+\)' -> '(at HASH)'
 pin-change.dev  (uninstalled)  git  git+file://${BASEDIR}/pin-change#master  (at HASH)
+### :C:f: stored overlay opam file
+### opam switch create --empty overlays
+### :C:f:1: Common case
+### <pkg:dep-over.1>
+opam-version: "2.0"
+### <pin:over/over.opam>
+opam-version: "2.0"
+depends: "dep-over"
+### opam pin ./over
+[NOTE] Package over does not exist in opam repositories registered in the current switch.
+over is now pinned to file://${BASEDIR}/over (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep-over 1            [required by over]
+  - install over     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-over.1
+-> retrieved over.dev  (file://${BASEDIR}/over)
+-> installed over.dev
+Done.
+### opam-cat OPAM/overlays/.opam-switch/overlay/over/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+depends: "dep-over"
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "over"
+opam-version: "2.0"
+synopsis: "A word"
+version: "dev"
+url {
+src: "file://${BASEDIR}/over"
+}
+### :C:f:2: Locked
+### <pkg:dep-over-locked.1>
+opam-version: "2.0"
+### <pkg:dep-over-locked.2>
+opam-version: "2.0"
+### <pin:over-locked/over-locked.opam>
+opam-version: "2.0"
+depends: "dep-over-locked"
+### opam install ./over-locked dep-over-locked.1
+[NOTE] Package over-locked does not exist in opam repositories registered in the current switch.
+over-locked is now pinned to file://${BASEDIR}/over-locked (version dev)
+The following actions will be performed:
+=== install 2 packages
+  - install dep-over-locked 1
+  - install over-locked     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-over-locked.1
+-> retrieved over-locked.dev  (file://${BASEDIR}/over-locked)
+-> installed over-locked.dev
+Done.
+### opam lock over-locked
+Generated lock files for:
+  - over-locked.dev: ${BASEDIR}/over-locked.opam.locked
+### mv over-locked.opam.locked over-locked/over-locked.opam.locked
+### opam remove over-locked
+The following actions will be performed:
+=== remove 1 package
+  - remove over-locked dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   over-locked.dev
+Done.
+### opam install dep-over-locked.2
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade dep-over-locked 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep-over-locked.1
+-> installed dep-over-locked.2
+Done.
+### opam install over-locked --locked
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[over-locked.dev] synchronised (file://${BASEDIR}/over-locked)
+[over-locked] Installing new package description from upstream file://${BASEDIR}/over-locked
+
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade dep-over-locked 2 to 1       [required by over-locked]
+=== install 1 package
+  - install   over-locked     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep-over-locked.2
+-> installed dep-over-locked.1
+-> installed over-locked.dev
+Done.
+### opam-cat OPAM/overlays/.opam-switch/overlay/over-locked/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+depends: ["dep-over-locked" {= "1"}]
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "over-locked"
+opam-version: "2.0"
+synopsis: "A word"
+version: "dev"
+x-locked: "locked"
+url {
+src: "file://${BASEDIR}/over-locked"
+}
+### :C:f:3: Subpath
+### <pkg:dep-over-subpath.1>
+opam-version: "2.0"
+### <pin:over-subpath/inner/over-subpath.opam>
+opam-version: "2.0"
+depends: "dep-over-subpath"
+### opam pin ./over-subpath --subpath inner
+[NOTE] Package over-subpath does not exist in opam repositories registered in the current switch.
+over-subpath is now subpath-pinned to directory /inner in file://${BASEDIR}/over-subpath (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep-over-subpath 1            [required by over-subpath]
+  - install over-subpath     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-over-subpath.1
+-> retrieved over-subpath.dev  (directory /inner in file://${BASEDIR}/over-subpath)
+-> installed over-subpath.dev
+Done.
+### opam-cat OPAM/overlays/.opam-switch/overlay/over-subpath/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+depends: "dep-over-subpath"
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "over-subpath"
+opam-version: "2.0"
+synopsis: "A word"
+version: "dev"
+x-subpath: "inner"
+url {
+src: "file://${BASEDIR}/over-subpath"
+}
+### :C:f:3: Env path rewrite
+### <pkg:dep-over-epr.1>
+opam-version: "2.0"
+### <pin:over-epr/over-epr.opam>
+opam-version: "2.0"
+depends: "dep-over-epr"
+x-env-path-rewrite: [
+  [ SOME_ENV ":" "target" ]
+]
+### opam pin ./over-epr
+[NOTE] Package over-epr does not exist in opam repositories registered in the current switch.
+over-epr is now pinned to file://${BASEDIR}/over-epr (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep-over-epr 1            [required by over-epr]
+  - install over-epr     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-over-epr.1
+-> retrieved over-epr.dev  (file://${BASEDIR}/over-epr)
+-> installed over-epr.dev
+Done.
+### opam-cat OPAM/overlays/.opam-switch/overlay/over-epr/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+depends: "dep-over-epr"
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "over-epr"
+opam-version: "2.0"
+synopsis: "A word"
+version: "dev"
+x-env-path-rewrite: [[SOME_ENV ":" "target"]]
+url {
+src: "file://${BASEDIR}/over-epr"
+}
