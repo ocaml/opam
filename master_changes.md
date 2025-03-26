@@ -187,6 +187,7 @@ users)
   * Add a test showing simulated pinning does not propagate version information [#6256 @rjbou]
   * Untie lock with pin depend test from OPAMEDITOR behaviour [#6412 @rjbou]
   * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
+  * Add pin test to show stored overlay opam files [#6209 @rjbou]
 
 ### Engine
 
