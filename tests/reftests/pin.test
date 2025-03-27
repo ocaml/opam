@@ -1097,7 +1097,6 @@ The following actions will be performed:
 -> installed local-no-keep-build-dir.dev
 Done.
 ### ls OPAM/no-keep-build-dir/.opam-switch/build
-local-no-keep-build-dir.dev
 ### opam unpin local-no-keep-build-dir
 Ok, local-no-keep-build-dir is no longer pinned to file://${BASEDIR}/local-no-keep-build-dir (version dev)
 The following actions will be performed:
@@ -1121,4 +1120,3 @@ The following actions will be performed:
 -> installed local-no-keep-build-dir.dev
 Done.
 ### ls OPAM/no-keep-build-dir/.opam-switch/build
-local-no-keep-build-dir.dev
