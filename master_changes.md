@@ -107,6 +107,12 @@ users)
   * Speedup the detection of available system packages with pacman and brew [#6324 @kit-ty-kate]
   * The system GNU Patch and diff are no longer runtime dependencies of opam [#5892 @kit-ty-kate - fix #6052]
 
+[NEW] Support providing external dependencies with Nix
+ * Always pass --no-version-check and --no-write-registry to Cygwin setup [#6046 @dra27]
+ * Use --quiet-mode noinput for the internal Cygwin installation (which is definitely a fully-specified command line) and --quiet-mode unattended for external Cygwin installations (in case the user does need to select something, e.g. a mirror) [#6046 @dra27]
+  * [BUG] Fix apt/debian lookup for installed packages [#6054 @rjbou]
+  * [NEW] Support providing external dependencies with Nix [#5982 @RyanGibb]
+
 ## Format upgrade
 
 ## Sandbox
