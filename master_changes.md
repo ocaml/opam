@@ -199,6 +199,7 @@ users)
   * Add a test for packages with subpath in a repository [#6439 @rjbou]
   * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
   * Add pin test to show stored overlay opam files [#6209 @rjbou]
+  * Add show test to highlight precedence of opam file selection and check that if an opam file is given it is always this one that is taken [#6209 @rjbou]
 
 ### Engine
 
