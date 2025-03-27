@@ -1068,3 +1068,57 @@ opam-version: "2.0"
 
 No solution found, exiting
 # Return code 20 #
+### : neither opam install nor opam pin should keep the build directory
+### : of the packages they install
+### OPAMKEEPBUILDDIR=0
+### opam switch create no-keep-build-dir --empty
+### <pkg:pkg-no-keep-build-dir.1>
+opam-version: "2.0"
+### opam install pkg-no-keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install pkg-no-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg-no-keep-build-dir.1
+Done.
+### ls OPAM/no-keep-build-dir/.opam-switch/build
+### <pin:local-no-keep-build-dir/opam>
+opam-version: "2.0"
+### opam install ./local-no-keep-build-dir
+[NOTE] Package local-no-keep-build-dir does not exist in opam repositories registered in the current switch.
+local-no-keep-build-dir is now pinned to file://${BASEDIR}/local-no-keep-build-dir (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install local-no-keep-build-dir dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-no-keep-build-dir.dev  (file://${BASEDIR}/local-no-keep-build-dir)
+-> installed local-no-keep-build-dir.dev
+Done.
+### ls OPAM/no-keep-build-dir/.opam-switch/build
+local-no-keep-build-dir.dev
+### opam unpin local-no-keep-build-dir
+Ok, local-no-keep-build-dir is no longer pinned to file://${BASEDIR}/local-no-keep-build-dir (version dev)
+The following actions will be performed:
+=== remove 1 package
+  - remove local-no-keep-build-dir dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   local-no-keep-build-dir.dev
+Done.
+### ls OPAM/no-keep-build-dir/.opam-switch/build
+### opam pin add ./local-no-keep-build-dir
+[NOTE] Package local-no-keep-build-dir does not exist in opam repositories registered in the current switch.
+local-no-keep-build-dir is now pinned to file://${BASEDIR}/local-no-keep-build-dir (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install local-no-keep-build-dir dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-no-keep-build-dir.dev  (file://${BASEDIR}/local-no-keep-build-dir)
+-> installed local-no-keep-build-dir.dev
+Done.
+### ls OPAM/no-keep-build-dir/.opam-switch/build
+local-no-keep-build-dir.dev
