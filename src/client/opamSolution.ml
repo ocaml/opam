@@ -867,18 +867,16 @@ let parallel_apply t
 
   let cleanup_artefacts graph =
     PackageActionGraph.iter_vertex (function
-        | `Remove nv
-          when not (OpamPackage.has_name t.pinned nv.name) ->
+        | `Remove nv ->
           OpamAction.cleanup_package_artefacts t nv
           (* if reinstalled, only removes build dir *)
-        | `Install nv
-          when not (OpamPackage.has_name t.pinned nv.name)
-            || OpamSwitchState.is_version_pinned t nv.name ->
-          let build_dir =
-            OpamPath.Switch.build t.switch_global.root t.switch nv in
+        | `Install nv ->
           if not OpamClientConfig.(!r.keep_build_dir) then
+            let build_dir =
+              OpamPath.Switch.build t.switch_global.root t.switch nv
+            in
             OpamFilename.rmdir build_dir
-        | `Remove _ | `Install _ | `Build _ | `Fetch _ -> ()
+        | `Build _ | `Fetch _ -> ()
         | `Change _ | `Reinstall _  -> assert false)
       graph
   in

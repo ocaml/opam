@@ -27,6 +27,7 @@ users)
 ## Actions
 
 ## Install
+  * Do not keep the build directory of the pinned packages [#6436 @kit-ty-kate]
 
 ## Build (package)
   * Patches are now applied using the `patch` OCaml library instead of GNU Patch [#5892 @kit-ty-kate - fix #6019 #6052]

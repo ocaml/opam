@@ -37,7 +37,6 @@ The following actions will be performed:
 -> installed pin-no-keep-build-dir.pin
 Done.
 ### ls OPAM/keepbuilddir0/.opam-switch/build
-pin-no-keep-build-dir.pin
 ### :I:2:b: unpin
 ### opam unpin pin-no-keep-build-dir
 Ok, pin-no-keep-build-dir is no longer pinned to file://${BASEDIR}/pin-no-keep-build-dir (version pin)
@@ -62,7 +61,6 @@ The following actions will be performed:
 -> installed pin-no-keep-build-dir.pin
 Done.
 ### ls OPAM/keepbuilddir0/.opam-switch/build
-pin-no-keep-build-dir.pin
 ### :I:3: Dev package
 ### rm -rf OPAM/keepbuilddir0/.opam-switch/build
 ### <pkg:dev-no-keep-build-dir.1>
@@ -96,7 +94,6 @@ The following actions will be performed:
 -> installed dev-no-keep-build-dir.1
 Done.
 ### ls OPAM/keepbuilddir0/.opam-switch/build
-dev-no-keep-build-dir.1
 ### :I:4: Version pinned packages
 ### rm -rf OPAM/keepbuilddir0/.opam-switch/build
 ### <pkg:vpin-no-keep-build-dir.1>
