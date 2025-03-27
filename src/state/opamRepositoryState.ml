@@ -155,19 +155,23 @@ let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
 let load lock_kind gt =
-  OpamFormatUpgrade.as_necessary_repo_switch_light_upgrade lock_kind `Repo gt;
+  let repos_config = OpamFormatUpgrade.as_necessary_repo lock_kind gt in
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
-  let repos_map = OpamStateConfig.Repos.safe_read ~lock_kind gt in
+  let repos_map =
+    match repos_config with
+    | Some repos_map -> repos_map
+    | None -> OpamStateConfig.Repos.safe_read ~lock_kind gt
+  in
   if OpamStateConfig.is_newer_than_self ~lock_kind gt then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"
       (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
       (OpamVersion.to_string (OpamFile.Config.root_version));
-  let mk_repo name (url, ta) = {
+  let mk_repo name {OpamFile.Repos_config.repoc_url; repoc_trust} = {
     repo_name = name;
-    repo_url = url;
-    repo_trust = ta;
+    repo_url = repoc_url;
+    repo_trust = repoc_trust;
   } in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
   let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
@@ -281,7 +285,9 @@ let write_config rt =
   OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)
     (OpamRepositoryName.Map.filter_map (fun _ r ->
          if r.repo_url = OpamUrl.empty then None
-         else Some (r.repo_url, r.repo_trust))
+         else
+           Some {OpamFile.Repos_config.repoc_url = r.repo_url;
+                 repoc_trust = r.repo_trust})
         rt.repositories)
 
 let check_last_update () =

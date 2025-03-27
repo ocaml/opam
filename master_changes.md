@@ -108,6 +108,8 @@ users)
   * The system GNU Patch and diff are no longer runtime dependencies of opam [#5892 @kit-ty-kate - fix #6052]
 
 ## Format upgrade
+  * Add a note about to enforce no more upgrading last hard upgrade version (2.0.0~beta5), as far as possible. [#6416 @rjbou]
+  * Complete upgrade mechanism to permit on the fly upgrade and write upgrade from repo and switch level [#6416 @rjbou]
 
 ## Sandbox
   * Respect the `DUNE_CACHE_ROOT` environment variable if it exists [#6326 @smorimoto]
