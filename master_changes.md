@@ -193,6 +193,7 @@ users)
   * Add a test in init to show ocaml system compiler selection behaviour [#6307 @kit-ty-kate @rjbou]
   * Add a test showing simulated pinning does not propagate version information [#6256 @rjbou]
   * Untie lock with pin depend test from OPAMEDITOR behaviour [#6412 @rjbou]
+  * Add admin filter subcommand test [#6166 @rjbou]
 
 ### Engine
 
