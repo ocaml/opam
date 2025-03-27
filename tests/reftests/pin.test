@@ -1035,7 +1035,7 @@ The following actions will be performed:
 -> installed dep2.2
 -> installed dep1.dev
 Done.
-### : opam install . --deps-only not selecting the good version
+### :C:d: opam install . --deps-only not selecting the good version
 ### <pkg:simcomp.1>
 opam-version: "2.0"
 flags: compiler
@@ -1068,7 +1068,7 @@ opam-version: "2.0"
 
 No solution found, exiting
 # Return code 20 #
-### : behaviour of opam pin when confronted with a missing opam description
+### :C:e: behaviour of opam pin when confronted with a missing opam description
 ### opam switch create --empty missing-opam
 ### OPAMEDITOR="echo iNvAlId "
 ### <pin-depends.sh>
@@ -1080,6 +1080,7 @@ pin-depends: [
   ["$2" "file://$basedir/$3"]
 ]
 EOF
+### :C:e:1: missing opam file in repo
 ### <pin:missing-opam/pkg.opam>
 opam-version: "2.0"
 ### opam pin pkg-with-typo ./missing-opam --no-action
@@ -1106,6 +1107,7 @@ pkg-with-typo is now pinned to file://${BASEDIR}/missing-opam (version dev)
 
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 20 #
+### :C:e:2: missing opam file in pin depends without the package in dependencies
 ### <pin:missing-opam/pkg.opam>
 opam-version: "2.0"
 ### sh ./pin-depends.sh missing-opam/pkg.opam pin-pkg.dev missing-opam
@@ -1134,6 +1136,7 @@ pkg is now pinned to file://${BASEDIR}/missing-opam (version dev)
 
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 20 #
+### :C:e:3: missing opam file in pin depends with package in dependencies
 ### <pin:missing-opam/pkg.opam>
 opam-version: "2.0"
 depends: [
@@ -1151,7 +1154,7 @@ pkg is now pinned to file://${BASEDIR}/missing-opam (version dev)
 
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 20 #
-### : special case where the name of the pin-depend matches the name of the package itself (recursive)
+### :C:e:4: special case where the name of the pin-depend matches the name of the package itself (recursive)
 ### <pin:missing-opam/pkg.opam>
 opam-version: "2.0"
 ### sh ./pin-depends.sh missing-opam/pkg.opam pkg.dev missing-opam/empty-dir
