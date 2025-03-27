@@ -8,3 +8,8 @@
   (libraries opam-format)
   (modules TypeGymnastics)
   (action (run %{test})))
+
+(test
+  (name patchDiff)
+  (modules patchDiff)
+  (libraries opam-repository))

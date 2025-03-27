@@ -1588,41 +1588,73 @@ let translate_patch ~dir orig corrected =
   end;
   close_in ch
 
-let gpatch = lazy begin
-  let rec search_gpatch = function
-    | [] -> None
-    | patch_cmd::patch_cmds ->
-      match OpamProcess.run (make_command ~name:"patch" patch_cmd ["--version"]) with
-      | r ->
-        (match OpamProcess.is_success r, r.OpamProcess.r_stdout with
-         | true, full::_ when
-             OpamStd.String.is_prefix_of ~from:0 ~full "GNU patch " ->
-           Some patch_cmd
-         | _ ->
-           search_gpatch patch_cmds)
-      | exception _ -> search_gpatch patch_cmds
-  in
-  let default_cmd, other_cmds =
-    match OpamStd.Sys.os () with
-    | Darwin
-    | DragonFly
-    | FreeBSD
-    | NetBSD
-    | OpenBSD -> ("gpatch", ["patch"])
-    | Cygwin
-    | Linux
-    | Unix
-    | Win32
-    | Other _ -> ("patch", ["gpatch"])
-  in
-  match search_gpatch (default_cmd :: other_cmds) with
-  | Some gpatch -> gpatch
-  | None ->
-    OpamConsole.warning "Invalid patch utility. Please install GNU patch";
-    default_cmd
-end
+exception Internal_patch_error of string
 
-let patch ?(preprocess=true) ~dir p =
+let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
+  let internal_patch_error fmt =
+    Printf.ksprintf (fun str -> raise (Internal_patch_error str)) fmt
+  in
+  (* NOTE: It is important to keep this `concat dir ""` to ensure the
+     is_prefix_of below doesn't match another similarly named directory *)
+  let dir = Filename.concat (real_path dir) "" in
+  let get_path file =
+    let file = real_path (Filename.concat dir file) in
+    if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
+      internal_patch_error "Patch %S tried to escape its scope."
+        patch_filename;
+    file
+  in
+  let patch ~file content diff =
+    (* NOTE: The None case returned by [Patch.patch] is only returned
+       if [diff = Patch.Delete _]. This sub-function is not called in
+       this case so we [assert false] instead. *)
+    match Patch.patch ~cleanly:true content diff with
+    | Some x -> x
+    | None -> assert false (* See NOTE above *)
+    | exception _ when not allow_unclean ->
+      internal_patch_error "Patch %S does not apply cleanly."
+        patch_filename
+    | exception _ ->
+      match Patch.patch ~cleanly:false content diff with
+      | Some x ->
+        OpamStd.Option.iter (write (file^".orig")) content;
+        x
+      | None -> assert false (* See NOTE above *)
+      | exception _ ->
+        OpamStd.Option.iter (write (file^".orig")) content;
+        write (file^".rej") (Format.asprintf "%a" Patch.pp diff);
+        internal_patch_error "Patch %S does not apply cleanly."
+          patch_filename
+  in
+  let apply diff = match diff.Patch.operation with
+    | Patch.Edit (file1, file2) ->
+      (* That seems to be the GNU patch behaviour *)
+      let file =
+        let file1 = get_path file1 in
+        if Sys.file_exists file1 then
+          file1
+        else
+          get_path file2
+      in
+      let content = read file in
+      let content = patch ~file:file (Some content) diff in
+      write file content;
+    | Patch.Delete file ->
+      let file = get_path file in
+      remove_file_t ~with_log:false file
+    | Patch.Create file ->
+      let file = get_path file in
+      let content = patch ~file None diff in
+      write file content
+    | Patch.Rename_only (src, dst) ->
+      let src = get_path src in
+      let dst = get_path dst in
+      (* we use rename as we have all guarantee *)
+      Unix.rename src dst
+  in
+  List.iter apply diffs
+
+let patch ?(preprocess=true) ~allow_unclean ~dir p =
   if not (Sys.file_exists p) then
     (OpamConsole.error "Patch file %S not found." p;
      raise Not_found);
@@ -1634,11 +1666,13 @@ let patch ?(preprocess=true) ~dir p =
     else
       p
   in
-  let patch_cmd = Lazy.force gpatch in
-  make_command ~name:"patch" ~dir patch_cmd ["-p1"; "-i"; p'] @@> fun r ->
-    if not (OpamConsole.debug ()) then Sys.remove p';
-    if OpamProcess.is_success r then Done None
-    else Done (Some (Process_error r))
+  let content = read p' in
+  try
+    let diffs = Patch.parse ~p:1 content in
+    internal_patch ~allow_unclean ~patch_filename:p ~dir diffs;
+    if preprocess && not (OpamConsole.debug ()) then Sys.remove p';
+    None
+  with exn -> Some exn
 
 let register_printer () =
   Printexc.register_printer (function
