@@ -2495,9 +2495,6 @@ module URLSyntax = struct
            (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
       "mirrors", Pp.ppacc with_mirrors mirrors
         (Pp.V.map_list ~depth:1 Pp.V.url);
-      "subpath", Pp.ppacc_opt
-        with_subpath subpath
-        (Pp.V.string -| Pp.of_module "subpath" (module OpamFilename.SubPath));
     ]
 
   let pp_contents =
@@ -2703,6 +2700,11 @@ module OPAMSyntax = struct
   let ext_field_prefix = "x-"
   let is_ext_field = OpamStd.String.starts_with ~prefix:ext_field_prefix
 
+  (* Builtin x-* fields *)
+  let subpath_xfield = "x-subpath"
+  let locked_xfield = "x-locked"
+  let rewrite_xfield = "x-env-path-rewrite"
+
   (* Getters *)
 
   let opam_version t = t.opam_version
@@ -2849,19 +2851,21 @@ module OPAMSyntax = struct
     if not (is_ext_field fld) then invalid_arg "OpamFile.OPAM.remove_extension";
     {t with extensions = OpamStd.String.Map.remove fld t.extensions }
 
-  let with_url url t =
-    let format_errors =
-      List.map (fun (name,bf) -> "url."^name, bf) url.URL.errors
-    in
-    { t with url = Some url;
-             format_errors = format_errors @ t.format_errors }
   let with_url_opt url t =
+    let t =
+      match url with
+      | Some { URL.subpath = Some sb; _ } ->
+        add_extension t subpath_xfield
+          (nullify_pos (String (OpamFilename.SubPath.to_string sb)))
+      | _ -> t
+    in
     let format_errors = match url with
       | None -> []
       | Some u -> List.map (fun (name,bf) -> "url."^name, bf) u.URL.errors
     in
     { t with url;
              format_errors = format_errors @ t.format_errors }
+  let with_url url t = with_url_opt (Some url) t
 
   let with_descr descr t = { t with descr = Some descr }
   let with_descr_opt descr t = { t with descr }
@@ -2876,7 +2880,15 @@ module OPAMSyntax = struct
   let with_extra_files extra_files t = { t with extra_files = Some extra_files }
   let with_extra_files_opt extra_files t = { t with extra_files }
 
-  let with_locked_opt locked t = { t with locked }
+  let with_locked_opt locked t =
+    let t =
+      match locked with
+      | None ->
+        remove_extension t locked_xfield
+      | Some locked ->
+        add_extension t locked_xfield (nullify_pos (String locked))
+    in
+    { t with locked }
 
   let with_format_errors format_errors t = { t with format_errors }
 
@@ -3240,11 +3252,8 @@ module OPAMSyntax = struct
     in
     Pp.pp parse (fun x -> x)
 
-  let handle_subpath_2_0 =
-    let subpath_xfield = "x-subpath" in
+  let handle_subpath =
     let parse ~pos:_ t =
-      if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
-      else
       match OpamStd.String.Map.find_opt subpath_xfield t.extensions with
       | Some {pelem = String subpath;_} ->
         let url = match t.url with
@@ -3258,43 +3267,22 @@ module OPAMSyntax = struct
           (OpamConsole.colorise `underline subpath_xfield)
       | None -> t
     in
-    let print t =
-      match t.url with
-      | Some ({ URL.subpath = Some sb ; _ } as url) ->
-        if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
-        else
-          add_extension t subpath_xfield
-            (nullify_pos @@ String (OpamFilename.SubPath.to_string sb))
-          |> with_url (URL.with_subpath_opt None url)
-      | _ -> t
-    in
+    let print t = t in (* already handled in [with_url_opt] above *)
     Pp.pp parse print
 
   let handle_locked =
-    let locked_xfield = "x-locked" in
     let parse ~pos:_ t =
-      if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
-      else
       match OpamStd.String.Map.find_opt locked_xfield t.extensions with
-      | Some {pelem = String locked;_} ->
+      | Some {pelem = String locked; _} ->
         { t with locked = Some locked }
       | Some {pos; _} ->
         Pp.bad_format ~pos "Field %s must be a string"
           (OpamConsole.colorise `underline locked_xfield)
       | None -> { t with locked = None }
     in
-    let print t =
-      if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
-      else
-      match t.locked with
-      | None | Some "" ->
-        remove_extension t locked_xfield
-      | Some locked ->
-        add_extension t locked_xfield (nullify_pos @@ String locked)
-    in
+    let print t = t in (* already handled in [with_locked_opt] above *)
     Pp.pp parse print
 
-  let rewrite_xfield = "x-env-path-rewrite"
   let handle_env_paths =
     let pp =
       let filtered pp =
@@ -3327,8 +3315,6 @@ module OPAMSyntax = struct
            (filtered Pp.V.separator) (filtered Pp.V.path_format))
     in
     let parse ~pos t =
-      if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
-      else
       match OpamStd.String.Map.find_opt rewrite_xfield t.extensions with
       | None -> t
       | Some value ->
@@ -3365,12 +3351,7 @@ module OPAMSyntax = struct
     Pp.pp
       (fun ~pos:_ (t, extensions) -> with_extensions extensions t)
       (fun t -> t, extensions t) -|
-    Pp.check (fun t ->
-        OpamVersion.(compare t.opam_version (of_string "2.0") > 0) ||
-        OpamStd.Option.Op.(t.url >>= URL.subpath) = None)
-      ~errmsg:"The url.subpath field is not allowed in files with \
-               `opam-version` <= 2.0" -|
-    handle_subpath_2_0 -|
+    handle_subpath -|
     handle_locked -|
     handle_env_paths
 
