@@ -569,37 +569,34 @@ and source_pin
     | _ -> opam_opt
   in
 
-  if not need_edit && opam_opt = None then
-    OpamConsole.note
-      "No package definition found for %s: please complete the template"
-      (OpamConsole.colorise `bold (OpamPackage.to_string nv));
-
-  let need_edit = need_edit || opam_opt = None in
-
   let opam_opt =
-    let opam_base = match opam_opt with
-      | None -> OpamFileTools.template nv
-      | Some opam -> opam
-    in
-    let opam_base =
-      OpamFile.OPAM.with_url_opt urlf opam_base
-    in
     if need_edit then
-      (if not (OpamFile.exists temp_file) then
-         OpamFile.OPAM.write_with_preserved_format
-           ?format_from:(OpamPinned.orig_opam_file st name opam_base)
-           temp_file opam_base;
-       edit_raw name temp_file >>|
-       (* Preserve metadata_dir so that copy_files below works *)
-       OpamFile.OPAM.(with_metadata_dir (metadata_dir opam_base))
-      )
+      let opam_base = match opam_opt with
+        | None ->
+          OpamConsole.note
+            "No package definition found for %s: please complete the template"
+            (OpamConsole.colorise `bold (OpamPackage.to_string nv));
+          OpamFileTools.template nv
+        | Some opam -> opam
+      in
+      let opam_base =
+        OpamFile.OPAM.with_url_opt urlf opam_base
+      in
+      if not (OpamFile.exists temp_file) then
+        OpamFile.OPAM.write_with_preserved_format
+          ?format_from:(OpamPinned.orig_opam_file st name opam_base)
+          temp_file opam_base;
+      edit_raw name temp_file >>|
+      (* Preserve metadata_dir so that copy_files below works *)
+      OpamFile.OPAM.(with_metadata_dir (metadata_dir opam_base))
     else
-      Some opam_base
+      Option.map (OpamFile.OPAM.with_url_opt urlf) opam_opt
   in
   match opam_opt with
   | None ->
     OpamConsole.error_and_exit `Not_found
-      "No valid package definition found"
+      "No valid package definition found for %s"
+      (OpamPackage.Name.to_string name)
   | Some opam ->
     let opam =
       match OpamFile.OPAM.get_url opam with
