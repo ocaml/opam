@@ -259,6 +259,7 @@ users)
 ## opam-format
   * `OpamFormula.string_of_relop`: export function [#6197 @mbarbin]
   * `OpamFormula.all_relop`: a list of all operators [#6197 @mbarbin]
+  * `OpamFile.OPAM.{*read*,write*}`: Stop modifying the `available` field when handling the builtin `x-*` fields [#6438 @kit-ty-kate]
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
 
 ## opam-core
