@@ -433,10 +433,11 @@ let run st tog ?no_constraint mode filter atoms =
     | ReverseDeps, _, _ ->
       (* non-installed names don't make sense in rev-deps *)
       if missing <> [] then
-        OpamConsole.warning "Not installed package%s %s, skipping"
-          (match missing with | [_] -> "" | _ -> "s")
-          (OpamStd.Format.pretty_list
-             (List.map OpamFormula.string_of_atom missing));
+        (OpamConsole.warning "Not installed package%s %s, skipping"
+           (match missing with | [_] -> "" | _ -> "s")
+           (OpamStd.Format.pretty_list
+              (List.map OpamFormula.string_of_atom missing));
+         OpamSwitchState.did_you_mean ~installed_only:true st missing);
       if OpamPackage.Set.is_empty select && atoms <> [] then
         OpamConsole.error_and_exit `Not_found "No package to display"
       else

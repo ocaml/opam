@@ -724,6 +724,7 @@ let unpin st names =
         st
       | None ->
         OpamConsole.note "%s is not pinned." (OpamPackage.Name.to_string name);
+        OpamSwitchState.did_you_mean st [name, None];
         st)
     st names
 

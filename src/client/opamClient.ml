@@ -2413,7 +2413,8 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
           nothing_to_do := false
         with Not_found ->
           OpamConsole.error "No package %s found for (forced) removal.\n"
-            (OpamFormula.short_string_of_atom atom)
+            (OpamFormula.short_string_of_atom atom);
+          OpamSwitchState.did_you_mean t [atom];
       in
       List.iter force_remove not_installed
     else
@@ -2584,9 +2585,11 @@ module PIN = struct
           (OpamPackage.Name.to_string name)
       | Some url -> url
     with Not_found ->
-      OpamConsole.error_and_exit `Not_found
+      OpamConsole.error
         "No package named %S found"
-        (OpamPackage.Name.to_string name)
+        (OpamPackage.Name.to_string name);
+      OpamSwitchState.did_you_mean t [name, None];
+      OpamStd.Sys.exit_because `Not_found
 
   let pin st name ?(edit=false) ?version ?(action=true) ?subpath ?locked target =
     try
@@ -2690,8 +2693,10 @@ module PIN = struct
         else
           OpamStd.Sys.exit_because `Aborted
       | None ->
-        OpamConsole.error_and_exit `Not_found
-          "Package is not pinned, and no existing version was supplied."
+        OpamConsole.error  
+          "Package is not pinned, and no existing version was supplied.";
+        OpamSwitchState.did_you_mean st [name, None];
+        OpamStd.Sys.exit_because `Not_found
     in
     if action then post_pin_action st pinned [name]
     else st
