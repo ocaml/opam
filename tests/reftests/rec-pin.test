@@ -1158,18 +1158,75 @@ The following actions will be performed:
   - install subpath-tar 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-[ERROR] Failed to get sources of subpath-tar.1: ${BASEDIR}/subpath-tar.tgz/inner
+-> retrieved subpath-tar.1  (directory /inner in file://${BASEDIR}/subpath-tar.tgz)
+-> installed subpath-tar.1
+Done.
+### :4:1: version pin an already package with subpath
+### <pkg:subpath-vpin.1>
+opam-version: "2.0"
+build: [ "test" "-f" "inner_file" ]
+### <subpath-vpin/inner/inner_file>
+I'm here!
+### <mkurl.sh>
+p=$1
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "REPO/packages/${p%.*}/$p/opam" << EOF
+url {
+  src: "file://$basedir/subpath-vpin"
+}
+x-subpath: "inner"
+available: opam-version > "2.1"
+EOF
+### sh mkurl.sh subpath-vpin.1
+### opam update default
 
-OpamSolution.Fetch_fail("${BASEDIR}/subpath-tar.tgz/inner")
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam pin subpath-vpin 1
+subpath-vpin is now pinned to version 1
 
+The following actions will be performed:
+=== install 1 package
+  - install subpath-vpin 1 (pinned)
 
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - fetch subpath-tar 1
-+- 
-- No changes have been performed
-# Return code 40 #
-### :4: subpath use error
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved subpath-vpin.1  (directory /inner in file://${BASEDIR}/subpath-vpin)
+-> installed subpath-vpin.1
+Done.
+### :4:2: version pin an already package with subpath (no available)
+### <pkg:subpath-vpin.2>
+opam-version: "2.0"
+build: [ "test" "-f" "inner_file" ]
+### <mkurl.sh>
+p=$1
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "REPO/packages/${p%.*}/$p/opam" << EOF
+url {
+  src: "file://$basedir/subpath-vpin"
+}
+x-subpath: "inner"
+EOF
+### sh mkurl.sh subpath-vpin.2
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam pin subpath-vpin 2
+[NOTE] Package subpath-vpin used to be pinned to version 1
+subpath-vpin is now pinned to version 2
+
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade subpath-vpin 1 to 2 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved subpath-vpin.2  (directory /inner in file://${BASEDIR}/subpath-vpin)
+-> removed   subpath-vpin.1
+-> installed subpath-vpin.2
+Done.
+### :5: subpath use error
 ### <REPO/packages/subpath-err/subpath-err.1/opam>
 opam-version: "2.0"
 url {
