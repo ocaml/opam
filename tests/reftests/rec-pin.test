@@ -1059,3 +1059,129 @@ root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version 3)
 [NOTE] Package root-a-k_p does not exist in opam repositories registered in the current switch.
 [root-a-k_p.3] synchronised (no changes)
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version 3)
+### :::::::::::::::::::::::::::::::::
+### : Read subpathed file from repo :
+### :::::::::::::::::::::::::::::::::
+### opam switch create --empty subpath-repo
+### :1: local directory
+### <pkg:subpath-file.1>
+opam-version: "2.0"
+build: [ "test" "-f" "inner_file" ]
+### <subpath-file/inner/inner_file>
+I'm here!
+### <mkurl.sh>
+p=$1
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "REPO/packages/${p%.*}/$p/opam" << EOF
+url {
+  src: "file://$basedir/subpath-file"
+}
+x-subpath: "inner"
+available: opam-version > "2.1"
+EOF
+### sh mkurl.sh subpath-file.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install subpath-file
+The following actions will be performed:
+=== install 1 package
+  - install subpath-file 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved subpath-file.1  (directory /inner in file://${BASEDIR}/subpath-file)
+-> installed subpath-file.1
+Done.
+### :2: local git directory
+### <pkg:subpath-git.1>
+opam-version: "2.0"
+build: [ "test" "-f" "inner_file" ]
+### <mkurl.sh>
+p=$1
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "REPO/packages/${p%.*}/$p/opam" << EOF
+url {
+  src: "file://$basedir/subpath-git"
+}
+x-subpath: "inner"
+available: opam-version > "2.1"
+EOF
+### sh mkurl.sh subpath-git.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### <subpath-git/inner/inner_file>
+I'm here!
+### git -C ./subpath-git init -q --initial-branch=master
+### git -C ./subpath-git config core.autocrlf false
+### git -C ./subpath-git add inner/
+### git -C ./subpath-git commit -qm "fst"
+### opam install subpath-git
+The following actions will be performed:
+=== install 1 package
+  - install subpath-git 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved subpath-git.1  (directory /inner in file://${BASEDIR}/subpath-git)
+-> installed subpath-git.1
+Done.
+### :3: local archive
+### <pkg:subpath-tar.1>
+opam-version: "2.0"
+build: [ [ "ls" ]  [ "test" "-f" "inner_file" ] ]
+### <mkurl.sh>
+p=$1
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "REPO/packages/${p%.*}/$p/opam" << EOF
+url {
+  src: "$basedir/subpath-tar.tgz"
+}
+x-subpath: "inner"
+available: opam-version > "2.1"
+EOF
+### sh mkurl.sh subpath-tar.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### <subpath-tar/inner/inner_file>
+I'm here!
+### tar czf subpath-tar.tgz subpath-tar
+### opam install subpath-tar
+The following actions will be performed:
+=== install 1 package
+  - install subpath-tar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Failed to get sources of subpath-tar.1: ${BASEDIR}/subpath-tar.tgz/inner
+
+OpamSolution.Fetch_fail("${BASEDIR}/subpath-tar.tgz/inner")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - fetch subpath-tar 1
++- 
+- No changes have been performed
+# Return code 40 #
+### :4: subpath use error
+### <REPO/packages/subpath-err/subpath-err.1/opam>
+opam-version: "2.0"
+url {
+  src: "file:///a/path/subpath-err"
+  subpath: "inner"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+[ERROR] In ${BASEDIR}/OPAM/repo/default/packages/subpath-err/subpath-err.1/opam:
+        The url.subpath field is not allowed in files with `opam-version` <= 2.0
+[ERROR] Strict mode: aborting
+[ERROR] Could not update repository "default": OpamStd.OpamSys.Exit(30)
+# Return code 40 #
