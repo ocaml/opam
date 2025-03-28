@@ -1086,12 +1086,12 @@ opam-version: "2.0"
 ### opam pin pkg-with-typo ./missing-opam --no-action
 [NOTE] Package pkg-with-typo does not exist in opam repositories registered in the current switch.
 [pkg-with-typo.dev] synchronised (file://${BASEDIR}/missing-opam)
-[ERROR] No valid package definition found
+[ERROR] No valid package definition found for pkg-with-typo
 # Return code 5 #
 ### opam pin pkg-with-typo ./missing-opam
 [NOTE] Package pkg-with-typo does not exist in opam repositories registered in the current switch.
 [pkg-with-typo.dev] synchronised (no changes)
-[ERROR] No valid package definition found
+[ERROR] No valid package definition found for pkg-with-typo
 # Return code 5 #
 ### :C:e:2: missing opam file in pin depends without the package in dependencies
 ### <pin:missing-opam/pkg.opam>
@@ -1104,7 +1104,7 @@ The following additional pinnings are required by pkg.dev:
 Pin and install them? [Y/n] y
 [NOTE] Package pin-pkg does not exist in opam repositories registered in the current switch.
 [pin-pkg.dev] synchronised (no changes)
-[ERROR] No valid package definition found
+[ERROR] No valid package definition found for pin-pkg
 # Return code 5 #
 ### :C:e:3: missing opam file in pin depends with package in dependencies
 ### <pin:missing-opam/pkg.opam>
@@ -1120,7 +1120,7 @@ The following additional pinnings are required by pkg.dev:
 Pin and install them? [Y/n] y
 [NOTE] Package pin-pkg does not exist in opam repositories registered in the current switch.
 [pin-pkg.dev] synchronised (no changes)
-[ERROR] No valid package definition found
+[ERROR] No valid package definition found for pin-pkg
 # Return code 5 #
 ### :C:e:4: special case where the name of the pin-depend matches the name of the package itself (recursive)
 ### : special case where the name of the pin-depend matches the name of the package itself (recursive)
@@ -1135,5 +1135,5 @@ The following additional pinnings are required by pkg.dev:
 Pin and install them? [Y/n] y
 [NOTE] Package pkg does not exist in opam repositories registered in the current switch.
 [pkg.dev] synchronised (no changes)
-[ERROR] No valid package definition found
+[ERROR] No valid package definition found for pkg
 # Return code 5 #

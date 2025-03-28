@@ -595,7 +595,8 @@ and source_pin
   match opam_opt with
   | None ->
     OpamConsole.error_and_exit `Not_found
-      "No valid package definition found"
+      "No valid package definition found for %s"
+      (OpamPackage.Name.to_string name)
   | Some opam ->
     let opam =
       match OpamFile.OPAM.get_url opam with
