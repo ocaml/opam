@@ -3563,6 +3563,29 @@ module OPAM = struct
   let effectively_equal ?(modulo_state=false) o1 o2 =
     effective_part ~modulo_state o1 = effective_part ~modulo_state o2
 
+  let effectively_equal_modulo_pin ~locked:locked_val
+      ~pin_locked ~pin_name ~pin_version ~pin_subpath ~pin_url
+      opam0 opam =
+    let opam = with_locked_opt pin_locked opam in
+    let opam =
+      match name_opt opam with
+      | None -> with_name pin_name opam
+      | Some _ -> opam
+    in
+    let opam =
+      match version_opt opam with
+      | None -> with_version (pin_version ()) opam
+      | Some _ -> opam
+    in
+    let opam =
+      match url opam with
+      | None ->
+        with_url (URL.create ?subpath:pin_subpath pin_url) opam
+      | Some _ -> opam
+    in
+    OpamStd.Option.equal String.equal locked_val (locked opam)
+    && effectively_equal opam0 opam
+
   let equal o1 o2 =
     with_metadata_dir None o1 = with_metadata_dir None o2
 

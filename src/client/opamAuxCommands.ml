@@ -297,31 +297,15 @@ let autopin_aux st ?quiet ?recurse ?subpath ?locked
           | Some opam0 ->
             (match OpamFile.OPAM.read_opt nf.pin.pin_file with
              | Some opam ->
-               let opam = OpamFile.OPAM.with_locked_opt nf.pin.pin_locked opam in
-               let opam =
-                 match OpamFile.OPAM.name_opt opam with
-                 | None -> OpamFile.OPAM.with_name nf.pin_name opam
-                 | Some _ -> opam
+               let {pin_name; pin = {pin_locked; pin_subpath; pin_url; _}} =
+                 nf
                in
-               let opam =
-                 match OpamFile.OPAM.version_opt opam with
-                 | None ->
-                   OpamFile.OPAM.with_version
-                     (OpamPinCommand.default_version st nf.pin_name) opam
-                 | Some _ -> opam
+               let pin_version () =
+                 OpamPinCommand.default_version st nf.pin_name
                in
-               let opam =
-                 match OpamFile.OPAM.url opam with
-                 | None ->
-                   OpamFile.OPAM.with_url
-                     (OpamFile.URL.create ?subpath:nf.pin.pin_subpath
-                        nf.pin.pin_url)
-                     opam
-                 | Some _ -> opam
-               in
-               OpamStd.Option.equal String.equal
-                 locked (OpamFile.OPAM.locked opam)
-               && OpamFile.OPAM.effectively_equal opam0 opam
+               OpamFile.OPAM.effectively_equal_modulo_pin
+                 ~locked ~pin_locked ~pin_name ~pin_version ~pin_subpath ~pin_url
+                 opam0 opam
              | None -> false)
           | None -> false
         with Not_found -> false)
