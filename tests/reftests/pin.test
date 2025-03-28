@@ -1254,7 +1254,6 @@ The following actions will be performed:
 Done.
 ### opam-cat OPAM/overlays/.opam-switch/overlay/over-locked/opam
 authors: "the testing team"
-available: opam-version >= "2.1"
 bug-reports: "https://nobug"
 depends: ["dep-over-locked" {= "1"}]
 description: "Two words."
@@ -1292,7 +1291,6 @@ The following actions will be performed:
 Done.
 ### opam-cat OPAM/overlays/.opam-switch/overlay/over-subpath/opam
 authors: "the testing team"
-available: opam-version >= "2.1"
 bug-reports: "https://nobug"
 depends: "dep-over-subpath"
 description: "Two words."
