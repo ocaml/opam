@@ -447,6 +447,16 @@ module OPAM: sig
       of the switch (depends, available, …) equal. This is [false] by default *)
   val effectively_equal: ?modulo_state:bool -> t -> t -> bool
 
+  val effectively_equal_modulo_pin :
+    locked:string option ->
+    pin_locked:string option ->
+    pin_name:name ->
+    pin_version:(unit -> version) ->
+    pin_subpath:subpath option ->
+    pin_url:url ->
+    t -> t ->
+    bool
+
   (** Compares two package definitions, ignoring the virtual fields bound to
       file location ([metadata_dir]...) *)
   val equal: t -> t -> bool
