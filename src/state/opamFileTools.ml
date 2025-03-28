@@ -895,28 +895,31 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        "License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ "
        ~detail:bad_licenses
        (bad_licenses <> []));
-(*
-    (let subpath =
-       match OpamStd.String.Map.find_opt "x-subpath" (extensions t) with
-       | Some {pelem = String _; _} -> true
-       | _ -> false
+    (let has_subpath =
+       OpamStd.Option.Op.(OpamFile.OPAM.url t >>= OpamFile.URL.subpath) <> None
      in
-     let opam_restriction =
-       OpamFilter.fold_down_left (fun acc filter ->
-           acc ||
-           match filter with
-           | FOp (FIdent (_, var, _), op, FString version)
-             when OpamVariable.to_string var = "opam-version" ->
-             OpamFormula.simplify_version_formula
-               (OpamFormula.ands
-                  [ Atom (`Lt, OpamPackage.Version.of_string "2.1");
-                    Atom (op, OpamPackage.Version.of_string version) ])
-             = None
-           | _ -> false) false t.available
+     let has_available_restriction () =
+       let rec scan_filter = function
+         | FOp (FIdent (_, var, _), op, FString version)
+           when OpamVariable.to_string var = "opam-version" ->
+           OpamFormula.simplify_version_formula
+             (OpamFormula.ands
+                [ Atom (`Lt, OpamPackage.Version.of_string "2.1");
+                  Atom (op, OpamPackage.Version.of_string version) ])
+           = None
+         | FBool _ | FString _ | FIdent _ | FOp _ | FDefined _ | FUndef _ ->
+           false
+         | FAnd (filter1, filter2) -> scan_filter filter1 || scan_filter filter2
+         | FOr (filter1, filter2) -> scan_filter filter1 && scan_filter filter2
+         | FNot filter -> not (scan_filter filter)
+       in
+       scan_filter t.available
      in
      cond 63 `Error
-       "`subpath` field need `opam-version = 2.1` restriction"
-       (subpath && not opam_restriction));
+       "`subpath` field needs a restriction in available field: \
+        `opam-version > 2.1`"
+       (has_subpath && not (has_available_restriction ())));
+(*
     (let subpath_string =
        match OpamStd.String.Map.find_opt "x-subpath" (extensions t) with
        | Some {pelem = String _; _} | None -> false

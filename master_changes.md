@@ -79,6 +79,7 @@ users)
 
 ## Lint
   * [NEW] Add W74 to detect `pin-depends` packages that are neither present in the `depends` nor `depopts` field [#6317 @rjbou - fix #5795]
+  * Enable lint E63 that checks for availability guard in case an opam file contains a subpath [#6438 @rjbou @kit-ty-kate]
 
 ## Repository
   * Accurately tag `curl` download command when loaded from global config file [#6270 @rjbou]
@@ -193,6 +194,7 @@ users)
   * Add a test in init to show ocaml system compiler selection behaviour [#6307 @kit-ty-kate @rjbou]
   * Add a test showing simulated pinning does not propagate version information [#6256 @rjbou]
   * Untie lock with pin depend test from OPAMEDITOR behaviour [#6412 @rjbou]
+  * Add test for lint E63 [#6438 @rjbou]
 
 ### Engine
 
