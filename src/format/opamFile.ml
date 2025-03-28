@@ -2884,64 +2884,6 @@ module OPAMSyntax = struct
     { t with ocaml_version = Some ocaml_version }
   let with_os os t = { t with os }
 
-  (* Adds an opam constraint as an 'available' constraint, without restricting
-     the file format compatibility *)
-  let pp_minimal_opam_version min_version =
-    let opam_version_var = OpamVariable.of_string "opam-version" in
-    let add_avail_constr t =
-      if OpamVersion.compare t.opam_version min_version >= 0 then t else
-      let available =
-        let opam_restricted =
-          OpamFilter.fold_down_left (fun acc filter ->
-              acc ||
-              match filter with
-              | FOp (FIdent ([], var, None), (`Eq|`Geq), FString version)
-              | FOp (FString version, (`Eq|`Leq), FIdent ([], var, None)) ->
-                var = opam_version_var &&
-                OpamVersion.(compare (of_string version) min_version) >= 0
-              | _ -> false)
-            false t.available
-        in
-        if opam_restricted then t.available else
-        let opam_restriction =
-          FOp (FIdent ([], opam_version_var, None), `Geq,
-               FString (OpamVersion.to_string min_version))
-        in
-        match t.available with
-        | FBool true -> opam_restriction
-        | available -> FAnd (available, opam_restriction)
-      in
-      { t with available }
-    in
-    let parse ~pos:_ t =
-      add_avail_constr t
-      (* This is not strictly needed since we know the constraint will be
-         verified for the running opam version, but avoids a discrepency if
-         re-parsing a printed file. *)
-    in
-    let print t =
-      (* remove constraints that are already implied by the file format
-         version *)
-      let available =
-        OpamFilter.map_up (function
-            | FOp (FIdent ([], var, None), (`Eq|`Geq), FString version)
-            | FOp (FString version, (`Eq|`Leq), FIdent ([], var, None))
-              when var = opam_version_var &&
-                   OpamVersion.compare (OpamVersion.of_string version)
-                     t.opam_version <= 0
-              -> FBool true
-            | FAnd (FBool true, f) | FAnd (f, FBool true) -> f
-            | FOr (FBool true, _) | FOr (_, FBool true) -> FBool true
-            | f -> f
-          )
-          t.available
-      in
-      add_avail_constr { t with available }
-      (* The constraint needs to be added here as well, in case the file was
-         just generated and has a subpath without the constraint already *)
-    in
-    Pp.pp parse print
-
   (* Post-processing functions used for some fields (optional, because we
      don't want them when linting). It's better to do them in the same pass
      as parsing, because it allows one to get file positions, which we lose
@@ -3300,10 +3242,7 @@ module OPAMSyntax = struct
 
   let handle_subpath_2_0 =
     let subpath_xfield = "x-subpath" in
-    let pp_constraint =
-      pp_minimal_opam_version (OpamVersion.of_string "2.1")
-    in
-    let parse ~pos t =
+    let parse ~pos:_ t =
       if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
       else
       match OpamStd.String.Map.find_opt subpath_xfield t.extensions with
@@ -3314,7 +3253,6 @@ module OPAMSyntax = struct
           | None -> None
         in
         { t with url }
-        |> Pp.parse ~pos pp_constraint
       | Some {pos;_} ->
         Pp.bad_format ~pos "Field %s must be a string"
           (OpamConsole.colorise `underline subpath_xfield)
@@ -3328,23 +3266,18 @@ module OPAMSyntax = struct
           add_extension t subpath_xfield
             (nullify_pos @@ String (OpamFilename.SubPath.to_string sb))
           |> with_url (URL.with_subpath_opt None url)
-          |> Pp.print pp_constraint
       | _ -> t
     in
     Pp.pp parse print
 
   let handle_locked =
     let locked_xfield = "x-locked" in
-    let pp_constraint =
-      pp_minimal_opam_version (OpamVersion.of_string "2.1")
-    in
-    let parse ~pos t =
+    let parse ~pos:_ t =
       if OpamVersion.(compare t.opam_version (of_string "2.0") > 0) then t
       else
       match OpamStd.String.Map.find_opt locked_xfield t.extensions with
       | Some {pelem = String locked;_} ->
         { t with locked = Some locked }
-        |> Pp.parse ~pos pp_constraint
       | Some {pos; _} ->
         Pp.bad_format ~pos "Field %s must be a string"
           (OpamConsole.colorise `underline locked_xfield)
@@ -3358,7 +3291,6 @@ module OPAMSyntax = struct
         remove_extension t locked_xfield
       | Some locked ->
         add_extension t locked_xfield (nullify_pos @@ String locked)
-        |> Pp.print pp_constraint
     in
     Pp.pp parse print
 
