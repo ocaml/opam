@@ -1001,6 +1001,114 @@ bug-reports: "https://nobug"
 ### opam lint ./lint.opam
 ${BASEDIR}/lint.opam: Warnings.
            warning 62: License doesn't adhere to the SPDX standard, see https://spdx.org/licenses/ : "DTFWYW"
+### : W63: x-subpath field needs a restriction in the available field
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url {
+  src: "file:///a/path"
+}
+x-subpath: "sub"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 63: `subpath` field needs a restriction in available field: `opam-version > 2.1`
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url {
+  src: "file:///a/path"
+}
+x-subpath: "sub"
+available: opam-version > "2.1"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url {
+  src: "file:///a/path"
+}
+x-subpath: "sub"
+available: opam-version > "1.2"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 63: `subpath` field needs a restriction in available field: `opam-version > 2.1`
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url {
+  src: "file:///a/path"
+}
+x-subpath: "sub"
+available: opam-version > "4.2"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url {
+  src: "file:///a/path"
+}
+x-subpath: "sub"
+available: opam-version > "2.1" | opam-version < "2.1"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Errors.
+             error 63: `subpath` field needs a restriction in available field: `opam-version > 2.1`
+# Return code 1 #
+### <lint.opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://to@li.nt"
+bug-reports: "https://nobug"
+url {
+  src: "file:///a/path"
+}
+x-subpath: "sub"
+available: opam-version > "2.1" & opam-version < "2.1"
+### opam lint ./lint.opam
+${BASEDIR}/lint.opam: Passed.
 ### : E65: URLs must be absolute
 ### <lint.opam>
 opam-version: "2.0"
