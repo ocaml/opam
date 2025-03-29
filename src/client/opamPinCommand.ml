@@ -377,7 +377,7 @@ let fetch_all_pins st ?working_dir pins =
       let name = OpamPackage.Name.to_string name in
       OpamProcess.Job.Op.(
         OpamRepository.pull_tree ~cache_dir ?subpath ?working_dir
-          name srcdir [] [url]
+          name (Some srcdir) [] [url]
         @@| fun r -> (pinned, r))
     in
     OpamParallel.map ~jobs:OpamStateConfig.(!r.dl_jobs) ~command pins
@@ -767,7 +767,7 @@ let list st ~short =
         url >>| OpamFile.URL.url >>= fun url ->
         match url.OpamUrl.backend with
         | #OpamUrl.version_control ->
-          let srcdir = OpamSwitchState.source_dir st nv in
+          let srcdir = Option.get (OpamSwitchState.source_dir st nv) in
           let color, rev =
             match OpamProcess.Job.run (OpamRepository.revision srcdir url) with
             | None -> (`red, "error while fetching current revision")
@@ -835,7 +835,7 @@ let scan ~normalise ~recurse ?subpath url =
         OpamRepository.pull_tree
           ~cache_dir:(OpamRepositoryPath.download_cache
                         OpamStateConfig.(!r.root_dir))
-          basename pin_cache_dir [] [url] @@| function
+          basename (Some pin_cache_dir) [] [url] @@| function
         | Not_available (_,u) ->
           OpamConsole.error_and_exit `Sync_error
             "Could not retrieve %s" u

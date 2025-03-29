@@ -156,7 +156,7 @@ val dev_packages: 'a switch_state -> package_set
 (** Returns the local source mirror for the given package
     ({!OpamPath.Switch.sources} or {!OpamPath.Switch.pinned_package}, depending
     on wether it's pinned). *)
-val source_dir: 'a switch_state -> package -> dirname
+val source_dir: 'a switch_state -> package -> dirname option
 
 (** Returns the set of active external dependencies for the package, computed
     from the values of the system-specific variables *)

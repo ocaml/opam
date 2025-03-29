@@ -272,10 +272,13 @@ let pull_tree_t
     match dirnames with
     | [ label, local_dirname, _subpath ] ->
       (fun archive msg ->
-         OpamFilename.cleandir local_dirname;
-         let text = OpamProcess.make_command_text label "extract" in
-         OpamProcess.Job.with_text text @@
-         OpamFilename.extract_job archive local_dirname
+         (match local_dirname with
+          | None -> Done None
+          | Some local_dirname ->
+            OpamFilename.cleandir local_dirname;
+            let text = OpamProcess.make_command_text label "extract" in
+            OpamProcess.Job.with_text text @@
+            OpamFilename.extract_job archive local_dirname)
          @@+ fallback (fun () ->  Done (Up_to_date msg)))
     | _ ->
       fun archive msg ->
@@ -286,8 +289,12 @@ let pull_tree_t
                 let text = OpamProcess.make_command_text label label in
                 OpamProcess.Job.with_text text @@
                 (try
-                   OpamFilename.cleandir local_dirname;
-                   OpamFilename.copy_dir ~src:tmpdir ~dst:local_dirname;
+                   (match local_dirname with
+                    | None -> ()
+                    | Some local_dirname ->
+                      OpamFilename.cleandir local_dirname;
+                      OpamFilename.copy_dir ~src:tmpdir ~dst:local_dirname;
+                   );
                    Done (Up_to_date label)
                  with OpamSystem.Process_error r ->
                    Done (Not_available
@@ -371,7 +378,11 @@ let pull_tree_t
                 remote_urls
             in
             Some label,
-            (if need_local_dirname then local_dirname else tmpdir),
+            (if need_local_dirname then
+               match local_dirname with
+               | None -> tmpdir
+               | Some local_dirname -> local_dirname
+             else tmpdir),
             subpath
           | _ -> None, tmpdir, None
         in
