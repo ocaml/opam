@@ -43,3 +43,8 @@ module Filename: sig
     string -> ?stdin:string -> ?stdout:string -> ?stderr:string
     -> string list -> string
 end
+
+module List : sig
+  (** NOTE: OCaml >= 4.11 *)
+  val fold_left_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a list -> 'acc * 'b list
+end
