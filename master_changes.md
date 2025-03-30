@@ -270,11 +270,13 @@ users)
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
 
 ## opam-core
+  * `OpamCompat.List.fold_left_map`: was added [#6442 @kit-ty-kate]
   * `OpamConsole`: Replace `black` text style (unused and not very readable) by `gray` [#6358 @kit-ty-kate]
   * `OpamConsole.pause`: Ensure the function always prints a newline character at the end [#6376 @kit-ty-kate]
   * `OpamFilename.patch`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
   * `OpamFilename.patch`: a named-parameter `~allow_unclean` was added [#5892 @kit-ty-kate]
   * `OpamHash.all_kinds`: was added, which returns the list of all possible values of `OpamHash.kind` [#5960 @kit-ty-kate]
+  * `OpamStd.List.fold_left_map`: was moved to `OpamCompat.List.fold_left_map` [#6442 @kit-ty-kate]
   * `OpamStd.List.split`: Improve performance [#6210 @kit-ty-kate]
   * `OpamStd.Option.{map,iter,compare,equal,to_string,some}`: were removed. Use `Stdlib.Option` instead. [#6442 @kit-ty-kate]
   * `OpamStd.Option.equal_some`: was added, which tests equality of an option with a value [#6381 @kit-ty-kate]

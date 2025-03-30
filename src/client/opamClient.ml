@@ -710,7 +710,7 @@ let git_for_windows kind mechanism ~interactive ~cygwin_is_tweakable =
   let gits =
     OpamStd.Env.get "PATH"
     |> OpamStd.Sys.split_path_variable
-    |> OpamStd.List.fold_left_map (fun gits p ->
+    |> OpamCompat.List.fold_left_map (fun gits p ->
         match resolve_git_in p with
         | Some git when not (OpamStd.String.Set.mem git gits) ->
           OpamStd.String.Set.add git gits,
