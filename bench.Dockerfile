@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM debian:12
 RUN apt-get update -qq && apt-get install -qq -yy make curl gcc g++ patch bzip2 git unzip
 RUN adduser --disabled-password --gecos '' --shell /bin/bash opam
 ENV OPAMREPOSHA 26770281fa1ea8b13aab979c1dfbd326e9ab512c
