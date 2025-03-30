@@ -254,9 +254,6 @@ module String : sig
 
   (** {3 Checks} *)
 
-  val starts_with: prefix:string -> string -> bool
-  val ends_with: suffix:string -> string -> bool
-  val for_all: (char -> bool) -> string -> bool
   val contains_char: string -> char -> bool
   val contains: sub:string -> string -> bool
   val exact_match: Re.re -> string -> bool
@@ -300,8 +297,6 @@ module String : sig
 
       [split_quoted "foo\";\"bar;baz" ';' = ["foo;bar"; "baz"]] *)
   val split_quoted: string -> char -> string list
-
-  val fold_left: ('a -> char -> 'a) -> 'a -> string -> 'a
 
   val is_hex: string -> bool
 
