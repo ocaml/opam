@@ -216,15 +216,6 @@ module OpamList = struct
     in
     aux [] l
 
-  let fold_left_map f s l =
-    let s, l_rev =
-      List.fold_left (fun (s, l_rev) x ->
-          let s, y = f s x in
-          s, y :: l_rev)
-        (s, []) l
-    in
-    s, List.rev l_rev
-
 end
 
 
