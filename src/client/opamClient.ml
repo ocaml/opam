@@ -966,7 +966,7 @@ let cygwin_searches ?first () =
       let possibles = OpamStubs.enumRegistry hive key OpamStubsTypes.REG_SZ in
       let map (_, path) =
         let path =
-          if OpamStd.String.starts_with ~prefix:"\\??\\" path then
+          if OpamCompat.String.starts_with ~prefix:"\\??\\" path then
             String.sub path 4 (String.length path - 4)
           else
             path

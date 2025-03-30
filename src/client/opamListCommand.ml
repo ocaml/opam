@@ -500,7 +500,7 @@ let field_of_string ~raw =
     fun s -> Raw_field s
   else
   fun s ->
-    if OpamStd.String.ends_with ~suffix:":" s then
+    if OpamCompat.String.ends_with ~suffix:":" s then
       Raw_field (OpamStd.String.remove_suffix ~suffix:":" s)
     else
     try

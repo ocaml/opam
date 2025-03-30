@@ -590,7 +590,7 @@ let from_1_3_dev2_to_1_3_dev5 ~on_the_fly:_ root conf =
                     OpamStd.Env.get "PATH" |>
                     OpamStd.Sys.split_path_variable |>
                     List.filter (fun s ->
-                        not (OpamStd.String.starts_with
+                        not (OpamCompat.String.starts_with
                                ~prefix:(OpamFilename.Dir.to_string root) s))
                   in
                   List.fold_left (function

@@ -20,6 +20,34 @@ module String = struct
       else loop (succ i) in
     loop 0
 
+  (** NOTE: OCaml >= 4.13 *)
+  let starts_with ~prefix s =
+    let x = String.length prefix in
+    let n = String.length s in
+    n >= x &&
+    let rec chk i = i >= x || prefix.[i] = s.[i] && chk (i+1) in
+    chk 0
+
+  (** NOTE: OCaml >= 4.13 *)
+  let ends_with ~suffix s =
+    let x = String.length suffix in
+    let n = String.length s in
+    n >= x &&
+    let rec chk i = i >= x || suffix.[i] = s.[i+n-x] && chk (i+1) in
+    chk 0
+
+  (** NOTE: OCaml >= 4.13 *)
+  let for_all f s =
+    let len = String.length s in
+    let rec aux i = i >= len || f s.[i] && aux (i+1) in
+    aux 0
+
+  (** NOTE: OCaml >= 4.13 *)
+  let fold_left f acc s =
+    let acc = ref acc in
+    for i = 0 to String.length s - 1 do acc := f !acc s.[i] done;
+    !acc
+
   include Stdlib.String
 end
 

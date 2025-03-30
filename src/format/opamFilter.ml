@@ -257,7 +257,7 @@ let expand_string_aux ?(partial=false) ?(escape_value=fun x -> x) ?default env t
   let f g =
     let str = Re.Group.get g 0 in
     if str = "%%" then (if partial then "%%" else "%")
-    else if not (OpamStd.String.ends_with ~suffix:"}%" str) then
+    else if not (OpamCompat.String.ends_with ~suffix:"}%" str) then
       (log "ERR: Unclosed variable replacement in %S\n" str;
        str)
     else
