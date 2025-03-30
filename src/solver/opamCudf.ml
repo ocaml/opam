@@ -1097,7 +1097,7 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
         let x, xs =
           List.fold_left (fun ((s, l, b) as x, xs) -> function
               | `Conflict ((s', l', b') as y) ->
-                if OpamStd.Option.equal String.equal s s' &&
+                if Stdlib.Option.equal String.equal s s' &&
                    Bool.equal b b' then
                   match List.map2 (List.map2 simplify_cst) l l' with
                   | new_l -> ((s, new_l, b), xs)

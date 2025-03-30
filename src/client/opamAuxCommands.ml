@@ -462,7 +462,7 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
     (* is pinned but no in already pinned because not same url *)
     List.fold_left (fun set nf ->
         match
-          OpamStd.Option.map
+          Stdlib.Option.map
             (fun nv -> OpamPackage.Set.mem nv already_pinned_set)
             (OpamPinned.package_opt st nf.pin_name)
         with

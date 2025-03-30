@@ -122,7 +122,7 @@ let poll_os_distribution () =
                                       "/etc/gentoo-release";
                                       "/etc/issue"]
      in
-     match OpamStd.Option.map OpamProcess.read_lines release_file with
+     match Option.map OpamProcess.read_lines release_file with
      | None |  Some [] -> linux
      | Some (s::_) ->
        try Scanf.sscanf s " %s " norm
@@ -151,7 +151,7 @@ let poll_os_version () =
     command_output ["sw_vers"; "-productVersion"] >>= norm
   | Some "win32" ->
     let (major, minor, build, _) = OpamStubs.getWindowsVersion () in
-    OpamStd.Option.some @@ Printf.sprintf "%d.%d.%d" major minor build
+    Option.some @@ Printf.sprintf "%d.%d.%d" major minor build
   | Some "cygwin" ->
     (try
        command_output ["cmd"; "/C"; "ver"] >>= fun s ->
@@ -179,7 +179,7 @@ let variables =
   List.map
     (fun (n, v) ->
        OpamVariable.of_string n,
-       OpamCompat.Lazy.map (OpamStd.Option.map (fun v -> OpamTypes.S v)) v)
+       OpamCompat.Lazy.map (Option.map (fun v -> OpamTypes.S v)) v)
     [
       "arch", arch;
       "os", os;

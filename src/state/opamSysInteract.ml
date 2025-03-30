@@ -74,7 +74,7 @@ let run_command
   Done (code, out)
 
 let run_query_command ?vars cmd args =
-  let vars = (`set, ("LC_ALL","C"))::OpamStd.Option.to_list vars in
+  let vars = (`set, ("LC_ALL","C"))::Option.to_list vars in
   let code,out = run_command ~vars cmd args in
   if code = 0 then out
   else []
@@ -251,7 +251,7 @@ module Cygwin = struct
   let internal_cygcache () = internal_cygwin () / "cache"
   let cygsetup () = internal_cygwin () // setupexe
   let is_internal config =
-    OpamStd.Option.equal OpamFilename.Dir.equal
+    Option.equal OpamFilename.Dir.equal
       (cygroot_opt config)
       (Some (internal_cygroot ()))
 
@@ -290,9 +290,9 @@ module Cygwin = struct
       try Some (OpamHash.sha512 Re.(Group.get (exec re content) 1))
       with Not_found -> None
     in
-    if OpamStd.Option.equal OpamHash.equal current_checksum checksum &&
+    if Option.equal OpamHash.equal current_checksum checksum &&
        OpamFilename.exists dst &&
-       OpamStd.Option.equal OpamHash.equal current_checksum
+       Option.equal OpamHash.equal current_checksum
          (Some (OpamHash.compute ~kind (OpamFilename.to_string dst))) then begin
       log "Up-to-date";
       OpamConsole.clear_status ();
@@ -1139,7 +1139,7 @@ let install ?env config packages =
     log "Nothing to install"
   else
     let commands, vars = install_packages_commands_t ?env config packages in
-    let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
+    let vars = Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
          try sudo_run_command ?env ?vars cmd args

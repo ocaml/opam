@@ -562,7 +562,7 @@ let mk_enum_opt_all ~cli validity ~section flags value states doc =
           in
           `Error (false, msg)
         else
-          (OpamStd.Option.iter (OpamConsole.warning "%s") (platform_err);
+          (Stdlib.Option.iter (OpamConsole.warning "%s") (platform_err);
            OpamConsole.warning "%s" msg;
            valid_flags elems)
       in
@@ -579,7 +579,7 @@ let mk_enum_opt_all ~cli validity ~section flags value states doc =
       | [], [], [str, platform_err], [] ->
         platform_error (Verbatim (to_str [str])) platform_err
       | [], [str, (c, instead), exp], platform, elems ->
-        OpamStd.Option.iter (OpamConsole.warning "%s")
+        Stdlib.Option.iter (OpamConsole.warning "%s")
           (platform_msg ~string_of_options:to_str platform);
         (OpamConsole.warning "%s"
            (older_flag_msg ~exp cli c instead (to_str [str]));
