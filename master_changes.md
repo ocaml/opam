@@ -130,3 +130,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamStd.Option.{map,iter,compare,equal,to_string,some}`: were removed. Use `Stdlib.Option` instead. [#6442 @kit-ty-kate]

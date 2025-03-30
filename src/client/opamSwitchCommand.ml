@@ -569,7 +569,7 @@ let freeze_url src_dir nv url =
 
 let freeze_opam src_dir nv opam =
   let url =
-    OpamStd.Option.map
+    Stdlib.Option.map
       (fun url -> freeze_url src_dir nv url)
       (OpamFile.OPAM.url opam)
   in

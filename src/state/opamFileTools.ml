@@ -84,7 +84,7 @@ let map_all_filters f t =
              | s, Some ft -> s, Some (f ft)
              | nf -> nf)
            args,
-         OpamStd.Option.map f filter)
+         Option.map f filter)
   in
   let map_filtered_formula =
     OpamFormula.map (fun (name, fc) ->
@@ -818,7 +818,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (rem_test || rem_doc));
     cond 59 `Warning "url doesn't contain a checksum"
       (is_url_archive &&
-       OpamStd.Option.map OpamFile.URL.checksum t.url = Some []);
+       Option.map OpamFile.URL.checksum t.url = Some []);
     (let upstream_error =
        if not check_upstream then None else
        match t.url with
@@ -879,7 +879,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
              Some ("Source not found: "^src)
      in
      cond 60 `Error "Upstream check failed"
-       ~detail:(OpamStd.Option.to_list upstream_error)
+       ~detail:(Option.to_list upstream_error)
        (upstream_error <> None));
     (let with_test =
        List.exists ((=) (OpamVariable.Full.of_string "with-test"))
@@ -1003,7 +1003,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (not_bool_strings <> []));
     cond 67 `Error
       "Checksum specified with a non archive url"
-      ?detail:(OpamStd.Option.map (fun url ->
+      ?detail:(Option.map (fun url ->
           [Printf.sprintf "%s - %s"
              (OpamFile.URL.url url |> OpamUrl.to_string)
              (OpamFile.URL.checksum url
@@ -1503,5 +1503,5 @@ let sort_opam opam =
   |> with_depexts @@ fst_sort opam.depexts
   |> with_conflicts @@ sort_ff opam.conflicts
   |> with_pin_depends @@ fst_sort ~comp:OpamPackage.compare opam.pin_depends
-  |> with_extra_files_opt @@ OpamStd.Option.map fst_sort opam.extra_files
+  |> with_extra_files_opt @@ Option.map fst_sort opam.extra_files
   |> with_extra_sources @@ fst_sort opam.extra_sources
