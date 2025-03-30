@@ -527,25 +527,6 @@ module OpamString = struct
   module Set = StringSet
   module Map = StringMap
 
-  let starts_with ~prefix s =
-    let x = String.length prefix in
-    let n = String.length s in
-    n >= x &&
-    let rec chk i = i >= x || prefix.[i] = s.[i] && chk (i+1) in
-    chk 0
-
-  let ends_with ~suffix s =
-    let x = String.length suffix in
-    let n = String.length s in
-    n >= x &&
-    let rec chk i = i >= x || suffix.[i] = s.[i+n-x] && chk (i+1) in
-    chk 0
-
-  let for_all f s =
-    let len = String.length s in
-    let rec aux i = i >= len || f s.[i] && aux (i+1) in
-    aux 0
-
   let contains_char s c =
     try let _ = String.index s c in true
     with Not_found -> false
@@ -617,7 +598,7 @@ module OpamString = struct
       String.sub s 0 n
 
   let remove_prefix ~prefix s =
-    if starts_with ~prefix s then
+    if OpamCompat.String.starts_with ~prefix s then
       let x = String.length prefix in
       let n = String.length s in
       String.sub s x (n - x)
@@ -625,7 +606,7 @@ module OpamString = struct
       s
 
   let remove_suffix ~suffix s =
-    if ends_with ~suffix s then
+    if OpamCompat.String.ends_with ~suffix s then
       let x = String.length suffix in
       let n = String.length s in
       String.sub s 0 (n - x)
@@ -700,11 +681,6 @@ module OpamString = struct
         f acc next current last normal in
     f [] 0 "" 0 true
 
-  let fold_left f acc s =
-    let acc = ref acc in
-    for i = 0 to String.length s - 1 do acc := f !acc s.[i] done;
-    !acc
-
   let compare_case s1 s2 =
     let l1 = String.length s1 and l2 = String.length s2 in
     let len = min l1 l2 in
@@ -755,7 +731,7 @@ module Env = struct
   (* Remove from a c-separated list of string the one with the given prefix *)
   let reset_value ~prefix c v =
     let v = OpamString.split v c in
-    List.filter (fun v -> not (OpamString.starts_with ~prefix v)) v
+    List.filter (fun v -> not (OpamCompat.String.starts_with ~prefix v)) v
 
   (* Split the list in two according to the first occurrence of the string
      starting with the given prefix.
@@ -765,7 +741,7 @@ module Env = struct
     let rec aux before =
       function
       | [] -> [], List.rev before
-      | curr::after when OpamString.starts_with ~prefix curr ->
+      | curr::after when OpamCompat.String.starts_with ~prefix curr ->
         before, after
       | curr::after -> aux (curr::before) after
     in aux [] v
@@ -1182,7 +1158,7 @@ module OpamSys = struct
     let rec aux i =
       if (i : int) >= len then "" else
       let s = env.(i) in
-      if OpamString.starts_with ~prefix (f s) then
+      if OpamCompat.String.starts_with ~prefix (f s) then
         String.sub s pfxlen (String.length s - pfxlen)
       else aux (i+1)
     in
@@ -1274,15 +1250,15 @@ module OpamSys = struct
           | dll ->
             (* Guard against any risk of stray \r characters *)
             let tdll = String.trim dll in
-            if OpamString.ends_with ~suffix:"cygwin1.dll" tdll then
-              if OpamString.starts_with ~prefix:"  " dll then
+            if OpamCompat.String.ends_with ~suffix:"cygwin1.dll" tdll then
+              if OpamCompat.String.starts_with ~prefix:"  " dll then
                 check_dll `Cygwin
               else if platform = `Native then
                 check_dll (`Tainted `Cygwin)
               else
                 check_dll platform
-            else if OpamString.ends_with ~suffix:"msys-2.0.dll" tdll then
-              if OpamString.starts_with ~prefix:"  " dll then
+            else if OpamCompat.String.ends_with ~suffix:"msys-2.0.dll" tdll then
+              if OpamCompat.String.starts_with ~prefix:"  " dll then
                 check_dll `Msys2
               else if platform = `Native then
                 check_dll (`Tainted `Msys2)

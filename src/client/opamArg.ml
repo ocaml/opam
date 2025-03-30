@@ -858,7 +858,7 @@ let atom =
 let atom_or_local =
   let parse str =
     if OpamStd.String.contains ~sub:Filename.dir_sep str ||
-       OpamStd.String.starts_with ~prefix:"." str
+       OpamCompat.String.starts_with ~prefix:"." str
     then
       if OpamFilename.(exists (of_string str)) then
         `Ok (`Filename (OpamFilename.of_string str))
@@ -1006,7 +1006,7 @@ let enum_with_default sl: 'a Arg.converter =
 
 let opamlist_column =
   let parse str =
-    if OpamStd.String.ends_with ~suffix:":" str then
+    if OpamCompat.String.ends_with ~suffix:":" str then
       let fld = OpamStd.String.remove_suffix ~suffix:":" str in
       `Ok (OpamListCommand.Field fld)
     else

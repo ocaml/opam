@@ -1072,7 +1072,7 @@ module Syntax = struct
                      rem, (f :: padding :: strs, stop)
                    with Not_found -> rem0, (strs, pos_index item.pos.stop)
                with Not_found | OpamPp.Bad_format _ ->
-                 if OpamStd.String.starts_with ~prefix:"x-" name &&
+                 if OpamCompat.String.starts_with ~prefix:"x-" name &&
                     List.find_opt (fun i -> it_ident i = `Var name)
                       syn_t.file_contents <> None then
                    rem, (field_str item lastpos strs)
@@ -2685,7 +2685,7 @@ module OPAMSyntax = struct
     | Some n -> n
 
   let ext_field_prefix = "x-"
-  let is_ext_field = OpamStd.String.starts_with ~prefix:ext_field_prefix
+  let is_ext_field = OpamCompat.String.starts_with ~prefix:ext_field_prefix
 
   (* Getters *)
 
@@ -2876,7 +2876,7 @@ module OPAMSyntax = struct
   (* Allow 'flag:xxx' tags as flags, for compat *)
   let flag_of_tag tag =
     let prefix = "flags:" in
-    if OpamStd.String.starts_with ~prefix tag then
+    if OpamCompat.String.starts_with ~prefix tag then
       Some (pkg_flag_of_string (OpamStd.String.remove_prefix ~prefix tag))
     else None
 

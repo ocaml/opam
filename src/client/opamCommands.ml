@@ -3562,7 +3562,7 @@ let pin ?(unpin_only=false) cli =
                          (match spu with
                           | Some spp ->
                             let open OpamUrl.Op in
-                            OpamStd.String.starts_with
+                            OpamCompat.String.starts_with
                               ~prefix:(url / OpamFilename.SubPath.to_string sp).path
                               (u / OpamFilename.SubPath.to_string spp).path
                           | None -> false)
@@ -4574,14 +4574,14 @@ let name_of_new_api_info info = Cmd.name (Cmd.v info (Term.const ()))
 
 let is_builtin_command prefix =
   List.exists (fun (_,info) ->
-                 OpamStd.String.starts_with ~prefix (name_of_new_api_info info))
+                 OpamCompat.String.starts_with ~prefix (name_of_new_api_info info))
               current_commands
 
 let is_admin_subcommand prefix =
   prefix = "admin" ||
   let matches =
     List.filter (fun (_,info) ->
-                   OpamStd.String.starts_with ~prefix (name_of_new_api_info info))
+                   OpamCompat.String.starts_with ~prefix (name_of_new_api_info info))
                 current_commands in
   match matches with
   | [(_,info)] when name_of_new_api_info info = "admin" -> true

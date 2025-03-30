@@ -646,7 +646,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        match t.OpamFile.OPAM.name with
        | None -> false
        | Some name ->
-         not (OpamStd.String.starts_with ~prefix:OpamPath.plugin_prefix
+         not (OpamCompat.String.starts_with ~prefix:OpamPath.plugin_prefix
                 (OpamPackage.Name.to_string name)));
     (let unclosed =
        List.fold_left (fun acc s ->

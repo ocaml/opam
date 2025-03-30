@@ -320,7 +320,7 @@ module SWHID = struct
     | pong::_ ->
       (* curl output after answering the http code *)
       (* https://archive.softwareheritage.org/api/1/ping/ *)
-      OpamStd.String.starts_with ~prefix:"\"pong\"" pong
+      OpamCompat.String.starts_with ~prefix:"\"pong\"" pong
     | _ -> false
 
   (*
@@ -343,9 +343,9 @@ module SWHID = struct
     | Some "NotFoundExc" ->
       (match get_value "reason" json with
        | Some reason ->
-         if OpamStd.String.ends_with ~suffix:"was never requested." reason then
+         if OpamCompat.String.ends_with ~suffix:"was never requested." reason then
            `Uncooked
-         else if OpamStd.String.ends_with ~suffix:"not found." reason then
+         else if OpamCompat.String.ends_with ~suffix:"not found." reason then
            `Not_found
          else `Error
        | None -> `Error)

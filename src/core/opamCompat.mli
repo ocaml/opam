@@ -11,6 +11,18 @@
 module String : sig
   (* NOTE: OCaml >= 4.13 *)
   val exists: (char -> bool) -> string -> bool
+
+  (* NOTE: OCaml >= 4.13 *)
+  val starts_with: prefix:string -> string -> bool
+
+  (* NOTE: OCaml >= 4.13 *)
+  val ends_with: suffix:string -> string -> bool
+
+  (* NOTE: OCaml >= 4.13 *)
+  val for_all: (char -> bool) -> string -> bool
+
+  (* NOTE: OCaml >= 4.13 *)
+  val fold_left: ('a -> char -> 'a) -> 'a -> string -> 'a
 end
 
 module Seq : sig

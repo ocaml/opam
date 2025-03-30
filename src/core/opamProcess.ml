@@ -269,7 +269,7 @@ let make_info ?code ?signal
   let home = OpamStd.Sys.home () in
   let print name str =
     let str =
-      if OpamStd.String.starts_with ~prefix:home str
+      if OpamCompat.String.starts_with ~prefix:home str
       then "~"^OpamStd.String.remove_prefix ~prefix:home str
       else str
     in

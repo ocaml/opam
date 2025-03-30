@@ -150,7 +150,7 @@ module Make (VCS: VCS) = struct
         in
         OpamStd.String.Set.filter (fun f ->
             List.exists (fun prefix ->
-                OpamStd.String.starts_with ~prefix f)
+                OpamCompat.String.starts_with ~prefix f)
               exc)
           fset
       in

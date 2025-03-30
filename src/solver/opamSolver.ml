@@ -76,7 +76,7 @@ let cudf_versions_map universe =
 
 let name_to_cudf name =
   let name_s = OpamPackage.Name.to_string name in
-  if OpamStd.String.for_all (function
+  if OpamCompat.String.for_all (function
       | 'a'..'z' | 'A'..'Z' | '0'..'9' | '@' | '/' | '+' | '(' | ')' | '.' | '-'
         -> true
       | _ -> false)

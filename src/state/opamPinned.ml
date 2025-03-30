@@ -161,7 +161,7 @@ let name_of_opam_filename ?locked dir file =
     | None -> rel
     | Some suf ->
       let ext = "."^suf in
-      if OpamStd.String.ends_with ~suffix:(suffix^ext) rel then
+      if OpamCompat.String.ends_with ~suffix:(suffix^ext) rel then
         OpamStd.String.remove_suffix ~suffix:ext rel
       else rel
   in
@@ -193,7 +193,7 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
       in
       List.fold_left
         (fun acc d ->
-           if OpamStd.String.ends_with ~suffix:".opam"
+           if OpamCompat.String.ends_with ~suffix:".opam"
                (OpamFilename.Dir.to_string d)
            then
              match OpamFilename.opt_file OpamFilename.Op.(d//"opam") with
@@ -205,7 +205,7 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
            if recurse &&
               not (base_dir = OpamFilename.Base.of_string OpamSwitch.external_dirname ||
                    base_dir = OpamFilename.Base.of_string "_build" ||
-                   OpamStd.String.starts_with ~prefix:"." basename)
+                   OpamCompat.String.starts_with ~prefix:"." basename)
            then
              let base = match base with
                | None -> Some basename
