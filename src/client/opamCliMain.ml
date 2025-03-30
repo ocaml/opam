@@ -12,7 +12,6 @@
 open Cmdliner
 open OpamStateTypes
 open OpamTypesBase
-open OpamStd.Op
 
 exception InvalidCLI of OpamCLIVersion.Sourced.t
 

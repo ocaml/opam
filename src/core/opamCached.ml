@@ -9,8 +9,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamStd.Op
-
 module type ARG = sig
   type t
   val name: string

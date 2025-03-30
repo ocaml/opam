@@ -206,8 +206,6 @@ let init ?noop:_ = initk (fun () -> ())
 
 let search_files = ["findlib"]
 
-open OpamStd.Op
-
 let opam_init ?root_dir ?strict ?solver =
   let open OpamStd.Option.Op in
 

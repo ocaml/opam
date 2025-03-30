@@ -636,12 +636,6 @@ end
 
 module Op: sig
 
-  (** Function application (with lower priority) (predefined in OCaml 4.01+) *)
-  val (@@): ('a -> 'b) -> 'a -> 'b
-
-  (** Pipe operator -- reverse application (predefined in OCaml 4.01+) *)
-  val (|>): 'a -> ('a -> 'b) -> 'b
-
   (** Function composition : (f @* g) x =~ f (g x) *)
   val (@*): ('b -> 'c) -> ('a -> 'b) -> 'a -> 'c
 
