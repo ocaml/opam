@@ -131,7 +131,7 @@ let cache_urls repo_root repo_def =
     |> OpamFile.Config.dl_cache
   in
   let repo_dl_cache =
-    OpamStd.List.filter_map (fun rel ->
+    List.filter_map (fun rel ->
         if OpamStd.String.contains ~sub:"://" rel
         then OpamUrl.parse_opt ~handle_suffix:false rel
         else Some OpamUrl.Op.(OpamUrl.of_string

@@ -125,7 +125,7 @@ module VCS = struct
     hg repo_root [ "status"; "--subrepos" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     let files =
-      OpamStd.List.filter_map (fun line ->
+      List.filter_map (fun line ->
           match OpamStd.String.split line ' ' with
           | ("A" | "M")::file::[] -> Some file
           | _ -> None) r.OpamProcess.r_stdout

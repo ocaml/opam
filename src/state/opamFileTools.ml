@@ -53,12 +53,12 @@ let filters_of_formula f =
 
 (* Doesn't include filters in commands *)
 let all_filters ?(exclude_post=false) t =
-  OpamStd.List.filter_map snd t.patches @
-  OpamStd.List.filter_map snd t.messages @
-  (if exclude_post then [] else OpamStd.List.filter_map snd t.post_messages) @
+  List.filter_map snd t.patches @
+  List.filter_map snd t.messages @
+  (if exclude_post then [] else List.filter_map snd t.post_messages) @
   List.map snd t.depexts @
-  OpamStd.List.filter_map snd t.libraries @
-  OpamStd.List.filter_map snd t.syntax @
+  List.filter_map snd t.libraries @
+  List.filter_map snd t.syntax @
   [t.available] @
   filters_of_formula
     (OpamFormula.ands
@@ -446,7 +446,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
             "Missing field 'version' or directory in the form 'name.version'";
 *)
     (let empty_fields =
-       OpamStd.List.filter_map (function n,[""] -> Some n | _ -> None)
+       List.filter_map (function n,[""] -> Some n | _ -> None)
          ["maintainer", t.maintainer; "homepage", t.homepage;
           "author", t.author; "license", t.license; "doc", t.doc;
           "tags", t.tags; "bug_reports", t.bug_reports]
@@ -477,7 +477,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
       (t.install <> [] && t.remove = []);
 *)
     (let unk_flags =
-       OpamStd.List.filter_map (function
+       List.filter_map (function
            | Pkgflag_Unknown s -> Some s
            | _ -> None)
          t.flags
@@ -736,12 +736,12 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        | None, _ | _, None -> []
        | Some fs, Some [] -> List.map fst fs
        | Some efiles, Some ffiles ->
-         OpamStd.List.filter_map (fun (n, _) ->
+         List.filter_map (fun (n, _) ->
              if OpamStd.List.mem_assoc OpamFilename.Base.equal
                  n ffiles then
                None else Some n)
            efiles @
-         OpamStd.List.filter_map (fun (n, check_f) ->
+         List.filter_map (fun (n, check_f) ->
              try
                if check_f (OpamStd.List.assoc OpamFilename.Base.equal
                              n efiles) then
@@ -755,7 +755,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (mismatching_extra_files <> []));
     (let spaced_depexts =
        List.concat (List.map (fun (dl,_) ->
-           OpamStd.List.filter_map
+           List.filter_map
              (fun s ->
                 let d = OpamSysPkg.to_string s in
                 if String.contains d ' ' || String.length d = 0 then
@@ -830,7 +830,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
            | [] -> None
            | chks ->
              let not_corresponding =
-               OpamStd.List.filter_map (fun chk ->
+               List.filter_map (fun chk ->
                    match OpamHash.mismatch (OpamFilename.to_string f) chk with
                    | Some m -> Some (m, chk)
                    | None -> None)
@@ -1120,7 +1120,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
   ]
   in
   format_errors @
-  OpamStd.List.filter_map (fun x -> x) warnings
+  List.filter_map (fun x -> x) warnings
 
 let lint = t_lint ~all:false
 

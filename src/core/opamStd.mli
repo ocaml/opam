@@ -175,16 +175,11 @@ end
 
 module List : sig
 
-  val cons: 'a -> 'a list -> 'a list
-
   (** Convert list items to string and concat. [concat_map sep f x] is equivalent
       to [String.concat sep (List.map f x)] but tail-rec. *)
   val concat_map:
     ?left:string -> ?right:string -> ?nil:string -> ?last_sep:string ->
     string -> ('a -> string) -> 'a list -> string
-
-  (** Like {!Stdlib.List.find}, but returning option instead of raising *)
-  val find_opt: ('a -> bool) -> 'a list -> 'a option
 
   val to_string: ('a -> string) -> 'a list -> string
 
@@ -193,9 +188,6 @@ module List : sig
 
   (** Sorts the list, removing duplicates *)
   val sort_nodup: ('a -> 'a -> int) -> 'a list -> 'a list
-
-  (** Filter and map *)
-  val filter_map: ('a -> 'b option) -> 'a list -> 'b list
 
   (** Retrieves [Some] values from a list *)
   val filter_some: 'a option list -> 'a list

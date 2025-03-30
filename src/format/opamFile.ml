@@ -615,7 +615,7 @@ module Environment = struct include LineFile(struct
         @@ Pp.fallback only_norewrite
         @@ Pp.fallback only_format only_comment
       in
-      (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons
+      (OpamFormat.lines_set ~empty:[] ~add:List.cons
          ~fold:List.fold_right
        @@ (Pp.identity
            ^+ env
@@ -976,7 +976,7 @@ module Syntax = struct
                  | vraw :: rraw ->
                    let blank = extract lastpos (pos_index vraw.pos.start) in
                    let rraw, lastpos =
-                     if OpamStd.List.find_opt
+                     if List.find_opt
                          (OpamPrinter.value_equals vraw) vlst <> None then
                        vlst_raw, lastpos
                      else
@@ -1073,7 +1073,7 @@ module Syntax = struct
                    with Not_found -> rem0, (strs, pos_index item.pos.stop)
                with Not_found | OpamPp.Bad_format _ ->
                  if OpamStd.String.starts_with ~prefix:"x-" name &&
-                    OpamStd.List.find_opt (fun i -> it_ident i = `Var name)
+                    List.find_opt (fun i -> it_ident i = `Var name)
                       syn_t.file_contents <> None then
                    rem, (field_str item lastpos strs)
                  else rem0, (strs, pos_index item.pos.stop))
@@ -1415,7 +1415,7 @@ module ConfigSyntax = struct
       | Some switch -> fun x -> not (OpamSwitch.equal switch x)
       | None -> fun _ -> true
     in
-    OpamStd.List.find_opt (fun switch ->
+    List.find_opt (fun switch ->
         not_current switch && not (OpamSwitch.is_external switch))
       t.installed_switches
   let jobs t = t.jobs
@@ -2931,14 +2931,14 @@ module OPAMSyntax = struct
     if known_flags <> flags then
       Pp.warn ~pos
         "Unknown package flags %s ignored"
-        (OpamStd.Format.pretty_list (OpamStd.List.filter_map (function
+        (OpamStd.Format.pretty_list (List.filter_map (function
              | Pkgflag_Unknown s -> Some s
              | _ -> None)
              flags));
     known_flags
 
   let cleanup_tags opam_version ~pos tags =
-    let flags = OpamStd.List.filter_map flag_of_tag tags in
+    let flags = List.filter_map flag_of_tag tags in
     ignore (cleanup_flags opam_version ~pos flags);
     tags
 
