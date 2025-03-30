@@ -115,7 +115,7 @@ let initk k =
         match args with
         | cmd::a ->
           let cmd, kind =
-            if OpamStd.String.ends_with ~suffix:"curl" cmd then
+            if OpamCompat.String.ends_with ~suffix:"curl" cmd then
               (CIdent "curl", None), `Curl
             else if cmd = "wget" then
               (CIdent "wget", None), `Default

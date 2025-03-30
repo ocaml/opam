@@ -272,7 +272,7 @@ let root =
     { t with path}
 
 let has_trailing_slash url =
-  OpamStd.String.ends_with ~suffix:"/" url.path
+  OpamCompat.String.ends_with ~suffix:"/" url.path
 
 let to_json url = `String (to_string url)
 let of_json = function

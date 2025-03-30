@@ -122,7 +122,7 @@ module VCS : OpamVCS.VCS = struct
       git repo_root [ "fetch" ; "-q"; origin; refspec ] @@> fun r ->
       if OpamProcess.check_success_and_cleanup r then Done ()
       else if
-        OpamStd.String.fold_left (fun acc c -> match acc, c with
+        OpamCompat.String.fold_left (fun acc c -> match acc, c with
             | true, ('0'..'9' | 'a'..'f' | 'A'..'F') -> true
             | _ -> false)
           true branch

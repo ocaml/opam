@@ -412,7 +412,7 @@ let load_defaults ~lock_kind root_dir =
       ?download_tool:(OpamFile.Config.dl_tool conf
       >>| function
         | ((CString c| CIdent c), None)::_ as t
-          when OpamStd.String.ends_with ~suffix:"curl" c -> lazy (t, `Curl)
+          when OpamCompat.String.ends_with ~suffix:"curl" c -> lazy (t, `Curl)
         | t -> lazy (t, `Default))
       ~validation_hook:(OpamFile.Config.validation_hook conf)
       ();

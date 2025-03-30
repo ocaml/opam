@@ -137,7 +137,7 @@ let family ~env () =
   | None ->
     Printf.ksprintf failwith
       "External dependency unusable, OS family not detected."
-  | Some family when OpamStd.String.starts_with ~prefix:"dummy-" family ->
+  | Some family when OpamCompat.String.starts_with ~prefix:"dummy-" family ->
     let error () =
       OpamConsole.error_and_exit `Bad_arguments
         "Syntax error on dummy depext test family. Syntax is \
@@ -594,12 +594,12 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       run_command ~discard_err:true pacman ["-Si"]
       |> snd
       |> List.fold_left (fun ((avail, provides, latest) as acc) l ->
-          if OpamStd.String.starts_with ~prefix:"Name" l then
+          if OpamCompat.String.starts_with ~prefix:"Name" l then
             match OpamStd.String.split l ' ' with
             | "Name"::":"::p::_ ->
               p +++ avail, provides, Some (OpamSysPkg.of_string p)
             | _ -> acc
-          else if OpamStd.String.starts_with ~prefix:"Provides" l then
+          else if OpamCompat.String.starts_with ~prefix:"Provides" l then
             match OpamStd.String.split l ' ' with
             | "Provides"::":"::"None"::[] -> acc
             | "Provides"::":"::pkgs ->
@@ -767,10 +767,10 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       run_query_command "apt-cache"
         ["search"; names_re (); "--names-only"; "--full"]
       |> List.fold_left (fun ((avail, provides, latest) as acc) l ->
-          if OpamStd.String.starts_with ~prefix:"Package: " l then
+          if OpamCompat.String.starts_with ~prefix:"Package: " l then
             let p = String.sub l 9 (String.length l - 9) in
             p +++ avail, provides, Some (OpamSysPkg.of_string p)
-          else if OpamStd.String.starts_with ~prefix:"Provides: " l then
+          else if OpamCompat.String.starts_with ~prefix:"Provides: " l then
             let ps =
               List.map package_provided (Re.split ~pos:10 provides_sep l)
               |> OpamSysPkg.Set.of_list

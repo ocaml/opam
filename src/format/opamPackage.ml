@@ -67,7 +67,7 @@ module Name = struct
 
   let of_string x =
     match
-      OpamStd.String.fold_left (fun acc c ->
+      OpamCompat.String.fold_left (fun acc c ->
           if acc = Some false then acc else match c with
             | 'a'..'z' | 'A'..'Z' -> Some true
             | '0'..'9' | '-' | '_' | '+' -> acc
