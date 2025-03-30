@@ -527,9 +527,7 @@ module OpamString = struct
   module Set = StringSet
   module Map = StringMap
 
-  let contains_char s c =
-    try let _ = String.index s c in true
-    with Not_found -> false
+  let contains_char = Stdlib.String.contains
 
   let contains ~sub =
     Re.(execp (compile (str sub)))
