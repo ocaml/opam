@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamStd.Op
 open OpamStateTypes
 
 let log fmt = OpamConsole.log "RSTATE" fmt

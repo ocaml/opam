@@ -11,7 +11,6 @@
 
 open OpamTypes
 open OpamStateTypes
-open OpamStd.Op
 
 type deps
 type revdeps
