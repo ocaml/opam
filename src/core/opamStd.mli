@@ -265,7 +265,6 @@ module String : sig
 
   (** {3 Manipulation} *)
 
-  val map: (char -> char) -> string -> string
   val strip: string -> string
   val strip_right: string -> string
   val sub_at: int -> string -> string
