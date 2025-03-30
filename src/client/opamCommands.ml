@@ -1088,7 +1088,7 @@ let show cli =
          in
          if opamfs = [] then
            let dirnames =
-             OpamStd.List.filter_map (function
+             List.filter_map (function
                  | `Dirname d -> Some (OpamFilename.Dir.to_string d)
                  | _ -> None)
                atom_locs
@@ -1859,7 +1859,7 @@ let install cli =
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_write gt @@ fun st ->
     let pure_atoms =
-      OpamStd.List.filter_map (function `Atom a -> Some a | _ -> None)
+      List.filter_map (function `Atom a -> Some a | _ -> None)
         atoms_or_locals
     in
     let atoms_or_locals =
@@ -2607,7 +2607,7 @@ let with_repos_rt gt cli repos f =
         repos
     in
     let new_defs =
-      OpamStd.List.filter_map (function
+      List.filter_map (function
           | (_, None) -> None
           | (n, Some url) ->
             let handle_suffix = OpamCLIVersion.Op.(cli @>= cli2_3) in
@@ -3002,7 +3002,7 @@ let switch cli =
                let st =
                  if is_implicit then
                    let local_compilers =
-                     OpamStd.List.filter_map
+                     List.filter_map
                        (fun (name, _) ->
                           (* The opam file for the local package might not be
                              the current pinning (e.g. with deps-only), but it's
@@ -4065,7 +4065,7 @@ let lint cli =
               Stdlib.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
             let json =
               Stdlib.Option.map
-                (OpamStd.List.cons
+                (List.cons
                    (OpamFileTools.warns_to_json ?filename:opam_f warnings))
                 json
             in

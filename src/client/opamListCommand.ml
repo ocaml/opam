@@ -506,7 +506,7 @@ let field_of_string ~raw =
     try
       OpamStd.List.assoc String.equal s names_fields
     with Not_found ->
-    match OpamStd.List.find_opt (String.equal s) opam_fields with
+    match List.find_opt (String.equal s) opam_fields with
     | Some f -> Field f
     | None -> OpamConsole.error_and_exit `Bad_arguments "No printer for %S" s
 

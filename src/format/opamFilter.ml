@@ -281,7 +281,7 @@ let unclosed_expansions text =
         ])
     )
   in
-  Re.all re text |> OpamStd.List.filter_map @@ fun gr ->
+  Re.all re text |> List.filter_map @@ fun gr ->
   if Re.Group.test gr 1 && not (Re.Group.test gr 2) then
     Some (Re.Group.offset gr 0, Re.Group.get gr 0)
   else None
@@ -491,7 +491,7 @@ let command env (l, f) =
   else
     None
 
-let commands env l = OpamStd.List.filter_map (command env) l
+let commands env l = List.filter_map (command env) l
 
 let single_command env l = List.concat (List.map (arguments env) l)
 

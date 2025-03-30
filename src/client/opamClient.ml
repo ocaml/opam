@@ -251,7 +251,7 @@ let upgrade_t
                                (OpamPackage.version unopt_pkg)
                           then
                             OpamPackage.Map.update unopt_pkg
-                              (OpamStd.List.cons (installed_pkg, formula)) [] map
+                              (List.cons (installed_pkg, formula)) [] map
                           else map
                        ) map conflicts_formula
                  ) set map
@@ -279,7 +279,7 @@ let upgrade_t
                                      (OpamPackage.version unopt_pkg))
                            then
                              OpamPackage.Map.update unopt_pkg
-                               (OpamStd.List.cons (latest_pkg, formula)) [] map
+                               (List.cons (latest_pkg, formula)) [] map
                            else map
                         ) map depends_formula
                    ) unopt map
@@ -605,7 +605,7 @@ let init_checks ?(hard_fail_exn=true) init_config =
                           OpamSysPoll.variables >>= Lazy.force))
   in
   let filter_tools =
-    OpamStd.List.filter_map (fun (cmd,str,oflt) ->
+    List.filter_map (fun (cmd,str,oflt) ->
         match oflt with
         | None -> Some (cmd,str)
         | Some flt -> if (OpamFilter.eval_to_bool env flt) then
@@ -1651,7 +1651,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
                             (OpamStd.List.assoc OpamVariable.equal vs)
                             OpamSysPoll.variables >>= Lazy.force))
     in
-    OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
+    List.filter_map (fun ((nam,scr),oflt) -> match oflt with
         | None -> Some (nam,scr)
         | Some flt ->
           if OpamFilter.eval_to_bool env flt then Some (nam,scr) else None)
@@ -1886,7 +1886,7 @@ let init
                                   OpamSysPoll.variables >>= Lazy.force))
           in
           let scripts = OpamFile.InitConfig.init_scripts init_config in
-          OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
+          List.filter_map (fun ((nam,scr),oflt) -> match oflt with
               | None -> Some (nam,scr)
               | Some flt -> if OpamFilter.eval_to_bool env flt then
                   Some (nam,scr) else None) scripts
@@ -1932,7 +1932,7 @@ let init
           in
           let univ = { univ with u_invariant = invariant } in
           let default_compiler =
-            OpamStd.List.find_opt
+            List.find_opt
               (OpamSolver.atom_coinstallability_check univ)
             alternatives
             |> OpamStd.Option.default []
@@ -2106,7 +2106,7 @@ let assume_built_restrictions ?available_packages t atoms =
   { t with available_packages }, fixed_atoms
 
 let filter_unpinned_locally t atoms f =
-  OpamStd.List.filter_map (fun at ->
+  List.filter_map (fun at ->
       let n,_ = at in
       if OpamSwitchState.is_pinned t n &&
          OpamStd.Option.Op.(OpamPinned.package_opt t n >>=

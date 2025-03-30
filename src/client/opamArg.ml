@@ -328,7 +328,7 @@ let scrubbed_environment_variables =
     else
       Some ("OPAM" ^ name)
   in
-    OpamStd.List.filter_map f environment_variables
+  List.filter_map f environment_variables
 
 let doc_opam_env_variables, init_opam_env_variabes =
   env_with_cli environment_variables

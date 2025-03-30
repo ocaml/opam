@@ -308,7 +308,7 @@ let pull_tree_t
         OpamFilename.extract_job archive tmpdir
         @@+ fallback (fun () ->
             let failing =
-              OpamStd.List.filter_map (function
+              List.filter_map (function
                   | Result _ | Up_to_date _ -> None
                   | Not_available (Some s,l) -> Some (s,l)
                   | Not_available (None, _) -> assert false

@@ -48,7 +48,7 @@ let post_message ?(failed=false) st action =
         ["Note: This package is deprecated."]
       else
         []) @
-      OpamStd.List.filter_map (fun (message,filter) ->
+      List.filter_map (fun (message,filter) ->
           if OpamFilter.opt_eval_to_bool filter_env filter then
             Some (OpamFilter.expand_string ~default:(fun _ -> "")
                     filter_env message)
@@ -186,7 +186,7 @@ let check_availability ?permissive t set atoms =
             (OpamSwitchState.unavailable_reason
                ~default:"the package no longer exists"
                t f)) in
-  let errors = OpamStd.List.filter_map check_atom atoms in
+  let errors = List.filter_map check_atom atoms in
   if errors <> [] then
     (List.iter (OpamConsole.error "%s") errors;
      OpamStd.Sys.exit_because `Not_found)
@@ -619,7 +619,7 @@ let parallel_apply t
             OpamAction.download_package t nv
           | _ ->
             let url =
-              match OpamStd.List.filter_map (OpamSwitchState.url t) nvs with
+              match List.filter_map (OpamSwitchState.url t) nvs with
               | u::_ as urls ->
                 let checksums =
                   List.map OpamFile.URL.checksum urls
@@ -727,10 +727,10 @@ let parallel_apply t
       let pools =
         (installs_removes, 1) ::
         (fetches, OpamStateConfig.(!r.dl_jobs)) ::
-        OpamStd.List.filter_map
+        List.filter_map
           (fun excl ->
              match
-               OpamStd.List.filter_map
+               List.filter_map
                  (fun nv ->
                     let act = `Build nv in
                     if PackageActionGraph.mem_vertex action_graph act
@@ -1412,7 +1412,7 @@ let apply ?ask t ~requested ?print_requested ?add_roots
       let messages p =
         let opam = OpamSwitchState.opam new_state p in
         let messages = OpamFile.OPAM.messages opam in
-        OpamStd.List.filter_map (fun (s,f) ->
+        List.filter_map (fun (s,f) ->
           if OpamFilter.opt_eval_to_bool
               (OpamPackageVar.resolve ~opam new_state) f
           then Some s

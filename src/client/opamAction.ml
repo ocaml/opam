@@ -214,7 +214,7 @@ let preprocess_dot_install st nv build_dir =
       OpamFilename.in_dir build_dir @@ fun () ->
       log "Installing %s.\n" (OpamPackage.to_string nv);
       let warnings =
-        OpamStd.List.filter_map (fun install -> install warning) installs
+        List.filter_map (fun install -> install warning) installs
       in
       if warnings <> [] then
         (let install_f = OpamPath.Switch.install root st.switch nv.name in
@@ -485,7 +485,7 @@ let prepare_package_source st nv dir =
         let extra_files_dir =
           OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
         in
-        OpamStd.List.filter_map (fun (base, hash) ->
+        List.filter_map (fun (base, hash) ->
             let src =
               OpamFilename.create extra_files_dir
                 (OpamFilename.Base.of_string (OpamHash.contents hash))
@@ -496,7 +496,7 @@ let prepare_package_source st nv dir =
           xs
     in
     let bad_hash =
-      OpamStd.List.filter_map (fun (src, base, hash) ->
+      List.filter_map (fun (src, base, hash) ->
           if OpamHash.check_file (OpamFilename.to_string src) hash then
             (OpamFilename.copy ~src ~dst:(OpamFilename.create dir base); None)
           else
@@ -612,7 +612,7 @@ let get_wrapper t opam wrappers ?local getter =
   in
   OpamFilter.commands (OpamPackageVar.resolve ~local:local_env ~opam t)
     (getter wrappers) |>
-  OpamStd.List.filter_map (function
+  List.filter_map (function
       | [] -> None
       | cmd::args -> Some (cmd, args))
 
@@ -695,7 +695,7 @@ let remove_commands t nv =
   | Some opam ->
     OpamFilter.commands (OpamPackageVar.resolve ~opam t)
       (OpamFile.OPAM.remove opam) |>
-    OpamStd.List.filter_map
+    List.filter_map
       (function [] -> None | cmd::args -> Some (cmd,args))
 
 (* Testing wether a package removal will be a NOOP. *)
@@ -930,7 +930,7 @@ let build_package t ?(test=false) ?(doc=false) ?(dev_setup=false) build_dir nv =
        OpamFilter.commands (OpamPackageVar.resolve ~opam t)
          (OpamFile.OPAM.deprecated_build_doc opam)
      else [])
-    |> OpamStd.List.filter_map (function
+    |> List.filter_map (function
         | [] -> None
         | cmd::args -> Some (cmd, args))
   in
@@ -991,7 +991,7 @@ let install_package t ?(test=false) ?(doc=false) ?(dev_setup=false) ?build_dir
     OpamFilter.commands
       (OpamPackageVar.resolve ~opam
          ~local:(local_vars ~test ~doc ~dev_setup) t) |>
-    OpamStd.List.filter_map
+    List.filter_map
       (function [] -> None | cmd::args -> Some (cmd, args))
   in
   let name = OpamPackage.name_to_string nv in
@@ -1061,7 +1061,7 @@ let install_package t ?(test=false) ?(doc=false) ?(dev_setup=false) ?build_dir
     let local =
       let added =
         let open OpamDirTrack in
-        OpamStd.List.filter_map (function
+        List.filter_map (function
             | name, (Added _|Contents_changed _|Kind_changed _) -> Some name
             | _ -> None)
           (OpamStd.String.Map.bindings changes)

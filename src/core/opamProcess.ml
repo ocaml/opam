@@ -181,7 +181,7 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
           Some (key ^ "=" ^ String.concat " " settings)
     | _ ->
         Some item in
-  let env = OpamStd.List.filter_map f env in
+  let env = List.filter_map f env in
   let env =
     if !cygwin_set then
       env

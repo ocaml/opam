@@ -24,7 +24,7 @@ let select_packages atom_locs st =
   else
     (let names = OpamPackage.names_of_packages packages in
      let missing =
-       OpamStd.List.filter_map (fun (n,vc) ->
+       List.filter_map (fun (n,vc) ->
            if OpamPackage.Name.Set.mem n names then None
            else Some (n,vc)) atoms
      in

@@ -263,7 +263,7 @@ let autopin_aux st ?quiet ?recurse ?subpath ?locked
     atoms, to_pin, OpamPackage.Set.empty, OpamPackage.Set.empty
   else
   let pinning_dirs =
-    OpamStd.List.filter_map (function
+    List.filter_map (function
         | `Dirname d -> Some OpamFilename.SubPath.(d /? subpath)
         | _ -> None)
       atom_or_local_list

@@ -793,7 +793,7 @@ let scan ~normalise ~recurse ?subpath url =
     OpamPinned.files_in_source_w_target
       ?locked:OpamStateConfig.(!r.locked)
       ~recurse ?subpath url dir
-    |> OpamStd.List.filter_map (fun nf ->
+    |> List.filter_map (fun nf ->
         let opam =
           OpamFile.OPAM.(safe_read nf.pin.pin_file
                          |> with_locked_opt nf.pin.pin_locked)
@@ -907,7 +907,7 @@ let parse_pins pins =
         }
     with Not_found | Failure _ -> None
   in
-  OpamStd.List.filter_map (fun str ->
+  List.filter_map (fun str ->
       let pin = get str in
       if pin = None then
         (OpamConsole.warning "Argument %S is not correct" str;

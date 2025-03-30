@@ -1311,7 +1311,7 @@ let remove_all_uninstalled_versions_but universe name constr =
 let to_cudf univ (req: Cudf_types.vpkg request) =
   let install =
     let conj = OpamFormula.ands_to_list req.wish_install in
-    OpamStd.List.filter_map (function
+    List.filter_map (function
         | Atom vpkg -> Some vpkg
         | Empty -> None
         | _ -> invalid_arg "OpamCudf.to_cudf: 'install' not a conjunction")

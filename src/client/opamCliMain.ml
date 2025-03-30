@@ -87,7 +87,7 @@ let rec preprocess_argv cli yes_args confirm args =
     raise_invalid_confirm_level None
   | confirm_level :: cl_arg :: args when is_confirm_level confirm_level ->
     let answer =
-      match OpamStd.List.find_opt (fun (_,n,_) -> n = cl_arg)
+      match List.find_opt (fun (_,n,_) -> n = cl_arg)
               OpamArg.confirm_enum with
       | Some (_, _, a) -> a
       | None -> raise_invalid_confirm_level (Some cl_arg)
@@ -236,7 +236,7 @@ let check_and_run_external_commands () =
           OpamPackage.packages_of_names
             st.packages
             (OpamPackage.Name.Set.of_list @@
-             (OpamStd.List.filter_map
+             (List.filter_map
                 (fun s ->
                    try Some (OpamPackage.Name.of_string s)
                    with Failure _ -> None)

@@ -806,7 +806,7 @@ module I = struct
       r, errs
     in
     let print (acc, _) =
-      OpamStd.List.filter_map
+      List.filter_map
         (fun (field,ppa) ->
            match snd (ppa.print acc) with
            | None | Some ({ pelem = List { pelem = []; _}; _}
@@ -875,7 +875,7 @@ module I = struct
     pp
       (fun ~pos items ->
          match
-           OpamStd.List.filter_map (fun v -> match v.pelem with
+           List.filter_map (fun v -> match v.pelem with
                | Variable (k,v) when k.pelem = name -> Some v
                | _ -> None)
              items
