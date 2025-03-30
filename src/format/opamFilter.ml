@@ -636,7 +636,7 @@ let rec simplify_extended_version_formula ef =
   in
   match to_pure ef with
   | Some f ->
-    OpamStd.Option.map to_filtered (OpamFormula.simplify_version_formula f)
+    Option.map to_filtered (OpamFormula.simplify_version_formula f)
   | None -> match ef with
     | And _ | Or _ ->
       let conj = match ef with And _ -> true | _ -> false in

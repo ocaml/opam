@@ -484,14 +484,6 @@ module IntSet = Set.Make(OInt)
 
 
 module Option = struct
-  let map f = function
-    | None -> None
-    | Some x -> Some (f x)
-
-  let iter f = function
-    | None -> ()
-    | Some x -> f x
-
   let default dft = function
     | None -> dft
     | Some x -> x
@@ -508,19 +500,6 @@ module Option = struct
     | None -> dft
     | Some x -> f x
 
-  let compare cmp o1 o2 =
-    match o1,o2 with
-    | None, None -> 0
-    | Some _, None -> 1
-    | None, Some _ -> -1
-    | Some x1, Some x2 -> cmp x1 x2
-
-  let equal f o1 o2 =
-    match o1, o2 with
-    | Some o1, Some o2 -> f o1 o2
-    | None, None -> true
-    | _ , _  -> false
-
   let equal_some f v1 = function
     | None -> false
     | Some v2 -> f v1 v2
@@ -529,11 +508,6 @@ module Option = struct
     | Some x -> f x
     | None -> none
 
-  let to_list = function
-    | None -> []
-    | Some x -> [x]
-
-  let some x = Some x
   let none _ = None
 
   let of_Not_found f x =
@@ -543,7 +517,7 @@ module Option = struct
     let (>>=) = function
       | None -> fun _ -> None
       | Some x -> fun f -> f x
-    let (>>|) opt f = map f opt
+    let (>>|) opt f = Option.map f opt
     let (>>+) opt f = match opt with
       | None -> f ()
       | some -> some
@@ -1112,7 +1086,7 @@ module OpamSys = struct
       | "cmd.exe" -> Some (Accept SH_cmd)
       | "" -> None
       | name ->
-        Option.map
+        Stdlib.Option.map
           (fun shell -> Accept shell)
           (shell_of_string (chop_exe_suffix name))
     in
@@ -1791,7 +1765,7 @@ module Config = struct
   type yes_answer = [ `unsafe_yes | `all_yes ]
 
   let env conv var =
-    try Option.map conv (Env.getopt ("OPAM"^var))
+    try Stdlib.Option.map conv (Env.getopt ("OPAM"^var))
     with Failure _ ->
       flush stdout;
       !console.warning

@@ -178,7 +178,7 @@ let do_upgrade repo_root =
     let () =
       OpamFile.Lines.read_opt cache_file +! [] |> List.iter @@ function
       | [url; md5] ->
-        OpamStd.Option.iter
+        Stdlib.Option.iter
           (fun url -> Hashtbl.add url_md5 url (OpamHash.of_string md5))
           (OpamUrl.parse_opt ~handle_suffix:false url)
       | _ -> failwith "Bad cache, run 'opam admin upgrade --clear-cache'"
@@ -332,7 +332,7 @@ let do_upgrade repo_root =
 
       (* cleanup *)
       OpamFilename.remove comp_file;
-      OpamStd.Option.iter OpamFilename.remove descr_file;
+      Stdlib.Option.iter OpamFilename.remove descr_file;
       OpamFilename.rmdir_cleanup (OpamFilename.dirname comp_file);
       OpamConsole.status_line
         "Compiler %s successfully converted to package %s"

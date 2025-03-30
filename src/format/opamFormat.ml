@@ -24,8 +24,8 @@ let values_pos = function
   | [] -> None
   | x::_ -> Some (value_pos x)
 
-let optelem = OpamStd.Option.map (fun x -> x.pelem)
-let nullposelem = OpamStd.Option.map nullify_pos
+let optelem = Option.map (fun x -> x.pelem)
+let nullposelem = Option.map nullify_pos
 
 (** low-level Pps for the Lines parser ([string list list]) *)
 

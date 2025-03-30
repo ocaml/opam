@@ -1624,11 +1624,11 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
     | exception _ ->
       match Patch.patch ~cleanly:false content diff with
       | Some x ->
-        OpamStd.Option.iter (write (file^".orig")) content;
+        Option.iter (write (file^".orig")) content;
         x
       | None -> assert false (* See NOTE above *)
       | exception _ ->
-        OpamStd.Option.iter (write (file^".orig")) content;
+        Option.iter (write (file^".orig")) content;
         write (file^".rej") (Format.asprintf "%a" Patch.pp diff);
         internal_patch_error "Patch %S does not apply cleanly."
           patch_filename

@@ -229,7 +229,7 @@ let upgrade_t
          let unopt = unopt -- base in
          let conflicts =
            let get_formula pkg =
-             OpamStd.Option.map
+             Stdlib.Option.map
                (fun opam ->
                   OpamFilter.filter_formula ~default:false
                     (OpamPackageVar.resolve_switch ~package:pkg t)
@@ -262,7 +262,7 @@ let upgrade_t
             dependency formula *)
          let incompatibilities =
            let get_formula pkg =
-             OpamStd.Option.map (OpamPackageVar.all_depends t)
+             Stdlib.Option.map (OpamPackageVar.all_depends t)
                (OpamSwitchState.opam_opt t pkg)
            in
            OpamPackage.Set.fold (fun latest_pkg map ->
@@ -882,7 +882,7 @@ let git_for_windows kind mechanism ~interactive ~cygwin_is_tweakable =
     | None -> menu ()
   and menu () =
     let prompt () =
-      OpamStd.Option.iter (OpamConsole.warning "%s\n") gfw_message;
+      Stdlib.Option.iter (OpamConsole.warning "%s\n") gfw_message;
       OpamConsole.menu "Which Git should opam use?"
         ~default ~yes:default ~no:default ~options
     in
@@ -919,7 +919,7 @@ let git_for_windows kind mechanism ~interactive ~cygwin_is_tweakable =
       None, install_via_depext
     end
   in
-  OpamStd.Option.iter (fun _ ->
+  Stdlib.Option.iter (fun _ ->
       OpamConsole.msg
         "You can change that later with \
          'opam option \"git-location=C:\\A\\Path\\bin\"'")
@@ -1189,7 +1189,7 @@ let rec cygwin_menu ~bypass_checks ~interactive header =
     if not interactive then
       OpamConsole.note "opam will use the %s installation found in your Path"
                        (string_of_kind kind);
-    OpamStd.Option.iter (OpamConsole.warning "%s") warn_path;
+    Stdlib.Option.iter (OpamConsole.warning "%s") warn_path;
     Some mechanism
   | `Specify ->
     begin
@@ -1295,7 +1295,7 @@ let initialise_msys2 root =
 
 let determine_windows_configuration ?cygwin_setup ?git_location
                                     ~bypass_checks ~interactive config =
-  OpamStd.Option.iter
+  Stdlib.Option.iter
     (log "Cygwin (from CLI): %a" (slog string_of_cygwin_setup)) cygwin_setup;
   (* Check whether symlinks can be created. Developer Mode is not the only way
      to do this, but it's the easiest. *)
@@ -1334,7 +1334,7 @@ let determine_windows_configuration ?cygwin_setup ?git_location
       check_git_location_or_exit git_location "--git-location";
       result
   in
-  OpamStd.Option.iter (log "%a" (slog string_of_git_location_cli)) git_location;
+  Stdlib.Option.iter (log "%a" (slog string_of_git_location_cli)) git_location;
 
   (* Checks and initialisation for both Cygwin/MSYS2 and Git (which is made
      mandatory on Windows)
@@ -1636,8 +1636,8 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
       config, None, [], None
   in
 
-  OpamStd.Option.iter initialise_msys2 msys2_check_root;
-  OpamStd.Option.iter OpamSysInteract.Cygwin.install mechanism;
+  Stdlib.Option.iter initialise_msys2 msys2_check_root;
+  Stdlib.Option.iter OpamSysInteract.Cygwin.install mechanism;
   check_for_sys_packages config system_packages;
 
   let _all_ok =
@@ -1866,8 +1866,8 @@ let init
             config, None, [], None
         in
 
-        OpamStd.Option.iter initialise_msys2 msys2_check_root;
-        OpamStd.Option.iter OpamSysInteract.Cygwin.install mechanism;
+        Stdlib.Option.iter initialise_msys2 msys2_check_root;
+        Stdlib.Option.iter OpamSysInteract.Cygwin.install mechanism;
         check_for_sys_packages config system_packages;
 
         let dontswitch =
@@ -2393,7 +2393,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
             ~download_only ~assume_built solution in
         t, Some (Success res)
   in
-  OpamStd.Option.iter (OpamSolution.check_solution t) solution;
+  Stdlib.Option.iter (OpamSolution.check_solution t) solution;
   t
 
 let install t ?formula ?autoupdate ?add_to_roots

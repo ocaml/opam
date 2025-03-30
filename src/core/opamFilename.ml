@@ -468,7 +468,7 @@ let with_flock flag ?dontblock file f =
     in
     let r = f fd in
     OpamSystem.funlock lock;
-    OpamStd.Option.iter Stdlib.close_out ch;
+    Option.iter Stdlib.close_out ch;
     r
   with e ->
     OpamStd.Exn.finalise e @@ fun () ->
@@ -648,7 +648,7 @@ module Attribute = struct
     if base <> 0 then base else
     let md5 = OpamHash.compare md5 a.md5 in
     if md5 <> 0 then md5 else
-      OpamStd.Option.compare Int.compare perm a.perm
+      Option.compare Int.compare perm a.perm
 
   let equal a b = compare a b = 0
 

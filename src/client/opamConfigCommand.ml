@@ -71,7 +71,7 @@ let rec print_env output = function
   | [] -> ()
   | (k, v, comment) :: r ->
     if OpamConsole.verbose () then
-      OpamStd.Option.iter (Printf.ksprintf output ": %s;\n") comment;
+      Stdlib.Option.iter (Printf.ksprintf output ": %s;\n") comment;
     if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
     then (
       let v' = possibly_unix_path_env_value k v in
@@ -83,7 +83,7 @@ let rec print_csh_env output = function
   | [] -> ()
   | (k, v, comment) :: r ->
     if OpamConsole.verbose () then
-      OpamStd.Option.iter (Printf.ksprintf output ": %s;\n") comment;
+      Stdlib.Option.iter (Printf.ksprintf output ": %s;\n") comment;
     if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
     then (
       let v' = possibly_unix_path_env_value k v in
@@ -776,7 +776,7 @@ let set_opt_switch_t ?inner gt switch switch_config field value =
 let set_opt_switch gt ?st field value =
   with_switch ~display:false gt `Lock_write st @@ fun sw swc ->
   let switch_config = set_opt_switch_t ~inner:false gt sw swc field value in
-  OpamStd.Option.map (fun st -> { st with switch_config }) st
+  Stdlib.Option.map (fun st -> { st with switch_config }) st
 
 let global_allowed_fields, global_allowed_sections =
   let allowed_fields =
@@ -869,7 +869,7 @@ let global_allowed_fields, global_allowed_sections =
         Config.with_swh_fallback (Config.swh_fallback Config.empty);
         "git-location", Atomic_pp
           (fun c ->
-             OpamStd.Option.iter (fun git_location ->
+             Stdlib.Option.iter (fun git_location ->
                  if OpamSystem.bin_contains_bash
                      (OpamFilename.Dir.to_string git_location) then
                    OpamConsole.error_and_exit `False
@@ -1042,7 +1042,7 @@ let set_var_switch gt ?st svar value =
              (OpamPackage.Name.to_string n)
          else "")
   in
-  OpamStd.Option.map (fun st -> { st with switch_config }) st
+  Stdlib.Option.map (fun st -> { st with switch_config }) st
 
 (** Option and var list display *)
 

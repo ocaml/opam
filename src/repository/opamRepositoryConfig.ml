@@ -129,13 +129,13 @@ let initk k =
       )
     |> (fun fetch ->
         match E.curl (), fetch with
-        | None, fetch -> OpamStd.Option.map Lazy.from_val fetch
+        | None, fetch -> Option.map Lazy.from_val fetch
         | Some cmd, Some (((CIdent "curl"| CString "curl"), filter)::args, _) ->
           Some (lazy ((CString cmd, filter)::args, `Curl))
         | Some cmd, None ->
           Some (lazy ([CString cmd, None], `Curl))
         | Some _, _ -> (* ignored *)
-          OpamStd.Option.map Lazy.from_val fetch)
+          Option.map Lazy.from_val fetch)
   in
   let validation_hook =
     E.validationhook () >>| fun s ->

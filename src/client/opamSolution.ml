@@ -1348,7 +1348,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t
   in
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in
-  install_sys_packages_t ~propagate_st:OpamStd.Option.some ~map_sysmap ~confirm
+  install_sys_packages_t ~propagate_st:Stdlib.Option.some ~map_sysmap ~confirm
     env config sys_packages t
 
 let install_sys_packages ~confirm =

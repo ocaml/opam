@@ -325,7 +325,7 @@ let autopin_aux st ?quiet ?recurse ?subpath ?locked
                      opam
                  | Some _ -> opam
                in
-               OpamStd.Option.equal String.equal
+               Stdlib.Option.equal String.equal
                  locked (OpamFile.OPAM.locked opam)
                && OpamFile.OPAM.effectively_equal opam0 opam
              | None -> false)
@@ -500,7 +500,7 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
     (* is pinned but no in already pinned because not same url *)
     List.fold_left (fun set nf ->
         match
-          OpamStd.Option.map
+          Stdlib.Option.map
             (fun nv -> OpamPackage.Set.mem nv already_pinned_set)
             (OpamPinned.package_opt st nf.pin_name)
         with
