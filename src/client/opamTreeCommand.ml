@@ -347,7 +347,7 @@ let print_solution st new_st missing solution =
   let messages p =
     let opam = OpamSwitchState.opam new_st p in
     let messages = OpamFile.OPAM.messages opam in
-    OpamStd.List.filter_map (fun (s,f) ->
+    List.filter_map (fun (s,f) ->
         if OpamFilter.opt_eval_to_bool
             (OpamPackageVar.resolve ~opam new_st) f
         then Some s

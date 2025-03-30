@@ -57,7 +57,7 @@ let upgrade_depexts_to_2_0_beta5 filename depexts =
     | _ -> raise Exit (* the filter is already in the new format if it
                          contains anything else *)
   in
-  OpamStd.List.filter_map
+  List.filter_map
     (fun (names, filter) ->
        try Some (names, transform_filter filter) with
        | Exit -> Some (names, filter)
