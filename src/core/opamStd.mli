@@ -244,10 +244,6 @@ module List : sig
 
   (** Like {!pick_assoc}, but with a test function that takes a list element *)
   val pick: ('a -> bool) -> 'a list -> 'a option * 'a list
-
-  (** Like {!Stdlib.List.fold_left}, but also performs {!Stdlib.List.map} at
-      the same time *)
-  val fold_left_map: ('s -> 'a -> ('s * 'b)) -> 's -> 'a list -> 's * 'b list
 end
 
 module String : sig

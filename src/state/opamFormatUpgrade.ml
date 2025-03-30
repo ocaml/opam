@@ -1091,7 +1091,9 @@ let apply_eval_variables conf old_vars new_vars =
         let cmd, docstring = OpamVariable.Map.find name new_vars in
         (OpamVariable.Map.remove name new_vars, (name, cmd, docstring))
     | _ -> (new_vars, var) in
-  let (missing, eval_variables) = OpamStd.List.fold_left_map update new_vars current_eval_variables in
+  let (missing, eval_variables) =
+    OpamCompat.List.fold_left_map update new_vars current_eval_variables
+  in
   let eval_variables =
     let add name (cmd, docstring) eval_variables =
       (name, cmd, docstring)::eval_variables in

@@ -165,3 +165,19 @@ Quoting commands for execution by cmd.exe is difficult.
 
   include Stdlib.Filename
 end
+
+module List = struct
+  [@@@warning "-32"]
+
+  (** NOTE: OCaml >= 4.11 *)
+  let fold_left_map f s l =
+    let s, l_rev =
+      List.fold_left (fun (s, l_rev) x ->
+          let s, y = f s x in
+          s, y :: l_rev)
+        (s, []) l
+    in
+    s, List.rev l_rev
+
+  include Stdlib.List
+end

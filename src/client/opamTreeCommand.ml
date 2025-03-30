@@ -76,7 +76,7 @@ let build_condition_map tog st =
               (* filter out non-installed dependencies *)
               |> List.filter (fun (name, _) ->
                   OpamSwitchState.is_name_installed st name)
-              |> OpamStd.List.fold_left_map (fun is_valid orig ->
+              |> OpamCompat.List.fold_left_map (fun is_valid orig ->
                   if not is_valid then
                     is_valid, orig
                   else
@@ -165,7 +165,7 @@ let build_deps_forest st universe tog filter names =
     let conditions = condition_map |> OpamPackage.Map.find package in
     let succ = OpamSolver.PkgGraph.succ graph package in
     let visited, children =
-      OpamStd.List.fold_left_map (fun visited package ->
+      OpamCompat.List.fold_left_map (fun visited package ->
           let satisfies =
             OpamPackage.(Name.Map.find_opt package.name) conditions
           in
@@ -180,7 +180,7 @@ let build_deps_forest st universe tog filter names =
   in
   root
   |> OpamPackage.Set.elements
-  |> OpamStd.List.fold_left_map build_root OpamPackage.Set.empty
+  |> OpamCompat.List.fold_left_map build_root OpamPackage.Set.empty
   |> snd
 
 let build_revdeps_forest st universe tog filter names =
@@ -212,7 +212,7 @@ let build_revdeps_forest st universe tog filter names =
     let visited = visited |> OpamPackage.Set.add package in
     let pred = OpamSolver.PkgGraph.pred graph package in
     let visited, children =
-      OpamStd.List.fold_left_map (fun visited child ->
+      OpamCompat.List.fold_left_map (fun visited child ->
           let demands =
             condition_map
             |> OpamPackage.Map.find child
@@ -232,7 +232,7 @@ let build_revdeps_forest st universe tog filter names =
   in
   root
   |> OpamPackage.Set.elements
-  |> OpamStd.List.fold_left_map build_root OpamPackage.Set.empty
+  |> OpamCompat.List.fold_left_map build_root OpamPackage.Set.empty
   |> snd
 
 let build st universe tog mode filter names =
