@@ -1673,10 +1673,6 @@ end
 
 module Op = struct
 
-  let (@@) f x = f x
-
-  let (|>) x f = f x
-
   let (@*) g f x = g (f x)
 
   let (@>) f g x = g (f x)

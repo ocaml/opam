@@ -12,7 +12,6 @@
 open OpamParserTypes.FullPos
 open OpamTypes
 open OpamTypesBase
-open OpamStd.Op
 open OpamPp
 open OpamPp.Op
 
