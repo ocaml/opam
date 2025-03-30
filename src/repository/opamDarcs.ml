@@ -198,7 +198,7 @@ module VCS = struct
             | _ -> None)
          | _ -> None)
       in
-      Done (OpamStd.Option.map (fun u ->
+      Done (Option.map (fun u ->
           OpamUrl.parse ~backend:`darcs u) res)
     | { OpamProcess.r_code = 1; _ } -> Done None
     | r -> OpamSystem.process_error r

@@ -32,7 +32,7 @@ let raise_invalid_cli :
 
 let raise_invalid_confirm_level invalid =
   let invalid =
-    OpamStd.Option.map (fun i ->
+    Stdlib.Option.map (fun i ->
         i, "one of " ^
            (OpamArg.confirm_enum
             |> List.map (fun (_,s,_) -> Printf.sprintf "`%s'" s)
@@ -439,7 +439,7 @@ let rec main_catch_all f =
     exit exit_code
 
 let run () =
-  OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
+  Stdlib.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
   OpamArg.preinit_opam_env_variables ();
   main_catch_all @@ fun () ->

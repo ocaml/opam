@@ -518,7 +518,7 @@ let apply_global_options cli o =
       o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
-  let yes = OpamStd.Option.(map some o.yes) in
+  let yes = Stdlib.Option.map Stdlib.Option.some o.yes in
   init_opam_env_variabes cli;
   OpamClientConfig.opam_init
     (* - format options - *)
@@ -620,7 +620,7 @@ let apply_global_options cli o =
             | Some { pelem = Ident "os-distribution"; _},
               { pelem = String "msys2"; _}::_  ->
               let cygbin =
-                OpamStd.Option.map Filename.dirname
+                Stdlib.Option.map Filename.dirname
                   (OpamSystem.resolve_command "cygcheck")
               in
               OpamCoreConfig.update ?cygbin ()

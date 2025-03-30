@@ -182,7 +182,7 @@ let package_files_to_cache repo_root cache_dir cache_urls
         | Some m ->
           OpamPackage.Map.update nv (fun l -> m::l) [] errors
         | None ->
-          OpamStd.Option.iter (fun link_dir ->
+          Stdlib.Option.iter (fun link_dir ->
               let name =
                 OpamStd.Option.default
                   (OpamUrl.basename (OpamFile.URL.url urlf))
@@ -628,7 +628,7 @@ let add_hashes_command cli =
              @@| function
              | Result () | Up_to_date () ->
                OpamHash.compute ~kind (OpamFilename.to_string f)
-               |> OpamStd.Option.some
+               |> Stdlib.Option.some
              | Not_available _ -> None)
       in
       (match h with

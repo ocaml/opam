@@ -632,7 +632,7 @@ let make_command st opam ?dir ?text_command (cmd, args) =
   let nv = OpamFile.OPAM.package opam in
   let name = OpamPackage.name_to_string nv in
   let env = OpamTypesBase.env_array (compilation_env st opam) in
-  let dir = OpamStd.Option.map OpamFilename.Dir.to_string dir in
+  let dir = Stdlib.Option.map OpamFilename.Dir.to_string dir in
   let text =
     let cmd, args = OpamStd.Option.default (cmd, args) text_command in
     OpamProcess.make_command_text name ~args cmd
@@ -810,7 +810,7 @@ let remove_package_aux
       | some -> some
     in
     let title = Printf.sprintf "While removing %s" (OpamPackage.to_string nv) in
-    OpamStd.Option.iter
+    Stdlib.Option.iter
       (OpamDirTrack.revert ~title ~verbose:(not silent) ?force
          (OpamPath.Switch.root root t.switch))
       changes

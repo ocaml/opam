@@ -147,10 +147,6 @@ module IntSet: SET with type elt = int
 (** {2 Utility modules extending the standard library on base types} *)
 
 module Option: sig
-  val map: ('a -> 'b) -> 'a option -> 'b option
-
-  val iter: ('a -> unit) -> 'a option -> unit
-
   val default: 'a -> 'a option -> 'a
 
   val default_map: 'a option -> 'a option -> 'a option
@@ -159,17 +155,9 @@ module Option: sig
 
   val map_default: ('a -> 'b) -> 'b -> 'a option -> 'b
 
-  val compare: ('a -> 'a -> int) -> 'a option -> 'a option -> int
-
-  val equal: ('a -> 'a -> bool) -> 'a option -> 'a option -> bool
-
   val equal_some : ('a -> 'a -> bool) -> 'a -> 'a option -> bool
 
   val to_string: ?none:string -> ('a -> string) -> 'a option -> string
-
-  val to_list: 'a option -> 'a list
-
-  val some: 'a -> 'a option
 
   val none: 'a -> 'b option
 

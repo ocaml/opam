@@ -231,7 +231,7 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
                     pin_file = OpamFile.make f;
                     pin_locked = locked;
                     pin_subpath =
-                      OpamStd.Option.map OpamFilename.SubPath.of_string subpath;
+                      Option.map OpamFilename.SubPath.of_string subpath;
                     pin_url = ();
                   }}
        with Unix.Unix_error _ ->

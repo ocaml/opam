@@ -911,7 +911,7 @@ module Syntax = struct
       let it_ident it = match it.pelem with
         | Variable (f, _) -> `Var f.pelem
         | Section ({section_kind = k; section_name = n; _}) ->
-          `Sec (k.pelem, OpamStd.Option.map (fun x -> x.pelem) n)
+          `Sec (k.pelem, Option.map (fun x -> x.pelem) n)
       in
       let lines_index =
         let rec aux acc s =
@@ -1080,7 +1080,7 @@ module Syntax = struct
             | Section {section_kind; section_name; section_items} ->
               let section_kind = section_kind.pelem in
               let section_items = section_items.pelem in
-              let section_name = OpamStd.Option.map (fun x -> x.pelem) section_name in
+              let section_name = Option.map (fun x -> x.pelem) section_name in
               (try
                  rem,
                  let ppa =
@@ -1090,7 +1090,7 @@ module Syntax = struct
                    match snd (Pp.print ppa t) with
                    | None -> None
                    | Some v ->
-                     OpamStd.List.assoc_opt (OpamStd.Option.equal String.equal)
+                     OpamStd.List.assoc_opt (Option.equal String.equal)
                        section_name v
                  in
                  let sec_field_t = print_sec ppa t in
@@ -1814,13 +1814,13 @@ module InitConfigSyntax = struct
         with_default_invariant default_invariant
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
       "jobs", Pp.ppacc_opt
-        (with_jobs @* OpamStd.Option.some) jobs
+        (with_jobs @* Option.some) jobs
         Pp.V.pos_int;
       "download-command", Pp.ppacc_opt
-        (with_dl_tool @* OpamStd.Option.some) dl_tool
+        (with_dl_tool @* Option.some) dl_tool
         (Pp.V.map_list ~depth:1 Pp.V.arg);
       "download-jobs", Pp.ppacc_opt
-        (with_dl_jobs @* OpamStd.Option.some) dl_jobs
+        (with_dl_jobs @* Option.some) dl_jobs
         Pp.V.pos_int;
       "archive-mirrors", Pp.ppacc
         with_dl_cache dl_cache
@@ -1835,7 +1835,7 @@ module InitConfigSyntax = struct
         (with_criterion `Fixup) (criterion `Fixup)
         Pp.V.string;
       "solver", Pp.ppacc_opt
-        (with_solver @* OpamStd.Option.some) solver
+        (with_solver @* Option.some) solver
         (Pp.V.map_list ~depth:1 Pp.V.arg);
       "global-variables", Pp.ppacc
         with_global_variables global_variables
@@ -2753,7 +2753,7 @@ module OPAMSyntax = struct
 
   let url t = t.url
   let descr t = t.descr
-  let synopsis t = OpamStd.Option.map Descr.synopsis t.descr
+  let synopsis t = Option.map Descr.synopsis t.descr
   let descr_body t = match t.descr with
     | None | Some (_, "") -> None
     | Some (_, text) -> Some text
@@ -3529,7 +3529,7 @@ module OPAM = struct
             else None)
           t.extensions;
 
-      url         = OpamStd.Option.map effective_url t.url;
+      url         = Option.map effective_url t.url;
       descr       = empty.descr;
 
       metadata_dir = empty.metadata_dir;
@@ -4145,7 +4145,7 @@ module CompSyntax = struct
           ])
     in
     let url =
-      OpamStd.Option.map
+      Option.map
         (fun url -> URL.with_url url URL.empty)
         comp.src
     in

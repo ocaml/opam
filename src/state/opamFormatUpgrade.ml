@@ -136,7 +136,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
       | FNot f ->
         let pkg_deps, pkg_conflicts, available_opt = aux f in
         pkg_conflicts, pkg_deps,
-        OpamStd.Option.map (fun f -> FNot f) available_opt
+        Option.map (fun f -> FNot f) available_opt
       | FAnd (f1,f2) ->
         let deps1, cflt1, f1 = aux f1 in
         let deps2, cflt2, f2 = aux f2 in
@@ -309,7 +309,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
     add_filter doc_filter install_doc
   in
   let dev_repo =
-    OpamStd.Option.map
+    Option.map
       (OpamUrl.parse ~handle_suffix:true @* OpamUrl.to_string)
       (OpamFile.OPAM.dev_repo opam)
   in
@@ -731,7 +731,7 @@ let from_1_3_dev6_to_1_3_dev7 ~on_the_fly:_ root conf =
             match OpamFileTools.read_opam srcdir with
             | Some opam ->
               OpamFile.OPAM.write (OpamFile.make (dstdir // "opam")) opam;
-              OpamStd.Option.iter (fun src ->
+              Option.iter (fun src ->
                   OpamFilename.copy_dir ~src ~dst:(dstdir / "files"))
                 (OpamFilename.opt_dir (srcdir / "files"))
             | None -> raise Not_found
@@ -898,7 +898,7 @@ let from_2_0_alpha_to_2_0_alpha2 ~on_the_fly:_ root conf =
           in
           let opamf = pkg_dir // "opam" in
           let opam0 = OpamFile.make opamf in
-          OpamStd.Option.iter (fun opam ->
+          Option.iter (fun opam ->
               opam_file_from_1_2_to_2_0 ~filename:opam0 opam
               |> OpamFile.OPAM.write_with_preserved_format opam0;
               OpamFilename.remove (pkg_dir // "descr");
@@ -1067,7 +1067,7 @@ let from_2_0_to_2_1_alpha ~on_the_fly:_ _ conf = conf, gtc_none
 let downgrade_2_1_switches root conf =
   List.iter (fun switch ->
       let f = OpamPath.Switch.switch_config root switch in
-      OpamStd.Option.iter (OpamFile.Switch_config.write f)
+      Option.iter (OpamFile.Switch_config.write f)
         (OpamStateConfig.downgrade_2_1_switch f))
     (OpamFile.Config.installed_switches conf);
   conf

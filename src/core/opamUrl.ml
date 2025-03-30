@@ -34,7 +34,7 @@ let compare {transport; path; hash; backend} u =
   if transport <> 0 then transport else
   let path = String.compare path u.path in
   if path <> 0 then path else
-  let hash = OpamStd.Option.compare String.compare hash u.hash in
+  let hash = Option.compare String.compare hash u.hash in
   if hash <> 0 then hash else
     compare backend u.backend
 

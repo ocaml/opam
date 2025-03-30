@@ -477,7 +477,7 @@ let init cli =
         ~no_default_config_file:no_config_file ~add_config_file:config_file
     in
     let repo =
-      OpamStd.Option.map (fun url ->
+      Stdlib.Option.map (fun url ->
           let repo_url = OpamUrl.parse ?backend:repo_kind ~from_file:false url in
           { repo_name; repo_url; repo_trust = None })
         repo_url
@@ -3384,7 +3384,7 @@ let pin ?(unpin_only=false) cli =
                 pinned_version = None;
                 pinned_opam =
                   OpamFile.OPAM.read_opt nf.pin.pin_file
-                  |> OpamStd.Option.map
+                  |> Stdlib.Option.map
                     (OpamFile.OPAM.with_locked_opt nf.pin.pin_locked);
                 pinned_url = nf.pin.pin_url;
                 pinned_subpath = nf.pin.pin_subpath;
@@ -3423,7 +3423,7 @@ let pin ?(unpin_only=false) cli =
                     pinned_version = None;
                     pinned_opam =
                       OpamFile.OPAM.read_opt nf.pin.pin_file
-                      |> OpamStd.Option.map
+                      |> Stdlib.Option.map
                         (OpamFile.OPAM.with_locked_opt nf.pin.pin_locked);
                     pinned_url = url;
                     pinned_subpath = nf.pin.pin_subpath;
@@ -3746,7 +3746,7 @@ let source cli =
       else if no_checksums then Some (Some false)
       else None
     in
-    OpamStd.Option.iter (fun force_checksums ->
+    Stdlib.Option.iter (fun force_checksums ->
         OpamRepositoryConfig.update ~force_checksums ())
       force_checksums;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -4062,9 +4062,9 @@ let lint cli =
                  else OpamConsole.colorise `yellow "Warnings.")
                 (OpamFileTools.warns_to_string warnings);
             if normalise then
-              OpamStd.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
+              Stdlib.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
             let json =
-              OpamStd.Option.map
+              Stdlib.Option.map
                 (OpamStd.List.cons
                    (OpamFileTools.warns_to_json ?filename:opam_f warnings))
                 json
@@ -4079,7 +4079,7 @@ let lint cli =
             (true, json))
         (false, json) files
     in
-    OpamStd.Option.iter (fun json -> OpamJson.append "lint" (`A json)) json;
+    Stdlib.Option.iter (fun json -> OpamJson.append "lint" (`A json)) json;
     if err then OpamStd.Sys.exit_because `False
   in
   mk_command  ~cli cli_original "lint" ~doc ~man

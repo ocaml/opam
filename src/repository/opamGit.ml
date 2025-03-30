@@ -89,7 +89,7 @@ module VCS : OpamVCS.VCS = struct
     let opam_ref = remote_ref repo_url in
     let refspec = Printf.sprintf "+%s:%s" branch opam_ref in
     git repo_root [ "remote" ; "set-url"; "origin"; origin ] @@> fun _ ->
-    OpamStd.Option.iter (fun cache ->
+    Option.iter (fun cache ->
         let alternates = repo_root / ".git" / "objects" / "info" // "alternates" in
         if not (OpamFilename.exists alternates) then
           OpamFilename.write alternates
@@ -212,7 +212,7 @@ module VCS : OpamVCS.VCS = struct
     let rref = remote_ref repo_url in
     git repo_root ([ "diff" ; "--no-ext-diff" ; "--quiet" ; rref; "--" ]
                    @ List.map OpamFilename.SubPath.to_string
-                     (OpamStd.Option.to_list subpath))
+                     (Option.to_list subpath))
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done true
     | { OpamProcess.r_code = 1; _ } as r ->
