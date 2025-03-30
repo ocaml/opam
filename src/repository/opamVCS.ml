@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamStd.Op
 open OpamProcess.Job.Op
 
 module type VCS = sig
