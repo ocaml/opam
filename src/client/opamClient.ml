@@ -1675,7 +1675,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
   in
   OpamRepositoryState.drop rt
 
-let has_space s = OpamStd.String.contains_char s ' '
+let has_space s = String.contains s ' '
 
 let default_redirect_root = OpamFilename.Dir.of_string "C:\\opamroot"
 

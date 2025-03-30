@@ -1261,7 +1261,7 @@ let is_switch_defined_var switch_config v =
     (OpamVariable.of_string v) <> None
   || (try let _path = OpamTypesBase.std_path_of_string v in true
       with Failure _ -> false)
-  || OpamStd.String.contains_char v ':'
+  || String.contains v ':'
 
 let var_switch_raw gt v =
   match OpamStateConfig.get_switch_opt () with

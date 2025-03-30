@@ -375,7 +375,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
       let env = Array.to_list env in
       (* Remove dubious variables *)
       let env =
-        List.filter (fun line -> not (OpamStd.String.contains_char line '$'))
+        List.filter (fun line -> not (String.contains line '$'))
           env
       in
       output_lines chan env;

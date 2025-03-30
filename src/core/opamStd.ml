@@ -527,10 +527,6 @@ module OpamString = struct
   module Set = StringSet
   module Map = StringMap
 
-  let contains_char s c =
-    try let _ = String.index s c in true
-    with Not_found -> false
-
   let contains ~sub =
     Re.(execp (compile (str sub)))
 
@@ -1166,7 +1162,7 @@ module OpamSys = struct
         fun x -> x
     in
     let name = forward_to_back name in
-    OpamString.contains_char name Filename.dir_sep.[0]
+    String.contains name Filename.dir_sep.[0]
 
   let resolve_in_path_t env name =
     if not (Filename.is_relative name) || is_external_cmd name then

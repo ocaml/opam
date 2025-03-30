@@ -871,7 +871,7 @@ let scan ~normalise ~recurse ?subpath url =
     |> OpamConsole.print_table stdout ~sep:"  "
 
 let looks_like_normalised args =
-    List.for_all (fun s -> OpamStd.String.contains_char s scan_sep) args
+    List.for_all (fun s -> String.contains s scan_sep) args
 
 let parse_pins pins =
   let separator = Re.char scan_sep in

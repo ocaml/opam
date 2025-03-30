@@ -756,7 +756,7 @@ let list ?(force_search=false) cli =
       (let drop_by_depexts =
          List.fold_left (fun missing str ->
              let is_missing pkgs =
-                 if OpamStd.String.contains_char str '.' then
+                 if String.contains str '.' then
                    let nv = OpamPackage.of_string str in
                    if OpamPackage.Set.mem nv results then None else
                      OpamPackage.Set.find_opt (OpamPackage.equal nv) pkgs
