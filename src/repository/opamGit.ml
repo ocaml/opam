@@ -260,7 +260,7 @@ module VCS : OpamVCS.VCS = struct
     git repo_root ~verbose:false [ "status" ; "--short" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     let files =
-      OpamStd.List.filter_map (fun line ->
+      List.filter_map (fun line ->
           match OpamStd.String.split line ' ' with
           | ("A" | "M" | "AM")::file::[]
           | ("R"|"RM"|"C"|"CM")::_::"->"::file::[] -> Some file

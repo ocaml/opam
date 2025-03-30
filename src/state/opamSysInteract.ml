@@ -732,7 +732,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       run_query_command (Commands.cygcheck config)
       ([ "-c"; "-d" ] @ to_string_list packages)
       |> (function | _::_::l -> l | _ -> [])
-      |> OpamStd.List.filter_map (fun l ->
+      |> List.filter_map (fun l ->
           match OpamStd.String.split l ' ' with
           | pkg::_ -> Some pkg
           | _ -> None)

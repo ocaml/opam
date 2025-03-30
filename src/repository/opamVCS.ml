@@ -109,7 +109,7 @@ module Make (VCS: VCS) = struct
       match subpath with
       | None -> files
       | Some sp ->
-        OpamStd.List.filter_map
+        List.filter_map
           (fun f ->
              if OpamStd.String.remove_prefix
                  ~prefix:(OpamFilename.SubPath.to_string sp ^ Filename.dir_sep) f

@@ -539,7 +539,7 @@ let expand updates =
       in
       let var = OpamStd.Env.Name.of_string svar in
       let zip, reverts =
-        match OpamStd.List.find_opt (fun (v, _, _, _) ->
+        match List.find_opt (fun (v, _, _, _) ->
             OpamStd.Env.Name.equal var v) acc with
         | Some (_, z, _doc, _) -> z, reverts
         | None ->
@@ -1149,7 +1149,7 @@ let write_static_init_scripts root ?completion ?env_hook ?(inplace=false) () =
   write_init_shell_scripts root;
   let update_scripts filef scriptf enable =
     let scripts =
-      OpamStd.List.filter_map (fun shell ->
+      List.filter_map (fun shell ->
           match filef shell, scriptf shell with
           | Some f, Some s -> Some (f, s)
           | _ -> None)

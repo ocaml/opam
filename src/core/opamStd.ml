@@ -84,8 +84,6 @@ let max_print = 100
 
 module OpamList = struct
 
-  let cons x xs = x :: xs
-
   let concat_map ?(left="") ?(right="") ?nil ?last_sep sep f =
     let last_sep = match last_sep with None -> sep | Some sep -> sep in
     function
@@ -118,10 +116,6 @@ module OpamList = struct
       assert (pos = 0);
       Bytes.to_string buf
 
-  let rec find_opt f = function
-    | [] -> None
-    | x::r -> if f x then Some x else find_opt f r
-
   let to_string f =
     concat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
 
@@ -133,16 +127,7 @@ module OpamList = struct
   let sort_nodup cmp l =
     remove_duplicates (fun a b -> cmp a b = 0) (List.sort cmp l)
 
-  let filter_map f l =
-    let rec loop accu = function
-      | []     -> List.rev accu
-      | h :: t ->
-        match f h with
-        | None   -> loop accu t
-        | Some x -> loop (x::accu) t in
-    loop [] l
-
-  let filter_some l = filter_map (fun x -> x) l
+  let filter_some l = List.filter_map (fun x -> x) l
 
   let rec find_map f = function
     | [] -> raise Not_found
@@ -1083,7 +1068,7 @@ module OpamSys = struct
     in
     lazy (
       let lazy ancestors = windows_process_ancestry in
-      match OpamList.filter_map categorize_process ancestors with
+      match List.filter_map categorize_process ancestors with
       | [] -> None
       | Accept most_relevant_shell :: _ -> Some most_relevant_shell
     )

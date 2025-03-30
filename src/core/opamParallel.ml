@@ -114,7 +114,7 @@ module Make (G : G) = struct
         (finished: int)
         (running: (OpamProcess.t * 'a * string option) M.t) =
       let texts =
-        OpamStd.List.filter_map (fun (_,_,t) -> t) (M.values running) in
+        List.filter_map (fun (_,_,t) -> t) (M.values running) in
       let rec limit_width acc rem_cols = function
         | [] -> List.rev acc
         | t::ts ->

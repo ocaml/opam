@@ -86,7 +86,7 @@ let os_release_field =
   let os_release_file = lazy (
     List.find Sys.file_exists ["/etc/os-release"; "/usr/lib/os-release"] |>
     OpamProcess.read_lines |>
-    OpamStd.List.filter_map (fun s ->
+    List.filter_map (fun s ->
         try
           Scanf.sscanf s "%s@= %s" (fun x v ->
               let contents =
