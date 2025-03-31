@@ -3,11 +3,12 @@ name: depexts
 on:
   pull_request:
     paths:
+      - '*.opam'
       - 'src/state/opamSysInteract.ml'
       - '.github/workflows/depexts.yml'
       - '.github/scripts/depexts/**'
   push:
-    paths:
+    branches:
       - 'master'
       - '2.**'
 
