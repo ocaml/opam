@@ -467,7 +467,6 @@ root-a-k_p.2    (uninstalled)  rsync  directory /a/k in file://${BASEDIR}/pinnes
 root-a_p.2      (uninstalled)  rsync  directory /a in file://${BASEDIR}/pinnes
 ### opam-cat $OPAMROOT/devnull/.opam-switch/overlay/root-a_p/opam
 authors: "the testing team"
-available: opam-version >= "2.1"
 bug-reports: "https://nobug"
 description: "Two words."
 dev-repo: "hg+https://pkg@op.am"
@@ -484,7 +483,6 @@ src: "file://${BASEDIR}/pinnes"
 }
 ### opam-cat OPAM/devnull/.opam-switch/overlay/root-a-i_g/opam
 authors: "the testing team"
-available: opam-version >= "2.1"
 bug-reports: "https://nobug"
 description: "Two words."
 dev-repo: "hg+https://pkg@op.am"
@@ -980,7 +978,6 @@ root-a-k_p.l2    (uninstalled)  rsync  directory /a/k in file://${BASEDIR}/pinne
 root-a_p.l2      (uninstalled)  rsync  directory /a in file://${BASEDIR}/pinnes
 ### opam-cat $OPAMROOT/devnull/.opam-switch/overlay/root-a_p/opam
 authors: "the testing team"
-available: opam-version >= "2.1"
 bug-reports: "https://nobug"
 description: "Two words."
 dev-repo: "hg+https://pkg@op.am"
@@ -998,7 +995,6 @@ src: "file://${BASEDIR}/pinnes"
 }
 ### opam-cat OPAM/devnull/.opam-switch/overlay/root-a-i_g/opam
 authors: "the testing team"
-available: opam-version >= "2.1"
 bug-reports: "https://nobug"
 description: "Two words."
 dev-repo: "hg+https://pkg@op.am"

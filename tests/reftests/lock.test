@@ -770,9 +770,7 @@ version: "l2"
 
 <><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
 [tolock.l1] synchronised (file://${BASEDIR}/tolock)
-[tolock] Conflicting update of the metadata from file://${BASEDIR}/tolock.
-Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [Y/n] y
-User metadata backed up in ${BASEDIR}/OPAM/backup/tolock.bak
+[tolock] Installing new package description from upstream file://${BASEDIR}/tolock
 Now run 'opam upgrade' to apply any package updates.
 ### opam show tolock --field=version,build --normalise
 version l2
@@ -801,9 +799,7 @@ build: [ "echo" "locked" ]
 
 <><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
 [tolock.l2] synchronised (file://${BASEDIR}/tolock)
-[tolock] Conflicting update of the metadata from file://${BASEDIR}/tolock.
-Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [Y/n] y
-User metadata backed up in ${BASEDIR}/OPAM/backup/tolock.bak
+[tolock] Installing new package description from upstream file://${BASEDIR}/tolock
 Now run 'opam upgrade' to apply any package updates.
 ### opam show tolock --field=version,build --normalise
 version l3
@@ -827,9 +823,7 @@ version: "l4"
 
 <><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
 [tolock.l3] synchronised (file://${BASEDIR}/tolock)
-[tolock] Conflicting update of the metadata from file://${BASEDIR}/tolock.
-Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [Y/n] y
-User metadata backed up in ${BASEDIR}/OPAM/backup/tolock.bak
+[tolock] Installing new package description from upstream file://${BASEDIR}/tolock
 Now run 'opam upgrade' to apply any package updates.
 ### opam show tolock --field=version,build --normalise
 version l4
@@ -857,9 +851,7 @@ echo "]" >> tolock.install
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [tolock.l4] synchronised (file://${BASEDIR}/tolock)
-[tolock] Conflicting update of the metadata from file://${BASEDIR}/tolock.
-Override files in ${BASEDIR}/OPAM/locking/.opam-switch/overlay/tolock (there will be a backup)? [Y/n] y
-User metadata backed up in ${BASEDIR}/OPAM/backup/tolock.bak
+[tolock] Installing new package description from upstream file://${BASEDIR}/tolock
 
 The following actions will be performed:
 === upgrade 1 package
@@ -1231,7 +1223,6 @@ pin-depends: [
   "git+https://github.com/ocaml-ppx/ppx_deriving.git#0a89b619f94cbbfc3b0fb3255ab4fe5bc77d32d6"
 ]
 ]
-available: opam-version >= "2.1"
 url {
 }
 x-locked: "locked"
