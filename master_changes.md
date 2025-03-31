@@ -211,6 +211,7 @@ users)
   * Add OCaml 5.3/MSVC to the build matrix [#6192 @kit-ty-kate]
   * Add a test making sure `opam init` works in the absence of `OPAMROOT` [#5663 @kit-ty-kate]
   * Show Cygwin version info after loading it from the cache [#6383 @kit-ty-kate]
+  * Upgrade the opam version used to setup the depexts workflows to 2.3.0 [#6444 @kit-ty-kate]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
