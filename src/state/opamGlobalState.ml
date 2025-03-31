@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamStd.Op
 open OpamFilename.Op
 
 open OpamStateTypes

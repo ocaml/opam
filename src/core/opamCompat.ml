@@ -20,6 +20,34 @@ module String = struct
       else loop (succ i) in
     loop 0
 
+  (** NOTE: OCaml >= 4.13 *)
+  let starts_with ~prefix s =
+    let x = String.length prefix in
+    let n = String.length s in
+    n >= x &&
+    let rec chk i = i >= x || prefix.[i] = s.[i] && chk (i+1) in
+    chk 0
+
+  (** NOTE: OCaml >= 4.13 *)
+  let ends_with ~suffix s =
+    let x = String.length suffix in
+    let n = String.length s in
+    n >= x &&
+    let rec chk i = i >= x || suffix.[i] = s.[i+n-x] && chk (i+1) in
+    chk 0
+
+  (** NOTE: OCaml >= 4.13 *)
+  let for_all f s =
+    let len = String.length s in
+    let rec aux i = i >= len || f s.[i] && aux (i+1) in
+    aux 0
+
+  (** NOTE: OCaml >= 4.13 *)
+  let fold_left f acc s =
+    let acc = ref acc in
+    for i = 0 to String.length s - 1 do acc := f !acc s.[i] done;
+    !acc
+
   include Stdlib.String
 end
 
@@ -164,4 +192,20 @@ Quoting commands for execution by cmd.exe is difficult.
     ]
 
   include Stdlib.Filename
+end
+
+module List = struct
+  [@@@warning "-32"]
+
+  (** NOTE: OCaml >= 4.13 *)
+  let fold_left_map f s l =
+    let s, l_rev =
+      List.fold_left (fun (s, l_rev) x ->
+          let s, y = f s x in
+          s, y :: l_rev)
+        (s, []) l
+    in
+    s, List.rev l_rev
+
+  include Stdlib.List
 end
