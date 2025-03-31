@@ -270,10 +270,6 @@ module Switch = struct
 
     let tmp_opam t a n = package t a n /- "opam_"
 
-    let url t a n = package t a n /- "url"
-
-    let descr t a n = package t a n /- "descr"
-
     let files t a n = package t a n / "files"
 
   end
