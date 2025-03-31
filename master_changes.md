@@ -89,6 +89,7 @@ users)
   * Rework SWH fallback to have a more correct archive retrieval and more fine grained error handling [#6036 @rjbou - fix #5721]
   * Check that the repositories given to `opam repository remove` actually exist [#5014 @kit-ty-kate - fixes #5012]
   * ✘ Symlinks in repositories are no longer supported [#5892 @kit-ty-kate]
+  * Fix subpath handling in opam files defining a local archive [#6439 @rjbou]
 
 ## Lock
   * [BUG] Fix `pin-depends` for `with-*` dependencies [#5471 @rjbou - fix #5428]
@@ -195,6 +196,7 @@ users)
   * Add a test showing simulated pinning does not propagate version information [#6256 @rjbou]
   * Untie lock with pin depend test from OPAMEDITOR behaviour [#6412 @rjbou]
   * Add test for lint E63 [#6438 @rjbou]
+  * Add a test for packages with subpath in a repository [#6439 @rjbou]
 
 ### Engine
 
@@ -251,6 +253,7 @@ users)
   * `OpamRepositoryBackend.S.revision`: now returns a `string` instead of a `version` [#6409 @kit-ty-kate]
   * `OpamRepositoryBackend.get_diff`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system `diff` utility [#5892 @kit-ty-kate]
   * `OpamRepositoryBackend.get_diff`: now raises `Stdlib.Failure` if an unsupported file type or comparison is detected [#5892 @kit-ty-kate]
+  * `OpamLocal.pull_url`: fix subpath handling when the url is a local archive [#6439 @rjbou]
 
 ## opam-state
   * `OpamStateConfig`: Make the `?lock_kind` parameters non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]

@@ -194,8 +194,9 @@ module B = struct
     OpamFilename.mkdir local_dirname;
     let dir = OpamFilename.Dir.to_string local_dirname in
     let remote_url =
-      OpamStd.Option.map_default (fun x -> OpamUrl.Op.(remote_url / OpamFilename.SubPath.to_string x))
-        remote_url subpath
+      if OpamSystem.is_archive remote_url.OpamUrl.path then remote_url else
+        OpamStd.Option.map_default (fun x -> OpamUrl.Op.(remote_url / OpamFilename.SubPath.to_string x))
+          remote_url subpath
     in
     let remote_url =
       match OpamUrl.local_dir remote_url with
