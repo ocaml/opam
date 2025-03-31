@@ -27,6 +27,8 @@ users)
 ## Actions
 
 ## Install
+  * Fix `opam install <local_dir>` not updating and storing pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
+  * Fix `opam install --deps-only/--show-action <local_dir>` not updating (without storing) pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
 
 ## Build (package)
   * Patches are now applied using the `patch` OCaml library instead of GNU Patch [#5892 @kit-ty-kate - fix #6019 #6052]
@@ -198,6 +200,9 @@ users)
   * Untie lock with pin depend test from OPAMEDITOR behaviour [#6412 @rjbou]
   * Add test for lint E63 [#6438 @rjbou]
   * Add a test for packages with subpath in a repository [#6439 @rjbou]
+  * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
+  * Add pin test to show stored overlay opam files [#6209 @rjbou]
+  * Add show test to highlight precedence of opam file selection and check that if an opam file is given it is always this one that is taken [#6209 @rjbou]
 
 ### Engine
 
