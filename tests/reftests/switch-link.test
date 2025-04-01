@@ -1,0 +1,20 @@
+N0REP0
+### OPAMYES=1
+### : make sure opam switch link doesn't remove previous switches
+### opam switch create empty --empty
+### opam switch create empty2 --empty
+### opam switch link empty2
+Directory ${BASEDIR} set to use switch empty2.
+Just remove ${BASEDIR}/_opam to unlink.
+### opam switch link empty
+Directory ${BASEDIR} set to use switch empty.
+Just remove ${BASEDIR}/_opam to unlink.
+### opam switch
+#   switch  compiler  description
+->  empty             empty
+    empty2            empty2
+### rm _opam
+### opam switch
+#   switch  compiler  description
+    empty             empty
+->  empty2            empty2
