@@ -141,6 +141,8 @@ val remove_file: string -> unit
     directory (not for symlinks or other files). *)
 val remove_dir: string -> unit
 
+val is_reg_dir: string -> bool
+
 (** Change the current working directory *)
 val chdir: string -> unit
 
