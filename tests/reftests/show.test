@@ -402,3 +402,51 @@ url {
 url.src:     "https://an.arch/i/ve.tgz"
 url.swhid:   "swh:1:dir:309cf2674ee7a0749978cf8265ab91a60aea0f7d"
 url.mirrors: "https://a.mi/rror"
+### : Opam file information precedence :
+### mkdir -p REPO/packages
+### <REPO/repo>
+opam-version: "2.0"
+### opam switch create ordering --empty
+### opam repository add local ./REPO
+[local] Initialised
+[NOTE] Repository local has been added to the selections of switch ordering only.
+       Run `opam repository add local --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam repository remove default --this-switch
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+### opam update local
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[local] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### : first repo
+### opam show lorem --field version
+2
+### : then installed
+### opam install lorem.1
+The following actions will be performed:
+=== install 1 package
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+Done.
+### opam show lorem --field version
+1
+### : then pinned
+### <pin:lorem/lorem.opam>
+opam-version: "2.0"
+version: "3"
+### opam pin ./lorem -n
+lorem is now pinned to file://${BASEDIR}/lorem (version 3)
+### opam show lorem --field version
+3
+### : and with all that, local file preceeds them all
+### <pin:lorem.opam>
+opam-version: "2.0"
+version: "4"
+### opam show ./lorem.opam --field version
+4
