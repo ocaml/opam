@@ -154,6 +154,10 @@ val remove_dir: string -> unit
     only internal opam directory (and not tmp dir). *)
 val rmdir_cleanup : string -> unit
 
+(** [is_reg_dir filename] returns [true] only if [filename] is a directory,
+    exists and is not a symlink. Returns [false] otherwise. *)
+val is_reg_dir: string -> bool
+
 (** Change the current working directory *)
 val chdir: string -> unit
 
