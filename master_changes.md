@@ -198,6 +198,7 @@ users)
   * Untie lock with pin depend test from OPAMEDITOR behaviour [#6412 @rjbou]
   * Add test for lint E63 [#6438 @rjbou]
   * Add a test for packages with subpath in a repository [#6439 @rjbou]
+  * Add tests for `--keep-build-dir` and `OPAMKEEPBUILDDIR` [#6436 @rjbou @kit-ty-kate]
 
 ### Engine
 
