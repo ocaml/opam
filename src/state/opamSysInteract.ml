@@ -1129,6 +1129,12 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) st config sys_pack
            (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l)
               OpamSysPkg.Set.Op.(sys_packages ++ required) [])
        in
+
+  (* We exclude variables from
+       https://github.com/NixOS/nix/blob/e4bda20918ad2af690c2e938211a7d362548e403/src/nix/develop.cc#L308-L325
+    append to variables from
+       https://github.com/NixOS/nix/blob/e4bda20918ad2af690c2e938211a7d362548e403/src/nix/develop.cc#L347-L353
+    and exclude some other regarding the Nix derivation *)
        let contents =
 {|{ pkgs ? import <nixpkgs> {} }:
 with pkgs;
@@ -1139,12 +1145,37 @@ stdenv.mkDerivation {
   phases = [ "buildPhase" ];
 
   buildPhase = ''
-vars=("NIX_CC" "NIX_CC_FLAGS" "NIX_CFLAGS_COMPILE" "NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu" "NIX_LDFLAGS" "PKG_CONFIG_PATH")
-for var in "''${vars[@]}"; do
-  escaped="$(echo "''${!var}" | sed -e 's/^$/@/' -e 's/ /\\ /g')"
+while IFS='=' read -r var value; do
+  escaped="''$(echo "$value" | sed -e 's/^$/@/' -e 's/ /\\ /g')"
   echo "$var	=	$escaped	Nix" >> "$out"
-done
+done < <(env \
+  -u BASHOPTS \
+  -u HOME \
+  -u NIX_BUILD_TOP \
+  -u NIX_ENFORCE_PURITY \
+  -u NIX_LOG_FD \
+  -u NIX_REMOTE \
+  -u PPID \
+  -u SHELLOPTS \
+  -u SSL_CERT_FILE \
+  -u TEMP \
+  -u TEMPDIR \
+  -u TERM \
+  -u TMP \
+  -u TMPDIR \
+  -u TZ \
+  -u UID \
+  -u PATH \
+  -u XDG_DATA_DIRS \
+  -u  self-referential \
+  -u excluded_vars \
+  -u excluded_pattern \
+  -u phases \
+  -u buildPhase \
+  -u outputs)
+
 echo "PATH	+=	$PATH	Nix" >> "$out"
+echo "XDG_DATA_DIRS	+=	$XDG_DATA_DIRS	Nix" >> "$out"
   '';
 
   preferLocalBuild = true;
