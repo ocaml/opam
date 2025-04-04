@@ -1,0 +1,561 @@
+N0REP0
+### : Build directories removal & keeping
+### OPAMYES=1
+### :I: KEEP_BUILD_DIR off
+### opam switch create keepbuilddir0 --empty
+### OPAMKEEPBUILDDIR=0
+### :I:1: Repository package
+### rm -rf OPAM/keepbuilddir0/.opam-switch/build
+### <pkg:pkg-no-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### opam install pkg-no-keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install pkg-no-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg-no-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir0/.opam-switch/build
+### :I:2: Pinned package
+### rm -rf OPAM/keepbuilddir0/.opam-switch/build
+### :I:2:a: from install command
+### <pin:pin-no-keep-build-dir/opam>
+opam-version: "2.0"
+version: "pin"
+build: "true"
+### opam install ./pin-no-keep-build-dir
+[NOTE] Package pin-no-keep-build-dir does not exist in opam repositories registered in the current switch.
+pin-no-keep-build-dir is now pinned to file://${BASEDIR}/pin-no-keep-build-dir (version pin)
+The following actions will be performed:
+=== install 1 package
+  - install pin-no-keep-build-dir pin (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved pin-no-keep-build-dir.pin  (file://${BASEDIR}/pin-no-keep-build-dir)
+-> installed pin-no-keep-build-dir.pin
+Done.
+### ls OPAM/keepbuilddir0/.opam-switch/build
+### :I:2:b: unpin
+### opam unpin pin-no-keep-build-dir
+Ok, pin-no-keep-build-dir is no longer pinned to file://${BASEDIR}/pin-no-keep-build-dir (version pin)
+The following actions will be performed:
+=== remove 1 package
+  - remove pin-no-keep-build-dir pin
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   pin-no-keep-build-dir.pin
+Done.
+### ls OPAM/keepbuilddir0/.opam-switch/build
+### :I:2:c: from pin command
+### opam pin add ./pin-no-keep-build-dir
+[NOTE] Package pin-no-keep-build-dir does not exist in opam repositories registered in the current switch.
+pin-no-keep-build-dir is now pinned to file://${BASEDIR}/pin-no-keep-build-dir (version pin)
+
+The following actions will be performed:
+=== install 1 package
+  - install pin-no-keep-build-dir pin (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pin-no-keep-build-dir.pin
+Done.
+### ls OPAM/keepbuilddir0/.opam-switch/build
+### :I:3: Dev package
+### rm -rf OPAM/keepbuilddir0/.opam-switch/build
+### <pkg:dev-no-keep-build-dir.1>
+opam-version: "2.0"
+url {
+  src: "file:///never/used/path"
+  }
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/dev-no-keep-build-dir/dev-no-keep-build-dir.1/opam << EOF
+dev-repo: "file://${basedir}/dev-no-keep-build-dir"
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### <pin:dev-no-keep-build-dir/dev-no-keep-build-dir.opam>
+opam-version: "2.0"
+build: "true"
+### opam pin dev-no-keep-build-dir --dev
+[dev-no-keep-build-dir.1] synchronised (file://${BASEDIR}/dev-no-keep-build-dir)
+dev-no-keep-build-dir is now pinned to file://${BASEDIR}/dev-no-keep-build-dir (version 1)
+
+The following actions will be performed:
+=== install 1 package
+  - install dev-no-keep-build-dir 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved dev-no-keep-build-dir.1  (file://${BASEDIR}/dev-no-keep-build-dir)
+-> installed dev-no-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir0/.opam-switch/build
+### :I:4: Version pinned packages
+### rm -rf OPAM/keepbuilddir0/.opam-switch/build
+### <pkg:vpin-no-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/vpin-no-keep-build-dir/vpin-no-keep-build-dir.1/opam << EOF
+url { src:"file://${basedir}/vpin-no-keep-build-dir" }
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### <pin:vpin-no-keep-build-dir/vpin-no-keep-build-dir.opam>
+opam-version: "2.0"
+build: "true"
+### opam pin vpin-no-keep-build-dir 1
+vpin-no-keep-build-dir is now pinned to version 1
+
+The following actions will be performed:
+=== install 1 package
+  - install vpin-no-keep-build-dir 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved vpin-no-keep-build-dir.1  (file://${BASEDIR}/vpin-no-keep-build-dir)
+-> installed vpin-no-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir0/.opam-switch/build
+### :I:5: Repository package with local source
+### rm -rf OPAM/keepbuilddir0/.opam-switch/build
+### mkdir local-src-no-keep-build-dir
+### <pkg:local-src-no-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/local-src-no-keep-build-dir/local-src-no-keep-build-dir.1/opam << EOF
+url { src:"file://${basedir}/local-src-no-keep-build-dir" }
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install local-src-no-keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install local-src-no-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-src-no-keep-build-dir.1  (no changes)
+-> installed local-src-no-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir0/.opam-switch/build
+### :I:6: Repository package with local git source
+### rm -rf OPAM/keepbuilddir0/.opam-switch/build
+### mkdir local-git-no-keep-build-dir
+### git -C ./local-git-no-keep-build-dir init -q --initial-branch=master
+### git -C ./local-git-no-keep-build-dir commit -qm init --allow-empty
+### <pkg:local-git-no-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/local-git-no-keep-build-dir/local-git-no-keep-build-dir.1/opam << EOF
+url { src:"git+file://${basedir}/local-git-no-keep-build-dir" }
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install local-git-no-keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install local-git-no-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-git-no-keep-build-dir.1  (git+file://${BASEDIR}/local-git-no-keep-build-dir)
+-> installed local-git-no-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir0/.opam-switch/build
+### :II: KEEP_BUILD_DIR on
+### opam switch create keepbuilddir1 --empty
+### OPAMKEEPBUILDDIR=1
+### :II:1: Repository package
+### rm -rf OPAM/keepbuilddir1/.opam-switch/build
+### <pkg:pkg-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### opam install pkg-keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install pkg-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir1/.opam-switch/build
+pkg-keep-build-dir.1
+### :II:2: Pinned package
+### rm -rf OPAM/keepbuilddir1/.opam-switch/build
+### :II:2:a: from install command
+### <pin:pin-keep-build-dir/opam>
+opam-version: "2.0"
+version: "pin"
+build: "true"
+### opam install ./pin-keep-build-dir
+[NOTE] Package pin-keep-build-dir does not exist in opam repositories registered in the current switch.
+pin-keep-build-dir is now pinned to file://${BASEDIR}/pin-keep-build-dir (version pin)
+The following actions will be performed:
+=== install 1 package
+  - install pin-keep-build-dir pin (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved pin-keep-build-dir.pin  (file://${BASEDIR}/pin-keep-build-dir)
+-> installed pin-keep-build-dir.pin
+Done.
+### ls OPAM/keepbuilddir1/.opam-switch/build
+pin-keep-build-dir.pin
+### :II:2:b: unpin
+### opam unpin pin-keep-build-dir
+Ok, pin-keep-build-dir is no longer pinned to file://${BASEDIR}/pin-keep-build-dir (version pin)
+The following actions will be performed:
+=== remove 1 package
+  - remove pin-keep-build-dir pin
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   pin-keep-build-dir.pin
+Done.
+### ls OPAM/keepbuilddir1/.opam-switch/build
+pin-keep-build-dir.pin
+### :II:2:c: from pin command
+### opam pin add ./pin-keep-build-dir
+[NOTE] Package pin-keep-build-dir does not exist in opam repositories registered in the current switch.
+pin-keep-build-dir is now pinned to file://${BASEDIR}/pin-keep-build-dir (version pin)
+
+The following actions will be performed:
+=== install 1 package
+  - install pin-keep-build-dir pin (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pin-keep-build-dir.pin
+Done.
+### ls OPAM/keepbuilddir1/.opam-switch/build
+pin-keep-build-dir.pin
+### :II:3: Dev package
+### rm -rf OPAM/keepbuilddir1/.opam-switch/build
+### <pkg:dev-keep-build-dir.1>
+opam-version: "2.0"
+url {
+  src: "file:///never/used/path"
+  }
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/dev-keep-build-dir/dev-keep-build-dir.1/opam << EOF
+dev-repo: "file://${basedir}/dev-keep-build-dir"
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### <pin:dev-keep-build-dir/dev-keep-build-dir.opam>
+opam-version: "2.0"
+build: "true"
+### opam pin dev-keep-build-dir --dev
+[dev-keep-build-dir.1] synchronised (file://${BASEDIR}/dev-keep-build-dir)
+dev-keep-build-dir is now pinned to file://${BASEDIR}/dev-keep-build-dir (version 1)
+
+The following actions will be performed:
+=== install 1 package
+  - install dev-keep-build-dir 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved dev-keep-build-dir.1  (file://${BASEDIR}/dev-keep-build-dir)
+-> installed dev-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir1/.opam-switch/build
+dev-keep-build-dir.1
+### :II:4: Version pinned packages
+### rm -rf OPAM/keepbuilddir1/.opam-switch/build
+### <pkg:vpin-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/vpin-keep-build-dir/vpin-keep-build-dir.1/opam << EOF
+url { src:"file://${basedir}/vpin-keep-build-dir" }
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### <pin:vpin-keep-build-dir/vpin-keep-build-dir.opam>
+opam-version: "2.0"
+build: "true"
+### opam pin vpin-keep-build-dir 1
+vpin-keep-build-dir is now pinned to version 1
+
+The following actions will be performed:
+=== install 1 package
+  - install vpin-keep-build-dir 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved vpin-keep-build-dir.1  (file://${BASEDIR}/vpin-keep-build-dir)
+-> installed vpin-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir1/.opam-switch/build
+vpin-keep-build-dir.1
+### :II:5: Repository package with local source
+### rm -rf OPAM/keepbuilddir1/.opam-switch/build
+### mkdir local-src-keep-build-dir
+### <pkg:local-src-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/local-src-keep-build-dir/local-src-keep-build-dir.1/opam << EOF
+url { src:"file://${basedir}/local-src-keep-build-dir" }
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install local-src-keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install local-src-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-src-keep-build-dir.1  (no changes)
+-> installed local-src-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir1/.opam-switch/build
+local-src-keep-build-dir.1
+### :II:6: Repository package with local git source
+### rm -rf OPAM/keepbuilddir1/.opam-switch/build
+### mkdir local-git-keep-build-dir
+### git -C ./local-git-keep-build-dir init -q --initial-branch=master
+### git -C ./local-git-keep-build-dir commit -qm init --allow-empty
+### <pkg:local-git-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/local-git-keep-build-dir/local-git-keep-build-dir.1/opam << EOF
+url { src:"git+file://${basedir}/local-git-keep-build-dir" }
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install local-git-keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install local-git-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-git-keep-build-dir.1  (git+file://${BASEDIR}/local-git-keep-build-dir)
+-> installed local-git-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir1/.opam-switch/build
+local-git-keep-build-dir.1
+### :III: KEEP_BUILD_DIR on using --keep-build-dir
+### opam switch create keepbuilddir2 --empty
+### OPAMKEEPBUILDDIR=0
+### :III:1: Repository package
+### rm -rf OPAM/keepbuilddir2/.opam-switch/build
+### <pkg:pkg-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### opam install pkg-keep-build-dir --keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install pkg-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir2/.opam-switch/build
+pkg-keep-build-dir.1
+### :III:2: Pinned package
+### rm -rf OPAM/keepbuilddir2/.opam-switch/build
+### :III:2:a: from install command
+### <pin:pin-keep-build-dir/opam>
+opam-version: "2.0"
+version: "pin"
+build: "true"
+### opam install ./pin-keep-build-dir --keep-build-dir
+[NOTE] Package pin-keep-build-dir does not exist in opam repositories registered in the current switch.
+pin-keep-build-dir is now pinned to file://${BASEDIR}/pin-keep-build-dir (version pin)
+The following actions will be performed:
+=== install 1 package
+  - install pin-keep-build-dir pin (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved pin-keep-build-dir.pin  (file://${BASEDIR}/pin-keep-build-dir)
+-> installed pin-keep-build-dir.pin
+Done.
+### ls OPAM/keepbuilddir2/.opam-switch/build
+pin-keep-build-dir.pin
+### :III:2:b: unpin
+### opam unpin pin-keep-build-dir --keep-build-dir
+Ok, pin-keep-build-dir is no longer pinned to file://${BASEDIR}/pin-keep-build-dir (version pin)
+The following actions will be performed:
+=== remove 1 package
+  - remove pin-keep-build-dir pin
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   pin-keep-build-dir.pin
+Done.
+### ls OPAM/keepbuilddir2/.opam-switch/build
+pin-keep-build-dir.pin
+### :III:2:c: from pin command
+### opam pin add ./pin-keep-build-dir --keep-build-dir
+[NOTE] Package pin-keep-build-dir does not exist in opam repositories registered in the current switch.
+pin-keep-build-dir is now pinned to file://${BASEDIR}/pin-keep-build-dir (version pin)
+
+The following actions will be performed:
+=== install 1 package
+  - install pin-keep-build-dir pin (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pin-keep-build-dir.pin
+Done.
+### ls OPAM/keepbuilddir2/.opam-switch/build
+pin-keep-build-dir.pin
+### :III:3: Dev package
+### rm -rf OPAM/keepbuilddir2/.opam-switch/build
+### <pkg:dev-keep-build-dir.1>
+opam-version: "2.0"
+url {
+  src: "file:///never/used/path"
+  }
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/dev-keep-build-dir/dev-keep-build-dir.1/opam << EOF
+dev-repo: "file://${basedir}/dev-keep-build-dir"
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### <pin:dev-keep-build-dir/dev-keep-build-dir.opam>
+opam-version: "2.0"
+build: "true"
+### opam pin dev-keep-build-dir --dev --keep-build-dir
+[dev-keep-build-dir.1] synchronised (file://${BASEDIR}/dev-keep-build-dir)
+dev-keep-build-dir is now pinned to file://${BASEDIR}/dev-keep-build-dir (version 1)
+
+The following actions will be performed:
+=== install 1 package
+  - install dev-keep-build-dir 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved dev-keep-build-dir.1  (file://${BASEDIR}/dev-keep-build-dir)
+-> installed dev-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir2/.opam-switch/build
+dev-keep-build-dir.1
+### :III:4: Version pinned packages
+### rm -rf OPAM/keepbuilddir2/.opam-switch/build
+### <pkg:vpin-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/vpin-keep-build-dir/vpin-keep-build-dir.1/opam << EOF
+url { src:"file://${basedir}/vpin-keep-build-dir" }
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### <pin:vpin-keep-build-dir/vpin-keep-build-dir.opam>
+opam-version: "2.0"
+build: "true"
+### opam pin vpin-keep-build-dir 1 --keep-build-dir
+vpin-keep-build-dir is now pinned to version 1
+
+The following actions will be performed:
+=== install 1 package
+  - install vpin-keep-build-dir 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved vpin-keep-build-dir.1  (file://${BASEDIR}/vpin-keep-build-dir)
+-> installed vpin-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir2/.opam-switch/build
+vpin-keep-build-dir.1
+### :III:5: Repository package with local source
+### rm -rf OPAM/keepbuilddir2/.opam-switch/build
+### rmdir local-src-keep-build-dir
+### mkdir local-src-keep-build-dir
+### <pkg:local-src-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/local-src-keep-build-dir/local-src-keep-build-dir.1/opam << EOF
+url { src:"file://${basedir}/local-src-keep-build-dir" }
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install local-src-keep-build-dir --keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install local-src-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-src-keep-build-dir.1  (no changes)
+-> installed local-src-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir2/.opam-switch/build
+local-src-keep-build-dir.1
+### :III:6: Repository package with local git source
+### rm -rf OPAM/keepbuilddir2/.opam-switch/build
+### rm -rf local-git-keep-build-dir
+### mkdir local-git-keep-build-dir
+### git -C ./local-git-keep-build-dir init -q --initial-branch=master
+### git -C ./local-git-keep-build-dir commit -qm init --allow-empty
+### <pkg:local-git-keep-build-dir.1>
+opam-version: "2.0"
+build: "true"
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> REPO/packages/local-git-keep-build-dir/local-git-keep-build-dir.1/opam << EOF
+url { src:"git+file://${basedir}/local-git-keep-build-dir" }
+EOF
+### sh mkurl.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install local-git-keep-build-dir --keep-build-dir
+The following actions will be performed:
+=== install 1 package
+  - install local-git-keep-build-dir 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-git-keep-build-dir.1  (git+file://${BASEDIR}/local-git-keep-build-dir)
+-> installed local-git-keep-build-dir.1
+Done.
+### ls OPAM/keepbuilddir2/.opam-switch/build
+local-git-keep-build-dir.1

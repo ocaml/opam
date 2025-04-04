@@ -1071,6 +1071,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:json.unix.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-keep-build-dir)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff keep-build-dir.test keep-build-dir.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-keep-build-dir)))
+
+(rule
+ (targets keep-build-dir.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:keep-build-dir.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-legacy-git)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
