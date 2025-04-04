@@ -1169,18 +1169,23 @@ let get_depexts ?(force=false) ?(recover=false) t ~new_packages ~all_packages =
             (OpamSwitchState.depexts_status_of_packages t more_pkgs
                ~old_packages:(OpamPackage.Set.diff all_packages more_pkgs))
     in
-    let avail, required, nf =
-      OpamPackage.Set.fold (fun pkg (avail,req,nf) ->
+    let depexts =
+      let open OpamSysPkg in
+      OpamPackage.Set.fold (fun pkg acc ->
           match OpamPackage.Map.find_opt pkg sys_packages with
           | Some sys ->
-            OpamSysPkg.(Set.union avail sys.s_available),
-            OpamSysPkg.(Set.union req sys.s_required),
-            OpamSysPkg.(Set.union nf sys.s_not_found)
-          | None -> avail, req, nf)
-        all_packages (OpamSysPkg.Set.empty, OpamSysPkg.Set.empty, OpamSysPkg.Set.empty)
+            { s_available = Set.union acc.s_available sys.s_available;
+              s_required = Set.union acc.s_required sys.s_required;
+              s_not_found = Set.union acc.s_not_found sys.s_not_found }
+          | None -> acc)
+        all_packages ({
+            s_available = Set.empty;
+            s_required = Set.empty;
+            s_not_found = Set.empty;
+        })
     in
-    print_depext_msg (avail, nf);
-    avail, required
+    print_depext_msg (depexts.s_available, depexts.s_not_found);
+    depexts.s_available, depexts.s_required
 
 let install_sys_packages ~st_conv ~map_sysmap ~confirm ~sys_packages ~required env config t =
   let rec entry_point t sys_packages required =
