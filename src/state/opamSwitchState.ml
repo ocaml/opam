@@ -765,8 +765,8 @@ let is_version_pinned st name =
 
 let source_dir st nv =
   if OpamPackage.Set.mem nv st.pinned
-  then OpamPath.Switch.pinned_package st.switch_global.root st.switch nv.name
-  else OpamPath.Switch.sources st.switch_global.root st.switch nv
+  then Some (OpamPath.Switch.pinned_package st.switch_global.root st.switch nv.name)
+  else None
 
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in

@@ -208,7 +208,7 @@ let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
 *)
   OpamRepository.pull_tree
     ~cache_dir:(OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir))
-    (OpamPackage.to_string nv) srcdir checksum ~working_dir ?subpath mirrors
+    (OpamPackage.to_string nv) (Some srcdir) checksum ~working_dir ?subpath mirrors
   @@| OpamRepository.report_fetch_result nv
 
 let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
@@ -427,8 +427,11 @@ let dev_package st ?autolock ?working_dir nv =
     if (OpamFile.URL.url url).OpamUrl.backend = `http then
       Done ((fun st -> st), false)
     else
-      fetch_dev_package url (OpamSwitchState.source_dir st nv)
-        ?subpath:(OpamFile.URL.subpath url) ?working_dir nv
+      (match OpamSwitchState.source_dir st nv with
+       | None -> Done (Up_to_date ())
+       | Some srcdir ->
+        fetch_dev_package url srcdir
+          ?subpath:(OpamFile.URL.subpath url) ?working_dir nv)
       @@| fun result ->
       (fun st -> st), match result with Result () -> true | _ -> false
 
@@ -555,8 +558,9 @@ let cleanup_source st old_opam_opt new_opam =
     | _ -> new_opam_o <> old_opam_o
   in
   if clean then
-    OpamFilename.rmdir
-      (OpamSwitchState.source_dir st (OpamFile.OPAM.package new_opam))
+    match OpamSwitchState.source_dir st (OpamFile.OPAM.package new_opam) with
+    | Some srcdir -> OpamFilename.rmdir srcdir
+    | None -> ()
 
 let download_package_source_t st url nv_dirs =
   let cache_dir = OpamRepositoryPath.download_cache st.switch_global.root in
@@ -617,7 +621,7 @@ let download_shared_package_source st url nvs =
 let download_package_source st nv dirname =
   download_package_source_t st
     (OpamFile.OPAM.url (OpamSwitchState.opam st nv))
-    [nv, dirname]
+    [nv, Some dirname]
   @@| fun (sources, extra_sources) ->
   sources,
   List.map (fun (_nv, name, failure) -> name, failure) extra_sources

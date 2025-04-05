@@ -40,7 +40,7 @@ val update: repository -> dirname -> [`Changes | `No_changes] OpamProcess.job
 val pull_shared_tree:
   ?cache_dir:dirname ->
   ?cache_urls:OpamUrl.t list ->
-  (string * OpamFilename.Dir.t * subpath option) list -> OpamHash.t list ->
+  (string * OpamFilename.Dir.t option * subpath option) list -> OpamHash.t list ->
   url list -> string download OpamProcess.job
 
 (* Same as {!pull_shared_tree}, but for a unique label/dirname.
@@ -49,7 +49,7 @@ val pull_shared_tree:
 val pull_tree:
   string -> ?full_fetch:bool -> ?cache_dir:dirname -> ?cache_urls:url list ->
   ?working_dir:bool -> ?subpath:subpath ->
-  dirname -> OpamHash.t list -> url list ->
+  dirname option -> OpamHash.t list -> url list ->
   string download OpamProcess.job
 
 (** Same as [pull_tree], but for fetching a single file. *)

@@ -161,10 +161,6 @@ module Switch: sig
   (** Clean, uncompressed sources for this switch: {i $meta/sources/} *)
   val sources_dir: t -> switch -> dirname
 
-  (** Clean, uncompressed source directory for this package: {i
-      $meta/sources/$name.$version/} *)
-  val sources: t -> switch -> package -> dirname
-
   (** Temporary switch-local directory where a by-hash map of extra files may be stored.
       This is used for switch-imports: {i $meta/extra-files-cache} *)
   val extra_files_dir: t -> switch -> dirname
