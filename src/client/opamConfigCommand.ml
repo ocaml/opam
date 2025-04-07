@@ -879,6 +879,8 @@ let global_allowed_fields, global_allowed_sections =
              c),
         Config.with_git_location_opt
           (InitConfig.git_location in_config ++ Config.git_location Config.empty);
+        "default-compiler", Atomic,
+        Config.with_default_compiler (Config.default_compiler Config.empty);
       ] @ List.map (fun f ->
           f, Atomic, Config.with_criteria
             (Config.criteria Config.empty))

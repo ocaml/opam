@@ -733,6 +733,8 @@ Updated ${BASEDIR}/OPAM/repo/test/packages/P3.1~weird-version.test/opam
 Updated ${BASEDIR}/OPAM/repo/test/packages/P4.1/opam
 Updated ${BASEDIR}/OPAM/repo/test/packages/P5.1/opam
 Now run 'opam upgrade' to apply any package updates.
+### opam option --global default-compiler="ocaml"
+Set to '"ocaml"' the field default-compiler in global configuration
 ### opam switch create system "--formula=[\"ocaml\" {= \"system\"}]"
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>

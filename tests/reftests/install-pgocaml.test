@@ -3,7 +3,7 @@ f372039d
 ### opam switch create --fake 4.06.1
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml-base-compiler" {= "4.06.1"} | "ocaml-system" {= "4.06.1"}]
+Switch invariant: ["ocaml-base-compiler" {= "4.06.1"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of base-bigarray.base

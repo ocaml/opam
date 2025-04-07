@@ -1147,6 +1147,17 @@ let v2_2 = OpamVersion.of_string "2.2"
 
 let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 
+let v2_4_alpha = OpamVersion.of_string "2.4~alpha"
+
+let from_2_2_to_2_4_alpha ~on_the_fly:_ _ conf =
+  (* default-compiler was never used outside of 'opam init' before
+     opam 2.4.0~alpha1 so it is safe to set unconditionnally *)
+  let default_compiler =
+    OpamFormula.Atom (OpamPackage.Name.of_string "ocaml-base-compiler",
+                      OpamFormula.Empty)
+  in
+  OpamFile.Config.with_default_compiler default_compiler conf, gtc_none
+
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
@@ -1244,6 +1255,7 @@ let as_necessary ?reinit requested_lock global_lock root config =
       v2_2_alpha,  from_2_1_to_2_2_alpha;
       v2_2_beta,   from_2_2_alpha_to_2_2_beta;
       v2_2,        from_2_2_beta_to_2_2;
+      v2_4_alpha,  from_2_2_to_2_4_alpha;
     ]
     |> List.filter (fun (v,_) ->
         OpamVersion.compare root_version v < 0)
