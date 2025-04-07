@@ -740,17 +740,16 @@ let get_compiler_packages ?repos rt =
   |> OpamPackage.keys
 
 let guess_compiler_invariant ?repos rt strings =
+  let gt = rt.repos_global in
   let repos = match repos with
-    | None -> OpamGlobalState.repos_list rt.repos_global
+    | None -> OpamGlobalState.repos_list gt
     | Some r -> r
   in
   let opams = OpamRepositoryState.build_index rt repos  in
   let packages = OpamPackage.keys opams in
-  let compiler_packages =
-    OpamPackage.Map.filter
-      (fun _ -> OpamFile.OPAM.has_flag Pkgflag_Compiler)
-      opams
-    |> OpamPackage.keys
+  let default_compiler_dnf =
+    OpamFormula.to_dnf
+      (OpamFile.Config.default_compiler gt.config)
   in
   let invariant =
     List.fold_left (fun acc str ->
@@ -758,26 +757,35 @@ let guess_compiler_invariant ?repos rt strings =
           let (name, _) as atom = OpamFormula.atom_of_string str in
           if OpamPackage.Set.exists (OpamFormula.check atom)
               (OpamPackage.packages_of_name packages name)
-          then OpamFormula.ands [acc; Atom atom]
+          then And (acc, Atom atom)
           else raise Not_found
         with Failure _ | Not_found ->
         try
           let v = OpamPackage.Version.of_string str in
           let candidates =
-            OpamPackage.Set.filter (fun nv -> nv.version = v)
-              compiler_packages
+            List.filter_map (fun pkgs ->
+                match
+                  OpamPackage.Set.find_opt
+                    (fun nv -> OpamPackage.Version.equal nv.version v)
+                    (OpamFormula.packages_of_atoms packages pkgs)
+                with
+                | None -> None
+                | Some nv ->
+                  Some
+                    (List.fold_left (fun acc ((n, _v) as atom) ->
+                         let atom =
+                           if OpamPackage.Name.equal nv.name n then
+                             (n, Some (`Eq, nv.version))
+                           else
+                             atom
+                         in
+                         And (acc, Atom atom)) Empty pkgs))
+              default_compiler_dnf
           in
-          if OpamPackage.Set.is_empty candidates then
+          if List.is_empty candidates then
             raise Not_found
           else
-          let disj =
-            OpamPackage.Set.fold
-              (fun nv acc ->
-                 OpamFormula.ors
-                   [acc; Atom (OpamSolution.eq_atom_of_package nv)])
-              candidates OpamFormula.Empty
-          in
-          OpamFormula.ands [acc; disj]
+            And (acc, OpamFormula.ors candidates)
         with
         | Failure _ ->
           OpamConsole.error_and_exit `Bad_arguments
