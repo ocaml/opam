@@ -746,9 +746,15 @@ let guess_compiler_invariant ?repos rt strings =
   in
   let opams = OpamRepositoryState.build_index rt repos  in
   let packages = OpamPackage.keys opams in
+  let sys_ocaml = OpamVariable.of_string "sys-ocaml-version" in
   let compiler_packages =
     OpamPackage.Map.filter
-      (fun _ -> OpamFile.OPAM.has_flag Pkgflag_Compiler)
+      (fun _ opam ->
+         OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
+         not @@ List.exists (fun var ->
+             OpamVariable.Full.is_global var &&
+             OpamVariable.equal sys_ocaml (OpamVariable.Full.variable var))
+           (OpamFilter.variables (OpamFile.OPAM.available opam)))
       opams
     |> OpamPackage.keys
   in
