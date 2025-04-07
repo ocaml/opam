@@ -248,7 +248,9 @@ wrap-install-commands: ["%{hooks}%/a-script.sh" "wrap-install"]
 wrap-remove-commands: ["%{hooks}%/a-script.sh" "wrap-remove"]
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "norepo" {"file://${BASEDIR}/REPO"}
+repo "norepo" {
+url: "file://${BASEDIR}/REPO"
+}
 ### sh $OPAMROOT/opam-init/hooks/a-script.sh test
 script test launched STOP i repeat STOP script test launched
 ### :: partially configured opamrc ::
@@ -302,4 +304,6 @@ wrap-install-commands: ["%{hooks}%/a-script.sh" "wrap-install"]
 wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### opam-cat $OPAMROOT/repo/repos-config
 opam-version: "2.0"
-repositories: "norepo" {"file://${BASEDIR}/REPO"}
+repo "norepo" {
+url: "file://${BASEDIR}/REPO"
+}
