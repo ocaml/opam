@@ -1,0 +1,23 @@
+N0REP0
+### : The effect of env updates containing empty strings on variables.sh
+### opam switch create variables-sh --empty
+### <pkg:empty-setenv.1>
+opam-version: "2.0"
+setenv: [
+  [ EMPTY_SET = "" ]
+  [ EMPTY_PREPEND += "" ]
+  [ EMPTY_TRAILING_PREPEND := "" ]
+  [ EMPTY_APPEND =+ "" ]
+  [ EMPTY_TRAILING_APPEND =: "" ]
+  [ EMPTY_REPLACE =+= "" ]
+]
+### opam install empty-setenv
+The following actions will be performed:
+=== install 1 package
+  - install empty-setenv 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed empty-setenv.1
+Done.
+### cat OPAM/opam-init/variables.sh | grep '^EMPTY_'
+EMPTY_SET=''; export EMPTY_SET;

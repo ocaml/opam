@@ -102,6 +102,7 @@ users)
 
 ## Env
   * Add the `OPAMSOLVERTOLERANCE` environment variable to allow users to fix solver timeouts for good [#5510 @kit-ty-kate - fix #3230]
+  * [BUG] Don't write empty environment update segments to variables.sh (`FOO += ""` no longer adds `FOO='':"$FOO"; export FOO;`) [#6198 @dra27]
 
 ## Opamfile
 
@@ -206,6 +207,7 @@ users)
   * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
   * Add pin test to show stored overlay opam files [#6209 @rjbou]
   * Add show test to highlight precedence of opam file selection and check that if an opam file is given it is always this one that is taken [#6209 @rjbou]
+  * Add a reftest showing the effect of env updates containing empty strings on `variables.sh` [#6198 @kit-ty-kate]
 
 ### Engine
 
