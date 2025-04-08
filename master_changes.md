@@ -284,6 +284,7 @@ users)
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
 
 ## opam-core
+  * `OpamCompat.String.{spellcheck}`: (along with all its dependencies, which are not exposed for now) was added [#6434 @arozovyk]
   * `OpamConsole`: Replace `black` text style (unused and not very readable) by `gray` [#6358 @kit-ty-kate]
   * `OpamConsole.pause`: Ensure the function always prints a newline character at the end [#6376 @kit-ty-kate]
   * `OpamFilename.patch`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
