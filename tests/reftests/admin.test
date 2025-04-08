@@ -736,6 +736,81 @@ opam-version: "2.0"
 ### opam admin compare-versions 0.0.9 --le 0.0.10
 ### opam admin compare-versions 0.2.2 --le 0.2.1
 # Return code 1 #
+### ::::::::::::::
+### :VIII: Filter :
+### ::::::::::::::
+### rm -rf packages
+### <packages/proin/proin.1/opam>
+opam-version: "2.0"
+available: [ os = "linux" ]
+### <packages/porttitor/porttitor.1/opam>
+opam-version: "2.0"
+### <packages/orci/orci.1/opam>
+opam-version: "2.0"
+### <packages/nec/nec.1/opam>
+opam-version: "2.0"
+depends: [ "proin" | "enim" ]
+### <packages/nonummy/nonummy.1/opam>
+opam-version: "2.0"
+### <packages/molestie/molestie.1/opam>
+opam-version: "2.0"
+### <packages/enim/enim.1/opam>
+opam-version: "2.0"
+available: [ os = "win32" ]
+### <packages/est/est.1/opam>
+opam-version: "2.0"
+available: false
+### opam admin list
+# Packages matching: available
+# Name    # Installed # Synopsis
+enim      --
+molestie  --
+nec       --
+nonummy   --
+orci      --
+porttitor --
+proin     --
+### opam admin filter --dry-run 'n*'
+The following 2 packages will be kept in the repository (6 packages will be REMOVED):
+nec.1 nonummy.1
+rm -rf ${BASEDIR}/packages/enim/enim.1
+rm -rf ${BASEDIR}/packages/est/est.1
+rm -rf ${BASEDIR}/packages/molestie/molestie.1
+rm -rf ${BASEDIR}/packages/orci/orci.1
+rm -rf ${BASEDIR}/packages/porttitor/porttitor.1
+rm -rf ${BASEDIR}/packages/proin/proin.1
+### opam admin filter --dry-run 'n*' --remove
+The following 2 packages will be REMOVED from the repository (6 packages will be kept):
+nec.1 nonummy.1
+rm -rf ${BASEDIR}/packages/nec/nec.1
+rm -rf ${BASEDIR}/packages/nonummy/nonummy.1
+### opam admin filter --dry-run --available
+The following 7 packages will be kept in the repository (1 packages will be REMOVED):
+enim.1 molestie.1 nec.1 nonummy.1 orci.1 porttitor.1 proin.1
+rm -rf ${BASEDIR}/packages/est/est.1
+### opam admin filter --dry-run --resolve nec --environment 'os=win32'
+The following 2 packages will be kept in the repository (6 packages will be REMOVED):
+enim.1 nec.1
+rm -rf ${BASEDIR}/packages/est/est.1
+rm -rf ${BASEDIR}/packages/molestie/molestie.1
+rm -rf ${BASEDIR}/packages/nonummy/nonummy.1
+rm -rf ${BASEDIR}/packages/orci/orci.1
+rm -rf ${BASEDIR}/packages/porttitor/porttitor.1
+rm -rf ${BASEDIR}/packages/proin/proin.1
+### opam admin filter --dry-run --resolve nec --environment 'os=linux'
+The following 2 packages will be kept in the repository (6 packages will be REMOVED):
+nec.1 proin.1
+rm -rf ${BASEDIR}/packages/enim/enim.1
+rm -rf ${BASEDIR}/packages/est/est.1
+rm -rf ${BASEDIR}/packages/molestie/molestie.1
+rm -rf ${BASEDIR}/packages/nonummy/nonummy.1
+rm -rf ${BASEDIR}/packages/orci/orci.1
+rm -rf ${BASEDIR}/packages/porttitor/porttitor.1
+### opam admin filter --dry-run --available --environment 'os=linux'
+The following 6 packages will be kept in the repository (2 packages will be REMOVED):
+molestie.1 nec.1 nonummy.1 orci.1 porttitor.1 proin.1
+rm -rf ${BASEDIR}/packages/enim/enim.1
+rm -rf ${BASEDIR}/packages/est/est.1
 ### ::::::::::::::::::::::
 ### :C: Specific cases :
 ### ::::::::::::::::::::::
