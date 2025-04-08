@@ -124,6 +124,9 @@ users)
 ## opam-repository
 
 ## opam-state
+  * `OpamStateConfig`: Make the `?lock_kind` parameters non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
+  * `OpamSwitchState.did_you_mean`: was added, returning a hint string when package names are misspelled [#6434 @arozovyk]
+  * `OpamSwitchState.load_selections`: Make the `?lock_kind` parameter non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
 
 ## opam-solver
 
