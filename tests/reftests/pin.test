@@ -819,10 +819,8 @@ Done.
 dev1
 ### sh add-pin.sh nip-of.dev2 git
 ### opam install ./nip-of
-[nip-of.dev1] synchronised (git+file://${BASEDIR}/nip-of#master)
-[nip-of] Conflicting update of the metadata from git+file://${BASEDIR}/nip-of#master.
-Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-of (there will be a backup)? [Y/n] y
-User metadata backed up in ${BASEDIR}/OPAM/backup/nip-of.bak
+nip-of is now pinned to git+file://${BASEDIR}/nip-of#master (version dev2)
+[nip-of.dev2] synchronised (git+file://${BASEDIR}/nip-of#master)
 The following actions will be performed:
 === upgrade 1 package
   - upgrade nip-of dev1 to dev2 (pinned)
@@ -870,10 +868,8 @@ Done.
 dev1
 ### sh add-pin.sh nip-fo.dev2 git
 ### opam install ./nip-fo
-[nip-fo.dev1] synchronised (git+file://${BASEDIR}/nip-fo#master)
-[nip-fo] Conflicting update of the metadata from git+file://${BASEDIR}/nip-fo#master.
-Override files in ${BASEDIR}/OPAM/opamfiles/.opam-switch/overlay/nip-fo (there will be a backup)? [Y/n] y
-User metadata backed up in ${BASEDIR}/OPAM/backup/nip-fo.bak
+nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#master (version dev2)
+[nip-fo.dev2] synchronised (git+file://${BASEDIR}/nip-fo#master)
 The following actions will be performed:
 === upgrade 1 package
   - upgrade nip-fo dev1 to dev2 (pinned)
@@ -888,18 +884,20 @@ dev2
 ### git -C ./nip-fo add nip-fo.dev3.t
 ### git -C ./nip-fo commit -qm "add install file"
 ### opam install ./nip-fo
+nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#master (version dev3)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/nip-fo (`--working-dir' not specified or specified with no argument).
-[nip-fo.dev2] synchronised (git+file://${BASEDIR}/nip-fo#master)
+[nip-fo.dev3] synchronised (git+file://${BASEDIR}/nip-fo#master)
 The following actions will be performed:
-=== recompile 1 package
-  - recompile nip-fo dev2 (pinned)
+=== upgrade 1 package
+  - upgrade nip-fo dev2 to dev3 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip-fo.dev3  (no changes)
 -> removed   nip-fo.dev2
--> installed nip-fo.dev2
+-> installed nip-fo.dev3
 Done.
 ### opam show nip-fo --field=version
-dev2
+dev3
 ### :::::::::::::::::::::::
 ### :X: --current is in pin-legacy.test
 ### :::::::::::::::::::::::
@@ -1035,7 +1033,7 @@ The following actions will be performed:
 -> installed dep2.2
 -> installed dep1.dev
 Done.
-### : opam install . --deps-only not selecting the good version
+### :C:d: opam install . --deps-only not selecting the good version
 ### <pkg:simcomp.1>
 opam-version: "2.0"
 flags: compiler
@@ -1068,3 +1066,296 @@ opam-version: "2.0"
 
 No solution found, exiting
 # Return code 20 #
+### :C:e: Make sure opam install works when the opam file changes and the package is pinned
+### opam switch create --empty local-pin-pinned-packages
+### <pkg:dependency.1>
+opam-version: "2.0"
+### <pkg:dependency.2>
+opam-version: "2.0"
+### <pkg:dependency.3>
+opam-version: "2.0"
+### mkdir pin-change
+### git -C pin-change init -q --initial-branch=master
+### git -C pin-change config core.autocrlf false
+### <pin:pin-change/opam>
+opam-version: "2.0"
+### git -C pin-change add opam
+### git -C pin-change commit -qm first-commit
+### :C:e:1: behaviour when the package is not pinned
+### opam install --deps-only --show ./pin-change
+Nothing to do.
+### <pin:pin-change/opam>
+opam-version: "2.0"
+depends: "dependency" {= "1"}
+### opam install --deps-only --show ./pin-change
+The following actions would be performed:
+=== install 1 package
+  - install dependency 1 [required by pin-change]
+### :C:e:2: behaviour when the package is pinned
+### <pin:pin-change/opam>
+opam-version: "2.0"
+### opam install ./pin-change
+[NOTE] Package pin-change does not exist in opam repositories registered in the current switch.
+pin-change is now pinned to git+file://${BASEDIR}/pin-change#master (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install pin-change dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved pin-change.dev  (git+file://${BASEDIR}/pin-change#master)
+-> installed pin-change.dev
+Done.
+### <pin:pin-change/opam>
+opam-version: "2.0"
+depends: "dependency" {= "1"}
+### :C:e:3: behaviour when the package is not pinned
+### opam install ./pin-change
+pin-change is now pinned to git+file://${BASEDIR}/pin-change#master (version dev)
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
+[pin-change.dev] synchronised (no changes)
+The following actions will be performed:
+=== recompile 1 package
+  - recompile pin-change dev (pinned)
+=== install 1 package
+  - install   dependency 1            [required by pin-change]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dependency.1
+-> retrieved pin-change.dev  (no changes)
+-> removed   pin-change.dev
+-> installed pin-change.dev
+Done.
+### <pin:pin-change/opam>
+opam-version: "2.0"
+depends: "dependency" {= "2"}
+### opam install --deps-only ./pin-change
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
+[pin-change.dev] synchronised (no changes)
+The following actions will be performed:
+=== recompile 1 package
+  - recompile pin-change dev (pinned) [uses dependency]
+=== upgrade 1 package
+  - upgrade   dependency 1 to 2       [required by pin-change]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dependency.1
+-> installed dependency.2
+-> retrieved pin-change.dev  (no changes)
+-> removed   pin-change.dev
+-> installed pin-change.dev
+Done.
+### opam remove pin-change
+The following actions will be performed:
+=== remove 1 package
+  - remove pin-change dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   pin-change.dev
+Done.
+### <pin:pin-change/opam>
+opam-version: "2.0"
+depends: "dependency" {= "3"}
+### opam install --deps-only ./pin-change/opam
+[NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
+[pin-change.dev] synchronised (no changes)
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade dependency 2 to 3 [required by pin-change]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dependency.2
+-> installed dependency.3
+Done.
+### opam pin | '\(at [a-f0-9]+\)' -> '(at HASH)'
+pin-change.dev  (uninstalled)  git  git+file://${BASEDIR}/pin-change#master  (at HASH)
+### :C:f: stored overlay opam file
+### opam switch create --empty overlays
+### :C:f:1: Common case
+### <pkg:dep-over.1>
+opam-version: "2.0"
+### <pin:over/over.opam>
+opam-version: "2.0"
+depends: "dep-over"
+### opam pin ./over
+[NOTE] Package over does not exist in opam repositories registered in the current switch.
+over is now pinned to file://${BASEDIR}/over (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep-over 1            [required by over]
+  - install over     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-over.1
+-> retrieved over.dev  (file://${BASEDIR}/over)
+-> installed over.dev
+Done.
+### opam-cat OPAM/overlays/.opam-switch/overlay/over/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+depends: "dep-over"
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "over"
+opam-version: "2.0"
+synopsis: "A word"
+version: "dev"
+url {
+src: "file://${BASEDIR}/over"
+}
+### :C:f:2: Locked
+### <pkg:dep-over-locked.1>
+opam-version: "2.0"
+### <pkg:dep-over-locked.2>
+opam-version: "2.0"
+### <pin:over-locked/over-locked.opam>
+opam-version: "2.0"
+depends: "dep-over-locked"
+### opam install ./over-locked dep-over-locked.1
+[NOTE] Package over-locked does not exist in opam repositories registered in the current switch.
+over-locked is now pinned to file://${BASEDIR}/over-locked (version dev)
+The following actions will be performed:
+=== install 2 packages
+  - install dep-over-locked 1
+  - install over-locked     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-over-locked.1
+-> retrieved over-locked.dev  (file://${BASEDIR}/over-locked)
+-> installed over-locked.dev
+Done.
+### opam lock over-locked
+Generated lock files for:
+  - over-locked.dev: ${BASEDIR}/over-locked.opam.locked
+### mv over-locked.opam.locked over-locked/over-locked.opam.locked
+### opam remove over-locked
+The following actions will be performed:
+=== remove 1 package
+  - remove over-locked dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   over-locked.dev
+Done.
+### opam install dep-over-locked.2
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade dep-over-locked 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep-over-locked.1
+-> installed dep-over-locked.2
+Done.
+### opam install over-locked --locked
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[over-locked.dev] synchronised (file://${BASEDIR}/over-locked)
+[over-locked] Installing new package description from upstream file://${BASEDIR}/over-locked
+
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade dep-over-locked 2 to 1       [required by over-locked]
+=== install 1 package
+  - install   over-locked     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep-over-locked.2
+-> installed dep-over-locked.1
+-> installed over-locked.dev
+Done.
+### opam-cat OPAM/overlays/.opam-switch/overlay/over-locked/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+depends: ["dep-over-locked" {= "1"}]
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "over-locked"
+opam-version: "2.0"
+synopsis: "A word"
+version: "dev"
+x-locked: "locked"
+url {
+src: "file://${BASEDIR}/over-locked"
+}
+### :C:f:3: Subpath
+### <pkg:dep-over-subpath.1>
+opam-version: "2.0"
+### <pin:over-subpath/inner/over-subpath.opam>
+opam-version: "2.0"
+depends: "dep-over-subpath"
+### opam pin ./over-subpath --subpath inner
+[NOTE] Package over-subpath does not exist in opam repositories registered in the current switch.
+over-subpath is now subpath-pinned to directory /inner in file://${BASEDIR}/over-subpath (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep-over-subpath 1            [required by over-subpath]
+  - install over-subpath     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-over-subpath.1
+-> retrieved over-subpath.dev  (directory /inner in file://${BASEDIR}/over-subpath)
+-> installed over-subpath.dev
+Done.
+### opam-cat OPAM/overlays/.opam-switch/overlay/over-subpath/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+depends: "dep-over-subpath"
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "over-subpath"
+opam-version: "2.0"
+synopsis: "A word"
+version: "dev"
+x-subpath: "inner"
+url {
+src: "file://${BASEDIR}/over-subpath"
+}
+### :C:f:3: Env path rewrite
+### <pkg:dep-over-epr.1>
+opam-version: "2.0"
+### <pin:over-epr/over-epr.opam>
+opam-version: "2.0"
+depends: "dep-over-epr"
+x-env-path-rewrite: [
+  [ SOME_ENV ":" "target" ]
+]
+### opam pin ./over-epr
+[NOTE] Package over-epr does not exist in opam repositories registered in the current switch.
+over-epr is now pinned to file://${BASEDIR}/over-epr (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep-over-epr 1            [required by over-epr]
+  - install over-epr     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-over-epr.1
+-> retrieved over-epr.dev  (file://${BASEDIR}/over-epr)
+-> installed over-epr.dev
+Done.
+### opam-cat OPAM/overlays/.opam-switch/overlay/over-epr/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+depends: "dep-over-epr"
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "over-epr"
+opam-version: "2.0"
+synopsis: "A word"
+version: "dev"
+x-env-path-rewrite: [[SOME_ENV ":" "target"]]
+url {
+src: "file://${BASEDIR}/over-epr"
+}

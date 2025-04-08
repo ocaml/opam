@@ -28,6 +28,8 @@ users)
 
 ## Install
   * Do not keep the build directory of the pinned packages [#6436 @kit-ty-kate]
+  * [BUG] Fix `opam install <local_dir>` not updating and storing pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
+  * [BUG] Fix `opam install --deps-only/--show-action <local_dir>` not updating (without storing) pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
 
 ## Build (package)
   * Patches are now applied using the `patch` OCaml library instead of GNU Patch [#5892 @kit-ty-kate - fix #6019 #6052]
@@ -201,6 +203,9 @@ users)
   * Add a test for packages with subpath in a repository [#6439 @rjbou]
   * Add tests for `--keep-build-dir` and `OPAMKEEPBUILDDIR` [#6436 @rjbou @kit-ty-kate]
   * Add admin filter subcommand test [#6166 @rjbou]
+  * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
+  * Add pin test to show stored overlay opam files [#6209 @rjbou]
+  * Add show test to highlight precedence of opam file selection and check that if an opam file is given it is always this one that is taken [#6209 @rjbou]
 
 ### Engine
 
@@ -247,6 +252,7 @@ users)
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
   * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
   * `OpamArg.hash_kinds`: was added [#5960 @kit-ty-kate]
+  * `OpamAuxCommands.{simulate_autopin,autopin ~simulate:true}`: now updates the `reinstall` field of the returned `switch_state` if necessary [#6209 @kit-ty-kate]
   * `OpamRepositoryCommand.switch_repos`: expose the function [#5014 @kit-ty-kate]
   * `OpamLockCommand.lock_opam`: add `~keep_local` argument to add local pins to pin-depends (and not resolve them) [#6411 @rjbou]
   * `OpamLockCommand.lock_opam`: make the `?only_direct` argument non-optional [#6411 @kit-ty-kate]
