@@ -1177,7 +1177,7 @@ let get_depexts ?(force=false) ?(recover=false) t ~new_packages ~all_packages =
               s_not_found = OpamSysPkg.Set.union acc.s_not_found sys.s_not_found;
             }
           | None -> acc)
-        all_packages
+        new_packages
         { OpamSysPkg.
           s_available = OpamSysPkg.Set.empty;
           s_required = OpamSysPkg.Set.empty;
