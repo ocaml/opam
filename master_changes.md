@@ -190,6 +190,8 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a package spelling test `hints.test` outlining which types of misspellings are covered and which are not [#6434 @arozovyk]
+  * Add a package spelling test `hints-commands.test` demonstrating the hints provided across various commands when a package name is misspelled [#6434 @arozovyk]
   * Add switch removal test: failure on removal linked switch [#6276 @btjorge]
   * Extend the tests on opam admin to include packages using builtin global variables [#6331 @kit-ty-kate]
   * Extend the tests on opam admin check by including all the arguments [#6331 @kit-ty-kate @rjbou]
@@ -253,6 +255,7 @@ users)
 # API updates
 ## opam-client
   * `OpamAction.prepare_package_build`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
+  * Add package spelling hints in `OpamClient`, `OpamCommands`, `OpamListCommand`, `OpamLockCommand`, `OpamPinCommand`, `OpamSolution`, `OpamSwitchCommand` and `OpamTreeCommand` [#6434 @arozovyk]
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
   * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
   * `OpamArg.hash_kinds`: was added [#5960 @kit-ty-kate]
