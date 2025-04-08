@@ -1602,7 +1602,7 @@ let update_with_init_config ?(overwrite=false) config init_config =
 
 let check_for_sys_packages config system_packages =
   if system_packages <> [] then
-    let (missing, required, available) =
+    let (available, required, missing) =
       OpamSysInteract.packages_status config
         (OpamSysPkg.Set.of_list system_packages)
         ~old_packages:OpamSysPkg.Set.empty
@@ -1614,7 +1614,7 @@ let check_for_sys_packages config system_packages =
         |> OpamVariable.Map.of_list
       in
       (*Lazy.force header;*)
-      OpamSolution.print_depext_msg (missing, available);
+      OpamSolution.print_depext_msg (available, missing);
       ignore
         (OpamSolution.install_sys_packages
            ~confirm:true ~sys_packages:missing ~required
