@@ -107,6 +107,28 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a package spelling test `hints.test` outlining which types of misspellings are covered and which are not [#6434 @arozovyk]
+  * Add a package spelling test `hints-commands.test` demonstrating the hints provided across various commands when a package name is misspelled [#6434 @arozovyk]
+  * Add switch removal test: failure on removal linked switch [#6276 @btjorge]
+  * Extend the tests on opam admin to include packages using builtin global variables [#6331 @kit-ty-kate]
+  * Extend the tests on opam admin check by including all the arguments [#6331 @kit-ty-kate @rjbou]
+  * Add double pinning test in case of opam/opam opam file [#6343 @rjbou]
+  * Make sure `download.test` does not fail due to a checksum collision in the download cache [#6378 @kit-ty-kate]
+  * Add a test showing the behaviour of `opam upgrade` with packages flagged with `avoid-version`/`deprecated` [#6273 @kit-ty-kate]
+  * Add a test showing the behaviour when a pin depend is unpinned [#6380 @rjbou]
+  * Add a test to ensure `opam upgrade <pkg>` will not upgrade unrelated things [#6373 @kit-ty-kate]
+  * Add a test in init to show ocaml system compiler selection behaviour [#6307 @kit-ty-kate @rjbou]
+  * Add a test showing simulated pinning does not propagate version information [#6256 @rjbou]
+  * Untie lock with pin depend test from OPAMEDITOR behaviour [#6412 @rjbou]
+  * Add test for lint E63 [#6438 @rjbou]
+  * Add a test for packages with subpath in a repository [#6439 @rjbou]
+  * Add tests for `--keep-build-dir` and `OPAMKEEPBUILDDIR` [#6436 @rjbou @kit-ty-kate]
+  * Add admin filter subcommand test [#6166 @rjbou]
+  * Add a test showing the behaviour of opam install when a local opam file changes while being pinned [#6209 @kit-ty-kate]
+  * Add pin test to show stored overlay opam files [#6209 @rjbou]
+  * Add show test to highlight precedence of opam file selection and check that if an opam file is given it is always this one that is taken [#6209 @rjbou]
+  * Add a reftest showing the effect of env updates containing empty strings on `variables.sh` [#6198 @kit-ty-kate]
+  * Add tests showing behaviour of `opam pin` when confronted with a missing opam description [#6319 @kit-ty-kate]
 
 ### Engine
 
@@ -120,6 +142,15 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamAction.prepare_package_build`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
+  * Add package spelling hints in `OpamClient`, `OpamCommands`, `OpamListCommand`, `OpamLockCommand`, `OpamPinCommand`, `OpamSolution`, `OpamSwitchCommand` and `OpamTreeCommand` [#6434 @arozovyk]
+  * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
+  * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
+  * `OpamArg.hash_kinds`: was added [#5960 @kit-ty-kate]
+  * `OpamAuxCommands.{simulate_autopin,autopin ~simulate:true}`: now updates the `reinstall` field of the returned `switch_state` if necessary [#6209 @kit-ty-kate]
+  * `OpamRepositoryCommand.switch_repos`: expose the function [#5014 @kit-ty-kate]
+  * `OpamLockCommand.lock_opam`: add `~keep_local` argument to add local pins to pin-depends (and not resolve them) [#6411 @rjbou]
+  * `OpamLockCommand.lock_opam`: make the `?only_direct` argument non-optional [#6411 @kit-ty-kate]
 
 ## opam-repository
 

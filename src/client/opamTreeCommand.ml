@@ -399,9 +399,10 @@ let dry_install tog st universe install =
   | Conflicts cs ->
     OpamConsole.error
       "Could not simulate installing the specified package(s) to this switch:";
-    OpamConsole.errmsg "%s"
+    OpamConsole.errmsg "%s%s"
       (OpamCudf.string_of_conflicts st.packages
-         (OpamSwitchState.unavailable_reason st) cs);
+         (OpamSwitchState.unavailable_reason st) cs)
+      (OpamSwitchState.did_you_mean st install);
     OpamStd.Sys.exit_because `No_solution
 
 let run st tog ?no_constraint mode filter atoms =
@@ -433,10 +434,11 @@ let run st tog ?no_constraint mode filter atoms =
     | ReverseDeps, _, _ ->
       (* non-installed names don't make sense in rev-deps *)
       if missing <> [] then
-        OpamConsole.warning "Not installed package%s %s, skipping"
-          (match missing with | [_] -> "" | _ -> "s")
-          (OpamStd.Format.pretty_list
-             (List.map OpamFormula.string_of_atom missing));
+        (OpamConsole.warning "Not installed package%s %s, skipping%s"
+           (match missing with | [_] -> "" | _ -> "s")
+           (OpamStd.Format.pretty_list
+              (List.map OpamFormula.string_of_atom missing))
+           (OpamSwitchState.did_you_mean ~installed_only:true st missing));
       if OpamPackage.Set.is_empty select && atoms <> [] then
         OpamConsole.error_and_exit `Not_found "No package to display"
       else

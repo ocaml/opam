@@ -720,7 +720,9 @@ let unpin st names =
              (OpamPackage.Name.to_string name) pin_str);
         st
       | None ->
-        OpamConsole.note "%s is not pinned." (OpamPackage.Name.to_string name);
+        OpamConsole.note "%s is not pinned.%s"
+          (OpamPackage.Name.to_string name)
+          (OpamSwitchState.did_you_mean st [name, None]);
         st)
     st names
 

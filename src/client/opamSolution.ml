@@ -176,19 +176,20 @@ let check_availability ?permissive t set atoms =
       with Not_found -> false
     in
     if exists then None
-    else match check_depexts atom with Some _ as some -> some | None ->
-    if permissive = Some true
-    then Some (OpamSwitchState.not_found_message t atom)
-    else
-    let f = name, match cstr with None -> Empty | Some c -> Atom c in
-    Some (Printf.sprintf "%s: %s"
-            (OpamFormula.to_string (Atom f))
-            (OpamSwitchState.unavailable_reason
-               ~default:"the package no longer exists"
-               t f)) in
+    else match check_depexts atom with Some s -> Some (s, fun ()->"") | None ->
+      let show_hint () = OpamSwitchState.did_you_mean t [name, cstr] in
+      if permissive = Some true then
+        Some ((OpamSwitchState.not_found_message t atom), show_hint)
+      else
+        let f = name, match cstr with None -> Empty | Some c -> Atom c in
+        Some (Printf.sprintf "%s: %s"
+                (OpamFormula.to_string (Atom f))
+                (OpamSwitchState.unavailable_reason
+                   ~default:"the package no longer exists" t f), show_hint)
+  in
   let errors = OpamStd.List.filter_map check_atom atoms in
   if errors <> [] then
-    (List.iter (OpamConsole.error "%s") errors;
+    (List.iter (fun (e, hint) -> OpamConsole.error "%s%s" e (hint ()); ) errors;
      OpamStd.Sys.exit_because `Not_found)
 
 let fuzzy_name t name =

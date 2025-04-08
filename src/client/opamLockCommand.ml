@@ -19,8 +19,9 @@ let select_packages atom_locs st =
     OpamFormula.packages_of_atoms OpamPackage.Set.Op.(st.packages ++ st.installed) atoms
   in
   if OpamPackage.Set.is_empty packages then
-    OpamConsole.error_and_exit `Not_found "No package matching %s"
+    OpamConsole.error_and_exit `Not_found "No package matching %s%s"
       (OpamFormula.string_of_atoms atoms)
+      (OpamSwitchState.did_you_mean st atoms)
   else
     (let names = OpamPackage.names_of_packages packages in
      let missing =
@@ -29,8 +30,12 @@ let select_packages atom_locs st =
            else Some (n,vc)) atoms
      in
      if missing <> [] then
-       OpamConsole.error "No package matching %s"
-         (OpamFormula.string_of_atoms missing);
+       (let single = List.length missing = 1 in
+        OpamConsole.error_and_exit `Not_found "Package%s %s %s missing.%s"
+          (if single then "" else "s")
+          (OpamFormula.string_of_atoms missing)
+          (if single then "is" else "are")
+          (OpamSwitchState.did_you_mean st missing));
      (* we keep only one version of each package, the pinned or installed one,
         the latest version otherwise ; and the one that have their dependencies \
         installed *)
