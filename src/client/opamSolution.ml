@@ -1377,9 +1377,10 @@ let apply ?ask t ~requested ?print_requested ?add_roots
     in
     let t =
       if OpamClientConfig.(!r.show) then
-        (ignore
-           (get_depexts t ~new_packages:virt_inst ~all_packages:t.installed);
-         t)
+        let _ : OpamSysPkg.Set.t * OpamSysPkg.Set.t =
+          get_depexts t ~new_packages:virt_inst ~all_packages:t.installed
+        in
+        t
         (* Prints the msg about additional depexts to install *)
       else install_depexts t ~new_packages:virt_inst ~all_packages:t.installed
     in
@@ -1435,12 +1436,13 @@ let apply ?ask t ~requested ?print_requested ?add_roots
         solution0;
     );
     if OpamClientConfig.(!r.show) then
-      (ignore
-         (get_depexts t
-            ~new_packages:new_state0.installed
-            ~all_packages:new_state0.installed);
-       (* Prints the msg about additional depexts to install *)
-       (t, Aborted))
+      let _ : OpamSysPkg.Set.t * OpamSysPkg.Set.t =
+        get_depexts t
+          ~new_packages:new_state0.installed
+          ~all_packages:new_state0.installed
+      in
+      (* Prints the msg about additional depexts to install *)
+      (t, Aborted)
     else if download_only || confirmation ?ask names solution then (
       let t =
         install_depexts t
