@@ -1168,19 +1168,21 @@ let get_depexts ?(force=false) ?(recover=false) t ~new_packages ~all_packages =
                ~old_packages:(OpamPackage.Set.diff all_packages more_pkgs))
     in
     let depexts =
-      let open OpamSysPkg in
-      OpamPackage.Set.fold (fun pkg acc ->
+      OpamPackage.Set.fold (fun pkg (acc : OpamSysPkg.status) ->
           match OpamPackage.Map.find_opt pkg sys_packages with
           | Some sys ->
-            { s_available = Set.union acc.s_available sys.s_available;
-              s_required = Set.union acc.s_required sys.s_required;
-              s_not_found = Set.union acc.s_not_found sys.s_not_found }
+            { OpamSysPkg.
+              s_available = OpamSysPkg.Set.union acc.s_available sys.s_available;
+              s_required = OpamSysPkg.Set.union acc.s_required sys.s_required;
+              s_not_found = OpamSysPkg.Set.union acc.s_not_found sys.s_not_found;
+            }
           | None -> acc)
-        all_packages ({
-            s_available = Set.empty;
-            s_required = Set.empty;
-            s_not_found = Set.empty;
-        })
+        all_packages
+        { OpamSysPkg.
+          s_available = OpamSysPkg.Set.empty;
+          s_required = OpamSysPkg.Set.empty;
+          s_not_found = OpamSysPkg.Set.empty;
+        }
     in
     print_depext_msg (depexts.s_available, depexts.s_not_found);
     depexts.s_available, depexts.s_required
