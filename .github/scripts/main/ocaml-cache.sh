@@ -10,11 +10,6 @@ HOST="${3:-}"
 
 if [ "$PLATFORM" = Windows ]; then
   EXE='.exe'
-  if [ -e $OCAML_LOCAL.tar ]; then
-    mkdir -p "$OCAML_LOCAL"
-    tar -C "$OCAML_LOCAL" -pxf "$OCAML_LOCAL.tar"
-    exit 0
-  fi
 else
   EXE=''
 fi
