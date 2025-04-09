@@ -1277,21 +1277,21 @@ let install_sys_packages ~st_conv ~map_sysmap ~confirm ~sys_packages ~required e
       check_again t sys_packages
   and check_again t sys_packages =
     let open OpamSysPkg.Set.Op in
-    let needed, required, notfound =
+    let status =
       OpamSysInteract.packages_status ~env config sys_packages
         ~old_packages:required
     in
-    let still_missing = needed ++ notfound in
+    let still_missing = status.s_available ++ status.s_not_found in
     let installed = sys_packages -- still_missing in
     let t =
       map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t
     in
     if OpamSysPkg.Set.is_empty still_missing then t else
-    if OpamSysPkg.Set.(not (is_empty notfound) && is_empty needed) then
+    if OpamSysPkg.Set.(not (is_empty status.s_not_found) && is_empty status.s_available) then
       (OpamConsole.error
          "These packages are still missing and not found via \
           your system package manager: %s\n"
-         (syspkgs_to_string notfound);
+         (syspkgs_to_string status.s_not_found);
        manual_install t still_missing)
     else
       (OpamConsole.error "These packages are still missing: %s\n"

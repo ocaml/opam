@@ -480,7 +480,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages ~old_packages 
   let open OpamSysPkg.Set.Op in
   let compute_sets ?sys_available sys_installed =
     let installed = packages %% sys_installed in
-    let available, required, not_found =
+    let s_available, s_required, s_not_found =
       match sys_available with
       | Some sys_available ->
         let available = (packages -- installed) %% sys_available in
@@ -490,7 +490,8 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages ~old_packages 
         let available = packages -- installed in
         available, OpamSysPkg.Set.empty, OpamSysPkg.Set.empty
     in
-    available, required, not_found
+    let open OpamSysPkg in
+    { s_available; s_required; s_not_found }
   in
   let to_string_list pkgs =
     OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) pkgs [])
@@ -988,7 +989,11 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages ~old_packages 
          be found.' But omitting them will mean that they won't be
          added to the Nix derivation.
       *)
-      OpamSysPkg.Set.diff packages old_packages, old_packages, OpamSysPkg.Set.empty
+      let s_available = OpamSysPkg.Set.diff packages old_packages in
+      let s_required = old_packages in
+      let s_not_found = OpamSysPkg.Set.empty in
+      let open OpamSysPkg in
+      { s_available; s_required; s_not_found }
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-qP"]
@@ -1274,12 +1279,13 @@ let update ?(env=OpamVariable.Map.empty) config =
 
 let repo_enablers ?(env=OpamVariable.Map.empty) config =
   if family ~env () <> Centos then None else
-  let (needed, _, _) =
+  let status =
     packages_status ~env config (OpamSysPkg.raw_set
                                    (OpamStd.String.Set.singleton "epel-release"))
       ~old_packages:OpamSysPkg.Set.empty
   in
-  if OpamSysPkg.Set.is_empty needed then None
+  (* s_available packages are packages that are required but not installed *)
+  if OpamSysPkg.Set.is_empty status.s_available then None
   else
     Some
       "On CentOS/RHEL, many packages may assume that the Extra Packages for \

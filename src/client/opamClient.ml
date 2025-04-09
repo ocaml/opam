@@ -1602,22 +1602,24 @@ let update_with_init_config ?(overwrite=false) config init_config =
 
 let check_for_sys_packages config system_packages =
   if system_packages <> [] then
-    let (available, required, missing) =
+    let status =
       OpamSysInteract.packages_status config
         (OpamSysPkg.Set.of_list system_packages)
         ~old_packages:OpamSysPkg.Set.empty
     in
-    if not (OpamSysPkg.Set.is_empty missing) then
+    if not (OpamSysPkg.Set.is_empty status.s_not_found) then
       let vars = OpamFile.Config.global_variables config in
       let env =
         List.map (fun (v, c, s) -> v, (lazy (Some c), s)) vars
         |> OpamVariable.Map.of_list
       in
       (*Lazy.force header;*)
-      OpamSolution.print_depext_msg (available, missing);
+      OpamSolution.print_depext_msg (status.s_available, status.s_not_found);
       let _ : _ option =
         OpamSolution.install_sys_packages
-          ~confirm:true ~sys_packages:missing ~required
+          ~confirm:true
+          ~sys_packages:status.s_not_found
+          ~required:status.s_required
           env config None
       in
       ()
