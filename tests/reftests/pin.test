@@ -680,7 +680,7 @@ Done.
 ### opam pin add nip-v 1 --with-version 2 --no-action
 [nip-v.2] synchronised (file://${BASEDIR}/nip-v.1.tgz)
 nip-v is now pinned to file://${BASEDIR}/nip-v.1.tgz (version 2)
-### opam pin add nip 1 --with-version 42 --no-action
+### OPAMEDITOR=touch opam pin add nip 1 --with-version 42 --no-action --edit
 [nip.42] synchronised (file://${BASEDIR}/nip.1.tgz)
 [NOTE] No package definition found for nip.42: please complete the template
 [WARNING] The opam file didn't pass validation:
@@ -1359,3 +1359,71 @@ x-env-path-rewrite: [[SOME_ENV ":" "target"]]
 url {
 src: "file://${BASEDIR}/over-epr"
 }
+### :C:g: behaviour of opam pin when confronted with a missing opam description
+### opam switch create --empty missing-opam
+### OPAMEDITOR="echo iNvAlId "
+### <pin-depends.sh>
+#!/bin/sh
+set -eu
+basedir=$(echo "$BASEDIR" | sed 's/\\/\\\\\\\\/g')
+cat << EOF >> "$1"
+pin-depends: [
+  ["$2" "file://$basedir/$3"]
+]
+EOF
+### :C:g:1: missing opam file in repo
+### <pin:missing-opam/pkg.opam>
+opam-version: "2.0"
+### opam pin pkg-with-typo ./missing-opam --no-action
+[NOTE] Package pkg-with-typo does not exist in opam repositories registered in the current switch.
+[pkg-with-typo.dev] synchronised (file://${BASEDIR}/missing-opam)
+[ERROR] No valid package definition found for pkg-with-typo
+# Return code 5 #
+### opam pin pkg-with-typo ./missing-opam
+[NOTE] Package pkg-with-typo does not exist in opam repositories registered in the current switch.
+[pkg-with-typo.dev] synchronised (no changes)
+[ERROR] No valid package definition found for pkg-with-typo
+# Return code 5 #
+### :C:g:2: missing opam file in pin depends without the package in dependencies
+### <pin:missing-opam/pkg.opam>
+opam-version: "2.0"
+### sh ./pin-depends.sh missing-opam/pkg.opam pin-pkg.dev missing-opam
+### opam pin ./missing-opam
+[NOTE] Package pkg does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by pkg.dev:
+  - pin-pkg.dev at file://${BASEDIR}/missing-opam
+Pin and install them? [Y/n] y
+[NOTE] Package pin-pkg does not exist in opam repositories registered in the current switch.
+[pin-pkg.dev] synchronised (no changes)
+[ERROR] No valid package definition found for pin-pkg
+# Return code 5 #
+### :C:g:3: missing opam file in pin depends with package in dependencies
+### <pin:missing-opam/pkg.opam>
+opam-version: "2.0"
+depends: [
+  "pin-pkg"
+]
+### sh ./pin-depends.sh missing-opam/pkg.opam pin-pkg.dev missing-opam
+### opam pin ./missing-opam
+[NOTE] Package pkg does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by pkg.dev:
+  - pin-pkg.dev at file://${BASEDIR}/missing-opam
+Pin and install them? [Y/n] y
+[NOTE] Package pin-pkg does not exist in opam repositories registered in the current switch.
+[pin-pkg.dev] synchronised (no changes)
+[ERROR] No valid package definition found for pin-pkg
+# Return code 5 #
+### :C:g:4: special case where the name of the pin-depend matches the name of the package itself (recursive)
+### <pin:missing-opam/pkg.opam>
+opam-version: "2.0"
+### sh ./pin-depends.sh missing-opam/pkg.opam pkg.dev missing-opam/empty-dir
+### mkdir missing-opam/empty-dir
+### opam pin ./missing-opam
+[NOTE] Package pkg does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by pkg.dev:
+  - pkg.dev at file://${BASEDIR}/missing-opam/empty-dir
+Pin and install them? [Y/n] y
+[NOTE] Package pkg does not exist in opam repositories registered in the current switch.
+[pkg.dev] synchronised (no changes)
+[ERROR] No valid package definition found for pkg
+# Return code 5 #
