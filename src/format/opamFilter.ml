@@ -11,7 +11,6 @@
 
 open OpamTypes
 open OpamTypesBase
-open OpamStd.Op
 
 module OpamParser = OpamParser.FullPos
 module OpamPrinter = OpamPrinter.FullPos
@@ -257,7 +256,7 @@ let expand_string_aux ?(partial=false) ?(escape_value=fun x -> x) ?default env t
   let f g =
     let str = Re.Group.get g 0 in
     if str = "%%" then (if partial then "%%" else "%")
-    else if not (OpamStd.String.ends_with ~suffix:"}%" str) then
+    else if not (OpamCompat.String.ends_with ~suffix:"}%" str) then
       (log "ERR: Unclosed variable replacement in %S\n" str;
        str)
     else
@@ -281,7 +280,7 @@ let unclosed_expansions text =
         ])
     )
   in
-  Re.all re text |> OpamStd.List.filter_map @@ fun gr ->
+  Re.all re text |> List.filter_map @@ fun gr ->
   if Re.Group.test gr 1 && not (Re.Group.test gr 2) then
     Some (Re.Group.offset gr 0, Re.Group.get gr 0)
   else None
@@ -491,7 +490,7 @@ let command env (l, f) =
   else
     None
 
-let commands env l = OpamStd.List.filter_map (command env) l
+let commands env l = List.filter_map (command env) l
 
 let single_command env l = List.concat (List.map (arguments env) l)
 
@@ -636,7 +635,7 @@ let rec simplify_extended_version_formula ef =
   in
   match to_pure ef with
   | Some f ->
-    OpamStd.Option.map to_filtered (OpamFormula.simplify_version_formula f)
+    Option.map to_filtered (OpamFormula.simplify_version_formula f)
   | None -> match ef with
     | And _ | Or _ ->
       let conj = match ef with And _ -> true | _ -> false in

@@ -187,7 +187,7 @@ module MakeAction (P: GenericPackage) : ACTION with type package = P.t
     | `O ["recompile", p] -> P.of_json p >>= (fun p -> Some (`Reinstall p))
     | `O ["build", p] -> P.of_json p >>= (fun p -> Some (`Build p))
     | `O ["fetch", `A (_::_ as pl)] ->
-      Some (`Fetch (OpamStd.List.filter_map P.of_json pl))
+      Some (`Fetch (List.filter_map P.of_json pl))
     | _ -> None
 
   module O = struct

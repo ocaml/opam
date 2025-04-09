@@ -195,8 +195,8 @@ let map_option ?name pp1 =
     | Some n -> n
   in
   pp ~name
-    (fun ~pos -> OpamStd.Option.map (parse pp1 ~pos))
-    (OpamStd.Option.map (print pp1))
+    (fun ~pos -> Option.map (parse pp1 ~pos))
+    (Option.map (print pp1))
 
 let singleton = {
   parse = (fun ~pos:_ -> function [x] -> x | _ -> unexpected ());
@@ -280,7 +280,7 @@ let ppacc_opt
         set (cleanup ~pos acc (pp1.parse ~pos s)) acc
       | acc, None -> acc
     in
-    let print s = s, OpamStd.Option.map pp1.print (get s) in
+    let print s = s, Option.map pp1.print (get s) in
     {
       parse; print;
       ppname = pp1.ppname;

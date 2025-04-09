@@ -147,10 +147,6 @@ module IntSet: SET with type elt = int
 (** {2 Utility modules extending the standard library on base types} *)
 
 module Option: sig
-  val map: ('a -> 'b) -> 'a option -> 'b option
-
-  val iter: ('a -> unit) -> 'a option -> unit
-
   val default: 'a -> 'a option -> 'a
 
   val default_map: 'a option -> 'a option -> 'a option
@@ -159,17 +155,9 @@ module Option: sig
 
   val map_default: ('a -> 'b) -> 'b -> 'a option -> 'b
 
-  val compare: ('a -> 'a -> int) -> 'a option -> 'a option -> int
-
-  val equal: ('a -> 'a -> bool) -> 'a option -> 'a option -> bool
-
   val equal_some : ('a -> 'a -> bool) -> 'a -> 'a option -> bool
 
   val to_string: ?none:string -> ('a -> string) -> 'a option -> string
-
-  val to_list: 'a option -> 'a list
-
-  val some: 'a -> 'a option
 
   val none: 'a -> 'b option
 
@@ -187,16 +175,11 @@ end
 
 module List : sig
 
-  val cons: 'a -> 'a list -> 'a list
-
   (** Convert list items to string and concat. [concat_map sep f x] is equivalent
       to [String.concat sep (List.map f x)] but tail-rec. *)
   val concat_map:
     ?left:string -> ?right:string -> ?nil:string -> ?last_sep:string ->
     string -> ('a -> string) -> 'a list -> string
-
-  (** Like {!Stdlib.List.find}, but returning option instead of raising *)
-  val find_opt: ('a -> bool) -> 'a list -> 'a option
 
   val to_string: ('a -> string) -> 'a list -> string
 
@@ -205,9 +188,6 @@ module List : sig
 
   (** Sorts the list, removing duplicates *)
   val sort_nodup: ('a -> 'a -> int) -> 'a list -> 'a list
-
-  (** Filter and map *)
-  val filter_map: ('a -> 'b option) -> 'a list -> 'b list
 
   (** Retrieves [Some] values from a list *)
   val filter_some: 'a option list -> 'a list
@@ -256,10 +236,6 @@ module List : sig
 
   (** Like {!pick_assoc}, but with a test function that takes a list element *)
   val pick: ('a -> bool) -> 'a list -> 'a option * 'a list
-
-  (** Like {!Stdlib.List.fold_left}, but also performs {!Stdlib.List.map} at
-      the same time *)
-  val fold_left_map: ('s -> 'a -> ('s * 'b)) -> 's -> 'a list -> 's * 'b list
 end
 
 module String : sig
@@ -278,9 +254,6 @@ module String : sig
 
   (** {3 Checks} *)
 
-  val starts_with: prefix:string -> string -> bool
-  val ends_with: suffix:string -> string -> bool
-  val for_all: (char -> bool) -> string -> bool
   val contains_char: string -> char -> bool
   val contains: sub:string -> string -> bool
   val exact_match: Re.re -> string -> bool
@@ -292,7 +265,6 @@ module String : sig
 
   (** {3 Manipulation} *)
 
-  val map: (char -> char) -> string -> string
   val strip: string -> string
   val strip_right: string -> string
   val sub_at: int -> string -> string
@@ -324,8 +296,6 @@ module String : sig
 
       [split_quoted "foo\";\"bar;baz" ';' = ["foo;bar"; "baz"]] *)
   val split_quoted: string -> char -> string list
-
-  val fold_left: ('a -> char -> 'a) -> 'a -> string -> 'a
 
   val is_hex: string -> bool
 
@@ -666,12 +636,6 @@ end
 (** {2 General use infix function combinators} *)
 
 module Op: sig
-
-  (** Function application (with lower priority) (predefined in OCaml 4.01+) *)
-  val (@@): ('a -> 'b) -> 'a -> 'b
-
-  (** Pipe operator -- reverse application (predefined in OCaml 4.01+) *)
-  val (|>): 'a -> ('a -> 'b) -> 'b
 
   (** Function composition : (f @* g) x =~ f (g x) *)
   val (@*): ('b -> 'c) -> ('a -> 'b) -> 'a -> 'c
