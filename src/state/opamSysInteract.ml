@@ -509,17 +509,6 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
           Re.(Group.get (exec re_pkg l) 1) +++ pkgs
         with Not_found -> pkgs) OpamSysPkg.Set.empty
   in
-  let with_regexp_dbl ~re_installed ~re_pkg =
-    List.fold_left (fun (inst,avail) l ->
-        try
-          let pkg = Re.(Group.get (exec re_pkg l) 1) in
-          if Re.execp re_installed l then
-            pkg +++ inst, avail
-          else
-            inst, pkg +++ avail
-        with Not_found -> inst, avail)
-      OpamSysPkg.Set.(empty, empty)
-  in
   let package_set_of_pkgpath l =
     List.fold_left (fun set pkg ->
         let short_name =
@@ -705,7 +694,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     compute_sets sys_installed ~sys_available
   | Arch ->
     compute_sets_for_arch ~pacman:"pacman"
-  | Centos | Altlinux ->
+  | Centos | Altlinux | Suse ->
     (* Output format:
        >crypto-policies
        >python3-pip-wheel
@@ -983,32 +972,6 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> package_set_of_pkgpath
     in
     compute_sets sys_installed
-  | Suse ->
-    (* get the second column of the table:
-       zypper --quiet se -i -t package|grep '^i '|awk -F'|' '{print $2}'|xargs echo
-       output:
-       >S | Name                        | Summary
-       >--+-----------------------------+-------------
-       >  | go-gosqlite                 | Trivial SQLi
-       >i | libqt4-sql-sqlite-32bit     | Qt 4 sqlite
-    *)
-    let re_pkg =
-      Re.(compile @@ seq
-            [ bol;
-              rep1 any;
-              char '|';
-              rep1 space;
-              group @@ rep1 @@ alt [alnum; punct];
-              rep1 space;
-              char '|';
-            ])
-    in
-    let re_installed = Re.(compile @@ seq [bol ; char 'i']) in
-    let sys_installed, sys_available =
-      run_query_command "zypper" ["--quiet"; "se"; "-t"; "package"]
-      |> with_regexp_dbl ~re_installed ~re_pkg
-    in
-    compute_sets sys_installed ~sys_available
 
 (* Install *)
 
