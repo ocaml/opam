@@ -146,6 +146,8 @@ module Switch = struct
 
   let env_relative_to_prefix pfx = pfx / meta_dirname /- env_filename
 
+  let nix_env t a = meta t a /- "nix.env"
+
   let installed_opams t a = meta t a / "packages"
 
   let installed_opams_cache t a = meta t a / "packages" // "cache"
