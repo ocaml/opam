@@ -480,18 +480,22 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages ~required =
   let open OpamSysPkg.Set.Op in
   let compute_sets ?sys_available sys_installed =
     let installed = packages %% sys_installed in
-    let s_available, s_required, s_not_found =
-      match sys_available with
-      | Some sys_available ->
-        let available = (packages -- installed) %% sys_available in
-        let not_found = packages -- installed -- available in
-        available, OpamSysPkg.Set.empty, not_found
-      | None ->
-        let available = packages -- installed in
-        available, OpamSysPkg.Set.empty, OpamSysPkg.Set.empty
-    in
-    let open OpamSysPkg in
-    { s_available; s_required; s_not_found }
+    match sys_available with
+    | Some sys_available ->
+      let available = (packages -- installed) %% sys_available in
+      let not_found = packages -- installed -- available in
+      {
+        OpamSysPkg.s_available = available;
+        OpamSysPkg.s_required = OpamSysPkg.Set.empty;
+        OpamSysPkg.s_not_found = not_found;
+      }
+    | None ->
+      let available = packages -- installed in
+      {
+        OpamSysPkg.s_available = available;
+        OpamSysPkg.s_required = OpamSysPkg.Set.empty;
+        OpamSysPkg.s_not_found = OpamSysPkg.Set.empty;
+      }
   in
   let to_string_list pkgs =
     OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) pkgs [])
