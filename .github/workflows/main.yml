@@ -199,7 +199,7 @@ jobs:
       id: ocaml-cache
       uses: actions/cache@v4
       with:
-        path: D:\Cache\ocaml-local.tar
+        path: D:\Cache\ocaml-local
         key: ${{ runner.os }}-${{ matrix.host }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
         enableCrossOsArchive: true
     - name: Unpack Cygwin
@@ -207,7 +207,8 @@ jobs:
       run: .github\scripts\cygwin.cmd ${{ matrix.build }} D:\Cache\cygwin ${{ matrix.host }}
     - name: Cygwin info
       run: uname -a
-    - name: Unpack OCaml ${{ matrix.ocamlv }}
+    - name: Create OCaml ${{ matrix.ocamlv }} cache
+      if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
     - name: Build
       run: bash -exu .github/scripts/main/main.sh ${{ matrix.host }}
