@@ -74,12 +74,6 @@ module Cygwin : sig
   (* Returns true if Cygwin install is internal *)
   val is_internal: OpamFile.Config.t -> bool
 
-  (* [check_setup ~update] downloads and stores a Cygwin setup executable to
-     <opamroot>/.cygwin/setup-x86_64.exe. If [~update = false], this only
-     happens if the setup executable does not already exist, otherwise it is.
-     updated. *)
-  val check_setup: update:bool -> unit
-
   (* Return Cygwin binary path *)
   val cygbin_opt: OpamFile.Config.t -> OpamFilename.Dir.t option
 

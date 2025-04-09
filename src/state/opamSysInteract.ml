@@ -1012,7 +1012,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
 
 (* Install *)
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_packages =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show config sys_packages =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
@@ -1047,6 +1047,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
   | Cygwin ->
     (* We use setup_x86_64 to install package instead of `cygcheck` that is
        stored in `sys-pkg-manager-cmd` field *)
+    Cygwin.check_setup ~update:(not to_show);
     let is_internal = Cygwin.is_internal config in
     [`AsUser (OpamFilename.to_string (Cygwin.cygsetup ())),
      [ "--root"; (OpamFilename.Dir.to_string (Cygwin.cygroot config));
@@ -1106,7 +1107,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) config sys_package
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
 let install_packages_commands ?env config sys_packages =
-  fst (install_packages_commands_t ?env config sys_packages)
+  fst (install_packages_commands_t ?env ~to_show:true config sys_packages)
 
 let package_manager_name ?env config =
   match install_packages_commands ?env config OpamSysPkg.Set.empty with
@@ -1138,7 +1139,7 @@ let install ?env config packages =
   if OpamSysPkg.Set.is_empty packages then
     log "Nothing to install"
   else
-    let commands, vars = install_packages_commands_t ?env config packages in
+    let commands, vars = install_packages_commands_t ?env ~to_show:false config packages in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->

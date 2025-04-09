@@ -179,6 +179,7 @@ users)
   * Use a C stub to call the `uname` function from the C standard library instead of calling the `uname` POSIX command [#6217 @kit-ty-kate]
 
 ## Internal: Windows
+  * Only download Cygwin's `setup.exe` when the command is actually going to be displayed or used [#6467 @kit-ty-kate]
 
 ## Test
   * Add a library test for the new OCaml implementation of patch and diff [#5892 @rjbou]
@@ -210,6 +211,7 @@ users)
   * Add show test to highlight precedence of opam file selection and check that if an opam file is given it is always this one that is taken [#6209 @rjbou]
   * Add a reftest showing the effect of env updates containing empty strings on `variables.sh` [#6198 @kit-ty-kate]
   * Add tests showing behaviour of `opam pin` when confronted with a missing opam description [#6319 @kit-ty-kate]
+  * Make the reftests more reliable by not downloading Cygwin's setup.exe on Windows [#6467 @kit-ty-kate]
 
 ### Engine
 
@@ -274,6 +276,7 @@ users)
 ## opam-state
   * `OpamStateConfig`: Make the `?lock_kind` parameters non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
   * `OpamSwitchState.load_selections`: Make the `?lock_kind` parameter non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
+  * `OpamSysInteract.Cygwin.check_setup`: unexpose the function [#6467 @kit-ty-kate]
 
 ## opam-solver
 
