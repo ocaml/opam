@@ -214,6 +214,7 @@ users)
   * Add a reftest showing the effect of env updates containing empty strings on `variables.sh` [#6198 @kit-ty-kate]
   * Add tests showing behaviour of `opam pin` when confronted with a missing opam description [#6319 @kit-ty-kate]
   * Make the reftests more reliable by not downloading Cygwin's setup.exe on Windows [#6467 @kit-ty-kate]
+  * Add test for variables resolution in filters, for all fields [#5643 @rjbou]
 
 ### Engine
 
