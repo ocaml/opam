@@ -20,18 +20,18 @@ open OpamStateTypes
    [env] is used to determine host specification. *)
 val packages_status:
   ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
-  old_packages:OpamSysPkg.Set.t -> OpamSysPkg.status
+  required:OpamSysPkg.Set.t -> OpamSysPkg.status
 
 (* Return the commands to run to install given system packages.
    [env] is used to determine host specification. *)
 val install_packages_commands:
-  ?env:gt_variables -> _ switch_state option -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
-  required:OpamSysPkg.Set.t -> ([`AsAdmin of string | `AsUser of string] * string list) list
+  ?env:gt_variables -> _ switch_state option -> OpamFile.Config.t -> OpamSysPkg.status ->
+  ([`AsAdmin of string | `AsUser of string] * string list) list
 
 (* Install given system packages, by calling local system package manager.
    [env] is used to determine host specification. *)
 val install: ?env:gt_variables -> _ switch_state option -> OpamFile.Config.t ->
-  OpamSysPkg.Set.t -> required:OpamSysPkg.Set.t -> unit
+  OpamSysPkg.status -> unit
 
 val update: ?env:gt_variables -> OpamFile.Config.t -> unit
 

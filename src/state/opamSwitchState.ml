@@ -203,7 +203,7 @@ let depexts_status_of_packages_raw
   let ret =
     match
       OpamSysInteract.packages_status ?env global_config syspkg_set
-        ~old_packages:old_syspkg_set
+        ~required:old_syspkg_set
     with
     | status ->
       let status =

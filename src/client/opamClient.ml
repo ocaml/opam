@@ -1605,22 +1605,18 @@ let check_for_sys_packages config system_packages =
     let status =
       OpamSysInteract.packages_status config
         (OpamSysPkg.Set.of_list system_packages)
-        ~old_packages:OpamSysPkg.Set.empty
+        ~required:OpamSysPkg.Set.empty
     in
-    if not (OpamSysPkg.Set.is_empty status.s_not_found) then
+    if not (OpamSysPkg.Set.is_empty status.s_available) then
       let vars = OpamFile.Config.global_variables config in
       let env =
         List.map (fun (v, c, s) -> v, (lazy (Some c), s)) vars
         |> OpamVariable.Map.of_list
       in
       (*Lazy.force header;*)
-      OpamSolution.print_depext_msg (status.s_available, status.s_not_found);
+      OpamSolution.print_depext_msg status;
       let _ : _ option =
-        OpamSolution.install_sys_packages
-          ~confirm:true
-          ~sys_packages:status.s_not_found
-          ~required:status.s_required
-          env config None
+        OpamSolution.install_sys_packages ~confirm:true status env config None
       in
       ()
 

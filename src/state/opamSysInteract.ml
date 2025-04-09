@@ -473,7 +473,7 @@ let yum_cmd = lazy begin
     raise (OpamSystem.Command_not_found "yum or dnf")
 end
 
-let packages_status ?(env=OpamVariable.Map.empty) config packages ~old_packages =
+let packages_status ?(env=OpamVariable.Map.empty) config packages ~required =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
@@ -989,8 +989,8 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages ~old_packages 
          be found.' But omitting them will mean that they won't be
          added to the Nix derivation.
       *)
-      let s_available = OpamSysPkg.Set.diff packages old_packages in
-      let s_required = old_packages in
+      let s_available = OpamSysPkg.Set.diff packages required in
+      let s_required = required in
       let s_not_found = OpamSysPkg.Set.empty in
       let open OpamSysPkg in
       { s_available; s_required; s_not_found }
@@ -1029,14 +1029,14 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages ~old_packages 
 
 (* Install *)
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) st config sys_packages ~required =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) st config (depexts : OpamSysPkg.status) =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
       yes @ r else no @ r
   in
   let packages =
-    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
+    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements depexts.s_available)
   in
   match family ~env () with
   | Alpine -> [`AsAdmin "apk", "add"::yes ~no:["-i"] [] packages], None
@@ -1132,7 +1132,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) st config sys_pack
        in
        let packages = String.concat " "
            (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l)
-              OpamSysPkg.Set.Op.(sys_packages ++ required) [])
+              OpamSysPkg.Set.Op.(depexts.s_available ++ depexts.s_required) [])
        in
 
   (* We exclude variables from
@@ -1195,13 +1195,16 @@ echo "XDG_DATA_DIRS	+=	$XDG_DATA_DIRS	Nix" >> "$out"
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
-let install_packages_commands ?env st config sys_packages ~required =
-  fst (install_packages_commands_t ?env st config sys_packages ~required)
+let install_packages_commands ?env st config depexts =
+  fst (install_packages_commands_t ?env st config depexts)
 
 let package_manager_name ?env st config =
   match
-    install_packages_commands ?env st config OpamSysPkg.Set.empty
-      ~required:OpamSysPkg.Set.empty
+    install_packages_commands ?env st config {
+        OpamSysPkg.s_available = OpamSysPkg.Set.empty;
+        OpamSysPkg.s_required = OpamSysPkg.Set.empty;
+        OpamSysPkg.s_not_found = OpamSysPkg.Set.empty;
+      }
   with
   | ((`AsAdmin pkgman | `AsUser pkgman), _) :: _ -> pkgman
   | [] -> assert false
@@ -1227,11 +1230,11 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install ?env st config packages ~required =
-  if OpamSysPkg.Set.is_empty packages && OpamSysPkg.Set.is_empty required then
+let install ?env st config (depexts : OpamSysPkg.status) =
+  if OpamSysPkg.Set.is_empty depexts.s_available && OpamSysPkg.Set.is_empty depexts.s_required then
     log "Nothing to install"
   else
-    let commands, vars = install_packages_commands_t ?env st config packages ~required in
+    let commands, vars = install_packages_commands_t ?env st config depexts in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
@@ -1282,7 +1285,7 @@ let repo_enablers ?(env=OpamVariable.Map.empty) config =
   let status =
     packages_status ~env config (OpamSysPkg.raw_set
                                    (OpamStd.String.Set.singleton "epel-release"))
-      ~old_packages:OpamSysPkg.Set.empty
+      ~required:OpamSysPkg.Set.empty
   in
   (* s_available packages are packages that are required but not installed *)
   if OpamSysPkg.Set.is_empty status.s_available then None
