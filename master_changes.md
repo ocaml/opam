@@ -193,6 +193,8 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a package spelling test `hints.test` outlining which types of misspellings are covered and which are not [#6434 @arozovyk]
+  * Add a package spelling test `hints-commands.test` demonstrating the hints provided across various commands when a package name is misspelled [#6434 @arozovyk]
   * Add switch removal test: failure on removal linked switch [#6276 @btjorge]
   * Extend the tests on opam admin to include packages using builtin global variables [#6331 @kit-ty-kate]
   * Extend the tests on opam admin check by including all the arguments [#6331 @kit-ty-kate @rjbou]
@@ -258,6 +260,7 @@ users)
 # API updates
 ## opam-client
   * `OpamAction.prepare_package_build`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
+  * Add package spelling hints in `OpamClient`, `OpamCommands`, `OpamListCommand`, `OpamLockCommand`, `OpamPinCommand`, `OpamSolution`, `OpamSwitchCommand` and `OpamTreeCommand` [#6434 @arozovyk]
   * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
   * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared with `build_options` [#5563 @rjbou]
   * `OpamArg.hash_kinds`: was added [#5960 @kit-ty-kate]
@@ -278,6 +281,7 @@ users)
 
 ## opam-state
   * `OpamStateConfig`: Make the `?lock_kind` parameters non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
+  * `OpamSwitchState.did_you_mean`: was added, returning a hint string when package names are misspelled [#6434 @arozovyk]
   * `OpamSwitchState.load_selections`: Make the `?lock_kind` parameter non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
   * `OpamSysInteract.Cygwin.check_setup`: unexpose the function [#6467 @kit-ty-kate]
   * `OpamSysInteract.package_status`: SUSE-based distributions now uses `rpm` instead of `zypper` and no longer return an `available` set of system packages [#6464 @kit-ty-kate]
@@ -291,6 +295,7 @@ users)
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
 
 ## opam-core
+  * `OpamCompat.String.{spellcheck}`: (along with all its dependencies, which are not exposed for now) was added [#6434 @arozovyk]
   * `OpamConsole`: Replace `black` text style (unused and not very readable) by `gray` [#6358 @kit-ty-kate]
   * `OpamConsole.pause`: Ensure the function always prints a newline character at the end [#6376 @kit-ty-kate]
   * `OpamFilename.patch`: now returns `exn option` instead of `exn option OpamProcess.job` and no longer calls the system GNU Patch [#5892 @kit-ty-kate]
