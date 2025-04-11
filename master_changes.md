@@ -233,6 +233,7 @@ users)
   * Enable the depexts workflow on master and when the opam description change [#6447 @kit-ty-kate]
   * Make depext generate action script pass spellcheck [#6471 @kit-ty-kate]
   * Add depext generate action script to spellcheck check action [#6471 @kit-ty-kate]
+  * Some cleaning in depext generate action and instruction for local testing [#6471 @rjbou]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]

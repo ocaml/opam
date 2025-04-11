@@ -108,7 +108,7 @@ esac
 
 OCAML_INVARIANT="\"ocaml\" {>= \"4.09.0\"$OCAML_CONSTRAINT}"
 
-# Copy 2.1 opam binary from cache
+# Copy released opam binary from cache
 cp binary/opam "$dir/opam"
 
 cat >> "$dir/Dockerfile" << EOF
@@ -137,17 +137,22 @@ set -eux
 
 git config --global --add safe.directory /github/workspace
 
+## CI WORKING DIR
 # Workdir is /github/workpaces
 cd /github/workspace
 
-### LOCAL TESTING
-#git clone https://github.com/ocaml/opam --single-branch --branch 2.2 --depth 1 local-opam
+## LOCAL TESTING WORKING DIR
+# with docker run -v local/path/opam:/opam/local-git:ro
+#git clone /opam/local-git --single-branch --branch branch-name --depth 1 local-opam
+# with a distant branch
+#git clone https://github.com/ocaml/opam --single-branch --branch branch-name --depth 1 local-opam
 #cd local-opam
 
 opam install . --deps
 eval \$(opam env)
 ./configure
 make
+
 ./opam config report
 ./opam switch create confs --empty
 EOF
@@ -170,8 +175,8 @@ if [ "$target" != centos ] && [ "$target" != gentoo ] && [ "$target" != opensuse
   test_depext conf-automake.1
 fi
 
-# additionna
-if [ "$target" != oraclelinux ] && [ "$target" != xxx ]; then
+# additional
+if [ "$target" != oraclelinux ]; then
   test_depext conf-dpkg.1 # gentoo
 fi
 
