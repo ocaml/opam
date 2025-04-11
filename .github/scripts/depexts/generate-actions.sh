@@ -111,6 +111,9 @@ OCAML_INVARIANT="\"ocaml\" {>= \"4.09.0\"$OCAML_CONSTRAINT}"
 # Copy released opam binary from cache
 cp binary/opam "$dir/opam"
 
+LOCAL_REPO=/opam/repo
+CONF_BRANCH=confs
+
 cat >> "$dir/Dockerfile" << EOF
 RUN test -d /opam || mkdir /opam
 ENV OPAMROOTISOK=1
@@ -120,7 +123,19 @@ ENV OPAMCONFIRMLEVEL=unsafe-yes
 ENV OPAMPRECISETRACKING=1
 COPY opam /usr/bin/opam
 RUN echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
-RUN /usr/bin/opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
+# Retrieve opam repo
+RUN git clone $OPAM_REPO --single-branch --branch master $LOCAL_REPO
+RUN git config --global user.email "gha@op.am"
+RUN git config --global user.name "OPAM GHA"
+RUN git -C $LOCAL_REPO reset --hard $OPAM_REPO_SHA
+RUN git -C $LOCAL_REPO reset --soft \$(git -C $LOCAL_REPO rev-list --all | tail -1)
+RUN git -C $LOCAL_REPO commit -qm "all packages"
+# Build a branch that contains only confs packages
+RUN git -C $LOCAL_REPO checkout -b $CONF_BRANCH
+RUN git -C $LOCAL_REPO rm -q \$(git -C $LOCAL_REPO ls-files packages | grep -v "^packages/conf-")
+RUN git -C $LOCAL_REPO commit -qm "keep only confs"
+# Setup opam
+RUN /usr/bin/opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+file://$LOCAL_REPO#master
 RUN echo 'archive-mirrors: "https://opam.ocaml.org/cache"' >> \$OPAMROOT/config
 RUN /usr/bin/opam switch create this-opam --formula='$OCAML_INVARIANT'
 RUN /usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps
@@ -154,7 +169,7 @@ eval \$(opam env)
 make
 
 ./opam config report
-./opam switch create confs --empty
+./opam switch create confs --empty --repo rconf=git+file://$LOCAL_REPO#$CONF_BRANCH
 EOF
 
 # Test depexts
