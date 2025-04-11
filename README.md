@@ -78,8 +78,8 @@ fully unattended, choose a mirror URL from https://cygwin.com/mirrors.lst and ad
 the `--site` switch to the command line
 (e.g., `--site=https://www.mirrorservice.org/sites/sourceware.org/pub/cygwin/`).
 
-It is recommended that you set the `CYGWIN` environment variable to
-`nodosfilewarning winsymlinks:native`.
+It is recommended that you set the [`CYGWIN`](https://cygwin.com/cygwin-ug-net/using-cygwinenv.html)
+environment variable to `winsymlinks:native`.
 
 Cygwin is started either from a shortcut or by running:
 

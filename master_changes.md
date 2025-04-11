@@ -252,6 +252,7 @@ users)
   * Document the meaning of colored version numbers in the manpage of `opam show` [#6358 @kit-ty-kate]
   * Add an explanation of how plugins work to the manual [#5627 @kit-ty-kate]
   * Improve the installation documentation [#6372 @kit-ty-kate]
+  * Don't suggest setting the nodosfilewarning option of CYGWIN [#6470 @MisterDA]
 
 ## Security fixes
 
