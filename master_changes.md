@@ -259,6 +259,8 @@ users)
   * Improve the installation documentation [#6372 @kit-ty-kate]
   * Don't suggest setting the nodosfilewarning option of CYGWIN [#6470 @MisterDA]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
