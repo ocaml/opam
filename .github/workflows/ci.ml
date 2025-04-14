@@ -88,7 +88,6 @@ type cache = {
   id: string;
   force_gzip: bool;
   paths: string list;
-  always_build: bool;
   build: string list;
   build_shell: string option;
 }
@@ -111,7 +110,6 @@ let get_cache_cont : type s . s cache_name -> s = function
          id = "archives";
          force_gzip = true;
          paths = ["src_ext/archives"; "~/opam-repository"];
-         always_build = false;
          build = ["bash -exu .github/scripts/main/archives-cache.sh"];
          build_shell = None}
   | Cygwin ->
@@ -121,7 +119,6 @@ let get_cache_cont : type s . s cache_name -> s = function
          id = "cygwin64";
          force_gzip = true;
          paths = [Printf.sprintf "%s\\x86_64-pc-cygwin" cygwin_cache_directory];
-         always_build = false;
          build = [Printf.sprintf {|.github\scripts\cygwin.cmd x86_64-pc-cygwin %s create|} cygwin_cache_directory];
          build_shell = Some "cmd"}
   | OCaml ->
@@ -136,8 +133,7 @@ let get_cache_cont : type s . s cache_name -> s = function
          key = Printf.sprintf "${{ runner.os }}%s-ocaml-%s-${{ %s.outputs.ocaml-cache }}" (if_windows ("-" ^ host) "") version;
          id = "ocaml-cache";
          force_gzip = is_windows;
-         paths = [if_windows {|D:\Cache\ocaml-local.tar|} "~/.cache/ocaml-local/**"];
-         always_build = is_windows;
+         paths = [if_windows {|D:\Cache\ocaml-local|} "~/.cache/ocaml-local/**"];
          build = [Printf.sprintf "bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} %s%s" version (if_windows (" " ^ host) "")];
          build_shell = None}
   | OpamBS ->
@@ -147,7 +143,6 @@ let get_cache_cont : type s . s cache_name -> s = function
          id = "opam-bootstrap";
          force_gzip = false;
          paths = ["${{ env.OPAMBSROOT }}/**"; "~/.cache/opam-local/bin/**"];
-         always_build = false;
          build = ["bash -exu .github/scripts/main/opam-bs-cache.sh"];
          build_shell = None}
   | OpamRoot ->
@@ -157,7 +152,6 @@ let get_cache_cont : type s . s cache_name -> s = function
          id = "opam-rt";
          force_gzip = false;
          paths = ["~/.cache/opam-rt/**"];
-         always_build = false;
          build = [];
          build_shell = None}
   | Opam12Root ->
@@ -167,7 +161,6 @@ let get_cache_cont : type s . s cache_name -> s = function
          id = "";
          force_gzip = false;
          paths = ["${{ env.OPAM12CACHE }}"];
-         always_build = false;
          build = [];
          build_shell = None}
 
@@ -197,12 +190,9 @@ let build_cache ?cond name =
   get_cache_cont name (fun cache ->
   let miss = Predicate (true, CacheMiss cache.id) in
   let cond =
-    if cache.always_build then
-      cond
-    else
-      Option.map_default (fun cond -> Some (And [cond; miss])) (Some miss) cond
+    Option.map_default (fun cond -> Some (And [cond; miss])) (Some miss) cond
   in
-  run ?cond ?shell:cache.build_shell (Printf.sprintf "%s %s%s" (if cache.always_build then "Unpack" else "Create") cache.name (if cache.always_build then "" else " cache")) cache.build)
+  run ?cond ?shell:cache.build_shell (Printf.sprintf "Create %s cache" cache.name) cache.build)
 
 let unpack_cygwin ?cond build host =
   run ?cond ~shell:"cmd" "Unpack Cygwin" [Printf.sprintf {|.github\scripts\cygwin.cmd %s %s %s|} build cygwin_cache_directory host]
