@@ -299,6 +299,7 @@ users)
   * `OpamFormula.all_relop`: a list of all operators [#6197 @mbarbin]
   * `OpamFile.OPAM.{*read*,write*}`: Stop modifying the `available` field when handling the builtin `x-*` fields [#6438 @kit-ty-kate]
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
+  * `OpamPath`: add `nix_env` inner switch path for nix environment [#5982 @RyanGibb]
 
 ## opam-core
   * `OpamConsole`: Replace `black` text style (unused and not very readable) by `gray` [#6358 @kit-ty-kate]
