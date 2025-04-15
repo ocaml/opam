@@ -1175,7 +1175,7 @@ let get_depexts ?(force=false) ?(recover=false) t packages =
   print_depext_msg (avail, nf);
   avail
 
-let install_sys_packages ~map_sysmap ~confirm env config sys_packages t =
+let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
   let rec entry_point t sys_packages =
     if OpamClientConfig.(!r.fake) then
       (print_command sys_packages; t)
@@ -1326,10 +1326,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
   in
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in
-  install_sys_packages ~map_sysmap ~confirm env config sys_packages t
+  install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t
 
 let install_sys_packages ~confirm =
-  install_sys_packages ~map_sysmap:(fun _ () -> ()) ~confirm
+  install_sys_packages_t ~map_sysmap:(fun _ () -> ()) ~confirm
 
 (* Apply a solution *)
 let apply ?ask t ~requested ?print_requested ?add_roots
