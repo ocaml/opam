@@ -29,15 +29,16 @@ val stateless_install: ?env:gt_variables -> unit -> bool
    [env] is used to determine host specification.
    [config] is used to determine Windows depext installation. *)
 val install_packages_commands:
-  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.to_install ->
+  ?env:gt_variables -> rw switch_state option -> OpamFile.Config.t ->
+  OpamSysPkg.to_install ->
   ([`AsAdmin of string | `AsUser of string] * string list) list
 
 (* Install given system packages, by calling local system package manager.
    [env] is used to determine host specification.
    [config] is used to determine Windows depext installation. *)
 val install:
-  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.to_install ->
-  unit
+  ?env:gt_variables -> rw switch_state option -> OpamFile.Config.t ->
+  OpamSysPkg.to_install -> unit
 
 val update: ?env:gt_variables -> OpamFile.Config.t -> unit
 

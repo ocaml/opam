@@ -1001,7 +1001,8 @@ let package_manager_name_t ?(env=OpamVariable.Map.empty) config =
   | Openbsd -> `AsAdmin "pkg_add"
   | Suse -> `AsAdmin "zypper"
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show config sys_packages =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show st
+    config sys_packages =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
@@ -1097,8 +1098,8 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show config sy
   | Openbsd -> [pm, yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [pm, yes ["--non-interactive"] ("install"::packages)], None
 
-let install_packages_commands ?env config sys_packages =
-  fst (install_packages_commands_t ?env ~to_show:true config sys_packages)
+let install_packages_commands ?env st config sys_packages =
+  fst (install_packages_commands_t ?env ~to_show:true st config sys_packages)
 
 let package_manager_name ?env config =
   match package_manager_name_t ?env config with
@@ -1125,13 +1126,13 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install ?env config (packages : OpamSysPkg.to_install) =
+let install ?env st config (packages : OpamSysPkg.to_install) =
   if OpamSysPkg.Set.is_empty packages.ti_new
   && OpamSysPkg.Set.is_empty packages.ti_required then
     log "Nothing to install"
   else
     let commands, vars =
-      install_packages_commands_t ?env ~to_show:false config packages
+      install_packages_commands_t ?env ~to_show:false st config packages
     in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter

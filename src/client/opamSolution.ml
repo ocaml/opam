@@ -1188,7 +1188,10 @@ let get_depexts ?(force=false) ?(recover=false) t
     in
     { ti_new = status.s_available; ti_required }
 
-let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
+(* propagate_st is used to determine if we need to handle stateless depext
+   systems *)
+let install_sys_packages_t ~propagate_st ~map_sysmap ~confirm env config
+    sys_packages t =
   let rec entry_point t sys_packages =
     if OpamClientConfig.(!r.fake) then
       (print_command sys_packages; t)
@@ -1234,7 +1237,8 @@ let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
     | `Quit -> give_up_msg (); OpamStd.Sys.exit_because `Aborted
   and print_command sys_packages =
     let commands =
-      OpamSysInteract.install_packages_commands ~env config sys_packages
+      OpamSysInteract.install_packages_commands ~env
+        (propagate_st t) config sys_packages
       |> List.map (fun ((`AsAdmin c | `AsUser c), a) -> c::a)
     in
     OpamConsole.formatted_msg
@@ -1263,7 +1267,8 @@ let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
     | `Quit -> give_up ()
   and auto_install t sys_packages =
     try
-      OpamSysInteract.install ~env config sys_packages; (* handles dry_run *)
+      OpamSysInteract.install ~env
+        (propagate_st t) config sys_packages; (* handles dry_run *)
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
@@ -1345,10 +1350,12 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t
   in
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in
-  install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t
+  install_sys_packages_t ~propagate_st:OpamStd.Option.some ~map_sysmap ~confirm
+    env config sys_packages t
 
 let install_sys_packages ~confirm =
-  install_sys_packages_t ~map_sysmap:(fun _ () -> ()) ~confirm
+  install_sys_packages_t ~propagate_st:(fun () -> None)
+    ~map_sysmap:(fun _ () -> ()) ~confirm
 
 (* Apply a solution *)
 let apply ?ask t ~requested ?print_requested ?add_roots

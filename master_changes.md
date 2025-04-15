@@ -297,6 +297,7 @@ users)
   * `OpamSysInteract.{install_packages_commands,install}: no longer takes set of package to install but `OpamSysPkg.to_install` [#5982 @rjbou @RyanGibb @kit-ty-kate]
   * `OpamSysInteract.package_manager_name`: no longer build the command, or run an action to retrieve system package manager name [#5982 @rjbou]
   * `OpamSysInteract`: add `stateless_install` that return if system package manager is stateless one (per switch) [#5982 @rjbou]
+  * `OpamSysInteract.{install_packages_commands,install}: takes a new argument, a switch stat option, for stateless systems that need to write on switch [#5982 @RyanGibb @rjbou]
 
 ## opam-solver
 
