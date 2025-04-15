@@ -100,3 +100,4 @@ src/x_build_libs.ocp
 # dev setup
 /.ocamlinit
 /release/out
+/.github/actions
