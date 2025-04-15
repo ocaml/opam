@@ -2,7 +2,7 @@
 
 set -eu
 
-#for target in alpine archlinux centos debian fedora gentoo opensuse oraclelinux ubuntu; do
+#for target in alpine archlinux centos debian fedora gentoo opensuse oraclelinux nix ubuntu; do
 target=$1
 dir=.github/actions/$target
 
@@ -96,6 +96,20 @@ RUN yum install -y $mainlibs
 RUN yum install -y gcc-c++
 EOF
   ;;
+  nix)
+    mainlibs=${mainlibs/m4/gnum4}
+    mainlibs=${mainlibs/make/gnumake}
+    mainlibs=${mainlibs/tar/}
+    mainlibs=$(echo "$mainlibs" | sed -E 's/([[:alnum:]]+)/nixpkgs.\1/g')
+    additionallibs="gcc diffutils getconf gnused gawk"
+    additionallibs=$(echo "$additionallibs" | sed -E 's/([[:alnum:]]+)/nixpkgs.\1/g')
+    # We don't use $ocaml as nix compiler lib is not main ocaml compiler
+    cat > "$dir/Dockerfile" << EOF
+FROM nixos/nix
+RUN nix-channel --update
+RUN nix-env -iA $mainlibs $additionallibs nixpkgs.ocaml
+EOF
+    ;;
   ubuntu)
   cat > "$dir/Dockerfile" << EOF
 FROM ubuntu:20.04
@@ -168,6 +182,18 @@ eval \$(/usr/bin/opam env)
 ./configure
 make
 
+EOF
+
+if [ "$target" = nix ]; then
+  cat >> "$dir/entrypoint.sh" << EOF
+./opam var --global os-family=nixos
+./opam var --global os-distribution=nixos
+
+EOF
+fi
+
+
+cat >> "$dir/entrypoint.sh" << EOF
 ./opam config report
 ./opam switch create confs --empty --repo rconf=git+file://$LOCAL_REPO#$CONF_BRANCH
 EOF
