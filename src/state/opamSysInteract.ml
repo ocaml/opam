@@ -127,6 +127,7 @@ type families =
   | Macports
   | Msys2
   | Netbsd
+  | Nix
   | Openbsd
   | Suse
 
@@ -192,6 +193,7 @@ let family ~env () =
     | "gentoo" -> Gentoo
     | "homebrew" -> Homebrew
     | "macports" -> Macports
+    | "nixos" -> Nix
     | "macos" ->
       failwith
         "External dependency handling for macOS requires either \
@@ -963,6 +965,18 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> package_set_of_pkgpath
     in
     compute_sets sys_installed
+  | Nix ->
+      (* We say all requested packages are available but uninstalled.
+         We could check that these packages are available in Nixpkgs,
+         but that would involve an expensive Nixpkgs evaluation.
+         Saying no packages are installed results in a warning that
+         conf packages depend on a 'system package that can no longer
+         be found.' But omitting them will mean that they won't be
+         added to the Nix derivation.
+      *)
+      let s_available = packages in
+      let s_not_found = OpamSysPkg.Set.empty in
+      { OpamSysPkg.s_available; s_not_found }
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-qP"]
@@ -973,6 +987,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
 let stateless_install ?(env=OpamVariable.Map.empty) () =
   match family ~env () with
   | exception Failure _ -> true (* no depexts *)
+  | Nix -> true
   | Alpine | Altlinux | Arch | Centos | Cygwin | Debian | Dummy _
   | Freebsd | Gentoo | Homebrew | Macports | Msys2 | Netbsd
   | Openbsd | Suse -> false
@@ -998,9 +1013,11 @@ let package_manager_name_t ?(env=OpamVariable.Map.empty) config =
   | Macports -> `AsAdmin "port"
   | Msys2 -> `AsUser (Commands.msys2 config)
   | Netbsd -> `AsAdmin "pkgin"
+  | Nix -> `AsUser "nix-build"
   | Openbsd -> `AsAdmin "pkg_add"
   | Suse -> `AsAdmin "zypper"
 
+(* Perform some action for Nix and Cygwin *)
 let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show st
     config sys_packages =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
@@ -1095,6 +1112,79 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show st
     [`AsUser (Commands.msys2 config),
      "-Su"::"--noconfirm"::packages], None
   | Netbsd -> [pm, yes ["-y"] ("install" :: packages)], None
+  | Nix ->
+    (match st with
+     | None ->
+       log "Nix depext must be passed switch";
+       [], None
+     | Some (st : _ OpamStateTypes.switch_state) ->
+       let dir = OpamPath.Switch.meta st.switch_global.root st.switch in
+       let drvFile =
+         OpamFilename.create dir
+           (OpamFilename.Base.of_string "env.nix")
+       in
+       let packages =
+         String.concat " "
+           (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l)
+              OpamSysPkg.Set.Op.(sys_packages.ti_new ++ sys_packages.ti_required) [])
+       in
+       (* We exclude variables from
+            https://github.com/NixOS/nix/blob/e4bda20918ad2af690c2e938211a7d362548e403/src/nix/develop.cc#L308-L325
+          append to variables from
+            https://github.com/NixOS/nix/blob/e4bda20918ad2af690c2e938211a7d362548e403/src/nix/develop.cc#L347-L353
+          and exclude some other regarding the Nix derivation *)
+       let contents =
+         {|{ pkgs ? import <nixpkgs> {} }:
+with pkgs;
+stdenv.mkDerivation {
+  name = "opam-nix-env";
+  nativeBuildInputs = with buildPackages; [ |} ^ packages ^ {| ];
+
+  phases = [ "buildPhase" ];
+
+  buildPhase = ''
+while IFS='=' read -r var value; do
+  escaped="''$(echo "$value" | sed -e 's/^$/@/' -e 's/ /\\ /g')"
+  echo "$var	=	$escaped	Nix" >> "$out"
+done < <(env \
+  -u BASHOPTS \
+  -u HOME \
+  -u NIX_BUILD_TOP \
+  -u NIX_ENFORCE_PURITY \
+  -u NIX_LOG_FD \
+  -u NIX_REMOTE \
+  -u PPID \
+  -u SHELLOPTS \
+  -u SSL_CERT_FILE \
+  -u TEMP \
+  -u TEMPDIR \
+  -u TERM \
+  -u TMP \
+  -u TMPDIR \
+  -u TZ \
+  -u UID \
+  -u PATH \
+  -u XDG_DATA_DIRS \
+  -u self-referential \
+  -u excluded_vars \
+  -u excluded_pattern \
+  -u phases \
+  -u buildPhase \
+  -u outputs)
+
+echo "PATH	+=	$PATH	Nix" >> "$out"
+echo "XDG_DATA_DIRS	+=	$XDG_DATA_DIRS	Nix" >> "$out"
+  '';
+
+  preferLocalBuild = true;
+}
+|} in
+       OpamFilename.write drvFile contents;
+       let envFile = OpamPath.Switch.nix_env st.switch_global.root st.switch in
+       [pm,
+        [ OpamFilename.to_string drvFile;
+          "--out-link"; OpamFile.to_string envFile ] ],
+       None)
   | Openbsd -> [pm, yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [pm, yes ["--non-interactive"] ("install"::packages)], None
 
@@ -1158,6 +1248,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Macports -> Some (`AsAdmin "port", ["sync"])
     | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])
     | Netbsd -> None
+    | Nix -> Some (`AsUser "nix-channel", ["--update"])
     | Openbsd -> None
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
   in

@@ -116,6 +116,7 @@ users)
   * Change probing tool for SUSE-based distributions from `zypper` to `rpm` [#6464 @kit-ty-kate]
   * Disable the detection of available system packages on SUSE-based distributions [#6464 @kit-ty-kate]
   * Add support for stateless depexts systems, by keeping synchronised already installed systems dependencies with switch state [#5982 @RyanGibb @rjbou @kit-ty-kate]
+  * [NEW] Support providing external dependencies with Nix [#5982 @RyanGibb @rjbou @kit-ty-kate]
 
 ## Format upgrade
 

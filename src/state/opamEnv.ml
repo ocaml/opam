@@ -677,11 +677,22 @@ let updates_common ~set_opamroot ~set_opamswitch root switch =
     else [] in
   root @ switch
 
+let updates_nix st =
+  match OpamSysPoll.os_family st.switch_global.global_variables with
+  | Some "nixos" ->
+    (match
+       OpamFile.Environment.read_opt
+         (OpamPath.Switch.nix_env st.switch_global.root st.switch)
+     with
+     | None -> []
+     | Some env -> List.map resolve_separator_and_format env)
+  | _ -> []
+
 let updates ~set_opamroot ~set_opamswitch ?force_path st =
   let common =
     updates_common ~set_opamroot ~set_opamswitch st.switch_global.root st.switch
   in
-  common @ compute_updates ?force_path st
+  common @ compute_updates ?force_path st @ updates_nix st
 
 let get_pure ?(updates=[]) () =
   let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
