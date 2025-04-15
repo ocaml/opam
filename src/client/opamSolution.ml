@@ -1144,46 +1144,51 @@ let print_depext_msg (status : OpamSysPkg.status) =
 (* Gets depexts from the state, without checking again, unless [recover] is
    true. *)
 let get_depexts ?(force=false) ?(recover=false) t packages =
-  if not force && OpamStateConfig.(!r.no_depexts) then OpamSysPkg.Set.empty else
-  let sys_packages =
-    if recover then
-      OpamSwitchState.depexts_status_of_packages t packages
-    else
-      let base = Lazy.force t.sys_packages in
-      (* workaround: st.sys_packages is not always updated with added
-         packages *)
-      let more_pkgs =
-        OpamPackage.Set.filter (fun nv ->
-            (* dirty heuristic: recompute for all non-canonical packages *)
-            OpamPackage.Map.find_opt nv t.repos_package_index
-            <> OpamSwitchState.opam_opt t nv)
-          packages
-      in
-      if OpamPackage.Set.is_empty more_pkgs then base else
-        OpamPackage.Map.union (fun _ x -> x) base
-          (OpamSwitchState.depexts_status_of_packages t more_pkgs)
-  in
-  let status =
-    let open OpamSysPkg.Set.Op in
-    OpamPackage.Set.fold (fun pkg (acc : OpamSysPkg.status) ->
-        match OpamPackage.Map.find_opt pkg sys_packages with
-        | Some sys ->
-          { OpamSysPkg.
-            s_available = acc.s_available ++ sys.s_available;
-            s_not_found = acc.s_not_found ++ sys.s_not_found;
-          }
-        | None -> acc)
-      packages OpamSysPkg.status_empty
-  in
-  print_depext_msg status;
-  status.s_available
+  if not force && OpamStateConfig.(!r.no_depexts) then
+    OpamSysPkg.to_install_empty
+  else
+    let sys_packages =
+      if recover then
+        OpamSwitchState.depexts_status_of_packages t packages
+      else
+        let base = Lazy.force t.sys_packages in
+        (* workaround: st.sys_packages is not always updated with added
+           packages *)
+        let more_pkgs =
+          OpamPackage.Set.filter (fun nv ->
+              (* dirty heuristic: recompute for all non-canonical packages *)
+              OpamPackage.Map.find_opt nv t.repos_package_index
+              <> OpamSwitchState.opam_opt t nv)
+            packages
+        in
+        if OpamPackage.Set.is_empty more_pkgs then base else
+          OpamPackage.Map.union (fun _ x -> x) base
+            (OpamSwitchState.depexts_status_of_packages t more_pkgs)
+    in
+    let status =
+      let open OpamSysPkg.Set.Op in
+      OpamPackage.Set.fold (fun pkg (acc : OpamSysPkg.status) ->
+          match OpamPackage.Map.find_opt pkg sys_packages with
+          | Some sys ->
+            { OpamSysPkg.
+              s_available = acc.s_available ++ sys.s_available;
+              s_not_found = acc.s_not_found ++ sys.s_not_found;
+            }
+          | None -> acc)
+        packages OpamSysPkg.status_empty
+    in
+    print_depext_msg status;
+    { OpamSysPkg.to_install_empty with ti_new = status.s_available }
 
 let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
   let rec entry_point t sys_packages =
     if OpamClientConfig.(!r.fake) then
       (print_command sys_packages; t)
     else if OpamFile.Config.depext_run_installs config then
-      if confirm then menu t sys_packages else auto_install t sys_packages
+      if confirm then
+        menu t sys_packages
+      else
+        auto_install t sys_packages
     else
       manual_install t sys_packages
   and menu t sys_packages =
@@ -1258,10 +1263,10 @@ let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
   and check_again t sys_packages =
     let open OpamSysPkg.Set.Op in
     let status =
-      OpamSysInteract.packages_status ~env config sys_packages
+      OpamSysInteract.packages_status ~env config sys_packages.ti_new
     in
     let still_missing = status.s_available ++ status.s_not_found in
-    let installed = sys_packages -- still_missing in
+    let installed = sys_packages.ti_new -- still_missing in
     let t =
       map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t
     in
@@ -1272,10 +1277,10 @@ let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
          "These packages are still missing and not found via \
           your system package manager: %s\n"
          (syspkgs_to_string status.s_not_found);
-       manual_install t still_missing)
+       manual_install t { sys_packages with ti_new = still_missing })
     else
       (OpamConsole.error "These packages are still missing: %s\n"
-         (syspkgs_to_string sys_packages);
+         (syspkgs_to_string sys_packages.ti_new);
        if OpamStd.Sys.tty_in then entry_point t sys_packages
        else give_up ())
   and bypass t =
@@ -1295,7 +1300,7 @@ let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
     give_up_msg ();
     OpamStd.Sys.exit_because `Aborted
   in
-  if OpamSysPkg.Set.is_empty sys_packages ||
+  if (OpamSysPkg.Set.is_empty sys_packages.OpamSysPkg.ti_new) ||
      OpamClientConfig.(!r.show) ||
      OpamClientConfig.(!r.assume_depexts) then
     t

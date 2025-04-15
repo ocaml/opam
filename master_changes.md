@@ -274,6 +274,7 @@ users)
   * `OpamLockCommand.lock_opam`: add `~keep_local` argument to add local pins to pin-depends (and not resolve them) [#6411 @rjbou]
   * `OpamLockCommand.lock_opam`: make the `?only_direct` argument non-optional [#6411 @kit-ty-kate]
   * `OpamSolution.print_depext_msg`: takes now an `OpamSysPkg.status` instead of sets [#5982 @kit-ty-kate @RyanGibb]
+  * `OpamSolution.install_sys_packages`: no longer takes set of package to install but `OpamSysPkg.to_install` [#5982 @rjbou @RyanGibb @kit-ty-kate]
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
@@ -291,6 +292,7 @@ users)
   * `OpamSysInteract.Cygwin.check_setup`: unexpose the function [#6467 @kit-ty-kate]
   * `OpamSysInteract.package_status`: SUSE-based distributions now uses `rpm` instead of `zypper` and no longer return an `available` set of system packages [#6464 @kit-ty-kate]
   * `OpamSysInteract.packages_status`: returns now a `OpamSysPkg.status` instead of sets [#5982 @kit-ty-kate @RyanGib]
+  * `OpamSysInteract.{install_packages_commands,install}: no longer takes set of package to install but `OpamSysPkg.to_install` [#5982 @rjbou @RyanGibb @kit-ty-kate]
 
 ## opam-solver
 
@@ -300,6 +302,7 @@ users)
   * `OpamFile.OPAM.{*read*,write*}`: Stop modifying the `available` field when handling the builtin `x-*` fields [#6438 @kit-ty-kate]
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
   * `OpamPath`: add `nix_env` inner switch path for nix environment [#5982 @RyanGibb]
+  * `OpamSysPkg`; add new type `to_install` to store system package to install information, newly requested ones and already installed required ones ; and its empty recode `to_install_empty` and display function `string_of_to_install` [#5982 @rjbou]
 
 ## opam-core
   * `OpamConsole`: Replace `black` text style (unused and not very readable) by `gray` [#6358 @kit-ty-kate]

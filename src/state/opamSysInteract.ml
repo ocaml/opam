@@ -979,7 +979,8 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show config sy
       yes @ r else no @ r
   in
   let packages =
-    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
+    List.map OpamSysPkg.to_string
+      (OpamSysPkg.Set.elements sys_packages.OpamSysPkg.ti_new)
   in
   match family ~env () with
   | Alpine -> [`AsAdmin "apk", "add"::yes ~no:["-i"] [] packages], None
@@ -1066,11 +1067,14 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show config sy
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
+
 let install_packages_commands ?env config sys_packages =
   fst (install_packages_commands_t ?env ~to_show:true config sys_packages)
 
 let package_manager_name ?env config =
-  match install_packages_commands ?env config OpamSysPkg.Set.empty with
+  match
+    install_packages_commands ?env config OpamSysPkg.to_install_empty
+  with
   | ((`AsAdmin pkgman | `AsUser pkgman), _) :: _ -> pkgman
   | [] -> assert false
 
@@ -1095,8 +1099,9 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install ?env config packages =
-  if OpamSysPkg.Set.is_empty packages then
+let install ?env config (packages : OpamSysPkg.to_install) =
+  if OpamSysPkg.Set.is_empty packages.ti_new
+  && OpamSysPkg.Set.is_empty packages.ti_required then
     log "Nothing to install"
   else
     let commands, vars = install_packages_commands_t ?env ~to_show:false config packages in

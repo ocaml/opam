@@ -44,6 +44,8 @@ let raw_set set =
   OpamStd.String.Set.fold (fun spkg set-> Set.add (of_string spkg) set)
     set Set.empty
 
+(** System package status *)
+
 type status =
   {
     s_available : Set.t;
@@ -64,3 +66,23 @@ let string_of_status sp =
   Printf.sprintf "available: %s; not_found: %s"
     (Set.to_string sp.s_available)
     (Set.to_string sp.s_not_found)
+
+(** System packages to install *)
+
+type to_install = {
+  ti_new : Set.t;
+  (** Package to install required by new opam packages *)
+
+  ti_required : Set.t
+  (** Package to install required by already install opam packages *)
+}
+
+let to_install_empty = {
+  ti_new  = Set.empty;
+  ti_required  = Set.empty;
+}
+
+let string_of_to_install ti =
+  Printf.sprintf "new: %s; required: %s"
+    (Set.to_string ti.ti_new)
+    (Set.to_string ti.ti_required)

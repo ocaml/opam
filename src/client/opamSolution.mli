@@ -82,8 +82,9 @@ val print_depext_msg : OpamSysPkg.status -> unit
 
 (** As {!install_depexts}, but supplied with a set of system packages to be
     installed. *)
-val install_sys_packages: confirm:bool -> OpamStateTypes.gt_variables ->
-  OpamFile.Config.t -> OpamSysPkg.Set.t -> unit -> unit
+val install_sys_packages:
+  confirm:bool -> OpamStateTypes.gt_variables -> OpamFile.Config.t ->
+  OpamSysPkg.to_install -> unit -> unit
 
 (* Install external dependencies of the given package set, according the depext
    configuration. If [confirm] is false, install commands are directly

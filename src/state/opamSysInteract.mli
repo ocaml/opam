@@ -22,14 +22,18 @@ val packages_status:
   OpamSysPkg.status
 
 (* Return the commands to run to install given system packages.
-   [env] is used to determine host specification. *)
+   [env] is used to determine host specification.
+   [config] is used to determine Windows depext installation. *)
 val install_packages_commands:
-  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
+  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.to_install ->
   ([`AsAdmin of string | `AsUser of string] * string list) list
 
 (* Install given system packages, by calling local system package manager.
-   [env] is used to determine host specification. *)
-val install: ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t -> unit
+   [env] is used to determine host specification.
+   [config] is used to determine Windows depext installation. *)
+val install:
+  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.to_install ->
+  unit
 
 val update: ?env:gt_variables -> OpamFile.Config.t -> unit
 
