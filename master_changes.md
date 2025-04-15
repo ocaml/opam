@@ -241,6 +241,7 @@ users)
   * Use the good opam binary in depext jobs [#6471 @RyanGibb]
   * Restore the OCaml cache for the Windows jobs [#6469 @kit-ty-kate]
   * Add depext job for Nix [#5982 @RyanGibb @kit-ty-kate @rjbou]
+  * Fix fedora depext job, add awk to install packages and set the distro version [#5982 @rjbou]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
