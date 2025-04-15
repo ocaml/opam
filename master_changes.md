@@ -293,6 +293,7 @@ users)
   * `OpamSysInteract.package_status`: SUSE-based distributions now uses `rpm` instead of `zypper` and no longer return an `available` set of system packages [#6464 @kit-ty-kate]
   * `OpamSysInteract.packages_status`: returns now a `OpamSysPkg.status` instead of sets [#5982 @kit-ty-kate @RyanGib]
   * `OpamSysInteract.{install_packages_commands,install}: no longer takes set of package to install but `OpamSysPkg.to_install` [#5982 @rjbou @RyanGibb @kit-ty-kate]
+  * `OpamSysInteract.package_manager_name`: no longer build the command, or run an action to retrieve system package manager name [#5982 @rjbou]
 
 ## opam-solver
 
