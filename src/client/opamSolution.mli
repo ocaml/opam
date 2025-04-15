@@ -86,12 +86,15 @@ val install_sys_packages:
   confirm:bool -> OpamStateTypes.gt_variables -> OpamFile.Config.t ->
   OpamSysPkg.to_install -> unit -> unit
 
-(* Install external dependencies of the given package set, according the depext
-   configuration. If [confirm] is false, install commands are directly
+(* Install external dependencies of the given package sets, according the depext
+   configuration. [pkg_to_install] is the set of package that solution propose
+   to install, and [pkg_installed] is the set of package that are alreday
+   installed. [pkg_to_install] can be a subset of [pkg_installed].
+   If [confirm] is false, install commands are directly
    launched, without asking user (used by the `--depext-only` option). If
    [force_depext] is true, it overrides [OpamFile.Config.depext] value. *)
 val install_depexts: ?force_depext:bool -> ?confirm:bool -> rw switch_state ->
-  package_set -> rw switch_state
+  pkg_to_install:package_set -> pkg_installed:package_set -> rw switch_state
 
 (** {2 Atoms} *)
 

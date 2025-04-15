@@ -2349,7 +2349,8 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       in
       if depext_only then
         (OpamSolution.install_depexts ~force_depext:true ~confirm:false t
-           (OpamSolver.all_packages solution)), None
+           ~pkg_to_install:(OpamSolver.all_packages solution)
+           ~pkg_installed:t.installed), None
       else
         let add_roots =
           match add_to_roots, deps_only with

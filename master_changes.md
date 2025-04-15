@@ -115,6 +115,7 @@ users)
   * The system GNU Patch and diff are no longer runtime dependencies of opam [#5892 @kit-ty-kate - fix #6052]
   * Change probing tool for SUSE-based distributions from `zypper` to `rpm` [#6464 @kit-ty-kate]
   * Disable the detection of available system packages on SUSE-based distributions [#6464 @kit-ty-kate]
+  * Add support for stateless depexts systems, by keeping synchronised already installed systems dependencies with switch state [#5982 @RyanGibb @rjbou @kit-ty-kate]
 
 ## Format upgrade
 
@@ -275,6 +276,7 @@ users)
   * `OpamLockCommand.lock_opam`: make the `?only_direct` argument non-optional [#6411 @kit-ty-kate]
   * `OpamSolution.print_depext_msg`: takes now an `OpamSysPkg.status` instead of sets [#5982 @kit-ty-kate @RyanGibb]
   * `OpamSolution.install_sys_packages`: no longer takes set of package to install but `OpamSysPkg.to_install` [#5982 @rjbou @RyanGibb @kit-ty-kate]
+  * `OpamSolution.install_depexts`: instead of the package set of new package to install, now takes 2 labelled arguments `pkg_to_install` and `pkg_installed` to be able to keep synchronised stateless depext systems [#5982 @rjbou @RyanGibb @kit-ty-kate]
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
@@ -294,6 +296,7 @@ users)
   * `OpamSysInteract.packages_status`: returns now a `OpamSysPkg.status` instead of sets [#5982 @kit-ty-kate @RyanGib]
   * `OpamSysInteract.{install_packages_commands,install}: no longer takes set of package to install but `OpamSysPkg.to_install` [#5982 @rjbou @RyanGibb @kit-ty-kate]
   * `OpamSysInteract.package_manager_name`: no longer build the command, or run an action to retrieve system package manager name [#5982 @rjbou]
+  * `OpamSysInteract`: add `stateless_install` that return if system package manager is stateless one (per switch) [#5982 @rjbou]
 
 ## opam-solver
 

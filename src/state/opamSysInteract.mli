@@ -21,6 +21,10 @@ val packages_status:
   ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
   OpamSysPkg.status
 
+(* Returns [true] if the distribution is a stateless installation. It permits to
+   define where there is a need to handle installed system packages or not. *)
+val stateless_install: ?env:gt_variables -> unit -> bool
+
 (* Return the commands to run to install given system packages.
    [env] is used to determine host specification.
    [config] is used to determine Windows depext installation. *)

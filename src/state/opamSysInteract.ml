@@ -970,6 +970,13 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     in
     compute_sets sys_installed
 
+let stateless_install ?(env=OpamVariable.Map.empty) () =
+  match family ~env () with
+  | exception Failure _ -> true (* no depexts *)
+  | Alpine | Altlinux | Arch | Centos | Cygwin | Debian | Dummy _
+  | Freebsd | Gentoo | Homebrew | Macports | Msys2 | Netbsd
+  | Openbsd | Suse -> false
+
 (* Install *)
 
 let package_manager_name_t ?(env=OpamVariable.Map.empty) config =
