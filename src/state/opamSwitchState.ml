@@ -198,21 +198,24 @@ let depexts_status_of_packages_raw
   let syspkg_set = syspkg_set -- bypass in
   let ret =
     match OpamSysInteract.packages_status ?env global_config syspkg_set with
-    | avail, not_found ->
-      let avail, not_found =
+    | status ->
+      let status =
         if OpamStateConfig.(!r.no_depexts) then
           (* Mark all as available. This is necessary to store the exceptions
              afterwards *)
-          avail ++ not_found, OpamSysPkg.Set.empty
+          { OpamSysPkg.status_empty with
+            s_available = status.s_available ++ status.s_not_found; }
         else if OpamFile.Config.depext_cannot_install global_config then
-          OpamSysPkg.Set.empty, avail ++ not_found
+          { OpamSysPkg.status_empty with
+            s_not_found = status.s_available ++ status.s_not_found; }
         else
-          avail, not_found
+          status
       in
       OpamPackage.Map.map (fun set ->
-          { OpamSysPkg.s_available = set %% avail;
-            OpamSysPkg.s_not_found = set %% not_found}
-        ) syspkg_map
+          { OpamSysPkg.
+            s_available = set %% status.s_available;
+            s_not_found = set %% status.s_not_found })
+        syspkg_map
     | exception (Failure msg) ->
       OpamConsole.note "%s\nYou can disable this check using 'opam \
                         option --global depext=false'"

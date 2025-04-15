@@ -273,6 +273,7 @@ users)
   * `OpamRepositoryCommand.switch_repos`: expose the function [#5014 @kit-ty-kate]
   * `OpamLockCommand.lock_opam`: add `~keep_local` argument to add local pins to pin-depends (and not resolve them) [#6411 @rjbou]
   * `OpamLockCommand.lock_opam`: make the `?only_direct` argument non-optional [#6411 @kit-ty-kate]
+  * `OpamSolution.print_depext_msg`: takes now an `OpamSysPkg.status` instead of sets [#5982 @kit-ty-kate @RyanGibb]
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
@@ -289,6 +290,7 @@ users)
   * `OpamSwitchState.load_selections`: Make the `?lock_kind` parameter non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
   * `OpamSysInteract.Cygwin.check_setup`: unexpose the function [#6467 @kit-ty-kate]
   * `OpamSysInteract.package_status`: SUSE-based distributions now uses `rpm` instead of `zypper` and no longer return an `available` set of system packages [#6464 @kit-ty-kate]
+  * `OpamSysInteract.packages_status`: returns now a `OpamSysPkg.status` instead of sets [#5982 @kit-ty-kate @RyanGib]
 
 ## opam-solver
 

@@ -1129,17 +1129,17 @@ let syspkgs_to_string spkgs =
     (fun p -> OpamConsole.colorise `bold (OpamSysPkg.to_string p))
     (OpamSysPkg.Set.elements spkgs)
 
-let print_depext_msg (avail, nf) =
-  if not (OpamSysPkg.Set.is_empty nf) then
+let print_depext_msg (status : OpamSysPkg.status) =
+  if not (OpamSysPkg.Set.is_empty status.s_not_found) then
     OpamConsole.warning
       "These additional system packages are required, but not available on \
        your system: %s"
-      (syspkgs_to_string nf);
-  if not (OpamSysPkg.Set.is_empty avail) then
+      (syspkgs_to_string status.s_not_found);
+  if not (OpamSysPkg.Set.is_empty status.s_available) then
     (OpamConsole.formatted_msg
        "\nThe following system packages will first need to be installed:\n";
      OpamConsole.formatted_msg ~indent:4 "    %s\n"
-       (syspkgs_to_string avail))
+       (syspkgs_to_string status.s_available))
 
 (* Gets depexts from the state, without checking again, unless [recover] is
    true. *)
@@ -1160,20 +1160,23 @@ let get_depexts ?(force=false) ?(recover=false) t packages =
           packages
       in
       if OpamPackage.Set.is_empty more_pkgs then base else
-      OpamPackage.Map.union (fun _ x -> x) base
-        (OpamSwitchState.depexts_status_of_packages t more_pkgs)
+        OpamPackage.Map.union (fun _ x -> x) base
+          (OpamSwitchState.depexts_status_of_packages t more_pkgs)
   in
-  let avail, nf =
-    OpamPackage.Set.fold (fun pkg (avail,nf) ->
+  let status =
+    let open OpamSysPkg.Set.Op in
+    OpamPackage.Set.fold (fun pkg (acc : OpamSysPkg.status) ->
         match OpamPackage.Map.find_opt pkg sys_packages with
         | Some sys ->
-          OpamSysPkg.(Set.union avail sys.s_available),
-          OpamSysPkg.(Set.union nf sys.s_not_found)
-        | None -> avail, nf)
-      packages (OpamSysPkg.Set.empty, OpamSysPkg.Set.empty)
+          { OpamSysPkg.
+            s_available = acc.s_available ++ sys.s_available;
+            s_not_found = acc.s_not_found ++ sys.s_not_found;
+          }
+        | None -> acc)
+      packages OpamSysPkg.status_empty
   in
-  print_depext_msg (avail, nf);
-  avail
+  print_depext_msg status;
+  status.s_available
 
 let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
   let rec entry_point t sys_packages =
@@ -1254,20 +1257,21 @@ let install_sys_packages_t ~map_sysmap ~confirm env config sys_packages t =
       check_again t sys_packages
   and check_again t sys_packages =
     let open OpamSysPkg.Set.Op in
-    let needed, notfound =
+    let status =
       OpamSysInteract.packages_status ~env config sys_packages
     in
-    let still_missing = needed ++ notfound in
+    let still_missing = status.s_available ++ status.s_not_found in
     let installed = sys_packages -- still_missing in
     let t =
       map_sysmap (fun sysp -> OpamSysPkg.Set.diff sysp installed) t
     in
     if OpamSysPkg.Set.is_empty still_missing then t else
-    if OpamSysPkg.Set.(not (is_empty notfound) && is_empty needed) then
+    if not (OpamSysPkg.Set.is_empty status.s_not_found)
+    && OpamSysPkg.Set.is_empty status.s_available then
       (OpamConsole.error
          "These packages are still missing and not found via \
           your system package manager: %s\n"
-         (syspkgs_to_string notfound);
+         (syspkgs_to_string status.s_not_found);
        manual_install t still_missing)
     else
       (OpamConsole.error "These packages are still missing: %s\n"

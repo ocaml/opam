@@ -75,10 +75,10 @@ val check_solution:
     without actually performing the action(s) on disk. *)
 val dry_run: 'a switch_state -> OpamSolver.solution -> 'a switch_state
 
-(** Given [(available, not_found)] (see {!OpamSysInteract.packages_status}),
+(** Given [OpamSysPkg.status] (see {!OpamSysInteract.packages_status}),
     displays appropriate warnings/messages on the console if either set is
     non-empty. *)
-val print_depext_msg : OpamSysPkg.Set.t * OpamSysPkg.Set.t -> unit
+val print_depext_msg : OpamSysPkg.status -> unit
 
 (** As {!install_depexts}, but supplied with a set of system packages to be
     installed. *)
