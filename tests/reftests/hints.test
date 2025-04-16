@@ -1,0 +1,56 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+### <pkg:bar.1>
+opam-version: "2.0"
+### <pkg:baz.1>
+opam-version: "2.0"
+### <pkg:foobarbaz.1>
+opam-version: "2.0"
+### : Test input with 3 Unicode characters (default max_dist = 1).
+### : 'foz' has edit distance 1 to 'foo' => hint should be given.
+### opam show foz
+[ERROR] No package matching foz found
+        Hint: Did you mean foo?
+# Return code 5 #
+### : Test input with 10 characters (default max_dist = 2).
+### : 'foobarbiz' has edit distance 2 from 'foobarbaz' => hint should be given.
+### opam show foobarbiz
+[ERROR] No package matching foobarbiz found
+        Hint: Did you mean foobarbaz?
+# Return code 5 #
+### : Test input with 2 characters only: 'fo'.
+### : max_dist = 0 so no suggestions even though 'foo' is close.
+### opam show fo
+[ERROR] No package matching fo found
+# Return code 5 #
+### : Test with completely unrelated string 'xyz' (edit distance > 1 with everything).
+### : 'xyz' is 3 chars, max_dist = 1, but nothing in dictionary is close enough => no hint.
+### opam show xyz
+[ERROR] No package matching xyz found
+# Return code 5 #
+### : Test with two misspelled package names: 'bare' and 'bazz'
+### : Each word gets its own suggestion (bare -> bar, bazz -> baz)
+### opam info bare bazz
+[ERROR] No package matching bare or bazz found
+        Hint: Did you mean bar?
+        Hint: Did you mean baz?
+# Return code 5 #
+### : Add two more short packages that are close to 'fob'
+### <pkg:foa.1>
+opam-version: "2.0"
+### <pkg:foc.1>
+opam-version: "2.0"
+### : Test input 'fob', which is equally distant (edit dist = 1) to both 'foa' and 'foc'
+### : Single hint is picked based on first match in dictionary order.
+### opam show fob
+[ERROR] No package matching fob found
+        Hint: Did you mean foa?
+# Return code 5 #
+### : Add a short-named package 'a'
+### <pkg:a.1>
+opam-version: "2.0"
+### : Input is 'b' (1 character), max_dist = 0 => no hint should be given
+### opam show b
+[ERROR] No package matching b found
+# Return code 5 #
