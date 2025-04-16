@@ -21,6 +21,7 @@ users)
 ## Init
   * [BUG] Fix the detection of `ZDOTDIR` when using `zsh` [#6299 @acasta-yhliu - fix #6281]
   * Remove `ocaml-system` from the list of default compilers [#6307 @kit-ty-kate - fix #3509]
+  * Display an appropriate error message when the file given to `opam init --config` does not exist or is in a VCS [#5979 @kit-ty-kate]
 
 ## Config report
 
@@ -215,6 +216,7 @@ users)
   * Add tests showing behaviour of `opam pin` when confronted with a missing opam description [#6319 @kit-ty-kate]
   * Make the reftests more reliable by not downloading Cygwin's setup.exe on Windows [#6467 @kit-ty-kate]
   * Add test for variables resolution in filters, for all fields [#5643 @rjbou]
+  * Add a test showing the behaviour of opam init --config when the file given does not exist [#5979 @kit-ty-kate]
 
 ### Engine
 
@@ -319,3 +321,5 @@ users)
   * `OpamSystem.patch`: do not remove the original patch file if called with `~preprocess:false` [#5892 @kit-ty-kate]
   * `OpamParallel.*.{map,reduce,iter}`: Run `Gc.compact` when the main process is waiting for the children processes for the first time [#5396 @kkeundotnet]
   * `OpamSystem`, `OpamFilename`: add `with_tmp_file` and `with_tmp_file_job` function, that create a file name in temporary directory and removes it at the end of the call [#6036 @rjbou]
+  * Add `OpamUrl.kind` as an alternative for OpamUrl.local_{file,dir} [#5979 @kit-ty-kate]
+  * Expose `OpamUrl.string_of_vc` [#5979 @kit-ty-kate]
