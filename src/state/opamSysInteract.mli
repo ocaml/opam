@@ -11,24 +11,34 @@
 open OpamStateTypes
 
 (* Given a list of system packages, retrieve their installation status from the
-   system and returns a pair of {!sys_package} set:
-     * first one is available set: package that exist on the default
-       repositories, but not installed)
-     * second one, not found set: packages not found on the defined repositories
-   [env] is used to determine host specification. *)
+   system and returns a {!OpamSysInteract.packages_status} record with,
+     * available set: package that exist on the default
+       repositories, but not installed
+     * not found set: packages not found on the defined repositories
+   [env] is used to determine host specification.
+   [config] is used to determine Windows depext installation. *)
 val packages_status:
   ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
-  OpamSysPkg.Set.t * OpamSysPkg.Set.t
+  OpamSysPkg.status
+
+(* Returns [true] if the distribution is a stateless installation. It permits to
+   define where there is a need to handle installed system packages or not. *)
+val stateless_install: ?env:gt_variables -> unit -> bool
 
 (* Return the commands to run to install given system packages.
-   [env] is used to determine host specification. *)
+   [env] is used to determine host specification.
+   [config] is used to determine Windows depext installation. *)
 val install_packages_commands:
-  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
+  ?env:gt_variables -> rw switch_state option -> OpamFile.Config.t ->
+  OpamSysPkg.to_install ->
   ([`AsAdmin of string | `AsUser of string] * string list) list
 
 (* Install given system packages, by calling local system package manager.
-   [env] is used to determine host specification. *)
-val install: ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t -> unit
+   [env] is used to determine host specification.
+   [config] is used to determine Windows depext installation. *)
+val install:
+  ?env:gt_variables -> rw switch_state option -> OpamFile.Config.t ->
+  OpamSysPkg.to_install -> unit
 
 val update: ?env:gt_variables -> OpamFile.Config.t -> unit
 

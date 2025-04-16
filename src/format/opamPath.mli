@@ -183,6 +183,9 @@ module Switch: sig
   (** Like {!environment}, but from the switch prefix dir *)
   val env_relative_to_prefix: dirname -> OpamFile.Environment.t OpamFile.t
 
+  (** A Nix specific environment file *)
+  val nix_env : t -> switch -> OpamFile.Environment.t OpamFile.t
+
   (** Directory where the metadata of installed packages is mirrored.
       {i $meta/packages/} *)
   val installed_opams: t -> switch -> dirname

@@ -115,6 +115,8 @@ users)
   * The system GNU Patch and diff are no longer runtime dependencies of opam [#5892 @kit-ty-kate - fix #6052]
   * Change probing tool for SUSE-based distributions from `zypper` to `rpm` [#6464 @kit-ty-kate]
   * Disable the detection of available system packages on SUSE-based distributions [#6464 @kit-ty-kate]
+  * Add support for stateless depexts systems, by keeping synchronised already installed systems dependencies with switch state [#5982 @RyanGibb @rjbou @kit-ty-kate]
+  * [NEW] Support providing external dependencies with Nix [#5982 @RyanGibb @rjbou @kit-ty-kate]
 
 ## Format upgrade
 
@@ -215,6 +217,7 @@ users)
   * Add tests showing behaviour of `opam pin` when confronted with a missing opam description [#6319 @kit-ty-kate]
   * Make the reftests more reliable by not downloading Cygwin's setup.exe on Windows [#6467 @kit-ty-kate]
   * Add test for variables resolution in filters, for all fields [#5643 @rjbou]
+  * Add test for depext system : testing the test system, depext bypass, and not available distribution [#5982 @rjbou]
 
 ### Engine
 
@@ -237,6 +240,8 @@ users)
   * Cache the repository and a minimal one in docker image for depext jobs [#6471 @rjbou]
   * Use the good opam binary in depext jobs [#6471 @RyanGibb]
   * Restore the OCaml cache for the Windows jobs [#6469 @kit-ty-kate]
+  * Add depext job for Nix [#5982 @RyanGibb @kit-ty-kate @rjbou]
+  * Fix fedora depext job, add awk to install packages and set the distro version [#5982 @rjbou]
 
 ## Doc
   * Update the command to install opam to point to the new simplified url on opam.ocaml.org [#6226 @kit-ty-kate]
@@ -272,6 +277,9 @@ users)
   * `OpamRepositoryCommand.switch_repos`: expose the function [#5014 @kit-ty-kate]
   * `OpamLockCommand.lock_opam`: add `~keep_local` argument to add local pins to pin-depends (and not resolve them) [#6411 @rjbou]
   * `OpamLockCommand.lock_opam`: make the `?only_direct` argument non-optional [#6411 @kit-ty-kate]
+  * `OpamSolution.print_depext_msg`: takes now an `OpamSysPkg.status` instead of sets [#5982 @kit-ty-kate @RyanGibb]
+  * `OpamSolution.install_sys_packages`: no longer takes set of package to install but `OpamSysPkg.to_install` [#5982 @rjbou @RyanGibb @kit-ty-kate]
+  * `OpamSolution.install_depexts`: instead of the package set of new package to install, now takes 2 labelled arguments `pkg_to_install` and `pkg_installed` to be able to keep synchronised stateless depext systems [#5982 @rjbou @RyanGibb @kit-ty-kate]
 
 ## opam-repository
   * `OpamDownload.get_output`: fix `wget` option for `POST` requests [#6036 @rjbou]
@@ -288,6 +296,11 @@ users)
   * `OpamSwitchState.load_selections`: Make the `?lock_kind` parameter non-optional to avoid breaking the library users after they upgrade their opam root [#5488 @kit-ty-kate]
   * `OpamSysInteract.Cygwin.check_setup`: unexpose the function [#6467 @kit-ty-kate]
   * `OpamSysInteract.package_status`: SUSE-based distributions now uses `rpm` instead of `zypper` and no longer return an `available` set of system packages [#6464 @kit-ty-kate]
+  * `OpamSysInteract.packages_status`: returns now a `OpamSysPkg.status` instead of sets [#5982 @kit-ty-kate @RyanGib]
+  * `OpamSysInteract.{install_packages_commands,install}: no longer takes set of package to install but `OpamSysPkg.to_install` [#5982 @rjbou @RyanGibb @kit-ty-kate]
+  * `OpamSysInteract.package_manager_name`: no longer build the command, or run an action to retrieve system package manager name [#5982 @rjbou]
+  * `OpamSysInteract`: add `stateless_install` that return if system package manager is stateless one (per switch) [#5982 @rjbou]
+  * `OpamSysInteract.{install_packages_commands,install}: takes a new argument, a switch stat option, for stateless systems that need to write on switch [#5982 @RyanGibb @rjbou]
 
 ## opam-solver
 
@@ -296,6 +309,8 @@ users)
   * `OpamFormula.all_relop`: a list of all operators [#6197 @mbarbin]
   * `OpamFile.OPAM.{*read*,write*}`: Stop modifying the `available` field when handling the builtin `x-*` fields [#6438 @kit-ty-kate]
   * `OpamFile.Repos_config.t`: change the type to not allow repositories without an URL [#6249 @kit-ty-kate]
+  * `OpamPath`: add `nix_env` inner switch path for nix environment [#5982 @RyanGibb]
+  * `OpamSysPkg`; add new type `to_install` to store system package to install information, newly requested ones and already installed required ones ; and its empty recode `to_install_empty` and display function `string_of_to_install` [#5982 @rjbou]
 
 ## opam-core
   * `OpamConsole`: Replace `black` text style (unused and not very readable) by `gray` [#6358 @kit-ty-kate]

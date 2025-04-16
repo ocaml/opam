@@ -6,7 +6,7 @@ depexts: "depext-1"
 ### opam var --global os-family=dummy-failure
 Added '[os-family "dummy-failure" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam switch create test --empty
-### : Erroneous package manager install is not blocking :
+### :I: Erroneous package manager install is not blocking :
 ### opam install a | sed-cmd false
 The following actions will be performed:
 === install 1 package
@@ -33,3 +33,494 @@ opam believes some required external dependencies are missing. opam can:
 [NOTE] You can retry with '--assume-depexts' to skip this check, or run 'opam option depext=false' to permanently disable handling of system packages.
 
 # Return code 10 #
+### :II: testing the (dummy) testing system :
+### # Syntax: dummy-<success|failure>[:<*|0|installed-pkgslist>:*|0|available-pkgslist>]
+### #         where '*' is for all and '0' for none
+### #         installed defaults to none, and availabel defaults to all
+### :II:1:a: SUCCESS, all installed
+### opam var --global os-family=dummy-success
+Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pkg:foo.1>
+opam-version: "2.0"
+depexts: ["depext-1" "depext-ok" "depext-unav" "depext-avail"]
+### opam install foo | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+The following system packages will first need to be installed:
+    depext-1 depext-avail depext-ok depext-unav
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "depext-1" "depext-avail" "depext-ok" "depext-unav"
+- depext-1 depext-avail depext-ok depext-unav
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam remove foo
+[WARNING] Opam package foo.1 depends on the following system packages that can no longer be found: depext-1 depext-avail depext-ok depext-unav
+The following actions will be performed:
+=== remove 1 package
+  - remove foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+Done.
+### :II:1:b: Success, depext-ok installed, all available
+### opam var --global os-family=dummy-success:depext-ok:
+Added '[os-family "dummy-success:depext-ok:" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+The following system packages will first need to be installed:
+    depext-1 depext-avail depext-unav
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "depext-1" "depext-avail" "depext-unav"
+- depext-1 depext-avail depext-unav
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam remove foo
+[WARNING] Opam package foo.1 depends on the following system packages that can no longer be found: depext-1 depext-avail depext-unav
+The following actions will be performed:
+=== remove 1 package
+  - remove foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+Done.
+### :II:1:c: Success, none installed, depext-avail available
+### opam var --global os-family=dummy-success::depext-avail
+Added '[os-family "dummy-success::depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo
+[ERROR] Package foo depends on the unavailable system packages 'depext-1', 'depext-ok' and 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
+### opam remove foo
+[NOTE] foo is not installed.
+
+Nothing to do.
+### opam var --global os-family=dummy-success:*:
+Added '[os-family "dummy-success:*:" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam remove foo
+The following actions will be performed:
+=== remove 1 package
+  - remove foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+Done.
+### :II:1:d: Success, none installed, all available
+### opam var --global os-family=dummy-success:0:
+Added '[os-family "dummy-success:0:" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+The following system packages will first need to be installed:
+    depext-1 depext-avail depext-ok depext-unav
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "depext-1" "depext-avail" "depext-ok" "depext-unav"
+- depext-1 depext-avail depext-ok depext-unav
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam remove foo
+[WARNING] Opam package foo.1 depends on the following system packages that can no longer be found: depext-1 depext-avail depext-ok depext-unav
+The following actions will be performed:
+=== remove 1 package
+  - remove foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+Done.
+### :II:1:e: Success, depext-ok installed, depext-avail available
+### opam var --global os-family=dummy-success:depext-ok:depext-avail
+Added '[os-family "dummy-success:depext-ok:depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo
+[ERROR] Package foo depends on the unavailable system packages 'depext-1' and 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
+### opam remove foo
+[NOTE] foo is not installed.
+
+Nothing to do.
+### :II:2:a: SUCCESS, all installed
+### opam var --global os-family=dummy-failure
+Added '[os-family "dummy-failure" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pkg:foo.1>
+opam-version: "2.0"
+depexts: ["depext-1" "depext-ok" "depext-unav" "depext-avail"]
+### opam install foo | sed-cmd false
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+The following system packages will first need to be installed:
+    depext-1 depext-avail depext-ok depext-unav
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run false to install them (may need root/sudo access)
+  2. Display the recommended false command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ false 
+[ERROR] System package install failed with exit code 1 at command:
+            false
+[ERROR] These packages are still missing: depext-1 depext-avail depext-ok depext-unav
+
+[NOTE] You can retry with '--assume-depexts' to skip this check, or run 'opam option depext=false' to permanently disable handling of system packages.
+
+# Return code 10 #
+### opam remove foo
+[NOTE] foo is not installed.
+
+Nothing to do.
+### :II:2:b: Failure, depext-ok installed, all available
+### opam var --global os-family=dummy-failure:depext-ok:
+Added '[os-family "dummy-failure:depext-ok:" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo | sed-cmd false
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+The following system packages will first need to be installed:
+    depext-1 depext-avail depext-unav
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run false to install them (may need root/sudo access)
+  2. Display the recommended false command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ false 
+[ERROR] System package install failed with exit code 1 at command:
+            false
+[ERROR] These packages are still missing: depext-1 depext-avail depext-unav
+
+[NOTE] You can retry with '--assume-depexts' to skip this check, or run 'opam option depext=false' to permanently disable handling of system packages.
+
+# Return code 10 #
+### opam remove foo
+[NOTE] foo is not installed.
+
+Nothing to do.
+### :II:2:c: Failure, none installed, depext-avail available
+### opam var --global os-family=dummy-failure::depext-avail
+Added '[os-family "dummy-failure::depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo
+[ERROR] Package foo depends on the unavailable system packages 'depext-1', 'depext-ok' and 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
+### opam remove foo
+[NOTE] foo is not installed.
+
+Nothing to do.
+### opam var --global os-family=dummy-failure:*:
+Added '[os-family "dummy-failure:*:" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam remove foo
+The following actions will be performed:
+=== remove 1 package
+  - remove foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+Done.
+### :II:2:d: Failure, none installed, all available
+### opam var --global os-family=dummy-failure:0:
+Added '[os-family "dummy-failure:0:" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo | sed-cmd false
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+The following system packages will first need to be installed:
+    depext-1 depext-avail depext-ok depext-unav
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run false to install them (may need root/sudo access)
+  2. Display the recommended false command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ false 
+[ERROR] System package install failed with exit code 1 at command:
+            false
+[ERROR] These packages are still missing: depext-1 depext-avail depext-ok depext-unav
+
+[NOTE] You can retry with '--assume-depexts' to skip this check, or run 'opam option depext=false' to permanently disable handling of system packages.
+
+# Return code 10 #
+### opam remove foo
+[NOTE] foo is not installed.
+
+Nothing to do.
+### :II:2:e: Failure, depext-ok installed, depext-avail available
+### opam var --global os-family=dummy-failure:depext-ok:depext-avail
+Added '[os-family "dummy-failure:depext-ok:depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install foo
+[ERROR] Package foo depends on the unavailable system packages 'depext-1' and 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
+### opam remove foo
+[NOTE] foo is not installed.
+
+Nothing to do.
+### :III: Bypass handling
+### opam switch create bypass --empty
+### :III:1: available package
+### <pkg:bar.1>
+opam-version: "2.0"
+depexts: ["depext-ok" "depext-avail"]
+### opam var --global os-family=dummy-success:depext-ok:depext-avail
+Added '[os-family "dummy-success:depext-ok:depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
+### :III:1:a: normal install
+### opam install bar | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+The following system packages will first need to be installed:
+    depext-avail
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "depext-avail"
+- depext-avail
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### :III:1:b: depext-bypass set by user install
+### opam option 'depext-bypass="depext-avail"'
+Set to '"depext-avail"' the field depext-bypass in switch bypass
+### opam install bar
+[NOTE] Package bar is already installed (current version is 1).
+### opam remove bar
+The following actions will be performed:
+=== remove 1 package
+  - remove bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+Done.
+### :III:1:b: depext-bypass set by opam install
+### opam option depext-bypass=
+Reverted field depext-bypass in switch bypass
+### opam install bar --assume-depexts
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+The following system packages will first need to be installed:
+    depext-avail
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+[NOTE] Requirement for system package depext-avail overridden in this switch. Use `opam option 'depext-bypass-="depext-avail"'' to revert.
+Done.
+### opam option depext-bypass
+"depext-avail"
+### opam remove bar
+The following actions will be performed:
+=== remove 1 package
+  - remove bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+Done.
+### :III:2: unavailable package
+### <pkg:baz.1>
+opam-version: "2.0"
+depexts: ["depext-ok" "depext-unav"]
+### opam var --global os-family=dummy-success:depext-ok:0
+Added '[os-family "dummy-success:depext-ok:0" "Set through 'opam var'"]' to field global-variables in global configuration
+### :III:2:a: normal install
+### opam install baz
+[ERROR] Package baz depends on the unavailable system package 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
+### :III:2:b: depext-bypass set by user install
+### opam option 'depext-bypass="depext-unav"'
+Set to '"depext-unav"' the field depext-bypass in switch bypass
+### opam install baz
+The following actions will be performed:
+=== install 1 package
+  - install baz 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed baz.1
+Done.
+### opam remove baz
+The following actions will be performed:
+=== remove 1 package
+  - remove baz 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   baz.1
+Done.
+### :III:2:b: depext-bypass set by opam install
+### opam option depext-bypass=
+Reverted field depext-bypass in switch bypass
+### opam install baz --assume-depexts
+[ERROR] Package baz depends on the unavailable system package 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
+### opam option depext-bypass
+[]
+### :IV: System package changed checkout
+### opam switch create sys_changed --empty
+### <pkg:qux.1>
+opam-version: "2.0"
+depexts: ["depext-ok"]
+### opam var --global os-family=dummy-success
+Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install qux | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install qux 1
+
+The following system packages will first need to be installed:
+    depext-ok
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "depext-ok"
+- depext-ok
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed qux.1
+Done.
+### opam var --global os-family=dummy-success:depext-ok:
+Added '[os-family "dummy-success:depext-ok:" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam reinstall qux
+The following actions will be performed:
+=== recompile 1 package
+  - recompile qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   qux.1
+-> installed qux.1
+Done.
+### opam var --global os-family=dummy-success:0:
+Added '[os-family "dummy-success:0:" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam reinstall qux | sed-cmd echo
+[WARNING] Opam package qux.1 depends on the following system package that can no longer be found: depext-ok
+The following actions will be performed:
+=== recompile 1 package
+  - recompile qux 1
+
+The following system packages will first need to be installed:
+    depext-ok
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "depext-ok"
+- depext-ok
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   qux.1
+-> installed qux.1
+Done.
+### :V: Init with unknown family
+### <pkg:comp.1>
+opam-version: "2.0"
+flags: compiler
+### OPAMVAR_os_family=unknown opam init ./REPO --root ./OPAM2 --no-setup --bypass-checks --compiler comp -y
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'comp' (invariant ["comp"]) ><><><><><><><><><><><>
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["comp"]
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed comp.1
+Done.

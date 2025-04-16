@@ -127,6 +127,7 @@ type families =
   | Macports
   | Msys2
   | Netbsd
+  | Nix
   | Openbsd
   | Suse
 
@@ -192,6 +193,7 @@ let family ~env () =
     | "gentoo" -> Gentoo
     | "homebrew" -> Homebrew
     | "macports" -> Macports
+    | "nixos" -> Nix
     | "macos" ->
       failwith
         "External dependency handling for macOS requires either \
@@ -478,17 +480,14 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
   let open OpamSysPkg.Set.Op in
   let compute_sets ?sys_available sys_installed =
     let installed = packages %% sys_installed in
-    let available, not_found =
-      match sys_available with
-      | Some sys_available ->
-        let available = (packages -- installed) %% sys_available in
-        let not_found = packages -- installed -- available in
-        available, not_found
-      | None ->
-        let available = packages -- installed in
-        available, OpamSysPkg.Set.empty
-    in
-    available, not_found
+    match sys_available with
+    | Some sys_available ->
+      let s_available = (packages -- installed) %% sys_available in
+      let s_not_found = packages -- installed -- s_available in
+      { OpamSysPkg.s_available; s_not_found }
+    | None ->
+      let s_available = packages -- installed in
+      { OpamSysPkg.status_empty with s_available }
   in
   let to_string_list pkgs =
     OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) pkgs [])
@@ -966,6 +965,18 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> package_set_of_pkgpath
     in
     compute_sets sys_installed
+  | Nix ->
+      (* We say all requested packages are available but uninstalled.
+         We could check that these packages are available in Nixpkgs,
+         but that would involve an expensive Nixpkgs evaluation.
+         Saying no packages are installed results in a warning that
+         conf packages depend on a 'system package that can no longer
+         be found.' But omitting them will mean that they won't be
+         added to the Nix derivation.
+      *)
+      let s_available = packages in
+      let s_not_found = OpamSysPkg.Set.empty in
+      { OpamSysPkg.s_available; s_not_found }
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-qP"]
@@ -973,22 +984,57 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     in
     compute_sets sys_installed
 
+let stateless_install ?(env=OpamVariable.Map.empty) () =
+  match family ~env () with
+  | exception Failure _ -> true (* no depexts *)
+  | Nix -> true
+  | Alpine | Altlinux | Arch | Centos | Cygwin | Debian | Dummy _
+  | Freebsd | Gentoo | Homebrew | Macports | Msys2 | Netbsd
+  | Openbsd | Suse -> false
+
 (* Install *)
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show config sys_packages =
+let package_manager_name_t ?(env=OpamVariable.Map.empty) config =
+  match family ~env () with
+  | Alpine -> `AsAdmin "apk"
+  | Altlinux -> `AsAdmin "apt-get"
+  | Arch -> `AsAdmin "pacman"
+  | Centos -> `AsAdmin (Lazy.force yum_cmd)
+  | Cygwin -> `AsUser (OpamFilename.to_string (Cygwin.cygsetup ()))
+  | Debian -> `AsAdmin "apt-get"
+  | Dummy test ->
+    if test.install then
+      `AsUser "echo"
+    else
+      `AsUser "false"
+  | Freebsd -> `AsAdmin "pkg"
+  | Gentoo -> `AsAdmin "emerge"
+  | Homebrew -> `AsUser "brew"
+  | Macports -> `AsAdmin "port"
+  | Msys2 -> `AsUser (Commands.msys2 config)
+  | Netbsd -> `AsAdmin "pkgin"
+  | Nix -> `AsUser "nix-build"
+  | Openbsd -> `AsAdmin "pkg_add"
+  | Suse -> `AsAdmin "zypper"
+
+(* Perform some action for Nix and Cygwin *)
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show st
+    config sys_packages =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
       yes @ r else no @ r
   in
   let packages =
-    List.map OpamSysPkg.to_string (OpamSysPkg.Set.elements sys_packages)
+    List.map OpamSysPkg.to_string
+      (OpamSysPkg.Set.elements sys_packages.OpamSysPkg.ti_new)
   in
+  let pm = package_manager_name_t ~env config in
   match family ~env () with
-  | Alpine -> [`AsAdmin "apk", "add"::yes ~no:["-i"] [] packages], None
+  | Alpine -> [pm, "add"::yes ~no:["-i"] [] packages], None
   | Altlinux ->
-    [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages], None
-  | Arch -> [`AsAdmin "pacman", "-Su"::yes ["--noconfirm"] packages], None
+    [pm, "install"::yes ["-qq"; "-yy"] packages], None
+  | Arch -> [pm, "-Su"::yes ["--noconfirm"] packages], None
   | Centos ->
     (* TODO: check if they all declare "rhel" as primary family *)
     (* Kate's answer: no they don't :( (e.g. Fedora, Oraclelinux define Nothing and "fedora" respectively)  *)
@@ -998,14 +1044,14 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show config sy
     let epel_release = "epel-release" in
     let install_epel rest =
       if List.mem epel_release packages then
-        [`AsAdmin (Lazy.force yum_cmd), "install"::yes ["-y"] [epel_release]] @ rest
+        [pm, "install"::yes ["-y"] [epel_release]] @ rest
       else rest
     in
     install_epel
-      [`AsAdmin (Lazy.force yum_cmd), "install"::yes ["-y"]
-                (OpamStd.String.Set.of_list packages
-                 |> OpamStd.String.Set.remove epel_release
-                 |> OpamStd.String.Set.elements);
+      [pm, "install"::yes ["-y"]
+             (OpamStd.String.Set.of_list packages
+              |> OpamStd.String.Set.remove epel_release
+              |> OpamStd.String.Set.elements);
        `AsUser "rpm", "-q"::"--whatprovides"::packages], None
   | Cygwin ->
     (* We use setup_x86_64 to install package instead of `cygcheck` that is
@@ -1040,24 +1086,24 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show config sy
     ],
     None
   | Debian ->
-    [`AsAdmin "apt-get", "install"::yes ["-qq"; "-yy"] packages],
+    [pm, "install"::yes ["-qq"; "-yy"] packages],
     (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
   | Dummy test ->
     if test.install then
-      [`AsUser "echo", packages], None
+      [pm, packages], None
     else
-      [`AsUser "false", []], None
-  | Freebsd -> [`AsAdmin "pkg", "install"::yes ["-y"] packages], None
-  | Gentoo -> [`AsAdmin "emerge", yes ~no:["-a"] [] packages], None
+      [pm, []], None
+  | Freebsd -> [pm, "install"::yes ["-y"] packages], None
+  | Gentoo -> [pm, yes ~no:["-a"] [] packages], None
   | Homebrew ->
-    [`AsUser "brew", "install"::packages], (* NOTE: Does not have any interactive mode *)
+    [pm, "install"::packages], (* NOTE: Does not have any interactive mode *)
     Some (["HOMEBREW_NO_AUTO_UPDATE","yes"])
   | Macports ->
     let packages = (* Separate variants from their packages *)
       List.map (fun p -> OpamStd.String.split p ' ')  packages
       |> List.flatten
     in
-    [`AsAdmin "port", yes ["-N"] ("install"::packages)],
+    [pm, yes ["-N"] ("install"::packages)],
     None
   | Msys2 ->
     (* NOTE: MSYS2 interactive mode may break (not show output until key pressed)
@@ -1065,17 +1111,89 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show config sy
        https://www.msys2.org/wiki/Terminals/#mixing-msys2-and-windows. *)
     [`AsUser (Commands.msys2 config),
      "-Su"::"--noconfirm"::packages], None
-  | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
-  | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
-  | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
+  | Netbsd -> [pm, yes ["-y"] ("install" :: packages)], None
+  | Nix ->
+    (match st with
+     | None ->
+       log "Nix depext must be passed switch";
+       [], None
+     | Some (st : _ OpamStateTypes.switch_state) ->
+       let dir = OpamPath.Switch.meta st.switch_global.root st.switch in
+       let drvFile =
+         OpamFilename.create dir
+           (OpamFilename.Base.of_string "env.nix")
+       in
+       let packages =
+         String.concat " "
+           (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l)
+              OpamSysPkg.Set.Op.(sys_packages.ti_new ++ sys_packages.ti_required) [])
+       in
+       (* We exclude variables from
+            https://github.com/NixOS/nix/blob/e4bda20918ad2af690c2e938211a7d362548e403/src/nix/develop.cc#L308-L325
+          append to variables from
+            https://github.com/NixOS/nix/blob/e4bda20918ad2af690c2e938211a7d362548e403/src/nix/develop.cc#L347-L353
+          and exclude some other regarding the Nix derivation *)
+       let contents =
+         {|{ pkgs ? import <nixpkgs> {} }:
+with pkgs;
+stdenv.mkDerivation {
+  name = "opam-nix-env";
+  nativeBuildInputs = with buildPackages; [ |} ^ packages ^ {| ];
 
-let install_packages_commands ?env config sys_packages =
-  fst (install_packages_commands_t ?env ~to_show:true config sys_packages)
+  phases = [ "buildPhase" ];
+
+  buildPhase = ''
+while IFS='=' read -r var value; do
+  escaped="''$(echo "$value" | sed -e 's/^$/@/' -e 's/ /\\ /g')"
+  echo "$var	=	$escaped	Nix" >> "$out"
+done < <(env \
+  -u BASHOPTS \
+  -u HOME \
+  -u NIX_BUILD_TOP \
+  -u NIX_ENFORCE_PURITY \
+  -u NIX_LOG_FD \
+  -u NIX_REMOTE \
+  -u PPID \
+  -u SHELLOPTS \
+  -u SSL_CERT_FILE \
+  -u TEMP \
+  -u TEMPDIR \
+  -u TERM \
+  -u TMP \
+  -u TMPDIR \
+  -u TZ \
+  -u UID \
+  -u PATH \
+  -u XDG_DATA_DIRS \
+  -u self-referential \
+  -u excluded_vars \
+  -u excluded_pattern \
+  -u phases \
+  -u buildPhase \
+  -u outputs)
+
+echo "PATH	+=	$PATH	Nix" >> "$out"
+echo "XDG_DATA_DIRS	+=	$XDG_DATA_DIRS	Nix" >> "$out"
+  '';
+
+  preferLocalBuild = true;
+}
+|} in
+       OpamFilename.write drvFile contents;
+       let envFile = OpamPath.Switch.nix_env st.switch_global.root st.switch in
+       [pm,
+        [ OpamFilename.to_string drvFile;
+          "--out-link"; OpamFile.to_string envFile ] ],
+       None)
+  | Openbsd -> [pm, yes ~no:["-i"] ["-I"] packages], None
+  | Suse -> [pm, yes ["--non-interactive"] ("install"::packages)], None
+
+let install_packages_commands ?env st config sys_packages =
+  fst (install_packages_commands_t ?env ~to_show:true st config sys_packages)
 
 let package_manager_name ?env config =
-  match install_packages_commands ?env config OpamSysPkg.Set.empty with
-  | ((`AsAdmin pkgman | `AsUser pkgman), _) :: _ -> pkgman
-  | [] -> assert false
+  match package_manager_name_t ?env config with
+  | `AsAdmin pkgman | `AsUser pkgman -> pkgman
 
 let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
   let cmd, args =
@@ -1098,11 +1216,14 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install ?env config packages =
-  if OpamSysPkg.Set.is_empty packages then
+let install ?env st config (packages : OpamSysPkg.to_install) =
+  if OpamSysPkg.Set.is_empty packages.ti_new
+  && OpamSysPkg.Set.is_empty packages.ti_required then
     log "Nothing to install"
   else
-    let commands, vars = install_packages_commands_t ?env ~to_show:false config packages in
+    let commands, vars =
+      install_packages_commands_t ?env ~to_show:false st config packages
+    in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
@@ -1127,6 +1248,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Macports -> Some (`AsAdmin "port", ["sync"])
     | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])
     | Netbsd -> None
+    | Nix -> Some (`AsUser "nix-channel", ["--update"])
     | Openbsd -> None
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
   in
@@ -1149,11 +1271,12 @@ let update ?(env=OpamVariable.Map.empty) config =
 
 let repo_enablers ?(env=OpamVariable.Map.empty) config =
   if family ~env () <> Centos then None else
-  let (needed, _) =
-    packages_status ~env config (OpamSysPkg.raw_set
-                       (OpamStd.String.Set.singleton "epel-release"))
+  let status =
+    packages_status ~env config
+      (OpamSysPkg.raw_set
+         (OpamStd.String.Set.singleton "epel-release"))
   in
-  if OpamSysPkg.Set.is_empty needed then None
+  if OpamSysPkg.Set.is_empty status.s_available then None
   else
     Some
       "On CentOS/RHEL, many packages may assume that the Extra Packages for \
