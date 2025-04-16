@@ -3,6 +3,268 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.4.0~alpha1:
+* (*) Remove `ocaml-system` from the list of default compilers chosen at
+  `opam init` time [#6307 @kit-ty-kate - fix #3509]
+* (*) Fail when trying to pin a package whose definition could not be found
+  instead of forcing interactive edition (e.g. this could happen when
+  making a typo in the package name of a pin-depends)
+  [#6319 @kit-ty-kate - fix #6322]
+* Patches are now applied using the `patch` OCaml library instead of GNU Patch
+  [#5892 @kit-ty-kate - fix #6019 #6052]
+  * (*) Context diffs are not supported anymore, only Unified diffs are
+    (including its git extensions) [#5892 @kit-ty-kate]
+  * (*) Stop support of file permission changes via git extension to the
+    unified diff specification [#5892 @kit-ty-kate - fix #3782]
+* (*) Fix `opam install <local_dir>` not updating and storing pinned
+  packages' metadata [#6209 @kit-ty-kate - fix #5567]
+* (*) Fix `opam install --deps-only/--show-action <local_dir>` not updating
+  (without storing) pinned packages' metadata [#6209 @kit-ty-kate - fix #5567]
+* (*) Symlinks in repositories are no longer supported [#5892 @kit-ty-kate]
+* (*) Support providing external dependencies with Nix by adding support
+  for stateless depexts systems
+  [#5982 @RyanGibb @rjbou @kit-ty-kate - fix #5124]
+* `opam show` now displays the version number of packages flagged with
+  `avoid-version`/`deprecated` gray [#6358 @kit-ty-kate - fix #6354]
+* Remove the build directories of pinned packages after successful builds
+  [#6436 @kit-ty-kate]
+* (*) Fix `pin-depends` for `with-*` dependencies when creating a lock file
+  [#5471 @rjbou - fix #5428]
+* GNU `patch` and the `diff` command are no longer runtime dependencies
+  [#5892 @kit-ty-kate - fix ocaml/setup-ocaml#933 #6052]
+* Fix a regression on `opam upgrade <package>` upgrading unrelated packages
+  [#6373 @AltGr]
+* Fix a regression on `opam upgrade --all <uninstalled-pkg>` not upgrading
+  the whole switch [#6373 @kit-ty-kate]
+* `opam pin`/`opam pin list` now displays the current revision of a pinned
+  repository in a new column [#6274 @desumn - fix #5533]
+* Don't ask confirmation when pinning an unknown package
+  (absent from repositories) [#6309 @kit-ty-kate @rjbou - fix #3199]
+* Do not show the not-up-to-date message with packages tagged with
+  `avoid-version`/`deprecated` [#6273 @kit-ty-kate - fix #6271]
+* (*) Disable the detection of available system packages on SUSE-based
+  distributions [#6464 @kit-ty-kate]
+* Allow running some opam commands on machines with limited amount of memory
+  by running `Gc.compact` while the main process is waiting for the children
+  processes [#5396 @kkeundotnet]
+* Prefer curl over any other download tools on every systems,
+  if available [#6305 @kit-ty-kate]
+* Add the `OPAMSOLVERTOLERANCE` environment variable to allow users to fix
+  solver timeouts for good [#5510 @kit-ty-kate - fix #3230]
+* Add `fetch` on DragonFlyBSD and `ftp` on NetBSD to the list of download
+  tools to use, if available [#6305 @kit-ty-kate]
+* Fix the detection of `ZDOTDIR` when using `zsh`
+  [#6299 @acasta-yhliu - fix #6281]
+* Check that the repositories given to `opam repository remove` actually
+  exist [#5014 @kit-ty-kate - fixes #5012]
+* Respect the `DUNE_CACHE_ROOT` environment variable if it exists
+  [#6326 @smorimoto]
+* (+) Add `opam admin compare-versions` to compare package versions for
+  sanity checks [#6197 @mbarbin]
+* Fix `opam admin check` in the presence of the `with-dev-setup` variable
+  [#6331 @kit-ty-kate - fix #6329]
+* (*) The `-i`/`--ignore-test-doc` argument has been removed from
+  `opam admin check` [#6335 @kit-ty-kate]
+* (*) `opam admin check` now sets `with-test` and `with-doc` to `false`
+  instead of `true` [#6335 @kit-ty-kate]
+* (+) Add `opam admin migrate-extrafiles` which moves all `extra-files`
+  of an existing opam repository into `extra-sources`
+  [#5960 @hannesm @rjbou @kit-ty-kate]
+* Fix `opam switch remove <dir>` failure when it is a linked switch
+  [#6276 @btjorge - fix #6275]
+* (*) Ensure the right version (the pinned one) of packages are used when
+  simulating pinning [#6256 @rjbou @kit-ty-kate - fix #6248 #6379]
+* Fix sandboxing support on NixOS [#6333 @kit-ty-kate]
+* Improve the messages when a package is not up-to-date on `opam upgrade`
+  [#6272 @kit-ty-kate - fix #6270]
+* Use a non-underline uppercase character to denote the default when
+  asking a question [#6289 @hannesm @kit-ty-kate - fix #6288]
+* Fix the detection of installed external packages on OpenBSD to not just
+  consider manually installed packages [#6362 @semarie]
+* Do not pre-write the answer to questions with the default anwser
+  [#6376 @kit-ty-kate]
+* (+) Add `opam lock --keep-local` to keep local pins url in `pin-depends`
+  field [#6411 @rjbou - fix #4897]
+* Do not ask to install `pin-depends` twice [#6375 @kit-ty-kate - fix #6374]
+* Correctly handle `pkg.version` pattern in `opam switch list-available`
+  [#6186 @arozovyk - fix #6152]
+* Fix `opam switch list-available` when given several arguments
+  [#6318 @kit-ty-kate]
+* Avoid issues when using `wget2` as download-tool where the requested url
+  might return an HTML page instead of the expected content
+  [#6303 @kit-ty-kate]
+* Speedup the detection of available system packages with `pacman` and `brew`
+  [#6324 @kit-ty-kate]
+* (+) Add `--require-checksums` and `--no-checksums` to `opam source`
+  [#5563 @rjbou]
+* Add `apt-rpm`/ALTLinux family support for depexts [#6207 @RiderALT]
+* Display Windows `NTSTATUS` exit codes in hex [#6401 @dra27 @MisterDA]
+* Use a C stub to call the `uname` function from the C standard library
+  instead of calling the `uname` POSIX command [#6217 @kit-ty-kate]
+* Don't write empty environment update segments to `variables.sh`
+  (`FOO += ""` no longer adds `FOO='':"$FOO"; export FOO;`) [#6198 @dra27]
+* Only download Cygwin's `setup.exe` when the command is actually going
+  to be displayed or used [#6467 @kit-ty-kate]
+* Add W74 to `opam lint` to detect `pin-depends` packages that are neither
+  present in the `depends` no `depopts` field [#6317 @rjbou - fix #5795]
+* Add E63 to `opam lint` to check for availability guard in case an opam
+  file contains a `subpath` field [#6438 @rjbou @kit-ty-kate]
+* Add `--cli`/`OPAMCLI` version 2.4 [#6268 @mbarbin @rjbou]
+* Fix `subpath` handling in opam files defining a local archive
+  [#6439 @rjbou]
+* Change probing tool for SUSE-based distributions from `zypper` to `rpm`
+  [#6464 @kit-ty-kate]
+* Build changes:
+  * Simplify the making of stripped binaries by introducing the
+    `make opam-stripped` target [#6208 @kit-ty-kate]
+  * Fix compilation on macOS with OCaml 5.3 by bumping the
+    downloaded-if-missing `mccs` to 1.1+19 [#6192 @kit-ty-kate]
+  * Upgrade the downloaded-if-missing `opam-file-format` to 2.2.0~alpha1,
+    `spdx_licenses` to 1.3.0 and `dune` to 3.16.1
+    [#6321 #6370 #6192 @kit-ty-kate - fix #6369]
+  * `menhir` is now part of the transitive dependency of opam
+    (via `opam-file-format`) [#6321 @kit-ty-kate]
+* Accurately tag `curl` download command when loaded from global config file
+  [#6302 @rjbou]
+* Remove `wget` support for Software Heritage fallback
+  [#6036 @rjbou - fix #5721]
+* Fix Software Heritage liveness check [#6036 @rjbou - fix #5721]
+* Update the Software Heritage API requests [#6036 @rjbou]
+* Improve and extend the tests
+  [#5892 #6276 #6331 #6343 #6378 #6273 #6380 #6373 #6307 #6256 #6412 #6438
+   #6439 #6436 #6166 #6209 #6209 #6209 #6198 #6319 #6467 #5643 #5982
+   @rjbou @kit-ty-kate @btjorge]
+* Improve and extend the benchmarks [#6212 #6212 #6443 @kit-ty-kate]
+* Improve and extend the test infrastructure
+  [#5349 #6296 #6274 #6313 #6363 #6363 #6192 #6192 #5663 #6383 #6444 #6447
+   #6471 #6471 #6471 #6471 #6471 #6469 #5982
+   @kit-ty-kate @rjbou @RyanGibb]
+* Improve and extend the documentation
+  [#6226 #6231 #6252 #6252 #6150 #6150 #6150 #6150 #6267 #6251 #6306 #6315
+   #5659 #6320 #6338 #6361 #6358 #5627 #6372 #6470
+   @kit-ty-kate @rjbou @RyanGibb @gridbugs @fccm2 @shym
+   @hannesm @tobil4sk @juergenhoetzel @MisterDA]
+* API changes in `opam-client`:
+  * `OpamAction.prepare_package_build`: now returns `exn option` instead of
+    `exn option OpamProcess.job` and no longer calls the system GNU Patch
+    [#5892 @kit-ty-kate]
+  * `OpamArg.InvalidCLI`: export exception [#6150 @rjbou]
+  * `OpamArg`: export `require_checksums` and `no_checksums`, that are shared
+    with `build_options` [#5563 @rjbou]
+  * `OpamArg.hash_kinds`: was added [#5960 @kit-ty-kate]
+  * `OpamAuxCommands.{simulate_autopin,autopin ~simulate:true}`: now updates
+    the `reinstall` field of the returned `switch_state` if necessary
+    [#6209 @kit-ty-kate]
+  * `OpamRepositoryCommand.switch_repos`: expose the function
+    [#5014 @kit-ty-kate]
+  * `OpamLockCommand.lock_opam`: add `~keep_local` argument to add local pins
+    to pin-depends (and not resolve them) [#6411 @rjbou]
+  * `OpamLockCommand.lock_opam`: make the `?only_direct` argument non-optional
+    [#6411 @kit-ty-kate]
+  * `OpamSolution.print_depext_msg`: takes now an `OpamSysPkg.status` instead
+    of sets [#5982 @kit-ty-kate @RyanGibb]
+  * `OpamSolution.install_sys_packages`: no longer takes set of package to
+    install but `OpamSysPkg.to_install` [#5982 @rjbou @RyanGibb @kit-ty-kate]
+  * `OpamSolution.install_depexts`: instead of the package set of new package
+    to install, now takes 2 labelled arguments `pkg_to_install` and
+    `pkg_installed` to be able to keep synchronised stateless depext systems
+    [#5982 @rjbou @RyanGibb @kit-ty-kate]
+* API changes in `opam-repository`:
+  * `OpamDownload.get_output`: fix `wget` option for `POST` requests
+    [#6036 @rjbou]
+  * `OpamDownload.get_output`: use long form for `curl` `POST` request option
+    [#6036 @rjbou]
+  * `OpamDownload.download`: more fine grained HTTP request error code
+    detection for curl [#6036 @rjbou]
+  * `OpamLocal.pull_url`: fix subpath handling when the url is a local archive
+    [#6439 @rjbou]
+  * `OpamRepository.revision`: now returns a `string` instead of a `version`
+    [#6409 @kit-ty-kate]
+  * `OpamRepositoryBackend.S.revision`: now returns a `string` instead of a
+    `version` [#6409 @kit-ty-kate]
+  * `OpamRepositoryBackend.get_diff`: now returns `exn option` instead of
+    `exn option OpamProcess.job` and no longer calls the system `diff`
+    utility [#5892 @kit-ty-kate]
+  * `OpamRepositoryBackend.get_diff`: now raises `Stdlib.Failure` if an
+    unsupported file type or comparison is detected [#5892 @kit-ty-kate]
+* API changes in `opam-state`:
+  * `OpamStateConfig`: Make the `?lock_kind` parameters non-optional to avoid
+    breaking the library users after they upgrade their opam root
+    [#5488 @kit-ty-kate]
+  * `OpamSwitchState.load_selections`: Make the `?lock_kind` parameter
+    non-optional to avoid breaking the library users after they upgrade their
+    opam root [#5488 @kit-ty-kate]
+  * `OpamSysInteract.Cygwin.check_setup`: unexpose the function
+    [#6467 @kit-ty-kate]
+  * `OpamSysInteract.package_status`: SUSE-based distributions now uses `rpm`
+    instead of `zypper` and no longer return an `available` set of system
+    packages [#6464 @kit-ty-kate]
+  * `OpamSysInteract.packages_status`: returns now a `OpamSysPkg.status`
+    instead of sets [#5982 @kit-ty-kate @RyanGib]
+  * `OpamSysInteract.{install_packages_commands,install}: no longer takes set
+    of package to install but `OpamSysPkg.to_install`
+    [#5982 @rjbou @RyanGibb @kit-ty-kate]
+  * `OpamSysInteract.package_manager_name`: no longer build the command, or
+    run an action to retrieve system package manager name [#5982 @rjbou]
+  * `OpamSysInteract`: add `stateless_install` that return if system package
+    manager is stateless one (per switch) [#5982 @rjbou]
+  * `OpamSysInteract.{install_packages_commands,install}: takes a new
+    argument, a switch stat option, for stateless systems that need to write
+    on switch [#5982 @RyanGibb @rjbou]
+* API changes in `opam-format`:
+  * `OpamFormula.string_of_relop`: export function [#6197 @mbarbin]
+  * `OpamFormula.all_relop`: a list of all operators [#6197 @mbarbin]
+  * `OpamFile.OPAM.{*read*,write*}`: Stop modifying the `available` field
+    when handling the builtin `x-*` fields [#6438 @kit-ty-kate]
+  * `OpamFile.Repos_config.t`: change the type to not allow repositories
+    without an URL [#6249 @kit-ty-kate]
+  * `OpamPath`: add `nix_env` inner switch path for nix environment
+    [#5982 @RyanGibb]
+  * `OpamSysPkg`; add new type `to_install` to store system package to
+    install information, newly requested ones and already installed
+    required ones ; and its empty recode `to_install_empty` and display
+    function `string_of_to_install` [#5982 @rjbou]
+* API changes in `opam-core`:
+  * `OpamConsole`: Replace `black` text style (unused and not very readable)
+    by `gray` [#6358 @kit-ty-kate]
+  * `OpamConsole.pause`: Ensure the function always prints a newline character
+    at the end [#6376 @kit-ty-kate]
+  * `OpamFilename.patch`: now returns `exn option` instead of
+    `exn option OpamProcess.job` and no longer calls the system GNU Patch
+    [#5892 @kit-ty-kate]
+  * `OpamFilename.patch`: a named-parameter `~allow_unclean` was added
+    [#5892 @kit-ty-kate]
+  * `OpamHash.all_kinds`: was added, which returns the list of all possible
+    values of `OpamHash.kind` [#5960 @kit-ty-kate]
+  * `OpamParallel.*.{map,reduce,iter}`: Run `Gc.compact` when the main
+    process is waiting for the children processes for the first time
+    [#5396 @kkeundotnet]
+  * `OpamStd.List.split`: Improve performance [#6210 @kit-ty-kate]
+  * `OpamStd.Option.equal_some`: was added, which tests equality of an option
+    with a value [#6381 @kit-ty-kate]
+  * `OpamStd.Sys.getconf`: was removed, replaced by `get_long_bit`
+    [#6217 @kit-ty-kate]
+  * `OpamStd.Sys.get_long_bit`: was added, which returns the output of the
+    `getconf LONG_BIT` command [#6217 @kit-ty-kate]
+  * `OpamStd.Sys.uname`: now returns the memoized result of the `uname`
+    function from the C standard library [#6217 @kit-ty-kate]
+  * `OpamStd.Sys.get_freebsd_version`: was added, which returns the output
+    of the `uname -U` command [#6217 @kit-ty-kate]
+  * `OpamSystem.get_files`: was exposed which returns the list of files
+    (without prefix) inside the given directory [#5892 @kit-ty-kate]
+  * `OpamSystem.remove_dir`: do not fail with an exception when directory
+    is a symbolic link [#6276 @btjorge @rjbou - fix #6275]
+  * `OpamSystem.patch`: now returns `exn option` instead of
+    `exn option OpamProcess.job` and no longer calls the system GNU Patch
+    [#5892 @kit-ty-kate]
+  * `OpamSystem.patch`: a named-parameter `~allow_unclean` was added
+    [#5892 @kit-ty-kate]
+  * `OpamSystem.patch`: do not remove the original patch file if called with
+    `~preprocess:false` [#5892 @kit-ty-kate]
+  * `OpamSystem`, `OpamFilename`: add `with_tmp_file` and `with_tmp_file_job`
+    function, that create a file name in temporary directory and removes it
+    at the end of the call [#6036 @rjbou]
+
 2.3.0:
 * (no difference compared to 2.3.0~rc1)
 
