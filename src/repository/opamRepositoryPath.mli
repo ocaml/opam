@@ -41,13 +41,6 @@ val packages: dirname -> string option -> package -> dirname
     {i $repo/packages/XXX/$NAME.$VERSION/opam} *)
 val opam: dirname -> string option -> package -> OpamFile.OPAM.t OpamFile.t
 
-(** Return the description file for a given package:
-    {i $repo/packages/XXX/$NAME.VERSION/descr} *)
-val descr: dirname -> string option -> package -> OpamFile.Descr.t OpamFile.t
-
-(** urls {i $repo/package/XXX/$NAME.$VERSION/url} *)
-val url: dirname -> string option -> package -> OpamFile.URL.t OpamFile.t
-
 (** files {i $repo/packages/XXX/$NAME.$VERSION/files} *)
 val files: dirname -> string option -> package -> dirname
 
