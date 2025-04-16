@@ -543,7 +543,7 @@ let freeze_url src_dir nv url =
   match url_t.backend with
   | #OpamUrl.version_control ->
     (match OpamProcess.Job.run
-             (OpamRepository.revision (src_dir nv) url_t) with
+             (OpamRepository.revision (Option.get (src_dir nv)) url_t) with
     | None ->
       OpamConsole.error_and_exit `Not_found
         "Unable to retrieve %s url revision: %s, \
@@ -596,9 +596,9 @@ let export rt ?(freeze=false) ?(full=false)
       let read_opams read pkgs =
         let src_dir nv =
           if OpamPackage.Set.mem nv selections.sel_pinned then
-            OpamPath.Switch.pinned_package root switch nv.name
+            Some (OpamPath.Switch.pinned_package root switch nv.name)
           else
-            OpamPath.Switch.sources root switch nv
+            None
         in
         OpamPackage.Set.fold (fun nv map ->
             match read nv with

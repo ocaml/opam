@@ -249,14 +249,16 @@ let download_shared_source st url nvs =
   let nvs =
     (* filter out version-pinned packages since we already have their source *)
     List.filter (fun nv ->
-        let dir = OpamSwitchState.source_dir st nv in
         not (OpamPackage.Set.mem nv st.pinned &&
-             OpamFilename.exists_dir dir &&
-             OpamStd.Option.Op.(
-               OpamPinned.find_opam_file_in_source nv.name dir >>|
-               (fun (f, lock) ->
-               OpamFile.OPAM.(safe_read f |> with_locked_opt lock)) >>=
-               OpamFile.OPAM.version_opt) = Some nv.version))
+             match OpamSwitchState.source_dir st nv with
+             | None -> false
+             | Some dir ->
+               OpamFilename.exists_dir dir &&
+               OpamStd.Option.Op.(
+                 OpamPinned.find_opam_file_in_source nv.name dir >>|
+                 (fun (f, lock) ->
+                    OpamFile.OPAM.(safe_read f |> with_locked_opt lock)) >>=
+                 OpamFile.OPAM.version_opt) = Some nv.version))
       nvs
   in
   if nvs = [] then Done None
@@ -889,12 +891,16 @@ let cleanup_package_artefacts t nv =
   let dev_dir = OpamSwitchState.source_dir t nv in
   if OpamPackage.Set.mem nv t.installed then
     (if not (OpamSwitchState.is_dev_package t nv) then
-       OpamFilename.rmdir dev_dir)
+       match dev_dir with
+       | None -> ()
+       | Some dev_dir -> OpamFilename.rmdir dev_dir)
   else
     (log "Removing the local metadata";
      OpamSwitchAction.remove_metadata t (OpamPackage.Set.singleton nv);
      if not (OpamPackage.Set.mem nv t.pinned) then
-       OpamFilename.rmdir dev_dir)
+       match dev_dir with
+       | None -> ()
+       | Some dev_dir -> OpamFilename.rmdir dev_dir)
 
 let sources_needed st g =
   PackageActionGraph.fold_vertex (fun act acc ->

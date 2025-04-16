@@ -594,10 +594,12 @@ let parallel_apply t
     in
     let source_dir nv =
       let opam = OpamSwitchState.opam t nv in
-      let raw = OpamSwitchState.source_dir t nv in
-      match OpamFile.OPAM.url opam with
-      | None -> raw
-      | Some url -> OpamFilename.SubPath.(raw /? OpamFile.URL.subpath url)
+      match OpamSwitchState.source_dir t nv with
+      | None -> None
+      | Some raw -> Some (
+          match OpamFile.OPAM.url opam with
+          | None -> raw
+          | Some url -> OpamFilename.SubPath.(raw /? OpamFile.URL.subpath url))
     in
     if OpamClientConfig.(!r.fake) then
       match action with
@@ -661,10 +663,14 @@ let parallel_apply t
         OpamStateConfig.(!r.dev_setup) && found
       in
       let source_dir = source_dir nv in
-      (if OpamFilename.exists_dir source_dir
-       then (if not is_inplace then
-               OpamFilename.copy_dir ~src:source_dir ~dst:build_dir)
-       else OpamFilename.mkdir build_dir;
+      ((match source_dir with
+          | None -> OpamFilename.mkdir build_dir
+          | Some source_dir ->
+            if OpamFilename.exists_dir source_dir
+            then (if not is_inplace then
+                    OpamFilename.copy_dir ~src:source_dir ~dst:build_dir)
+            else OpamFilename.mkdir build_dir
+        );
        OpamAction.prepare_package_source t nv build_dir @@+ function
        | Some exn -> store_time (); Done (`Exception exn)
        | None ->
@@ -694,9 +700,13 @@ let parallel_apply t
          let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
          OpamFilename.rmdir d;
          let source_dir = source_dir nv in
-         if OpamFilename.exists_dir source_dir
-         then OpamFilename.copy_dir ~src:source_dir ~dst:d
-         else OpamFilename.mkdir d;
+         begin match source_dir with
+         | Some source_dir ->
+           if OpamFilename.exists_dir source_dir
+           then OpamFilename.copy_dir ~src:source_dir ~dst:d
+           else OpamFilename.mkdir d
+         | None -> OpamFilename.mkdir d
+         end;
          OpamAction.prepare_package_source t nv d
        else Done None) @@+ fun _ ->
       OpamProcess.Job.ignore_errors ~default:()
