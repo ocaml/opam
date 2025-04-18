@@ -352,8 +352,8 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
 
 (* Global state changes that need to be propagated *)
 let gtc_none = { gtc_repo = false; gtc_switch = false }
-let gtc_repo = { gtc_repo = true; gtc_switch = false }
-let gtc_switch = { gtc_repo = false; gtc_switch = true }
+let _gtc_repo = { gtc_repo = true; gtc_switch = false }
+let _gtc_switch = { gtc_repo = false; gtc_switch = true }
 let _gtc_both = { gtc_repo = true; gtc_switch = true }
 
 (* - Progressive version update functions - *)
@@ -1121,18 +1121,7 @@ let from_2_1_to_2_2_alpha ~on_the_fly:_ _ conf =
 
 let v2_2_beta = OpamVersion.of_string "2.2~beta"
 
-let from_2_2_alpha_to_2_2_beta_repo ?config:_ root _conf =
-  let f = OpamPath.repos_config root in
-  let config = OpamFile.Repos_config.read f in
-  let config =
-    OpamRepositoryName.Map.add
-      (OpamRepositoryName.of_string "added-repo")
-      (OpamUrl.of_string "file://a/path", None)
-      config
-  in
-  Some config
-
-let from_2_2_alpha_to_2_2_beta ~on_the_fly root conf =
+let from_2_2_alpha_to_2_2_beta ~on_the_fly _ conf =
   (* In opam < 2.1 "jobs" was set during initialisation
      This creates problems when upgrading from opam 2.0 as it
      sets the job count for good even if the CPU is replaced.
@@ -1152,35 +1141,11 @@ let from_2_2_alpha_to_2_2_beta ~on_the_fly root conf =
    | Some prev_jobs when prev_jobs = max 1 (OpamSysPoll.cores () - 1) -> ()
    | Some prev_jobs -> info_jobs_changed ~prev_jobs
    | None -> info_jobs_changed ~prev_jobs:1);
-  if not on_the_fly then
-    (let f = OpamPath.repos_config root in
-     OpamStd.Option.iter (fun repos ->
-         OpamFile.Repos_config.write f repos)
-       (from_2_2_alpha_to_2_2_beta_repo root conf));
-  OpamFile.Config.with_jobs_opt None conf, gtc_repo
+  OpamFile.Config.with_jobs_opt None conf, gtc_none
 
 let v2_2 = OpamVersion.of_string "2.2"
 
-let from_2_2_beta_to_2_2_switch ?config:_ switch root _conf =
-  let f = OpamPath.Switch.switch_config root switch in
-  OpamStd.Option.map (fun config ->
-      let synopsis =
-        let syn = config.OpamFile.Switch_config.synopsis in
-        if String.equal "" syn then "I ADD SOMETHING" else
-          String.uppercase_ascii syn
-      in
-      {config with OpamFile.Switch_config.synopsis = synopsis})
-    (OpamFile.Switch_config.read_opt f)
-
-let from_2_2_beta_to_2_2 ~on_the_fly root conf =
-  if not on_the_fly then
-    (List.iter (fun switch ->
-         let f = OpamPath.Switch.switch_config root switch in
-         OpamStd.Option.iter (fun sc ->
-             OpamFile.Switch_config.write f sc)
-           (from_2_2_beta_to_2_2_switch switch root conf))
-        (OpamFile.Config.installed_switches conf));
-  conf, gtc_switch
+let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
@@ -1471,7 +1436,6 @@ let as_necessary_repo lock_kind gt =
   (* No upgrade to do *)
   if not gt.global_state_to_upgrade.gtc_repo then None else
     let updates = [
-      v2_2_beta, from_2_2_alpha_to_2_2_beta_repo;
     ] in
     as_necessary_repo_switch_t
       updates
@@ -1484,7 +1448,6 @@ let as_necessary_switch lock_kind switch gt =
   (* No upgrade to do *)
   if not gt.global_state_to_upgrade.gtc_switch then None else
     let updates = [
-      v2_2, from_2_2_beta_to_2_2_switch;
     ] |> List.map (fun (v,f) ->
         v, fun ?config root conf -> f ?config switch root conf)
     in
