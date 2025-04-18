@@ -1247,13 +1247,14 @@ let upgrades root_version =
   |> List.partition (fun (v,_) ->
       OpamVersion.compare v latest_hard_upgrade <= 0)
 
-let as_necessary ?reinit requested_lock global_lock root config =
-  let root_version =
-    match OpamFile.Config.opam_root_version_opt config with
-    | Some v -> v
-    | None ->
-      let v = OpamFile.Config.opam_version config in
-      if OpamVersion.compare v v2_0 <> 0 then v else
+let default_opam_root_version = v2_1_alpha
+
+let get_root_version root config =
+  match OpamFile.Config.opam_root_version_opt config with
+  | Some v -> v
+  | None ->
+    let v = OpamFile.Config.opam_version config in
+    if OpamVersion.compare v v2_0 <> 0 then v else
       try
         List.iter (fun switch ->
             ignore @@
@@ -1261,8 +1262,11 @@ let as_necessary ?reinit requested_lock global_lock root config =
               (OpamPath.Switch.switch_config root switch))
           (OpamFile.Config.installed_switches config);
         v
-      with Sys_error _ | OpamPp.Bad_version _ -> v2_1_alpha
-  in
+      with Sys_error _ | OpamPp.Bad_version _ ->
+        default_opam_root_version
+
+let as_necessary ?reinit requested_lock global_lock root config =
+  let root_version = get_root_version root config in
   let cmp = OpamVersion.(compare OpamFile.Config.root_version root_version) in
   if cmp <= 0 then config, gtc_none (* newer or same *) else
   let hard_upg, light_upg = upgrades root_version in
