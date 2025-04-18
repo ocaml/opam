@@ -75,6 +75,7 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Add `2.4.0~alpha1` to the install scripts [#6475 @kit-ty-kate]
 
 ## Install script
 
