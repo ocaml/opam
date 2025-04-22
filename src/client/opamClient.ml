@@ -2179,7 +2179,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
             in
             let url =
               if OpamSwitchState.is_dev_package t nv then
-                Some (OpamFile.URL.create OpamUrl.{empty with backend = `git})
+                Some (OpamFile.URL.create {OpamUrl.empty with backend = `git})
               else None
             in
             let dopam =

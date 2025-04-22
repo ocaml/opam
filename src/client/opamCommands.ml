@@ -909,8 +909,8 @@ let tree ?(why=false) cli =
            st ~recurse ?subpath ~quiet:true
            ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
        in
-       let tog = OpamListCommand.{
-           post; test; doc; dev; dev_setup;
+       let tog = {
+           OpamListCommand.post; test; doc; dev; dev_setup;
            recursive = false;
            depopts = false;
            build = true;

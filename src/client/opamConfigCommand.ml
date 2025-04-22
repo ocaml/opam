@@ -237,7 +237,7 @@ let load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
   in
   let environment_opam_switch_prefix =
     OpamStd.List.find_map_opt (function
-        | OpamTypes.{ envu_var = "OPAM_SWITCH_PREFIX";
+        | { OpamTypes.envu_var = "OPAM_SWITCH_PREFIX";
                       envu_op = Eq;
                       envu_value; _} ->
           Some envu_value
