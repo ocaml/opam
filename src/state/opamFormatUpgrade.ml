@@ -853,13 +853,14 @@ let from_2_0_alpha_to_2_0_alpha2 ~on_the_fly:_ root conf =
             let pkgdir nv = meta_dir / "packages" / OpamPackage.to_string nv in
             if OpamFilename.exists_dir (pkgdir nv) then
               OpamFilename.move_dir ~src:(pkgdir nv) ~dst:(pkgdir new_nv);
-            OpamStd.Option.Op.(
-              OpamFilename.opt_file (pkgdir new_nv // "opam") >>|
-              OpamFile.make >>= fun f ->
-              OpamFile.OPAM.read_opt f >>|
-              opam_file_from_1_2_to_2_0 ~filename:f >>|
-              OpamFile.OPAM.write_with_preserved_format f
-            ) |> ignore;
+            let _ : unit option =
+              OpamStd.Option.Op.(
+                OpamFilename.opt_file (pkgdir new_nv // "opam") >>|
+                OpamFile.make >>= fun f ->
+                OpamFile.OPAM.read_opt f >>|
+                opam_file_from_1_2_to_2_0 ~filename:f >>|
+                OpamFile.OPAM.write_with_preserved_format f)
+            in ();
             if OpamFile.exists (config_f nv) then
               (OpamFile.Dot_config.write (config_f new_nv)
                  (remove_vars config);
@@ -930,7 +931,7 @@ let from_2_0_alpha2_to_2_0_alpha3 ~on_the_fly:_ root conf =
               | "root", S r ->
                 (Some (OpamFilename.Dir.of_string r), paths, variables)
               | stdpath, S d when
-                  (try ignore (std_path_of_string stdpath); true
+                  (try let _ : std_path = std_path_of_string stdpath in true
                    with Failure _ -> false) ->
                 root, (std_path_of_string stdpath, d) :: paths, variables
               | _, value -> root, paths, (var, value) :: variables)
@@ -1205,9 +1206,10 @@ let as_necessary ?reinit requested_lock global_lock root config =
       if OpamVersion.compare v v2_0 <> 0 then v else
       try
         List.iter (fun switch ->
-            ignore @@
-            OpamFile.Switch_config.read_opt
-              (OpamPath.Switch.switch_config root switch))
+            let _ : OpamFile.Switch_config.t option =
+              OpamFile.Switch_config.read_opt
+                (OpamPath.Switch.switch_config root switch)
+            in ())
           (OpamFile.Config.installed_switches config);
         v
       with Sys_error _ | OpamPp.Bad_version _ -> v2_1_alpha
@@ -1415,8 +1417,10 @@ let hard_upgrade_from_2_1_intermediates ?reinit ?global_lock root =
       | None -> OpamFilename.flock `Lock_read (OpamPath.lock root)
     in
     (* it will trigger only hard upgrades that won't get back *)
-    ignore @@ as_necessary `Lock_write global_lock root ?reinit
-      (OpamFile.Config.with_opam_root_version v2_1_alpha2 config)
+    let _ : OpamFile.Config.t * gt_changes =
+      as_necessary `Lock_write global_lock root ?reinit
+        (OpamFile.Config.with_opam_root_version v2_1_alpha2 config)
+    in ()
 
 let opam_file ?(quiet=false) ?filename opam =
   let v = OpamFile.OPAM.opam_version opam in

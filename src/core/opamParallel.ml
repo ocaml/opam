@@ -226,7 +226,12 @@ module Make (G : G) = struct
               | e -> (n,e)::errors, pend)
             running ([node,error],[])
         in
-        (try List.iter (fun _ -> ignore (OpamProcess.wait_one pend)) pend
+        (try
+           List.iter (fun _ ->
+               let _ : OpamProcess.t * OpamProcess.result =
+                 OpamProcess.wait_one pend
+               in ())
+             pend
          with e -> log "%a in sub-process cleanup" (slog Printexc.to_string) e);
         (* Generate the remaining nodes in topological order *)
         let remaining =
@@ -312,7 +317,7 @@ module Make (G : G) = struct
     r
 
   let iter ~jobs ~command ?dry_run ?pools g =
-    ignore (aux_map ~jobs ~command ?dry_run ?pools g)
+    let _ : _ M.t = aux_map ~jobs ~command ?dry_run ?pools g in ()
 
   let map ~jobs ~command ?dry_run ?pools g =
     M.bindings (aux_map ~jobs ~command ?dry_run ?pools g)
@@ -372,7 +377,7 @@ module MakeGraph (X: VERTEX) = struct
   include Graph.Oper.I (PG)
 
   let transitive_closure ?reflexive g =
-    ignore (add_transitive_closure ?reflexive g)
+    let _ : g = add_transitive_closure ?reflexive g in ()
 
   let build vertices edges =
     let graph = create ~size:(List.length vertices) () in
@@ -489,7 +494,7 @@ let iter ~jobs ~command ?dry_run l =
   let a = Array.of_list l in
   let g = flat_graph_of_array a in
   let command ~pred:_ i = command a.(i) in
-  ignore (IntGraph.Parallel.iter ~jobs ~command ?dry_run g)
+  IntGraph.Parallel.iter ~jobs ~command ?dry_run g
 
 let map ~jobs ~command ?dry_run l =
   let a = Array.of_list l in

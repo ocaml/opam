@@ -686,7 +686,7 @@ let list ?(force_search=false) cli =
             | None -> single
             | Some (n, _v) -> n
           in
-          (try ignore (OpamPackage.Name.of_string nameglob); true
+          (try let _ : name = (OpamPackage.Name.of_string nameglob) in true
            with Failure _ -> false)
         | _ -> false
       in
@@ -2440,9 +2440,11 @@ let repository cli =
         let repos =
           OpamRepositoryName.Map.keys rt.OpamStateTypes.repositories
         in
-        ignore @@ check_for_repos repos names
-          (OpamConsole.warning
-             "No configured repositories by these names found: %s");
+        let _ : bool =
+          check_for_repos repos names
+            (OpamConsole.warning
+               "No configured repositories by these names found: %s")
+        in
         OpamRepositoryState.drop @@
         List.fold_left OpamRepositoryCommand.remove rt names
       else begin
@@ -2468,8 +2470,9 @@ let repository cli =
         List.filter (fun n ->
             not (List.exists (OpamRepositoryName.equal n) names))
       in
-      ignore @@ OpamRepositoryCommand.update_selection gt
-        ~global ~switches:switches rm;
+      let _ : _ global_state =
+        OpamRepositoryCommand.update_selection gt ~global ~switches:switches rm
+      in
       `Ok ()
     | Some `add, [name] ->
       let name = OpamRepositoryName.of_string name in
@@ -2477,9 +2480,11 @@ let repository cli =
           let repos =
             OpamRepositoryName.Map.keys rt.OpamStateTypes.repositories
           in
-          ignore @@ check_for_repos repos [name]
-            (OpamConsole.error_and_exit `Not_found
-               "No configured repository '%s' found, you must specify an URL"));
+          let _ : bool =
+            check_for_repos repos [name]
+              (OpamConsole.error_and_exit `Not_found
+                 "No configured repository '%s' found, you must specify an URL")
+          in ());
       OpamGlobalState.drop @@
       OpamRepositoryCommand.update_selection gt ~global ~switches
         (update_repos name);
