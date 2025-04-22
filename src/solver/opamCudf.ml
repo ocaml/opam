@@ -1556,7 +1556,7 @@ let call_external_solver ~version_map univ req =
     let _ : string option =
       (dump_cudf_request ~version_map cudf_request
          criteria OpamSolverConfig.(!r.cudf_file))
-    in ();
+    in
     (* Wrap a return of exn Timeout through Depsolver *)
     let check_request_using ~call_solver ~explain req =
       let timed_out = ref false in

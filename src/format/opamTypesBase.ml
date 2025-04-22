@@ -161,7 +161,7 @@ let env_array l =
     OpamStd.Env.Name.Map.fold
       (fun k v i -> a.(i) <- (k :> string) ^ "=" ^ v; succ i)
       bindings 0
-  in ();
+  in
   a
 
 

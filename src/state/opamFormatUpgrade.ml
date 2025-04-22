@@ -860,7 +860,7 @@ let from_2_0_alpha_to_2_0_alpha2 ~on_the_fly:_ root conf =
                 OpamFile.OPAM.read_opt f >>|
                 opam_file_from_1_2_to_2_0 ~filename:f >>|
                 OpamFile.OPAM.write_with_preserved_format f)
-            in ();
+            in
             if OpamFile.exists (config_f nv) then
               (OpamFile.Dot_config.write (config_f new_nv)
                  (remove_vars config);
