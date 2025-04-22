@@ -162,6 +162,7 @@ users)
   * Add a helper script to help generate the configure file on platforms without autoconf 2.71 [#6878 @kit-ty-kate]
   * Fix a rare potential GC corruption in `OpamStubs.uname` [#6880 @avsm @kit-ty-kate @andrew]
   * Fix a rare potential GC corruption in `OpamStubs.enumRegistry` on Windows [#6882 @kit-ty-kate]
+  * Remove uses of `Stdlib.ignore` [#6481 @rjbou @kit-ty-kate]
 
 ## Internal: Unix
 

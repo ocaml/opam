@@ -253,7 +253,9 @@ let force_win32_vt100 handle () =
     (* ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x4 *)
     let vt100_on = 0x4 in
     if mode land vt100_on = 0 then
-      OpamStubs.setConsoleMode hConsoleOutput (mode lor vt100_on) |> ignore
+      let _ : bool =
+        OpamStubs.setConsoleMode hConsoleOutput (mode lor vt100_on)
+      in ()
   with Not_found -> ()
 
 let enable_win32_vt100 ch =
@@ -272,7 +274,9 @@ let enable_win32_vt100 ch =
             let mode =
               OpamStubs.getConsoleMode hConsoleOutput land (lnot vt100_on)
             in
-            OpamStubs.setConsoleMode hConsoleOutput mode |> ignore
+            let _ : bool =
+              OpamStubs.setConsoleMode hConsoleOutput mode
+            in ()
           with Not_found -> ()
         in
         at_exit restore_console;
@@ -280,7 +284,7 @@ let enable_win32_vt100 ch =
       end else
         (ch, Shim)
   with Not_found ->
-    (ch, VT100 ignore)
+    (ch, VT100 (fun () -> ()))
 
 let stdout_state = lazy (enable_win32_vt100 OpamStubs.STD_OUTPUT_HANDLE)
 let stderr_state = lazy (enable_win32_vt100 OpamStubs.STD_ERROR_HANDLE)
@@ -445,11 +449,12 @@ let carriage_delete_windows () =
       let {OpamStubs.size = (w, _); cursorPosition = (_, row); _} =
         OpamStubs.getConsoleScreenBufferInfo hConsoleOutput in
       Printf.printf "\r%!";
-      OpamStubs.fillConsoleOutputCharacter hConsoleOutput '\000' w (0, row)
-        |> ignore
+      let _ : bool =
+        OpamStubs.fillConsoleOutputCharacter hConsoleOutput '\000' w (0, row)
+      in ()
   | (_, VT100 force) ->
-      force ();
-      carriage_delete_unix ()
+    force ();
+    carriage_delete_unix ()
 
 let carriage_delete =
   if not OpamStd.Sys.tty_out then fun () -> () else
@@ -534,7 +539,7 @@ let log_formatter, finalise_output =
     in
       Format.formatter_of_buffer b, f
   else
-    Format.formatter_of_out_channel stderr, ignore
+    Format.formatter_of_out_channel stderr, fun _ -> ()
 
 let () =
   Format.pp_set_margin log_formatter 0

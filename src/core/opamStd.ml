@@ -1222,7 +1222,7 @@ module OpamSys = struct
             else
               check_dll platform
           | exception e ->
-            Unix.close_process_full process |> ignore;
+            let _ : Unix.process_status = Unix.close_process_full process in
             fatal e;
             platform
         in
@@ -1422,15 +1422,17 @@ module Win32 = struct
     (* Update our environment *)
     Unix.putenv "HOME" dir;
     (* Update our parent's environment *)
-    ignore (parent_putenv "HOME" dir);
+    let _ : bool = parent_putenv "HOME" dir in
     (* Persist the value to the user's environment *)
     OpamStubs.(writeRegistry HKEY_CURRENT_USER "Environment" "HOME" REG_SZ dir);
     (* Broadcast the change (or a reboot would be required) *)
     (* These constants are defined in WinUser.h *)
     let hWND_BROADCAST = 0xffffn in
     let sMTO_ABORTIFHUNG = 0x2 in
-    OpamStubs.(sendMessageTimeout hWND_BROADCAST 5000 sMTO_ABORTIFHUNG
-                                  WM_SETTINGCHANGE 0 "Environment") |> ignore
+    let _ : int * int =
+      OpamStubs.(sendMessageTimeout hWND_BROADCAST 5000 sMTO_ABORTIFHUNG
+                   WM_SETTINGCHANGE 0 "Environment")
+    in ()
 end
 
 
