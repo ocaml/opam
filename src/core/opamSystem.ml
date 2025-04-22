@@ -221,9 +221,7 @@ let rec temp_file ?(auto_clean=true) ?dir prefix =
   )
 
 let remove_file file =
-  if
-    try ignore (Unix.lstat file); true with Unix.Unix_error _ -> false
-  then (
+  if file_or_symlink_exists file then (
     log "rm %s" file;
     try
       try Unix.unlink file
