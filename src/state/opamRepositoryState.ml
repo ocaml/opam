@@ -129,17 +129,19 @@ let load_repo repo repo_root =
 
 let get_repo_depexts opams gt =
   let env = OpamPackageVar.resolve_global gt in
-  OpamPackage.Map.fold (fun package opam acc ->
+  OpamPackage.Map.fold (fun package opam (s,m) ->
+      let open OpamSysPkg.Set.Op in 
       let depexts =
-        List.fold_left (fun depexts (names, filter) ->
+        List.fold_left (fun (depexts) (names, filter) ->
             if OpamFilter.eval_to_bool ~default:false env filter then
-              OpamSysPkg.Set.Op.(names ++ depexts)
+              (names ++ depexts)
             else
               depexts)
           OpamSysPkg.Set.empty (OpamFile.OPAM.depexts opam) 
       in
-      OpamPackage.Map.add package depexts acc ) 
-    opams OpamPackage.Map.empty
+      (depexts ++ s),
+      OpamPackage.Map.add package depexts m ) 
+    opams (OpamSysPkg.Set.empty, OpamPackage.Map.empty)
 
 (* Cleaning directories follows the repo path pattern:
    TMPDIR/opam-tmp-dir/repo-dir, defined in [load]. *)
@@ -237,11 +239,15 @@ let load lock_kind gt =
           let repo_def, repo_opams =
             load_repo repo (get_root_raw gt.root repos_tmp name)
           in
-          let repo_depexts = get_repo_depexts repo_opams gt in
+          let repo_depexts, pkg_to_depext = get_repo_depexts repo_opams gt in
+          let status = OpamSysInteract.packages_status gt.config repo_depexts in 
           let repo_sys_pkg_status =
-            OpamPackage.Map.map (fun sys_packages -> 
-                OpamSysInteract.packages_status gt.config sys_packages)
-              repo_depexts
+            OpamPackage.Map.map (fun set ->
+                OpamSysPkg.Set.Op.
+                  { OpamSysPkg.
+                    s_available = set %% status.s_available;
+                    s_not_found = set %% status.s_not_found })
+              pkg_to_depext
           in
           OpamRepositoryName.Map.add name repo_def defs,
           OpamRepositoryName.Map.add name repo_opams opams,
