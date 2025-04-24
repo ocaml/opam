@@ -84,20 +84,6 @@ module type IO_Arg = sig
   val to_string : 'a typed_file -> t -> string
 end
 
-module Stats = struct
-  let read_files = ref []
-  let write_files = ref []
-  let print () =
-    let aux kind = function
-      | [] -> ()
-      | l  ->
-        OpamConsole.msg "%d files %s:\n  %s\n"
-          (List.length !read_files) kind (String.concat "\n  " l)
-    in
-    aux "read" !read_files;
-    aux "write" !write_files
-end
-
 let dummy_file = OpamFilename.raw "<none>"
 
 module MakeIO (F : IO_Arg) = struct
@@ -111,7 +97,6 @@ module MakeIO (F : IO_Arg) = struct
     let chrono = OpamConsole.timer () in
     let write = OpamFilename.with_open_out_bin_atomic in
     write f (fun oc -> F.to_channel f oc v);
-    Stats.write_files := filename :: !Stats.write_files;
     log "Wrote %s atomically in %.3fs" filename (chrono ())
 
   let read_opt f =
@@ -121,7 +106,6 @@ module MakeIO (F : IO_Arg) = struct
       let ic = OpamFilename.open_in f in
       try
         Unix.lockf (Unix.descr_of_in_channel ic) Unix.F_RLOCK 0;
-        Stats.read_files := filename :: !Stats.read_files;
         let r = F.of_channel f ic in
         close_in ic;
         log ~level:3 "Read %s in %.3fs" filename (chrono ());

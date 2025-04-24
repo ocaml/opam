@@ -490,10 +490,6 @@ let main () =
   end;
   OpamStd.Sys.at_exit (fun () ->
       flush_all_noerror ();
-      if OpamClientConfig.(!r.print_stats) then (
-        OpamFile.Stats.print ();
-        OpamSystem.print_stats ();
-      );
       json_out ()
     );
   run ()

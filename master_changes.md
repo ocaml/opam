@@ -13,6 +13,7 @@ users)
 ## Version
 
 ## Global CLI
+  * Remove handling of the `OPAMSTATS` environment variable [#6485 @hannesm]
 
 ## Plugins
 
@@ -94,6 +95,7 @@ users)
 ## Shell
 
 ## Internal
+  * Fix a memory leak happening when running large numbers of commands or opening large number of opam files [#6485 @hannesm - fix #6484]
 
 ## Internal: Unix
 
@@ -116,6 +118,8 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamClientConfig`: remove `STATS` variant and related `print_stats` field in config record [#6485 @hannesm]
+  * `OpamArg.environment_variable`: make `STATS` as removed from cli 2.3 [#6485 @rjbou]
 
 ## opam-repository
 
@@ -124,5 +128,7 @@ users)
 ## opam-solver
 
 ## opam-format
+  * `OpamFile`: remove `Stats` module [#6485 @hannesm]
 
 ## opam-core
+  * `OpamSystem`: remove `print_stats` function [#6485 @hannesm]

@@ -358,9 +358,6 @@ val translate_patch: dir:string -> string -> string -> unit
     terminates (default: [true]). *)
 val temp_file: ?auto_clean:bool -> ?dir:string -> string -> string
 
-(** Print stats *)
-val print_stats: unit -> unit
-
 (** Registers an exception printer that adds some OPAM version info, and details
     on process and Unix errors *)
 val register_printer: unit -> unit

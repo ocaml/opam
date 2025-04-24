@@ -519,14 +519,6 @@ let get_cygpath_path_transform =
   else
     Lazy.from_val (fun ~pathlist:_ x -> x)
 
-let runs = ref []
-let print_stats () =
-  match !runs with
-  | [] -> ()
-  | l  ->
-    OpamConsole.msg "%d external processes called:\n%s"
-      (List.length l) (OpamStd.Format.itemize ~bullet:"  " (String.concat " ") l)
-
 let log_file ?dir name = temp_file ?dir (OpamStd.Option.default "log" name)
 
 let make_command
@@ -554,7 +546,6 @@ let run_process
     ?verbose ?env ~name ?metadata ?stdout ?allow_stdin command =
   let env = match env with None -> OpamProcess.default_env () | Some e -> e in
   let chrono = OpamConsole.timer () in
-  runs := command :: !runs;
   match command with
   | []          -> invalid_arg "run_process"
   | cmd :: args ->

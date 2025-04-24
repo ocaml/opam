@@ -29,7 +29,6 @@ module E = struct
     | ROOTISOK of bool option
     | SHOW of bool option
     | SKIPUPDATE of bool option
-    | STATS of bool option
     | WORKINGDIR of bool option
     | VERBOSEON of string list option
 
@@ -52,14 +51,12 @@ module E = struct
   let rootisok = value (function ROOTISOK b -> b | _ -> None)
   let show = value (function SHOW b -> b | _ -> None)
   let skipupdate = value (function SKIPUPDATE b -> b | _ -> None)
-  let stats = value (function STATS b -> b | _ -> None)
   let workingdir = value (function WORKINGDIR b -> b | _ -> None)
   let verboseon = value (function VERBOSEON s -> s | _ -> None)
 
 end
 
 type t = {
-  print_stats: bool;
   pin_kind_auto: bool;
   autoremove: bool;
   editor: string;
@@ -82,7 +79,6 @@ type t = {
 }
 
 let default = {
-  print_stats = false;
   pin_kind_auto = true;
   autoremove = false;
   editor = "nano";
@@ -105,7 +101,6 @@ let default = {
 }
 
 type 'a options_fun =
-  ?print_stats:bool ->
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
@@ -128,7 +123,6 @@ type 'a options_fun =
   'a
 
 let setk k t
-    ?print_stats
     ?pin_kind_auto
     ?autoremove
     ?editor
@@ -151,7 +145,6 @@ let setk k t
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
-    print_stats = t.print_stats + print_stats;
     pin_kind_auto = t.pin_kind_auto + pin_kind_auto;
     autoremove = t.autoremove + autoremove;
     editor = t.editor + editor;
@@ -186,7 +179,6 @@ let initk k =
     E.editor () ++ OpamStd.Env.(getopt "VISUAL" ++ getopt "EDITOR")
   in
   setk (setk (fun c -> r := c; k)) !r
-    ?print_stats:(E.stats ())
     ?pin_kind_auto:(E.pinkindauto ())
     ?autoremove:(E.autoremove ())
     ?editor

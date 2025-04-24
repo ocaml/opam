@@ -312,7 +312,7 @@ let environment_variables =
       "see option `--show'.";
       "SKIPUPDATE", cli_original, (fun v -> SKIPUPDATE (env_bool v)),
       "see option `--skip-updates'.";
-      "STATS", cli_original, (fun v -> STATS (env_bool v)),
+      "STATS", cli_between cli2_0 cli2_4, (fun _v -> OpamStd.Config.E.REMOVED),
       "display stats at the end of command.";
       "VERBOSEON", cli_from cli2_2, (fun v -> VERBOSEON (env_string_list v)),
       "see option --verbose-on";
@@ -575,7 +575,6 @@ let apply_global_options cli o =
     (* - client options - *)
     ?working_dir:(flag o.working_dir)
     ?ignore_pin_depends:(flag o.ignore_pin_depends)
-    (* ?print_stats:bool *)
     (* ?sync_archives:bool *)
     (* ?pin_kind_auto:bool *)
     (* ?autoremove:bool *)
