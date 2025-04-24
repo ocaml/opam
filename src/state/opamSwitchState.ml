@@ -178,6 +178,54 @@ module Installed_cache = OpamCached.Make(struct
     let name = "installed"
   end)
 
+
+
+let depexts_status_from_repo packages global_config switch_config rt =
+  let open OpamSysPkg.Set.Op in
+  let bypass =
+    OpamFile.Config.depext_bypass global_config ++
+    switch_config.OpamFile.Switch_config.depext_bypass
+  in
+  let repos = repos_list_raw rt switch_config in
+  let initial_map =
+    OpamPackage.Set.fold (fun pkg acc ->
+        OpamPackage.Map.add pkg OpamSysPkg.status_empty acc
+      ) packages OpamPackage.Map.empty
+  in
+  let check_status status = 
+    if OpamStateConfig.(!r.no_depexts) then
+      (* Mark all as available. This is necessary to store the exceptions
+         afterwards *)
+      OpamSysPkg.{ status_empty with
+                   s_available = status.s_available ++ status.s_not_found; }
+    else if OpamFile.Config.depext_cannot_install global_config then
+      { OpamSysPkg.status_empty with
+        s_not_found = status.s_available ++ status.s_not_found; }
+    else
+      status
+  in 
+  List.fold_left (fun acc_map repo_name ->
+      match OpamRepositoryName.Map.find_opt repo_name rt.sys_pkg_statues with
+      | None -> acc_map
+      | Some pkg_to_status ->
+        OpamPackage.Map.fold (fun pkg sys_status acc ->
+            if OpamPackage.Set.mem pkg packages then
+              let current = OpamPackage.Map.find pkg acc in
+              let merged = OpamSysPkg.{
+                  s_available = (sys_status.s_available ++ current.s_available -- bypass);
+                  s_not_found = (sys_status.s_not_found ++ current.s_not_found -- bypass);
+                } in
+              let status_checked = check_status merged in 
+              OpamPackage.Map.add pkg status_checked acc
+            else
+              acc
+          ) pkg_to_status acc_map
+    ) initial_map repos
+
+  
+     
+
+
 let depexts_status_of_packages_raw
     ~depexts ?env global_config switch_config packages =
   if OpamPackage.Set.is_empty packages then OpamPackage.Map.empty else
@@ -515,22 +563,24 @@ let load lock_kind gt rt switch =
   let sys_packages =
     if not (OpamFile.Config.depext gt.config)
     || OpamStateConfig.(!r.no_depexts) then
-       OpamPackage.Map.empty
+      OpamPackage.Map.empty
     else (
+(*       let available = (Lazy.force available_packages) in 
+      depexts_status_from_repo available gt.config switch_config rt  *)
       depexts_status_of_packages_raw gt.config switch_config
-        ~env:gt.global_variables
-        (Lazy.force available_packages)
-        ~depexts:(fun package ->
-            let env =
-              OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
-            in
-            depexts_raw ~env package opams)
+          ~env:gt.global_variables
+          (Lazy.force available_packages)
+          ~depexts:(fun package ->
+             let env =
+               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
+             in
+             depexts_raw ~env package opams) 
     )
   in
   let available_packages =
     if not (OpamFile.Config.depext gt.config) then available_packages
     else lazy (
-      let sys_packages =  sys_packages in
+      let sys_packages = sys_packages in
       OpamPackage.Set.filter (fun nv ->
           depexts_unavailable_raw sys_packages nv = None)
         (Lazy.force available_packages)
