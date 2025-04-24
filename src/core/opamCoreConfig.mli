@@ -78,6 +78,8 @@ type t = private {
   (** Windows specific: the full path of the git binary to use on Windows. *)
   set : bool;
   (** Options have not yet been initialised (i.e. defaults are active) *)
+  in_opam : bool;
+  (** Indicates that the code is running inside of opam and not as a library *)
 }
 
 type 'a options_fun =
@@ -136,3 +138,7 @@ val answer: unit -> OpamStd.Config.answer
 
 (** [true] if OPAM was compiled in developer mode *)
 val developer : bool
+
+(** Indicates that the code currently runs inside opam, not a library.
+    Internal use only. *)
+val set_in_opam : unit -> unit
