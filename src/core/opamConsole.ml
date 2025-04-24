@@ -562,7 +562,7 @@ let log section ?(level=1) fmt =
       | None -> debug_level
       | exception Not_found -> 0
   in
-  if not OpamCoreConfig.(!r.set) then
+  if not OpamCoreConfig.(!r.set) && OpamCoreConfig.(!r.in_opam) then
     let b = Buffer.create 128 in
     let timestamp = timestamp () ^ "  " in
     let k _ = Queue.push (level, timestamp, Buffer.contents b) pending in

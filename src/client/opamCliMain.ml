@@ -483,6 +483,7 @@ let json_out () =
         (Printexc.to_string e)
 
 let main () =
+  OpamCoreConfig.set_in_opam ();
   if Sys.win32 then begin
     (* Disable the critical error handling dialog *)
     ignore (OpamStubs.setErrorMode (1 lor OpamStubs.getErrorMode ()));

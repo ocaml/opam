@@ -67,6 +67,7 @@ type t = {
   cygbin: string option;
   git_location: string option;
   set: bool;
+  in_opam: bool;
 }
 
 type 'a options_fun =
@@ -109,6 +110,7 @@ let default = {
   cygbin = None;
   git_location = None;
   set = false;
+  in_opam = false;
 }
 
 let setk k t
@@ -151,6 +153,7 @@ let setk k t
     cygbin = (match cygbin with Some _ -> cygbin | None -> t.cygbin);
     git_location = (match git_location with Some _ -> git_location | None -> t.git_location);
     set = true;
+    in_opam = t.in_opam;
   }
 
 let set t = setk (fun x () -> x) t
@@ -212,3 +215,5 @@ let answer_is_yes () =
   | _ -> false
 
 let developer = not (String.equal OpamCoreConfigDeveloper.value "")
+
+let set_in_opam () = r := {!r with in_opam = true}
