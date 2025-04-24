@@ -20,7 +20,7 @@ module Cache = struct
   type t = {
     cached_repofiles: (repository_name * OpamFile.Repo.t) list;
     cached_opams: (repository_name * OpamFile.OPAM.t OpamPackage.Map.t) list;
-    cached_sys_pkg_statues: (repository_name * sys_pkg_status) list;
+    cached_sys_pkg_statues: (repository_name * sys_pkg_status OpamPackage.Map.t) list;
   }
 
   module C = OpamCached.Make (struct
@@ -129,7 +129,7 @@ let load_repo repo repo_root =
 
 let get_repo_depexts opams gt =
   let env = OpamPackageVar.resolve_global gt in
-  OpamPackage.Map.fold (fun _ opam acc ->
+  OpamPackage.Map.fold (fun package opam acc ->
       let depexts =
         List.fold_left (fun depexts (names, filter) ->
             if OpamFilter.eval_to_bool ~default:false env filter then
@@ -138,8 +138,8 @@ let get_repo_depexts opams gt =
               depexts)
           OpamSysPkg.Set.empty (OpamFile.OPAM.depexts opam) 
       in
-      OpamSysPkg.Set.Op.(depexts ++ acc)) 
-    opams OpamSysPkg.Set.empty
+      OpamPackage.Map.add package depexts acc ) 
+    opams OpamPackage.Map.empty
 
 (* Cleaning directories follows the repo path pattern:
    TMPDIR/opam-tmp-dir/repo-dir, defined in [load]. *)
@@ -239,7 +239,9 @@ let load lock_kind gt =
           in
           let repo_depexts = get_repo_depexts repo_opams gt in
           let repo_sys_pkg_status =
-            OpamSysInteract.packages_status gt.config repo_depexts
+            OpamPackage.Map.map (fun sys_packages -> 
+                OpamSysInteract.packages_status gt.config sys_packages)
+              repo_depexts
           in
           OpamRepositoryName.Map.add name repo_def defs,
           OpamRepositoryName.Map.add name repo_opams opams,
