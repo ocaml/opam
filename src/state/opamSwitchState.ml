@@ -565,16 +565,16 @@ let load lock_kind gt rt switch =
     || OpamStateConfig.(!r.no_depexts) then
       OpamPackage.Map.empty
     else (
-(*       let available = (Lazy.force available_packages) in 
-      depexts_status_from_repo available gt.config switch_config rt  *)
-      depexts_status_of_packages_raw gt.config switch_config
+       let available = (Lazy.force available_packages) in 
+      depexts_status_from_repo available gt.config switch_config rt  
+    (*   depexts_status_of_packages_raw gt.config switch_config
           ~env:gt.global_variables
           (Lazy.force available_packages)
           ~depexts:(fun package ->
              let env =
                OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
              in
-             depexts_raw ~env package opams) 
+             depexts_raw ~env package opams)  *)
     )
   in
   let available_packages =
