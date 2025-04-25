@@ -90,7 +90,7 @@ type +'lock repos_state = {
   repo_opams: OpamFile.OPAM.t package_map repository_name_map;
   (** All opam files that can be found in the configured repositories *)
 
-  sys_pkg_statues: sys_pkg_status package_map repository_name_map;
+  repo_sys_pkg_statues: sys_pkg_status package_map repository_name_map;
   (** System package statuses of all depexts mentionned in opam files in a given repository *)
 
   repos_tmp: (OpamRepositoryName.t, OpamFilename.Dir.t Lazy.t) Hashtbl.t;

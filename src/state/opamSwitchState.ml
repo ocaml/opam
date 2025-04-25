@@ -198,7 +198,7 @@ let depexts_status_from_repo packages global_config switch_config rt =
       status
   in 
   List.fold_left (fun pkg_to_sys repo_name ->
-      match OpamRepositoryName.Map.find_opt repo_name rt.sys_pkg_statues with
+      match OpamRepositoryName.Map.find_opt repo_name rt.repo_sys_pkg_statues with
       | None -> pkg_to_sys
       | Some repo_pkg_to_status ->
         OpamPackage.Map.fold (fun pkg sys_status acc ->

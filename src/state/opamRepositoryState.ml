@@ -56,7 +56,7 @@ module Cache = struct
           OpamRepositoryName.Map.bindings
             (filter_out_nourl rt.repo_opams);
         cached_sys_pkg_statues = OpamRepositoryName.Map.bindings
-        (filter_out_nourl rt.sys_pkg_statues);
+        (filter_out_nourl rt.repo_sys_pkg_statues);
       }
 
   let file rt =
@@ -221,7 +221,7 @@ let load lock_kind gt =
       repositories;
       repos_definitions;
       repo_opams = opams;
-      sys_pkg_statues
+      repo_sys_pkg_statues = sys_pkg_statues
     } in
     OpamStd.Sys.at_exit (fun () -> cleanup rt);
     rt

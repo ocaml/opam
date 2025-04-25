@@ -1078,7 +1078,7 @@ let get_virtual_switch_state repo_root env =
     repos_definitions = singl repo_def;
     repo_opams = singl opams;
     repos_tmp;
-    sys_pkg_statues = singl (OpamPackage.Map.empty); (* TODO: should it be computed here ? *)
+    repo_sys_pkg_statues = singl (OpamPackage.Map.empty); (* TODO: should it be computed here ? *)
   } in
   let gt =
     {gt with global_variables =
