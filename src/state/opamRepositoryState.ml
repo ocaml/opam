@@ -251,8 +251,7 @@ let load lock_kind gt =
           in
           OpamRepositoryName.Map.add name repo_def defs,
           OpamRepositoryName.Map.add name repo_opams opams,
-          OpamRepositoryName.Map.add name repo_sys_pkg_status sys_pkg_statues
-        )
+          OpamRepositoryName.Map.add name repo_sys_pkg_status sys_pkg_statues)
         repos_map (OpamRepositoryName.Map.empty, OpamRepositoryName.Map.empty,
                    OpamRepositoryName.Map.empty)
     in
