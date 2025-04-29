@@ -89,6 +89,7 @@ users)
 ## Opam file format
 
 ## Solver
+  * [BUG] Fix incorrect "[required by X]" message when multiple opam files are present [#6491 @syedazeez337]
 
 ## Client
 
