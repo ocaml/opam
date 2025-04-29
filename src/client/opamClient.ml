@@ -202,7 +202,7 @@ let upgrade_t
                       List.exists (function
                           | Pkgflag_AvoidVersion | Pkgflag_Deprecated -> true
                           | Pkgflag_LightUninstall | Pkgflag_Verbose
-                          | Pkgflag_Plugin | Pkgflag_Compiler
+                          | Pkgflag_Plugin | Pkgflag_Compiler | Pkgflag_Explicit
                           | Pkgflag_Conf | Pkgflag_Unknown _ -> false)
                         (OpamFile.OPAM.flags opam)
                     in

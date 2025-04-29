@@ -748,7 +748,9 @@ let guess_compiler_invariant ?repos rt strings =
   let packages = OpamPackage.keys opams in
   let compiler_packages =
     OpamPackage.Map.filter
-      (fun _ -> OpamFile.OPAM.has_flag Pkgflag_Compiler)
+      (fun _ opam ->
+         OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
+         not (OpamFile.OPAM.has_flag Pkgflag_Explicit opam))
       opams
     |> OpamPackage.keys
   in
