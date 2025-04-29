@@ -1865,7 +1865,13 @@ let compute_root_causes g requested reinstall available =
             let cause = direct_cause act direction action in
             if cause = Unknown then causes else
             try
-              Map.add p (merge_causes (cause,depth) (Map.find p causes)) causes
+              (* Check if we already have a cause for this package *)
+              let existing_cause, existing_depth = Map.find p causes in
+              (* Only update if the new cause is more specific or closer *)
+              if existing_cause = Unknown || depth < existing_depth then
+                Map.add p (cause, depth) causes
+              else
+                causes
             with Not_found ->
               aux seen (depth + 1) p (Map.add p (cause,depth) causes)
           ) causes actions in
