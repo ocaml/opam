@@ -32,6 +32,7 @@ users)
 ## UI
 
 ## Switch
+  * Do not include compiler packages flagged with `avoid-version`/`deprecated` in the invariant when calling `opam switch create [name] <version>` [#6494 @kit-ty-kate]
 
 ## Config
 

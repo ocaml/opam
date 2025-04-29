@@ -75,7 +75,7 @@ depends: "ocaml-system" {= version} | "ocaml-base-compiler" {= version}
 ### opam switch create 5.3.0
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml-base-compiler" {= "5.3.0"} | "ocaml-system" {= "5.3.0"}]
+Switch invariant: ["ocaml-base-compiler" {= "5.3.0"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml-base-compiler.5.3.0
@@ -83,7 +83,7 @@ Done.
 ### opam switch create --solver=builtin-mccs+glpk 5.3-mccs 5.3.0
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml-base-compiler" {= "5.3.0"} | "ocaml-system" {= "5.3.0"}]
+Switch invariant: ["ocaml-base-compiler" {= "5.3.0"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml-base-compiler.5.3.0
@@ -91,7 +91,7 @@ Done.
 ### opam switch create --solver=builtin-0install 5.3-0install 5.3.0
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml-base-compiler" {= "5.3.0"} | "ocaml-system" {= "5.3.0"}]
+Switch invariant: ["ocaml-base-compiler" {= "5.3.0"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml-base-compiler.5.3.0
@@ -151,7 +151,7 @@ flags: [compiler deprecated]
 ### opam switch create deprecated 4.14.0
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml-base-compiler" {= "4.14.0"} | "ocaml-system" {= "4.14.0"}]
+Switch invariant: ["ocaml-base-compiler" {= "4.14.0"}]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml-base-compiler.4.14.0
