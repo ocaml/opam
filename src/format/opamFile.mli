@@ -1129,13 +1129,6 @@ end
 (** {2 urls.txt file *} *)
 module File_attributes: IO_FILE with type t = file_attribute_set
 
-module Stats: sig
-
-  (** Display statistics about file access. *)
-  val print: unit -> unit
-
-end
-
 (** Helper module for manipulation of the raw syntax ([opamfile]) format.
     (the specific file handling modules are derived from this one) *)
 module Syntax : sig

@@ -31,7 +31,6 @@ module E: sig
     | ROOTISOK of bool option
     | SHOW of bool option
     | SKIPUPDATE of bool option
-    | STATS of bool option
     | WORKINGDIR of bool option
     | VERBOSEON of string list option
     val cli: unit -> string option
@@ -41,7 +40,6 @@ module E: sig
 end
 
 type t = private {
-  print_stats: bool;
   pin_kind_auto: bool;
   autoremove: bool;
   editor: string;
@@ -64,7 +62,6 @@ type t = private {
 }
 
 type 'a options_fun =
-  ?print_stats:bool ->
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
@@ -104,7 +101,6 @@ val opam_init:
   ?skip_version_checks:bool ->
   ?all_parens:bool ->
   ?log_dir:OpamTypes.dirname ->
-  ?print_stats:bool ->
   ?pin_kind_auto:bool ->
   ?autoremove:bool ->
   ?editor:string ->
