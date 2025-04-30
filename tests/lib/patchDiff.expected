@@ -341,3 +341,119 @@ patch format
 + second/same-file
   > foo
 
+
+----------------------
+ Test 10: add empty file
+----------------------
+
+*** SETUP ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/im-empty
++ second/same-file
+  > foo
+
+*** DIFF ***
+ERROR: File "src/patch.ml", line 423, characters 58-64: Assertion failed
+
+----------------------
+ Test 11: remove empty file
+----------------------
+
+*** SETUP ***
++ first/
++ first/im-empty
++ first/same-file
+  > foo
++ second/
++ second/same-file
+  > foo
+
+*** DIFF ***
+ERROR: File "src/patch.ml", line 423, characters 58-64: Assertion failed
+
+----------------------
+ Test 12: move file into a new directory
+----------------------
+
+*** SETUP ***
++ first/
++ first/move-me
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/inner
++ second/inner/move-me
+  > bar
++ second/same-file
+  > foo
+
+*** DIFF ***
+--- /dev/null
++++ second/inner/move-me
+@@ -0,0 +1,1 @@
++bar
+--- first/move-me
++++ /dev/null
+@@ -1,1 +0,0 @@
+-bar
+
+*** PATCHED ***
++ first/
++ first/inner
++ first/inner/move-me
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/inner
++ second/inner/move-me
+  > bar
++ second/same-file
+  > foo
+
+
+----------------------
+ Test 13: delete file that deletes the directory
+----------------------
+
+*** SETUP ***
++ first/
++ first/im-here
++ first/im-here/delete-me
+  > bar
++ first/im-not-here
++ first/im-not-here/delete-me
+  > baz
++ first/same-file
+  > foo
++ second/
++ second/im-here
++ second/same-file
+  > foo
+
+*** DIFF ***
+--- first/im-here/delete-me
++++ /dev/null
+@@ -1,1 +0,0 @@
+-bar
+--- first/im-not-here/delete-me
++++ /dev/null
+@@ -1,1 +0,0 @@
+-baz
+\ No newline at end of file
+
+*** PATCHED ***
++ first/
++ first/im-here
++ first/im-not-here
++ first/same-file
+  > foo
++ second/
++ second/im-here
++ second/same-file
+  > foo
+

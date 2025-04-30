@@ -1,6 +1,7 @@
 type content =
   | File of string (* file *)
   | Dir of (string * string) list (* directory with list filename * content *)
+  | NamedDir of string * (string * string) list (* directory with list filename * content *)
   | Symlink (* Soft Link *)
   | Hardlink (* Hard link *)
   | V (* void *)
@@ -164,6 +165,43 @@ let _good_diff =
   "@@ -2,1 +2,0 @@\n" ^
   "-bar\n"
 
+let content_empty_file_snd = [
+  same_file;
+  { name = "im-empty";
+    first = V;
+    second = File "";
+  };
+]
+
+let content_empty_file_fst = [
+  same_file;
+  { name = "im-empty";
+    first = File "";
+    second = V;
+  };
+]
+
+let content_file_fst_to_file_in_dir_snd = [
+  same_file;
+  let name = "move-me" in
+  { name;
+    first = File bar;
+    second = NamedDir ("inner", [name, bar]);
+  };
+]
+
+let content_single_file_in_dir_snd = [
+  same_file;
+  { name = "im-here";
+    first = Dir [ "delete-me", bar];
+    second = Dir [];
+  };
+  { name = "im-not-here";
+    first = Dir [ "delete-me", "baz"];
+    second = V;
+  };
+]
+
 (** Utils *)
 
 let print = Printf.printf
@@ -220,7 +258,13 @@ let write_setup dir content =
   let create inner_dir name = function
     | File content ->
       OpamFilename.write (inner_dir // name) content
-    | Dir lst ->
+    | (Dir _ | NamedDir _) as cdir ->
+      let name, lst =
+        match cdir with
+        | Dir lst -> name, lst
+        | NamedDir (name, lst) -> name, lst
+        | _ -> assert false
+      in
       let inner_dir = inner_dir / name in
       OpamFilename.mkdir inner_dir;
       List.iter (fun (n,c) -> OpamFilename.write (inner_dir // n) c) lst
@@ -271,6 +315,9 @@ let diff_patch dir setup =
           (OpamFilename.Base.of_string second)
       with
       | exception Failure s -> print "ERROR: %s\n" s; None
+      | exception e ->
+        print "ERROR: %s\n" (Printexc.to_string e);
+        None
       | None -> print "No diff\n"; None
       | some -> some
   in
@@ -328,6 +375,22 @@ let tests = [
   { label = "patch truncated";
     content = content_patch_failure_truncated;
     kind = Patch diff_patch_failure_truncated;
+  };
+  { label = "add empty file";
+    content = content_empty_file_snd;
+    kind = DiffPatch;
+  };
+  { label = "remove empty file";
+    content = content_empty_file_fst;
+    kind = DiffPatch;
+  };
+  { label = "move file into a new directory";
+    content = content_file_fst_to_file_in_dir_snd;
+    kind = DiffPatch;
+  };
+  { label = "delete file that deletes the directory";
+    content = content_single_file_in_dir_snd;
+    kind = DiffPatch;
   };
 ]
 
