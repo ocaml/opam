@@ -111,6 +111,7 @@ users)
 ## Reftests
 ### Tests
   * Show the behaviour of `opam switch create` in presence of `avoid-version`/`deprecated` packages [#6494 @kit-ty-kate]
+  * Add some tests showing the behaviour of the internal patch implementation [#6490 @rjbou]
 
 ### Engine
 
