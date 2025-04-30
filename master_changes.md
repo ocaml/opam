@@ -106,6 +106,7 @@ users)
 
 ## Test
   * patchDiff: add some tests showing the handling of empty files and new directories [#6490 @rjbou]
+  * patchDiff: test the diff parser when generated using `git diff` [#6490 @rjbou]
 
 ## Benchmarks
 
