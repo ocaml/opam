@@ -24,6 +24,7 @@
   > foo
 + first/file-only-fst
   > foo
++ first/same-dir
 + first/same-file
   > foo
 + second/
@@ -43,6 +44,7 @@
   > bar
 + second/file-only-snd
   > foo
++ second/same-dir
 + second/same-file
   > foo
 
@@ -100,6 +102,7 @@
 + first/dir-only-fst
 + first/file-only-snd
   > foo
++ first/same-dir
 + first/same-file
   > foo
 + second/
@@ -119,6 +122,7 @@
   > bar
 + second/file-only-snd
   > foo
++ second/same-dir
 + second/same-file
   > foo
 

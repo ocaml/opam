@@ -222,6 +222,7 @@ let write_setup dir content =
       OpamFilename.write (inner_dir // name) content
     | Dir lst ->
       let inner_dir = inner_dir / name in
+      OpamFilename.mkdir inner_dir;
       List.iter (fun (n,c) -> OpamFilename.write (inner_dir // n) c) lst
     | Symlink ->
       OpamFilename.link ~relative:false ~target:(link_f ())
