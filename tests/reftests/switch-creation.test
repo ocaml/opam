@@ -57,3 +57,102 @@ Creating repository from-link...
 
 <><> Upgrading repositories from older opam format ><><><><><><><><><><><><><><>
 Upgrading repository "from-link"...
+### :a: switch create <version> should not have packages tagged with
+### ::: avoid-version in the resulting invariant
+### rm -rf REPO/packages
+### <pkg:ocaml-base-compiler.5.3.0>
+opam-version: "2.0"
+flags: compiler
+### <pkg:ocaml-system.5.3.0>
+opam-version: "2.0"
+flags: [compiler avoid-version]
+### <pkg:ocaml.5.3.0>
+opam-version: "2.0"
+depends: "ocaml-base-compiler" {= version} | "ocaml-system" {= version}
+### <pkg:reverse-ocaml.5.3.0>
+opam-version: "2.0"
+depends: "ocaml-system" {= version} | "ocaml-base-compiler" {= version}
+### opam switch create 5.3.0
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "5.3.0"} | "ocaml-system" {= "5.3.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+Done.
+### opam switch create --solver=builtin-mccs+glpk 5.3-mccs 5.3.0
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "5.3.0"} | "ocaml-system" {= "5.3.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+Done.
+### opam switch create --solver=builtin-0install 5.3-0install 5.3.0
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "5.3.0"} | "ocaml-system" {= "5.3.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+Done.
+### opam switch create system ocaml-system
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-system"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-system.5.3.0
+Done.
+### opam switch create --solver=builtin-mccs+glpk default-mccs ocaml
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+-> installed ocaml.5.3.0
+Done.
+### opam switch create --solver=builtin-0install default-0install ocaml
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+-> installed ocaml.5.3.0
+Done.
+### opam switch create --solver=builtin-mccs+glpk reversed-mccs reverse-ocaml
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["reverse-ocaml"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+-> installed reverse-ocaml.5.3.0
+Done.
+### opam switch create --solver=builtin-0install reversed-0install reverse-ocaml
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["reverse-ocaml"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-system.5.3.0
+-> installed reverse-ocaml.5.3.0
+Done.
+### :b: switch create <version> should not have packages tagged with
+### ::: deprecated in the resulting invariant
+### <pkg:ocaml-base-compiler.4.14.0>
+opam-version: "2.0"
+flags: compiler
+### <pkg:ocaml-system.4.14.0>
+opam-version: "2.0"
+flags: [compiler deprecated]
+### opam switch create deprecated 4.14.0
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "4.14.0"} | "ocaml-system" {= "4.14.0"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.4.14.0
+Done.
