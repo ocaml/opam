@@ -241,10 +241,17 @@ type diff_patch =
   | DiffPatch
   | Patch of string
 
+type setup = {
+  label: string; (* setup label *)
+  content: arborescence list; (* the content of directory, first and second one *)
+  kind: diff_patch; (* what test to run *)
+}
+
 let print_dirs dir =
   print "%s\n" (read_dir dir [ first; second ])
 
-let diff_patch dir content kind =
+let diff_patch dir setup =
+  let { content; kind; _ } = setup in
   write_setup dir content;
   print "*** SETUP ***\n";
   print_dirs dir;
@@ -285,17 +292,42 @@ let diff_patch dir content kind =
 (** The tests *)
 
 let tests = [
-  "normal", content_working_diff, DiffPatch;
-  "diff file/dir error", content_dir_file, DiffPatch;
-  "diff dir/file error", content_file_dir, DiffPatch;
-  "symlink fst", content_symlink_fst, DiffPatch;
-  "symlink snd", content_symlink_snd, DiffPatch;
-  "hardlink fst", content_hardlink_fst, DiffPatch;
-  "hardlink snd", content_hardlink_snd, DiffPatch;
-  "patch error garbage", content_patch_failure_garbage,
-  Patch diff_patch_failure_garbage;
-  "patch truncated", content_patch_failure_truncated,
-  Patch diff_patch_failure_truncated;
+  { label = "normal";
+    content = content_working_diff;
+    kind = DiffPatch;
+  };
+  { label = "diff file/dir error";
+    content = content_dir_file;
+    kind = DiffPatch;
+  };
+  { label = "diff dir/file error";
+    content = content_file_dir;
+    kind = DiffPatch;
+  };
+  { label = "symlink fst";
+    content = content_symlink_fst;
+    kind = DiffPatch;
+  };
+  { label = "symlink snd";
+    content = content_symlink_snd;
+    kind = DiffPatch;
+  };
+  { label = "hardlink fst";
+    content = content_hardlink_fst;
+    kind = DiffPatch;
+  };
+  { label = "hardlink snd";
+    content = content_hardlink_snd;
+    kind = DiffPatch;
+  };
+  { label = "patch error garbage";
+    content = content_patch_failure_garbage;
+    kind = Patch diff_patch_failure_garbage;
+  };
+  { label = "patch truncated";
+    content = content_patch_failure_truncated;
+    kind = Patch diff_patch_failure_truncated;
+  };
 ]
 
 let () =
@@ -304,9 +336,9 @@ let () =
   set_binary_mode_out stdout true;
   Unix.dup2 Unix.stdout Unix.stderr;
   OpamFilename.with_tmp_dir @@ fun dir ->
-  List.iteri (fun i (label, content, kind) ->
+  List.iteri (fun i setup ->
       print "\n----------------------\n";
-      print " Test %d: %s\n" (i+1) label;
+      print " Test %d: %s\n" (i+1) setup.label;
       print "----------------------\n\n";
-      diff_patch dir content kind)
+      diff_patch dir setup)
     tests
