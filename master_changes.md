@@ -113,6 +113,7 @@ users)
 
 ## Github Actions
   * Add depext job for depext test on Altlinux [#6277 @rjbou]
+  * Upgrade the opam binary used for the depexts run to `2.4.0~alpha1` [#6277 @kit-ty-kate]
 
 ## Doc
 
