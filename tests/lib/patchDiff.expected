@@ -560,8 +560,20 @@ similarity index 100%
 rename from move-me
 rename to inner/move-me
 
-*** GIT PATCH ERROR ***
-ERROR: Unix.Unix_error(Unix.ENOENT, "rename", "/tmp/build_c0ffee_dune/opam-c0ffee-c0ffee/first/move-me")
+*** GIT PATCHED ***
++ first/
++ first/inner
++ first/inner/move-me
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/inner
++ second/inner/move-me
+  > bar
++ second/same-file
+  > foo
+
 
 ----------------------
  Test 13: delete file that deletes the directory

@@ -63,13 +63,12 @@ OPAM/repo/repo/packages/first/first.1/files/fst/another-file
 REPOSITORY                      update repo from git+file://${BASEDIR}/REPO
 [repo] synchronised from git+file://${BASEDIR}/REPO
 REPOSITORY                      repo: applying patch update at ${BASEDIR}/OPAM/log/git-diff
-[ERROR] Could not update repository "repo": ${OPAM}: "rename" failed on ${BASEDIR}/OPAM/repo/repo/packages/first/first.1/files/fst/another-file: No such file or directory
-# Return code 40 #
 ### find OPAM/repo/repo/packages/first/first.1/files | sort | grep -v .git
 OPAM/repo/repo/packages/first/first.1/files
 OPAM/repo/repo/packages/first/first.1/files/fst
 OPAM/repo/repo/packages/first/first.1/files/fst/a-file
-OPAM/repo/repo/packages/first/first.1/files/fst/another-file
+OPAM/repo/repo/packages/first/first.1/files/snd
+OPAM/repo/repo/packages/first/first.1/files/snd/another-file
 ### :I:4: remove empty directories
 ### git -C ./REPO rm packages/first/first.1/files/fst/a-file
 rm 'packages/first/first.1/files/fst/a-file'
@@ -80,9 +79,7 @@ rm 'packages/first/first.1/files/fst/a-file'
 REPOSITORY                      update repo from git+file://${BASEDIR}/REPO
 [repo] synchronised from git+file://${BASEDIR}/REPO
 REPOSITORY                      repo: applying patch update at ${BASEDIR}/OPAM/log/git-diff
-[ERROR] Could not update repository "repo": ${OPAM}: "rename" failed on ${BASEDIR}/OPAM/repo/repo/packages/first/first.1/files/fst/another-file: No such file or directory
-# Return code 40 #
 ### find OPAM/repo/repo/packages/first/first.1/files | sort | grep -v .git
 OPAM/repo/repo/packages/first/first.1/files
-OPAM/repo/repo/packages/first/first.1/files/fst
-OPAM/repo/repo/packages/first/first.1/files/fst/another-file
+OPAM/repo/repo/packages/first/first.1/files/snd
+OPAM/repo/repo/packages/first/first.1/files/snd/another-file

@@ -1657,8 +1657,7 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
     | Patch.Git_ext (_, _, Patch.Rename_only (src, dst)) ->
       let src = get_path src in
       let dst = get_path dst in
-      (* we use rename as we have all guarantee *)
-      Unix.rename src dst;
+      mv src dst;
       let dirname_src = Filename.dirname src in
       if dirname_src <> (Filename.dirname dst : string) then
         rmdir_cleanup dirname_src
