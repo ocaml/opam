@@ -515,8 +515,11 @@ module SWHID = struct
                    | Some computed ->
                      if String.equal computed hash then
                        (List.iter (fun (_nv, dst, _sp) ->
-                            (* add a text *)
-                            OpamFilename.copy_dir ~src:sources ~dst)
+                            match dst with
+                            | None -> ()
+                            | Some dst ->
+                              (* add a text *)
+                              OpamFilename.copy_dir ~src:sources ~dst)
                            dirnames;
                         Result (Some "SWH fallback"))
                      else

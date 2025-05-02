@@ -42,6 +42,6 @@ module SWHID: sig
      string label * dirname * subpath option. *)
   val archive_fallback:
     ?max_tries:int -> OpamFile.URL.t ->
-    (string * dirname * subpath option) list ->
+    (string * dirname option * subpath option) list ->
     string option download OpamProcess.job
 end
