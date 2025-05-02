@@ -257,7 +257,7 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
             (already, fname::modified, nonempty, cannot)
           else if cur_item_ct = Some Dir then
             let d = OpamFilename.Dir.of_string f in
-            if OpamFilename.dir_is_empty d then
+            if OpamFilename.dir_is_empty d = Some true then
               (rmdir d; acc)
             else
               let nonempty =

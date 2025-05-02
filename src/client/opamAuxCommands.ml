@@ -64,14 +64,18 @@ let remove_files_from_destdir st pfx packages =
            (OpamConsole.colorise `bold (OpamFilename.to_string f));
        if not OpamStateConfig.(!r.dryrun) then OpamFilename.remove f)
     else if OpamFilename.exists_dir d then
-      if OpamFilename.dir_is_empty d then
-        (if OpamConsole.verbose () then
-           OpamConsole.msg "Removing %s\n"
-             (OpamConsole.colorise `bold (OpamFilename.Dir.to_string d));
-         if not OpamStateConfig.(!r.dryrun) then OpamFilename.rmdir d)
-      else
+      begin match OpamFilename.dir_is_empty d with
+      | Some true ->
+        if OpamConsole.verbose () then
+          OpamConsole.msg "Removing %s\n"
+            (OpamConsole.colorise `bold (OpamFilename.Dir.to_string d));
+        if not OpamStateConfig.(!r.dryrun) then
+          OpamFilename.rmdir d
+      | Some false ->
         OpamConsole.note "Not removing non-empty directory %s"
           (OpamConsole.colorise `bold (OpamFilename.Dir.to_string d))
+      | None -> ()
+      end
   | _ -> ()
 
 let name_from_project_dirname d =

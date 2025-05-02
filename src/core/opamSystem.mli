@@ -174,7 +174,9 @@ val rec_dirs: string -> string list
 (** Return the list of directories in the current directory. *)
 val dirs: string -> string list
 
-val dir_is_empty: string -> bool
+(** Returns whether a directory is empty.
+    Returns [None] if the directory could not be found. *)
+val dir_is_empty: string -> bool option
 
 (** [directories_with_links dir] returns the directories in the directory [dir].
     Links pointing to directory are also returned. *)

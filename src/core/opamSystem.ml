@@ -389,8 +389,17 @@ let dirs dir =
   directories_with_links dir
 
 let dir_is_empty dir =
-  try in_dir dir (fun () -> Sys.readdir (Sys.getcwd ()) = [||])
-  with File_not_found _ -> false
+  try
+    let dir = Unix.opendir dir in
+    Fun.protect ~finally:(fun () -> Unix.closedir dir) @@ fun () ->
+    let rec loop () =
+      match Unix.readdir dir with
+      | "." | ".." -> loop ()
+      | _ -> false
+      | exception End_of_file -> true
+    in
+    Some (loop ())
+  with Unix.Unix_error(Unix.ENOENT, _, _) -> None
 
 let with_tmp_dir fn =
   let dir = mk_temp_dir () in

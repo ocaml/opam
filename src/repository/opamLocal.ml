@@ -87,7 +87,7 @@ let rsync ?(args=[]) ?(exclude_vcdirs=true) src dst =
   else (
     OpamSystem.mkdir dst;
     let convert_path = Lazy.force convert_path in
-    call_rsync (fun () -> not (OpamSystem.dir_is_empty dst))
+    call_rsync (fun () -> OpamSystem.dir_is_empty dst = Some false)
       ( rsync_arg :: args @ exclude_args @
         [ "--delete"; "--delete-excluded"; convert_path src; convert_path dst; ])
     @@| function
@@ -174,8 +174,7 @@ module B = struct
     | Up_to_date _ ->
       finalise (); Done OpamRepositoryBackend.Update_empty
     | Result _ ->
-      if not (OpamFilename.exists_dir repo_root) ||
-         OpamFilename.dir_is_empty repo_root then
+      if OpamFilename.dir_is_empty repo_root <> Some false then
         Done (OpamRepositoryBackend.Update_full quarantine)
       else
         OpamStd.Exn.finally finalise @@ fun () ->

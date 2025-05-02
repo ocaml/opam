@@ -74,7 +74,7 @@ let rmdir dirname =
 
 let rec rmdir_cleanup dirname =
   let sd = Dir.to_string dirname in
-  if OpamSystem.dir_is_empty sd then (
+  if OpamSystem.dir_is_empty sd = Some true then (
     rmdir dirname;
     let parent = Filename.dirname sd in
     if parent <> sd then rmdir_cleanup parent

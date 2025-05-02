@@ -145,3 +145,4 @@ users)
 
 ## opam-core
   * `OpamSystem`: remove `print_stats` function [#6485 @hannesm]
+  * `OpamSystem.dir_is_empty`: Speedup and change its type to handle unreachable directories better [#6490 @kit-ty-kate]

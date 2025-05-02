@@ -130,7 +130,7 @@ let clean_repo_tmp tmp_dir =
     (let dir = Lazy.force tmp_dir in
      OpamFilename.rmdir dir;
      let parent = OpamFilename.dirname_dir dir in
-     if OpamFilename.dir_is_empty parent then
+     if OpamFilename.dir_is_empty parent = Some true then
        OpamFilename.rmdir parent)
 
 let remove_from_repos_tmp rt name =
