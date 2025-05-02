@@ -2206,14 +2206,13 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
           nvs (t, deps_of_packages))
       dname_map (t, OpamPackage.Set.empty)
   in
-  let pkg_skip, pkg_new =
-    get_installed_atoms t atoms in
-  let atoms, deps_atoms =
+  let pkg_skip, _pkg_new = get_installed_atoms t atoms in
+  let atoms, atoms_and_deps =
     if deps_only then
       [],
       List.map (fun (n, c) -> OpamPackage.Name.Map.find n dname_map, c) atoms
     else
-      atoms, []
+      atoms, atoms
   in
   let pkg_reinstall =
     if assume_built then OpamPackage.Set.of_list pkg_skip
@@ -2278,23 +2277,26 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
 
   OpamSolution.check_availability t available_packages atoms;
 
-  if pkg_new = [] && OpamPackage.Set.is_empty pkg_reinstall &&
+  if atoms_and_deps = [] &&
+     OpamPackage.Set.is_empty pkg_reinstall &&
      formula = OpamFormula.Empty
   then t else
-  let t, atoms =
+  let t, atoms_and_deps =
     if assume_built then
+      (* NOTE: it is safe because --assume-built and --deps-only
+         cannot be used together *)
       assume_built_restrictions ~available_packages t atoms
-    else t, atoms
+    else t, atoms_and_deps
   in
   let request =
     OpamSolver.request ()
-      ~install:(atoms @ deps_atoms)
+      ~install:atoms_and_deps
       ~deprequest:(OpamFormula.to_atom_formula formula)
   in
   let requested =
-    OpamPackage.Name.Set.of_list (List.rev_map fst (atoms @ deps_atoms))
+    OpamPackage.Name.Set.of_list (List.rev_map fst atoms_and_deps)
   in
-  let packages = OpamFormula.packages_of_atoms t.packages (atoms @ deps_atoms) in
+  let packages = OpamFormula.packages_of_atoms t.packages atoms_and_deps in
   let solution =
     let reinstall = if assume_built then Some pkg_reinstall else None in
     OpamSolution.resolve t Install
