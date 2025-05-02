@@ -79,10 +79,10 @@ let get_files_for_diff parent_dir dir1 dir2 =
   match dir1, dir2 with
   | None, None -> assert false
   | Some dir, None ->
-    List.map (fun file -> Patch.Delete (dir^"/"^file))
+    List.map (fun file -> (Some (dir^"/"^file), None))
       (getfiles parent_dir dir)
   | None, Some dir ->
-    List.map (fun file -> Patch.Create (dir^"/"^file))
+    List.map (fun file -> (None, Some (dir^"/"^file)))
       (getfiles parent_dir dir)
   | Some dir1, Some dir2 ->
     let files1 = List.fast_sort String.compare (getfiles parent_dir dir1) in
@@ -91,18 +91,16 @@ let get_files_for_diff parent_dir dir1 dir2 =
       | (file1::files1 as orig1), (file2::files2 as orig2) ->
         let cmp = String.compare file1 file2 in
         if cmp = 0 then
-          aux (Patch.Edit
-                 (dir1^"/"^file1, dir2^"/"^file2)
-               :: acc)
+          aux ((Some (dir1^"/"^file1), Some (dir2^"/"^file2)) :: acc)
             files1 files2
         else if cmp < 0 then
-          aux (Patch.Delete (dir1^"/"^file1) :: acc) files1 orig2
+          aux ((Some (dir1^"/"^file1), None) :: acc) files1 orig2
         else
-          aux (Patch.Create (dir2^"/"^file2) :: acc) orig1 files2
+          aux ((None, Some (dir2^"/"^file2)) :: acc) orig1 files2
       | file1::files1, [] ->
-        aux (Patch.Delete (dir1^"/"^file1) :: acc) files1 []
+        aux ((Some (dir1^"/"^file1), None) :: acc) files1 []
       | [], file2::files2 ->
-        aux (Patch.Create (dir2^"/"^file2) :: acc) [] files2
+        aux ((None, Some (dir2^"/"^file2)) :: acc) [] files2
       | [], [] ->
         acc
     in
@@ -115,8 +113,10 @@ let get_diff parent_dir dir1 dir2 =
     (slog OpamFilename.Base.to_string) dir1
     (slog OpamFilename.Base.to_string) dir2;
   let readfile parent_dir file =
-    let file = Filename.concat (OpamFilename.Dir.to_string parent_dir) file in
-    OpamSystem.read file
+    let real_file =
+      Filename.concat (OpamFilename.Dir.to_string parent_dir) file
+    in
+    (file, OpamSystem.read real_file)
   in
   let lstat_opt parent_dir = function
     | None -> None
@@ -127,15 +127,9 @@ let get_diff parent_dir dir1 dir2 =
   let rec aux diffs dir1 dir2 =
     let files = get_files_for_diff parent_dir dir1 dir2 in
     let diffs =
-      List.fold_left (fun diffs operation ->
-          let file1, file2 = match operation with
-            | Patch.Delete filename -> (Some filename, None)
-            | Patch.Create filename -> (None, Some filename)
-            | Patch.Edit (file1, file2)
-            | Patch.Rename_only (file1, file2) -> (Some file1, Some file2)
-          in
+      List.fold_left (fun diffs (file1, file2) ->
           let add_to_diffs content1 content2 diffs =
-            match Patch.diff operation content1 content2 with
+            match Patch.diff content1 content2 with
             | None -> diffs
             | Some diff -> diff :: diffs
           in

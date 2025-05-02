@@ -52,8 +52,7 @@ module B = struct
     @@ fun () ->
     OpamRepositoryBackend.job_text repo_name "sync"
       (sync_state repo_name quarantine url) @@+ fun () ->
-    if not (OpamFilename.exists_dir repo_root) ||
-       OpamFilename.dir_is_empty repo_root then
+    if OpamFilename.dir_is_empty repo_root <> Some false then
       Done (OpamRepositoryBackend.Update_full quarantine)
     else
       OpamStd.Exn.finally finalise @@ fun () ->

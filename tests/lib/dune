@@ -12,4 +12,4 @@
 (test
   (name patchDiff)
   (modules patchDiff)
-  (libraries opam-repository))
+  (libraries str opam-repository))

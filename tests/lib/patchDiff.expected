@@ -24,6 +24,7 @@
   > foo
 + first/file-only-fst
   > foo
++ first/same-dir
 + first/same-file
   > foo
 + second/
@@ -43,6 +44,7 @@
   > bar
 + second/file-only-snd
   > foo
++ second/same-dir
 + second/same-file
   > foo
 
@@ -97,9 +99,9 @@
 + first/diff-file-plus-snd
   > foo
   > bar
-+ first/dir-only-fst
 + first/file-only-snd
   > foo
++ first/same-dir
 + first/same-file
   > foo
 + second/
@@ -119,6 +121,97 @@
   > bar
 + second/file-only-snd
   > foo
++ second/same-dir
++ second/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/diff-dir-plus-fst/fst a/diff-dir-plus-fst/fst
+index c0ffee..c0ffee c0ffee
+--- b/diff-dir-plus-fst/fst
++++ a/diff-dir-plus-fst/fst
+@@ -1 +1,2 @@
+ foo
++bar
+diff --git b/diff-dir-plus-snd/fst a/diff-dir-plus-snd/fst
+index c0ffee..c0ffee c0ffee
+--- b/diff-dir-plus-snd/fst
++++ a/diff-dir-plus-snd/fst
+@@ -1,2 +1 @@
+ foo
+-bar
+diff --git b/diff-file a/diff-file
+index c0ffee..c0ffee c0ffee
+--- b/diff-file
++++ a/diff-file
+@@ -1 +1 @@
+-foo
++bar
+diff --git b/diff-file-plus-fst a/diff-file-plus-fst
+index c0ffee..c0ffee c0ffee
+--- b/diff-file-plus-fst
++++ a/diff-file-plus-fst
+@@ -1,2 +1 @@
+ foo
+-bar
+diff --git b/diff-file-plus-snd a/diff-file-plus-snd
+index c0ffee..c0ffee c0ffee
+--- b/diff-file-plus-snd
++++ a/diff-file-plus-snd
+@@ -1 +1,2 @@
+ foo
++bar
+diff --git b/file-only-fst a/file-only-fst
+deleted file mode c0ffee
+index c0ffee..c0ffee
+--- b/file-only-fst
++++ /dev/null
+@@ -1 +0,0 @@
+-foo
+diff --git b/dir-only-fst/fst a/file-only-snd
+similarity index 100%
+rename from dir-only-fst/fst
+rename to file-only-snd
+
+*** GIT PATCHED ***
++ first/
++ first/diff-dir-plus-fst
++ first/diff-dir-plus-fst/fst
+  > foo
+  > bar
++ first/diff-dir-plus-snd
++ first/diff-dir-plus-snd/fst
+  > foo
++ first/diff-file
+  > bar
++ first/diff-file-plus-fst
+  > foo
++ first/diff-file-plus-snd
+  > foo
+  > bar
++ first/file-only-snd
+  > foo
++ first/same-dir
++ first/same-file
+  > foo
++ second/
++ second/diff-dir-plus-fst
++ second/diff-dir-plus-fst/fst
+  > foo
+  > bar
++ second/diff-dir-plus-snd
++ second/diff-dir-plus-snd/fst
+  > foo
++ second/diff-file
+  > bar
++ second/diff-file-plus-fst
+  > foo
++ second/diff-file-plus-snd
+  > foo
+  > bar
++ second/file-only-snd
+  > foo
++ second/same-dir
 + second/same-file
   > foo
 
@@ -334,6 +427,216 @@ patch format
   > bar
 + second/diff-file-plus-fst
   > foo
++ second/same-file
+  > foo
+
+
+----------------------
+ Test 10: add empty file
+----------------------
+
+*** SETUP ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/im-empty
++ second/same-file
+  > foo
+
+*** DIFF ***
+diff --git second/im-empty second/im-empty
+new file mode 100644
+
+*** PATCHED ***
++ first/
++ first/im-empty
++ first/same-file
+  > foo
++ second/
++ second/im-empty
++ second/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/im-empty a/im-empty
+new file mode c0ffee
+index c0ffee..c0ffee
+
+*** GIT PATCHED ***
++ first/
++ first/im-empty
++ first/same-file
+  > foo
++ second/
++ second/im-empty
++ second/same-file
+  > foo
+
+
+----------------------
+ Test 11: remove empty file
+----------------------
+
+*** SETUP ***
++ first/
++ first/im-empty
++ first/same-file
+  > foo
++ second/
++ second/same-file
+  > foo
+
+*** DIFF ***
+diff --git first/im-empty first/im-empty
+deleted file mode 100644
+
+*** PATCHED ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/im-empty a/im-empty
+deleted file mode c0ffee
+index c0ffee..c0ffee
+
+*** GIT PATCHED ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/same-file
+  > foo
+
+
+----------------------
+ Test 12: move file into a new directory
+----------------------
+
+*** SETUP ***
++ first/
++ first/move-me
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/inner
++ second/inner/move-me
+  > bar
++ second/same-file
+  > foo
+
+*** DIFF ***
+--- /dev/null
++++ second/inner/move-me
+@@ -0,0 +1,1 @@
++bar
+--- first/move-me
++++ /dev/null
+@@ -1,1 +0,0 @@
+-bar
+
+*** PATCHED ***
++ first/
++ first/inner
++ first/inner/move-me
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/inner
++ second/inner/move-me
+  > bar
++ second/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/move-me a/inner/move-me
+similarity index 100%
+rename from move-me
+rename to inner/move-me
+
+*** GIT PATCHED ***
++ first/
++ first/inner
++ first/inner/move-me
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/inner
++ second/inner/move-me
+  > bar
++ second/same-file
+  > foo
+
+
+----------------------
+ Test 13: delete file that deletes the directory
+----------------------
+
+*** SETUP ***
++ first/
++ first/im-here
++ first/im-here/delete-me
+  > bar
++ first/im-not-here
++ first/im-not-here/delete-me
+  > baz
++ first/same-file
+  > foo
++ second/
++ second/im-here
++ second/same-file
+  > foo
+
+*** DIFF ***
+--- first/im-here/delete-me
++++ /dev/null
+@@ -1,1 +0,0 @@
+-bar
+--- first/im-not-here/delete-me
++++ /dev/null
+@@ -1,1 +0,0 @@
+-baz
+\ No newline at end of file
+
+*** PATCHED ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/im-here
++ second/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/im-here/delete-me a/im-here/delete-me
+deleted file mode c0ffee
+index c0ffee..c0ffee
+--- b/im-here/delete-me
++++ /dev/null
+@@ -1 +0,0 @@
+-bar
+diff --git b/im-not-here/delete-me a/im-not-here/delete-me
+deleted file mode c0ffee
+index c0ffee..c0ffee
+--- b/im-not-here/delete-me
++++ /dev/null
+@@ -1 +0,0 @@
+-baz
+\ No newline at end of file
+
+*** GIT PATCHED ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/im-here
 + second/same-file
   > foo
 

@@ -1805,9 +1805,7 @@ let init
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
   let original_root = OpamStateConfig.(!r.original_root_dir) in
-  let root_empty =
-    not (OpamFilename.exists_dir original_root)
-    || OpamFilename.dir_is_empty original_root in
+  let root_empty = OpamFilename.dir_is_empty original_root <> Some false in
   let root = OpamStateConfig.(!r.root_dir) in
   let root, remove_root =
     let ignore_non_fatal f x =

@@ -1,0 +1,85 @@
+N0REP0
+### <REPO/repo>
+opam-version: "2.0"
+### <REPO/packages/first/first.1/opam>
+opam-version: "2.0"
+### <REPO/packages/first/first.1/files/fst/a-file>
+I'm some content
+### <REPO/packages/first/first.1/files/fst/another-file>
+I'm some content
+### :I: Git updates
+### git -C ./REPO init -q
+### git -C ./REPO config core.autocrlf false
+### git -C ./REPO add repo
+### git -C ./REPO add packages/first
+### git -C ./REPO commit -qm "first"
+### opam repository add repo git+file://${BASEDIR}/REPO --set-default
+[repo] Initialised
+### opam repository remove default --all
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS="REPOSITORY REPO_BACKEND"
+### find OPAM/repo/repo/packages/first/first.1/files | sort | grep -v .git
+OPAM/repo/repo/packages/first/first.1/files
+OPAM/repo/repo/packages/first/first.1/files/fst
+OPAM/repo/repo/packages/first/first.1/files/fst/a-file
+OPAM/repo/repo/packages/first/first.1/files/fst/another-file
+### :I:1: Add empty file
+### touch REPO/packages/first/first.1/files/empty
+### git -C ./REPO add packages/first/first.1/files/empty
+### git -C ./REPO commit -qm "add empty file"
+### opam update | "diff-[0-9a-f]+-[0-9a-f]+" -> "diff"
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+REPOSITORY                      update repo from git+file://${BASEDIR}/REPO
+[repo] synchronised from git+file://${BASEDIR}/REPO
+REPOSITORY                      repo: applying patch update at ${BASEDIR}/OPAM/log/git-diff
+### find OPAM/repo/repo/packages/first/first.1/files | sort | grep -v .git
+OPAM/repo/repo/packages/first/first.1/files
+OPAM/repo/repo/packages/first/first.1/files/empty
+OPAM/repo/repo/packages/first/first.1/files/fst
+OPAM/repo/repo/packages/first/first.1/files/fst/a-file
+OPAM/repo/repo/packages/first/first.1/files/fst/another-file
+### :I:2: Remove empty file
+### git -C ./REPO rm packages/first/first.1/files/empty
+rm 'packages/first/first.1/files/empty'
+### git -C ./REPO commit -qm "remove empty file"
+### opam update | "diff-[0-9a-f]+-[0-9a-f]+" -> "diff"
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+REPOSITORY                      update repo from git+file://${BASEDIR}/REPO
+[repo] synchronised from git+file://${BASEDIR}/REPO
+REPOSITORY                      repo: applying patch update at ${BASEDIR}/OPAM/log/git-diff
+### find OPAM/repo/repo/packages/first/first.1/files | sort | grep -v .git
+OPAM/repo/repo/packages/first/first.1/files
+OPAM/repo/repo/packages/first/first.1/files/fst
+OPAM/repo/repo/packages/first/first.1/files/fst/a-file
+OPAM/repo/repo/packages/first/first.1/files/fst/another-file
+### :I:3: Move a file into a new directory
+### mkdir REPO/packages/first/first.1/files/snd
+### git -C ./REPO mv packages/first/first.1/files/fst/another-file packages/first/first.1/files/snd/another-file
+### git -C ./REPO commit -qm "move file into another directory"
+### opam update | "diff-[0-9a-f]+-[0-9a-f]+" -> "diff"
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+REPOSITORY                      update repo from git+file://${BASEDIR}/REPO
+[repo] synchronised from git+file://${BASEDIR}/REPO
+REPOSITORY                      repo: applying patch update at ${BASEDIR}/OPAM/log/git-diff
+### find OPAM/repo/repo/packages/first/first.1/files | sort | grep -v .git
+OPAM/repo/repo/packages/first/first.1/files
+OPAM/repo/repo/packages/first/first.1/files/fst
+OPAM/repo/repo/packages/first/first.1/files/fst/a-file
+OPAM/repo/repo/packages/first/first.1/files/snd
+OPAM/repo/repo/packages/first/first.1/files/snd/another-file
+### :I:4: remove empty directories
+### git -C ./REPO rm packages/first/first.1/files/fst/a-file
+rm 'packages/first/first.1/files/fst/a-file'
+### git -C ./REPO commit -qm "remove single file in directory"
+### opam update | "diff-[0-9a-f]+-[0-9a-f]+" -> "diff"
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+REPOSITORY                      update repo from git+file://${BASEDIR}/REPO
+[repo] synchronised from git+file://${BASEDIR}/REPO
+REPOSITORY                      repo: applying patch update at ${BASEDIR}/OPAM/log/git-diff
+### find OPAM/repo/repo/packages/first/first.1/files | sort | grep -v .git
+OPAM/repo/repo/packages/first/first.1/files
+OPAM/repo/repo/packages/first/first.1/files/snd
+OPAM/repo/repo/packages/first/first.1/files/snd/another-file

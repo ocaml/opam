@@ -46,6 +46,9 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Fix a crash when updating a repository that is deleting or adding empty files [#6490 @kit-ty-kate]
+  * Fix an extreme performance issue (takes several hours) when applying a large repository update [#6490 @kit-ty-kate]
+  * Fix a crash when updating a git repository that moved a file to a new directory [#6490 @kit-ty-kate]
 
 ## Tree
 
@@ -75,6 +78,8 @@ users)
 ## VCS
 
 ## Build
+  * Update the requirement for the `patch` library to `3.0.0~alpha2` [#6490 @kit-ty-kate]
+  * Upgrade the downloaded-if-missing `patch` to `3.0.0~alpha2` [#6490 @kit-ty-kate]
 
 ## Infrastructure
 
@@ -105,12 +110,15 @@ users)
 ## Internal: Windows
 
 ## Test
+  * patchDiff: add some tests showing the handling of empty files and new directories [#6490 @rjbou]
+  * patchDiff: test the diff parser when generated using `git diff` [#6490 @rjbou]
 
 ## Benchmarks
 
 ## Reftests
 ### Tests
   * Show the behaviour of `opam switch create` in presence of `avoid-version`/`deprecated` packages [#6494 @kit-ty-kate]
+  * Add some tests showing the behaviour of the internal patch implementation [#6490 @rjbou]
 
 ### Engine
 
@@ -138,3 +146,7 @@ users)
 
 ## opam-core
   * `OpamSystem`: remove `print_stats` function [#6485 @hannesm]
+  * `OpamSystem`: add the `rmdir_cleanup` function [#6490 @kit-ty-kate]
+  * `OpamSystem.dir_is_empty`: Speedup and change its type to handle unreachable directories better [#6490 @kit-ty-kate]
+  * `OpamSystem.internal_patch`: remove parent directories when all of their content has been moved somewhere else [#6490 @kit-ty-kate]
+  * `OpamSystem.internal_patch`: fix moving files to new directories when receiving a git diff [#6490 @kit-ty-kate]

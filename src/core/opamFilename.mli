@@ -50,7 +50,9 @@ val mkdir: Dir.t -> unit
 (** List the sub-directory recursively *)
 val rec_dirs: Dir.t -> Dir.t list
 
-val dir_is_empty: Dir.t -> bool
+(** Returns whether a directory is empty.
+    Returns [None] if the directory could not be found. *)
+val dir_is_empty: Dir.t -> bool option
 
 (** List the sub-directory (do not recurse) *)
 val dirs: Dir.t -> Dir.t list
