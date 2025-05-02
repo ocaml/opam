@@ -447,7 +447,34 @@ patch format
   > foo
 
 *** DIFF ***
-ERROR: File "src/patch.ml", line 423, characters 58-64: Assertion failed
+diff --git second/im-empty second/im-empty
+new file mode 100644
+
+*** PATCHED ***
++ first/
++ first/im-empty
++ first/same-file
+  > foo
++ second/
++ second/im-empty
++ second/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/im-empty a/im-empty
+new file mode c0ffee
+index c0ffee..c0ffee
+
+*** GIT PATCHED ***
++ first/
++ first/im-empty
++ first/same-file
+  > foo
++ second/
++ second/im-empty
++ second/same-file
+  > foo
+
 
 ----------------------
  Test 11: remove empty file
@@ -463,7 +490,30 @@ ERROR: File "src/patch.ml", line 423, characters 58-64: Assertion failed
   > foo
 
 *** DIFF ***
-ERROR: File "src/patch.ml", line 423, characters 58-64: Assertion failed
+diff --git first/im-empty first/im-empty
+deleted file mode 100644
+
+*** PATCHED ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/im-empty a/im-empty
+deleted file mode c0ffee
+index c0ffee..c0ffee
+
+*** GIT PATCHED ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/same-file
+  > foo
+
 
 ----------------------
  Test 12: move file into a new directory

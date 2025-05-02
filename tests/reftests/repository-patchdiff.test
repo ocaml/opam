@@ -34,6 +34,7 @@ REPOSITORY                      update repo from git+file://${BASEDIR}/REPO
 REPOSITORY                      repo: applying patch update at ${BASEDIR}/OPAM/log/git-diff
 ### find OPAM/repo/repo/packages/first/first.1/files | sort | grep -v .git
 OPAM/repo/repo/packages/first/first.1/files
+OPAM/repo/repo/packages/first/first.1/files/empty
 OPAM/repo/repo/packages/first/first.1/files/fst
 OPAM/repo/repo/packages/first/first.1/files/fst/a-file
 OPAM/repo/repo/packages/first/first.1/files/fst/another-file
@@ -45,9 +46,8 @@ rm 'packages/first/first.1/files/empty'
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 REPOSITORY                      update repo from git+file://${BASEDIR}/REPO
-REPOSITORY                      update empty, no validation performed
-[repo] no changes from git+file://${BASEDIR}/REPO
-REPOSITORY                      repo: applying empty update
+[repo] synchronised from git+file://${BASEDIR}/REPO
+REPOSITORY                      repo: applying patch update at ${BASEDIR}/OPAM/log/git-diff
 ### find OPAM/repo/repo/packages/first/first.1/files | sort | grep -v .git
 OPAM/repo/repo/packages/first/first.1/files
 OPAM/repo/repo/packages/first/first.1/files/fst

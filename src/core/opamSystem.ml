@@ -1630,14 +1630,14 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
       let content = read file in
       let content = patch ~file:file (Some content) diff in
       write file content;
-    | Patch.Delete file ->
+    | Patch.Delete file | Patch.Git_ext (file, _, Patch.Delete_only) ->
       let file = get_path file in
       remove_file_t ~with_log:false file
-    | Patch.Create file ->
+    | Patch.Create file | Patch.Git_ext (_, file, Patch.Create_only) ->
       let file = get_path file in
       let content = patch ~file None diff in
       write file content
-    | Patch.Rename_only (src, dst) ->
+    | Patch.Git_ext (_, _, Patch.Rename_only (src, dst)) ->
       let src = get_path src in
       let dst = get_path dst in
       (* we use rename as we have all guarantee *)

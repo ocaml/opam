@@ -46,6 +46,8 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Fix a crash when updating a repository that is deleting or adding empty files [#6490 @kit-ty-kate]
+  * Fix an extreme performance issue (takes several hours) when applying a large repository update [#6490 @kit-ty-kate]
 
 ## Tree
 
@@ -75,6 +77,8 @@ users)
 ## VCS
 
 ## Build
+  * Update the requirement for the `patch` library to `3.0.0~alpha2` [#6490 @kit-ty-kate]
+  * Upgrade the downloaded-if-missing `patch` to `3.0.0~alpha2` [#6490 @kit-ty-kate]
 
 ## Infrastructure
 
