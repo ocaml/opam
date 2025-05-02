@@ -747,8 +747,22 @@ let guess_compiler_invariant ?repos rt strings =
   let opams = OpamRepositoryState.build_index rt repos  in
   let packages = OpamPackage.keys opams in
   let compiler_packages =
+    let env =
+      fun full_var ->
+        let var = OpamVariable.Full.variable full_var in
+        if
+          List.exists (fun (var', _, _) -> OpamVariable.equal var var')
+            OpamInitDefaults.eval_variables
+        then
+          Some (S "")
+        else
+          None
+    in
     OpamPackage.Map.filter
-      (fun _ -> OpamFile.OPAM.has_flag Pkgflag_Compiler)
+      (fun _ opam ->
+         OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
+         OpamFilter.partial_eval env
+           (OpamFile.OPAM.available opam) <> FBool false)
       opams
     |> OpamPackage.keys
   in
