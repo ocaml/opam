@@ -260,8 +260,9 @@ module Cygwin = struct
   let download_setupexe dst =
     let overwrite = true in
     let kind = `SHA512 in
+    let dst_exists = OpamFilename.exists dst in
     let current_checksum =
-      if OpamFilename.exists dst then
+      if dst_exists then
         Some (OpamHash.compute ~kind (OpamFilename.to_string dst))
       else
         None
@@ -269,11 +270,21 @@ module Cygwin = struct
     let open OpamProcess.Job.Op in
     log "Downloading Cygwin setup checksums";
     if OpamConsole.disp_status_line () then
-      if OpamFilename.exists dst then
+      if dst_exists then
         OpamConsole.status_line "Checking if Cygwin setup is up-to-date"
       else
         OpamConsole.status_line "Downloading Cygwin setup from cygwin.com";
     OpamFilename.with_tmp_dir_job @@ fun dir ->
+    OpamProcess.Job.catch
+      (fun exn ->
+         let backtrace = Printexc.get_raw_backtrace () in
+         if dst_exists then begin
+           OpamConsole.warning "%s failed to update" setupexe;
+           Done ()
+         end else
+           Printexc.raise_with_backtrace exn backtrace
+      )
+    @@ fun () ->
     OpamDownload.download ~overwrite url_setupexe_sha512 dir @@+ fun file ->
     let checksum =
       let content = OpamFilename.read file in
@@ -293,7 +304,7 @@ module Cygwin = struct
       with Not_found -> None
     in
     if OpamStd.Option.equal OpamHash.equal current_checksum checksum &&
-       OpamFilename.exists dst &&
+       dst_exists &&
        OpamStd.Option.equal OpamHash.equal current_checksum
          (Some (OpamHash.compute ~kind (OpamFilename.to_string dst))) then begin
       log "Up-to-date";

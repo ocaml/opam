@@ -65,6 +65,7 @@ users)
 ## Opamfile
 
 ## External dependencies
+  * Cygwin: Fallback to the existing `setup-x86_64.exe` if its upgrade failed to be fetched [#6482 @kit-ty-kate - fix #6495, partial fix #6474]
 
 ## Format upgrade
 
