@@ -1636,20 +1636,20 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
   in
   let apply diff = match diff.Patch.operation with
     | Patch.Edit (file1, file2) ->
+      let file1 = get_path file1 in
+      let file2 = get_path file2 in
+      let file1_exists = Sys.file_exists file1 in
       (* That seems to be the GNU patch behaviour *)
-      let file =
-        let file1 = get_path file1 in
-        if Sys.file_exists file1 then
-          file1
-        else
-          get_path file2
-      in
+      let file = if file1_exists then file1 else file2 in
       let content = read file in
       let content = patch ~file:file (Some content) diff in
       write file content;
+      if file1_exists && file1 <> (file2 : string) then
+        rmdir_cleanup (Filename.dirname file1)
     | Patch.Delete file | Patch.Git_ext (file, _, Patch.Delete_only) ->
       let file = get_path file in
-      remove_file_t ~with_log:false file
+      remove_file_t ~with_log:false file;
+      rmdir_cleanup (Filename.dirname file)
     | Patch.Create file | Patch.Git_ext (_, file, Patch.Create_only) ->
       let file = get_path file in
       let content = patch ~file None diff in
@@ -1658,7 +1658,10 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
       let src = get_path src in
       let dst = get_path dst in
       (* we use rename as we have all guarantee *)
-      Unix.rename src dst
+      Unix.rename src dst;
+      let dirname_src = Filename.dirname src in
+      if dirname_src <> (Filename.dirname dst : string) then
+        rmdir_cleanup dirname_src
   in
   List.iter apply diffs
 

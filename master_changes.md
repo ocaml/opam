@@ -147,3 +147,4 @@ users)
   * `OpamSystem`: remove `print_stats` function [#6485 @hannesm]
   * `OpamSystem`: add the `rmdir_cleanup` function [#6490 @kit-ty-kate]
   * `OpamSystem.dir_is_empty`: Speedup and change its type to handle unreachable directories better [#6490 @kit-ty-kate]
+  * `OpamSystem.internal_patch`: remove parent directories when all of their content has been moved somewhere else [#6490 @kit-ty-kate]

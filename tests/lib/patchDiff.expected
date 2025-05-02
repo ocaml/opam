@@ -99,7 +99,6 @@
 + first/diff-file-plus-snd
   > foo
   > bar
-+ first/dir-only-fst
 + first/file-only-snd
   > foo
 + first/same-dir
@@ -190,7 +189,6 @@ rename to file-only-snd
 + first/diff-file-plus-snd
   > foo
   > bar
-+ first/dir-only-fst
 + first/file-only-snd
   > foo
 + first/same-dir
@@ -597,8 +595,6 @@ ERROR: Unix.Unix_error(Unix.ENOENT, "rename", "/tmp/build_c0ffee_dune/opam-c0ffe
 
 *** PATCHED ***
 + first/
-+ first/im-here
-+ first/im-not-here
 + first/same-file
   > foo
 + second/
@@ -625,8 +621,6 @@ index c0ffee..c0ffee
 
 *** GIT PATCHED ***
 + first/
-+ first/im-here
-+ first/im-not-here
 + first/same-file
   > foo
 + second/
