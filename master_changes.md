@@ -33,6 +33,7 @@ users)
 ## UI
 
 ## Switch
+  * Do not include compiler packages flagged with `avoid-version`/`deprecated` in the invariant when calling `opam switch create [name] <version>` [#6494 @kit-ty-kate]
 
 ## Config
 
@@ -109,6 +110,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Show the behaviour of `opam switch create` in presence of `avoid-version`/`deprecated` packages [#6494 @kit-ty-kate]
 
 ### Engine
 
