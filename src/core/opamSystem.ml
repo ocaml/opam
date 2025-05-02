@@ -401,6 +401,14 @@ let dir_is_empty dir =
     Some (loop ())
   with Unix.Unix_error(Unix.ENOENT, _, _) -> None
 
+let rec rmdir_cleanup dirname =
+  if dir_is_empty dirname = Some true then (
+    remove_dir dirname;
+    let parent = Filename.dirname dirname in
+    if parent <> (dirname : string) then
+      rmdir_cleanup parent
+  )
+
 let with_tmp_dir fn =
   let dir = mk_temp_dir () in
   try

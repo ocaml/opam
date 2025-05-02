@@ -141,6 +141,11 @@ val remove_file: string -> unit
     directory (not for symlinks or other files). *)
 val remove_dir: string -> unit
 
+(** Removes an empty directory, as well as any empty leading path components.
+    Must be called only on a directory that is known to not have empty parents,
+    only internal opam directory (and not tmp dir). *)
+val rmdir_cleanup : string -> unit
+
 (** Change the current working directory *)
 val chdir: string -> unit
 
