@@ -233,6 +233,7 @@ let string_of_pkg_flag = function
   | Pkgflag_Conf -> "conf"
   | Pkgflag_AvoidVersion -> "avoid-version"
   | Pkgflag_Deprecated -> "deprecated"
+  | Pkgflag_Explicit -> "explicit"
   | Pkgflag_Unknown s -> s
 
 let pkg_flag_of_string = function
@@ -243,6 +244,7 @@ let pkg_flag_of_string = function
   | "conf" -> Pkgflag_Conf
   | "avoid-version" -> Pkgflag_AvoidVersion
   | "deprecated" -> Pkgflag_Deprecated
+  | "explicit" -> Pkgflag_Explicit
   | s -> Pkgflag_Unknown s
 
 let action_contents = function

@@ -1003,7 +1003,19 @@ let universe st
        would be much more involved, but some solvers might struggle without any
        cleanup at this point *)
     (* remove_conflicts st base *)
-    st.available_packages
+    let is_not_explicit pkg =
+      let name = OpamPackage.name pkg in
+      let opam = OpamPackage.Map.find pkg st.opams in
+      not (
+        OpamFile.OPAM.has_flag Pkgflag_Explicit opam &&
+        not (OpamPackage.Set.mem pkg st.pinned) &&
+        not (OpamPackage.Set.mem pkg st.installed) &&
+        not (OpamFormula.exists (fun (n, _) -> OpamPackage.Name.equal n name) st.switch_invariant)
+      )
+    in
+    lazy (
+      OpamPackage.Set.filter is_not_explicit (Lazy.force st.available_packages)
+    )
   in
   let u_reinstall =
     (* Ignore reinstalls outside of the dependency cone of

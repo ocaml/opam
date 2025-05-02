@@ -3483,6 +3483,7 @@ module OPAM = struct
       flags      =
         (List.filter (function
              | Pkgflag_Plugin -> true
+             | Pkgflag_Explicit -> not modulo_state
              | Pkgflag_LightUninstall
              | Pkgflag_Verbose
              | Pkgflag_Compiler

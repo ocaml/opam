@@ -122,6 +122,7 @@ type package_flag =
   | Pkgflag_Deprecated (** This version of the package will only be installed if
                            strictly required and will print a deprecation
                            warning *)
+  | Pkgflag_Explicit (** TODO *)
   | Pkgflag_Unknown of string (** Used for error reporting, otherwise ignored *)
 
 (** At some point we want to abstract so that the same functions can be used
