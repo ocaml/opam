@@ -51,6 +51,7 @@ users)
   * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
 
 ## Update / Upgrade
+  * Fix erroneous recompilations on files with empty but present `build`/`runtest`/`install`/`remove` field [#6505 @kit-ty-kate - fix #5814]
 
 ## Tree
 

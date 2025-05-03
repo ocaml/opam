@@ -755,12 +755,5 @@ The following actions will be performed:
 -> installed no-recompile.dev
 Done.
 ### opam upgrade
-The following actions will be performed:
-=== recompile 1 package
-  - recompile no-recompile dev (pinned) [upstream or system changes]
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved no-recompile.dev  (no changes)
--> removed   no-recompile.dev
--> installed no-recompile.dev
-Done.
+Already up-to-date.
+Nothing to do.
