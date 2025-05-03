@@ -119,6 +119,7 @@ users)
 ### Tests
   * Show the behaviour of `opam switch create` in presence of `avoid-version`/`deprecated` packages [#6494 @kit-ty-kate]
   * Add some tests showing the behaviour of the internal patch implementation [#6490 @rjbou]
+  * Add a test showing the behaviour of `opam upgrade` when faced with empty but present `build`/`run-test`/`install`/`build` field [#6505 @kit-ty-kate]
 
 ### Engine
 
