@@ -1314,6 +1314,7 @@ The following actions will be performed:
 Done.
 ### opam install escape-absolute --require-checksums
 [NOTE] Package escape-absolute is already installed (current version is 1).
+Nothing to do.
 ### opam source escape-absolute
 Successfully extracted to ${BASEDIR}/escape-absolute.1
 ### test -f escape-absolute.1/etc/passwd

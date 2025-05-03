@@ -364,6 +364,7 @@ Done.
 Set to '"depext-avail"' the field depext-bypass in switch bypass
 ### opam install bar
 [NOTE] Package bar is already installed (current version is 1).
+Nothing to do.
 ### opam remove bar
 The following actions will be performed:
 === remove 1 package
