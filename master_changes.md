@@ -49,6 +49,7 @@ users)
   * Fix a crash when updating a repository that is deleting or adding empty files [#6490 @kit-ty-kate]
   * Fix an extreme performance issue (takes several hours) when applying a large repository update [#6490 @kit-ty-kate]
   * Fix a crash when updating a git repository that moved a file to a new directory [#6490 @kit-ty-kate]
+  * Fix erroneous recompilations on files with empty but present `build`/`runtest`/`install`/`remove` field [#6505 @kit-ty-kate - fix #5814]
 
 ## Tree
 
@@ -119,6 +120,7 @@ users)
 ### Tests
   * Show the behaviour of `opam switch create` in presence of `avoid-version`/`deprecated` packages [#6494 @kit-ty-kate]
   * Add some tests showing the behaviour of the internal patch implementation [#6490 @rjbou]
+  * Add a test showing the behaviour of `opam upgrade` when faced with empty but present `build`/`run-test`/`install`/`build` field [#6505 @kit-ty-kate]
 
 ### Engine
 
