@@ -208,7 +208,7 @@ let search_files = ["findlib"]
 
 open OpamStd.Op
 
-let opam_init ?root_dir ?strict ?solver =
+let opam_init ?root_dir ?safe_mode ?strict ?solver =
   let open OpamStd.Option.Op in
 
   (* (i) get root dir *)
@@ -254,14 +254,17 @@ let opam_init ?root_dir ?strict ?solver =
   let log_dir =
     OpamStd.Option.map OpamFilename.Dir.to_string @@
     if log_dir = None && initialised
-       && OpamCoreConfig.E.logs () = None then
+       && OpamCoreConfig.E.logs () = None
+       && not ((OpamCoreConfig.E.safe () = Some true)
+               || (safe_mode = Some true))
+               then
       (* fixme: in order to not revert [OPAMLOGS] value,
          we need to check it here *)
       Some (OpamPath.log root)
     else log_dir
   in
   (fun () -> ()) |>
-  OpamCoreConfig.initk ?log_dir |>
+  OpamCoreConfig.initk ?safe_mode ?log_dir |>
   OpamRepositoryConfig.initk |>
   OpamSolverConfig.initk ?solver |>
   OpamStateConfig.initk ~root_dir:root ~root_from |>
