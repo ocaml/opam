@@ -61,6 +61,7 @@ users)
 ## Update / Upgrade
   * Fix the false-positive mismatch debug warning during `opam update` when faced with nested extra-files on Windows [#6715 @kit-ty-kate]
   * Implement incremental opam file loading to process only changed files during repository updates and repository state loading [#6614 @arozovyk - fix #5824]
+  * Fix erroneous recompilations on files with empty but present `build`/`runtest`/`install`/`remove` field [#6505 @kit-ty-kate - fix #5814]
 
 ## Tree
 
