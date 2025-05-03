@@ -175,6 +175,7 @@ users)
   * Use the new `opam-set-os` command when applicable [#6741 @arozovyk]
   * Add a test showing that `variables.sh` doesn't re-apply updates if sourced more than once in the same session [#6729 @dra27 @kit-ty-kate]
   * Add a test for #6455 showing the effect on opam env if the switch whose settings were applied by `variables.sh` is deleted [#6729 @dra27]
+  * Add a test showing the behaviour of `opam upgrade` when faced with empty but present `build`/`run-test`/`install`/`build` field [#6505 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
