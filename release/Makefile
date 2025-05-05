@@ -9,7 +9,7 @@ FLEXDLLV = 0.43
 OCAML_URL = https://github.com/ocaml/ocaml/archive/refs/tags/$(OCAMLV).tar.gz
 FLEXDLL_URL = https://github.com/ocaml/flexdll/archive/refs/tags/$(FLEXDLLV).tar.gz
 
-ALPINE_VERSION = 3.20
+ALPINE_VERSION = 3.21
 
 HOST_OS = $(shell uname -s | tr A-Z a-z | sed -e 's/_.*//' -e 's/darwin/macos/' -e 's/cygwin/windows/')
 HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
