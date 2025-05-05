@@ -3,6 +3,46 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.4.0~alpha2:
+* Do not include compiler packages flagged with `avoid-version`/`deprecated`
+  in the generated invariant when calling `opam switch create [name] <version>`
+  [#6494 @kit-ty-kate]
+* Cygwin: Fallback to the existing `setup-x86_64.exe` if its upgrade failed
+  to be fetched [#6482 @kit-ty-kate - fix #6495, partial fix #6474]
+* Regression fixes from `2.4.0~alpha1`:
+  * Fix a crash when updating a repository that is deleting or adding empty
+    files [#6490 @kit-ty-kate]
+  * Fix an extreme performance issue (takes several hours) when applying a
+    large repository update [#6490 @kit-ty-kate]
+  * Fix a crash when updating a git repository that moved a file to a new
+    directory [#6490 @kit-ty-kate]
+* Fix a memory leak happening when running large numbers of commands or
+  opening large number of opam files [#6485 @hannesm - fix #6484]
+* Remove handling of the `OPAMSTATS` environment variable [#6485 @hannesm]
+* Build changes:
+  * Update the requirement for the `patch` library to `3.0.0~alpha2`
+    [#6490 @kit-ty-kate]
+  * Upgrade the downloaded-if-missing `patch` library to `3.0.0~alpha2`
+    [#6490 @kit-ty-kate]
+* Improve and extend the testsuite [#6490 #6494 @rjbou @kit-ty-kate]
+* Improve and extend the test infrastructure [#6277 @rjbou @kit-ty-kate]
+* API changes in `opam-client`:
+  * `OpamClientConfig`: remove `STATS` variant and related `print_stats`
+    field in config record [#6485 @hannesm]
+  * `OpamArg.environment_variable`: make `STATS` as removed from cli 2.3
+    [#6485 @rjbou]
+* API changes in `opam-format`:
+  * `OpamFile`: remove `Stats` module [#6485 @hannesm]
+* API changes in `opam-core`:
+  * `OpamSystem`: remove `print_stats` function [#6485 @hannesm]
+  * `OpamSystem`: add the `rmdir_cleanup` function [#6490 @kit-ty-kate]
+  * `OpamSystem.dir_is_empty`: Speedup and change its type to handle
+    unreachable directories better [#6490 @kit-ty-kate]
+  * `OpamSystem.internal_patch`: remove parent directories when all of their
+    content has been moved somewhere else [#6490 @kit-ty-kate]
+  * `OpamSystem.internal_patch`: fix moving files to new directories when
+    receiving a git diff [#6490 @kit-ty-kate]
+
 2.4.0~alpha1:
 * (*) Remove `ocaml-system` from the list of default compilers chosen at
   `opam init` time [#6307 @kit-ty-kate - fix #3509]
