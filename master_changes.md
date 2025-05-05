@@ -75,6 +75,7 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Switch the host of qemu-base-images from gitlab to github [#6510 @kit-ty-kate]
 
 ## Install script
 
