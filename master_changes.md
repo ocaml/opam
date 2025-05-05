@@ -11,6 +11,7 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
+  * Bump the version to `2.4.0~alpha3~dev` [#6512 @kit-ty-kate]
 
 ## Global CLI
 
