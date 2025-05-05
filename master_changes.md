@@ -69,6 +69,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * [BUG] Fix `git remote get-url` failure, add handling for exit code 2 [#6412 @rjbou]
 
 ## Build
 
