@@ -90,6 +90,9 @@ type +'lock repos_state = {
   repo_opams: OpamFile.OPAM.t package_map repository_name_map;
   (** All opam files that can be found in the configured repositories *)
 
+  repo_sys_pkg_statues: sys_pkg_status package_map repository_name_map;
+  (** System package statuses of all depexts mentionned in opam files in a given repository *)
+
   repos_tmp: (OpamRepositoryName.t, OpamFilename.Dir.t Lazy.t) Hashtbl.t;
   (** Temporary directories containing the uncompressed contents of the
       repositories *)
@@ -135,7 +138,7 @@ type +'lock switch_state = {
   packages: package_set;
   (** The set of all known packages *)
 
-  sys_packages: sys_pkg_status package_map Lazy.t;
+  sys_packages: sys_pkg_status package_map;
   (** Map of package and their system dependencies packages status. Only
       initialised for otherwise available packages *)
 
