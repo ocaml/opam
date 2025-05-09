@@ -116,6 +116,7 @@ users)
 
 ## Internal
   * Improve cache-loading performance when using OCaml >= 5.4 by using `Gc.ramp_up` [#6515 @dra27]
+  * Make OpamStd.String.compare_case allocation free [#6515 @dra27]
 
 ## Internal: Unix
 
