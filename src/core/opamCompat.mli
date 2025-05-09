@@ -88,3 +88,8 @@ module Pair : sig
     ('a -> 'a -> bool) -> ('b -> 'b -> bool) ->
     ('a * 'b) -> ('a * 'b) -> bool
 end
+
+module Int : sig
+  (** NOTE: OCaml >= 4.13 *)
+  val min : int -> int -> int
+end

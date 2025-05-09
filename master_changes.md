@@ -163,3 +163,5 @@ users)
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
   * `OpamUrl`: rename and expose `local_path` as `looks_like_local_path` [#5979 @kit-ty-kate]
   * `OpamCompat.Gc.ramp_up`: was added [#6515 @dra27]
+  * `OpamCompat.Int.min`: was added [#6515 @kit-ty-kate]
+  * `OpamStd.String.compare_case`: is now allocation free [#6515 @dra27]
