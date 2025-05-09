@@ -239,6 +239,7 @@ users)
   * `OpamSystem.cpu_count`: now uses a C binding instead of system utilities to get the number of cores of the current machine [#6634 @kit-ty-kate]
   * `OpamSystem.is_reg_dir`: is now exposed, which returns `true` only if its parameter is a directory, exists and is not a symlink. It returns `false` otherwise [#6450 @kit-ty-kate]
   * `OpamCompat.Gc.ramp_up`: was added [#6515 @dra27]
+  * `OpamCompat.Int.min`: was added [#6515 @kit-ty-kate]
   * `OpamCompat.List.fold_left_map`: was added [#6442 @kit-ty-kate]
   * `OpamCompat.List.equal`: was added [#6644 @kit-ty-kate]
   * `OpamCompat.Map.filter_map`: was added [#6442 @kit-ty-kate]
