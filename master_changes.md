@@ -51,6 +51,7 @@ users)
 ## List
 
 ## Show
+  * Improve performance of `opam show` by reading switch selection only once instead of once per package-version [#6515 @dra27]
 
 ## Var/Option
   * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
@@ -219,6 +220,7 @@ users)
   * `OpamSwitchState.overlay_opam_file`: was added [6679 @rjbou]
   * `OpamRepositoryState` add `load_opams_from_diff` to update package definitions based on file change operations (diff) [#6614 @arozovyk]
   * `OpamRepositoryState.get_repo_files`: was added [#6679 @kit-ty-kate @rjbou]
+  * `OpamGlobalState.all_installed_versions`: was added [#6515 @dra27]
 
 ## opam-solver
 
@@ -243,6 +245,7 @@ users)
   * `OpamCompat.List.fold_left_map`: was added [#6442 @kit-ty-kate]
   * `OpamCompat.List.equal`: was added [#6644 @kit-ty-kate]
   * `OpamCompat.Map.filter_map`: was added [#6442 @kit-ty-kate]
+  * `OpamCompat.Map.add_to_list`: was added [#6515 @dra27]
   * `OpamCompat.MAP`: was added [#6442 @kit-ty-kate]
   * `OpamCompat.Pair.equal`: was added [#6644 @kit-ty-kate]
   * `OpamCompat.String.{starts_with,ends_with,for_all,fold_left}`: were added [#6442 @kit-ty-kate]

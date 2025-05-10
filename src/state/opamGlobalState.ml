@@ -179,6 +179,12 @@ let installed_versions gt name =
       with Not_found -> acc)
     gt OpamPackage.Map.empty
 
+let all_installed_versions gt =
+  fold_switches (fun switch sel acc ->
+      OpamPackage.Set.fold (fun nv acc ->
+        OpamPackage.Map.add_to_list nv switch acc) sel.sel_installed acc)
+    gt OpamPackage.Map.empty
+
 let repos_list gt = OpamFile.Config.repositories gt.config
 
 let unlock gt =

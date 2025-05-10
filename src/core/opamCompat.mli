@@ -78,6 +78,9 @@ module type MAP = sig
 
   (** NOTE: OCaml >= 4.11 *)
   val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
+
+  (** NOTE: OCaml >= 5.1 *)
+  val add_to_list: key -> 'a -> 'a list t -> 'a list t
 end
 
 module Map(Ord : Stdlib.Map.OrderedType) : MAP with type key = Ord.t
