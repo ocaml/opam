@@ -128,6 +128,7 @@ users)
   * Homogeneise verbose command output between sandboxed and non sandboxed one [#6675 @rjbou]
   * Add the `install-pin-depends`, `ignore-pin-depends`, `proceed-actions` and `switch-clean-up` named questions [#6611 @kit-ty-kate @rjbou]
   * Add logging for file reads and writes [#6679 @rjbou]
+  * Improve cache-loading performance when using OCaml >= 5.4 by using `Gc.ramp_up` [#6515 @dra27]
 
 ## Internal: Unix
 
@@ -237,6 +238,7 @@ users)
   * `OpamCoreConfig.in_opam`: was added [#6487 @kit-ty-kate]
   * `OpamSystem.cpu_count`: now uses a C binding instead of system utilities to get the number of cores of the current machine [#6634 @kit-ty-kate]
   * `OpamSystem.is_reg_dir`: is now exposed, which returns `true` only if its parameter is a directory, exists and is not a symlink. It returns `false` otherwise [#6450 @kit-ty-kate]
+  * `OpamCompat.Gc.ramp_up`: was added [#6515 @dra27]
   * `OpamCompat.List.fold_left_map`: was added [#6442 @kit-ty-kate]
   * `OpamCompat.List.equal`: was added [#6644 @kit-ty-kate]
   * `OpamCompat.Map.filter_map`: was added [#6442 @kit-ty-kate]

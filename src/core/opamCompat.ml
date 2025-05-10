@@ -8,6 +8,16 @@
 (*                                                                        *)
 (**************************************************************************)
 
+module Gc = struct
+  [@@@warning "-32"]
+
+  let ramp_up f = (f (), ())
+
+  include Gc
+
+  let ramp_up f = fst (ramp_up f)
+end
+
 module String = struct
   [@@@warning "-32"]
 

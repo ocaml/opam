@@ -56,7 +56,8 @@ end = struct
     let chrono = OpamConsole.timer () in
     let f ic =
       try
-        let (cache: t) = Marshal.from_channel ic in
+        let (cache: t) =
+          OpamCompat.Gc.ramp_up (fun () -> Marshal.from_channel ic) in
         log "Loaded %a in %.3fs" (slog OpamFilename.to_string) file (chrono ());
         Some cache
       with End_of_file | Failure _ ->
