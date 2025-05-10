@@ -166,3 +166,4 @@ users)
   * `OpamCompat.Gc.ramp_up`: was added [#6515 @dra27]
   * `OpamCompat.Int.min`: was added [#6515 @kit-ty-kate]
   * `OpamStd.String.compare_case`: is now allocation free [#6515 @dra27]
+  * `OpamVersionCompare.{compare,equal}`: are now allocation free [#6515 @dra27]
