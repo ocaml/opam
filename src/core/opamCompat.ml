@@ -238,6 +238,9 @@ module type MAP = sig
 
   (** NOTE: OCaml >= 4.11 *)
   val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
+
+  (** NOTE: OCaml >= 5.1 *)
+  val add_to_list: key -> 'a -> 'a list t -> 'a list t
 end
 
 module Map(Ord : Stdlib.Map.OrderedType) = struct
@@ -252,6 +255,11 @@ module Map(Ord : Stdlib.Map.OrderedType) = struct
         | Some value -> M.add key value map
         | None -> map
       ) map M.empty
+
+  (** NOTE: OCaml >= 5.1 *)
+  let add_to_list x data m =
+    let add = function None -> Some [data] | Some l -> Some (data :: l) in
+    M.update x add m
 
   include M
 end
