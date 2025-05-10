@@ -42,6 +42,7 @@ users)
 ## List
 
 ## Show
+  * Improve performance of `opam show` by reading switch selection only once instead of once per package-version [#6515 @dra27]
 
 ## Var/Option
 
