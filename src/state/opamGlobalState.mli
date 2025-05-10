@@ -41,6 +41,10 @@ val switch_exists: 'a global_state -> switch -> bool
     of switches they are installed in *)
 val installed_versions: 'a global_state -> name -> switch list package_map
 
+(** Returns the map of all installed packages to the list of switch(es) they're
+    installed in. *)
+val all_installed_versions: 'a global_state -> switch list package_map
+
 (** Default list of repositories to get packages from, ordered by decreasing
     priority. This can be overridden by switch-specific selections, and does not
     have to include all configured repositories. *)
