@@ -46,6 +46,8 @@ conflicts: "foo"
     - baz -> bar -> foo
     - baz
 
+No solution found, exiting
+# Return code 20 #
 ### :I:4: Nothing to do
 ### opam switch create nothing --empty
 ### opam install foo | sed-cmd echo
