@@ -225,3 +225,276 @@ The following actions will be performed:
 -> installed roots2.1
 Done.
 ### opam list --roots -s
+### :: Deps-only mechanism for packages that are interdependant.
+### :: This test is for checking the behaviour of conflicting or not install or interdependant packages
+### : deps of same packages, no version specified
+### opam switch create deps-conflictssssssssssssssssss --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install --deps-only lorem dolor
+The following actions will be performed:
+=== install 2 packages
+  - install ipsum 1 [required by dolor]
+  - install lorem 1 [required by ipsum]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+-> installed ipsum.1
+Done.
+### : deps of same packages, good version specified
+### opam switch create deps-conflictsssssssssssssssssss --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install --deps-only lorem.1 dolor.1
+The following actions will be performed:
+=== install 2 packages
+  - install ipsum 1 [required by dolor]
+  - install lorem 1 [required by ipsum]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+-> installed ipsum.1
+Done.
+### : deps of same packages, uninstallable version specified
+### opam switch create deps-conflictssssssssssssssssssss --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install --deps-only lorem.2 dolor.1
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - deps-of-dolor -> ipsum -> lorem < 2
+    - deps-of-lorem
+
+No solution found, exiting
+# Return code 20 #
+### : deps of same packages, no version specified, already installed package
+### opam switch create deps-conflictsssssssssssssssssssss --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install lorem.1
+The following actions will be performed:
+=== install 1 package
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+Done.
+### opam install --deps-only lorem dolor
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by dolor]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### : deps of same packages, good version specified, already installed package
+### opam switch create deps-conflictssssssssssssssssssssss --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install lorem.1
+The following actions will be performed:
+=== install 1 package
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+Done.
+### opam install --deps-only lorem.1 dolor.1
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by dolor]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### : deps of same packages, uninstallable version specified, already installed package
+### opam switch create deps-conflictssssssssssssssssssssssss --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install lorem.1
+The following actions will be performed:
+=== install 1 package
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+Done.
+### opam install --deps-only lorem.2 dolor.1
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - deps-of-dolor -> ipsum -> lorem < 2
+    - deps-of-lorem
+
+No solution found, exiting
+# Return code 20 #
+### : other :
+### <pkg:lorem.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "lorem" {="2"}
+### <pkg:dolor.2>
+opam-version: "2.0"
+depends: "lorem" {="1"}
+### <pkg:sit.1>
+opam-version: "2.0"
+### <pkg:sit.2>
+opam-version: "2.0"
+### opam switch create deps-conflicts --empty
+### # it takes lorem.2 & dolor.1
+### opam install --deps-only lorem dolor
+The following actions will be performed:
+=== install 1 package
+  - install sit 2 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed sit.2
+Done.
+### opam switch create deps-conflictsss --empty
+### # it takes lorem.1
+### opam install --deps-only lorem dolor.2
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### opam switch create deps-conflictss --empty
+### opam install --deps-only lorem.2 dolor.1
+The following actions will be performed:
+=== install 1 package
+  - install sit 2 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed sit.2
+Done.
+### opam switch create deps-conflictsssssss --empty
+### opam install --deps-only lorem.1 dolor.2
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### opam switch create deps-conflictssss --empty
+### opam install --deps-only lorem.2 dolor.2
+[ERROR] Package conflict!
+  * Missing dependency:
+    - deps-of-dolor -> deps-of-lorem < 2
+    no matching version
+
+No solution found, exiting
+# Return code 20 #
+### opam switch create deps-conflictsssss --empty
+### opam install --deps-only lorem.1 lorem.2
+[ERROR] Package conflict!
+  * Missing dependency:
+    - (request) -> deps-of-lorem
+    unknown package
+
+No solution found, exiting
+# Return code 20 #
+### opam switch create deps-conflictsssssssssssssssss --empty
+### opam install lorem.1
+The following actions will be performed:
+=== install 2 packages
+  - install ipsum 1 [required by lorem]
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+-> installed lorem.1
+Done.
+### # it takes lorem.2
+### opam install --deps-only dolor.1 lorem
+The following actions will be performed:
+=== remove 1 package
+  - remove  lorem 1 [conflicts with lorem]
+=== install 1 package
+  - install sit   2 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   deps-of-lorem.1
+-> removed   lorem.1
+-> installed sit.2
+Done.

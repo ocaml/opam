@@ -1427,3 +1427,72 @@ Pin and install them? [Y/n] y
 [pkg.dev] synchronised (no changes)
 [ERROR] No valid package definition found for pkg
 # Return code 5 #
+### :C:h: #6501
+### :C:h:1: same version
+### opam switch create patch --empty
+### <pkg:patch.1>
+opam-version: "2.0"
+depends: [
+  "dep-patch"
+  "dep-test-patch" { with-test}
+]
+### <pkg:dep-patch.1>
+opam-version: "2.0"
+### <pkg:dep-test-patch.1>
+opam-version: "2.0"
+### <pin:patch/patch.opam>
+opam-version: "2.0"
+version: "1"
+depends: [
+  "dep-patch"
+  "dep-test-patch" { with-test}
+]
+### opam install patch
+The following actions will be performed:
+=== install 2 packages
+  - install dep-patch 1 [required by patch]
+  - install patch     1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-patch.1
+-> installed patch.1
+Done.
+### opam install ./patch --with-test --deps
+### opam install dep-test-patch
+The following actions will be performed:
+=== install 1 package
+  - install dep-test-patch 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-test-patch.1
+Done.
+### :C:h:2: change version
+### opam switch create patch2 --empty
+### opam install patch
+The following actions will be performed:
+=== install 2 packages
+  - install dep-patch 1 [required by patch]
+  - install patch     1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-patch.1
+-> installed patch.1
+Done.
+### <pin:patch/patch.opam>
+opam-version: "2.0"
+version: "2"
+depends: [
+  "dep-patch"
+  "dep-test-patch" { with-test}
+]
+### opam install ./patch --with-test --deps
+The following actions will be performed:
+=== remove 1 package
+  - remove  patch          1 [no longer available]
+=== install 1 package
+  - install dep-test-patch 1 [required by patch]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   patch.1
+-> installed dep-test-patch.1
+Done.
