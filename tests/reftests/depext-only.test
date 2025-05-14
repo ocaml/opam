@@ -1,0 +1,109 @@
+N0REP0
+### opam var --global os-family=dummy-success
+Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
+### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
+### OPAMYES=1
+### <pkg:foo.1>
+opam-version: "2.0"
+depexts: "sys-foo"
+### <pkg:bar.1>
+opam-version: "2.0"
+depends: "foo"
+### :I: Common usage
+### :I:1: Direct depext
+### opam switch create direct --empty
+### opam install foo --depext-only | sed-cmd echo
+
+The following system packages will first need to be installed:
+    sys-foo
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
++ echo "sys-foo"
+- sys-foo
+### opam list -s
+### :I:2: Transitive dependency
+### opam switch create transitive --empty
+### opam install bar --depext-only | sed-cmd echo
+
+The following system packages will first need to be installed:
+    sys-foo
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
++ echo "sys-foo"
+- sys-foo
+### :I:3: Conflict
+### opam switch create conflict --empty
+### <pkg:baz.1>
+opam-version: "2.0"
+depends: "bar"
+depexts: "sys-baz"
+conflicts: "foo"
+### opam install baz --depext-only
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - baz -> bar -> foo
+    - baz
+
+### :I:4: Nothing to do
+### opam switch create nothing --empty
+### opam install foo | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+The following system packages will first need to be installed:
+    sys-foo
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "sys-foo"
+- sys-foo
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### OPAMVAR_os_family=dummy-success:sys-foo: opam install foo --depext-only
+[NOTE] Package foo is already installed (current version is 1).
+### opam install foo --depext-only | sed-cmd echo
+[WARNING] Opam package foo.1 depends on the following system package that can no longer be found: sys-foo
+
+The following system packages will first need to be installed:
+    sys-foo
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
++ echo "sys-foo"
+- sys-foo
+### :I:5: No depext
+### OPAMNODEPEXTS=1 opam install foo --depext-only
+opam: --depext-only and --no-depexts can't be used together
+Usage: opam install [OPTION]… [PACKAGES]…
+Try 'opam install --help' or 'opam --help' for more information.
+# Return code 2 #
+### :I:6: No confirmation
+### opam switch create refuse --empty
+### OPAMCONFIRMLEVEL=no OPAMYES=0
+### opam install foo --depext-only | sed-cmd echo
+
+The following system packages will first need to be installed:
+    sys-foo
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
++ echo "sys-foo"
+- sys-foo
+### :I:7: Not available
+### opam switch create not-avail --empty
+### OPAMVAR_os_family=dummy-success::something-else opam install foo --depext-only
+[ERROR] Package foo depends on the unavailable system package 'sys-foo'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
