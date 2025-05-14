@@ -23,6 +23,7 @@ users)
 ## Actions
 
 ## Install
+  * BUG: Fix `opam install pkg --depext-only` exit with code 0 instead of 20 (not found) [#6516 @rjbou - fix #6488]
 
 ## Build (package)
 
