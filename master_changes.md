@@ -110,6 +110,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add some related pin tests: fetching, reinstall trigger & simulated pin (deps-only) [#6530 @rjbou]
 
 ### Engine
 

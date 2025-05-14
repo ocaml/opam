@@ -1427,3 +1427,98 @@ Pin and install them? [Y/n] y
 [pkg.dev] synchronised (no changes)
 [ERROR] No valid package definition found for pkg
 # Return code 5 #
+### :C:h: Checking the opam file update reinstall trigger
+### <pkg:reinst.1>
+opam-version: "2.0"
+depends: "dep-reinst" { = "1" }
+### <pkg:dep-reinst.1>
+opam-version: "2.0"
+### <pkg:dep-reinst.2>
+opam-version: "2.0"
+### <pkg:dep-reinst.3>
+opam-version: "2.0"
+### :C:h:1: Update opam file and install again
+### # simulated pin test in simulated-pin:I:
+### opam switch create reinst-1 --empty
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: "dep-reinst" { = "1" }
+### opam install ./reinst
+reinst is now pinned to file://${BASEDIR}/reinst (version 1)
+The following actions will be performed:
+=== install 2 packages
+  - install dep-reinst 1          [required by reinst]
+  - install reinst     1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-reinst.1
+-> retrieved reinst.1  (file://${BASEDIR}/reinst)
+-> installed reinst.1
+Done.
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: "dep-reinst" { = "2" }
+### opam install ./reinst
+reinst is now pinned to file://${BASEDIR}/reinst (version 1)
+[reinst.1] synchronised (file://${BASEDIR}/reinst)
+The following actions will be performed:
+=== recompile 1 package
+  - recompile reinst     1 (pinned)
+=== upgrade 1 package
+  - upgrade   dep-reinst 1 to 2     [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep-reinst.1
+-> installed dep-reinst.2
+-> retrieved reinst.1  (no changes)
+-> removed   reinst.1
+-> installed reinst.1
+Done.
+### :C:i: Checking the opam file update reinstall trigger, changing only with-test dependencies (variables)
+### # simulated pin test in simulated-pin:II:
+### <pkg:reinst.1>
+opam-version: "2.0"
+depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "1" } ]
+### <pkg:dep-reinst.1>
+opam-version: "2.0"
+### <pkg:dep-reinst.2>
+opam-version: "2.0"
+### <pkg:dep-test-reinst.1>
+opam-version: "2.0"
+### <pkg:dep-test-reinst.2>
+opam-version: "2.0"
+### :C:i:1: Update opam file and install again
+### opam switch create reinst-wt-1 --empty
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "1" } ]
+### opam install ./reinst
+reinst is now pinned to file://${BASEDIR}/reinst (version 1)
+The following actions will be performed:
+=== install 2 packages
+  - install dep-reinst 1          [required by reinst]
+  - install reinst     1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-reinst.1
+-> retrieved reinst.1  (file://${BASEDIR}/reinst)
+-> installed reinst.1
+Done.
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "2" } ]
+### opam install ./reinst --with-test
+reinst is now pinned to file://${BASEDIR}/reinst (version 1)
+[reinst.1] synchronised (file://${BASEDIR}/reinst)
+The following actions will be performed:
+=== recompile 1 package
+  - recompile reinst          1 (pinned)
+=== install 1 package
+  - install   dep-test-reinst 2          [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-test-reinst.2
+-> retrieved reinst.1  (no changes)
+-> removed   reinst.1
+-> installed reinst.1
+Done.

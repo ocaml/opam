@@ -1,0 +1,246 @@
+N0REP0
+### OPAMYES=1
+### ::: Tests specific to simulated pinning behaviour, trigerred by `opam install ./localdir --deps-only`
+### :I: Checking the opam file update reinstall trigger
+### <pkg:reinst.1>
+opam-version: "2.0"
+depends: "dep-reinst" { = "1" }
+### <pkg:dep-reinst.1>
+opam-version: "2.0"
+### <pkg:dep-reinst.2>
+opam-version: "2.0"
+### <pkg:dep-reinst.3>
+opam-version: "2.0"
+### :I:1: Update opam file and install again
+### opam switch create reinst-1 --empty
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: "dep-reinst" { = "1" }
+### opam install ./reinst
+reinst is now pinned to file://${BASEDIR}/reinst (version 1)
+The following actions will be performed:
+=== install 2 packages
+  - install dep-reinst 1          [required by reinst]
+  - install reinst     1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-reinst.1
+-> retrieved reinst.1  (file://${BASEDIR}/reinst)
+-> installed reinst.1
+Done.
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: "dep-reinst" { = "2" }
+### opam install ./reinst --deps-only
+[reinst.1] synchronised (file://${BASEDIR}/reinst)
+[reinst] Installing new package description from upstream file://${BASEDIR}/reinst
+The following actions will be performed:
+=== recompile 1 package
+  - recompile reinst     1 (pinned) [uses dep-reinst]
+=== upgrade 1 package
+  - upgrade   dep-reinst 1 to 2     [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep-reinst.1
+-> installed dep-reinst.2
+-> retrieved reinst.1  (no changes)
+-> removed   reinst.1
+-> installed reinst.1
+Done.
+### :I:2: Install from repo and pin same opam file
+### opam switch create reinst-2 --empty
+### opam install reinst
+The following actions will be performed:
+=== install 2 packages
+  - install dep-reinst 1 [required by reinst]
+  - install reinst     1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-reinst.1
+-> installed reinst.1
+Done.
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: "dep-reinst" { = "1" }
+### opam install ./reinst --deps-only
+### :I:3: Install from repo and pin different same opam file
+### opam switch create reinst-3 --empty
+### opam install reinst
+The following actions will be performed:
+=== install 2 packages
+  - install dep-reinst 1 [required by reinst]
+  - install reinst     1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-reinst.1
+-> installed reinst.1
+Done.
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: "dep-reinst" { = "2" }
+### opam install ./reinst --deps-only
+### :II: Checking the opam file update reinstall trigger, changing only with-test dependencies (variables)
+### <pkg:reinst.1>
+opam-version: "2.0"
+depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "1" } ]
+### <pkg:dep-reinst.1>
+opam-version: "2.0"
+### <pkg:dep-reinst.2>
+opam-version: "2.0"
+### <pkg:dep-reinst.3>
+opam-version: "2.0"
+### <pkg:dep-test-reinst.1>
+opam-version: "2.0"
+### <pkg:dep-test-reinst.2>
+opam-version: "2.0"
+### <pkg:dep-test-reinst.3>
+opam-version: "2.0"
+### :II:1: Update opam file and install again
+### opam switch create reinst-wt-1 --empty
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "1" } ]
+### opam install ./reinst
+reinst is now pinned to file://${BASEDIR}/reinst (version 1)
+The following actions will be performed:
+=== install 2 packages
+  - install dep-reinst 1          [required by reinst]
+  - install reinst     1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-reinst.1
+-> retrieved reinst.1  (file://${BASEDIR}/reinst)
+-> installed reinst.1
+Done.
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "2" } ]
+### opam install ./reinst --deps-only --with-test
+[reinst.1] synchronised (file://${BASEDIR}/reinst)
+[reinst] Installing new package description from upstream file://${BASEDIR}/reinst
+The following actions will be performed:
+=== install 1 package
+  - install dep-test-reinst 2 [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-test-reinst.2
+Done.
+### :II:2: Install from repo and simulated pin same opam file
+### opam switch create reinst-wt-2 --empty
+### opam install reinst
+The following actions will be performed:
+=== install 2 packages
+  - install dep-reinst 1 [required by reinst]
+  - install reinst     1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-reinst.1
+-> installed reinst.1
+Done.
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "1" } ]
+### opam install ./reinst --deps-only --with-test
+### :II:3: Install from repo and simulated pin different same opam file
+### opam switch create reinst-wt-3 --empty
+### opam install reinst
+The following actions will be performed:
+=== install 2 packages
+  - install dep-reinst 1 [required by reinst]
+  - install reinst     1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-reinst.1
+-> installed reinst.1
+Done.
+### <pin:reinst/reinst.opam>
+opam-version: "2.0"
+depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "2" } ]
+### opam install ./reinst --deps-only --with-test
+### :III: Fetching of simulated pin
+### <pkg:fetch.0>
+opam-version: "2.0"
+### <pkg:fetch-dep.1>
+opam-version: "2.0"
+### <pkg:fetch-dep.2>
+opam-version: "2.0"
+### <pin:fetch/fetch.opam>
+opam-version: "2.0"
+version: "1"
+build: ["test" "-f" "pinned-file"]
+depends: "fetch-dep" { = "1" }
+### <fetch/pinned-file>
+I'm the first version of the file, trust me!
+### opam switch create fetch-sim --empty
+### opam pin ./fetch -n
+fetch is now pinned to file://${BASEDIR}/fetch (version 1)
+### opam-cat OPAM/fetch-sim/.opam-switch/overlay/fetch/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+build: ["test" "-f" "pinned-file"]
+depends: "fetch-dep" {= "1"}
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "fetch"
+opam-version: "2.0"
+synopsis: "A word"
+version: "1"
+url {
+src: "file://${BASEDIR}/fetch"
+}
+### opam-cat OPAM/fetch-sim/.opam-switch/packages/fetch.1/opam
+# OPAM/fetch-sim/.opam-switch/packages/fetch.1/opam not found
+### find OPAM/fetch-sim/.opam-switch/sources/fetch | sort
+OPAM/fetch-sim/.opam-switch/sources/fetch
+OPAM/fetch-sim/.opam-switch/sources/fetch/fetch.opam
+OPAM/fetch-sim/.opam-switch/sources/fetch/pinned-file
+### cat OPAM/fetch-sim/.opam-switch/sources/fetch/pinned-file
+I'm the first version of the file, trust me!
+### # find OPAM/fetch-sim
+### <pin:fetch/fetch.opam>
+opam-version: "2.0"
+version: "2"
+build: ["test" "-f" "pinned-file2"]
+depends: "fetch-dep" { = "2" }
+### <fetch/pinned-file>
+I'm the second version of the file, trust me!
+### opam install ./fetch --deps-only
+[fetch.1] synchronised (file://${BASEDIR}/fetch)
+[fetch] Installing new package description from upstream file://${BASEDIR}/fetch
+The following actions will be performed:
+=== install 1 package
+  - install fetch-dep 2 [required by fetch]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed fetch-dep.2
+Done.
+### opam-cat OPAM/fetch-sim/.opam-switch/overlay/fetch/opam
+authors: "the testing team"
+bug-reports: "https://nobug"
+build: ["test" "-f" "pinned-file2"]
+depends: ["fetch-dep" {= "2"}]
+description: "Two words."
+dev-repo: "hg+https://pkg@op.am"
+homepage: "egapemoh"
+license: "MIT"
+maintainer: "maint@tain.er"
+name: "fetch"
+opam-version: "2.0"
+synopsis: "A word"
+version: "2"
+url {
+src: "file://${BASEDIR}/fetch"
+}
+### opam-cat OPAM/fetch-sim/.opam-switch/packages/fetch.1/opam
+# OPAM/fetch-sim/.opam-switch/packages/fetch.1/opam not found
+### opam-cat OPAM/fetch-sim/.opam-switch/packages/fetch.2/opam
+# OPAM/fetch-sim/.opam-switch/packages/fetch.2/opam not found
+### find OPAM/fetch-sim/.opam-switch/sources/fetch | sort
+OPAM/fetch-sim/.opam-switch/sources/fetch
+OPAM/fetch-sim/.opam-switch/sources/fetch/fetch.opam
+OPAM/fetch-sim/.opam-switch/sources/fetch/pinned-file
+### cat OPAM/fetch-sim/.opam-switch/sources/fetch/pinned-file
+I'm the second version of the file, trust me!
