@@ -105,6 +105,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add reftest for `--depext-only` option [#6516 @rjbou]
 
 ### Engine
 
