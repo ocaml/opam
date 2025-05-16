@@ -13,7 +13,7 @@
     functions *)
 
 (** binary operations (compatible with the Dose type for Cudf operators!) *)
-type relop = OpamParserTypes.FullPos.relop_kind (* = [ `Eq | `Neq | `Geq | `Gt | `Leq | `Lt ] *)
+type relop = [ `Eq | `Neq | `Geq | `Gt | `Leq | `Lt ]
 
 val compare_relop : relop -> relop -> int
 
