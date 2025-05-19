@@ -25,6 +25,7 @@ users)
 
 ## Install
   * [BUG] Fix `opam install --deps-only` using the opam description of the wrong package in some cases [#6544 @kit-ty-kate - fix #6535]
+  * ◈ Change behaviour of `--deps-only`: no longer required unicity of name.version when dependencies only is asked, only take into account the requested dependencies. In other words, if you have `pkg.1` installed, installing dependencies of `pkg.2` no longer removes `pkg.1`. This allows also to install dependencies of conflicting packages when their dependencies are compliant. [#6520 @rjbou]
 
 ## Build (package)
 
