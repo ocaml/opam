@@ -2143,7 +2143,8 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
     OpamPackage.Name.Set.of_list (List.rev_map fst atoms)
   in
   let dname_map =
-    if deps_only then
+    match deps_only with
+    | Some t ->
       (* pkgname -> name of fake package for handling pkg deps *)
       OpamPackage.Name.Set.fold (fun name ->
           let open OpamPackage.Name in
@@ -2156,7 +2157,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
           let dname = nodup 2 @@ of_string ("deps-of-" ^ to_string name) in
           OpamPackage.Name.Map.add name dname)
         names OpamPackage.Name.Map.empty
-    else OpamPackage.Name.Map.empty
+    | None -> OpamPackage.Name.Map.empty
   in
   let t, deps_of_packages =
     (* add deps-of-xxx packages to replace each atom *)
@@ -2208,10 +2209,11 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   in
   let pkg_skip, _pkg_new = get_installed_atoms t atoms in
   let atoms, atoms_and_deps =
-    if deps_only then
+    match deps_only with
+    | Some _ ->
       [],
       List.map (fun (n, c) -> OpamPackage.Name.Map.find n dname_map, c) atoms
-    else
+    | None ->
       atoms, atoms
   in
   let pkg_reinstall =
@@ -2222,7 +2224,9 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
      warning for already installed package roots. *)
   let current_roots = t.installed_roots in
   let t =
-    if deps_only then t else
+    match deps_only with
+    | Some _ -> t
+    | None ->
       List.fold_left (fun t nv ->
           if OpamPackage.Set.mem nv t.installed then
             match add_to_roots with
@@ -2354,7 +2358,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       else
         let add_roots =
           match add_to_roots, deps_only with
-          | (Some true | None), true ->
+          | (Some true | None), Some t ->
             let pkgs_solution = OpamSolver.all_packages solution in
             let requested_deps =
               OpamPackage.Set.fold (fun nv acc ->
@@ -2369,9 +2373,9 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
             in
             Some (OpamPackage.names_of_packages
                     (OpamFormula.packages pkgs_solution requested_deps))
-          | Some true, false -> Some requested
+          | Some true, None -> Some requested
           | Some false, _ -> Some OpamPackage.Name.Set.empty
-          | None, false -> None
+          | None, None -> None
         in
         let t, res =
           OpamSolution.apply ?ask t
@@ -2385,7 +2389,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   t
 
 let install t ?formula ?autoupdate ?add_to_roots
-    ?(deps_only=false) ?(ignore_conflicts=false) ?(assume_built=false)
+    ?(deps_only=None) ?(ignore_conflicts=false) ?(assume_built=false)
     ?(download_only=false) ?(depext_only=false) names =
   let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
   let autoupdate_atoms = match autoupdate with

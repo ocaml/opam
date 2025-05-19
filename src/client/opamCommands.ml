@@ -1877,10 +1877,16 @@ let install cli =
       else atoms_or_locals
     in
     if formula = OpamFormula.Empty && atoms_or_locals = [] then `Ok () else
-    let st, atoms =
-      OpamAuxCommands.autopin
-        st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check||depext_only)
-        ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
+    let st, deps_only, atoms =
+      let deps_st, atoms =
+        OpamAuxCommands.autopin
+          st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check||depext_only)
+          ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
+      in
+      if deps_only then
+        (st, Some deps_st, atoms)
+      else
+        (deps_st, None, atoms)
     in
     if formula = OpamFormula.Empty && atoms = [] then
       (OpamConsole.msg "Nothing to do\n";
@@ -3150,7 +3156,7 @@ let switch cli =
            then OpamSwitchAction.update_switch_state st
            else
                OpamClient.install_t st ~ask:true [] None ~formula:invariant
-               ~deps_only:false ~assume_built:false
+               ~deps_only:None ~assume_built:false
          in
          OpamSwitchState.drop st;
          `Ok ())
