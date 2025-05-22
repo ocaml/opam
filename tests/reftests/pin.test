@@ -1525,6 +1525,7 @@ Done.
 opam-version: "2.0"
 depends: "dep-reinst" { = "1" }
 ### opam install ./reinst --deps-only
+Nothing to do.
 ### :C:h:4: Install from repo and pin different same opam file
 ### opam switch create reinst-4 --empty
 ### opam install reinst
@@ -1541,6 +1542,19 @@ Done.
 opam-version: "2.0"
 depends: "dep-reinst" { = "2" }
 ### opam install ./reinst --deps-only
+The following actions will be performed:
+=== recompile 1 package
+  - recompile reinst     1      [uses dep-reinst]
+=== upgrade 1 package
+  - upgrade   dep-reinst 1 to 2 [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep-reinst.1
+-> installed dep-reinst.2
+-> retrieved reinst.1  (file://${BASEDIR}/reinst)
+-> removed   reinst.1
+-> installed reinst.1
+Done.
 ### :C:k: Checking the opam file update reinstall trigger, changing only with-test dependencies (variables)
 ### <pkg:reinst.1>
 opam-version: "2.0"
@@ -1638,6 +1652,13 @@ Done.
 opam-version: "2.0"
 depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "1" } ]
 ### opam install ./reinst --deps-only --with-test
+The following actions will be performed:
+=== install 1 package
+  - install dep-test-reinst 1 [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-test-reinst.1
+Done.
 ### :C:h:4: Install from repo and pin different same opam file
 ### opam switch create reinst-wt-4 --empty
 ### opam install reinst
@@ -1654,3 +1675,10 @@ Done.
 opam-version: "2.0"
 depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "2" } ]
 ### opam install ./reinst --deps-only --with-test
+The following actions will be performed:
+=== install 1 package
+  - install dep-test-reinst 2 [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-test-reinst.2
+Done.
