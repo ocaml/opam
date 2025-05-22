@@ -59,6 +59,7 @@ Done.
 opam-version: "2.0"
 depends: "dep-reinst" { = "1" }
 ### opam install ./reinst --deps-only
+Nothing to do.
 ### :I:3: Install from repo and pin different same opam file
 ### opam switch create reinst-3 --empty
 ### opam install reinst
@@ -75,6 +76,17 @@ Done.
 opam-version: "2.0"
 depends: "dep-reinst" { = "2" }
 ### opam install ./reinst --deps-only
+The following actions will be performed:
+=== remove 1 package
+  - remove  reinst     1      [conflicts with dep-reinst]
+=== upgrade 1 package
+  - upgrade dep-reinst 1 to 2 [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   reinst.1
+-> removed   dep-reinst.1
+-> installed dep-reinst.2
+Done.
 ### :II: Checking the opam file update reinstall trigger, changing only with-test dependencies (variables)
 ### <pkg:reinst.1>
 opam-version: "2.0"
@@ -135,6 +147,13 @@ Done.
 opam-version: "2.0"
 depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "1" } ]
 ### opam install ./reinst --deps-only --with-test
+The following actions will be performed:
+=== install 1 package
+  - install dep-test-reinst 1 [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-test-reinst.1
+Done.
 ### :II:3: Install from repo and simulated pin different same opam file
 ### opam switch create reinst-wt-3 --empty
 ### opam install reinst
@@ -151,6 +170,13 @@ Done.
 opam-version: "2.0"
 depends: [ "dep-reinst" { = "1" } "dep-test-reinst" { with-test & = "2" } ]
 ### opam install ./reinst --deps-only --with-test
+The following actions will be performed:
+=== install 1 package
+  - install dep-test-reinst 2 [required by reinst]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep-test-reinst.2
+Done.
 ### :III: Fetching of simulated pin
 ### <pkg:fetch.0>
 opam-version: "2.0"
