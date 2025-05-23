@@ -1,7 +1,7 @@
 (library
   (name        opam_state)
   (public_name opam-state)
-  (libraries   opam-repository re spdx_licenses)
+  (libraries   opam-repository re spdx_licenses base64)
   (synopsis    "OCaml Package Manager instance management library")
   (modules_without_implementation OpamStateTypes)
   (modules     :standard)
@@ -14,4 +14,24 @@
 (rule
   (targets opamScript.ml)
   (deps    ../../shell/crunch.ml (glob_files shellscripts/*.*sh))
+  (action  (with-stdout-to %{targets} (run ocaml %{deps}))))
+
+; Embed Cygwin mechanism
+;; blank for Non Windows
+ (rule
+   (enabled_if (<> %{os_type} "Win32"))
+   (action
+     (write-file opamEmbedCygwinSetup.ml "let drop _ = ()")))
+
+;; Download and integrate base64 into code for Windows
+(rule
+  (enabled_if (= %{os_type} "Win32"))
+  (targets setup.exe)
+  (action
+    (run curl --silent -Lo %{targets} https://cygwin.com/setup-x86_64.exe)))
+
+(rule
+  (enabled_if (= %{os_type} "Win32"))
+  (targets opamEmbedCygwinSetup.ml)
+  (deps    ../../shell/embedCygwin.ml setup.exe)
   (action  (with-stdout-to %{targets} (run ocaml %{deps}))))
