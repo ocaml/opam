@@ -407,7 +407,7 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
     );
     reinstall = lazy (
       let open OpamPackage.Set.Op in
-      let installed_pinned = st.pinned %% st.installed in
+      let installed_pinned = local_packages %% st.installed in
       OpamPackage.Set.fold (fun pinned_pkg reinstall ->
           match
             OpamPackage.Set.find_opt
