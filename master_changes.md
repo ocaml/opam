@@ -109,6 +109,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Bump the opam-repository sha to avoid a checksum breakage [#6524 @kit-ty-kate]
 
 ## Doc
 
