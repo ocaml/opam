@@ -379,7 +379,7 @@ let parallel_apply t
       (* Turns out these depexts weren't needed after all. Remember that and
          make the bypass permanent. *)
       try
-        (OpamPackage.Map.find nv (Lazy.force !t_ref.sys_packages)).s_available
+        (OpamPackage.Map.find nv (!t_ref.sys_packages)).s_available
       with Not_found -> OpamSysPkg.Set.empty
     in
     let bypass = OpamSysPkg.Set.union missing_depexts !bypass_ref in
@@ -1152,7 +1152,7 @@ let get_depexts ?(force=false) ?(recover=false) t
       if recover then
         OpamSwitchState.depexts_status_of_packages t pkg_to_install
       else
-        let base = Lazy.force t.sys_packages in
+        let base = t.sys_packages in
         (* workaround: st.sys_packages is not always updated with added
            packages *)
         let more_pkgs =
@@ -1337,9 +1337,9 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t
               sys_map
           | None -> sys_map)
         pkg_to_install
-        (Lazy.force t.sys_packages)
+        (t.sys_packages)
     in
-    { t with sys_packages = lazy sys_packages }
+    { t with sys_packages = sys_packages }
   in
   let confirm =
     confirm && not (OpamSysInteract.Cygwin.is_internal t.switch_global.config)
