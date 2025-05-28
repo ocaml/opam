@@ -110,6 +110,8 @@ users)
 ### Engine
 
 ## Github Actions
+  * Bump the opam-repository sha to avoid a checksum breakage [#6524 @kit-ty-kate]
+  * Bump the version of opam used to setup the depexts tests [#6524 @kit-ty-kate]
 
 ## Doc
 
