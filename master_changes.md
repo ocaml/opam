@@ -131,6 +131,10 @@ users)
 ## opam-state
   * `OpamSwitchState`: add `update_sys_packages` to update depexts status of a set of packages. [#6489 @arozovyk]
   * `OpamSysInteract`: add `available_status` and `installed_status` to be computed separately, redefine `packages_status` accordingly [#6489 @arozovyk]
+  * `OpamStateTypes`: add available system package status field in `repos_state` for all the depexts declared in repo's packages. The new field is also added to the cache [#6489 @arozovyk fix #6461]
+  * `OpamUpdate.repositories`: Compute repo's available system packages on opam update [#6489 @arozovyk fix #6461]
+  * `OpamRepositoryState.load`: load repo's available system packages [#6489 @arozovyk fix #6461]
+  * `OpamRepositoryState`: add `get_declared_depexts` that returns all the declared depexts in a set of opam files. [#6489 @arozovyk]
 
 ## opam-solver
 
