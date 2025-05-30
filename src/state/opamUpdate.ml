@@ -186,14 +186,49 @@ let repositories rt repos =
       ~dry_run:OpamStateConfig.(!r.dryrun)
       repos
   in
+  let get_sys_available rt = 
+    OpamRepositoryName.Map.map (fun opams ->
+        let gt = rt.repos_global in 
+        let repo_depexts = 
+          OpamRepositoryState.get_repo_declared_depexts opams gt
+        in
+        OpamSysInteract.available_packages ~env:gt.global_variables 
+          gt.config repo_depexts 
+      ) rt.repo_opams
+  in
+  let write_config_cache rt = 
+    OpamRepositoryState.write_config rt;
+    OpamRepositoryState.Cache.save rt;
+  in
+  let depexts_available_equal old new_ = 
+    OpamRepositoryName.Map.equal
+      (fun o n ->
+         match o, n with 
+           OpamSysPkg.Suppose_available, _ -> true 
+         |_, OpamSysPkg.Suppose_available -> true
+         | OpamSysPkg.Available os, OpamSysPkg.Available ns -> 
+           OpamSysPkg.Set.equal os ns)
+      old new_ 
+  in 
   let rt =
     match rt_update with
     | Some rt_update ->
       let rt = rt_update rt in
-      OpamRepositoryState.write_config rt;
-      OpamRepositoryState.Cache.save rt;
+      let repos_sys_available_pkgs = get_sys_available rt in 
+      let rt = { rt with repos_sys_available_pkgs } in
+      write_config_cache rt; 
       rt
-    | None -> rt
+    | None ->
+      (* We do an update since the system can (rarely) change as well *)
+      let repos_sys_available_pkgs = get_sys_available rt in 
+      if depexts_available_equal rt.repos_sys_available_pkgs 
+          repos_sys_available_pkgs 
+      then 
+        rt 
+      else 
+        let rt = { rt with repos_sys_available_pkgs } in 
+        write_config_cache rt; 
+        rt
   in
   failed, rt
 
