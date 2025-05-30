@@ -1141,19 +1141,12 @@ let print_depext_msg (status : OpamSysPkg.status) =
      OpamConsole.formatted_msg ~indent:4 "    %s\n"
        (syspkgs_to_string status.s_available))
 
-(* Gets depexts from the state, without checking again, unless [recover] is
-   true. *)
-let get_depexts ?(force=false) ?(recover=false) t
-    ~pkg_to_install ~pkg_installed =
+(* Gets depexts from the state *)
+let get_depexts ?(force=false) t ~pkg_to_install ~pkg_installed =
   if not force && OpamStateConfig.(!r.no_depexts) then
     OpamSysPkg.to_install_empty
   else
-    let sys_packages =
-      if recover then
-        OpamSwitchState.depexts_status_of_packages t pkg_to_install
-      else
-        Lazy.force t.sys_packages
-    in
+    let sys_packages = Lazy.force t.sys_packages in
     let already_installed = OpamPackage.Set.diff pkg_installed pkg_to_install in
     let open OpamSysPkg.Set.Op in
     let status =
@@ -1263,8 +1256,18 @@ let install_sys_packages_t ~propagate_st ~map_sysmap ~confirm env config
       check_again t sys_packages
   and check_again t sys_packages =
     let open OpamSysPkg.Set.Op in
+    let sys_available =
+      match propagate_st t with 
+        Some st -> 
+        OpamSysPkg.Available 
+          (OpamRepositoryState.get_repo_available_depexts st.switch_repos)
+      | None -> 
+        OpamSysInteract.available_packages ~env config sys_packages.ti_new
+    in 
     let status =
-      OpamSysInteract.packages_status ~env config sys_packages.ti_new
+      OpamSysInteract.packages_status 
+        ~sys_available 
+        ~env config sys_packages.ti_new
     in
     let still_missing = status.s_available ++ status.s_not_found in
     let installed = sys_packages.ti_new -- still_missing in
@@ -1333,8 +1336,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t
     confirm && not (OpamSysInteract.Cygwin.is_internal t.switch_global.config)
   in
   let sys_packages =
-    get_depexts ~force:force_depext ~recover:force_depext t
-      ~pkg_to_install ~pkg_installed
+    get_depexts ~force:force_depext t ~pkg_to_install ~pkg_installed
   in
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in

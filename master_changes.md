@@ -105,8 +105,10 @@ users)
 
 ## Reftests
 ### Tests
+  * Use `opam-set-os` in reftests following the depexts update.
 
 ### Engine
+  * Add `opam-set-os` command that combines setting global `os-family` variable followed by a (silent) `opam update` [#6461 @arozovyk]
 
 ## Github Actions
 
@@ -117,6 +119,8 @@ users)
 # API updates
 ## opam-client
   * Remove the heuristic of recomputing depexts of additional (pinned) packages in `OpamSolution` and move the logic to `OpamClient.install_t` and `OpamAuxCommand.autopin` [#6461 @arozovyk]
+  * Update the system package status check in `OpamClient` for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6461 @arozovyk]
+  * During `OpamSolution.install_sys_packages_t`, check for availability of system packages in `repo_state` before installing depexts [#6461 @arozovyk]
 
 ## opam-repository
 
@@ -127,6 +131,7 @@ users)
   * Split depexts status function in `OpamSysInteract` for available and installed to be computed separately [#6461 @arozovyk]
   * Add available system package status field in `repos_state` for all the depexts declared in repo's packages. The new field is also added to the cache [#6461 @arozovyk]
   * Compute repo's available packages on opam update [#6461 @arozovyk]
+  * During `OpamSwitchState.update_sys_packages`, check for availability of packages in `repo_state` when updating the depexts status of additional packages [#6461 @arozovyk]
 
 ## opam-solver
 
