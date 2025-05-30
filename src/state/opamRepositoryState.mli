@@ -22,7 +22,8 @@ module Cache: sig
   val load:
     dirname ->
     (OpamFile.Repo.t repository_name_map *
-     OpamFile.OPAM.t package_map repository_name_map)
+     OpamFile.OPAM.t package_map repository_name_map *
+     OpamSysPkg.available repository_name_map)
       option
   val remove: unit -> unit
 end
@@ -62,6 +63,14 @@ val get_root: 'a repos_state -> repository_name -> OpamFilename.Dir.t
 
 (** Same as {!get_root}, but with a repository rather than just a name as argument *)
 val get_repo_root: 'a repos_state -> repository -> OpamFilename.Dir.t
+
+(** Get repositories avaialble depexts. An empty set is returned if we suppose that 
+    all the packages are available, see [OpamSysPkg.available]. *)
+val get_repo_available_depexts: 'a repos_state -> OpamSysPkg.Set.t
+
+(** Returns the set of depexts required in opam files *)
+val get_repo_declared_depexts: OpamFile.OPAM.t OpamPackage.Map.t -> 
+  [< unlocked ] global_state -> OpamSysPkg.Set.t
 
 (* (\** Runs the given function with access to a (possibly temporary) directory
  *     containing the extracted structure of the given repository, and cleans it up
