@@ -1152,19 +1152,7 @@ let get_depexts ?(force=false) ?(recover=false) t
       if recover then
         OpamSwitchState.depexts_status_of_packages t pkg_to_install
       else
-        let base = Lazy.force t.sys_packages in
-        (* workaround: st.sys_packages is not always updated with added
-           packages *)
-        let more_pkgs =
-          OpamPackage.Set.filter (fun nv ->
-              (* dirty heuristic: recompute for all non-canonical packages *)
-              OpamPackage.Map.find_opt nv t.repos_package_index
-              <> OpamSwitchState.opam_opt t nv)
-            pkg_to_install
-        in
-        if OpamPackage.Set.is_empty more_pkgs then base else
-          OpamPackage.Map.union (fun _ x -> x) base
-            (OpamSwitchState.depexts_status_of_packages t more_pkgs)
+        Lazy.force t.sys_packages
     in
     let already_installed = OpamPackage.Set.diff pkg_installed pkg_to_install in
     let open OpamSysPkg.Set.Op in
