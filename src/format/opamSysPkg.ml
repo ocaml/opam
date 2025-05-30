@@ -55,6 +55,8 @@ type status =
     (** Package unavailable on this system *)
   }
 
+(* System package availability *)
+type available = Available of Set.t | Suppose_available 
 
 let status_empty =
   {
