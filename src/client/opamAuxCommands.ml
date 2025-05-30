@@ -535,6 +535,7 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
     with OpamPinCommand.Aborted ->
       OpamStd.Sys.exit_because `Aborted
   in
+  let st = OpamSwitchState.update_sys_packages pins st in 
   let _result, st, _updated =
     let already_pinned =
       OpamPackage.Set.union already_pinned_set
