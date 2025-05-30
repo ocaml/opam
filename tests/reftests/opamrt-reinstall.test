@@ -70,6 +70,7 @@ d
 ### : 3/ Install d
 ### opam install d
 [NOTE] Package d is already installed (current version is 1).
+Nothing to do.
 ### opam list -sV
 a.1
 b.1
