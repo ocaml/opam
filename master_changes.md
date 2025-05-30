@@ -128,9 +128,12 @@ users)
 
 ## opam-state
   * `OpamSwitchState`: add `update_sys_packages` to update depexts status of a set of packages. [#6489 @arozovyk]
+  * `OpamSysInteract`: add `available_status` and `installed_status` to be computed separately, redefine `packages_status` accordingly [#6489 @arozovyk]
 
 ## opam-solver
 
 ## opam-format
+  * `OpamSysPkg`: add `available` type to indicate the availability of a set of system packages. [#6489 @arozovyk]
+  * `OpamSysPkg`: add `available_equal`. [#6489 @arozovyk]
 
 ## opam-core
