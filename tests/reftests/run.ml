@@ -1116,9 +1116,9 @@ let run_test ?(vars=[]) ~opam t =
               in
               match cache with
               | None -> print_string "No cache\n"
-              | Some (_, cache) when OpamRepositoryName.Map.is_empty cache ->
+              | Some (_, cache, _) when OpamRepositoryName.Map.is_empty cache ->
                 print_string "Empty cache\n"
-              | Some (_, cache) ->
+              | Some (_, cache, _) ->
                 let cache =
                   if OpamPackage.Name.Map.is_empty nvs then cache else
                     OpamRepositoryName.Map.map
