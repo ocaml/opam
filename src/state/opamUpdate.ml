@@ -186,14 +186,40 @@ let repositories rt repos =
       ~dry_run:OpamStateConfig.(!r.dryrun)
       repos
   in
+  let get_sys_available rt =
+    let opams =  OpamRepositoryName.Map.fold (fun _ opams acc ->
+        OpamPackage.Map.union (fun _ x -> x) acc opams
+      ) rt.repo_opams (OpamPackage.Map.empty)
+    in
+    let repo_depexts =
+      OpamRepositoryState.get_declared_depexts opams rt.repos_global
+    in
+    OpamSysInteract.available_packages ~env:rt.repos_global.global_variables
+      rt.repos_global.config repo_depexts
+  in
+  let write_config_cache rt =
+    OpamRepositoryState.write_config rt;
+    OpamRepositoryState.Cache.save rt
+  in
   let rt =
     match rt_update with
     | Some rt_update ->
       let rt = rt_update rt in
-      OpamRepositoryState.write_config rt;
-      OpamRepositoryState.Cache.save rt;
+      let repos_sys_available_pkgs = get_sys_available rt in
+      let rt = { rt with repos_sys_available_pkgs } in
+      write_config_cache rt;
       rt
-    | None -> rt
+    | None ->
+      (* We do an update since the system can (rarely) change as well *)
+      let repos_sys_available_pkgs = get_sys_available rt in
+      if OpamSysPkg.available_equal rt.repos_sys_available_pkgs
+          repos_sys_available_pkgs
+      then
+        rt
+      else
+        let rt = { rt with repos_sys_available_pkgs } in
+        write_config_cache rt;
+        rt
   in
   failed, rt
 

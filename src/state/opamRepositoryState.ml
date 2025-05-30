@@ -19,6 +19,7 @@ module Cache = struct
   type t = {
     cached_repofiles: (repository_name * OpamFile.Repo.t) list;
     cached_opams: (repository_name * OpamFile.OPAM.t OpamPackage.Map.t) list;
+    cached_sys_available_pkgs: OpamSysPkg.available;
   }
 
   module C = OpamCached.Make (struct
@@ -47,13 +48,14 @@ module Cache = struct
            with Not_found -> false)
         repos_map
     in
-      { cached_repofiles =
-          OpamRepositoryName.Map.bindings
-            (filter_out_nourl rt.repos_definitions);
-        cached_opams =
-          OpamRepositoryName.Map.bindings
-            (filter_out_nourl rt.repo_opams);
-      }
+    { cached_repofiles =
+        OpamRepositoryName.Map.bindings
+          (filter_out_nourl rt.repos_definitions);
+      cached_opams =
+        OpamRepositoryName.Map.bindings
+          (filter_out_nourl rt.repo_opams);
+      cached_sys_available_pkgs = rt.repos_sys_available_pkgs;
+    }
 
   let file rt =
     OpamPath.state_cache rt.repos_global.root
@@ -71,7 +73,8 @@ module Cache = struct
     | Some cache ->
       Some
         (OpamRepositoryName.Map.of_list cache.cached_repofiles,
-         OpamRepositoryName.Map.of_list cache.cached_opams)
+         OpamRepositoryName.Map.of_list cache.cached_opams,
+         cache.cached_sys_available_pkgs)
     | None -> None
 
 end
@@ -153,6 +156,21 @@ let get_root rt name =
 let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
+let get_declared_depexts opams gt =
+  let env = OpamPackageVar.resolve_global gt in
+  OpamPackage.Map.fold (fun _ opam s ->
+      let open OpamSysPkg.Set.Op in
+      let depexts =
+        List.fold_left (fun depexts (names, filter) ->
+            if OpamFilter.eval_to_bool ~default:false env filter then
+              (names ++ depexts)
+            else
+              depexts)
+          OpamSysPkg.Set.empty (OpamFile.OPAM.depexts opam)
+      in
+      (depexts ++ s))
+    opams (OpamSysPkg.Set.empty)
+
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
@@ -195,7 +213,7 @@ let load lock_kind gt =
         ) in
         Hashtbl.add repos_tmp name tmp
     ) repositories;
-  let make_rt repos_definitions opams =
+  let make_rt repos_definitions opams repos_sys_available_pkgs =
     let rt = {
       repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
@@ -203,28 +221,40 @@ let load lock_kind gt =
       repositories;
       repos_definitions;
       repo_opams = opams;
+      repos_sys_available_pkgs
     } in
     OpamStd.Sys.at_exit (fun () -> cleanup rt);
     rt
   in
   match Cache.load gt.root with
-  | Some (repofiles, opams) ->
+  | Some (repofiles, opams, sys_available_pkgs) ->
     log "Cache found";
-    make_rt repofiles opams
+    make_rt repofiles opams sys_available_pkgs
   | None ->
     log "No cache found";
     OpamFilename.with_flock_upgrade `Lock_read lock @@ fun _ ->
-    let repofiles, opams =
-      OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
+    let repofiles, opams, repo_depexts =
+      OpamRepositoryName.Map.fold (fun name url (defs, opams, all_depexts) ->
           let repo = mk_repo name url in
           let repo_def, repo_opams =
             load_repo repo (get_root_raw gt.root repos_tmp name)
           in
+          let repo_depexts = get_declared_depexts repo_opams gt in
+          let repo_depexts =
+              OpamSysPkg.Set.Op.(repo_depexts ++ all_depexts)
+          in
           OpamRepositoryName.Map.add name repo_def defs,
-          OpamRepositoryName.Map.add name repo_opams opams)
-        repos_map (OpamRepositoryName.Map.empty, OpamRepositoryName.Map.empty)
+          OpamRepositoryName.Map.add name repo_opams opams,
+          repo_depexts)
+        repos_map (OpamRepositoryName.Map.empty,
+                   OpamRepositoryName.Map.empty,
+                   OpamSysPkg.Set.empty)
     in
-    let rt = make_rt repofiles opams in
+    let repos_sys_available_pkgs =
+      OpamSysInteract.available_packages ~env:gt.global_variables
+        gt.config repo_depexts
+    in
+    let rt = make_rt repofiles opams repos_sys_available_pkgs in
     Cache.save_new rt;
     rt
 
