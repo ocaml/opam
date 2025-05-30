@@ -122,6 +122,8 @@ users)
 
 ## opam-state
   * OpamSwitchState: add `update_sys_packages` function to update depexts status of a set of packages. [#6461 @arozovyk]
+  * Add a function to update system dependencies status of additional packages in `OpamSwitchState` [#6461 @arozovyk]
+  * Split depexts status function in `OpamSysInteract` for available and installed to be computed separately [#6461 @arozovyk]
 
 ## opam-solver
 
