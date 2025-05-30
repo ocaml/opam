@@ -120,6 +120,7 @@ users)
 ## opam-repository
 
 ## opam-state
+  * Add a function to update system dependencies status of additional packages in `OpamSwitchState` [#6461 @arozovyk]
 
 ## opam-solver
 

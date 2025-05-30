@@ -1275,6 +1275,19 @@ let update_pin nv opam st =
   ) in
   { st with sys_packages; available_packages }
 
+let update_sys_packages pkgs st = 
+  let sys_packages =
+    if OpamPackage.Set.is_empty pkgs then
+      st.sys_packages
+    else
+      lazy (
+        (OpamPackage.Map.union (fun x _ -> x) 
+           (Lazy.force st.sys_packages)
+           (depexts_status_of_packages st pkgs))
+      ) 
+  in
+  {st with sys_packages}  
+
 let do_backup lock st = match lock with
   | `Lock_write ->
     let file = OpamPath.Switch.backup st.switch_global.root st.switch in
