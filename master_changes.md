@@ -123,6 +123,8 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamSolution` Remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
+  * `OpamClient.install_t` and `OpamAuxCommand.autopin` update depexts status earlier using `OpamSwitchState.update_sys_packages` [#6489 @arozovyk]
 
 ## opam-repository
 
