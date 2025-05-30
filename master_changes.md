@@ -36,6 +36,7 @@ users)
 ## Config
 
 ## Pin
+  * [BUG] In case of simulate pin (`opam install . --deps`), trigger reinstall based on newly simulated pinned packages instead of already pinned set [#6522 @rjbou - partial fix #6501]
 
 ## List
 
@@ -106,6 +107,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add test for reinstall trigger of already installed pinned packages [#6522 @rjbou]
 
 ### Engine
 
