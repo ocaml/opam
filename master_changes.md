@@ -172,6 +172,7 @@ users)
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * `OpamSwitchState`: add `update_sys_packages` to update depexts status of a set of packages. [#6489 @arozovyk]
 
 ## opam-solver
 
