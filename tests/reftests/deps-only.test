@@ -36,9 +36,10 @@ The following actions would be performed:
 Nothing to do.
 ### opam install --deps-only foo baz
 The following actions would be performed:
-=== install 2 packages
-  - install bar 1 [required by baz]
-  - install foo 1 [required by bar]
+=== install 3 packages
+  - install bar  1 [required by baz]
+  - install foo  1 [required by bar, truc]
+  - install truc 1 [required by foo]
 ### opam install --deps-only bar baz
 The following actions would be performed:
 === install 1 package
@@ -225,3 +226,126 @@ The following actions will be performed:
 -> installed roots2.1
 Done.
 ### opam list --roots -s
+### : deps of same packages
+### opam switch create deps-conflictssssssssssssssssss --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install --deps-only lorem dolor
+The following actions will be performed:
+=== install 3 packages
+  - install ipsum 1 [required by dolor]
+  - install lorem 1 [required by ipsum, sit]
+  - install sit   1 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+-> installed ipsum.1
+-> installed sit.1
+Done.
+### : other :
+### <pkg:lorem.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "lorem" {="2"}
+### <pkg:dolor.2>
+opam-version: "2.0"
+depends: "lorem" {="1"}
+### <pkg:sit.1>
+opam-version: "2.0"
+### <pkg:sit.2>
+opam-version: "2.0"
+### opam switch create deps-conflicts --empty
+### # it takes lorem.2 & dolor.1
+### opam install --deps-only lorem dolor
+The following actions will be performed:
+=== install 1 package
+  - install sit 2 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed sit.2
+Done.
+### opam switch create deps-conflictsss --empty
+### # it takes lorem.1
+### opam install --deps-only lorem dolor.2
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### opam switch create deps-conflictss --empty
+### opam install --deps-only lorem.2 dolor.1
+The following actions will be performed:
+=== install 1 package
+  - install sit 2 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed sit.2
+Done.
+### opam switch create deps-conflictsssssss --empty
+### opam install --deps-only lorem.1 dolor.2
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### opam switch create deps-conflictssss --empty
+### opam install --deps-only lorem.2 dolor.2
+[ERROR] Package conflict!
+  * Missing dependency:
+    - deps-of-dolor -> deps-of-lorem < 2
+    no matching version
+
+No solution found, exiting
+# Return code 20 #
+### opam switch create deps-conflictsssss --empty
+### opam install --deps-only lorem.1 lorem.2
+[ERROR] Package conflict!
+  * Missing dependency:
+    - (request) -> deps-of-lorem
+    unknown package
+
+No solution found, exiting
+# Return code 20 #
+### opam switch create deps-conflictsssssssssssssssss --empty
+### opam install lorem.1
+The following actions will be performed:
+=== install 2 packages
+  - install ipsum 1 [required by lorem]
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+-> installed lorem.1
+Done.
+### opam install --deps-only dolor.1 lorem
+The following actions will be performed:
+=== install 1 package
+  - install sit 2 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   deps-of-lorem.1
+-> installed sit.2
+Done.
