@@ -120,6 +120,7 @@ users)
 ## opam-repository
 
 ## opam-state
+  * OpamSwitchState: add `update_sys_packages` function to update depexts status of a set of packages. [#6461 @arozovyk]
 
 ## opam-solver
 
