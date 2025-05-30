@@ -175,6 +175,7 @@ users)
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
   * `OpamSwitchState`: add `update_sys_packages` to update depexts status of a set of packages. [#6489 @arozovyk]
+  * `OpamSysInteract`: add `available_status` and `installed_status` to be computed separately, redefine `packages_status` accordingly [#6489 @arozovyk]
 
 ## opam-solver
 
@@ -182,6 +183,8 @@ users)
   * `OpamFormula.equal_relop`: was added [#6644 @kit-ty-kate]
   * `OpamTypesBase.{action,pkg_flag,simple_arg,arg,filter,command}_equal`: were added [#6644 @kit-ty-kate]
   * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
+  * `OpamSysPkg`: add `available` type to indicate the availability of a set of system packages. [#6489 @arozovyk]
+  * `OpamSysPkg`: add `available_equal`. [#6489 @arozovyk]
 
 ## opam-core
   * `OpamConsole.log`: does not keep log messages before initialization if the code is ran through a library [#6487 @kit-ty-kate]
