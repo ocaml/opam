@@ -15,3 +15,9 @@
   (targets opamScript.ml)
   (deps    ../../shell/crunch.ml (glob_files shellscripts/*.*sh))
   (action  (with-stdout-to %{targets} (run ocaml %{deps}))))
+
+; Embedded Cygwin mechanism (done in the configure script on Windows if requested)
+ (rule
+   (mode fallback)
+   (action
+     (write-file opamEmbeddedCygwinSetup.ml "let content = None")))

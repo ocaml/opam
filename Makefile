@@ -101,7 +101,9 @@ clean:
 distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
 	rm -f Makefile.config config.log config.status aclocal.m4
-	rm -f src/*.META src/*/.merlin src/manifest/dune src/manifest/install.inc src/stubs/win32/dune src/core/cc64 src/ocaml-flags-configure.sexp
+	rm -f src/*.META src/*/.merlin src/manifest/dune src/manifest/install.inc \
+        src/stubs/win32/dune src/core/cc64 src/ocaml-flags-configure.sexp \
+        src/state/opamEmbeddedCygwinSetup.ml
 	rm -f src/client/linking.sexp src/core/c-flags.sexp src/core/developer src/core/version
 
 OPAMINSTALLER_FLAGS = --prefix "$(call CYGPATH,$(DESTDIR)$(prefix))"

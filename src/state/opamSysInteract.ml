@@ -278,11 +278,17 @@ module Cygwin = struct
     OpamProcess.Job.catch
       (fun exn ->
          let backtrace = Printexc.get_raw_backtrace () in
-         if dst_exists then begin
-           OpamConsole.warning "%s failed to update" setupexe;
-           Done ()
-         end else
-           Printexc.raise_with_backtrace exn backtrace
+         if dst_exists then
+           OpamConsole.warning "%s failed to update" setupexe
+         else
+           begin match OpamEmbeddedCygwinSetup.content with
+           | None -> Printexc.raise_with_backtrace exn backtrace
+           | Some setup_exe_content ->
+             OpamConsole.warning "Cygwin setup failed to download - \
+                                  using embedded copy instead";
+             OpamFilename.write dst setup_exe_content
+           end;
+         Done ()
       )
     @@ fun () ->
     OpamDownload.download ~overwrite url_setupexe_sha512 dir @@+ fun file ->

@@ -89,6 +89,34 @@ AC_ARG_WITH([dune],
 AC_ARG_WITH([vendored-deps],
   AS_HELP_STRING([--with-vendored-deps],[Use vendored dependencies instead of any available in the compiler installation]))
 
+AC_ARG_WITH([cygwin-setup],
+  AS_HELP_STRING([--with-cygwin-setup],["Embed Cygwin's setup.exe into the executable"]),
+  [AS_IF([test ${WIN32} -eq 0],[AC_MSG_ERROR([--with-cygwin-setup is only supported on Windows])])])
+
+AS_IF([test "x$with_cygwin_setup" != "x"],[
+  AS_CASE([$with_cygwin_setup],
+    [yes], [
+      dest='src_ext/archives'
+      mkdir -p "$dest"
+      dnl Always download setup, because it's not a fixed URL for each version
+      dnl of setup (in the way that the vendored source archives are)
+      rm -f "$dest/setup-x86_64.exe" "$dest/sha512.sum"
+      curl --output-dir "$dest" -fsSLO https://cygwin.com/setup-x86_64.exe
+      curl -fsSL https://cygwin.com/sha512.sum | grep -F setup-x86_64.exe > "$dest/sha512.sum"
+      AS_IF([test ! -e "$dest/sha512.sum" || \
+             test ! -e "$dest/setup-x86_64.exe" || \
+             ! ( cd "$dest"; shasum -c sha512.sum ) ],[
+        AC_MSG_ERROR([Failed to download and verify Cygwin's setup-x86_64.exe])
+      ])
+      CYGWIN_SETUP="$dest/setup-x86_64.exe"
+    ],
+    [no], [],
+    [CYGWIN_SETUP=$(cygpath -m "$with_cygwin_setup")])
+  AS_IF([test "x" != "x$CYGWIN_SETUP"],[
+    ocaml shell/embed.ml "$CYGWIN_SETUP" > src/state/opamEmbeddedCygwinSetup.ml
+  ])
+])
+
 AS_IF([test "x" != "x$LIB_PREFIX"], [
   CPATH=$CPATH:$LIB_PREFIX/include
   LIBRARY_PATH=$LIBRARY_PATH:$LIB_PREFIX/lib
