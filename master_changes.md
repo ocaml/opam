@@ -36,6 +36,7 @@ users)
 ## Config
 
 ## Pin
+  * [BUG] When using `--deps-only`, no longer take into account the simulated pin information. This is hit when a package `pkg` is already installed and `opam install ./pkg --deps` is called, if there is a conflict between installed `pkg` dependencies and local `pkg` declaration, the conflict is not seen and the already installed `pkg` is kept. [#XXX @rjbou]
 
 ## List
 
