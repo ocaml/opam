@@ -1,5 +1,5 @@
-URL_cppo = https://github.com/ocaml-community/cppo/archive/refs/tags/v1.7.0.tar.gz
-MD5_cppo = 90f66810f73b115cc55e581a34bf7db9
+URL_cppo = https://github.com/ocaml-community/cppo/archive/v1.8.0.tar.gz
+MD5_cppo = a197cb393b84f6b30e0ff55080ac429b
 
 URL_extlib = https://github.com/ygrek/ocaml-extlib/releases/download/1.8.0/extlib-1.8.0.tar.gz
 MD5_extlib = 43fb3bf2989671af1769147b1171d080
@@ -13,8 +13,8 @@ MD5_re = e0199e32947fd33fcc1b8e69de2308a1
 URL_cmdliner = https://erratique.ch/software/cmdliner/releases/cmdliner-1.3.0.tbz
 MD5_cmdliner = 662936095a1613d7254815238e11793f
 
-URL_ocamlgraph = https://github.com/backtracking/ocamlgraph/releases/download/2.1.0/ocamlgraph-2.1.0.tbz
-MD5_ocamlgraph = 4200d8f223aa7a32b4024e4553821c7c
+URL_ocamlgraph = https://github.com/backtracking/ocamlgraph/releases/download/2.2.0/ocamlgraph-2.2.0.tbz
+MD5_ocamlgraph = 3195404bc06fce560d5336d7614028bc
 
 URL_cudf = https://gitlab.com/irill/cudf/-/archive/v0.10/cudf-v0.10.tar.gz
 MD5_cudf = ed8fea314d0c6dc0d8811ccf860c53dd
@@ -45,8 +45,8 @@ MD5_stdlib-shims = 09db7af8b4a3a96048a61cb6ae2496ef
 URL_spdx_licenses = https://github.com/kit-ty-kate/spdx_licenses/releases/download/v1.3.0/spdx_licenses-1.3.0.tar.gz
 MD5_spdx_licenses = 7e9a0c48d477c900ccb5a0ec9a402118
 
-URL_uutf = https://erratique.ch/software/uutf/releases/uutf-1.0.3.tbz
-MD5_uutf = a308285514259d20b48abc92f00a3708
+URL_uutf = https://erratique.ch/software/uutf/releases/uutf-1.0.4.tbz
+MD5_uutf = 19c8e6d8ae6c70116495a7d44ac75f3d
 
 URL_jsonm = https://erratique.ch/software/jsonm/releases/jsonm-1.0.2.tbz
 MD5_jsonm = bb21574ddd58543120430ff306b462e6
@@ -60,5 +60,5 @@ MD5_swhid_core = 77d88d4b1d96261c866f140c64d89af8
 URL_menhir = https://gitlab.inria.fr/fpottier/menhir/-/archive/20240715/archive.tar.gz
 MD5_menhir = d39a8943fe1be28199e5ec1f4133504c
 
-URL_patch = https://github.com/hannesm/patch/releases/download/v3.0.0-alpha2/patch-3.0.0-alpha2.tar.gz
-MD5_patch = 7f11023c7231b916cfe3dd28ff6ce948
+URL_patch = https://github.com/hannesm/patch/releases/download/v3.0.0-beta1/patch-3.0.0-beta1.tar.gz
+MD5_patch = e4654a4516a2841991ac17c1f07f6068

@@ -44,6 +44,8 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Fix a stack overflow when updating repositories with large files [#6527 @kit-ty-kate - fix #6513]
+  * Fix a failure when updating a repository which adds a line at the end of a file without final newline character [#6527 @kit-ty-kate - fix hannesm/patch#28]
 
 ## Tree
 
@@ -72,6 +74,8 @@ users)
 ## VCS
 
 ## Build
+  * Bump the downloaded-if-missing dune to 3.19.0, cppo to 1.8.0, ocamlgraph to 2.2.0, uutf to 1.0.4 and patch to 3.0.0~beta1 [#6527 @kit-ty-kate]
+  * Allows `./configure --without-dune` to build with OCaml 5.4 [#6527 @kit-ty-kate]
 
 ## Infrastructure
 
