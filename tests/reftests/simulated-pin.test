@@ -35,17 +35,15 @@ depends: "dep-reinst" { = "2" }
 [reinst.1] synchronised (file://${BASEDIR}/reinst)
 [reinst] Installing new package description from upstream file://${BASEDIR}/reinst
 The following actions will be performed:
-=== recompile 1 package
-  - recompile reinst     1 (pinned) [uses dep-reinst]
+=== remove 1 package
+  - remove  reinst     1 (pinned) [conflicts with dep-reinst]
 === upgrade 1 package
-  - upgrade   dep-reinst 1 to 2     [required by reinst]
+  - upgrade dep-reinst 1 to 2     [required by reinst]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   reinst.1
 -> removed   dep-reinst.1
 -> installed dep-reinst.2
--> retrieved reinst.1  (no changes)
--> removed   reinst.1
--> installed reinst.1
 Done.
 ### :I:2: Install from repo and pin same opam file
 ### opam switch create reinst-2 --empty

@@ -166,6 +166,10 @@ type +'lock switch_state = {
       of removed system dependencies. Only packages which are unavailable end up
       in this set, they are otherwise put in {!field:reinstall}. *)
 
+  overwrote_opams: (bool * OpamFile.OPAM.t) package_map;
+  (** In case of simulated pins, keep the old information of opam files. The
+      boolean is set to true if the package was previously pinned. *)
+
   (* Missing: a cache for
      - switch-global and package variables
      - the solver universe? *)
