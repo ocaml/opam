@@ -546,6 +546,7 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
       OpamStd.Sys.exit_because `Aborted
   in
   let _result, st, _updated =
+    if simulate then false, st, OpamPackage.Set.empty else
     let already_pinned =
       OpamPackage.Set.union already_pinned_set
         (OpamPackage.packages_of_names pins already_pinned_diff_url)

@@ -1129,8 +1129,6 @@ Done.
 opam-version: "2.0"
 depends: "dependency" {= "2"}
 ### opam install --deps-only ./pin-change
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
-[pin-change.dev] synchronised (no changes)
 The following actions will be performed:
 === remove 1 package
   - remove  pin-change dev (pinned) [conflicts with dependency]
@@ -1146,8 +1144,6 @@ Done.
 opam-version: "2.0"
 depends: "dependency" {= "3"}
 ### opam install --deps-only ./pin-change/opam
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
-[pin-change.dev] synchronised (no changes)
 The following actions will be performed:
 === upgrade 1 package
   - upgrade dependency 2 to 3 [required by pin-change]
