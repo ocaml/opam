@@ -113,6 +113,7 @@ users)
 ## Reftests
 ### Tests
   * Add some related pin tests: fetching, reinstall trigger & simulated pin (deps-only) [#6530 @rjbou]
+  * Add working dir test case to check the case where a requested working-dir package is already pinned with another url [#6533 @rjbou]
 
 ### Engine
 

@@ -272,3 +272,74 @@ The following actions would be performed:
   - downgrade qux     4 to 1       [required by ongoing]
 === recompile 1 package
   - recompile ongoing dev (pinned)
+### : working dir an already pinned package, but pinned to a different url
+### : see https://github.com/ocaml/opam/issues/4484 & https://github.com/ocaml/opam/pull/4542
+### <pin:old-url/change-url.opam>
+opam-version: "2.0"
+version: "a"
+build: [
+  [ "test" "-f" "old-file" ]
+  [ "test" "!" "-f" "new-file" ]
+]
+### <old-url/old-file>
+Yeah, I'm an old file
+### <old-url/file>
+I'm a normal file
+### <pin:new-url/change-url.opam>
+opam-version: "2.0"
+version: "a"
+build: [
+  [ "test" "!" "-f" "old-file" ]
+  [ "test" "-f" "new-file" ]
+]
+### <new-url/file>
+I'm a normal file
+### git -C ./new-url init -q --initial-branch=master
+### git -C ./new-url config core.autocrlf false
+### git -C ./new-url add -A
+### git -C ./new-url commit -qm "init"
+### <new-url/new-file>
+I'm a new file, huhu
+### git -C ./new-url status --short
+?? new-file
+### opam switch create change-url-no-install --empty
+### :: do not install the first pin
+### opam pin ./old-url -n
+[NOTE] Package change-url does not exist in opam repositories registered in the current switch.
+change-url is now pinned to file://${BASEDIR}/old-url (version a)
+### opam install ./new-url --working-dir
+[NOTE] Package change-url is currently pinned to file://${BASEDIR}/old-url (version a).
+change-url is now pinned to git+file://${BASEDIR}/new-url#master (version a)
+[change-url.a] synchronised (git+file://${BASEDIR}/new-url#master)
+The following actions will be performed:
+=== install 1 package
+  - install change-url a (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed change-url.a
+Done.
+### :: install the first pin
+### opam switch create change-url --empty
+### opam pin ./old-url
+[NOTE] Package change-url does not exist in opam repositories registered in the current switch.
+change-url is now pinned to file://${BASEDIR}/old-url (version a)
+
+The following actions will be performed:
+=== install 1 package
+  - install change-url a (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed change-url.a
+Done.
+### opam install ./new-url --working-dir
+[NOTE] Package change-url is currently pinned to file://${BASEDIR}/old-url (version a).
+change-url is now pinned to git+file://${BASEDIR}/new-url#master (version a)
+[change-url.a] synchronised (git+file://${BASEDIR}/new-url#master)
+The following actions will be performed:
+=== recompile 1 package
+  - recompile change-url a (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   change-url.a
+-> installed change-url.a
+Done.
