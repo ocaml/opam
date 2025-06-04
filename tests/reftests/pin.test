@@ -1487,12 +1487,9 @@ depends: [
 ]
 ### opam install ./patch --with-test --deps
 The following actions will be performed:
-=== remove 1 package
-  - remove  patch          1 [no longer available]
 === install 1 package
   - install dep-test-patch 1 [required by patch]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   patch.1
 -> installed dep-test-patch.1
 Done.

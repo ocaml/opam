@@ -2174,10 +2174,15 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
                 (O.depends opam)
             in
             let conflicts =
-              let vstring = OpamPackage.Version.to_string nv.version in
+              let non_installed =
+                OpamSwitchState.packages_of_atoms t [(OpamPackage.name nv, None)] -- t.installed
+              in
               OpamFormula.ors
-                (Atom (nv.name, Atom (Constraint (`Neq, FString vstring))) ::
-                 if ignore_conflicts then [] else [ O.conflicts opam ])
+                (OpamPackage.Set.fold
+                   (fun nv acc ->
+                      let vstring = OpamPackage.Version.to_string nv.version in
+                      Atom (nv.name, Atom (Constraint (`Eq, FString vstring))) :: acc)
+                   non_installed (if ignore_conflicts then [] else [ O.conflicts opam ]))
             in
             let url =
               if OpamSwitchState.is_dev_package t nv then
