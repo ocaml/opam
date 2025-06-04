@@ -395,8 +395,6 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
       OpamPackage.Map.filter (fun nv _ ->
           OpamPackage.Set.mem nv local_packages)
         st.opams
-      |> OpamPackage.Map.mapi (fun nv opam ->
-          OpamPackage.Set.mem nv st.pinned, opam)
   in
   let st = {
     st with

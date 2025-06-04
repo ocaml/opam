@@ -978,15 +978,9 @@ let universe st
   (* We retrieve the previous opam files, package in this set are simulated
      pins and we don't want the take the new definition into account for
      solving *)
-  let overwrote_opams, overwrote_unpinned =
-    OpamPackage.Map.fold (fun nv (pinned, opam) (opams, unpinneds) ->
-        OpamPackage.Map.add nv opam opams,
-        if pinned then unpinneds else OpamPackage.Set.add nv unpinneds)
-      st.overwrote_opams OpamPackage.(Map.empty, Set.empty)
+  let opams =
+    OpamPackage.Map.union (fun _ o -> o) st.opams st.overwrote_opams
   in
-    OpamPackage.Map.union (fun _ o -> o) st.opams overwrote_opams
-  in
-  let u_pinned = OpamPinned.packages st -- overwrote_unpinned in
   let u_depends =
     let depend =
       let ignored = OpamStateConfig.(!r.ignore_constraints_on) in
