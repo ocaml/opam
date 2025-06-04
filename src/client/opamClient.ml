@@ -2161,7 +2161,9 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   let t, deps_of_packages =
     (* add deps-of-xxx packages to replace each atom *)
     OpamPackage.Name.Map.fold (fun name dname (t, deps_of_packages) ->
-        let ats = List.filter (fun (n,_) -> n = name) atoms in
+        let ats =
+          List.filter (fun (n,_) -> OpamPackage.Name.equal n name) atoms
+        in
         let nvs = OpamSwitchState.packages_of_atoms t ats in
         let self_conflict =
           match OpamSwitchState.find_installed_package_by_name t name with
