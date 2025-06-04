@@ -118,9 +118,9 @@ The following actions would be performed:
   - install   c 1
   - install   d 1
 ### diff install-1.cudf reinstall-1.cudf
-20a21
+19a20
 > reinstall: true
-54c55
+53c54
 < install: d , a
 ---
 > install: d , a = 1

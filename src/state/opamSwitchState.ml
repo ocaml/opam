@@ -1046,7 +1046,6 @@ let universe st
   u_depends;
   u_depopts;
   u_conflicts;
-  u_installed_roots = st.installed_roots;
   u_invariant;
   u_reinstall;
   u_attrs     = ["opam-query", lazy requested;

@@ -99,7 +99,7 @@ users)
 ## Shell
 
 ## Internal
-  * Cudf: remove unused attribute pinned [#XXX @rjbou]
+  * Cudf: remove unused attribute pinned and installed-roots [#XXX @rjbou]
 
 ## Internal: Unix
 
