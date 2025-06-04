@@ -99,6 +99,7 @@ users)
 ## Shell
 
 ## Internal
+  * Cudf: remove unused attribute pinned [#XXX @rjbou]
 
 ## Internal: Unix
 

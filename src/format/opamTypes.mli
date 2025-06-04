@@ -307,7 +307,6 @@ type universe = {
   u_conflicts: formula package_map;
   u_action   : user_action;
   u_installed_roots: package_set;
-  u_pinned   : package_set;
   u_invariant: formula;
   u_reinstall: package_set;
   u_attrs    : (string * package_set Lazy.t) list;

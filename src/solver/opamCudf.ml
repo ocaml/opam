@@ -20,7 +20,6 @@ let s_source = "opam-name"
 let s_source_number = "opam-version"
 let s_reinstall = "reinstall"
 let s_installed_root = "installed-root"
-let s_pinned = "pinned"
 let s_version_lag = "version-lag"
 
 let opam_invariant_package_name =
@@ -1273,7 +1272,6 @@ let default_preamble =
     (s_source_number,  `String None);
     (s_reinstall,      `Bool (Some false));
     (s_installed_root, `Bool (Some false));
-    (s_pinned,         `Bool (Some false));
     (s_version_lag,    `Nat (Some 0));
   ] in
   Dose_common.CudfAdd.add_properties Cudf.default_preamble l

@@ -57,7 +57,6 @@ let get_universe opams =
            OpamFilter.filter_formula ~default:false (env nv))
         opams;
     u_installed_roots = OpamPackage.Set.empty;
-    u_pinned = OpamPackage.Set.empty;
     u_invariant = OpamFormula.Empty;
     u_attrs = [];
     u_reinstall = OpamPackage.Set.empty;

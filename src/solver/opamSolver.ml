@@ -30,7 +30,6 @@ let empty_universe =
     u_conflicts = OpamPackage.Map.empty;
     u_action = Install;
     u_installed_roots = OpamPackage.Set.empty;
-    u_pinned = OpamPackage.Set.empty;
     u_invariant = OpamFormula.Empty;
     u_reinstall = OpamPackage.Set.empty;
     u_attrs = [];
@@ -187,7 +186,6 @@ let opam2cudf_map universe version_map packages =
   let installed_map = set_to_bool_map universe.u_installed in
   let reinstall_map = set_to_bool_map universe.u_reinstall in
   let installed_root_map = set_to_bool_map universe.u_installed_roots in
-  let pinned_to_current_version_map = set_to_bool_map universe.u_pinned in
   let avoid_versions =
     match
       OpamStd.List.assoc_opt String.equal "avoid-version" universe.u_attrs
@@ -249,9 +247,6 @@ let opam2cudf_map universe version_map packages =
     |> add installed_root_map (fun _ x cp ->
         {cp with Cudf.pkg_extra =
                    (OpamCudf.s_installed_root, `Bool x) :: cp.Cudf.pkg_extra})
-    |> add pinned_to_current_version_map (fun _ x cp ->
-        {cp with Cudf.pkg_extra =
-                   (OpamCudf.s_pinned, `Bool x) :: cp.Cudf.pkg_extra})
     |> add version_lag_map (fun _ x cp ->
         {cp with Cudf.pkg_extra =
                    (OpamCudf.s_version_lag, `Int x) :: cp.Cudf.pkg_extra})
