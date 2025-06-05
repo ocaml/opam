@@ -2161,8 +2161,17 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   let t, deps_of_packages =
     (* add deps-of-xxx packages to replace each atom *)
     OpamPackage.Name.Map.fold (fun name dname (t, deps_of_packages) ->
-        let ats = List.filter (fun (n,_) -> n = name) atoms in
+        let ats =
+          List.filter (fun (n,_) -> OpamPackage.Name.equal n name) atoms
+        in
         let nvs = OpamSwitchState.packages_of_atoms t ats in
+        let self_conflict =
+          match OpamSwitchState.find_installed_package_by_name t name with
+          | exception Not_found -> Atom (name, Empty)
+          | pkg ->
+            let vstring = OpamPackage.Version.to_string pkg.version in
+            Atom (name, Atom (Constraint (`Neq, FString vstring)))
+        in
         OpamPackage.Set.fold (fun nv (t, deps_of_packages) ->
             let module O = OpamFile.OPAM in
             let dnv = OpamPackage.create dname nv.version in
@@ -2174,9 +2183,8 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
                 (O.depends opam)
             in
             let conflicts =
-              let vstring = OpamPackage.Version.to_string nv.version in
               OpamFormula.ors
-                (Atom (nv.name, Atom (Constraint (`Neq, FString vstring))) ::
+                (self_conflict ::
                  if ignore_conflicts then [] else [ O.conflicts opam ])
             in
             let url =
