@@ -57,7 +57,7 @@ val reinit:
 val install:
   rw switch_state ->
   ?formula:formula ->
-  ?autoupdate:atom list -> ?add_to_roots:bool -> ?deps_only:bool ->
+  ?autoupdate:atom list -> ?add_to_roots:bool -> ?deps_only:_ switch_state option ->
   ?ignore_conflicts:bool -> ?assume_built:bool -> ?download_only:bool ->
   ?depext_only:bool -> atom list ->
   rw switch_state
@@ -68,7 +68,7 @@ val install_t:
   rw switch_state ->
   ?ask:bool -> ?ignore_conflicts:bool -> ?depext_only:bool -> ?download_only:bool ->
   atom list -> ?formula:formula ->
-  bool option -> deps_only:bool -> assume_built:bool ->
+  bool option -> deps_only:_ switch_state option -> assume_built:bool ->
   rw switch_state
 
 (** Check that the given list of packages [atoms] have their dependencies
