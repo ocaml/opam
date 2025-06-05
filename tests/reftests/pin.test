@@ -1129,8 +1129,6 @@ Done.
 opam-version: "2.0"
 depends: "dependency" {= "2"}
 ### opam install --deps-only ./pin-change
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
-[pin-change.dev] synchronised (no changes)
 The following actions will be performed:
 === remove 1 package
   - remove  pin-change dev (pinned) [conflicts with dependency]
@@ -1146,8 +1144,6 @@ Done.
 opam-version: "2.0"
 depends: "dependency" {= "3"}
 ### opam install --deps-only ./pin-change/opam
-[NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
-[pin-change.dev] synchronised (no changes)
 The following actions will be performed:
 === upgrade 1 package
   - upgrade dependency 2 to 3 [required by pin-change]
@@ -1512,3 +1508,118 @@ The following actions will be performed:
 -> removed   reinst.1
 -> installed reinst.1
 Done.
+### :C:j: Updating a pinned package by `opam install .` do not loose `opam pin edit` information
+### # from https://github.com/ocaml/opam/pull/2893/commits/02d1ea9bb604d680fd6910848f11c8a49583afb1
+### OPAMEDITOR='sed -i.bak "s/file1/file2/g" '
+### <pkg:tide.1>
+opam-version: "2.0"
+### <pin:tide/tide.opam>
+opam-version: "2.0"
+install: [
+  [ "mkdir" "%{lib}%/%{name}%" ]
+  [ "cp" "file1" "%{lib}%/%{name}%/file1" ]
+]
+### <tide/file1>
+The original one
+### <tide/file2>
+The edited one
+### :C:j:1: with pin edit
+### opam switch create pin-edit --empty
+### opam pin ./tide
+tide is now pinned to file://${BASEDIR}/tide (version 1)
+
+The following actions will be performed:
+=== install 1 package
+  - install tide 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved tide.1  (file://${BASEDIR}/tide)
+-> installed tide.1
+Done.
+### ls OPAM/pin-edit/lib/tide
+file1
+### opam-cat OPAM/pin-edit/.opam-switch/overlay/tide/opam | grep install
+install: [["mkdir" "%{lib}%/%{name}%"] ["cp" "file1" "%{lib}%/%{name}%/file1"]]
+### opam pin edit tide
+You can edit this file again with "opam pin edit tide", export it with "opam show tide --raw"
+Save the new opam file back to "${BASEDIR}/tide/tide.opam"? [Y/n] y
+The following actions will be performed:
+=== recompile 1 package
+  - recompile tide 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved tide.1  (file://${BASEDIR}/tide)
+-> removed   tide.1
+-> installed tide.1
+Done.
+### ls OPAM/pin-edit/lib/tide
+file2
+### opam-cat OPAM/pin-edit/.opam-switch/overlay/tide/opam | grep install
+install: [["mkdir" "%{lib}%/%{name}%"] ["cp" "file2" "%{lib}%/%{name}%/file2"]]
+### <tide/stuff>
+just passing
+### opam install ./tide
+[tide.1] synchronised (file://${BASEDIR}/tide)
+The following actions will be performed:
+=== recompile 1 package
+  - recompile tide 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   tide.1
+-> installed tide.1
+Done.
+### ls OPAM/pin-edit/lib/tide
+file2
+### opam-cat OPAM/pin-edit/.opam-switch/overlay/tide/opam | grep install
+install: [["mkdir" "%{lib}%/%{name}%"] ["cp" "file2" "%{lib}%/%{name}%/file2"]]
+### :C:j:2: with --edit
+### opam switch create flag-edit --empty
+### sed -i.bak "s/file2/file1/g" tide/tide.opam
+### opam pin ./tide
+tide is now pinned to file://${BASEDIR}/tide (version 1)
+
+The following actions will be performed:
+=== install 1 package
+  - install tide 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed tide.1
+Done.
+### ls OPAM/flag-edit/lib/tide
+file1
+### opam-cat OPAM/flag-edit/.opam-switch/overlay/tide/opam | grep install
+install: [["mkdir" "%{lib}%/%{name}%"] ["cp" "file1" "%{lib}%/%{name}%/file1"]]
+### opam pin ./tide --edit
+[NOTE] Package tide is already pinned to file://${BASEDIR}/tide (version 1).
+You can edit this file again with "opam pin edit tide", export it with "opam show tide --raw"
+tide is now pinned to file://${BASEDIR}/tide (version 1)
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile tide 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   tide.1
+-> installed tide.1
+Done.
+### ls OPAM/flag-edit/lib/tide
+file2
+### opam-cat OPAM/flag-edit/.opam-switch/overlay/tide/opam | grep install
+install: [["mkdir" "%{lib}%/%{name}%"] ["cp" "file2" "%{lib}%/%{name}%/file2"]]
+### <tide/stuff2>
+just passing
+### opam install ./tide
+tide is now pinned to file://${BASEDIR}/tide (version 1)
+[tide.1] synchronised (file://${BASEDIR}/tide)
+The following actions will be performed:
+=== recompile 1 package
+  - recompile tide 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   tide.1
+-> installed tide.1
+Done.
+### ls OPAM/flag-edit/lib/tide
+file1
+### opam-cat OPAM/flag-edit/.opam-switch/overlay/tide/opam | grep install
+install: [["mkdir" "%{lib}%/%{name}%"] ["cp" "file1" "%{lib}%/%{name}%/file1"]]

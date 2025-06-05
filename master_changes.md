@@ -37,6 +37,7 @@ users)
 
 ## Pin
   * [BUG] When using `--deps-only`, no longer take into account the simulated pin information. This is hit when a package `pkg` is already installed and `opam install ./pkg --deps` is called, if there is a conflict between installed `pkg` dependencies and local `pkg` declaration, the conflict is not seen and the already installed `pkg` is kept. [#6530 @rjbou - fix #6529]
+  * [BUG] In case of simulated pin (deps-only, depext-only), no longer fetch and write the sources [#6533 @rjbou - fix #6532]
 
 ## List
 
@@ -113,6 +114,8 @@ users)
 ## Reftests
 ### Tests
   * Add some related pin tests: fetching, reinstall trigger & simulated pin (deps-only) [#6530 @rjbou]
+  * Add working dir test case to check the case where a requested working-dir package is already pinned with another url [#6533 @rjbou]
+  * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
 
 ### Engine
 
