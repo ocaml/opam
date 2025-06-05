@@ -63,7 +63,7 @@ let of_url url =
 
 let to_url swh =
   let path = Printf.sprintf "%s%s" prefix (to_string swh) in
-  OpamUrl.{ transport = "https"; backend = `http ; hash = None; path }
+  { OpamUrl.transport = "https"; backend = `http ; hash = None; path }
 
 (** Identifier computing *)
 

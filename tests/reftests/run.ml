@@ -767,12 +767,14 @@ let run_test ?(vars=[]) ~opam t =
   let dir = OpamSystem.real_path dir in
   Sys.chdir dir;
   let opamroot = Filename.concat dir "OPAM" in
-  if Sys.win32 then
-    ignore @@ command ~allowed_codes:[0; 1] ~silent:true
-      "robocopy"
-      ["/e"; "/copy:dat"; "/dcopy:dat"; "/sl"; opamroot0; opamroot]
-  else
-    ignore @@ command "cp" ["-PR"; opamroot0; opamroot];
+  let _ : string =
+    if Sys.win32 then
+      command ~allowed_codes:[0; 1] ~silent:true
+        "robocopy"
+        ["/e"; "/copy:dat"; "/dcopy:dat"; "/sl"; opamroot0; opamroot]
+    else
+      command "cp" ["-PR"; opamroot0; opamroot]
+  in
   let vars = [
     "OPAM", opam.as_seen_in_opam;
     "OPAMROOT", opamroot;
@@ -783,12 +785,16 @@ let run_test ?(vars=[]) ~opam t =
   if t.repo_hash = no_opam_repo then
     (mkdir_p (default_repo^"/packages");
      write_file ~path:(default_repo^"/repo") ~contents:{|opam-version: "2.0"|};
-     ignore @@ command opam.as_called ~silent:true
-       [ "repository"; "set-url"; "default"; "./"^default_repo;
-         "--root"; opamroot]);
-  ignore @@ command ~silent:true opam.as_called
-    ["var"; "--quiet"; "--root"; opamroot; "--global"; "--cli=2.1";
-     "sys-ocaml-version=4.08.0"];
+     let _ : string =
+       command opam.as_called ~silent:true
+         [ "repository"; "set-url"; "default"; "./"^default_repo;
+           "--root"; opamroot]
+     in ());
+  let _ : string =
+    command ~silent:true opam.as_called
+      ["var"; "--quiet"; "--root"; opamroot; "--global"; "--cli=2.1";
+       "sys-ocaml-version=4.08.0"]
+  in
   print_endline (String.concat " " (t.repo_hash::t.tags));
   let _vars =
     List.fold_left (fun vars (cmd, out) ->
@@ -849,8 +855,9 @@ let run_test ?(vars=[]) ~opam t =
                write_file ~path:opam_path ~contents
           );
           print_string contents;
-          ignore @@ run_cmd ~opam ~dir ~vars ~silent:true
-            "opam" ["update"; "default"];
+          let _ : string * int option =
+            run_cmd ~opam ~dir ~vars ~silent:true "opam" ["update"; "default"]
+          in
           vars
         | Pin_file_content path ->
           let open OpamParserTypes.FullPos in
