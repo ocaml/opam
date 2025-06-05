@@ -46,6 +46,7 @@ module type MAP = sig
   val of_list: (key * 'a) list -> 'a t
   val safe_add: key -> 'a -> 'a t -> 'a t
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
+  val add_to_list: key -> 'a -> 'a list t -> 'a list t
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
   val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
@@ -430,6 +431,10 @@ module Map = struct
       then failwith (Printf.sprintf "duplicate entry %s" (O.to_string k))
       else add k v map
 
+    let add_to_list x data m =
+      let add = function None -> Some [data] | Some l -> Some (data :: l) in
+      M.update x add m
+
     let update k f zero map =
       let v = try find k map with Not_found -> zero in
       add k (f v) map
@@ -755,25 +760,25 @@ module OpamString = struct
     for i = 0 to String.length s - 1 do acc := f !acc s.[i] done;
     !acc
 
+  let rec compare_case_aux len s1 s2 i =
+    if i < len then
+      let c1 = s1.[i] and c2 = s2.[i] in
+      match Char.compare (Char.lowercase_ascii c1) (Char.lowercase_ascii c2)
+      with
+      | 0 ->
+        (match Char.compare c1 c2 with
+         | 0 -> compare_case_aux len s1 s2 (i+1)
+         | c -> c)
+      | c -> c
+    else
+      let l1 = String.length s1 and l2 = String.length s2 in
+      if l1 < l2 then -1
+      else if l1 > l2 then 1
+      else 0
+
   let compare_case s1 s2 =
-    let l1 = String.length s1 and l2 = String.length s2 in
-    let len = min l1 l2 in
-    let rec aux i =
-      if i < len then
-        let c1 = s1.[i] and c2 = s2.[i] in
-        match Char.compare (Char.lowercase_ascii c1) (Char.lowercase_ascii c2)
-        with
-        | 0 ->
-          (match Char.compare c1 c2 with
-           | 0 -> aux (i+1)
-           | c -> c)
-        | c -> c
-      else
-        if l1 < l2 then -1
-        else if l1 > l2 then 1
-        else 0
-    in
-    aux 0
+    let len = min (String.length s1) (String.length s2) in
+    compare_case_aux len s1 s2 0
 
   let is_prefix_of ~from ~full s =
     let length_s = String.length s in
