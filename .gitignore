@@ -85,6 +85,7 @@ src/core/c-flags.sexp
 src/core/developer
 src/manifest/dune
 src/manifest/install.inc
+src/state/opamEmbeddedCygwinSetup.ml
 # doc
 doc/dev-manual/*aux
 doc/dev-manual/*.html

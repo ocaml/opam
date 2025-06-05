@@ -740,6 +740,7 @@ enable_static
 enable_cold_check
 with_dune
 with_vendored_deps
+with_cygwin_setup
 enable_certificate_check
 '
       ac_precious_vars='build_alias
@@ -1400,6 +1401,7 @@ Optional Packages:
   --without-dune          Compile using vendored Dune instead of any in PATH
   --with-vendored-deps    Use vendored dependencies instead of any available
                           in the compiler installation
+  --with-cygwin-setup     "Embed Cygwin's setup.exe into the executable"
 
 Some influential environment variables:
   CC          C compiler command
@@ -3939,6 +3941,52 @@ then :
   withval=$with_vendored_deps;
 fi
 
+
+
+# Check whether --with-cygwin-setup was given.
+if test ${with_cygwin_setup+y}
+then :
+  withval=$with_cygwin_setup; if test ${WIN32} -eq 0
+then :
+  as_fn_error $? "--with-cygwin-setup is only supported on Windows" "$LINENO" 5
+fi
+fi
+
+
+if test "x$with_cygwin_setup" != "x"
+then :
+
+  case $with_cygwin_setup in #(
+  yes) :
+
+      dest='src_ext/archives'
+      mkdir -p "$dest"
+                  rm -f "$dest/setup-x86_64.exe" "$dest/sha512.sum"
+      curl --output-dir "$dest" -fsSLO https://cygwin.com/setup-x86_64.exe
+      curl -fsSL https://cygwin.com/sha512.sum | grep -F setup-x86_64.exe > "$dest/sha512.sum"
+      if test ! -e "$dest/sha512.sum" || \
+             test ! -e "$dest/setup-x86_64.exe" || \
+             ! ( cd "$dest"; shasum -c sha512.sum )
+then :
+
+        as_fn_error $? "Failed to download and verify Cygwin's setup-x86_64.exe" "$LINENO" 5
+
+fi
+      CYGWIN_SETUP="$dest/setup-x86_64.exe"
+     ;; #(
+  no) :
+     ;; #(
+  *) :
+    CYGWIN_SETUP=$(cygpath -m "$with_cygwin_setup") ;;
+esac
+  if test "x" != "x$CYGWIN_SETUP"
+then :
+
+    ocaml shell/embed.ml "$CYGWIN_SETUP" > src/state/opamEmbeddedCygwinSetup.ml
+
+fi
+
+fi
 
 if test "x" != "x$LIB_PREFIX"
 then :

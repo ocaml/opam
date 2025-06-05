@@ -103,6 +103,7 @@ users)
 ## Internal: Unix
 
 ## Internal: Windows
+  * Embed Cygwin `setup.exe` executable to use as a fallback in case of cygwin.com network issues [#6523 @rjbou - fix #6498]
 
 ## Test
 
