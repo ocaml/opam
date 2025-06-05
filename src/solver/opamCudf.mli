@@ -176,13 +176,6 @@ val s_source_number: string
 (** a package to be reinstalled (a bool) *)
 val s_reinstall: string
 
-(** true if this package belongs to the roots ("installed manually")
-    packages *)
-val s_installed_root: string
-
-(** true if the package is pinned to this version *)
-val s_pinned: string
-
 (** the number of versions of the package since this one, cubed *)
 val s_version_lag: string
 

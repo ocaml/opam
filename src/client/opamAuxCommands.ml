@@ -390,6 +390,12 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
       ++ local_packages
     else st.pinned
   in
+  let overwrote_opams =
+    if for_view then OpamPackage.Map.empty else
+      OpamPackage.Map.filter (fun nv _ ->
+          OpamPackage.Set.mem nv local_packages)
+        st.opams
+  in
   let st = {
     st with
     opams =
@@ -429,6 +435,7 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
         installed_pinned (Lazy.force st.reinstall)
     );
     pinned;
+    overwrote_opams;
   } in
   st, local_packages
 

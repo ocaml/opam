@@ -294,8 +294,7 @@ let apply_selector ~base st = function
     in
     let universe =
       { universe
-        with u_installed = OpamPackage.Set.empty;
-             u_installed_roots = OpamPackage.Set.empty }
+        with u_installed = OpamPackage.Set.empty; }
     in
     (match OpamSolver.resolve universe
              (OpamSolver.request ~install:atoms ()) with
