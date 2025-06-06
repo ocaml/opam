@@ -416,25 +416,14 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
     );
     reinstall = lazy (
       let open OpamPackage.Set.Op in
-      let installed_pinned = st.pinned %% st.installed in
-      OpamPackage.Set.fold (fun pinned_pkg reinstall ->
-          match
-            OpamPackage.Set.find_opt
-              (fun pkg ->
-                 OpamPackage.Name.equal
-                   (OpamPackage.name pinned_pkg)
-                   (OpamPackage.name pkg))
-              local_packages
-          with
-          | None -> reinstall
-          | Some local_pkg ->
-            let old_opam = OpamPackage.Map.find pinned_pkg st.installed_opams in
-            let new_opam = OpamPackage.Map.find local_pkg local_opams in
-            if OpamFile.OPAM.effectively_equal old_opam new_opam then
-              reinstall
-            else
-              OpamPackage.Set.add local_pkg
-                (OpamPackage.Set.remove pinned_pkg reinstall))
+      let installed_pinned = local_packages %% st.installed in
+      OpamPackage.Set.fold (fun pkg reinstall ->
+          let old_opam = OpamPackage.Map.find pkg st.installed_opams in
+          let new_opam = OpamPackage.Map.find pkg local_opams in
+          if OpamFile.OPAM.effectively_equal old_opam new_opam then
+            reinstall
+          else
+            OpamPackage.Set.add pkg reinstall)
         installed_pinned (Lazy.force st.reinstall)
     );
     pinned;
