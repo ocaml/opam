@@ -1302,6 +1302,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opam-pkgvar-with-plus.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-opam-repo-ci)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff opam-repo-ci.test opam-repo-ci.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-opam-repo-ci)))
+
+(rule
+ (targets opam-repo-ci.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opam-repo-ci.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-opamroot-versions)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
