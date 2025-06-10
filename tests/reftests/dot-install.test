@@ -128,7 +128,7 @@ ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/O
 ACTION                          Removing dot.~dev
 -> removed   dot.~dev
 Installing dot.~dev.
-TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+TRACK                           after install: 3 elements, 0 added, scanned in 0.000s
 -> installed dot.~dev
 ACTION                          Cleaning up artefacts of dot.~dev
 Done.
@@ -196,7 +196,7 @@ The following actions will be simulated:
 ACTION                          download_package: dot.~dev
 ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/dot.~dev
 Installing dot.~dev.
-TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+TRACK                           after install: 1 elements, 0 added, scanned in 0.000s
 -> installed dot.~dev
 Done.
 ### ocaml cat.ml inst dot

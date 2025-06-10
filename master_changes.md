@@ -31,6 +31,7 @@ users)
 ## UI
 
 ## Switch
+  * [BUG] Stop `opam switch create --dry-run` from creating a directory [#6540 @hannesm - fix #5918]
 
 ## Config
 
