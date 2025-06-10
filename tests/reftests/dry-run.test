@@ -16,6 +16,7 @@ Installing comp.1.
 -> installed comp.1
 Done.
 ### test -d ./local
+# Return code 1 #
 ### ::: opam switch create --dry-run global
 ### opam switch create --dry-run --empty global
 ### test -d OPAM/global
@@ -30,3 +31,4 @@ Installing comp.1.
 -> installed comp.1
 Done.
 ### test -d OPAM/global
+# Return code 1 #
