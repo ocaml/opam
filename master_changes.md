@@ -119,6 +119,7 @@ users)
   * Add working dir test case to check the case where a requested working-dir package is already pinned with another url [#6533 @rjbou]
   * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
   * Add a test for opam repository CI workflow [#6539 @rjbou]
+  * Add a test for action on disk of actiongraph actions [#6550 @rjbou]
 
 ### Engine
   * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]
