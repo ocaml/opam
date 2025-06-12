@@ -591,6 +591,24 @@ let common_filters ?opam dir =
      Sed "log-xxx";
      with_hexa_twice "patch",
      Sed "patch-xxx";
+     (* rsync output
+        >sent 133 bytes  received 12 bytes  290.00 bytes/sec
+     *)
+     seq [
+       str "sent" ; rep1 space; rep1 digit; rep1 space; str "bytes"; rep1 space;
+       str "received"; rep1 space; rep1 digit; rep1 space; str "bytes";
+       rep1 any; str "bytes/sec"
+     ],
+     GrepV;
+     (* rsync output
+        >total size is 383  speedup is 0.58
+     *)
+     seq [
+       str "total"; rep1 space; str "size"; rep1 space; str "is"; rep1 space;
+       rep1 digit; rep1 space;
+       str "speedup"; rep1 space; str "is";
+     ],
+     GrepV
    ] @
    (match opam with
     | None -> []
