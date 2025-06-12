@@ -225,3 +225,137 @@ The following actions will be performed:
 -> installed roots2.1
 Done.
 ### opam list --roots -s
+### : make sure actions are taken from the correct opam description
+### opam switch create deps-only-opam-description-1 --empty
+### <pkg:miou.0.3.1>
+opam-version: "2.0"
+### <pkg:miou.0.3.0>
+opam-version: "2.0"
+### <pin:test/opam>
+opam-version: "2.0"
+depends: ["miou"]
+### opam install ./test
+[NOTE] Package test does not exist in opam repositories registered in the current switch.
+test is now pinned to file://${BASEDIR}/test (version dev)
+The following actions will be performed:
+=== install 2 packages
+  - install miou 0.3.1        [required by test]
+  - install test dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed miou.0.3.1
+-> retrieved test.dev  (file://${BASEDIR}/test)
+-> installed test.dev
+Done.
+### <pin:test/opam>
+opam-version: "2.0"
+build: "false"
+depends: ["miou" {= "0.3.0"}]
+### opam install --deps ./test | '[0-9]{14}' -> 'CURRENTTIME'
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade miou 0.3.1 to 0.3.0 [required by test]
+=== recompile 1 package
+  - recompile test dev (pinned)   [uses miou]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test.dev  (file://${BASEDIR}/test)
+-> removed   test.dev
+-> removed   miou.0.3.1
+-> installed miou.0.3.0
+[ERROR] The compilation of test.dev failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build test dev
++- 
++- The following changes have been performed
+| - remove    test dev
+| - downgrade miou 0.3.1 to 0.3.0
++- 
+
+The former state can be restored with:
+    ${OPAM} switch import "${BASEDIR}/OPAM/deps-only-opam-description-1/.opam-switch/backup/state-CURRENTTIME.export"
+Or you can retry to install your package selection with:
+    ${OPAM} install --restore
+# Return code 31 #
+### : same but with non-pinned packages
+### opam switch create deps-only-opam-description-2 --empty
+### <addurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+echo "url { src: \"file://$basedir/$2\" }" >> "$1"
+### <pkg:miou.0.3.1>
+opam-version: "2.0"
+### <pkg:miou.0.3.0>
+opam-version: "2.0"
+### <pkg:test.1>
+opam-version: "2.0"
+depends: ["miou"]
+build: ["cat" "file"]
+### sh addurl.sh REPO/packages/test/test.1/opam test-content
+### <test-content/file>
+I am a file
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install -v test | grep -v '^\+ '
+The following actions will be performed:
+=== install 2 packages
+  - install miou 0.3.1 [required by test]
+  - install test 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/6: [test.1: rsync]
+Processing  3/6: [test.1: rsync]
+-> installed miou.0.3.1
+Processing  4/6: [test.1: rsync]
+-> retrieved test.1  (file://${BASEDIR}/test-content)
+Processing  5/6: [test: cat file]
+- I am a file
+-> compiled  test.1
+-> installed test.1
+Done.
+### <pin:test/opam>
+opam-version: "2.0"
+build: "false"
+depends: ["miou" {= "0.3.0"}]
+### opam install --deps -v ./test | grep -v '^\+ ' | '[0-9]{14}' -> 'CURRENTTIME'
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade miou 0.3.1 to 0.3.0 [required by test]
+=== recompile 1 package
+  - recompile test 1              [uses miou]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/8: [test.1: rsync]
+Processing  3/8: [test.1: rsync]
+-> retrieved test.1  (file://${BASEDIR}/test)
+-> removed   test.1
+-> removed   miou.0.3.1
+-> installed miou.0.3.0
+Processing  7/8: [test: false]
+[ERROR] The compilation of test.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build test 1
++- 
++- The following changes have been performed
+| - remove    test 1
+| - downgrade miou 0.3.1 to 0.3.0
++- 
+
+The former state can be restored with:
+    ${OPAM} switch import "${BASEDIR}/OPAM/deps-only-opam-description-2/.opam-switch/backup/state-CURRENTTIME.export"
+Or you can retry to install your package selection with:
+    ${OPAM} install --restore
+'${OPAM} install --deps -v ./test' failed.
+# Return code 31 #

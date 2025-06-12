@@ -118,6 +118,7 @@ users)
   * Add some related pin tests: fetching, reinstall trigger & simulated pin (deps-only) [#6530 @rjbou]
   * Add working dir test case to check the case where a requested working-dir package is already pinned with another url [#6533 @rjbou]
   * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
+  * Add a test showing the use of the wrong opam definition when reinstalling the package given with `--deps-only` [#6544 @kit-ty-kate]
 
 ### Engine
 
