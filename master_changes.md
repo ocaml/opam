@@ -119,6 +119,7 @@ users)
   * Add working dir test case to check the case where a requested working-dir package is already pinned with another url [#6533 @rjbou]
   * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
   * Add a testcase for #6501 [#6520 @rjbou]
+  * Add deps-only behaviour test [#6520 @rjbou]
 
 ### Engine
 
