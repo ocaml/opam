@@ -35,7 +35,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing -v | sed-cmd test | sed-cmd cat
+### opam install ongoing -v | sed-cmd test cat
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -58,7 +58,7 @@ Processing  2/3: [ongoing: cat ongoing.txt]
 -> compiled  ongoing.dev
 -> installed ongoing.dev
 Done.
-### opam install ongoing --working-dir -v | sed-cmd test | sed-cmd cat
+### opam install ongoing --working-dir -v | sed-cmd test cat
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
@@ -118,7 +118,7 @@ Processing  2/3: [ongoing: test newfile.txt]
 - No changes have been performed
 '${OPAM} install ongoing -v' failed.
 # Return code 31 #
-### opam install ongoing --working-dir -v | sed-cmd test | sed-cmd cat
+### opam install ongoing --working-dir -v | sed-cmd test cat
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
@@ -204,7 +204,7 @@ opam-version: "2.0"
 ### <pin:ongoing/ongoing.opam>
 opam-version: "2.0"
 build: [[ "test" "-f" "newfile.txt" ] [ "cat" "newfile.txt" ]]
-### opam install qux ongoing --working-dir -v | '^Processing .+$' -> '\c' | sed-cmd test | sed-cmd cat | grep -v "switch import" | unordered
+### opam install qux ongoing --working-dir -v | '^Processing .+$' -> '\c' | sed-cmd test cat | grep -v "switch import" | unordered
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)

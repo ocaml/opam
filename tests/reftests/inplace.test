@@ -16,7 +16,7 @@ new!
 ### opam pin ./ongoing -n
 [NOTE] Package ongoing does not exist in opam repositories registered in the current switch.
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
-### opam install ongoing -v | sed-cmd test | sed-cmd cat | sed-cmd touch
+### opam install ongoing -v | sed-cmd test cat touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -51,7 +51,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing --inplace -v | sed-cmd test | sed-cmd cat | sed-cmd touch
+### opam install ongoing --inplace -v | sed-cmd test cat touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
@@ -89,7 +89,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing --inplace --working-dir -v | sed-cmd test | sed-cmd cat | sed-cmd touch
+### opam install ongoing --inplace --working-dir -v | sed-cmd test cat touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
