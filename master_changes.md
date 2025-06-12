@@ -24,6 +24,7 @@ users)
 ## Actions
 
 ## Install
+  * [BUG] Fix `opam install --deps-only` using the opam description of the wrong package in some cases [#6544 @kit-ty-kate - fix #6535]
 
 ## Build (package)
 
