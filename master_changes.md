@@ -84,6 +84,7 @@ users)
 
 ## Release scripts
   * Add opam `2.4.0~alpha2` to the install script [#6511 @kit-ty-kate]
+  * Call the opam configure script with `--with-cygwin-setup` on Windows [#6538 @kit-ty-kate]
 
 ## Install script
 

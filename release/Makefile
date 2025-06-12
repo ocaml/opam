@@ -92,6 +92,7 @@ CPATH=/usr/local/include: \
 LIBRARY_PATH=/usr/local/lib: \
 
 EXTRA_CONFIGURE_ARGS_windows = --host=x86_64-w64-mingw32 --with-flexdll
+EXTRA_OPAM_CONFIGURE_ARGS_windows = --with-cygwin-setup
 
 %: opam-$(VERSION)-%
 
@@ -128,7 +129,8 @@ host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	    MAKE=$(MAKE) \
 	    $(EXPORTS_$(HOST_OS)); \
 	  cd build/opam-full-$(VERSION) && \
-	  ./configure --with-vendored-deps --with-mccs && \
+	  ./configure --with-vendored-deps --with-mccs \
+	    $(EXTRA_OPAM_CONFIGURE_ARGS_$(HOST_OS)) && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
 	  $(MAKE) opam-stripped; \
 	)
