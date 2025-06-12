@@ -113,10 +113,10 @@ build: ["test" "-f" "rab"]
 some content
 ### sh hash.sh REPO foo.4
 ### OPAMDEBUGSECTIONS="FILE(opam) FILE(repo) FILE(repos-config)  CACHE(repository)"
-### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-hash" | unordered
+### opam update --debug-level=-3 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-hash.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.5/opam in 0.000s
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -128,8 +128,8 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/fo
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/opam in 0.000s
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
-CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-hash.cache ...
-CACHE(repository)               ${BASEDIR}/OPAM/repo/state-hash.cache written in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-magicv.cache written in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam install foo.4
 The following actions will be performed:
@@ -140,10 +140,10 @@ The following actions will be performed:
 -> removed   foo.5
 -> installed foo.4
 Done.
-### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-hash"
+### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-magicv"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-hash.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.4/opam in 0.000s
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -176,10 +176,10 @@ some content
 ### sh hash.sh REPO2 bar.1
 ### opam repository add repo2 ./REPO2 --this-switch
 [repo2] Initialised
-### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-hash"
+### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-magicv"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-hash.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.1/opam in 0.000s
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -199,10 +199,10 @@ build: ["test" "-f" "oof"]
 ### <REPO2/packages/bar/bar.2/files/oof>
 some content
 ### sh hash.sh REPO2 bar.2
-### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-hash" | unordered
+### opam update --debug-level=-3 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-hash.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [repo2] synchronised from file://${BASEDIR}/REPO2
@@ -211,8 +211,8 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.1/opam in 0.000s
 [tarred] no changes from file://${BASEDIR}/REPO
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
-CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-hash.cache ...
-CACHE(repository)               ${BASEDIR}/OPAM/repo/state-hash.cache written in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-magicv.cache written in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam install bar.2
 The following actions will be performed:
@@ -235,10 +235,10 @@ build: ["test" "-f" "oof"]
 ### <REPO2/packages/bar/bar.3/files/oof>
 some content
 ### sh hash.sh REPO2 bar.3
-### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-hash" | unordered
+### opam update --debug-level=-3 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-hash.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/bar.2/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.1/opam in 0.000s
 
@@ -257,8 +257,8 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/fo
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/opam in 0.000s
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
-CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-hash.cache ...
-CACHE(repository)               ${BASEDIR}/OPAM/repo/state-hash.cache written in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-magicv.cache written in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam install bar.3 foo.6 | unordered
 The following actions will be performed:

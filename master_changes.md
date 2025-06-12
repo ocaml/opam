@@ -121,6 +121,7 @@ users)
 
 ### Engine
   * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]
+  * Automatically clean opam output from hexa & date temp directory names (debug mode) [#6549 @rjbou]
 
 ## Github Actions
   * Bump the opam-repository sha to avoid a checksum breakage [#6524 @kit-ty-kate]
