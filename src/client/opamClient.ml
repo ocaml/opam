@@ -2276,6 +2276,19 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
     OpamSwitchAction.write_selections t
   );
 
+  let t =
+    if deps_only then
+      let opams, pinned =
+        OpamPackage.Map.fold (fun nv (was_pinned, opam) (opams, pinned) ->
+            OpamPackage.Map.add nv opam opams,
+            if was_pinned then pinned else OpamPackage.Set.remove nv pinned)
+          t.overwrote_opams (t.opams, OpamPinned.packages t)
+      in
+      {t with opams; pinned; overwrote_opams = OpamPackage.Map.empty}
+    else
+      t
+  in
+
   OpamSolution.check_availability t available_packages atoms;
 
   if pkg_new = [] && OpamPackage.Set.is_empty pkg_reinstall &&
