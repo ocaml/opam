@@ -122,6 +122,7 @@ users)
   * Add a test showing the use of the wrong opam definition when reinstalling the package given with `--deps-only` [#6544 @kit-ty-kate]
   * Add a test for opam repository CI workflow [#6539 @rjbou]
   * Add a testcase for #6501 [#6520 @rjbou]
+  * Add deps-only behaviour test [#6520 @rjbou]
 
 ### Engine
   * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]

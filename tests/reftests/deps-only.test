@@ -326,3 +326,814 @@ Processing  7/8: [test: cat file]
 -> compiled  test.1
 -> installed test.1
 Done.
+### :III: Deps-only mechanism for packages that are interdependant.
+### :: This test is for checking the behaviour of conflicting or not install or interdependant packages
+### :III:1: deps of same packages, no version specified
+### opam switch create deps-conflicts-1 --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install --deps-only lorem dolor
+The following actions will be performed:
+=== install 2 packages
+  - install ipsum 1 [required by dolor]
+  - install lorem 1 [required by ipsum]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+-> installed ipsum.1
+Done.
+### :III:2: deps of same packages, good version specified
+### opam switch create deps-conflicts-2 --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install --deps-only lorem.1 dolor.1
+The following actions will be performed:
+=== install 2 packages
+  - install ipsum 1 [required by dolor]
+  - install lorem 1 [required by ipsum]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+-> installed ipsum.1
+Done.
+### :III:3: deps of same packages, uninstallable version specified
+### opam switch create deps-conflicts-3 --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install --deps-only lorem.2 dolor.1
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - deps-of-dolor -> ipsum -> lorem < 2
+    - deps-of-lorem
+
+No solution found, exiting
+# Return code 20 #
+### :III:4: deps of same packages, no version specified, already installed package
+### opam switch create deps-conflicts-4 --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install lorem.1
+The following actions will be performed:
+=== install 1 package
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+Done.
+### opam install --deps-only lorem dolor
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by dolor]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### :III:5: deps of same packages, good version specified, already installed package
+### opam switch create deps-conflicts-5 --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install lorem.1
+The following actions will be performed:
+=== install 1 package
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+Done.
+### opam install --deps-only lorem.1 dolor.1
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by dolor]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### :III:6: deps of same packages, uninstallable version specified, already installed package
+### opam switch create deps-conflicts-6 --empty
+### <pkg:lorem.1>
+opam-version: "2.0"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+depends: "lorem" {= "1"}
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:sit.1>
+opam-version: "2.0"
+depopts: "lorem" { < "2" }
+### opam install lorem.1
+The following actions will be performed:
+=== install 1 package
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed lorem.1
+Done.
+### opam install --deps-only lorem.2 dolor.1
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - deps-of-dolor -> ipsum -> lorem < 2
+    - deps-of-lorem
+
+No solution found, exiting
+# Return code 20 #
+### :III:7: other cases
+### <pkg:lorem.1>
+opam-version: "2.0"
+depends: "ipsum"
+### <pkg:lorem.2>
+opam-version: "2.0"
+depends: "sit"
+### <pkg:ipsum.1>
+opam-version: "2.0"
+### <pkg:dolor.1>
+opam-version: "2.0"
+depends: "lorem" {="2"}
+### <pkg:dolor.2>
+opam-version: "2.0"
+depends: "lorem" {="1"}
+### <pkg:sit.1>
+opam-version: "2.0"
+### <pkg:sit.2>
+opam-version: "2.0"
+### opam switch create deps-conflicts-7a --empty
+### # it takes lorem.2 & dolor.1
+### opam install --deps-only lorem dolor
+The following actions will be performed:
+=== install 1 package
+  - install sit 2 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed sit.2
+Done.
+### opam switch create deps-conflicts-7b --empty
+### # it takes lorem.1
+### opam install --deps-only lorem dolor.2
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### opam switch create deps-conflicts-7c --empty
+### opam install --deps-only lorem.2 dolor.1
+The following actions will be performed:
+=== install 1 package
+  - install sit 2 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed sit.2
+Done.
+### opam switch create deps-conflicts-7d --empty
+### opam install --deps-only lorem.1 dolor.2
+The following actions will be performed:
+=== install 1 package
+  - install ipsum 1 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+Done.
+### opam switch create deps-conflicts-7e --empty
+### opam install --deps-only lorem.2 dolor.2
+[ERROR] Package conflict!
+  * Missing dependency:
+    - deps-of-dolor -> deps-of-lorem < 2
+    no matching version
+
+No solution found, exiting
+# Return code 20 #
+### opam switch create deps-conflicts-7f --empty
+### opam install --deps-only lorem.1 lorem.2
+[ERROR] Package conflict!
+  * Missing dependency:
+    - (request) -> deps-of-lorem
+    unknown package
+
+No solution found, exiting
+# Return code 20 #
+### opam switch create deps-conflicts-7g --empty
+### opam install lorem.1
+The following actions will be performed:
+=== install 2 packages
+  - install ipsum 1 [required by lorem]
+  - install lorem 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ipsum.1
+-> installed lorem.1
+Done.
+### # it takes lorem.2
+### opam install --deps-only dolor.1 lorem
+The following actions will be performed:
+=== remove 1 package
+  - remove  lorem 1 [conflicts with lorem]
+=== install 1 package
+  - install sit   2 [required by lorem]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   deps-of-lorem.1
+-> removed   lorem.1
+-> installed sit.2
+Done.
+### :IV: Install of dependencies of an already installed packages
+### :IV:1: One package
+### :IV:1:a: Compliant version, same dependencies
+### rm -rf REPO/packages/
+### opam switch create numbering-1a --empty
+### <pkg:primo.1>
+opam-version: "2.0"
+### <pkg:secundo.1>
+opam-version: "2.0"
+depends: "primo"
+### <pkg:secundo.2>
+opam-version: "2.0"
+depends: "primo" { = "2" }
+### opam install secundo.1
+The following actions will be performed:
+=== install 2 packages
+  - install primo   1 [required by secundo]
+  - install secundo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed primo.1
+-> installed secundo.1
+Done.
+### <pkg:primo.2>
+opam-version: "2.0"
+### opam install --deps secundo.2
+The following actions will be performed:
+=== remove 1 package
+  - remove  secundo 1      [conflicts with secundo]
+=== upgrade 1 package
+  - upgrade primo   1 to 2 [required by secundo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   secundo.1
+-> removed   primo.1
+-> installed primo.2
+Done.
+### :IV:1:b: compliant version, different dependencies
+### rm -rf REPO/packages/
+### opam switch create numbering-1b --empty
+### <pkg:primo.1>
+opam-version: "2.0"
+### <pkg:primo.2>
+opam-version: "2.0"
+### <pkg:secundo.1>
+opam-version: "2.0"
+depends: "primo"
+### <pkg:secundo.2>
+opam-version: "2.0"
+depends: "tertio"
+### <pkg:tertio.1>
+opam-version: "2.0"
+### opam install secundo.1
+The following actions will be performed:
+=== install 2 packages
+  - install primo   2 [required by secundo]
+  - install secundo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed primo.2
+-> installed secundo.1
+Done.
+### opam install --deps secundo.2
+The following actions will be performed:
+=== remove 1 package
+  - remove  secundo 1 [conflicts with secundo]
+=== install 1 package
+  - install tertio  1 [required by secundo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   secundo.1
+-> installed tertio.1
+Done.
+### :IV:1:c: Non compliant version: dependencies conflicts on version
+### rm -rf REPO/packages/
+### opam switch create numbering-1c --empty
+### <pkg:primo.1>
+opam-version: "2.0"
+### <pkg:primo.2>
+opam-version: "2.0"
+### <pkg:secundo.1>
+opam-version: "2.0"
+depends: "primo" { = "1" }
+### <pkg:secundo.2>
+opam-version: "2.0"
+depends: "primo" { = "2" }
+### opam install secundo.1
+The following actions will be performed:
+=== install 2 packages
+  - install primo   1 [required by secundo]
+  - install secundo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed primo.1
+-> installed secundo.1
+Done.
+### opam install --deps secundo.2
+The following actions will be performed:
+=== remove 1 package
+  - remove  secundo 1      [conflicts with secundo]
+=== upgrade 1 package
+  - upgrade primo   1 to 2 [required by secundo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   secundo.1
+-> removed   primo.1
+-> installed primo.2
+Done.
+### :IV:1:d: Non compliant version: conflicts on package
+### rm -rf REPO/packages/
+### opam switch create numbering-1d --empty
+### <pkg:primo.1>
+opam-version: "2.0"
+### <pkg:primo.2>
+opam-version: "2.0"
+### <pkg:secundo.1>
+opam-version: "2.0"
+depends: "primo" { = "1" }
+### <pkg:secundo.2>
+opam-version: "2.0"
+depends: "tertio"
+conflicts: "primo"
+### <pkg:tertio.1>
+opam-version: "2.0"
+### opam install secundo.1
+The following actions will be performed:
+=== install 2 packages
+  - install primo   1 [required by secundo]
+  - install secundo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed primo.1
+-> installed secundo.1
+Done.
+### opam install --deps secundo.2
+The following actions will be performed:
+=== remove 2 packages
+  - remove  primo   1 [conflicts with secundo]
+  - remove  secundo 1 [conflicts with secundo]
+=== install 1 package
+  - install tertio  1 [required by secundo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   secundo.1
+-> removed   primo.1
+-> installed tertio.1
+Done.
+### :IV:1:e: Compliant version, package installed as a dependency of root package
+### rm -rf REPO/packages/
+### opam switch create numbering-1e --empty
+### <pkg:primo.1>
+opam-version: "2.0"
+### <pkg:secundo.1>
+opam-version: "2.0"
+depends: "primo"
+### <pkg:tertio.1>
+opam-version: "2.0"
+depends: "secundo"
+### opam install tertio.1
+The following actions will be performed:
+=== install 3 packages
+  - install primo   1 [required by secundo]
+  - install secundo 1 [required by tertio]
+  - install tertio  1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed primo.1
+-> installed secundo.1
+-> installed tertio.1
+Done.
+### <pkg:secundo.2>
+opam-version: "2.0"
+depends: "primo" { > "1" }
+### <pkg:primo.2>
+opam-version: "2.0"
+### opam install --deps secundo.2
+The following actions will be performed:
+=== recompile 1 package
+  - recompile tertio  1      [uses secundo]
+=== upgrade 2 packages
+  - upgrade   primo   1 to 2 [required by secundo]
+  - upgrade   secundo 1 to 2 [uses primo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   tertio.1
+-> removed   secundo.1
+-> removed   primo.1
+-> installed primo.2
+-> installed secundo.2
+-> installed tertio.1
+Done.
+### :IV:1:f: Non compliant version, package installed as a dependency of root package
+### rm -rf REPO/packages/
+### opam switch create numbering-1f --empty
+### <pkg:primo.1>
+opam-version: "2.0"
+### <pkg:primo.2>
+opam-version: "2.0"
+### <pkg:secundo.1>
+opam-version: "2.0"
+depends: "primo" { = "1" }
+### <pkg:tertio.1>
+opam-version: "2.0"
+depends: "secundo" { ="1" }
+### <pkg:secundo.2>
+opam-version: "2.0"
+depends: "primo" { = "2" }
+### opam install tertio.1
+The following actions will be performed:
+=== install 3 packages
+  - install primo   1 [required by secundo]
+  - install secundo 1 [required by tertio]
+  - install tertio  1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed primo.1
+-> installed secundo.1
+-> installed tertio.1
+Done.
+### opam install --deps secundo.2
+The following actions will be performed:
+=== remove 2 packages
+  - remove  secundo 1      [conflicts with secundo]
+  - remove  tertio  1      [uses secundo]
+=== upgrade 1 package
+  - upgrade primo   1 to 2 [required by secundo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   tertio.1
+-> removed   secundo.1
+-> removed   primo.1
+-> installed primo.2
+Done.
+### :IV:2: Several packages (two)
+### :IV:2:a: Compliant version, same dependencies
+### rm -rf REPO/packages/
+### opam switch create numbering-2a --empty
+### <pkg:a-primo.1>
+opam-version: "2.0"
+### <pkg:a-secundo.1>
+opam-version: "2.0"
+depends: "a-primo"
+### <pkg:a-secundo.2>
+opam-version: "2.0"
+depends: "a-primo" { = "2" }
+### <pkg:b-primo.1>
+opam-version: "2.0"
+### <pkg:b-secundo.1>
+opam-version: "2.0"
+depends: "b-primo"
+### <pkg:b-secundo.2>
+opam-version: "2.0"
+depends: "b-primo" { = "2" }
+### opam install a-secundo.1 b-secundo.1
+The following actions will be performed:
+=== install 4 packages
+  - install a-primo   1 [required by a-secundo]
+  - install a-secundo 1
+  - install b-primo   1 [required by b-secundo]
+  - install b-secundo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a-primo.1
+-> installed a-secundo.1
+-> installed b-primo.1
+-> installed b-secundo.1
+Done.
+### <pkg:a-primo.2>
+opam-version: "2.0"
+### <pkg:b-primo.2>
+opam-version: "2.0"
+### opam install --deps a-secundo.2 b-secundo.2
+The following actions will be performed:
+=== remove 2 packages
+  - remove  a-secundo 1      [conflicts with a-secundo]
+  - remove  b-secundo 1      [conflicts with b-secundo]
+=== upgrade 2 packages
+  - upgrade a-primo   1 to 2 [required by a-secundo]
+  - upgrade b-primo   1 to 2 [required by b-secundo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a-secundo.1
+-> removed   b-secundo.1
+-> removed   a-primo.1
+-> removed   b-primo.1
+-> installed a-primo.2
+-> installed b-primo.2
+Done.
+### :IV:2:b: compliant version, different dependencies
+### rm -rf REPO/packages/
+### opam switch create numbering-2b --empty
+### <pkg:a-primo.1>
+opam-version: "2.0"
+### <pkg:a-primo.2>
+opam-version: "2.0"
+### <pkg:a-secundo.1>
+opam-version: "2.0"
+depends: "a-primo"
+### <pkg:a-secundo.2>
+opam-version: "2.0"
+depends: "a-tertio"
+### <pkg:a-tertio.1>
+opam-version: "2.0"
+### <pkg:b-primo.1>
+opam-version: "2.0"
+### <pkg:b-primo.2>
+opam-version: "2.0"
+### <pkg:b-secundo.1>
+opam-version: "2.0"
+depends: "b-primo"
+### <pkg:b-secundo.2>
+opam-version: "2.0"
+depends: "b-tertio"
+### <pkg:b-tertio.1>
+opam-version: "2.0"
+### opam install a-secundo.1 b-secundo.1
+The following actions will be performed:
+=== install 4 packages
+  - install a-primo   2 [required by a-secundo]
+  - install a-secundo 1
+  - install b-primo   2 [required by b-secundo]
+  - install b-secundo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a-primo.2
+-> installed a-secundo.1
+-> installed b-primo.2
+-> installed b-secundo.1
+Done.
+### opam install --deps a-secundo.2 b-secundo.2
+The following actions will be performed:
+=== remove 2 packages
+  - remove  a-secundo 1 [conflicts with a-secundo]
+  - remove  b-secundo 1 [conflicts with b-secundo]
+=== install 2 packages
+  - install a-tertio  1 [required by a-secundo]
+  - install b-tertio  1 [required by b-secundo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a-secundo.1
+-> removed   b-secundo.1
+-> installed a-tertio.1
+-> installed b-tertio.1
+Done.
+### :IV:2:c: Non compliant version: dependencies conflicts on version
+### rm -rf REPO/packages/
+### opam switch create numbering-2c --empty
+### <pkg:a-primo.1>
+opam-version: "2.0"
+### <pkg:a-primo.2>
+opam-version: "2.0"
+### <pkg:a-secundo.1>
+opam-version: "2.0"
+depends: "a-primo" { = "1" }
+### <pkg:a-secundo.2>
+opam-version: "2.0"
+depends: "a-primo" { = "2" }
+### <pkg:b-primo.1>
+opam-version: "2.0"
+### <pkg:b-primo.2>
+opam-version: "2.0"
+### <pkg:b-secundo.1>
+opam-version: "2.0"
+depends: "b-primo" { = "1" }
+### <pkg:b-secundo.2>
+opam-version: "2.0"
+depends: "b-primo" { = "2" }
+### opam install a-secundo.1 b-secundo.1
+The following actions will be performed:
+=== install 4 packages
+  - install a-primo   1 [required by a-secundo]
+  - install a-secundo 1
+  - install b-primo   1 [required by b-secundo]
+  - install b-secundo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a-primo.1
+-> installed a-secundo.1
+-> installed b-primo.1
+-> installed b-secundo.1
+Done.
+### opam install --deps a-secundo.2 b-secundo.2
+The following actions will be performed:
+=== remove 2 packages
+  - remove  a-secundo 1      [conflicts with a-secundo]
+  - remove  b-secundo 1      [conflicts with b-secundo]
+=== upgrade 2 packages
+  - upgrade a-primo   1 to 2 [required by a-secundo]
+  - upgrade b-primo   1 to 2 [required by b-secundo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a-secundo.1
+-> removed   b-secundo.1
+-> removed   a-primo.1
+-> removed   b-primo.1
+-> installed a-primo.2
+-> installed b-primo.2
+Done.
+### :IV:2:d: Compliant version, package installed as a dependency of root package
+### rm -rf REPO/packages/
+### opam switch create numbering-2d --empty
+### <pkg:a-primo.1>
+opam-version: "2.0"
+### <pkg:a-secundo.1>
+opam-version: "2.0"
+depends: "a-primo"
+### <pkg:a-tertio.1>
+opam-version: "2.0"
+depends: "a-secundo"
+### <pkg:b-primo.1>
+opam-version: "2.0"
+### <pkg:b-secundo.1>
+opam-version: "2.0"
+depends: "b-primo"
+### <pkg:b-tertio.1>
+opam-version: "2.0"
+depends: "b-secundo"
+### opam install a-tertio.1 b-tertio.1
+The following actions will be performed:
+=== install 6 packages
+  - install a-primo   1 [required by a-secundo]
+  - install a-secundo 1 [required by a-tertio]
+  - install a-tertio  1
+  - install b-primo   1 [required by b-secundo]
+  - install b-secundo 1 [required by b-tertio]
+  - install b-tertio  1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a-primo.1
+-> installed a-secundo.1
+-> installed a-tertio.1
+-> installed b-primo.1
+-> installed b-secundo.1
+-> installed b-tertio.1
+Done.
+### <pkg:a-secundo.2>
+opam-version: "2.0"
+depends: "a-primo" { > "1" }
+### <pkg:a-primo.2>
+opam-version: "2.0"
+### <pkg:b-secundo.2>
+opam-version: "2.0"
+depends: "b-primo" { > "1" }
+### <pkg:b-primo.2>
+opam-version: "2.0"
+### opam install --deps a-secundo.2 b-secundo.2
+The following actions will be performed:
+=== recompile 2 packages
+  - recompile a-tertio  1      [uses a-secundo]
+  - recompile b-tertio  1      [uses b-secundo]
+=== upgrade 4 packages
+  - upgrade   a-primo   1 to 2 [required by a-secundo]
+  - upgrade   a-secundo 1 to 2 [uses a-primo]
+  - upgrade   b-primo   1 to 2 [required by b-secundo]
+  - upgrade   b-secundo 1 to 2 [uses b-primo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a-tertio.1
+-> removed   a-secundo.1
+-> removed   a-primo.1
+-> removed   b-tertio.1
+-> removed   b-secundo.1
+-> removed   b-primo.1
+-> installed a-primo.2
+-> installed a-secundo.2
+-> installed a-tertio.1
+-> installed b-primo.2
+-> installed b-secundo.2
+-> installed b-tertio.1
+Done.
+### :IV:2:e: Non compliant version, package installed as a dependency of root package
+### rm -rf REPO/packages/
+### opam switch create numbering-2e --empty
+### <pkg:a-primo.1>
+opam-version: "2.0"
+### <pkg:a-primo.2>
+opam-version: "2.0"
+### <pkg:a-secundo.1>
+opam-version: "2.0"
+depends: "a-primo" { = "1" }
+### <pkg:a-tertio.1>
+opam-version: "2.0"
+depends: "a-secundo" { ="1" }
+### <pkg:a-secundo.2>
+opam-version: "2.0"
+depends: "a-primo" { = "2" }
+### <pkg:b-primo.1>
+opam-version: "2.0"
+### <pkg:b-primo.2>
+opam-version: "2.0"
+### <pkg:b-secundo.1>
+opam-version: "2.0"
+depends: "b-primo" { = "1" }
+### <pkg:b-tertio.1>
+opam-version: "2.0"
+depends: "b-secundo" { ="1" }
+### <pkg:b-secundo.2>
+opam-version: "2.0"
+depends: "b-primo" { = "2" }
+### opam install a-tertio.1 b-tertio.1
+The following actions will be performed:
+=== install 6 packages
+  - install a-primo   1 [required by a-secundo]
+  - install a-secundo 1 [required by a-tertio]
+  - install a-tertio  1
+  - install b-primo   1 [required by b-secundo]
+  - install b-secundo 1 [required by b-tertio]
+  - install b-tertio  1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a-primo.1
+-> installed a-secundo.1
+-> installed a-tertio.1
+-> installed b-primo.1
+-> installed b-secundo.1
+-> installed b-tertio.1
+Done.
+### opam install --deps a-secundo.2 b-secundo.2
+The following actions will be performed:
+=== remove 4 packages
+  - remove  a-secundo 1      [conflicts with a-secundo]
+  - remove  a-tertio  1      [uses a-secundo]
+  - remove  b-secundo 1      [conflicts with b-secundo]
+  - remove  b-tertio  1      [uses b-secundo]
+=== upgrade 2 packages
+  - upgrade a-primo   1 to 2 [required by a-secundo]
+  - upgrade b-primo   1 to 2 [required by b-secundo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   a-tertio.1
+-> removed   a-secundo.1
+-> removed   b-tertio.1
+-> removed   b-secundo.1
+-> removed   a-primo.1
+-> removed   b-primo.1
+-> installed a-primo.2
+-> installed b-primo.2
+Done.
