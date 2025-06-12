@@ -545,6 +545,15 @@ let common_filters ?opam dir =
        [str dir; str (OpamSystem.back_to_forward dir); str (OpamSystem.apply_cygpath dir)]
      else
        [str dir] in
+   let with_hexa_twice prefix =
+     seq [
+       str prefix;
+       char '-';
+       repn xdigit 4 (Some 9);
+       char '-';
+       repn xdigit 4 (Some 9);
+     ]
+   in
    [
      seq [ bol;
            alt [ str "#=== ERROR";
@@ -566,6 +575,22 @@ let common_filters ?opam dir =
           str "opam-";
           rep1 (alt [xdigit; char '-'])],
      Sed "${OPAMTMP}";
+     seq [
+       str "state-";
+       repn digit 14 (Some 14);
+       str ".export";
+     ],
+     Sed "state-today.export";
+     seq [
+       str "state-";
+       repn xdigit 8 (Some 8);
+       str ".cache";
+     ],
+     Sed "state-magicv.cache";
+     with_hexa_twice "log",
+     Sed "log-xxx";
+     with_hexa_twice "patch",
+     Sed "patch-xxx";
    ] @
    (match opam with
     | None -> []
