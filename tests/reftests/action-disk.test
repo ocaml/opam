@@ -680,7 +680,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/remove/main-ppin.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => none)
@@ -739,9 +738,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/remove/main-ppin.dev
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/main-ppin.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => none)
@@ -760,10 +756,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/overlay/main-ppin/opam in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache (none => write)
-CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache ...
-CACHE(installed)                ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache written in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache (none => read)
+CACHE(installed)                Loaded ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache (read => none)
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config atomically in 0.000s
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/backup/state-today.export atomically in 0.000s
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/sources/main-ppin
@@ -851,7 +846,6 @@ FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/environment atomically in 0.000s
 FILE(.config)                   Cannot find ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/config/main-ppin.config
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache
-SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/main-ppin.dev
 FILE(opam)                      Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/main-ppin.dev/opam atomically in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache (none => write)
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache ...
@@ -945,7 +939,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/remove/main-ppin.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => none)
@@ -1339,7 +1332,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/remove/main-gpin.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => none)
@@ -1411,9 +1403,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/remove/main-gpin.dev
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/main-gpin.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => none)
@@ -1432,10 +1421,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin/opam in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (none => write)
-CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache ...
-CACHE(installed)                ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache written in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (none => read)
+CACHE(installed)                Loaded ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (read => none)
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config atomically in 0.000s
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export atomically in 0.000s
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin
@@ -1542,7 +1530,6 @@ FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/environment atomically in 0.000s
 FILE(.config)                   Cannot find ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/config/main-gpin.config
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache
-SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/main-gpin.dev
 FILE(opam)                      Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/main-gpin.dev/opam atomically in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (none => write)
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache ...
@@ -1667,7 +1654,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/remove/main-gpin.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => none)
@@ -1965,8 +1951,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => none)
@@ -1996,11 +1980,12 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          [log-xxx] (in 0.000s) getconf _NPROCESSORS_ONLN
+SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/2: [main-repo.1: extract]
 + /usr/bin/tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
 SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
-SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 SYSTEM                          rmdir ${OPAMTMP}
 -> retrieved main-repo.1  (cached)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
@@ -2023,9 +2008,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => none)
@@ -2043,10 +2025,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (re
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-state in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (none => write)
-CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache ...
-CACHE(installed)                ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache written in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (none => read)
+CACHE(installed)                Loaded ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (read => none)
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-config atomically in 0.000s
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export atomically in 0.000s
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
