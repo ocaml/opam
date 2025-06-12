@@ -124,6 +124,7 @@ users)
   * Add a test for opam repository CI workflow [#6539 @rjbou]
   * Add a testcase for #6501 [#6520 @rjbou]
   * Add deps-only behaviour test [#6520 @rjbou]
+  * Add a test for action on disk of actiongraph actions [#6550 @rjbou]
 
 ### Engine
   * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]
