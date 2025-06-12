@@ -408,7 +408,7 @@ module Parse = struct
             | "|" :: "unordered" :: r ->
                 get_rewr (true, sort, acc) r
             | "|" :: "sed-cmd" :: cmd :: r ->
-                let sandbox =
+                let sandbox cmd =
                   (* Sandbox prefix
                  >[...] /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "cmd" <
                  >[...] ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "cmd" <
@@ -432,7 +432,7 @@ module Parse = struct
               seq @@ [ char '"'] @  r @ [ char '"'; rep1 space ];
               seq @@ r @ [ rep1 space ];
               ] in
-            let unix_prefix =
+            let unix_prefix cmd =
               (* Unix & Mac command prefix
                  >[...] /usr/bin/cmd <
                  >[...] /usr/bin/cmd <
@@ -445,7 +445,7 @@ module Parse = struct
                 Re.str cmd;
                 ]
             in
-            let win_prefix =
+            let win_prefix cmd =
               (* Windows command prefix
                  >[...] C:\Windows\system32\cmd.exe <
                  >[...] C:\Windows\system32\cmd <
@@ -461,9 +461,16 @@ module Parse = struct
                 Re.str cmd;
                 opt @@ Re.str ".exe";
                 ] in
-            let re = alt @@ sandbox :: unix_prefix @ win_prefix in
-            let str = Printf.sprintf "%s " cmd in
-            get_rewr (unordered, sort, (re, Sed str) :: acc) r
+            let re cmd = alt @@ sandbox cmd :: unix_prefix cmd @ win_prefix cmd in
+            let rec aux cmd r acc =
+              let str = Printf.sprintf "%s " cmd in
+              let acc = (re cmd, Sed str) :: acc in
+              match r with
+              | "|" :: _ | [] -> acc, r
+              | cmd :: r -> aux cmd r acc
+            in
+            let acc, r = aux cmd r acc in
+            get_rewr (unordered, sort, acc) r
             | ">$" :: output :: [] ->
                 unordered, sort, List.rev acc, Some (get_str output)
             | [] ->

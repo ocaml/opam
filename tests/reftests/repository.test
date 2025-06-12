@@ -42,7 +42,7 @@ default.tar.gz
 lock
 plain
 repos-config
-### opam install foo.2 -vv | grep '^\+' | sed-cmd test | sed-cmd tar
+### opam install foo.2 -vv | grep '^\+' | sed-cmd test tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/default.tar.gz" "-C" "${OPAMTMP}"
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.2)
 ### opam repository remove default --all
@@ -61,7 +61,7 @@ lock
 plain
 repos-config
 tarred.tar.gz
-### opam install foo.3 -vv | grep '^\+' | sed-cmd test | sed-cmd tar
+### opam install foo.3 -vv | grep '^\+' | sed-cmd test tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.3)
 ### opam repository remove plain --all
@@ -75,7 +75,7 @@ some content
 ### opam update -vv | grep '^\+' | sed-cmd tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
 + tar "cfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz.tmp" "-C" "${OPAMTMP}" "tarred"
-### opam install foo.4 -vv | grep '^\+' | sed-cmd test | sed-cmd tar
+### opam install foo.4 -vv | grep '^\+' | sed-cmd test tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.4)
 ### mkdir tarred-ext

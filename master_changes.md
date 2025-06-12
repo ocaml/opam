@@ -120,6 +120,7 @@ users)
   * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
 
 ### Engine
+  * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]
 
 ## Github Actions
   * Bump the opam-repository sha to avoid a checksum breakage [#6524 @kit-ty-kate]
