@@ -125,6 +125,7 @@ users)
   * Add a testcase for #6501 [#6520 @rjbou]
   * Add deps-only behaviour test [#6520 @rjbou]
   * Add a test for action on disk of actiongraph actions [#6550 @rjbou]
+  * Move sources directory existence/cleaning from clean test to its own file [#6550 @rjbou]
 
 ### Engine
   * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]
