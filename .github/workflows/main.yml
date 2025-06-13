@@ -202,11 +202,6 @@ jobs:
         path: D:\Cache\ocaml-local
         key: ${{ runner.os }}-${{ matrix.host }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
         enableCrossOsArchive: true
-    - name: Unpack Cygwin
-      shell: cmd
-      run: .github\scripts\cygwin.cmd ${{ matrix.build }} D:\Cache\cygwin ${{ matrix.host }}
-    - name: Cygwin info
-      run: uname -a
     - name: poke
       shell: cmd
       run: |
@@ -219,6 +214,11 @@ jobs:
         dir D:\Cache\ocaml-local
         echo ==
         dir D:\Cache\ocaml-local\bin
+    - name: Unpack Cygwin
+      shell: cmd
+      run: .github\scripts\cygwin.cmd ${{ matrix.build }} D:\Cache\cygwin ${{ matrix.host }}
+    - name: Cygwin info
+      run: uname -a
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
