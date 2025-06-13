@@ -33,14 +33,15 @@ The following actions will be performed:
 -> installed patch.1
 Done.
 ### opam install ./patch --with-test --deps
-### opam install patch-test-dep
 The following actions will be performed:
 === install 1 package
-  - install patch-test-dep 1
+  - install patch-test-dep 1 [required by patch]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed patch-test-dep.1
 Done.
+### opam install patch-test-dep
+[NOTE] Package patch-test-dep is already installed (current version is 1).
 ### :2: change version
 ### opam switch create patch2 --empty
 ### opam install patch
