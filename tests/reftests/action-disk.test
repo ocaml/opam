@@ -1,5 +1,5 @@
 N0REP0
-### OPAMDEBUGSECTIONS="SYSTEM FILE(config) FILE(repos-config) FILE(repo) FILE(switch-config) FILE(switch-state) FILE(opam) FILE(environment) FILE(package-version-list) FILE(.install) FILE(changes) FILE(.config) CACHE(installed) CACHE(repository)"
+### OPAMDEBUGSECTIONS="SYSTEM FILE CACHE"
 ### OPAMDEBUG=-5
 ### OPAMVERBOSE=2
 ### OPAMYES=1

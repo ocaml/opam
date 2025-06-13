@@ -560,7 +560,15 @@ let log section ?(level=1) fmt =
       match OpamStd.String.Map.find section sections with
       | Some level -> level
       | None -> debug_level
-      | exception Not_found -> 0
+      | exception Not_found ->
+        let begins_with prefix =
+          let prefix = prefix ^ "(" in
+          OpamStd.String.starts_with ~prefix section
+        in
+        match OpamStd.String.Map.find_last begins_with sections with
+        | _, Some level -> level
+        | _, None -> debug_level
+        | exception Not_found -> 0
   in
   if not OpamCoreConfig.(!r.set) then
     let b = Buffer.create 128 in
