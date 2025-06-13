@@ -24,6 +24,7 @@ users)
 ## Actions
 
 ## Install
+  * [BUG] Fix sources directory removed on reinstall actions: no longer remove sources directory if the package is not pinned when cleaning after a removal action [#6550 @rjbou - fix #6551]
 
 ## Build (package)
 
@@ -136,6 +137,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamAction.cleanup_artefacts`: no longer remove sources directory if the packages is installed but not pinned [#6550 @rjbou]
 
 ## opam-repository
 

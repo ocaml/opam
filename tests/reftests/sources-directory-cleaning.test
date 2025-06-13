@@ -81,6 +81,7 @@ The following actions will be performed:
 -> installed waste.1
 Done.
 ### ls OPAM/sources-dir/.opam-switch/sources
+waste.1
 ### : at atomic reinstall
 ### opam remove waste
 The following actions will be performed:
@@ -116,6 +117,7 @@ The following actions will be performed:
 -> installed waste.1
 Done.
 ### ls OPAM/sources-dir/.opam-switch/sources
+waste.1
 ### opam remove waste
 The following actions will be performed:
 === remove 1 package
@@ -152,6 +154,7 @@ The following actions will be performed:
 -> installed waste.1
 Done.
 ### ls OPAM/sources-dir/.opam-switch/sources
+waste.1
 ### opam remove waste
 The following actions will be performed:
 === remove 1 package

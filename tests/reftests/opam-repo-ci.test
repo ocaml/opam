@@ -140,8 +140,7 @@ Processing  1/7: [main.1: extract]
 -> installed main.1
 Done.
 ### ls OPAM/reinstall-sources/.opam-switch/sources/main
-ls: cannot access 'OPAM/reinstall-sources/.opam-switch/sources/main': No such file or directory
-# Return code 2 #
+content
 ### opam reinstall --with-test main.1 | sed-cmd tar | "${PRE_MD5}/${MD5}" -> pre/hash
 The following actions will be performed:
 === recompile 1 package
