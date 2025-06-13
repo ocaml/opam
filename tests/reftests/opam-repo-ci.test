@@ -97,3 +97,60 @@ Processing  1/4: [main.1: extract]
 -> removed   main.1
 -> installed main.1
 Done.
+### : other test
+### opam switch create reinstall-sources --empty
+### opam pin add -k version main.1 1 -n
+main is now pinned to version 1
+### opam install main.1 | sed-cmd tar | "${PRE_MD5}/${MD5}" -> pre/hash
+The following actions will be performed:
+=== install 2 packages
+  - install dep  1          [required by main]
+  - install main 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/6: [main.1: extract]
+Processing  3/6: [main.1: extract]
+-> installed dep.1
+Processing  4/6: [main.1: extract]
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
+-> retrieved main.1  (cached)
+-> installed main.1
+Done.
+### rm -r OPAM/download-cache
+### ls OPAM/reinstall-sources/.opam-switch/sources/main
+content
+### opam reinstall --with-test main.1 | sed-cmd rsync tar
+The following actions will be performed:
+=== recompile 1 package
+  - recompile main 1 (pinned)
+=== install 1 package
+  - install   test 1          [required by main]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/7: [main.1: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/archive.tgz" "${OPAMTMP}"
+- sending incremental file list
+- archive.tgz
+- 
+Processing  1/7: [main.1: extract]
++ tar "xfz" "${OPAMTMP}/archive.tgz" "-C" "${OPAMTMP}"
+-> retrieved main.1  (file://${BASEDIR}/archive.tgz)
+-> removed   main.1
+-> installed test.1
+-> installed main.1
+Done.
+### ls OPAM/reinstall-sources/.opam-switch/sources/main
+ls: cannot access 'OPAM/reinstall-sources/.opam-switch/sources/main': No such file or directory
+# Return code 2 #
+### opam reinstall --with-test main.1 | sed-cmd tar | "${PRE_MD5}/${MD5}" -> pre/hash
+The following actions will be performed:
+=== recompile 1 package
+  - recompile main 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/4: [main.1: extract]
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
+-> retrieved main.1  (cached)
+-> removed   main.1
+-> installed main.1
+Done.
