@@ -205,6 +205,7 @@ jobs:
     - name: poke
       shell: cmd
       run: |
+        set
         dir C:\a\_temp\*.tzst /s
         where zstd
         "C:\Program Files\Git\usr\bin\tar.exe" --version
