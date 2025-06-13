@@ -24,6 +24,7 @@ users)
 ## Actions
 
 ## Install
+  * ◈ Change behaviour of `--deps-only`: no longer required unicity of name.version when dependencies only is asked, only take into account the requested dependencies. In other words, if you have `pkg.1` installed, installing dependencies of `pkg.2` no longer removes `pkg.1`. This allows also to install dependencies of conflicting packages when their dependencies are compliant. [#6520 @rjbou]
 
 ## Build (package)
 
@@ -118,6 +119,8 @@ users)
   * Add some related pin tests: fetching, reinstall trigger & simulated pin (deps-only) [#6530 @rjbou]
   * Add working dir test case to check the case where a requested working-dir package is already pinned with another url [#6533 @rjbou]
   * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
+  * Add a testcase for #6501 [#6520 @rjbou]
+  * Add deps-only behaviour test [#6520 @rjbou]
 
 ### Engine
 
