@@ -1470,6 +1470,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pat-sub.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-pin-depsonly-wtest-6501)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff pin-depsonly-wtest-6501.test pin-depsonly-wtest-6501.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-pin-depsonly-wtest-6501)))
+
+(rule
+ (targets pin-depsonly-wtest-6501.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pin-depsonly-wtest-6501.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-pin-legacy)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
