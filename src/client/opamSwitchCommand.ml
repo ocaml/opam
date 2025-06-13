@@ -297,10 +297,22 @@ let create
     OpamConsole.error_and_exit `Bad_arguments
       "There already is an installed switch named %s"
       (OpamSwitch.to_string switch);
-  if Sys.file_exists (OpamFilename.Dir.to_string comp_dir) then
-    OpamConsole.error_and_exit `Bad_arguments
-      "Directory %S already exists, please choose a different name"
-      (OpamFilename.Dir.to_string comp_dir);
+  let comp_dir_str = OpamFilename.Dir.to_string comp_dir in
+  if Sys.file_exists comp_dir_str then
+    OpamConsole.error
+      "The directory %S already exists, but it doesn't appear to be a \
+       valid OPAM switch.\n" comp_dir_str;
+  let warning =
+    (OpamConsole.colorise `yellow 
+       (Printf.sprintf"Warning: proceeding will permanently erase all the \
+                       contents of:\n         %s\n" comp_dir_str))
+  in
+  let prompt = "Would you like to overwrite this directory and create a new switch?" in
+  if OpamConsole.confirm "%s\n%s" warning prompt then
+    OpamFilename.rmdir comp_dir
+  else
+    OpamConsole.error_and_exit `Aborted
+      "Switch installation was aborted by the user.";
   let gt, st =
     if not simulate then
       let gt =
