@@ -210,7 +210,14 @@ jobs:
     - name: poke
       shell: cmd
       run: |
+        dir C:\a\_temp\*.tzst /s
+        where zstd
+        "C:\Program Files\Git\usr\bin\tar.exe" --version
+        echo ==
+        dir D:\Cache
+        echo ==
         dir D:\Cache\ocaml-local
+        echo ==
         dir D:\Cache\ocaml-local\bin
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
