@@ -207,6 +207,11 @@ jobs:
       run: .github\scripts\cygwin.cmd ${{ matrix.build }} D:\Cache\cygwin ${{ matrix.host }}
     - name: Cygwin info
       run: uname -a
+    - name: poke
+      shell: cmd
+      run: |
+        dir D:\Cache\ocaml-local
+        dir D:\Cache\ocaml-local\bin
     - name: Create OCaml ${{ matrix.ocamlv }} cache
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
