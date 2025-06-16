@@ -24,6 +24,7 @@ users)
 ## Actions
 
 ## Install
+  * [BUG] Fix sources directory removed on reinstall actions: no longer remove sources directory if the package is not pinned when cleaning after a removal action [#6550 @rjbou - fix #6551]
 
 ## Build (package)
 
@@ -118,8 +119,13 @@ users)
   * Add some related pin tests: fetching, reinstall trigger & simulated pin (deps-only) [#6530 @rjbou]
   * Add working dir test case to check the case where a requested working-dir package is already pinned with another url [#6533 @rjbou]
   * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
+  * Add a test for opam repository CI workflow [#6539 @rjbou]
+  * Add a test for action on disk of actiongraph actions [#6550 @rjbou]
+  * Move sources directory existence/cleaning from clean test to its own file [#6550 @rjbou]
 
 ### Engine
+  * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]
+  * Automatically clean opam output from hexa & date temp directory names (debug mode) [#6549 @rjbou]
 
 ## Github Actions
   * Bump the opam-repository sha to avoid a checksum breakage [#6524 @kit-ty-kate]
@@ -131,6 +137,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamAction.cleanup_artefacts`: no longer remove sources directory if the packages is installed but not pinned [#6550 @rjbou]
 
 ## opam-repository
 

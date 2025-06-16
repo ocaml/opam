@@ -26,7 +26,7 @@ Done.
 Clearing cache of downloaded files
 ### :I:a: FETCH wget
 ### OPAMFETCH=wget
-### opam install foo --download-only | grep -v "^+-" | sed-cmd wget | sed-cmd tar | "${OPAMVERSION}" -> "current"
+### opam install foo --download-only | grep -v "^+-" | sed-cmd wget tar | "${OPAMVERSION}" -> "current"
 The following actions will be performed:
 === install 1 package
   - install foo 1
@@ -41,7 +41,7 @@ Done.
 Clearing cache of downloaded files
 ### :I:b: FETCH curl
 ### OPAMFETCH=curl
-### opam install foo --download-only | grep -v "^+-" | sed-cmd curl | sed-cmd tar | "${OPAMVERSION}" -> "current"
+### opam install foo --download-only | grep -v "^+-" | sed-cmd curl tar | "${OPAMVERSION}" -> "current"
 The following actions will be performed:
 === install 1 package
   - install foo 1
@@ -140,7 +140,7 @@ OpamSolution.Fetch_fail("https://github.com/UnixJunkie/get_line/archive/v1.0.0.t
 Clearing cache of downloaded files
 ### :I:g: FETCH wget & local curl
 ### OPAMFETCH=wget OPAMCURL=$BASEDIR/bin/curl
-### opam install foo --download-only | grep -v "^+-" | sed-cmd wget | sed-cmd tar | "${OPAMVERSION}" -> "current"
+### opam install foo --download-only | grep -v "^+-" | sed-cmd wget tar | "${OPAMVERSION}" -> "current"
 The following actions will be performed:
 === install 1 package
   - install foo 1
@@ -180,7 +180,7 @@ echo "}" >> "$file"
 Now run 'opam upgrade' to apply any package updates.
 ### opam clean -c
 Clearing cache of downloaded files
-### opam install foo --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd rsync | sed-cmd tar | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/"
+### opam install foo --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd rsync tar | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/"
 The following actions will be performed:
 === install 1 package
   - install foo 1
@@ -255,7 +255,7 @@ url {
 }
 ### opam clean -c
 Clearing cache of downloaded files
-### opam install baz --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd wget | sed-cmd tar | "${OPAMVERSION}" -> "current" | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/" | grep -v "OPAM[/\\]log"
+### opam install baz --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd wget tar | "${OPAMVERSION}" -> "current" | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/" | grep -v "OPAM[/\\]log"
 The following actions will be performed:
 === install 1 package
   - install baz 1
