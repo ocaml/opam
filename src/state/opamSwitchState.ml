@@ -975,15 +975,6 @@ let universe st
       ~force_dev_deps ~test ~doc ~dev_setup
       ~requested_allpkgs
   in
-  (* We retrieve the previous opam files, package in this set are simulated
-     pins and we don't want the take the new definition into account for
-     solving *)
-  let opams, u_pinned =
-    OpamPackage.Map.fold (fun nv (was_pinned, opam) (opams, pinned) ->
-        OpamPackage.Map.add nv opam opams,
-        if was_pinned then pinned else OpamPackage.Set.remove nv pinned)
-      st.overwrote_opams (st.opams, OpamPinned.packages st)
-  in
   let u_depends =
     let depend =
       let ignored = OpamStateConfig.(!r.ignore_constraints_on) in
@@ -1000,10 +991,10 @@ let universe st
             else Atom atom)
           (OpamFile.OPAM.depends opam)
     in
-    get_deps depend opams
+    get_deps depend st.opams
   in
-  let u_depopts = get_deps OpamFile.OPAM.depopts opams in
-  let u_conflicts = get_conflicts st st.packages opams in
+  let u_depopts = get_deps OpamFile.OPAM.depopts st.opams in
+  let u_conflicts = get_conflicts st st.packages st.opams in
   let u_invariant =
     if OpamStateConfig.(!r.unlock_base) then OpamFormula.Empty
     else st.switch_invariant
@@ -1058,7 +1049,7 @@ let universe st
   u_depopts;
   u_conflicts;
   u_installed_roots = st.installed_roots;
-  u_pinned;
+  u_pinned = OpamPinned.packages st;
   u_invariant;
   u_reinstall;
   u_attrs     = ["opam-query", lazy requested;
