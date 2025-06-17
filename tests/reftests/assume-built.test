@@ -17,7 +17,7 @@ new!
 [NOTE] Package ongoing does not exist in opam repositories registered in the current switch.
 ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
 ### : assume built
-### opam install ongoing -v | sed-cmd test | sed-cmd sh | sed-cmd touch
+### opam install ongoing -v | sed-cmd test sh touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -51,7 +51,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing --assume-built -v | sed-cmd test | sed-cmd touch | grep -v "switch import"
+### opam install ongoing --assume-built -v | sed-cmd test touch | grep -v "switch import"
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -81,7 +81,7 @@ Processing  3/3: [ongoing: test out]
 '${OPAM} install ongoing --assume-built -v' failed.
 # Return code 31 #
 ### touch ongoing/out
-### opam install ongoing --assume-built -v | sed-cmd test | sed-cmd touch
+### opam install ongoing --assume-built -v | sed-cmd test touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1:
@@ -147,7 +147,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   ongoing.dev
 Done.
-### opam install ongoing --assume-built --working-dir -v | sed-cmd test | sed-cmd touch
+### opam install ongoing --assume-built --working-dir -v | sed-cmd test touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]

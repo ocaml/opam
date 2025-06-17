@@ -408,7 +408,7 @@ module Parse = struct
             | "|" :: "unordered" :: r ->
                 get_rewr (true, sort, acc) r
             | "|" :: "sed-cmd" :: cmd :: r ->
-                let sandbox =
+                let sandbox cmd =
                   (* Sandbox prefix
                  >[...] /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "cmd" <
                  >[...] ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "cmd" <
@@ -432,7 +432,7 @@ module Parse = struct
               seq @@ [ char '"'] @  r @ [ char '"'; rep1 space ];
               seq @@ r @ [ rep1 space ];
               ] in
-            let unix_prefix =
+            let unix_prefix cmd =
               (* Unix & Mac command prefix
                  >[...] /usr/bin/cmd <
                  >[...] /usr/bin/cmd <
@@ -445,7 +445,7 @@ module Parse = struct
                 Re.str cmd;
                 ]
             in
-            let win_prefix =
+            let win_prefix cmd =
               (* Windows command prefix
                  >[...] C:\Windows\system32\cmd.exe <
                  >[...] C:\Windows\system32\cmd <
@@ -461,9 +461,16 @@ module Parse = struct
                 Re.str cmd;
                 opt @@ Re.str ".exe";
                 ] in
-            let re = alt @@ sandbox :: unix_prefix @ win_prefix in
-            let str = Printf.sprintf "%s " cmd in
-            get_rewr (unordered, sort, (re, Sed str) :: acc) r
+            let re cmd = alt @@ sandbox cmd :: unix_prefix cmd @ win_prefix cmd in
+            let rec aux cmd r acc =
+              let str = Printf.sprintf "%s " cmd in
+              let acc = (re cmd, Sed str) :: acc in
+              match r with
+              | "|" :: _ | [] -> acc, r
+              | cmd :: r -> aux cmd r acc
+            in
+            let acc, r = aux cmd r acc in
+            get_rewr (unordered, sort, acc) r
             | ">$" :: output :: [] ->
                 unordered, sort, List.rev acc, Some (get_str output)
             | [] ->
@@ -538,6 +545,15 @@ let common_filters ?opam dir =
        [str dir; str (OpamSystem.back_to_forward dir); str (OpamSystem.apply_cygpath dir)]
      else
        [str dir] in
+   let with_hexa_twice prefix =
+     seq [
+       str prefix;
+       char '-';
+       repn xdigit 4 (Some 9);
+       char '-';
+       repn xdigit 4 (Some 9);
+     ]
+   in
    [
      seq [ bol;
            alt [ str "#=== ERROR";
@@ -559,6 +575,58 @@ let common_filters ?opam dir =
           str "opam-";
           rep1 (alt [xdigit; char '-'])],
      Sed "${OPAMTMP}";
+     seq [
+       str "state-";
+       repn digit 14 (Some 14);
+       str ".export";
+     ],
+     Sed "state-today.export";
+     seq [
+       str "state-";
+       repn xdigit 8 (Some 8);
+       str ".cache";
+     ],
+     Sed "state-magicv.cache";
+     with_hexa_twice "log",
+     Sed "log-xxx";
+     with_hexa_twice "patch",
+     Sed "patch-xxx";
+     (* rsync output
+        Linux
+        >sending incremental file list
+        MacOS
+        >building file list ... done
+     *)
+     alt [
+       seq [
+         rep any;
+         str "sending incremental file list";
+         rep any;
+       ];
+       seq [
+         rep any;
+         str "building file list"; rep any; str "done";
+         rep any;];
+     ],
+     GrepV;
+     (* rsync output
+        >sent 133 bytes  received 12 bytes  290.00 bytes/sec
+     *)
+     seq [
+       str "sent" ; rep1 space; rep1 digit; rep1 space; str "bytes"; rep1 space;
+       str "received"; rep1 space; rep1 digit; rep1 space; str "bytes";
+       rep1 any; str "bytes/sec"
+     ],
+     GrepV;
+     (* rsync output
+        >total size is 383  speedup is 0.58
+     *)
+     seq [
+       str "total"; rep1 space; str "size"; rep1 space; str "is"; rep1 space;
+       rep1 digit; rep1 space;
+       str "speedup"; rep1 space; str "is";
+     ],
+     GrepV
    ] @
    (match opam with
     | None -> []
