@@ -349,7 +349,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
           {|if "${{ matrix.host }}" equ "x86_64-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"|} ::
           {|if "${{ matrix.host }}" equ "i686-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"|} ::
           run_or_fail [
-           {|opam init --yes --bare default git+file://D:/opam-repository#${{ env.OPAM_TEST_REPO_SHA }} --no-git-location|};
+           {|opam init --yes --bare default git+file://%cd%/../../../opam-repository#${{ env.OPAM_TEST_REPO_SHA }} --no-git-location|};
            {|opam switch --yes create default ocaml-system|};
            {|opam env|};
            {|opam install --yes lwt|};
