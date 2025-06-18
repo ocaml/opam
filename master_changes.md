@@ -11,7 +11,6 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
-  * Bump the version to `2.4.0~alpha3~dev` [#6512 @kit-ty-kate]
 
 ## Global CLI
 
@@ -24,9 +23,6 @@ users)
 ## Actions
 
 ## Install
-  * [BUG] Fix `opam install --deps-only` using the opam description of the wrong package in some cases [#6544 @kit-ty-kate - fix #6535]
-  * ◈ Change behaviour of `--deps-only`: no longer required unicity of name.version when dependencies only is asked, only take into account the requested dependencies. In other words, if you have `pkg.1` installed, installing dependencies of `pkg.2` no longer removes `pkg.1`. This allows also to install dependencies of conflicting packages when their dependencies are compliant. [#6520 @rjbou]
-  * [BUG] Fix sources directory removed on reinstall actions: no longer remove sources directory if the package is not pinned when cleaning after a removal action [#6550 @rjbou - fix #6551]
 
 ## Build (package)
 
@@ -39,9 +35,6 @@ users)
 ## Config
 
 ## Pin
-  * [BUG] When using `--deps-only`, no longer take into account the simulated pin information. This is hit when a package `pkg` is already installed and `opam install ./pkg --deps` is called, if there is a conflict between installed `pkg` dependencies and local `pkg` declaration, the conflict is not seen and the already installed `pkg` is kept. [#6530 @rjbou - fix #6529]
-  * [BUG] In case of simulated pin (deps-only, depext-only), no longer fetch and write the sources [#6533 @rjbou - fix #6532]
-  * [BUG] In case of simulate pin (`opam install . --deps`), trigger reinstall based on newly simulated pinned packages instead of already pinned set [#6522 @rjbou - partial fix #6501]
 
 ## List
 
@@ -50,8 +43,6 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
-  * Fix a stack overflow when updating repositories with large files [#6527 @kit-ty-kate - fix #6513]
-  * Fix a failure when updating a repository which adds a line at the end of a file without final newline character [#6527 @kit-ty-kate - fix hannesm/patch#28]
 
 ## Tree
 
@@ -80,14 +71,10 @@ users)
 ## VCS
 
 ## Build
-  * Bump the downloaded-if-missing dune to 3.19.0, cppo to 1.8.0, ocamlgraph to 2.2.0, uutf to 1.0.4 and patch to 3.0.0~beta1 [#6527 @kit-ty-kate]
-  * Allows `./configure --without-dune` to build with OCaml 5.4 [#6527 @kit-ty-kate]
 
 ## Infrastructure
 
 ## Release scripts
-  * Add opam `2.4.0~alpha2` to the install script [#6511 @kit-ty-kate]
-  * Call the opam configure script with `--with-cygwin-setup` on Windows [#6538 @kit-ty-kate]
 
 ## Install script
 
@@ -110,7 +97,6 @@ users)
 ## Internal: Unix
 
 ## Internal: Windows
-  * Embed Cygwin `setup.exe` executable to use as a fallback in case of cygwin.com network issues [#6523 @rjbou - fix #6498]
 
 ## Test
 
@@ -118,25 +104,10 @@ users)
 
 ## Reftests
 ### Tests
-  * Add some related pin tests: fetching, reinstall trigger & simulated pin (deps-only) [#6530 @rjbou]
-  * Add working dir test case to check the case where a requested working-dir package is already pinned with another url [#6533 @rjbou]
-  * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
-  * Add a test showing the use of the wrong opam definition when reinstalling the package given with `--deps-only` [#6544 @kit-ty-kate]
-  * Add a test for opam repository CI workflow [#6539 @rjbou]
-  * Add a testcase for #6501 [#6520 @rjbou]
-  * Add deps-only behaviour test [#6520 @rjbou]
-  * Add a test for action on disk of actiongraph actions [#6550 @rjbou]
-  * Move sources directory existence/cleaning from clean test to its own file [#6550 @rjbou]
 
 ### Engine
-  * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]
-  * Automatically clean opam output from hexa & date temp directory names (debug mode) [#6549 @rjbou]
-  * Automatically remove some rsync outputs, stats on synchronisation [#6549 @rjbou]
 
 ## Github Actions
-  * Bump the opam-repository sha to avoid a checksum breakage [#6524 @kit-ty-kate]
-  * Bump the version of opam used to setup the depexts tests [#6524 @kit-ty-kate]
-  * Harden the script against bugs in actions/runner-images in case `GITHUB_WORKSPACE` gets moved from `D:` to `C:` in the Windows image [#6553 @kit-ty-kate]
 
 ## Doc
 
@@ -144,7 +115,6 @@ users)
 
 # API updates
 ## opam-client
-  * `OpamAction.cleanup_artefacts`: no longer remove sources directory if the packages is installed but not pinned [#6550 @rjbou]
 
 ## opam-repository
 
