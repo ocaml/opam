@@ -25,6 +25,7 @@ users)
 
 ## Install
   * [BUG] Fix `opam install --deps-only` using the opam description of the wrong package in some cases [#6544 @kit-ty-kate - fix #6535]
+  * ◈ Change behaviour of `--deps-only`: no longer required unicity of name.version when dependencies only is asked, only take into account the requested dependencies. In other words, if you have `pkg.1` installed, installing dependencies of `pkg.2` no longer removes `pkg.1`. This allows also to install dependencies of conflicting packages when their dependencies are compliant. [#6520 @rjbou]
 
 ## Build (package)
 
@@ -121,6 +122,8 @@ users)
   * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
   * Add a test showing the use of the wrong opam definition when reinstalling the package given with `--deps-only` [#6544 @kit-ty-kate]
   * Add a test for opam repository CI workflow [#6539 @rjbou]
+  * Add a testcase for #6501 [#6520 @rjbou]
+  * Add deps-only behaviour test [#6520 @rjbou]
 
 ### Engine
   * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]

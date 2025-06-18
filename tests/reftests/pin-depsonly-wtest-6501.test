@@ -1,0 +1,71 @@
+N0REP0
+### :: Test case for issue #6501 : install of dependencies (main + tests) from
+### :: a local package, in the case where the main package is already installed
+### :: in switch from repository
+### OPAMYES=1
+### :1: same version
+### opam switch create patch --empty
+### <pkg:patch.1>
+opam-version: "2.0"
+depends: [
+  "patch-dep"
+  "patch-test-dep" { with-test}
+]
+### <pkg:patch-dep.1>
+opam-version: "2.0"
+### <pkg:patch-test-dep.1>
+opam-version: "2.0"
+### <pin:patch/patch.opam>
+opam-version: "2.0"
+version: "1"
+depends: [
+  "patch-dep"
+  "patch-test-dep" { with-test}
+]
+### opam install patch
+The following actions will be performed:
+=== install 2 packages
+  - install patch     1
+  - install patch-dep 1 [required by patch]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed patch-dep.1
+-> installed patch.1
+Done.
+### opam install ./patch --with-test --deps
+The following actions will be performed:
+=== install 1 package
+  - install patch-test-dep 1 [required by patch]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed patch-test-dep.1
+Done.
+### opam install patch-test-dep
+[NOTE] Package patch-test-dep is already installed (current version is 1).
+### :2: change version
+### opam switch create patch2 --empty
+### opam install patch
+The following actions will be performed:
+=== install 2 packages
+  - install patch     1
+  - install patch-dep 1 [required by patch]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed patch-dep.1
+-> installed patch.1
+Done.
+### <pin:patch/patch.opam>
+opam-version: "2.0"
+version: "2"
+depends: [
+  "patch-dep"
+  "patch-test-dep" { with-test}
+]
+### opam install ./patch --with-test --deps
+The following actions will be performed:
+=== install 1 package
+  - install patch-test-dep 1 [required by patch]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed patch-test-dep.1
+Done.
