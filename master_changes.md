@@ -120,6 +120,7 @@ users)
   * Add working dir test case to check the case where a requested working-dir package is already pinned with another url [#6533 @rjbou]
   * Add a pin edit test case to check that the additional information is not lost in case of repin to the same url [#6533 @rjbou]
   * Add a test showing the use of the wrong opam definition when reinstalling the package given with `--deps-only` [#6544 @kit-ty-kate]
+  * Add a test for opam repository CI workflow [#6539 @rjbou]
 
 ### Engine
   * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]

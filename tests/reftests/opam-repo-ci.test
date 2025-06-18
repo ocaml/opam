@@ -1,0 +1,103 @@
+N0REP0
+### OPAMYES=1
+### :I: Opam repo CI reinstall workflow
+### <pkg:dep.1>
+opam-version: "2.0"
+### <pkg:test.1>
+opam-version: "2.0"
+### <pkg:main.1>
+opam-version: "2.0"
+depends: [
+  "dep"
+  "test" { with-test }
+]
+### <content>
+I'm a file
+### <main.opam>
+opam-version: "2.0"
+name: "main"
+version: "1"
+depends: [
+  "dep"
+  "test" { with-test }
+]
+### tar czf archive.tgz content main.opam
+### openssl md5 archive.tgz | '.*= ' -> '' >$ MD5
+### sh -c "echo '$MD5' | cut -c 1-2" >$ PRE_MD5
+### <add-url.sh>
+n=main
+nv=$n.1
+arch=archive.tgz
+file="REPO/packages/$n/$nv/opam"
+cat >> "$file" << EOF
+url {
+  src: "$arch"
+  checksum: "md5=$MD5"
+}
+EOF
+### sh add-url.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### OPAMPRECISETRACKING="1" OPAMERRLOGLEN="0" OPAMDOWNLOADJOBS="1"
+### opam option solver=builtin-0install
+Set to 'builtin-0install' the field solver in global configuration
+### opam switch create cirepo --empty
+### opam pin -k version -yn main.1 1
+main is now pinned to version 1
+### OPAMVERBOSE=2
+### # First reinstall
+### # emulate '(cache (opam-archives (target /home/opam/.opam/download-cache)))'
+### mkdir -p OPAM/download-cache/md5/$PRE_MD5
+### cp archive.tgz OPAM/download-cache/md5/$PRE_MD5/$MD5
+### opam reinstall main.1 | sed-cmd tar | "${PRE_MD5}..?${MD5}" -> pre/hash
+main.1 is not installed. Install it? [Y/n] y
+The following actions will be performed:
+=== install 2 packages
+  - install dep  1          [required by main]
+  - install main 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/6: [main.1: extract]
+Processing  3/6: [main.1: extract]
+-> installed dep.1
+Processing  4/6: [main.1: extract]
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
+-> retrieved main.1  (cached)
+-> installed main.1
+Done.
+### # Second reinstall
+### # emulate the absence of cache opam-archives
+### rm -r OPAM/download-cache/
+### opam reinstall main.1 --with-test | grep -v bytes | grep -v size
+The following actions will be performed:
+=== recompile 1 package
+  - recompile main 1 (pinned)
+=== install 1 package
+  - install   test 1          [required by main]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   main.1
+-> installed test.1
+-> installed main.1
+Done.
+### # Third reinstall
+### # no change in source on cache archive
+### opam reinstall main.1 --with-test -vv | sed-cmd rsync tar | "${PRE_MD5}..?${MD5}" -> pre/hash
+The following actions will be performed:
+=== recompile 1 package
+  - recompile main 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/4: [main.1: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/archive.tgz" "${OPAMTMP}"
+- archive.tgz
+- 
+Processing  1/4: [main.1: extract]
++ tar "xfz" "${OPAMTMP}/archive.tgz" "-C" "${OPAMTMP}"
+-> retrieved main.1  (file://${BASEDIR}/archive.tgz)
+-> removed   main.1
+-> installed main.1
+Done.
