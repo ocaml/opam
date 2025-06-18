@@ -91,13 +91,6 @@ The following actions will be performed:
   - recompile main 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  1/4: [main.1: rsync]
-+ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/archive.tgz" "${OPAMTMP}"
-- archive.tgz
-- 
-Processing  1/4: [main.1: extract]
-+ tar "xfz" "${OPAMTMP}/archive.tgz" "-C" "${OPAMTMP}"
--> retrieved main.1  (file://${BASEDIR}/archive.tgz)
 -> removed   main.1
 -> installed main.1
 Done.

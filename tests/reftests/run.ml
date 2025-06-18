@@ -549,9 +549,9 @@ let common_filters ?opam dir =
      seq [
        str prefix;
        char '-';
-       repn xdigit 4 (Some 9);
+       repn xdigit 3 (Some 9);
        char '-';
-       repn xdigit 4 (Some 9);
+       repn xdigit 3 (Some 9);
      ]
    in
    [

@@ -26,6 +26,7 @@ users)
 ## Install
   * [BUG] Fix `opam install --deps-only` using the opam description of the wrong package in some cases [#6544 @kit-ty-kate - fix #6535]
   * ◈ Change behaviour of `--deps-only`: no longer required unicity of name.version when dependencies only is asked, only take into account the requested dependencies. In other words, if you have `pkg.1` installed, installing dependencies of `pkg.2` no longer removes `pkg.1`. This allows also to install dependencies of conflicting packages when their dependencies are compliant. [#6520 @rjbou]
+  * [BUG] Fix sources directory removed on reinstall actions: no longer remove sources directory if the package is not pinned when cleaning after a removal action [#6550 @rjbou - fix #6551]
 
 ## Build (package)
 
@@ -124,6 +125,8 @@ users)
   * Add a test for opam repository CI workflow [#6539 @rjbou]
   * Add a testcase for #6501 [#6520 @rjbou]
   * Add deps-only behaviour test [#6520 @rjbou]
+  * Add a test for action on disk of actiongraph actions [#6550 @rjbou]
+  * Move sources directory existence/cleaning from clean test to its own file [#6550 @rjbou]
 
 ### Engine
   * Allow multiple arguments to `sed-cmd` command [#6549 @rjbou]
@@ -141,6 +144,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamAction.cleanup_artefacts`: no longer remove sources directory if the packages is installed but not pinned [#6550 @rjbou]
 
 ## opam-repository
 
