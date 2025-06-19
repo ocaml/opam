@@ -77,6 +77,7 @@ users)
 ## Release scripts
 
 ## Install script
+  * Add opam 2.4.0~beta1 [#6559 @kit-ty-kate]
 
 ## Admin
 
