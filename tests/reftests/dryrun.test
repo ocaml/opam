@@ -110,30 +110,7 @@ Switch invariant: ["foo"]
 Done.
 ### sh pre.sh
 ### OPAMVERBOSE=2 OPAMDEBUG=-5 opam switch remove dr --dry-run
-FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
-FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
-Switch dr and all its packages will be wiped. Are you sure? [Y/n] y
-FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/lib/foo
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1/foo
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/install/foo.changes
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/lock
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/foo.1/opam
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/switch-config
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/switch-state
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/environment
-SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 ### sh post.sh
-diff '--exclude-from=x-diff' -r previous/config OPAM/config
-4,5d3
-< installed-switches: "dr"
-< switch: "dr"
-Only in previous: dr
-# Return code 1 #
 ### :2a: local switch creation :
 ### sh initial.sh unpack
 ### opam switch create dr foo
@@ -229,30 +206,7 @@ Done.
 ### OPAMVERBOSE=2 OPAMDEBUG=-5 OPAMDEBUGSECTIONS="" opam switch remove ./nip --dry-run
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 CLI                             Parsing CLI version 2.5
-GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
-FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
-SWITCH                          remove switch=${BASEDIR}/nip
-FILE(switch-config)             Read ${BASEDIR}/nip/_opam/.opam-switch/switch-config in 0.000s
-Switch ${BASEDIR}/nip and all its packages will be wiped. Are you sure? [Y/n] y
-FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
-SYSTEM                          rmdir ${BASEDIR}/nip/_opam
-SYSTEM                          rm ${BASEDIR}/nip/_opam/lib/foo
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/build/foo.1/foo
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/install/foo.changes
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/lock
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/packages/foo.1/opam
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/packages/cache
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/switch-config
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/switch-state
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/environment
-SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 ### sh post.sh
-diff '--exclude-from=x-diff' -r previous/config OPAM/config
-4d3
-< installed-switches: "${BASEDIR}/nip"
-# Return code 1 #
 ### :2d: local switch creation with package deps only :
 ### sh initial.sh unpack
 ### <pin:nip/nip.opam>
