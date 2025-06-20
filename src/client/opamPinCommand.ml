@@ -620,6 +620,7 @@ and source_pin
 
     let opam = copy_files st opam in
 
+    if not OpamStateConfig.(!r.dryrun) then
     OpamFile.OPAM.write_with_preserved_format
       ?format_from:(OpamPinned.orig_opam_file st name opam)
       (OpamPath.Switch.Overlay.opam st.switch_global.root st.switch nv.name)
