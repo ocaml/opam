@@ -278,32 +278,8 @@ Switch invariant: ["foo"]
 Done.
 ### sh pre.sh
 ### OPAMVERBOSE=2 OPAMDEBUG=-5 opam switch remove dr --dry-run | unordered
-FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
-FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
-Switch dr and all its packages will be wiped. Are you sure? [Y/n] y
-FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/lib/foo
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1/foo
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/install/foo.changes
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/lock
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/foo.1/opam
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/switch-config
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/switch-state
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/environment
-SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
+
 ### sh post.sh
-diff '--exclude-from=x-diff' -r previous/config OPAM/config
-7,10d6
-< installed-switches:
-<   "dr"
-< switch:
-<   "dr"
-Only in previous: dr
-# Return code 1 #
 ### :I:2:b: Local switch removal
 ### sh initial.sh unpack
 ### <nip/a-file>
@@ -320,67 +296,8 @@ Done.
 ### OPAMVERBOSE=2 OPAMDEBUG=-5 OPAMDEBUGSECTIONS="" opam switch remove ./nip --dry-run | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 CLI                             Parsing CLI version 2.6
-GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
-SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
-FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
-SWITCH                          remove switch=${BASEDIR}/nip
-FILE(switch-config)             Read ${BASEDIR}/nip/_opam/.opam-switch/switch-config in 0.000s
-Switch ${BASEDIR}/nip and all its packages will be wiped. Are you sure? [Y/n] y
-FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
-SYSTEM                          rmdir ${BASEDIR}/nip/_opam
-SYSTEM                          rm ${BASEDIR}/nip/_opam/lib/foo
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/build/foo.1/foo
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/install/foo.changes
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/lock
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/packages/foo.1/opam
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/packages/cache
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/switch-config
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/switch-state
-SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/environment
-SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 ### sh post.sh
-diff '--exclude-from=x-diff' -r previous/config OPAM/config
-7,8d6
-< installed-switches:
-<   "${BASEDIR}/nip"
-# Return code 1 #
 ### sh post-local.sh nip
-Local switch disappeared *woosh*
-previous-local
-previous-local/.opam-switch
-previous-local/.opam-switch/build
-previous-local/.opam-switch/build/foo.1
-previous-local/.opam-switch/build/foo.1/foo
-previous-local/.opam-switch/config
-previous-local/.opam-switch/environment
-previous-local/.opam-switch/install
-previous-local/.opam-switch/install/foo.changes
-previous-local/.opam-switch/lock
-previous-local/.opam-switch/packages
-previous-local/.opam-switch/packages/cache
-previous-local/.opam-switch/packages/foo.1
-previous-local/.opam-switch/packages/foo.1/opam
-previous-local/.opam-switch/switch-config
-previous-local/.opam-switch/switch-state
-previous-local/bin
-previous-local/doc
-previous-local/lib
-previous-local/lib/foo
-previous-local/lib/stublibs
-previous-local/lib/toplevel
-previous-local/man
-previous-local/man/man1
-previous-local/man/man1M
-previous-local/man/man2
-previous-local/man/man3
-previous-local/man/man4
-previous-local/man/man5
-previous-local/man/man6
-previous-local/man/man7
-previous-local/man/man9
-previous-local/sbin
-# Return code 3 #
 ### :II: Package installation
 ### sh initial.sh unpack
 ### opam switch create dr foo
