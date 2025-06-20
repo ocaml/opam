@@ -546,17 +546,12 @@ Processing  1/1: [nip: rsync]
 SYSTEM                          rmdir ${OPAMTMP}
 [NOTE] Package nip does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
-SYSTEM                          read ${BASEDIR}/nip/nip.opam
-SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
 nip is now pinned to file://${BASEDIR}/nip (version dev)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 # Return code 1 #
 ### :8: pinning path with opam file :
@@ -599,10 +594,6 @@ Processing  1/1: [nip: rsync]
 SYSTEM                          rmdir ${OPAMTMP}
 [NOTE] Package nip does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
-SYSTEM                          read ${BASEDIR}/nip/nip.opam
-SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
 nip is now pinned to file://${BASEDIR}/nip (version dev)
 
 The following actions will be simulated:
@@ -618,7 +609,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 # Return code 1 #
 ### :8a: pinning vcs with opam file :
@@ -674,10 +664,6 @@ Processing  1/1: [nip: git]
 SYSTEM                          rmdir ${OPAMTMP}
 [NOTE] Package nip does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
-SYSTEM                          read ${BASEDIR}/nip/nip.opam
-SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
 nip is now pinned to git+file://${BASEDIR}/nip#master (version dev)
 
 The following actions will be simulated:
@@ -693,7 +679,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 diff gitPrevious gitOPAM
 0a1
@@ -737,10 +722,6 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/ni
 SYSTEM                          rmdir ${OPAMTMP}
 [nip.1] synchronised (file://${BASEDIR}/nip)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/nip/nip.1/opam
-SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
 nip is now pinned to file://${BASEDIR}/nip (version 1)
 
 The following actions will be simulated:
@@ -756,7 +737,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 # Return code 1 #
 ### :8d: pinning version :
@@ -878,15 +858,8 @@ SYSTEM                          rmdir ${OPAMTMP}
 [nip-d.1] synchronised (no changes)
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d/nip-d.opam in 0.000s
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip-d
-SYSTEM                          read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d/nip-d.opam
-SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip-d/opam
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip-d
 nip-d is now pinned to file://${BASEDIR}/nip-d (version 1)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
-SYSTEM                          read ${BASEDIR}/nip/nip.opam
-SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
 nip is now pinned to file://${BASEDIR}/nip (version dev)
 
 The following actions will be simulated:
@@ -905,7 +878,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 # Return code 1 #
 ### :8f: pinning vcs with opam file :
@@ -970,9 +942,6 @@ Processing  1/1: [nip.dev: git]
 SYSTEM                          rm ${BASEDIR}/OPAM/log/rsync-files-xxx
 SYSTEM                          rmdir ${OPAMTMP}
 [nip.dev] synchronised (git+file://${BASEDIR}/nip#master)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/files
-FILE(opam)                      Wrote ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam atomically in 0.000s
 
 The following actions will be simulated:
 === recompile 1 package
@@ -987,24 +956,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
-1a2,3
-> name: "nip"
-> version: "dev"
-4,5d5
-< authors: "the testing team"
-< homepage: "egapemoh"
-6a7
-> authors: "the testing team"
-8c9
-< dev-repo: "hg+https://pkg@op.am"
----
-> homepage: "egapemoh"
-10,11c11
-< name: "nip"
-< version: "dev"
----
-> dev-repo: "hg+https://pkg@op.am"
 Only in OPAM/dr/.opam-switch: reinstall
 Only in OPAM/dr/.opam-switch/sources/nip: another-file
 # Return code 1 #
@@ -1215,9 +1166,6 @@ Processing  1/1: [nip.dev: rsync]
 SYSTEM                          rmdir ${OPAMTMP}
 [nip.dev] synchronised (file://${BASEDIR}/nip)
 [nip] Installing new package description from upstream file://${BASEDIR}/nip
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/files
-FILE(opam)                      Wrote ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam atomically in 0.000s
 
 The following actions will be simulated:
 === recompile 1 package
@@ -1244,27 +1192,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
-1a2,3
-> name: "nip"
-> version: "dev"
-4,5d5
-< authors: "the testing team"
-< homepage: "egapemoh"
-6a7
-> authors: "the testing team"
-8c9
-< dev-repo: "hg+https://pkg@op.am"
----
-> homepage: "egapemoh"
-10,12c11,13
-< build: ["touch" "a-file"]
-< name: "nip"
-< version: "dev"
----
-> depends: ["bar"]
-> build: ["touch" "a-file-snd"]
-> dev-repo: "hg+https://pkg@op.am"
 Only in OPAM/dr/.opam-switch: reinstall
 Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
@@ -1278,11 +1205,8 @@ diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OP
 The following actions will be performed:
 === recompile 1 package
   - recompile nip dev (pinned) [upstream or system changes]
-=== install 1 package
-  - install   bar 1            [required by nip]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed bar.1
 -> retrieved nip.dev  (no changes)
 -> removed   nip.dev
 -> installed nip.dev
@@ -1420,9 +1344,6 @@ Processing  1/1: [nip.dev: git]
 SYSTEM                          rmdir ${OPAMTMP}
 [nip.dev] synchronised (git+file://${BASEDIR}/nip#master)
 [nip] Installing new package description from upstream git+file://${BASEDIR}/nip#master
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/files
-FILE(opam)                      Wrote ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam atomically in 0.000s
 
 The following actions will be simulated:
 === recompile 1 package
@@ -1449,27 +1370,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
-1a2,3
-> name: "nip"
-> version: "dev"
-4,5d5
-< authors: "the testing team"
-< homepage: "egapemoh"
-6a7
-> authors: "the testing team"
-8c9
-< dev-repo: "hg+https://pkg@op.am"
----
-> homepage: "egapemoh"
-10,12c11,13
-< build: ["touch" "a-file"]
-< name: "nip"
-< version: "dev"
----
-> depends: ["bar"]
-> build: ["touch" "a-file-snd"]
-> dev-repo: "hg+https://pkg@op.am"
 Only in OPAM/dr/.opam-switch: reinstall
 Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
@@ -1483,13 +1383,10 @@ diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OP
 The following actions will be performed:
 === recompile 1 package
   - recompile nip dev (pinned) [upstream or system changes]
-=== install 1 package
-  - install   bar 1            [required by nip]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved nip.dev  (no changes)
 -> removed   nip.dev
--> installed bar.1
 -> installed nip.dev
 Done.
 ### :14: pinning internal update with install with no changes with git :
