@@ -290,25 +290,26 @@ let install_compiler
 let switch_consistent gt switch = 
   let switch_dir = OpamPath.Switch.root gt.root switch in
   match OpamFilename.dir_is_empty switch_dir with 
-  | Some true -> 
+  | Some true ->
     (* Directory exists and is empty *)
     (* TODO: Verify whether the switch path is not pointing to internal opam
        directories *)
     (* if OpamFilename.dir_starts_with switch_dir gt.root then 
        ()      
-       else  *)
-    OpamFilename.rmdir_cleanup switch_dir;
-    `Empty 
+       else *)
+       (* Opam path, list verify if we are not removing one of those. *)
+(*     OpamFilename.rmdir_cleanup switch_dir;
+ *)     `Empty
   | Some false ->
     (* Directory exists and is not empty - verify it to be a valid switch *)
-    (try 
+    (try
        match OpamFile.Switch_config.read_opt 
                (OpamPath.Switch.switch_config gt.root switch) with 
-       | Some _ ->  
+       | Some _ ->
          (match OpamFile.SwitchSelections.read_opt
                   (OpamPath.Switch.selections gt.root switch) with
            Some (switch_selections:switch_selections) -> 
-           if OpamPackage.Set.for_all (fun p_pinned ->  
+           if OpamPackage.Set.for_all (fun p_pinned -> (* verify code wise if it's the case. *)
                let name = OpamPackage.name p_pinned in 
                OpamFilename.exists_dir 
                  (OpamPath.Switch.Overlay.package gt.root switch name)
@@ -318,13 +319,21 @@ let switch_consistent gt switch =
              && OpamPackage.Set.for_all (
                   fun p_installed -> 
                     (* TODO: Maybe keep only changes check? *)
+                    (* TODO: there is a file in /packages/ *)
+                    (* verify code wise if it's the case. OpamPath.overlay *)
+                    OpamFilename.exists_dir 
+                      (OpamPath.Switch.installed_package_dir gt.root switch p_installed)   
+                    ||
                     OpamFile.exists (OpamPath.Switch.install gt.root switch
                                        (OpamPackage.name p_installed))  
                     || OpamFile.exists (OpamPath.Switch.changes gt.root switch 
                                           (OpamPackage.name p_installed)) 
                 ) switch_selections.sel_installed then 
+                  (* Have both errors shown, and fail then. *)
                `Valid_switch
-             else 
+                (* fixup, mettre dans global state, switch-config il faut qu'il soit là.
+                   sans me soucier. *)
+             else
                `IO_Error "Some packages are not properly installed."          
            else
              `IO_Error "Some pinned packages have their files broken.\n ";
