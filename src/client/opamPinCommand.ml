@@ -700,11 +700,12 @@ let unpin st names =
   log "unpin %a"
     (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
   List.fold_left (fun st name ->
-      OpamFilename.rmdir
-        (OpamPath.Switch.pinned_package st.switch_global.root st.switch name);
-      OpamFilename.rmdir
-        (OpamPath.Switch.Overlay.package
-           st.switch_global.root st.switch name);
+      if not OpamStateConfig.(!r.dryrun) then
+        (OpamFilename.rmdir
+           (OpamPath.Switch.pinned_package st.switch_global.root st.switch name);
+         OpamFilename.rmdir
+           (OpamPath.Switch.Overlay.package
+              st.switch_global.root st.switch name));
       match OpamPinned.package_opt st name with
       | Some nv ->
         let pin_str =

@@ -1044,11 +1044,6 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam
 Ok, nip is no longer pinned to file://${BASEDIR}/nip (version dev)
 The following actions will be simulated:
 === remove 1 package
@@ -1064,9 +1059,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in previous/dr/.opam-switch/overlay: nip
 Only in OPAM/dr/.opam-switch: remove
-Only in previous/dr/.opam-switch/sources: nip
 # Return code 1 #
 ### :VII:8: Pin triggered by install
 ### sh initial.sh unpack
