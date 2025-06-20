@@ -24,6 +24,9 @@ type status =
     (** Package unavailable on this system *)
   }
 
+(** System package availability *)
+type available = Available of Set.t | Suppose_available 
+
 val status_empty: status
 
 val string_of_status: status -> string
