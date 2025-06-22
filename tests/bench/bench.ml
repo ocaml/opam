@@ -136,6 +136,12 @@ let () =
     in
     List.fold_left (+.) 0.0 l /. float_of_int n
   in
+  let time_update_local_plain =
+    (* This should be the latest test *)
+    launch (fmt "%s repo set-url default /rep/opam-repository-after-phase3" bin);
+    launch "rm -rf ~/.opam/repo/default && cp -r /rep/opam-repository-before-phase1 ~/.opam/repo/default";
+    time_cmd ~exit:0 (fmt "opam update")
+  in
   let json = fmt {|{
   "results": [
     {
@@ -210,6 +216,11 @@ let () =
           "name": "OpamStd.String.split amortised over 10 runs",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "opam update local plain repository",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -239,6 +250,7 @@ let () =
       time_show_raw
       time_show_precise
       time_OpamStd_String_split_10
+      time_update_local_plain
       bin_size
   in
   print_endline json
