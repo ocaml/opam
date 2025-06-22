@@ -105,7 +105,7 @@ AS_IF([test "x$with_cygwin_setup" != "x"],[
       curl -fsSL https://cygwin.com/sha512.sum | grep -F setup-x86_64.exe > "$dest/sha512.sum"
       AS_IF([test ! -e "$dest/sha512.sum" || \
              test ! -e "$dest/setup-x86_64.exe" || \
-             ! ( cd "$dest"; shasum -c sha512.sum ) ],[
+             ! ( cd "$dest" && sha512sum -c sha512.sum ) ],[
         AC_MSG_ERROR([Failed to download and verify Cygwin's setup-x86_64.exe])
       ])
       CYGWIN_SETUP="$dest/setup-x86_64.exe"
