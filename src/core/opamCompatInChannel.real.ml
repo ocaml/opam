@@ -8,4 +8,4 @@
 (*                                                                        *)
 (**************************************************************************)
 
-include Stdlib.In_channel
+let input_all = Stdlib.In_channel.input_all
