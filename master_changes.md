@@ -76,6 +76,7 @@ users)
 
 ## Release scripts
   * Switch the host of qemu-base-images from gitlab to github [#6510 @kit-ty-kate]
+  * Speedup the initial clone of qemu-base-images when missing [#6510 @kit-ty-kate]
 
 ## Install script
 
