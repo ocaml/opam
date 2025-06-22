@@ -5,6 +5,7 @@ ENV OPAMREPOSHA 26770281fa1ea8b13aab979c1dfbd326e9ab512c
 # 50 commits before OPAMREPOSHAPHASE1
 ENV OPAMREPOSHAPHASE1DELTA 1db3104e98a25ff2b5f859189c9408dc760260e7
 ENV OPAMREPOSHAPHASE1 2d85539cd05071ec4f91d6c4ee35d2adc44aa283
+ENV OPAMREPOSHAPHASE3 2cd8e78594a8943245b8061dbdabd39e7ca492fb
 RUN git clone https://github.com/ocaml/opam-repository /rep/opam-repository
 RUN git -C /rep/opam-repository checkout $OPAMREPOSHA
 RUN git clone /rep/opam-repository /rep/opam-repository-small-diff

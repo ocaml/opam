@@ -178,6 +178,21 @@ let () =
     launch (fmt "git -C /rep/opam-repository.git update-ref HEAD $OPAMREPOSHAPHASE1");
     time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-large-diff-git %s update" bin)
   in
+  let time_update_phase1_phase3_local =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-phase1-phase3" "file:///rep/opam-repository";
+    (* NOTE: this changes the main repository content to a newer commit
+       (currently defined in bench.Dockerfile as $OPAMREPOSHA). This will impact
+       any benchmarks defined in the future that are using /rep/opam-repository *)
+    launch (fmt "git -C /rep/opam-repository checkout $OPAMREPOSHAPHASE3");
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-phase1-phase3 %s update" bin)
+  in
+  let time_update_phase1_phase3_git =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-phase1-phase3-git" "git+file:///rep/opam-repository.git";
+    launch (fmt "git -C /rep/opam-repository.git update-ref HEAD $OPAMREPOSHAPHASE3");
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-phase1-phase3-git %s update" bin)
+  in
   let json = fmt {|{
   "results": [
     {
@@ -287,6 +302,16 @@ let () =
           "name": "opam update - large diff (git repo)",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "opam update - phase1 to phase3 (local repo)",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam update - phase1 to phase3 (git repo)",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -322,6 +347,8 @@ let () =
       time_update_small_diff_git
       time_update_large_diff_local
       time_update_large_diff_git
+      time_update_phase1_phase3_local
+      time_update_phase1_phase3_git
       bin_size
   in
   print_endline json

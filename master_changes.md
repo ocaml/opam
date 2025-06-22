@@ -105,6 +105,7 @@ users)
 ## Test
 
 ## Benchmarks
+  * Add an even larger real-world diff to benchmark `opam update` [#6567 @kit-ty-kate]
 
 ## Reftests
 ### Tests
