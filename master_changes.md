@@ -76,6 +76,9 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Switch the host of qemu-base-images from gitlab to github [#6510 @kit-ty-kate]
+  * Speedup the initial clone of qemu-base-images when missing [#6510 @kit-ty-kate]
+  * Update some of the platforms the prebuilt binaries are built on to Alpine 2.21, FreeBSD 14.3, OpenBSD 7.7 and NetBSD 10.1 [#6510 @kit-ty-kate]
 
 ## Install script
   * Add opam 2.4.0~beta1 [#6559 @kit-ty-kate]
