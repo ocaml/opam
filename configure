@@ -3966,7 +3966,7 @@ then :
       curl -fsSL https://cygwin.com/sha512.sum | grep -F setup-x86_64.exe > "$dest/sha512.sum"
       if test ! -e "$dest/sha512.sum" || \
              test ! -e "$dest/setup-x86_64.exe" || \
-             ! ( cd "$dest"; shasum -c sha512.sum )
+             ! ( cd "$dest" && sha512sum -c sha512.sum )
 then :
 
         as_fn_error $? "Failed to download and verify Cygwin's setup-x86_64.exe" "$LINENO" 5

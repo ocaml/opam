@@ -71,6 +71,7 @@ users)
 ## VCS
 
 ## Build
+  * Use coreutils' `sha512sum` instead of perl's `shasum` utility when using `./configure --with-cygwin-setup` [#6566 @kit-ty-kate - fix #6557]
 
 ## Infrastructure
 
