@@ -124,25 +124,35 @@ let get_diff parent_dir dir1 dir2 =
       let file = Filename.concat (OpamFilename.Dir.to_string parent_dir) file in
       Some (Unix.lstat file)
   in
-  let rec aux diffs dir1 dir2 =
+  let rec aux acc dir1 dir2 =
     let files = get_files_for_diff parent_dir dir1 dir2 in
     let diffs =
-      List.fold_left (fun diffs (file1, file2) ->
-          let add_to_diffs content1 content2 diffs =
-            match Patch.diff content1 content2 with
-            | None -> diffs
-            | Some diff -> diff :: diffs
-          in
+      List.fold_left (fun ((size, diffs) as acc) (file1, file2) ->
           match lstat_opt parent_dir file1, lstat_opt parent_dir file2 with
           | Some {st_kind = S_REG; _}, None
           | None, Some {st_kind = S_REG; _}
           | Some {st_kind = S_REG; _}, Some {st_kind = S_REG; _} ->
             let content1 = Option.map (readfile parent_dir) file1 in
             let content2 = Option.map (readfile parent_dir) file2 in
-            add_to_diffs content1 content2 diffs
+            begin match Patch.diff content1 content2 with
+            | None -> (size, diffs)
+            | Some diff ->
+                let approximated_max_length_diff (filename, content) =
+                  let len_content = String.length content in
+                  String.length filename * 4 + len_content + len_content / 40
+                in
+                let size = match content1, content2 with
+                  | None, None -> assert false
+                  | Some x, None | None, Some x ->
+                      size + 4096 + approximated_max_length_diff x
+                  | Some x, Some y ->
+                      size + 4096 + approximated_max_length_diff x + approximated_max_length_diff y
+                in
+                (size, diff :: diffs)
+            end
           | Some {st_kind = S_DIR; _}, None | None, Some {st_kind = S_DIR; _}
           | Some {st_kind = S_DIR; _}, Some {st_kind = S_DIR; _} ->
-            aux diffs file1 file2
+            aux acc file1 file2
           | Some {st_kind = S_DIR; _}, Some {st_kind = S_REG; _} ->
             failwith "Change from a directory to a regular file is unsupported"
           | Some {st_kind = S_REG; _}, Some {st_kind = S_DIR; _} ->
@@ -158,21 +168,26 @@ let get_diff parent_dir dir1 dir2 =
           | Some {st_kind = S_SOCK; _}, _ | _, Some {st_kind = S_SOCK; _} ->
             failwith "Sockets are unsupported"
           | None, None -> assert false)
-        diffs files
+        acc files
     in
     diffs
   in
   match
-    aux []
+    aux (0, [])
       (Some (OpamFilename.Base.to_string dir1))
       (Some (OpamFilename.Base.to_string dir2))
   with
-  | [] ->
+  | _, [] ->
     log "Internal diff (empty) done in %.2fs." (chrono ());
     None
-  | diffs ->
+  | max_length, diffs ->
     log "Internal diff (non-empty) done in %.2fs." (chrono ());
     let patch = OpamSystem.temp_file ~auto_clean:false "patch" in
     let patch_file = OpamFilename.of_string patch in
-    OpamFilename.write patch_file (Format.asprintf "%a" Patch.pp_list diffs);
+    let buf =
+      (* 512 is the default internal size of the Buffer.t in Format *)
+      Buffer.create max_length
+    in
+    Patch.pp_list (Format.formatter_of_buffer buf) diffs;
+    OpamFilename.write patch_file (Buffer.contents buf);
     Some patch_file
