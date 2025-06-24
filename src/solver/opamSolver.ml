@@ -511,7 +511,7 @@ let dosetrim f =
       |[p] -> trimmed_pkgs := p::!trimmed_pkgs
       |_ -> assert false
   in
-  ignore (f ~callback ~explain:false);
+  let _ : int = f ~callback ~explain:false in
   !trimmed_pkgs
 
 let coinstallable_subset universe ?(add_invariant=true) set packages =
