@@ -43,16 +43,20 @@ module Dir = struct
   let equal = String.equal
 
   let of_string dirname =
+    OpamSystem.(real_path @@ forward_to_back dirname)
+
+  let of_string_resolved dirname =
+    let home = OpamStd.Sys.home () in
+    let prefix = "~" ^ Filename.dir_sep in
     let dirname =
-      if dirname = "~" then OpamStd.Sys.home ()
+      if dirname = "~" then home
       else if
-        OpamStd.String.starts_with ~prefix:("~"^Filename.dir_sep) dirname
+        OpamStd.String.starts_with ~prefix dirname
       then
-        Filename.concat (OpamStd.Sys.home ())
-          (OpamStd.String.remove_prefix ~prefix:("~"^Filename.dir_sep) dirname)
+        Filename.concat home (OpamStd.String.remove_prefix ~prefix dirname)
       else dirname
     in
-    OpamSystem.real_path (OpamSystem.forward_to_back dirname)
+    of_string dirname
 
   let to_string dirname = dirname
 
@@ -190,6 +194,14 @@ let of_string s =
   let basename = Filename.basename s in
   {
     dirname  = Dir.of_string dirname;
+    basename = Base.of_string basename;
+  }
+
+let of_string_resolved s =
+  let dirname = Filename.dirname s in
+  let basename = Filename.basename s in
+  {
+    dirname  = Dir.of_string_resolved dirname;
     basename = Base.of_string basename;
   }
 
