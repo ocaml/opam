@@ -1722,6 +1722,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:resolve-variables.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-safe)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff safe.test safe.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-safe)))
+
+(rule
+ (targets safe.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:safe.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-shared-fetch)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
