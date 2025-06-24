@@ -156,3 +156,98 @@ Switch invariant: ["ocaml-base-compiler" {= "4.14.0"}]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed ocaml-base-compiler.4.14.0
 Done.
+### :c: switch create <version> should keep avoid version packages if only
+### ::: avoid version compiler packages are compliant
+### :c:1: Mimic opam repository compiler packages
+### rm -rf REPO/packages
+### <pkg:ocaml-variants.5.3.0+options>
+opam-version: "2.0"
+flags: [ compiler ]
+### <pkg:ocaml-base-compiler.5.3.0>
+opam-version: "2.0"
+flags: [ compiler ]
+### <pkg:ocaml.5.3.0>
+opam-version: "2.0"
+depends: [
+  "ocaml-base-compiler" {>= "5.3.0~" & < "5.3.1~"}
+  | "ocaml-variants" {>= "5.3.0~" & < "5.3.1~"}
+  | "ocaml-system" {>= "5.3.0~" & < "5.3.1~"}
+]
+flags: [ conf ]
+### <pkg:ocaml-system.5.3.0>
+opam-version: "2.0"
+flags: [ compiler avoid-version ]
+### <pkg:ocaml-variants.5.4.0~alpha1+options>
+opam-version: "2.0"
+flags: [compiler avoid-version]
+### <pkg:ocaml-base-compiler.5.4.0~alpha1>
+opam-version: "2.0"
+flags: [compiler avoid-version]
+### <pkg:ocaml.5.4.0>
+opam-version: "2.0"
+depends: [
+  "ocaml-base-compiler" {>= "5.4.0~" & < "5.4.1~"}
+  | "ocaml-variants" {>= "5.4.0~" & < "5.4.1~"}
+  | "ocaml-system" {>= "5.4.0~" & < "5.4.1~"}
+]
+flags: [ conf avoid-version ]
+### opam switch create 5.4.0~alpha1
+[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
+# Return code 5 #
+### opam switch create 5.4-alpha-default 5.4.0~alpha1
+[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
+# Return code 5 #
+### opam switch create --solver=builtin-mccs+glpk 5.4-alpha-mccs 5.4.0~alpha1
+[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
+# Return code 5 #
+### opam switch create --solver=builtin-0install 5.4.0~alpha1install 5.4.0~alpha1
+[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
+# Return code 5 #
+### :c:2: With 2 packages avoid version
+### rm -rf REPO/packages
+### <pkg:ocaml-variants.5.3.0>
+opam-version: "2.0"
+flags: [ compiler ]
+### <pkg:ocaml-base-compiler.5.3.0>
+opam-version: "2.0"
+flags: [ compiler ]
+### <pkg:ocaml.5.3.0>
+opam-version: "2.0"
+depends: [
+  "ocaml-base-compiler" {>= "5.3.0~" & < "5.3.1~"}
+  | "ocaml-variants" {>= "5.3.0~" & < "5.3.1~"}
+  | "ocaml-system" {>= "5.3.0~" & < "5.3.1~"}
+]
+flags: [ conf ]
+### <pkg:ocaml-system.5.3.0>
+opam-version: "2.0"
+flags: [ compiler avoid-version ]
+### <pkg:ocaml-variants.5.4.0~alpha1>
+opam-version: "2.0"
+flags: [compiler avoid-version]
+### <pkg:ocaml-base-compiler.5.4.0~alpha1>
+opam-version: "2.0"
+flags: [compiler avoid-version]
+### <pkg:ocaml.5.4.0>
+opam-version: "2.0"
+depends: [
+  "ocaml-base-compiler" {>= "5.4.0~" & < "5.4.1~"}
+  | "ocaml-variants" {>= "5.4.0~" & < "5.4.1~"}
+  | "ocaml-system" {>= "5.4.0~" & < "5.4.1~"}
+]
+flags: [ conf avoid-version ]
+### opam switch remove 5.4.0~alpha1 -y
+The compiler switch 5.4.0~alpha1 does not exist.
+# Return code 5 #
+### opam switch create 5.4.0~alpha1
+[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
+# Return code 5 #
+### opam switch create 5.4-alpha-default-2 5.4.0~alpha1
+[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
+# Return code 5 #
+### opam switch create --solver=builtin-mccs+glpk 5.4-alpha-mccs-2 5.4.0~alpha1
+[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
+# Return code 5 #
+### opam switch create --solver=builtin-0install 5.4.0~alpha1install-2 5.4.0~alpha1
+[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
+# Return code 5 #
