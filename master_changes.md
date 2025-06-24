@@ -129,6 +129,11 @@ users)
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
   * Fix support for removing local link directories [#6450 @kit-ty-kate]
   * Bump `OPAM_REPO_SHA` in the github action workflows to allow patch 3.0.0 [#6663 @kit-ty-kate]
+  * Use `opam-set-os` in reftests following the depexts update.
+
+### Engine
+  * `gawk` was re-added to the base fedora images [#6473 @kit-ty-kate]
+  * Add `opam-set-os` command that combines setting global `os-family` variable followed by a (silent) `opam update` [#6489 @arozovyk]
 
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]
