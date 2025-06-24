@@ -69,6 +69,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * [BUG] Fix `git remote get-url` failure, add handling for exit code 2 [#6412 @rjbou]
 
 ## Build
   * Use coreutils' `sha512sum` instead of perl's `shasum` utility when using `./configure --with-cygwin-setup` [#6566 @kit-ty-kate - fix #6557]
