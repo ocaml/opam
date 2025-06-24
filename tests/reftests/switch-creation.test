@@ -192,9 +192,19 @@ Switch invariant: [
 -> installed ocaml-base-compiler.5.3.0
 -> installed ocaml-variant.4.14.0
 Done.
-### opam switch create not-found1-v 5.3.0 4.14.0 12.3.4
-[ERROR] No compiler matching `12.3.4' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+### opam switch create not-found1-v 5.3.0 4.14.0 12.3.4 -y
+No compiler matching 12.3.4 found, remove them from invariant? [Y/n] y
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: [
+  "ocaml-base-compiler" {= "5.3.0"}
+  "ocaml-base-compiler" {= "4.14.0"} | "ocaml-variant" {= "4.14.0"}
+]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+-> installed ocaml-variant.4.14.0
+Done.
 ### :d:2: with full name
 ### opam switch create all-good-nv ocaml.5.3.0 ocaml.4.14.0
 
@@ -208,9 +218,19 @@ Switch invariant: ["ocaml" {= "5.3.0"} "ocaml" {= "4.14.0"}]
 
 Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] n
 # Return code 20 #
-### opam switch create not-found1-nv ocaml.5.3.0 ocaml.4.14.0 ocaml.12.3.4
-[ERROR] No compiler matching `ocaml.12.3.4' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+### opam switch create not-found1-nv ocaml.5.3.0 ocaml.4.14.0 ocaml.12.3.4 -y
+No compiler matching ocaml.12.3.4 found, remove them from invariant? [Y/n] y
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {= "5.3.0"} "ocaml" {= "4.14.0"}]
+[ERROR] Could not determine which packages to install for this switch:
+  * No agreement on the version of ocaml:
+    - (invariant) -> ocaml
+    You can temporarily relax the switch invariant with `--update-invariant'
+
+
+Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
+# Return code 20 #
 ### :d:3: with a mix of both
 ### opam switch create all-good-vnv ocaml.5.3.0 4.14.0
 
@@ -225,12 +245,49 @@ Switch invariant: [
 -> installed ocaml.5.3.0
 -> installed ocaml-variant.4.14.0
 Done.
-### opam switch create not-found1-nv-vnv ocaml.5.3.0 4.14.0 ocaml.12.3.4
-[ERROR] No compiler matching `ocaml.12.3.4' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
-### opam switch create not-found1-v-vnv ocaml.5.3.0 4.14.0 12.3.4
-[ERROR] No compiler matching `12.3.4' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
-### opam switch create not-found2-v-nv-vnv ocaml.5.3.0 4.14.0 12.3.4 ocaml.56.7.8
-[ERROR] No compiler matching `12.3.4' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
+### opam switch create not-found1-nv-vnv ocaml.5.3.0 4.14.0 ocaml.12.3.4 -y
+No compiler matching ocaml.12.3.4 found, remove them from invariant? [Y/n] y
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: [
+  "ocaml" {= "5.3.0"}
+  "ocaml-base-compiler" {= "4.14.0"} | "ocaml-variant" {= "4.14.0"}
+]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+-> installed ocaml.5.3.0
+-> installed ocaml-variant.4.14.0
+Done.
+### opam switch create not-found1-v-vnv ocaml.5.3.0 4.14.0 12.3.4 -y
+No compiler matching 12.3.4 found, remove them from invariant? [Y/n] y
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: [
+  "ocaml" {= "5.3.0"}
+  "ocaml-base-compiler" {= "4.14.0"} | "ocaml-variant" {= "4.14.0"}
+]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+-> installed ocaml.5.3.0
+-> installed ocaml-variant.4.14.0
+Done.
+### opam switch create not-found2-v-nv-vnv ocaml.5.3.0 4.14.0 12.3.4 ocaml.56.7.8 -y
+No compiler matching ocaml.56.7.8 and 12.3.4 found, remove them from invariant? [Y/n] y
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: [
+  "ocaml" {= "5.3.0"}
+  "ocaml-base-compiler" {= "4.14.0"} | "ocaml-variant" {= "4.14.0"}
+]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.3.0
+-> installed ocaml.5.3.0
+-> installed ocaml-variant.4.14.0
+Done.
+### opam switch create not-found1-vnv ocaml.5.3.0 4.14.0 12.3.4 ocaml.56.7.8 -n
+No compiler matching ocaml.56.7.8 and 12.3.4 found, remove them from invariant? [Y/n] n
+[NOTE] Use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
 # Return code 5 #
