@@ -49,6 +49,8 @@ let to_string ?custom t =
         ^ (match converter with
             | Some (it,ifu) -> "?"^it^":"^ifu
             | None -> "")
+      | FNext f    ->
+        Printf.sprintf "#next(%s)" (aux f)
       | FOp(e,s,f) ->
         paren ~cond:(context <> `Or && context <> `And)
           (Printf.sprintf "%s %s %s"
@@ -75,6 +77,7 @@ let rec fold_down_left f acc filter = match filter with
   | FOp(l,_,r) | FAnd(l,r) | FOr(l,r) ->
     fold_down_left f (fold_down_left f (f acc filter) l) r
   | FNot x
+  | FNext x
   | FUndef x
   | FDefined x ->
     fold_down_left f (f acc filter) x
@@ -87,6 +90,7 @@ let rec map_up f = function
   | FOp (l, op, r) -> f (FOp (map_up f l, op, map_up f r))
   | FAnd (l, r) -> f (FAnd (map_up f l, map_up f r))
   | FOr (l, r) -> f (FOr (map_up f l, map_up f r))
+  | FNext x -> f (FNext (map_up f x))
   | FNot x -> f (FNot (map_up f x))
   | FUndef x -> f (FUndef (map_up f x))
   | FDefined x -> f (FDefined (map_up f x))
@@ -367,6 +371,12 @@ let rec reduce_aux ?no_undef_expand ~default_str env =
   | FBool b -> FBool b
   | FString s -> FString s
   | FIdent i -> resolve_ident ?no_undef_expand env i
+  | FNext f ->
+     (match reduce f with
+      | FUndef x -> FUndef (FNext x)
+      | f -> FString (OpamPackage.Version.(value_string f
+                                           |> of_string |> next
+                                           |> to_string)))
   | FOp (e,relop,f) ->
     (match reduce e, reduce f with
      | FUndef x, FUndef y -> FUndef (FOp (x, relop, y))
