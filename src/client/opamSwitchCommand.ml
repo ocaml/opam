@@ -746,14 +746,17 @@ let guess_compiler_invariant ?repos rt strings =
   in
   let opams = OpamRepositoryState.build_index rt repos  in
   let packages = OpamPackage.keys opams in
-  let compiler_packages =
-    OpamPackage.Map.filter
-      (fun _ opam ->
-         OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
-         not (OpamFile.OPAM.has_flag Pkgflag_AvoidVersion opam) &&
-         not (OpamFile.OPAM.has_flag Pkgflag_Deprecated opam))
-      opams
-    |> OpamPackage.keys
+  let compiler_packages, removed_compiler_packages =
+    OpamPackage.Map.fold (fun nv opam (comp, avoid) ->
+        if OpamFile.OPAM.has_flag Pkgflag_Compiler opam then
+          if OpamFile.OPAM.has_flag Pkgflag_AvoidVersion opam
+          || OpamFile.OPAM.has_flag Pkgflag_Deprecated opam then
+            comp, OpamPackage.Set.add nv avoid
+          else
+            OpamPackage.Set.add nv comp, avoid
+        else
+          comp, avoid)
+      opams OpamPackage.Set.(empty, empty)
   in
   let invariant =
     List.fold_left (fun acc str ->
@@ -766,13 +769,27 @@ let guess_compiler_invariant ?repos rt strings =
         with Failure _ | Not_found ->
         try
           let v = OpamPackage.Version.of_string str in
-          let candidates =
-            OpamPackage.Set.filter (fun nv -> nv.version = v)
-              compiler_packages
+          let filter =
+            OpamPackage.Set.filter (fun nv ->
+                OpamPackage.Version.equal nv.version v)
           in
-          if OpamPackage.Set.is_empty candidates then
-            raise Not_found
-          else
+          let candidates =
+            let candidates = filter compiler_packages in
+            if OpamPackage.Set.is_empty candidates then
+              let avoided_candidates = filter removed_compiler_packages in
+              if OpamPackage.Set.is_empty avoided_candidates then
+                raise Not_found
+              else
+                (if not (OpamPackage.Set.is_singleton avoided_candidates) then
+                   OpamConsole.note
+                     "Compilers found for version %s are all flagged with \
+                      'avoid-version'.\nIt is better to use a more explicit \
+                      command like \
+                      'opam switch create <switch-name> <package-name.version>'"
+                     str;
+                 avoided_candidates)
+            else candidates
+          in
           let disj =
             OpamPackage.Set.fold
               (fun nv acc ->

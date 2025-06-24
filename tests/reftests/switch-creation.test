@@ -192,17 +192,37 @@ depends: [
 ]
 flags: [ conf avoid-version ]
 ### opam switch create 5.4.0~alpha1
-[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "5.4.0~alpha1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.4.0~alpha1
+Done.
 ### opam switch create 5.4-alpha-default 5.4.0~alpha1
-[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "5.4.0~alpha1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.4.0~alpha1
+Done.
 ### opam switch create --solver=builtin-mccs+glpk 5.4-alpha-mccs 5.4.0~alpha1
-[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "5.4.0~alpha1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.4.0~alpha1
+Done.
 ### opam switch create --solver=builtin-0install 5.4.0~alpha1install 5.4.0~alpha1
-[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml-base-compiler" {= "5.4.0~alpha1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.4.0~alpha1
+Done.
 ### :c:2: With 2 packages avoid version
 ### rm -rf REPO/packages
 ### <pkg:ocaml-variants.5.3.0>
@@ -237,17 +257,56 @@ depends: [
 ]
 flags: [ conf avoid-version ]
 ### opam switch remove 5.4.0~alpha1 -y
-The compiler switch 5.4.0~alpha1 does not exist.
-# Return code 5 #
+Switch 5.4.0~alpha1 and all its packages will be wiped. Are you sure? [Y/n] y
 ### opam switch create 5.4.0~alpha1
-[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+[NOTE] Compilers found for version 5.4.0~alpha1 are all flagged with 'avoid-version'.
+       It is better to use a more explicit command like 'opam switch create <switch-name> <package-name.version>'
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: [
+  "ocaml-base-compiler" {= "5.4.0~alpha1"} |
+  "ocaml-variants" {= "5.4.0~alpha1"}
+]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.4.0~alpha1
+Done.
 ### opam switch create 5.4-alpha-default-2 5.4.0~alpha1
-[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+[NOTE] Compilers found for version 5.4.0~alpha1 are all flagged with 'avoid-version'.
+       It is better to use a more explicit command like 'opam switch create <switch-name> <package-name.version>'
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: [
+  "ocaml-base-compiler" {= "5.4.0~alpha1"} |
+  "ocaml-variants" {= "5.4.0~alpha1"}
+]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.4.0~alpha1
+Done.
 ### opam switch create --solver=builtin-mccs+glpk 5.4-alpha-mccs-2 5.4.0~alpha1
-[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+[NOTE] Compilers found for version 5.4.0~alpha1 are all flagged with 'avoid-version'.
+       It is better to use a more explicit command like 'opam switch create <switch-name> <package-name.version>'
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: [
+  "ocaml-base-compiler" {= "5.4.0~alpha1"} |
+  "ocaml-variants" {= "5.4.0~alpha1"}
+]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.4.0~alpha1
+Done.
 ### opam switch create --solver=builtin-0install 5.4.0~alpha1install-2 5.4.0~alpha1
-[ERROR] No compiler matching `5.4.0~alpha1' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
-# Return code 5 #
+[NOTE] Compilers found for version 5.4.0~alpha1 are all flagged with 'avoid-version'.
+       It is better to use a more explicit command like 'opam switch create <switch-name> <package-name.version>'
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: [
+  "ocaml-base-compiler" {= "5.4.0~alpha1"} |
+  "ocaml-variants" {= "5.4.0~alpha1"}
+]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed ocaml-base-compiler.5.4.0~alpha1
+Done.

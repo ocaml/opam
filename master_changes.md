@@ -31,6 +31,7 @@ users)
 ## UI
 
 ## Switch
+  * Fix `opam switch <version>` where all compilers of that version are `avoid-version` [#6571 @rjbou - fix #6563]
 
 ## Config
 
