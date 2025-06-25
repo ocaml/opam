@@ -70,7 +70,7 @@ EOF
   cat > "$dir/Dockerfile" << EOF
 FROM fedora:43
 RUN dnf install -y $mainlibs $ocaml diffutils
-RUN dnf install -y gcc-c++ gawk
+RUN dnf install -y gcc-c++
 EOF
     ;;
   gentoo)

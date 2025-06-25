@@ -111,6 +111,7 @@ users)
 ### Tests
 
 ### Engine
+  * `gawk` was re-added to the base fedora images [#6473 @kit-ty-kate]
 
 ## Github Actions
 
