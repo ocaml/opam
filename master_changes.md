@@ -99,6 +99,7 @@ users)
 ## Shell
 
 ## Internal
+  * Do not remove the generated patch file during updates when debug-mode is on [#6575 @kit-ty-kate]
 
 ## Internal: Unix
 
