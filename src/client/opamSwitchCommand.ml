@@ -755,13 +755,13 @@ let guess_compiler_invariant ?repos rt strings =
       opams
     |> OpamPackage.keys
   in
-  let invariant =
-    List.fold_left (fun acc str ->
+  let invariant, invalid, not_found =
+    List.fold_left (fun (invariant, invalid, not_found) str ->
         try
           let (name, _) as atom = OpamFormula.atom_of_string str in
           if OpamPackage.Set.exists (OpamFormula.check atom)
-              (OpamPackage.packages_of_name packages name)
-          then OpamFormula.ands [acc; Atom atom]
+              (OpamPackage.packages_of_name packages name) then
+            OpamFormula.ands [invariant; Atom atom], invalid, not_found
           else raise Not_found
         with Failure _ | Not_found ->
         try
@@ -771,28 +771,37 @@ let guess_compiler_invariant ?repos rt strings =
               compiler_packages
           in
           if OpamPackage.Set.is_empty candidates then
-            raise Not_found
+            invariant, invalid, v::not_found
           else
-          let disj =
-            OpamPackage.Set.fold
-              (fun nv acc ->
-                 OpamFormula.ors
-                   [acc; Atom (OpamSolution.eq_atom_of_package nv)])
-              candidates OpamFormula.Empty
-          in
-          OpamFormula.ands [acc; disj]
+            let disj =
+              OpamPackage.Set.fold
+                (fun nv invariant ->
+                   OpamFormula.ors
+                     [invariant; Atom (OpamSolution.eq_atom_of_package nv)])
+                candidates OpamFormula.Empty
+            in
+            OpamFormula.ands [invariant; disj], invalid, not_found
         with
-        | Failure _ ->
-          OpamConsole.error_and_exit `Bad_arguments
-            "Invalid package specification or version %S"
-            str
-        | Not_found ->
-          OpamConsole.error_and_exit `Not_found
-            "No compiler matching `%s' found, use `opam switch list-available' \
-             to see what is available, or use `--packages' to select packages \
-             explicitly."
-            str)
-      OpamFormula.Empty
+        | Failure _ -> invariant, str::invalid, not_found)
+      (OpamFormula.Empty, [], [])
       strings
   in
-  OpamFormula.of_atom_formula invariant
+  let invariant = OpamFormula.of_atom_formula invariant in
+  if invalid <> [] then
+    OpamConsole.error "Invalid package specification or version: %s. Skipping."
+      (OpamStd.Format.pretty_list
+         (List.map (OpamConsole.colorise `underline) invalid));
+  if not_found <> [] then
+    let continue =
+      OpamConsole.confirm
+        "No compiler matching %s found, remove them from invariant?"
+        (OpamStd.Format.pretty_list (List.map (fun v ->
+             OpamConsole.colorise `underline (OpamPackage.Version.to_string v))
+             not_found))
+    in
+    if continue then invariant else
+      (OpamConsole.note
+        "Use `opam switch list-available' to see what is available, or use \
+         `--packages' to select packages explicitly.";
+         OpamStd.Sys.exit_because `Not_found)
+  else invariant
