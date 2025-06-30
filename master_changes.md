@@ -31,6 +31,7 @@ users)
 ## UI
 
 ## Switch
+  * Fix `opam switch <version>` where all compilers of that version are `avoid-version` [#6571 @rjbou - fix #6563]
 
 ## Config
 
@@ -109,6 +110,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add test for switch creation `opam switch <version>` where all compilers are flagged `avoid-version` [#6571 @rjbou]
 
 ### Engine
   * `gawk` was re-added to the base fedora images [#6473 @kit-ty-kate]
