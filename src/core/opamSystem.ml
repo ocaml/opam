@@ -645,7 +645,7 @@ let copy_file_t ?(with_log=true) src dst =
     log "copy %s -> %s" src dst;
   copy_file_aux ~src ~dst ()
 
-let rec link_t ?(with_log=true) src dst =
+let rec link_t ~except_vcs ?(with_log=true) src dst =
   mkdir (Filename.dirname dst);
   if file_or_symlink_exists dst then
     remove_file dst;
@@ -660,14 +660,14 @@ let rec link_t ?(with_log=true) src dst =
       else src
     in
     if Sys.is_directory src then
-      copy_dir_t src dst
+      copy_dir_t ~except_vcs src dst
     else
       copy_file_t src dst
 
-and copy_dir_t ?(with_log=true) src dst_dir =
+and copy_dir_t ~except_vcs ?(with_log=true) src dst_dir =
   if with_log || log_for_file_management () then
     log "copydir %s -> %s" src dst_dir;
-  let files = get_files src in
+  let files = get_files_t ~except_vcs src in
   mkdir dst_dir;
   let with_log = false in
   List.iter (fun file ->
@@ -677,10 +677,10 @@ and copy_dir_t ?(with_log=true) src dst_dir =
       | {Unix.st_kind = Unix.S_REG; _} ->
         copy_file_t ~with_log src dst
       | {Unix.st_kind = Unix.S_DIR; _} ->
-        copy_dir_t ~with_log src dst
+        copy_dir_t ~except_vcs ~with_log src dst
       | {Unix.st_kind = Unix.S_LNK; _} ->
         let src = Unix.readlink src in
-        link_t ~with_log src dst
+        link_t ~except_vcs ~with_log src dst
       | {Unix.st_kind = Unix.S_CHR; _} ->
         failwith (Printf.sprintf "Copying character devices (%s) is unsupported" src)
       | {Unix.st_kind = Unix.S_BLK; _} ->
@@ -695,7 +695,8 @@ and copy_dir_t ?(with_log=true) src dst_dir =
         OpamConsole.warning "Warning: cannot copy %s to %s" src dst_dir
     ) files
 
-let copy_dir = copy_dir_t ~with_log:true
+let copy_dir = copy_dir_t ~except_vcs:false ~with_log:true
+let copy_dir_except_vcs = copy_dir_t ~except_vcs:true ~with_log:true
 let copy_file = copy_file_t ~with_log:true
 
 let mv src dst =
@@ -708,7 +709,7 @@ let mv src dst =
   | Unix.Unix_error(Unix.EXDEV, _, _) ->
     let with_log = false in
     if Sys.is_directory src
-    then (copy_dir_t ~with_log src dst; remove_dir_t src)
+    then (copy_dir_t ~except_vcs:false ~with_log src dst; remove_dir_t src)
     else (copy_file_t ~with_log src dst; remove_file_t ~with_log src)
 
 let is_exec file =

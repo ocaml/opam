@@ -55,6 +55,7 @@ users)
 ## Lint
 
 ## Repository
+  * No longer copy VCS directories when adding or updating local non-VCS repositories [#6575 @kit-ty-kate - fix #6560]
 
 ## Lock
 
@@ -128,6 +129,7 @@ users)
 ## opam-client
 
 ## opam-repository
+  * `OpamLocal`: `fetch_repo_update` no longer copies vcs directories [#6575 @kit-ty-kate]
 
 ## opam-state
 
@@ -137,3 +139,4 @@ users)
 
 ## opam-core
   * `OpamSystem`: Add `get_files_except_vcs` [#6575 @kit-ty-kate]
+  * `OpamSystem`: Add `copy_dir_except_vcs` [#6575 @kit-ty-kate]

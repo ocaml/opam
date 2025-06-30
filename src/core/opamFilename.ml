@@ -294,8 +294,11 @@ let files_and_links d =
 let copy ~src ~dst =
   if src <> dst then OpamSystem.copy_file (to_string src) (to_string dst)
 
-let copy_dir ~src ~dst =
-  if src <> dst then OpamSystem.copy_dir (Dir.to_string src) (Dir.to_string dst)
+let copy_dir_t f ~src ~dst =
+  if src <> dst then f (Dir.to_string src) (Dir.to_string dst)
+
+let copy_dir = copy_dir_t OpamSystem.copy_dir
+let copy_dir_except_vcs = copy_dir_t OpamSystem.copy_dir_except_vcs
 
 let install ?warning ?exec ~src ~dst () =
   if src <> dst then OpamSystem.install ?warning ?exec (to_string src) (to_string dst)

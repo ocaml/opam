@@ -73,6 +73,10 @@ val copy_file: string -> string -> unit
     files otherwise *)
 val copy_dir: string -> string -> unit
 
+(** Same as [copy_dir] except it avoids copying VCS directories
+    ([.git], [.hg], [_darcs]) *)
+val copy_dir_except_vcs : string -> string -> unit
+
 val mv: string -> string -> unit
 
 type install_warning = [ `Add_exe          (* [.exe] had to be added *)
