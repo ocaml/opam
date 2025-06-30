@@ -118,17 +118,21 @@ let mkdir dir =
     end in
   aux dir
 
-let get_files dirname =
+let get_files_t ~except_vcs dirname =
   let dir = Unix.opendir dirname in
   let rec aux files =
     match Unix.readdir dir with
     | "." | ".." -> aux files
+    | ".git" | ".hg" | "_darcs" when except_vcs -> aux files
     | file -> aux (file :: files)
     | exception End_of_file -> files
   in
   let files = aux [] in
   Unix.closedir dir;
   files
+
+let get_files = get_files_t ~except_vcs:false
+let get_files_except_vcs = get_files_t ~except_vcs:true
 
 let log_for_file_management () =
   OpamCoreConfig.(!r.debug_level) >= 4

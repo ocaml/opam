@@ -980,10 +980,6 @@ some file
 Now run 'opam upgrade' to apply any package updates.
 ### sh -c "cat OPAM/log/patch-*"
 --- /dev/null
-+++ test-git.new/.git/some-file
-@@ -0,0 +1,1 @@
-+some file
---- /dev/null
 +++ test-git.new/packages/test/test.4/opam
 @@ -0,0 +1,1 @@
 +opam-version: "2.0"

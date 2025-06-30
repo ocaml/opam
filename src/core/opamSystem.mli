@@ -129,6 +129,10 @@ val write: string -> string -> unit
     directory [dir]. *)
 val get_files : string -> string list
 
+(** Same as [get_files] except it avoids copying VCS directories
+    ([.git], [.hg], [_darcs]) *)
+val get_files_except_vcs : string -> string list
+
 (** [remove filename] removes [filename]. Works whether [filename] is
     a file or a directory *)
 val remove: string -> unit

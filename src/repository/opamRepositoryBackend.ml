@@ -74,7 +74,7 @@ let job_text name label =
 let get_files_for_diff parent_dir dir1 dir2 =
   let getfiles parent_dir dir =
     let dir = Filename.concat (OpamFilename.Dir.to_string parent_dir) dir in
-    OpamSystem.get_files dir
+    OpamSystem.get_files_except_vcs dir
   in
   match dir1, dir2 with
   | None, None -> assert false

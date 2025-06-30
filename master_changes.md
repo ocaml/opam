@@ -44,6 +44,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Ignore VCS directories when diffing during updates [#6575 @kit-ty-kate - fix #6560]
 
 ## Tree
 
@@ -135,3 +136,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamSystem`: Add `get_files_except_vcs` [#6575 @kit-ty-kate]
