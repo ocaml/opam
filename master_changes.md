@@ -112,6 +112,7 @@ users)
 ## Reftests
 ### Tests
   * Add test for switch creation `opam switch <version>` where all compilers are flagged `avoid-version` [#6571 @rjbou]
+  * Add a test showing the behaviour of opam repository when adding and updating local VCS repositories forced as non-VCS [#6575 @kit-ty-kate]
 
 ### Engine
   * `gawk` was re-added to the base fedora images [#6473 @kit-ty-kate]
