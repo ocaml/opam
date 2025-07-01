@@ -244,8 +244,9 @@ module Set = struct
       !r
 
     let is_singleton s =
-      not (is_empty s) &&
-      min_elt s == max_elt s
+      let exception Break in
+      try S.fold (fun _ b -> if b then raise_notrace Break else true) s false
+      with Break -> false
 
     let choose_one s =
       if is_empty s then raise Not_found
@@ -379,8 +380,9 @@ module Map = struct
         m1 m2
 
     let is_singleton s =
-      not (is_empty s) &&
-      fst (min_binding s) == fst (max_binding s)
+      let exception Break in
+      try M.fold (fun _ _ b -> if b then raise_notrace Break else true) s false
+      with Break -> false
 
     let to_string string_of_value m =
       if M.cardinal m > max_print then

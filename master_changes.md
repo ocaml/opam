@@ -133,3 +133,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamStd.{Set,Map}.is_singleton`: Speedup from `O(2 * log n)` to `O(1)` [#6576 @kit-ty-kate]
