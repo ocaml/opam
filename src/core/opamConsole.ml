@@ -541,6 +541,11 @@ let () =
 
 let pending = Queue.create ()
 
+let add_to_queue data =
+  Queue.push data pending;
+  if Queue.length pending > 10 then
+    ignore (Queue.pop pending)
+
 let clear_pending debug_level =
   let f (level, timestamp, msg) =
     if level <= abs debug_level then
@@ -565,7 +570,7 @@ let log section ?(level=1) fmt =
   if not OpamCoreConfig.(!r.set) then
     let b = Buffer.create 128 in
     let timestamp = timestamp () ^ "  " in
-    let k _ = Queue.push (level, timestamp, Buffer.contents b) pending in
+    let k _ = add_to_queue (level, timestamp, Buffer.contents b) in
     Format.kfprintf k (Format.formatter_of_buffer b) ("%a  " ^^ fmt ^^ "\n%!")
       (acolor_w 30 `yellow) section
   else if level <= abs debug_level then
