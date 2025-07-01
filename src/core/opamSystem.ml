@@ -235,7 +235,20 @@ let remove_file file =
       internal_error "Cannot remove %s (%s)." file (Printexc.to_string e)
   )
 
-let string_of_channel = OpamCompatInChannel.input_all
+let string_of_channel ic =
+  let n = 32768 in
+  let b = Bytes.create n in
+  let rec iter ic b idx n =
+    if n = 0 then
+      Bytes.unsafe_to_string b ^ OpamCompatInChannel.input_all ic
+    else
+      let nread = Stdlib.input ic b idx n in
+      if nread = 0 then
+        Bytes.sub_string b 0 idx
+      else
+        iter ic b (idx + nread) (n - nread)
+  in
+  iter ic b 0 n
 
 let read file =
   let ic =
