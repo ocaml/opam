@@ -81,7 +81,7 @@ val dry_run: 'a switch_state -> OpamSolver.solution -> 'a switch_state
 val print_depext_msg : OpamSysPkg.status -> unit
 
 (** As {!install_depexts}, but supplied with a set of system packages to be
-    installed. *)
+    installed. Note that the system will be polled for package availabilty. *)
 val install_sys_packages:
   confirm:bool -> OpamStateTypes.gt_variables -> OpamFile.Config.t ->
   OpamSysPkg.to_install -> unit -> unit
