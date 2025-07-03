@@ -23,7 +23,7 @@ archive-mirrors: "https://opam.ocaml.org/cache"
 EOF
 opam switch create default ocaml-system
 eval $(opam env)
-opam install lwt
+opam install --debug-level=3 lwt
 opam list
 opam config report
 
