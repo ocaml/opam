@@ -75,6 +75,7 @@ users)
 
 ## Build
   * Use coreutils' `sha512sum` instead of perl's `shasum` utility when using `./configure --with-cygwin-setup` [#6566 @kit-ty-kate - fix #6557]
+  * Upgrade the download-if-missing dependencies to `dune 3.19.1`, `opam-file-format 2.2.0`, `spdx_licenses 1.4.0` and `patch 3.0.0` [#6580 @kit-ty-kate]
 
 ## Infrastructure
 
