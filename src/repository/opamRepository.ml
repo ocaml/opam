@@ -538,11 +538,9 @@ let apply_repo_update repo repo_root = function
       | `http | `rsync -> false
       | _ -> true
     in
-    (match OpamFilename.patch ~preprocess ~allow_unclean:false f repo_root with
-     | Some e ->
-       if not (OpamConsole.debug ()) then OpamFilename.remove f;
-       raise e
-     | None -> OpamFilename.remove f; Done ())
+    let err = OpamFilename.patch ~preprocess ~allow_unclean:false f repo_root in
+    if not (OpamConsole.debug ()) then OpamFilename.remove f;
+    OpamStd.Option.map_default raise (Done ()) err
   | Update_empty ->
     OpamConsole.msg "[%s] no changes from %s\n"
       (OpamConsole.colorise `green

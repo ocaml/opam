@@ -44,6 +44,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Ignore VCS directories when diffing during updates [#6575 @kit-ty-kate - fix #6560]
 
 ## Tree
 
@@ -54,6 +55,7 @@ users)
 ## Lint
 
 ## Repository
+  * No longer copy VCS directories when adding or updating local non-VCS repositories [#6575 @kit-ty-kate - fix #6560]
 
 ## Lock
 
@@ -99,6 +101,7 @@ users)
 ## Shell
 
 ## Internal
+  * Do not remove the generated patch file during updates when debug-mode is on [#6575 @kit-ty-kate]
 
 ## Internal: Unix
 
@@ -111,6 +114,7 @@ users)
 ## Reftests
 ### Tests
   * Add test for switch creation `opam switch <version>` where all compilers are flagged `avoid-version` [#6571 @rjbou]
+  * Add a test showing the behaviour of opam repository when adding and updating local VCS repositories forced as non-VCS [#6575 @kit-ty-kate]
 
 ### Engine
   * `gawk` was re-added to the base fedora images [#6473 @kit-ty-kate]
@@ -125,6 +129,7 @@ users)
 ## opam-client
 
 ## opam-repository
+  * `OpamLocal`: `fetch_repo_update` no longer copies vcs directories [#6575 @kit-ty-kate]
 
 ## opam-state
 
@@ -133,3 +138,5 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamSystem`: Add `get_files_except_vcs` [#6575 @kit-ty-kate]
+  * `OpamSystem`: Add `copy_dir_except_vcs` [#6575 @kit-ty-kate]

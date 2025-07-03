@@ -73,6 +73,10 @@ val copy_file: string -> string -> unit
     files otherwise *)
 val copy_dir: string -> string -> unit
 
+(** Same as [copy_dir] except it avoids copying VCS directories
+    ([.git], [.hg], [_darcs]) *)
+val copy_dir_except_vcs : string -> string -> unit
+
 val mv: string -> string -> unit
 
 type install_warning = [ `Add_exe          (* [.exe] had to be added *)
@@ -128,6 +132,10 @@ val write: string -> string -> unit
 (** [get_files dir] returns the list of files (without prefix) inside the
     directory [dir]. *)
 val get_files : string -> string list
+
+(** Same as [get_files] except it avoids copying VCS directories
+    ([.git], [.hg], [_darcs]) *)
+val get_files_except_vcs : string -> string list
 
 (** [remove filename] removes [filename]. Works whether [filename] is
     a file or a directory *)

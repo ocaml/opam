@@ -74,6 +74,10 @@ val move_dir: src:Dir.t -> dst:Dir.t -> unit
     [src] into [dst], overwriting any existing files. *)
 val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 
+(** Same as [copy_dir] except it avoids copying VCS directories
+    ([.git], [.hg], [_darcs]) *)
+val copy_dir_except_vcs : src:Dir.t -> dst:Dir.t -> unit
+
 (** Link a directory *)
 val link_dir: target:Dir.t -> link:Dir.t -> unit
 

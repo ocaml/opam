@@ -899,3 +899,84 @@ to-many-commits
 ### opam repository --short
 to-many-commits
 oper3
+### : Make sure the .git directory is not taken into account when synching local non-git repositories
+### opam switch create local-nongit-git --empty
+### git init -q --initial-branch=master GIT
+### git -C GIT config core.autocrlf false
+### <GIT/repo>
+opam-version: "2.0"
+### <GIT/packages/test/test.1/opam>
+opam-version: "2.0"
+### git -C GIT add -A
+### git -C GIT commit -qm init
+### OPAMDEBUGSECTIONS=this-must-be-nothing OPAMDEBUG=1
+### :: add the repository whith auto detection of vcs
+### opam repository add test-git GIT --this-switch
+[test-git] Initialised
+### ls -a OPAM/repo/test-git
+.
+..
+.git
+packages
+repo
+### <GIT/packages/test/test.2/opam>
+opam-version: "2.0"
+### git -C GIT add packages/test/test.2/opam
+### git -C GIT commit -qm update
+### opam update test-git
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[test-git] synchronised from git+file://${BASEDIR}/GIT
+Now run 'opam upgrade' to apply any package updates.
+### :: add & update the repository with non vcs kind, but source is vcs
+### opam repository set-url --kind=local test-git GIT
+[test-git] Initialised
+### ls -a OPAM/repo/test-git
+.
+..
+packages
+repo
+### <GIT/packages/test/test.3/opam>
+opam-version: "2.0"
+### rm -rf OPAM/log
+### opam update test-git
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[test-git] synchronised from file://${BASEDIR}/GIT
+Now run 'opam upgrade' to apply any package updates.
+### ls -a OPAM/repo/test-git
+.
+..
+packages
+repo
+### sh -c "cat OPAM/log/patch-*"
+--- /dev/null
++++ test-git.new/packages/test/test.3/opam
+@@ -0,0 +1,1 @@
++opam-version: "2.0"
+### :: Update local path repository when source contains a .git directory changes
+### opam repository remove -a test-git
+### opam repository add --kind=local test-git GIT --this-switch
+[test-git] Initialised
+### ls -a OPAM/repo/test-git
+.
+..
+packages
+repo
+### <GIT/packages/test/test.4/opam>
+opam-version: "2.0"
+### rm -rf OPAM/log
+### rm -rf OPAM/repo/test-git/.git
+### cp -r GIT/.git OPAM/repo/test-git/
+### <GIT/.git/some-file>
+some file
+### opam update test-git
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[test-git] synchronised from file://${BASEDIR}/GIT
+Now run 'opam upgrade' to apply any package updates.
+### sh -c "cat OPAM/log/patch-*"
+--- /dev/null
++++ test-git.new/packages/test/test.4/opam
+@@ -0,0 +1,1 @@
++opam-version: "2.0"

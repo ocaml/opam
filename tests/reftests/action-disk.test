@@ -59,7 +59,6 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages/
 SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2
 SYSTEM                          rmdir ${BASEDIR}/OPAM/repo/default.new
 [default] synchronised from file://${BASEDIR}/REPO
-SYSTEM                          rm ${BASEDIR}/OPAM/log/patch-xxx
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/default/repo in 0.000s
 Processing: [default: loading data]
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam in 0.000s
