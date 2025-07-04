@@ -11,6 +11,7 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
+  * Add `opam 2.4.0~rc1` to the install scripts [#6583 @kit-ty-kate]
 
 ## Global CLI
 
