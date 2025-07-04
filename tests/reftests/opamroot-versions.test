@@ -802,10 +802,13 @@ STATE                           Inferred invariant: from base packages { i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
@@ -849,7 +852,7 @@ variables {
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
@@ -882,10 +885,13 @@ STATE                           Inferred invariant: from base packages { i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
@@ -929,7 +935,7 @@ variables {
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:1:d: Upgraded root and local 2.0 switch not recorded
@@ -956,10 +962,13 @@ STATE                           Inferred invariant: from base packages { i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 -> installed i-am-package.2
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
@@ -996,7 +1005,7 @@ variables {
 }
 ### opam-cat _opam/.opam-switch/switch-state
 compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:1:e: reinit from 2.0
@@ -1033,6 +1042,7 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
+i-am-compiler     2           One-line description
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -1177,12 +1187,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -1213,8 +1226,8 @@ paths {
 variables {
 }
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
@@ -1253,12 +1266,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -1289,8 +1305,8 @@ paths {
 variables {
 }
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:2:d: Upgraded root and local 2.1~alpha switch not recorded
@@ -1316,12 +1332,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -1355,8 +1374,8 @@ paths {
 variables {
 }
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:2:e: reinit from 2.1~alpha
@@ -1398,6 +1417,7 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
+i-am-compiler     2           One-line description
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -1547,12 +1567,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -1583,8 +1606,8 @@ paths {
 variables {
 }
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
@@ -1625,12 +1648,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -1661,8 +1687,8 @@ paths {
 variables {
 }
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:3:d: Upgraded root and local 2.1~alpha2 switch not recorded
@@ -1688,12 +1714,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -1727,8 +1756,8 @@ paths {
 variables {
 }
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:3:e: reinit from 2.1~alpha2
@@ -1770,6 +1799,7 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
+i-am-compiler     2           One-line description
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -1894,12 +1924,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -1937,8 +1970,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### rm -rf _opam
@@ -1968,12 +2001,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -2011,8 +2047,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:4:d: Upgraded root and local 2.1~rc switch not recorded
@@ -2037,12 +2073,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -2072,8 +2111,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:4:e: reinit from 2.1~rc
@@ -2110,6 +2149,7 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
+i-am-compiler     2           One-line description
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
@@ -2244,12 +2284,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -2287,8 +2330,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:5:c: From 2.1 root, local unknown from config
@@ -2317,12 +2360,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -2360,8 +2406,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:5:d: Upgraded root and local 2.1 switch not recorded
@@ -2390,12 +2436,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -2433,8 +2482,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:5:e: reinit from 2.1
@@ -2487,6 +2536,7 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
+i-am-compiler     2           One-line description
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### rm -rf _opam
@@ -2607,12 +2657,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -2651,8 +2704,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:6:c: From 2.2~alpha root, local unknown from config
@@ -2680,12 +2733,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -2724,8 +2780,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:6:d: Upgraded root and local 2.2~alpha switch not recorded
@@ -2754,12 +2810,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
@@ -2798,8 +2857,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:6:e: reinit from 2.2~alpha
@@ -2853,6 +2912,7 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
+i-am-compiler     2           One-line description
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### rm -rf _opam
@@ -2971,12 +3031,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
@@ -3013,8 +3076,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:7:c: From 2.2~beta root, local unknown from config
@@ -3042,12 +3105,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
@@ -3084,8 +3150,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:7:d: Upgraded root and local 2.2~beta switch not recorded
@@ -3114,12 +3180,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
@@ -3156,8 +3225,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:7:e: reinit from 2.2~beta
@@ -3209,6 +3278,7 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
+i-am-compiler     2           One-line description
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### rm -rf _opam
@@ -3308,12 +3378,15 @@ STATE                           Definition missing for installed package i-am-sy
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -3343,8 +3416,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:8:c: From 2.2 root, local unknown from config
@@ -3368,12 +3441,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -3403,8 +3479,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:8:d: Upgraded root and local 2.2 switch not recorded
@@ -3429,12 +3505,15 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 STATE                           Detected changed packages (marked for reinstall): {}
 The following actions will be performed:
-=== install 1 package
-  - install i-am-package 2
+=== install 2 packages
+  - install i-am-compiler 2 [required by i-am-package]
+  - install i-am-package  2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed i-am-compiler.2
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 -> installed i-am-package.2
-STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
+STATE                           dependencies (0.000) result={ i-am-compiler.2, i-am-sys-compiler.2 }
 Done.
 ### # rw global state
 ### opam option jobs=4
@@ -3464,8 +3543,8 @@ opam-root: "${BASEDIR}/OPAM"
 opam-version: "2.0"
 synopsis: "local switch"
 ### opam-cat _opam/.opam-switch/switch-state
-compiler: ["i-am-sys-compiler.2"]
-installed: ["i-am-package.2" "i-am-sys-compiler.2"]
+compiler: ["i-am-compiler.2" "i-am-sys-compiler.2"]
+installed: ["i-am-compiler.2" "i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:8:e: reinit from 2.2
@@ -3511,5 +3590,6 @@ STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
 STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
+i-am-compiler     2           One-line description
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
