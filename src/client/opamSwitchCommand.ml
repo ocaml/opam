@@ -287,59 +287,59 @@ let install_compiler
     (Success result);
   OpamSwitchAction.write_selections t;
   t
-let switch_consistent gt switch = 
+let switch_consistent gt switch =
   let switch_dir = OpamPath.Switch.root gt.root switch in
-  match OpamFilename.dir_is_empty switch_dir with 
+  match OpamFilename.dir_is_empty switch_dir with
   | Some true ->
     (* Directory exists and is empty *)
     (* TODO: Verify whether the switch path is not pointing to internal opam
        directories *)
-    (* if OpamFilename.dir_starts_with switch_dir gt.root then 
-       ()      
+    (* if OpamFilename.dir_starts_with switch_dir gt.root then
+       ()
        else *)
-       (* Opam path, list verify if we are not removing one of those. *)
-(*     OpamFilename.rmdir_cleanup switch_dir;
- *)     `Empty
+    (* Opam path, list verify if we are not removing one of those. *)
+    (*     OpamFilename.rmdir_cleanup switch_dir;
+    *)     `Empty
   | Some false ->
     (* Directory exists and is not empty - verify it to be a valid switch *)
     (try
-       match OpamFile.Switch_config.read_opt 
-               (OpamPath.Switch.switch_config gt.root switch) with 
+       match OpamFile.Switch_config.read_opt
+               (OpamPath.Switch.switch_config gt.root switch) with
        | Some _ ->
          (match OpamFile.SwitchSelections.read_opt
                   (OpamPath.Switch.selections gt.root switch) with
-           Some (switch_selections:switch_selections) -> 
+           Some (switch_selections:switch_selections) ->
            if OpamPackage.Set.for_all (fun p_pinned -> (* verify code wise if it's the case. *)
-               let name = OpamPackage.name p_pinned in 
-               OpamFilename.exists_dir 
+               let name = OpamPackage.name p_pinned in
+               OpamFilename.exists_dir
                  (OpamPath.Switch.Overlay.package gt.root switch name)
-             ) switch_selections.sel_pinned then   
-             if OpamFilename.exists_dir 
+             ) switch_selections.sel_pinned then
+             if OpamFilename.exists_dir
                  (OpamPath.Switch.install_dir gt.root switch)
              && OpamPackage.Set.for_all (
-                  fun p_installed -> 
+                  fun p_installed ->
                     (* TODO: Maybe keep only changes check? *)
                     (* TODO: there is a file in /packages/ *)
                     (* verify code wise if it's the case. OpamPath.overlay *)
-                    OpamFilename.exists_dir 
-                      (OpamPath.Switch.installed_package_dir gt.root switch p_installed)   
+                    OpamFilename.exists_dir
+                      (OpamPath.Switch.installed_package_dir gt.root switch p_installed)
                     ||
                     OpamFile.exists (OpamPath.Switch.install gt.root switch
-                                       (OpamPackage.name p_installed))  
-                    || OpamFile.exists (OpamPath.Switch.changes gt.root switch 
-                                          (OpamPackage.name p_installed)) 
-                ) switch_selections.sel_installed then 
-                  (* Have both errors shown, and fail then. *)
+                                       (OpamPackage.name p_installed))
+                    || OpamFile.exists (OpamPath.Switch.changes gt.root switch
+                                          (OpamPackage.name p_installed))
+                ) switch_selections.sel_installed then
+               (* Have both errors shown, and fail then. *)
                `Valid_switch
-                (* fixup, mettre dans global state, switch-config il faut qu'il soit là.
-                   sans me soucier. *)
+               (* fixup, mettre dans global state, switch-config il faut qu'il soit là.
+                  sans me soucier. *)
              else
-               `IO_Error "Some packages are not properly installed."          
+               `IO_Error "Some packages are not properly installed."
            else
              `IO_Error "Some pinned packages have their files broken.\n ";
-         | None -> `IO_Error "switch-state is missing.") 
-       | None -> `IO_Error "switch-config is missing." 
-     with e -> 
+         | None -> `IO_Error "switch-state is missing.")
+       | None -> `IO_Error "switch-config is missing."
+     with e ->
        (* TODO: Files are broken, fixup? how to recover from here *)
        ( `IO_Error (Printf.sprintf "Failed to read files: %s\n" (Printexc.to_string e))))
   | None -> `Not_found
@@ -359,7 +359,7 @@ let create
       "The directory %S already exists, but it doesn't appear to be a \
        valid OPAM switch.\n" switch_dir_str;
   let warning =
-    (OpamConsole.colorise `yellow 
+    (OpamConsole.colorise `yellow
        (Printf.sprintf"Warning: proceeding will permanently erase all the \
                        contents of:\n         %s\n" switch_dir_str))
   in

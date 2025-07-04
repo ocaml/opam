@@ -390,3 +390,6 @@ module Builddir: sig
 end
 
 val internal_paths : t -> switch -> dirname list
+
+(** Check if a directory path is internal  *)
+val is_internal_path : t -> dirname -> bool
