@@ -12,6 +12,7 @@ users)
 
 ## Version
   * Add `opam 2.4.0~rc1` to the install scripts [#6583 @kit-ty-kate]
+  * Bump the version number to `2.5.0~alpha1~dev` [#6584 @kit-ty-kate]
 
 ## Global CLI
 
