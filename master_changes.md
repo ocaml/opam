@@ -66,6 +66,7 @@ users)
 ## External dependencies
 
 ## Format upgrade
+  * Complete upgrade mechanism to permit on the fly upgrade and write upgrade from repo and switch level [#6416 @rjbou]
 
 ## Sandbox
 

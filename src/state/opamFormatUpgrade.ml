@@ -1150,12 +1150,26 @@ let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
-   * If it is an hard upgrade, performs repo & switch upgrade in upgrade
-     function.
+   * [Should not happen] If it is an hard upgrade, performs repo & switch
+     upgrade in upgrade function.
 *)
 
 let latest_version = OpamFile.Config.root_version
 
+(* Development notes:
+   opam differentiates two kinds of format upgrade - "Hard" upgrades, which
+   must be written straight to disk, and "Light" upgrades, which can be
+   performed in-memory, and don't have to be written immediately.
+   This distinction was added in opam 2.1, as it allows users of a _newer_
+   version of opam-state to _read_ an opam root which is still being maintained
+   by an _older_ version of opam (for example, it allows a program compiled with
+   opam-state 2.1.0 to load the global configuration of an opam 2.0 user's root
+   without forcing the upgrade of that root to 2.1).
+
+   Essentially, a "Hard" upgrade is used where the change is difficult (or even
+   impossible) to perform in-memory. We try our hardest to keep all format
+   upgrades "Light" - i.e. the aim is that this version below should never
+   change. *)
 let latest_hard_upgrade = (* to *) v2_0_beta5
 
 (* intermediate roots that need a hard upgrade when upgrading from them *)
@@ -1196,13 +1210,51 @@ let flock_root =
       OpamConsole.error_and_exit `Locked
         "Could not acquire lock for performing format upgrade."
 
-let as_necessary ?reinit requested_lock global_lock root config =
-  let root_version =
-    match OpamFile.Config.opam_root_version_opt config with
-    | Some v -> v
-    | None ->
-      let v = OpamFile.Config.opam_version config in
-      if OpamVersion.compare v v2_0 <> 0 then v else
+(* returns hard upgrades * light upgrades lists *)
+let upgrades root_version =
+  let is_2_1_intermediate_root =
+    List.exists (OpamVersion.equal root_version) v2_1_intermediate_roots
+  in
+  let latest_hard_upgrade =
+    if is_2_1_intermediate_root then v2_1_rc else latest_hard_upgrade
+  in
+  (if is_2_1_intermediate_root then [
+      v2_1_alpha,  from_2_0_to_2_1_alpha;
+      v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
+      v2_1_rc,     from_2_1_alpha2_to_2_1_rc;
+      v2_1,        from_2_1_rc_to_2_1;
+    ] else [
+     v1_1,        from_1_0_to_1_1;
+     v1_2,        from_1_1_to_1_2;
+     v1_3_dev2,   from_1_2_to_1_3_dev2;
+     v1_3_dev5,   from_1_3_dev2_to_1_3_dev5;
+     v1_3_dev6,   from_1_3_dev5_to_1_3_dev6;
+     v1_3_dev7,   from_1_3_dev6_to_1_3_dev7;
+     v2_0_alpha,  from_1_3_dev7_to_2_0_alpha;
+     v2_0_alpha2, from_2_0_alpha_to_2_0_alpha2;
+     v2_0_alpha3, from_2_0_alpha2_to_2_0_alpha3;
+     v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
+     v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
+     v2_0,        from_2_0_beta5_to_2_0;
+     v2_1,        from_2_0_to_2_1;
+   ]) @ [
+    v2_2_alpha,  from_2_1_to_2_2_alpha;
+    v2_2_beta,   from_2_2_alpha_to_2_2_beta;
+    v2_2,        from_2_2_beta_to_2_2;
+  ]
+  |> List.filter (fun (v,_) ->
+      OpamVersion.compare root_version v < 0)
+  |> List.partition (fun (v,_) ->
+      OpamVersion.compare v latest_hard_upgrade <= 0)
+
+let default_opam_root_version = v2_1_alpha
+
+let get_root_version root config =
+  match OpamFile.Config.opam_root_version_opt config with
+  | Some v -> v
+  | None ->
+    let v = OpamFile.Config.opam_version config in
+    if OpamVersion.compare v v2_0 <> 0 then v else
       try
         List.iter (fun switch ->
             ignore @@
@@ -1210,46 +1262,14 @@ let as_necessary ?reinit requested_lock global_lock root config =
               (OpamPath.Switch.switch_config root switch))
           (OpamFile.Config.installed_switches config);
         v
-      with Sys_error _ | OpamPp.Bad_version _ -> v2_1_alpha
-  in
+      with Sys_error _ | OpamPp.Bad_version _ ->
+        default_opam_root_version
+
+let as_necessary ?reinit requested_lock global_lock root config =
+  let root_version = get_root_version root config in
   let cmp = OpamVersion.(compare OpamFile.Config.root_version root_version) in
   if cmp <= 0 then config, gtc_none (* newer or same *) else
-  let hard_upg, light_upg =
-    let is_2_1_intermediate_root =
-      List.exists (OpamVersion.equal root_version) v2_1_intermediate_roots
-    in
-    let latest_hard_upgrade =
-      if is_2_1_intermediate_root then v2_1_rc else latest_hard_upgrade
-    in
-    (if is_2_1_intermediate_root then [
-        v2_1_alpha,  from_2_0_to_2_1_alpha;
-        v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
-        v2_1_rc,     from_2_1_alpha2_to_2_1_rc;
-        v2_1,        from_2_1_rc_to_2_1;
-      ] else [
-       v1_1,        from_1_0_to_1_1;
-       v1_2,        from_1_1_to_1_2;
-       v1_3_dev2,   from_1_2_to_1_3_dev2;
-       v1_3_dev5,   from_1_3_dev2_to_1_3_dev5;
-       v1_3_dev6,   from_1_3_dev5_to_1_3_dev6;
-       v1_3_dev7,   from_1_3_dev6_to_1_3_dev7;
-       v2_0_alpha,  from_1_3_dev7_to_2_0_alpha;
-       v2_0_alpha2, from_2_0_alpha_to_2_0_alpha2;
-       v2_0_alpha3, from_2_0_alpha2_to_2_0_alpha3;
-       v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
-       v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
-       v2_0,        from_2_0_beta5_to_2_0;
-       v2_1,        from_2_0_to_2_1;
-     ]) @ [
-      v2_2_alpha,  from_2_1_to_2_2_alpha;
-      v2_2_beta,   from_2_2_alpha_to_2_2_beta;
-      v2_2,        from_2_2_beta_to_2_2;
-    ]
-    |> List.filter (fun (v,_) ->
-        OpamVersion.compare root_version v < 0)
-    |> List.partition (fun (v,_) ->
-        OpamVersion.compare v latest_hard_upgrade <= 0)
-  in
+  let hard_upg, light_upg = upgrades root_version in
   let need_hard_upg = hard_upg <> [] in
   let on_the_fly, global_lock_kind =
     if not need_hard_upg && requested_lock <> `Lock_write then
@@ -1347,38 +1367,97 @@ let as_necessary ?reinit requested_lock global_lock root config =
      log "Format upgrade done";
      config, changes)
 
-let as_necessary_repo_switch_light_upgrade lock_kind kind gt =
-  let { gtc_repo; gtc_switch } = gt.global_state_to_upgrade in
-  (* No upgrade to do *)
-  if not gtc_repo && not gtc_switch then () else
+let as_necessary_repo_switch_t updates read_f lock_kind gt =
+  let root = gt.root in
+  let config = gt.config in
   let config_f = OpamPath.config gt.root in
-  let written_root_version = OpamFile.Config.raw_root_version config_f in
+  let written_config = OpamFile.Config.BestEffort.read_opt config_f in
+  (* If we don't have a written opam root version in a config file,
+     we are unable to determine if there is an upgrade to do. This can happen in
+     case there is only on the fly upgrades from 2.0. Should we fail ? *)
+  let written_root_version =
+    OpamStd.Option.map_default
+      (get_root_version root) default_opam_root_version
+      written_config
+  in
   (* Config already upgraded *)
-  if OpamStd.Option.equal OpamVersion.equal
-      written_root_version
-      (Some OpamFile.Config.root_version) then () else
-  match lock_kind, kind with
-  (* ro repo & rw switch & only repo changes case *)
-  | `Lock_write, `Switch when not gtc_switch && gtc_repo -> ()
-  | `Lock_write, _ ->
-    let is_dev = OpamVersion.is_dev_version () in
-    OpamConsole.errmsg "%s" @@
-    OpamStd.Format.reformat @@
-    Printf.sprintf
-      "This %sversion of opam requires an update to the layout of %s \
-       from version %s to version %s, which can't be reverted.\n\
-       You may want to back it up before going further.\n"
-      (if is_dev then "development " else "")
-      (OpamFilename.Dir.to_string gt.root)
-      OpamStd.Option.Op.((written_root_version >>| OpamVersion.to_string) +! "2.0")
-      (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config));
-    if OpamConsole.confirm "Continue?" then
-      flock_root `Lock_write gt.root @@ fun _ ->
-      OpamFile.Config.write config_f gt.config;
-      erase_plugin_links gt.root
-    else
-      OpamStd.Sys.exit_because `Aborted
-  | _, _ -> ()
+  if OpamVersion.equal OpamFile.Config.root_version written_root_version then
+    None
+  else
+    let updates =
+      List.filter (fun (v,_) ->
+          OpamVersion.compare written_root_version v < 0)
+        updates
+    in
+    match lock_kind with
+    | `Lock_none | `Lock_read ->
+      (* apply repo or state config updates *)
+      List.fold_left (fun rs_config (_v,from) ->
+          from ?config:rs_config root config)
+        None updates
+    | `Lock_write ->
+      (* If a write lock is required, we need to run through the upgrade
+         mechanism from the beginning to enforce a write at each step if
+         needed *)
+      let is_dev = OpamVersion.is_dev_version () in
+      OpamConsole.errmsg "%s" @@
+      OpamStd.Format.reformat @@
+      Printf.sprintf
+        "This %sversion of opam requires an update to the layout of %s \
+         from version %s to version %s, which can't be reverted.\n\
+         You may want to back it up before going further.\n"
+        (if is_dev then "development " else "")
+        (OpamFilename.Dir.to_string gt.root)
+        (OpamVersion.to_string written_root_version)
+        (OpamVersion.to_string (OpamFile.Config.opam_root_version config));
+      if OpamConsole.confirm "Continue?" then
+        flock_root `Lock_write root @@ fun _ ->
+        (* we keep only light upgrades as hard upgrade is already handled by
+           global state loading, so we must not have to handle hard upgrades
+           as this point. *)
+        let _, upgrades = upgrades written_root_version in
+        let config =
+          OpamStd.Option.default config
+            (OpamFile.Config.BestEffort.read_opt config_f)
+        in
+        let config =
+          List.fold_left (fun config (v, from) ->
+              let config, _change = from ~on_the_fly:false root config in
+              config |> OpamFile.Config.with_opam_root_version v)
+            config upgrades
+        in
+        OpamFile.Config.write (OpamPath.config root) config;
+        erase_plugin_links root;
+        read_f root
+      else
+        OpamStd.Sys.exit_because `Aborted
+
+let as_necessary_repo lock_kind gt =
+  (* No upgrade to do *)
+  if not gt.global_state_to_upgrade.gtc_repo then None else
+    let updates = [
+    ] in
+    as_necessary_repo_switch_t
+      updates
+      (fun root ->
+         OpamFile.Repos_config.read_opt (OpamPath.repos_config root))
+      lock_kind
+      gt
+
+let as_necessary_switch lock_kind switch gt =
+  (* No upgrade to do *)
+  if not gt.global_state_to_upgrade.gtc_switch then None else
+    let updates = [
+    ] |> List.map (fun (v,f) ->
+        v, fun ?config root conf -> f ?config switch root conf)
+    in
+    as_necessary_repo_switch_t
+      updates
+      (fun root ->
+         OpamFile.Switch_config.read_opt
+           (OpamPath.Switch.switch_config root switch))
+      lock_kind
+      gt
 
 let hard_upgrade_from_2_1_intermediates ?reinit ?global_lock root =
   let config_f = OpamPath.config root in
