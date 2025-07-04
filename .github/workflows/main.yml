@@ -672,6 +672,7 @@ jobs:
         enableCrossOsArchive: true
     - name: Get changed files
       id: files
+      if: github.event_name == 'pull_request'
       uses: Ana06/get-changed-files@v2.3.0
     - name: Changed files list
       run: |
