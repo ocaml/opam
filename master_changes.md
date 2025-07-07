@@ -110,6 +110,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Only run the `get-changed-files` action when in a PR [#6582 @kit-ty-kate]
 
 ## Doc
 
