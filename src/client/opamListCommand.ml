@@ -511,10 +511,7 @@ let field_of_string ~raw =
     | None -> OpamConsole.error_and_exit `Bad_arguments "No printer for %S" s
 
 (* NOTE: upon changes, please update the man page section in opamCommands.ml *)
-let version_color st nv =
-  let installed = (* (in any switch) *)
-    OpamGlobalState.installed_versions st.switch_global nv.name
-  in
+let version_color installed st nv =
   let is_available nv = (* Ignore unavailability due to pinning *)
     try
       OpamFilter.eval_to_bool ~default:false
@@ -545,7 +542,8 @@ let mini_field_printer ?(prettify=false) ?(normalise=false) =
   | List l -> OpamPrinter.value_list l
   | _ -> OpamPrinter.Normalise.value v
 
-let detail_printer ?prettify ?normalise ?(sort=false) st nv =
+let detail_printer ?prettify ?normalise ?(sort=false) installed st nv =
+  let version_color = version_color installed in
   let open OpamStd.Option.Op in
   let (%) s cols = OpamConsole.colorise' cols s in
   let root_sty =
@@ -643,12 +641,14 @@ let detail_printer ?prettify ?normalise ?(sort=false) st nv =
     OpamStd.Option.default "" hash_opt
   | Raw -> OpamFile.OPAM.write_to_string (get_opam st nv)
   | All_installed_versions ->
-    OpamGlobalState.installed_versions st.switch_global nv.name |>
-    OpamPackage.Map.mapi (fun nv switches ->
-        Printf.sprintf "%s [%s]"
-          (OpamPackage.version_to_string nv % version_color st nv)
-          (String.concat " " (List.map OpamSwitch.to_string switches))) |>
-    OpamPackage.Map.values |>
+    let needed = nv.name in
+    OpamPackage.Map.fold (fun nv switches acc ->
+        if OpamPackage.Name.equal needed nv.name then
+          (Printf.sprintf "%s [%s]"
+            (OpamPackage.version_to_string nv % version_color st nv)
+            (String.concat " " (List.map OpamSwitch.to_string switches)))::acc
+        else acc) installed [] |>
+    List.rev |>
     String.concat "  "
   | Available_versions ->
     let available =
@@ -759,8 +759,9 @@ let display st format packages =
        OpamConsole.errmsg "%s\n"
          (OpamConsole.colorise `red "# No matches found"))
   else
+    let installed = OpamGlobalState.all_installed_versions st.switch_global in
     List.rev_map (fun nv ->
-        List.map (detail_printer ~prettify ~normalise st nv) format.columns)
+        List.map (detail_printer ~prettify ~normalise installed st nv) format.columns)
       packages |>
     List.rev |>
     add_head |>
@@ -834,10 +835,11 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     Synopsis;
     Description;
   ] in
+  let installed = OpamGlobalState.all_installed_versions st.switch_global in
   let output_table fields nv =
     let tbl =
       List.fold_left (fun acc item ->
-          let contents = detail_printer ?normalise ~sort st nv item in
+          let contents = detail_printer ?normalise ~sort installed st nv item in
           if show_empty || contents <> "" then
             [ OpamConsole.colorise `blue (string_of_field ~raw item); contents ]
             :: acc
@@ -888,7 +890,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     | [] ->
       OpamConsole.header_msg "Version-specific details";
       output_table one_version_fields pkg
-    | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise ~sort st pkg f)
+    | [f] -> OpamConsole.msg "%s\n" (detail_printer ?normalise ~sort installed st pkg f)
     | fields -> output_table fields pkg
   in
   List.iter (fun (name,_) ->
