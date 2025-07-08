@@ -98,6 +98,7 @@ users)
   * `./configure --enable-static` is now supported on OpenBSD [#6705 @flumf]
   * Add missing constraints to avoid cmdliner 2.0.0 [#6707 @kit-ty-kate]
   * Add patch library dependency to opam-state [#6614 @arozovyk]
+  * Update the bootstrap compiler's flexdll to 0.44 [#6592 @MisterDA]
 
 ## Infrastructure
 
