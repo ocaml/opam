@@ -99,6 +99,7 @@ users)
   * Add missing constraints to avoid cmdliner 2.0.0 [#6707 @kit-ty-kate]
   * Add patch library dependency to opam-state [#6614 @arozovyk]
   * Update the bootstrap compiler's flexdll to 0.44 [#6592 @MisterDA]
+  * Update the `msvs-detect` script used on Windows during compiler bootstrap to 0.7.0 [#6592 @MisterDA]
 
 ## Infrastructure
 
