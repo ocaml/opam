@@ -233,7 +233,6 @@ let depexts_unavailable_raw sys_packages nv =
   | _ -> None
 
 let load lock_kind gt rt switch =
-  OpamFormatUpgrade.as_necessary_repo_switch_light_upgrade lock_kind `Switch gt;
   let chrono = OpamConsole.timer () in
   log "LOAD-SWITCH-STATE %@ %a" (slog OpamSwitch.to_string) switch;
   if not (OpamGlobalState.switch_exists gt switch) then
@@ -259,7 +258,11 @@ let load lock_kind gt rt switch =
   let lock =
     OpamFilename.flock lock_kind (OpamPath.Switch.lock gt.root switch)
   in
-  let switch_config = load_switch_config ~lock_kind gt switch in
+  let switch_config =
+    match OpamFormatUpgrade.as_necessary_switch lock_kind switch gt with
+    | Some switch_config -> switch_config
+    | None -> load_switch_config ~lock_kind gt switch
+  in
   if OpamStateConfig.is_newer_than_self ~lock_kind gt then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"
