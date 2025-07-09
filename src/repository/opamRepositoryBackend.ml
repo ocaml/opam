@@ -17,6 +17,7 @@ type update =
   | Update_full of dirname * (string option * string option)
   | Update_patch of filename * (string option * string option)
   | Update_empty
+  | Update_metadata of (string option * string option)
   | Update_err of exn
 
 module type S = sig

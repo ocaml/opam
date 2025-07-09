@@ -553,6 +553,14 @@ let apply_repo_update repo repo_root = function
     log "%a: applying empty update"
       (slog OpamRepositoryName.to_string) repo.repo_name;
     Done (None, None)
+  | Update_metadata was_downloaded ->
+    OpamConsole.msg "[%s] updated metadata from %s\n"
+      (OpamConsole.colorise `green
+         (OpamRepositoryName.to_string repo.repo_name))
+      (OpamUrl.to_string repo.repo_url);
+    log "%a: applying metadata update"
+      (slog OpamRepositoryName.to_string) repo.repo_name;
+    Done was_downloaded
   | Update_err _ -> assert false
 
 let cleanup_repo_update upd =
@@ -567,6 +575,10 @@ let update repo repo_root =
   let module B = (val find_backend repo: OpamRepositoryBackend.S) in
   B.fetch_repo_update ~etag:repo.repo_etag ~last_modified:repo.repo_last_modified repo.repo_name repo_root repo.repo_url @@+ function
   | Update_err e -> raise e
+  | Update_metadata _ as upd_md ->
+    apply_repo_update repo repo_root upd_md @@+ fun was_downloaded ->
+    B.repo_update_complete repo_root repo.repo_url @@+ fun () ->
+    Done (`Changes was_downloaded)
   | Update_empty ->
     log "update empty, no validation performed";
     apply_repo_update repo repo_root Update_empty @@+ fun _was_downloaded ->

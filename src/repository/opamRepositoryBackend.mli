@@ -23,6 +23,8 @@ type update =
       local repository with 'patch -p1' would get it to the upstream state *)
   | Update_empty
   (** The repository is already up to date *)
+  | Update_metadata of (string option * string option)
+  (** The etag and last_modified have to be updated *)
   | Update_err of exn
   (** Failed to obtain the update *)
 

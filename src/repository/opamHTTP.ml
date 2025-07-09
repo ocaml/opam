@@ -67,7 +67,7 @@ module B = struct
               (OpamFilename.basename_dir repo_root)
               (OpamFilename.basename_dir quarantine))
          @@| function
-         | None -> OpamRepositoryBackend.Update_empty
+         | None -> OpamRepositoryBackend.Update_metadata was_downloaded
          | Some patch -> OpamRepositoryBackend.Update_patch (patch, was_downloaded))
     | `Not_downloaded ->
       Done OpamRepositoryBackend.Update_empty
