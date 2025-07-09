@@ -67,6 +67,8 @@ users)
 ## External dependencies
 
 ## Format upgrade
+  * Add a note about to enforce no more upgrading last hard upgrade version (2.0.0~beta5), as far as possible. [#6416 @rjbou]
+  * Complete upgrade mechanism to permit on the fly upgrade and write upgrade from repo and switch level [#6416 @rjbou]
 
 ## Sandbox
 
