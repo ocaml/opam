@@ -1,0 +1,123 @@
+N0REP0
+### OPAMYES=1
+### <pkg:foo.1>
+opam-version: "2.0"
+build: [ "touch" "foo" ]
+install: [ "cp" "foo" "%{lib}%/" ]
+### <pkg:bar.1>
+opam-version: "2.0"
+build: [ "touch" "bar" ]
+install: [ "cp" "bar" "%{lib}%/" ]
+### <pre.sh>
+rm -rf previous
+cp -R OPAM previous
+### <post.sh>
+diff -r previous OPAM
+### :I: switch creation :
+### sh pre.sh
+### opam switch create dr --dry-run foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing foo.1.
+-> installed foo.1
+Done.
+### sh post.sh
+Only in OPAM/log: log-xxx.out
+# Return code 1 #
+### :II: package installation :
+### opam switch create dr foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### sh pre.sh
+### opam install bar --dry-run
+The following actions will be simulated:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing bar.1.
+-> installed bar.1
+Done.
+### sh post.sh
+Only in OPAM/log: log-xxx.out
+# Return code 1 #
+### :III: package removal :
+### opam install bar
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### sh pre.sh
+### opam remove bar --dry-run
+The following actions will be simulated:
+=== remove 1 package
+  - remove bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   bar.1
+Done.
+### sh post.sh
+Only in OPAM/log: log-xxx.out
+# Return code 1 #
+### :IV: pinning :
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+### <nip/a-file>
+tauto
+### sh pre.sh
+### opam pin ./nip --dry-run
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be simulated:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing nip.dev.
+-> installed nip.dev
+Done.
+### sh post.sh
+Only in OPAM/dr/.opam-switch: overlay
+Only in OPAM/dr/.opam-switch: sources
+Only in OPAM/log: log-xxx.out
+# Return code 1 #
+### :V: pin removal :
+### opam pin ./nip
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.
+### sh pre.sh
+### opam pin remove ./nip --dry-run
+Ok, nip is no longer pinned to file://${BASEDIR}/nip (version dev)
+The following actions will be simulated:
+=== remove 1 package
+  - remove nip dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip.dev
+Done.
+### sh post.sh
+Only in previous/dr/.opam-switch/overlay: nip
+Only in previous/dr/.opam-switch/sources: nip
+Only in OPAM/log: log-xxx.out
+# Return code 1 #
