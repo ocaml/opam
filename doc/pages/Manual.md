@@ -383,6 +383,24 @@ For quick sanity checks, you can compare package versions using the OCaml REPL:
 - : int = 1
 ```
 
+You can also compare package versions using the `opam` command line (available
+from opam version `2.4.0`):
+
+```shell
+$ opam admin compare-versions 1.2.10 1.2.9
+1.2.10 > 1.2.9
+```
+
+Note that this command also supports flags to check the result of the comparison
+against a specified expectation. For example:
+
+```shell
+$ opam admin compare-versions 0.0.9 --lt 0.0.10
+[0]
+```
+
+Refer to the command help page for more details.
+
 ### Variables
 
 #### Usage
