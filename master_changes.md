@@ -113,6 +113,8 @@ users)
 
 ## Doc
 
+* Add mention of `opam admin compare-versions` in the Manual. [#6596 @mbarbin]
+
 ## Security fixes
 
 # API updates
