@@ -1132,7 +1132,7 @@ let list_command cli =
             | None -> single
             | Some (n, _v) -> n
           in
-          (try ignore (OpamPackage.Name.of_string nameglob); true
+          (try let _ : name = (OpamPackage.Name.of_string nameglob) in true
            with Failure _ -> false)
         | _ -> false
       in
