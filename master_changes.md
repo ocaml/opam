@@ -35,6 +35,7 @@ users)
 ## Config
 
 ## Pin
+  * [BUG] Fix `opam pin list` when the source of the pinned package doesn't exist [#6597 @kit-ty-kate]
 
 ## List
 
