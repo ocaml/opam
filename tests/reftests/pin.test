@@ -1674,4 +1674,4 @@ name: "pinned-pkg"
 pinned-pkg is now pinned to git+file://${BASEDIR}/no-source-dir#master (version dev)
 ### rm -r OPAM/no-source-dir/.opam-switch/sources/pinned-pkg
 ### opam pin
-pinned-pkg.dev  (uninstalled)  git  git+file://${BASEDIR}/no-source-dir#master  (at error while fetching current revision)
+pinned-pkg.dev  (uninstalled)  git  git+file://${BASEDIR}/no-source-dir#master  (error while fetching current revision)

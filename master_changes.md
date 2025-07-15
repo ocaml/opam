@@ -45,6 +45,7 @@ users)
   * Fix `opam config subst` so it works with absolute paths [#6936 @NathanReb - fix #6925]
 
 ## Pin
+  * Improve the error message of `opam pin list` when the source of the pinned package doesn't exist [#6597 @kit-ty-kate]
 
 ## List
 
