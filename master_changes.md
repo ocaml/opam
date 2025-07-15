@@ -104,6 +104,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test showing opam pin list not working when the source git directory is missing [#6597 @kit-ty-kate]
 
 ### Engine
 
