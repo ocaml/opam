@@ -1637,6 +1637,4 @@ name: "pinned-pkg"
 pinned-pkg is now pinned to git+file://${BASEDIR}/no-source-dir#master (version dev)
 ### rm -r OPAM/no-source-dir/.opam-switch/sources/pinned-pkg
 ### opam pin
-Fatal error:
-${OPAM}: "chdir" failed on ${BASEDIR}/OPAM/no-source-dir/.opam-switch/sources/pinned-pkg: No such file or directory
-# Return code 99 #
+pinned-pkg.dev  (uninstalled)  git  git+file://${BASEDIR}/no-source-dir#master  (error while fetching current revision)
