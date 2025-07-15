@@ -441,6 +441,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:cudf-preprocess.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-depext-only)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff depext-only.test depext-only.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-depext-only)))
+
+(rule
+ (targets depext-only.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:depext-only.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-depexts)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
