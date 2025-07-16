@@ -765,12 +765,13 @@ let list st ~short =
         match url.OpamUrl.backend with
         | #OpamUrl.version_control ->
           let srcdir = OpamSwitchState.source_dir st nv in
-          let color, rev =
+          let prefix, color, rev =
             match OpamProcess.Job.run (OpamRepository.revision srcdir url) with
-            | None -> (`red, "error while fetching current revision")
-            | Some ver -> (`magenta, ver)
+            | None | exception _ ->
+              ("", `red, "error while fetching current revision")
+            | Some ver -> ("at ", `magenta, ver)
           in
-          Some (Printf.sprintf "(at %s)" (OpamConsole.colorise color (rev)))
+          Some (Printf.sprintf "(%s%s)" prefix (OpamConsole.colorise color rev))
         | _ -> None
       in
       [ OpamPackage.to_string nv;
