@@ -20,6 +20,7 @@ users)
 
 ## Init
   * Remove `getconf` from the list of required runtime tools, which allows `opam init` to work out-of-the-box on Haiku [#6634 @kit-ty-kate - fix #6632]
+  * Default to the `.bashrc` file instead of the `.profile` when writing the shell hook with `bash` [#6603 @kit-ty-kate]
 
 ## Config report
 
