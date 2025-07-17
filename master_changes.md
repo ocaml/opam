@@ -23,6 +23,7 @@ users)
 ## Init
   * Remove `getconf` from the list of required runtime tools, which allows `opam init` to work out-of-the-box on Haiku [#6634 @kit-ty-kate - fix #6632]
   * The variables scripts now only updates the environment if `OPAM_SWITCH_PREFIX` is unset-or-empty [#6729 @dra27 - fix dbuenzli/topkg#142, #4649, #5761]
+  * Default to the `.bashrc` file instead of the `.profile` when writing the shell hook with `bash` [#6603 @kit-ty-kate]
 
 ## Config report
 

@@ -14,6 +14,7 @@ export SHELL=$(command -v bash)
 bash -lc "export PATH=\"\$PATH:$PATH\" HOME=\"$HOME\" SHELL=\"$SHELL\" && $@"
 ### <.bash_profile>
 export PATH=/usr/bin
+source "$HOME/.bashrc"
 ### bash locally-in-bash.sh opam init -a --bypass-checks --bare REPO --root root --shell=bash | '\\' -> '/'
 No configuration file found, using built-in defaults.
 
@@ -21,10 +22,10 @@ No configuration file found, using built-in defaults.
 [default] Initialised
 
 User configuration:
-  Updating ~/.bash_profile.
-[NOTE] Make sure that ~/.bash_profile is well sourced in your ~/.bashrc.
+  Updating ~/.bashrc.
+[NOTE] Make sure that ~/.bashrc is well sourced in your ~/.bash_profile.
 
-  Added 9 lines after line 2 in ~/.bash_profile.
+  Added 9 lines after line 1 in ~/.bashrc.
 ### # we need the switch for variables file
 ### opam switch create fake --empty --root root
 ### bash bash-lc.sh "bash bash-lc.sh \"'$OPAMBIN' exec --root root --no-switch -- env\"" | grep -v MANPATH | grep /root/fake/ | '=.*' -> ''

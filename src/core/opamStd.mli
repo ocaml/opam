@@ -516,6 +516,9 @@ module Sys : sig
       support the concept of a .profile file. *)
   val guess_dot_profile: shell -> string option
 
+  (** Guess the location of the .profile file for bash. *)
+  val guess_bash_dot_profile : unit -> string
+
   (** The separator character used in the PATH variable (varies depending on
       OS) *)
   val path_sep: char
