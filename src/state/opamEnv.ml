@@ -931,16 +931,16 @@ let eval_string gt ?(set_opamswitch=false) switch =
 let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd ]
 
 let complete_file = function
-  | SH_sh | SH_bash -> Some "complete.sh"
+  | SH_bash -> Some "complete.sh"
   | SH_zsh -> Some "complete.zsh"
-  | SH_csh | SH_fish | SH_pwsh _ | SH_cmd -> None
+  | SH_sh | SH_csh | SH_fish | SH_pwsh _ | SH_cmd -> None
 
 let env_hook_file = function
-  | SH_sh | SH_bash -> Some "env_hook.sh"
+  | SH_bash -> Some "env_hook.sh"
   | SH_zsh -> Some "env_hook.zsh"
   | SH_csh -> Some "env_hook.csh"
   | SH_fish -> Some "env_hook.fish"
-  | SH_pwsh _ | SH_cmd -> None
+  | SH_sh | SH_pwsh _ | SH_cmd -> None
 
 let variables_file = function
   | SH_sh | SH_bash | SH_zsh -> "variables.sh"
@@ -964,11 +964,11 @@ let complete_script = function
   | SH_pwsh _ | SH_cmd -> None
 
 let env_hook_script_base = function
-  | SH_sh | SH_bash -> Some OpamScript.env_hook
+  | SH_bash -> Some OpamScript.env_hook
   | SH_zsh -> Some OpamScript.env_hook_zsh
   | SH_csh -> Some OpamScript.env_hook_csh
   | SH_fish -> Some OpamScript.env_hook_fish
-  | SH_pwsh _ | SH_cmd -> None
+  | SH_sh | SH_pwsh _ | SH_cmd -> None
 
 let export_in_shell shell =
   let make_comment comment_opt =
