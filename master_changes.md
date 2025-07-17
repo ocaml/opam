@@ -11,7 +11,6 @@ moved, etc.), please update the _API updates_ part (it helps opam library
 users)
 
 ## Version
-  * Bump the version number to `2.4.0~rc2~dev` [#6584 @kit-ty-kate]
 
 ## Global CLI
 
@@ -36,7 +35,6 @@ users)
 ## Config
 
 ## Pin
-  * [BUG] Fix `opam pin list` when the source of the pinned package doesn't exist [#6597 @kit-ty-kate]
 
 ## List
 
@@ -106,7 +104,6 @@ users)
 
 ## Reftests
 ### Tests
-  * Add a test showing opam pin list not working when the source git directory is missing [#6597 @kit-ty-kate]
 
 ### Engine
 
