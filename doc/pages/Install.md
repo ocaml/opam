@@ -146,9 +146,9 @@ Sources of the latest stable version of opam are available on Github:
 You can also download the full archives, including opam dependencies (these
 don't require any extra downloads):
 
-* [2.3.0](https://github.com/ocaml/opam/releases/download/2.3.0/opam-full-2.3.0.tar.gz)
- - MD5: 81d029c2b79c53f4d99005df47696bef
- - SHA384: 7c62af375f7fc293236f5ce49c51957f39356a937a578683a79fbe1a3ed9e96b64d97c369206923248cbec62c4c251dc
+* [2.4.0](https://github.com/ocaml/opam/releases/download/2.4.0/opam-full-2.4.0.tar.gz)
+ - MD5: 5be1eabcaf25d9934e86e74fe07e6fee
+ - SHA384: a70cc5cfe52b1a7679e66d6cc7aed9e778ec6af29d5c8eb697e41ce3f7c59d0bf9fb9f5966453d1e848af1a3cf34a9af
 
 Follow the instructions in the included
 [`README.md`](https://github.com/ocaml/opam#readme) to get opam built and
