@@ -49,7 +49,7 @@
 * publish the announcement in discuss.ocaml.org
 * update the link to the discuss post in the blog post
 * update the link to the blog post in the release note
-* copy the blog entry from opam.ocaml.org for https://github.com/ocaml/ocaml.org/tree/main/data/changelog/opam
+* on stable releases, copy the blog entry from opam.ocaml.org for https://github.com/ocaml/ocaml.org/tree/main/data/changelog/releases/opam
 * announce the release on the OCaml Discord server
 
 ## After release
