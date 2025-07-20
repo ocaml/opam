@@ -23,6 +23,7 @@ users)
 ## Actions
 
 ## Install
+  * Fix pinned depends being ignored on simulated pins [#6612 @kit-ty-kate - fix #6610]
 
 ## Build (package)
 
