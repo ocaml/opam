@@ -377,3 +377,29 @@ Done.
 ### opam pin
 local-with-pin-deps.dev    rsync  file://${BASEDIR}/local-with-pin-deps
 pin-dep.dev                rsync  file://${BASEDIR}/pin-dep
+### : Make sure pin-depends during switch creations are not pinned twice
+### <opam-switch-create-local-pin-deps.ex>
+spawn env -u OPAMCONFIRMLEVEL opam switch create ./local-with-pin-deps
+expect "Pin and install them.*Y/n"
+send -- "n"
+expect "Try to install anyway, assuming.*Y/n"
+send -- "y"
+expect eof
+### expect ./opam-switch-create-local-pin-deps.ex
+spawn env -u OPAMCONFIRMLEVEL opam switch create ./local-with-pin-deps
+[NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by local-with-pin-deps.dev:
+  - pin-dep.dev at file://${BASEDIR}/pin-dep
+Pin and install them? [Y/n] n
+Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
+local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {>= "4.05.0"}]
+[ERROR] Could not determine which packages to install for this switch:
+  * Missing dependency:
+    - local-with-pin-deps -> pin-dep
+    unknown package
+
+
+Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] 
