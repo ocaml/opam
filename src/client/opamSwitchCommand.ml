@@ -348,7 +348,7 @@ let create
     in
     OpamStd.Exn.finalise e @@ fun () ->
     let gt, st =
-      if OpamConsole.confirm "Switch initialisation failed: clean up? \
+      if OpamConsole.confirm ~name:"switch-clean-up" "Switch initialisation failed: clean up? \
                               ('n' will leave the switch partially installed)"
       then clear_switch gt st.switch, st
       else if update_config && not simulate
