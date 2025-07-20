@@ -343,16 +343,31 @@ No solution found, exiting
 # Return code 20 #
 ### opam pin
 ### opam install --deps-only ./local-with-pin-deps
-[ERROR] Package conflict!
-  * Missing dependency:
-    - deps-of-local-with-pin-deps -> pin-dep
-    unknown package
+The following additional pinnings are required by local-with-pin-deps.dev:
+  - pin-dep.dev at file://${BASEDIR}/pin-dep
+Pin and install them? [Y/n] y
+[NOTE] Package pin-dep does not exist in opam repositories registered in the current switch.
+[pin-dep.dev] synchronised (no changes)
+pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install pin-dep dev (pinned) [required by local-with-pin-deps]
 
-No solution found, exiting
-# Return code 20 #
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved pin-dep.dev  (file://${BASEDIR}/pin-dep)
+-> installed pin-dep.dev
+Done.
 ### opam pin
+pin-dep.dev    rsync  file://${BASEDIR}/pin-dep
 ### opam pin remove pin-dep
-[NOTE] pin-dep is not pinned.
+Ok, pin-dep is no longer pinned to file://${BASEDIR}/pin-dep (version dev)
+The following actions will be performed:
+=== remove 1 package
+  - remove pin-dep dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   pin-dep.dev
+Done.
 ### opam pin
 ### opam install ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
@@ -393,13 +408,6 @@ The following additional pinnings are required by local-with-pin-deps.dev:
 Pin and install them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
-
-<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["ocaml" {>= "4.05.0"}]
-[ERROR] Could not determine which packages to install for this switch:
-  * Missing dependency:
-    - local-with-pin-deps -> pin-dep
-    unknown package
-
-
-Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] 
+The following additional pinnings are required by local-with-pin-deps.dev:
+  - pin-dep.dev at file://${BASEDIR}/pin-dep
+Pin and install them? [Y/n] 
