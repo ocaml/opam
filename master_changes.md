@@ -104,6 +104,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test showing the behaviour of autopin in presence of a pin-depends [#6612 @kit-ty-kate]
 
 ### Engine
 
