@@ -399,6 +399,8 @@ expect "Pin and install them.*Y/n"
 send -- "n"
 expect "Try to install anyway, assuming.*Y/n"
 send -- "y"
+expect "Switch initialisation failed: clean up.*Y/n"
+send -- "y"
 expect eof
 ### expect ./opam-switch-create-local-pin-deps.ex
 spawn env -u OPAMCONFIRMLEVEL opam switch create ./local-with-pin-deps
@@ -417,4 +419,29 @@ Switch invariant: ["ocaml" {>= "4.05.0"}]
     unknown package
 
 
-Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] 
+Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
+### <opam-switch-create-local-pin-deps.ex>
+spawn env -u OPAMCONFIRMLEVEL opam switch create ./local-with-pin-deps --deps-only
+expect "Pin and install them.*Y/n"
+send -- "n"
+expect "Try to install anyway, assuming.*Y/n"
+send -- "y"
+expect "Switch initialisation failed: clean up.*Y/n"
+send -- "y"
+expect eof
+### expect ./opam-switch-create-local-pin-deps.ex
+spawn env -u OPAMCONFIRMLEVEL opam switch create ./local-with-pin-deps --deps-only
+The following additional pinnings are required by local-with-pin-deps.dev:
+  - pin-dep.dev at file://${BASEDIR}/pin-dep
+Pin and install them? [Y/n] n
+Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {>= "4.05.0"}]
+[ERROR] Could not determine which packages to install for this switch:
+  * Missing dependency:
+    - local-with-pin-deps -> pin-dep
+    unknown package
+
+
+Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
