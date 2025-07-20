@@ -546,7 +546,9 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
       OpamUpdate.dev_packages st ~working_dir:OpamPackage.Set.empty already_pinned
   in
   let st =
-    if OpamClientConfig.(!r.ignore_pin_depends) then st else
+    (* NOTE: We skip pin-depends on non-simulated because handle_pin_depends has
+       already been called in source_pin *)
+    if not simulate || OpamClientConfig.(!r.ignore_pin_depends) then st else
       OpamPackage.Set.fold (fun nv st ->
           OpamPinCommand.handle_pin_depends st nv (OpamSwitchState.opam st nv))
         (OpamPackage.Set.union pins already_pinned_set) st

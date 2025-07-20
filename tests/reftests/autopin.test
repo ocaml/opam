@@ -408,6 +408,13 @@ The following additional pinnings are required by local-with-pin-deps.dev:
 Pin and install them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
-The following additional pinnings are required by local-with-pin-deps.dev:
-  - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] 
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["ocaml" {>= "4.05.0"}]
+[ERROR] Could not determine which packages to install for this switch:
+  * Missing dependency:
+    - local-with-pin-deps -> pin-dep
+    unknown package
+
+
+Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] 
