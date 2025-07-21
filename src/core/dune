@@ -50,6 +50,13 @@
               "let version = \"%{read-strings:version}\""))
 
 (rule
+  (enabled_if (>= %{ocaml_version} "4.14"))
+  (action (copy opamCompatInChannel.real.ml opamCompatInChannel.ml)))
+(rule
+  (enabled_if (< %{ocaml_version} "4.14"))
+  (action (copy opamCompatInChannel.compat.ml opamCompatInChannel.ml)))
+
+(rule
   (targets version)
   (deps    ../../shell/get_version.ml ../../configure.ac)
   (action  (with-stdout-to %{targets} (run ocaml ../../shell/get_version.ml ../../configure.ac))))

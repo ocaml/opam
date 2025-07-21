@@ -241,18 +241,18 @@ let remove_file file =
 
 let string_of_channel ic =
   let n = 32768 in
-  let s = Bytes.create n in
-  let b = Buffer.create 1024 in
-  let rec iter ic b s =
-    let nread =
-      try input ic s 0 n
-      with End_of_file -> 0 in
-    if nread > 0 then (
-      Buffer.add_subbytes b s 0 nread;
-      iter ic b s
-    ) in
-  iter ic b s;
-  Buffer.contents b
+  let b = Bytes.create n in
+  let rec iter ic b idx n =
+    if n = 0 then
+      Bytes.unsafe_to_string b ^ OpamCompatInChannel.input_all ic
+    else
+      let nread = Stdlib.input ic b idx n in
+      if nread = 0 then
+        Bytes.sub_string b 0 idx
+      else
+        iter ic b (idx + nread) (n - nread)
+  in
+  iter ic b 0 n
 
 let read file =
   let ic =

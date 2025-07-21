@@ -38,7 +38,6 @@ let () =
   in
   let time_OpamSystem_read_100 =
     (* NOTE: https://github.com/ocaml/opam/pull/5896 *)
-    Gc.compact ();
     let files =
       let ic = Stdlib.open_in_bin "/home/opam/all-opam-files" in
       let rec loop files =
@@ -50,6 +49,7 @@ let () =
     in
     let n = 100 in
     let l = List.init n (fun _ ->
+        Gc.compact ();
         let before = Unix.gettimeofday () in
         List.iter (fun file -> ignore (OpamSystem.read file)) files;
         Unix.gettimeofday () -. before)
@@ -65,7 +65,6 @@ let () =
   in
   let time_OpamPackage_Version_compare_100 =
     (* NOTE: https://github.com/ocaml/opam/pull/5518 *)
-    Gc.compact ();
     let ic = Stdlib.open_in_bin "/home/opam/all-packages" in
     let pkgs =
       let rec loop pkgs =
@@ -77,6 +76,7 @@ let () =
     in
     let n = 100 in
     let l = List.init n (fun _ ->
+        Gc.compact ();
         let before = Unix.gettimeofday () in
         let _ = List.stable_sort OpamPackage.Version.compare pkgs in
         Unix.gettimeofday () -. before)
@@ -118,7 +118,6 @@ let () =
     time_cmd ~exit:0 (fmt "%s show --raw conf-llvm.14.0.6" bin)
   in
   let time_OpamStd_String_split_10 =
-    Gc.compact ();
     let lines =
       let ic = Stdlib.open_in_bin "/home/opam/all-opam-content" in
       let rec loop files =
@@ -130,11 +129,18 @@ let () =
     in
     let n = 10 in
     let l = List.init n (fun _ ->
+        Gc.compact ();
         let before = Unix.gettimeofday () in
         List.iter (fun line -> ignore (OpamStd.String.split line ' ')) lines;
         Unix.gettimeofday () -. before)
     in
     List.fold_left (+.) 0.0 l /. float_of_int n
+  in
+  let time_update_local_plain =
+    (* This should be the latest test *)
+    launch (fmt "%s repo set-url default /rep/opam-repository-after-phase3" bin);
+    launch "rm -rf ~/.opam/repo/default && cp -r /rep/opam-repository-before-phase1 ~/.opam/repo/default";
+    time_cmd ~exit:0 (fmt "opam update")
   in
   let json = fmt {|{
   "results": [
@@ -210,6 +216,11 @@ let () =
           "name": "OpamStd.String.split amortised over 10 runs",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "opam update local plain repository",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -239,6 +250,7 @@ let () =
       time_show_raw
       time_show_precise
       time_OpamStd_String_split_10
+      time_update_local_plain
       bin_size
   in
   print_endline json
