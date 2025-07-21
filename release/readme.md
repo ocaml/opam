@@ -49,7 +49,7 @@
 * publish the announcement in discuss.ocaml.org
 * update the link to the discuss post in the blog post
 * update the link to the blog post in the release note
-* copy the blog entry from opam.ocaml.org for https://github.com/ocaml/ocaml.org/tree/main/data/changelog/opam
+* on stable releases, copy the blog entry from opam.ocaml.org for https://github.com/ocaml/ocaml.org/tree/main/data/changelog/releases/opam
 * announce the release on the OCaml Discord server
 
 ## After release
@@ -57,6 +57,7 @@
 * Remove the milestone that has just been released and create a new milestone for the next version
 * Bump the version with a `~dev` at the end (e.g. `2.2.0~alpha~dev`)
 * Check if reftests needs an update
+* If this is a stable release, publish the release on distributions (including winget) we can easily contribute to ourselves or ping the package maintainers
 
 ---
 
