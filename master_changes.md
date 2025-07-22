@@ -23,6 +23,7 @@ users)
 ## Actions
 
 ## Install
+  * Fix pinned depends being ignored on simulated pins [#6612 @kit-ty-kate - fix #6610]
 
 ## Build (package)
 
@@ -104,6 +105,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test showing the behaviour of autopin in presence of a pin-depends [#6612 @kit-ty-kate]
 
 ### Engine
 
