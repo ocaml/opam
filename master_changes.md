@@ -79,6 +79,7 @@ users)
 ## Release scripts
 
 ## Install script
+  * Add 2.4.1 to the install scripts [#6617 @kit-ty-kate]
 
 ## Admin
 

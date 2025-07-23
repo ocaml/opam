@@ -5,8 +5,8 @@ set -ue
 # (c) Copyright Fabrice Le Fessant INRIA/OCamlPro 2013
 # (c) Copyright Louis Gesbert OCamlPro 2014-2017
 
-VERSION='2.4.0'
-DEV_VERSION='2.4.0'
+VERSION='2.4.1'
+DEV_VERSION='2.4.1'
 DEFAULT_BINDIR=/usr/local/bin
 
 bin_sha512() {
@@ -412,6 +412,19 @@ bin_sha512() {
     opam-2.4.0-x86_64-macos)          echo "f54c3291bf1c115b78dc3bc420c54ad3de9a80677366ecedc7f1a820b18077979eb5abfa126a12a58dbd88a879c9a2566e901f25c420a770cb338dfd968907af";;
     opam-2.4.0-x86_64-netbsd)         echo "d88cf28fa4cdb141d0d30b057d5d6914ca8dd6921be3d9613d1efe07d9b6d015c361abafffce4f2b782320938a5935c9dab8a99ef26273d2b38ef2bae80d62b4";;
     opam-2.4.0-x86_64-openbsd)        echo "be087c8a85962bc46f3b5dd3820f12e948fdb6a9c5f344b09355343bc260a1cd1e92f9693f680e755c2c60a95a6e265a3585f74fb0c29083cd0beac87365c773";;
+
+    opam-2.4.1-arm64-linux)           echo "0e05ea7821f4a8af0a249c37177bf5a8ffc99ac588ba3fcc40f5d4cde0b9bcf9c855099cd3bc1be8f3c9f6c70584be88fe1b10c8b1ca07eeef235276dc998fe3";;
+    opam-2.4.1-arm64-macos)           echo "44e566be2627b7238cc16746127a6c722d30ac9f4893b41a1780fa9d7094269b991e7969053c3ca63c14cd0794d69a8818360cf06fecebd5a925822fee5a666e";;
+    opam-2.4.1-armhf-linux)           echo "c2d0c94143b3f0305f8392354b60ca2922043c592c6477c03550abf5f432b4bd7413c93724dac82fa1744839e3e23e3373a0f5ca9ca81358cf26d4fdcffdaafe";;
+    opam-2.4.1-i686-linux)            echo "60eb20be18ccb976973d1043703dc0d9988d562e7691576feb7b6ccf11e6c7bcb602fde6ef9d371c0b7c02aeb7210a769730728ccbdd53fa95c50c380b0e777e";;
+    opam-2.4.1-ppc64le-linux)         echo "af9015dc3fa023744805ea78407719f42436da0c75e49ac1b871225871115269f254135423a4c905f66a4a57834bed9d0b71ab1d54e99ec09527526d157fe6d4";;
+    opam-2.4.1-riscv64-linux)         echo "8dc1b5d9e52e30918a7991bd02a0e7eb5ea7801118defb526685caddd8a812d4014ffddc06bb4b47e37ce52505a6880cdbfb8f65233e17c4dad5f45880c6d5e7";;
+    opam-2.4.1-s390x-linux)           echo "5ecdf5e6b215247aecbbc7428dc3967e45ca2e329f909e81728c5cd6854c91f0444f8922757a9309a353afa6ecd596ed6565e3953892545af62b7f0831824858";;
+    opam-2.4.1-x86_64-freebsd)        echo "3d35771ca68fd172118a438b94f06df1ca4426ffdecb2637245265a617eeee5ac6d39d4f36bb742f654ccd22b4aef4ce51d72e3d0b845fc420b70d7c1b93a2af";;
+    opam-2.4.1-x86_64-linux)          echo "0e659a8d9027778a06d899332e7c47b7fdd267e192cd223b2a30cabdd3d9e4573edb92850adb0b74e1fbc75cb224062c796376cbf500c4077c91a785cb3221cf";;
+    opam-2.4.1-x86_64-macos)          echo "f19fdc5eccca0c8f629a4c87792a76dad64fc23c5993daa6d1a3dee9ea3305a4a2524fd5d15203e8702cd12e2359d80373a0157be913305696cf493f9de8d381";;
+    opam-2.4.1-x86_64-netbsd)         echo "d5912c34455476f32300122b6050d367f976782a734d3ccabcdeedb83be82a2eed1587bd217678efdb5da19cd1103338b47ba80569cddaf028c9197514d29b1f";;
+    opam-2.4.1-x86_64-openbsd)        echo "44d5d700e59a7f50d4dccc6d24d729289b0fbfb7cce1f6d96711298ea0cb9b74fe594f609af9b84c1b53612425268876d31faae1f9ff2b86b660afb16853be9f";;
 
     *) echo "no sha";;
   esac
