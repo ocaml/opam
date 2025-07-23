@@ -113,6 +113,8 @@ users)
 ## Github Actions
 
 ## Doc
+  * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
+  * Swapped the use of sha384 for sha512 for the release tarball in the installation documentation [#6620 @kit-ty-kate]
 
 ## Security fixes
 
