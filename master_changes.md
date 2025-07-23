@@ -45,6 +45,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Use `OpamRepositoryState.load_opams_incremental` to efficiently update the `repo_opams`, adding/updating/removing only changed packages. [#6614 @arozovyk - fix #5824]
 
 ## Tree
 
@@ -107,7 +108,7 @@ users)
 
 ## Reftests
 ### Tests
-
+  * Add tests for repository update using `OpamRepositoryState.load_opams_incremental` [#6614 @arozovyk - fix #5824]
 ### Engine
 
 ## Github Actions
@@ -122,8 +123,12 @@ users)
 ## opam-client
 
 ## opam-repository
+  * `OpamRepositoryBackend.update`: change type `Update_patch (filename * Patch.t list)` to include the list of file-level changes [#6614 @arozovyk - fix #5824]
+  * `OpamRepositoryBackend.get_diff`: change the return type to `(filename * Patch.t list) option` to include the list of file-level changes [#6614 @arozovyk - fix #5824]
+  * `OpamRepository.update`: change the return type to include the list of file-level changes [#6614 @arozovyk - fix #5824]
 
 ## opam-state
+  * Add `OpamRepositoryState.load_opams_incremental`: that only updates opam files that actually changed, using the list of `Patch.t` [#6614 @arozovyk - fix #5824]
 
 ## opam-solver
 

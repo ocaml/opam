@@ -1,0 +1,124 @@
+N0REP0
+### <REPO/repo>
+opam-version: "2.0"
+### <REPO/packages/foo/foo.1/opam>
+opam-version: "2.0"
+synopsis: "Initial package"
+### <REPO/packages/bar/bar.1/opam>
+opam-version: "2.0"
+synopsis: "Another package"
+### <REPO/packages/baz/baz.1/opam>
+opam-version: "2.0"
+synopsis: "Third package"
+### opam switch create repo-update --empty
+### opam repository add default ./REPO --this-switch
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list --all --all-versions -s
+bar.1
+baz.1
+foo.1
+### : Simple file creation
+### <REPO/packages/newpkg/newpkg.1/opam>
+opam-version: "2.0"
+synopsis: "New package created"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --all-versions -s
+bar.1
+baz.1
+foo.1
+newpkg.1
+### : File deletion
+### rm REPO/packages/bar/bar.1/opam
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --all-versions -s
+baz.1
+foo.1
+newpkg.1
+### : File edit
+### <REPO/packages/foo/foo.1/opam>
+opam-version: "2.0"
+synopsis: "Updated package"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam show foo.1 --field synopsis
+Updated package
+### : File move across directories (delete+create operations)
+### mv REPO/packages/foo/foo.1 REPO/packages/foo/newfoo.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --all-versions -s
+baz.1
+newfoo.1
+newpkg.1
+### : Package removal
+### rm -rf REPO/packages/newpkg
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --all-versions -s
+baz.1
+newfoo.1
+### : Test multiple operations in single update
+### <REPO/packages/multi1/multi1.1/opam>
+opam-version: "2.0"
+### <REPO/packages/multi2/multi2.1/opam>
+opam-version: "2.0"
+### <REPO/packages/foo/newfoo.1/opam>
+opam-version: "2.0"
+description: "Updated in multi-operation"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --all-versions -s
+baz.1
+multi1.1
+multi2.1
+newfoo.1
+### opam show newfoo.1 --field description
+Updated in multi-operation
+### : Final state
+### opam list --all --all-versions
+# Packages matching: any
+# Package # Installed # Synopsis
+baz.1     --          Third package
+multi1.1  --
+multi2.1  --
+newfoo.1  --
+### : Test cache after incremental updates
+### opam-cache repo
+=> default:newfoo.1 <=
+opam-version: "2.0"
+name: "newfoo"
+version: "1"
+synopsis: ""
+description: "Updated in multi-operation"
+=> default:multi2.1 <=
+opam-version: "2.0"
+name: "multi2"
+version: "1"
+=> default:multi1.1 <=
+opam-version: "2.0"
+name: "multi1"
+version: "1"
+=> default:baz.1 <=
+opam-version: "2.0"
+name: "baz"
+version: "1"
+synopsis: "Third package"

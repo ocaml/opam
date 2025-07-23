@@ -1680,6 +1680,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:repository-patchdiff.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-repository-update)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff repository-update.test repository-update.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-repository-update)))
+
+(rule
+ (targets repository-update.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:repository-update.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-repository)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
