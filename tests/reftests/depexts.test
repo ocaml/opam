@@ -510,20 +510,8 @@ opam-version: "2.0"
 flags: compiler
 ### OPAMVAR_os_family=unknown opam init ./REPO --root ./OPAM2 --no-setup --bypass-checks --compiler comp -y
 No configuration file found, using built-in defaults.
-
-<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
-[default] Initialised
-
-<><> Creating initial switch 'comp' (invariant ["comp"]) ><><><><><><><><><><><>
-
-<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
-Switch invariant: ["comp"]
-[NOTE] External dependency handling not supported for OS family 'unknown'.
-       You can disable this check using 'opam option --global depext=false'
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed comp.1
-Done.
+Fatal error: External dependency handling not supported for OS family 'unknown'.
+# Return code 99 #
 ### : <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 ### : [default] Initialised
 ### : 
