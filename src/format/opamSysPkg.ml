@@ -62,6 +62,16 @@ let status_empty =
     s_not_found  = Set.empty;
   }
 
+(* System package availability *)
+type available = Available of Set.t | Suppose_available
+
+let available_equal a b =
+  match a, b with
+  | Suppose_available, Suppose_available -> true
+  | Available os, Available ns -> Set.equal os ns
+  | _ -> OpamConsole.error_and_exit `Internal_error
+           "Equality check failed due to depexts status missmatch"
+
 let string_of_status sp =
   Printf.sprintf "available: %s; not_found: %s"
     (Set.to_string sp.s_available)
