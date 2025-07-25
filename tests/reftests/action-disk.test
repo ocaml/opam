@@ -800,6 +800,8 @@ FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/
 main-ppin is now pinned to file://${BASEDIR}/main-ppin (version dev)
 FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/reinstall
 FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/reinstall
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          rmdir ${OPAMTMP}
 The following actions will be performed:
 === install 1 package
   - install main-ppin dev (pinned)
@@ -1418,6 +1420,8 @@ FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.
 main-gpin is now pinned to git+file://${BASEDIR}/main-gpin#master (version dev)
 FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/reinstall
 FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/reinstall
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          rmdir ${OPAMTMP}
 The following actions will be performed:
 === install 1 package
   - install main-gpin dev (pinned)
@@ -2139,6 +2143,8 @@ FILE(package-version-list)      Cannot find ${BASEDIR}/main-ppin/_opam/.opam-swi
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
 Switch invariant: []
 FILE(package-version-list)      Cannot find ${BASEDIR}/main-ppin/_opam/.opam-switch/reinstall
+SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          rmdir ${OPAMTMP}
 [NOTE] No invariant was set, you may want to use `opam switch set-invariant' to keep a stable compiler version on upgrades.
 The following actions will be performed:
 === install 1 package
