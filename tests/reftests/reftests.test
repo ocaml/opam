@@ -8,7 +8,6 @@ N0REP0
 config
 config.lock
 lock
-log
 opam-init
 repo
 ### opam var root
@@ -510,5 +509,24 @@ name: "baz"
 version: "1"
 extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
 ### opam-cache repo inexistent
+### :V:4: opam-set-os
+### opam var --global os-distribution=void
+Added '[os-distribution "void" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var --global os-family=void
+Added '[os-family "void" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var --global os=void
+Added '[os "void" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os-distribution
+void
+### opam var os-family
+void
+### opam var os
+void
 ### opam-set-os foo
 Added '[os-family "foo" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os-distribution
+void
+### opam var os-family
+foo
+### opam var os
+void
