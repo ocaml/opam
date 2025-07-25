@@ -1176,6 +1176,8 @@ let run_test ?(vars=[]) ~opam t =
         | Set_os os ->
           ignore @@ run_cmd ~opam ~dir ~vars
             "opam" ["var"; "--global"; Printf.sprintf "os-family=%s" os];
+          ignore @@ run_cmd ~opam ~dir ~vars ~silent:true
+            "opam" ["update"];
           vars)
       vars
       t.commands
