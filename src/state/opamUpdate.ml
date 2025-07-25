@@ -194,8 +194,14 @@ let repositories rt repos =
     let repo_depexts =
       OpamRepositoryState.get_declared_depexts opams rt.repos_global
     in
-    OpamSysInteract.available_packages ~env:rt.repos_global.global_variables
-      rt.repos_global.config repo_depexts
+    try
+      OpamSysInteract.available_packages ~env:rt.repos_global.global_variables
+        rt.repos_global.config repo_depexts
+    with Failure msg ->
+      OpamConsole.note "%s\nYou can disable this check using 'opam \
+                        option --global depext=false'"
+        msg;
+      Suppose_available
   in
   let write_config_cache rt =
     OpamRepositoryState.write_config rt;
