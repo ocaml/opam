@@ -111,6 +111,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Only run the `get-changed-files` action when in a PR [#6582 @kit-ty-kate]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
