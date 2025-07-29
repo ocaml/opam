@@ -31,7 +31,7 @@ module type SET = sig
   end
 end
 module type MAP = sig
-  include Map.S
+  include OpamCompat.MAP
   val to_string: ('a -> string) -> 'a t -> string
   val to_json: 'a OpamJson.encoder -> 'a t OpamJson.encoder
   val of_json: 'a OpamJson.decoder -> 'a t OpamJson.decoder
@@ -44,7 +44,6 @@ module type MAP = sig
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
-  val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
 end
 module type ABSTRACT = sig
   type t
@@ -303,7 +302,7 @@ module Map = struct
 
   module Make (O : OrderedType) = struct
 
-    module M = Map.Make(O)
+    module M = OpamCompat.Map(O)
 
     include M
 
@@ -322,13 +321,6 @@ module Map = struct
     let mapi f map =
       fold (fun key value map ->
           add key (f key value) map
-        ) map empty
-
-    let filter_map f map =
-      fold (fun key value map ->
-          match f key value with
-          | Some value -> add key value map
-          | None -> map
         ) map empty
 
     let values map =
