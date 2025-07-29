@@ -18,16 +18,12 @@ module type SET = sig
 
   include Set.S
 
-  val map: (elt -> elt) -> t -> t
-
   val is_singleton: t -> bool
 
   (** Returns one element, assuming the set is a singleton.
       @raise Not_found on an empty set
       @raise Failure on a non-singleton *)
   val choose_one : t -> elt
-
-  val choose_opt: t -> elt option
 
   val of_list: elt list -> t
   val to_list_map: (elt -> 'b) -> t -> 'b list

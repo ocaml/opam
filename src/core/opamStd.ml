@@ -11,10 +11,8 @@
 
 module type SET = sig
   include Set.S
-  val map: (elt -> elt) -> t -> t
   val is_singleton: t -> bool
   val choose_one : t -> elt
-  val choose_opt : t -> elt option
   val of_list: elt list -> t
   val to_list_map: (elt -> 'b) -> t -> 'b list
   val to_string: t -> string
@@ -228,9 +226,6 @@ module Set = struct
       else if is_singleton s then choose s
       else failwith "choose_one"
 
-    let choose_opt s =
-      try Some (choose s) with Not_found -> None
-
     let of_list l =
       List.fold_left (fun set e -> add e set) empty l
 
@@ -243,9 +238,6 @@ module Set = struct
       else
         let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
         OpamList.to_string (fun x -> x) (List.rev l)
-
-    let map f t =
-      S.fold (fun e set -> S.add (f e) set) t S.empty
 
     exception Found of elt
 
