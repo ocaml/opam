@@ -207,13 +207,6 @@ module Set = struct
 
     include S
 
-    let fold f set i =
-      let r = ref i in
-      S.iter (fun elt ->
-          r := f elt !r
-        ) set;
-      !r
-
     let is_singleton s =
       not (is_empty s) &&
       min_elt s == max_elt s
@@ -305,23 +298,6 @@ module Map = struct
     module M = OpamCompat.Map(O)
 
     include M
-
-    let fold f map i =
-      let r = ref i in
-      M.iter (fun key value->
-          r:= f key value !r
-        ) map;
-      !r
-
-    let map f map =
-      fold (fun key value map ->
-          add key (f value) map
-        ) map empty
-
-    let mapi f map =
-      fold (fun key value map ->
-          add key (f key value) map
-        ) map empty
 
     let values map =
       List.rev (M.fold (fun _ v acc -> v :: acc) map [])
