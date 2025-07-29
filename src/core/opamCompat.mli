@@ -60,3 +60,12 @@ module List : sig
   (** NOTE: OCaml >= 4.11 *)
   val fold_left_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a list -> 'acc * 'b list
 end
+
+module type MAP = sig
+  include Stdlib.Map.S
+
+  (** NOTE: OCaml >= 4.11 *)
+  val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
+end
+
+module Map(Ord : Stdlib.Map.OrderedType) : MAP with type key = Ord.t
