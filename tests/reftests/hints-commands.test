@@ -1,0 +1,161 @@
+N0REP0
+### <pkg:foo.1>
+opam-version: "2.0"
+### <pkg:qux.1>
+opam-version: "2.0"
+### <pkg:bar.1>
+opam-version: "2.0"
+### opam switch create default --empty
+### OPAMYES=1
+### opam install foo bar
+The following actions will be performed:
+=== install 2 packages
+  - install bar 1
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+-> installed foo.1
+Done.
+### : SOURCE
+### opam source foa.1
+[ERROR] No package matching foa.1 found.
+        Hint: Did you mean foo?
+# Return code 5 #
+### : PIN 
+### : Trying to pin uninstalled package with TARGET=current. 
+### opam pin foa.1 --current             
+[ERROR] foa is not installed, invalid flag `--current'
+        Hint: Did you mean foo?
+# Return code 2 #
+### : Trying to dev-repo pin an unknown package
+### opam pin foa.1 --dev-repo
+[ERROR] No package named "foa" found
+        Hint: Did you mean foo?
+# Return code 5 #
+### : Trying to pin edit an unknown package 
+### opam pin edit foa
+[ERROR] Package is not pinned, and no existing version was supplied.
+        Hint: Did you mean foo?
+# Return code 5 #
+### : SHOW
+### opam show foa.1
+[ERROR] No package matching foa.1 found
+        Hint: Did you mean foo?
+# Return code 5 #
+### : LOCK
+### opam lock foa
+[ERROR] No package matching foa
+        Hint: Did you mean foo?
+# Return code 5 #
+### : Misspelling one of the packages
+### opam lock foo bat
+[ERROR] Package bat is missing.
+        Hint: Did you mean bar?
+# Return code 5 #
+### : Misspelling multiple packages
+### opam lock foo bat foe
+[ERROR] Packages bat & foe are missing.
+        Hint: Did you mean bar?
+        Hint: Did you mean foo?
+# Return code 5 #
+### : INSTALL
+### opam install foe
+[ERROR] No package named foe found.
+        Hint: Did you mean foo?
+# Return code 5 #
+### opam install foo bax
+[ERROR] No package named bax found.
+        Hint: Did you mean bar?
+# Return code 5 #
+### opam install foo bax quz
+[ERROR] No package named bax found.
+        Hint: Did you mean bar?
+[ERROR] No package named quz found.
+        Hint: Did you mean qux?
+# Return code 5 #
+### : REMOVE
+### opam remove foe
+[ERROR] No package named foe found.
+        Hint: Did you mean foo?
+# Return code 5 #
+### opam remove foo bax
+[ERROR] No package named bax found.
+        Hint: Did you mean bar?
+# Return code 5 #
+### opam remove foo bax quz
+[ERROR] No package named bax found.
+        Hint: Did you mean bar?
+[ERROR] No package named quz found.
+        Hint: Did you mean qux?
+# Return code 5 #
+### : UPGRADE
+### opam upgrade foe
+[ERROR] foe: unknown package
+        Hint: Did you mean foo?
+# Return code 5 #
+### opam upgrade foo bax
+[ERROR] bax: unknown package
+        Hint: Did you mean bar?
+# Return code 5 #
+### opam upgrade foo bax quz
+[ERROR] bax: unknown package
+        Hint: Did you mean bar?
+[ERROR] quz: unknown package
+        Hint: Did you mean qux?
+# Return code 5 #
+### : REINSTALL
+### opam reinstall foe
+[ERROR] foe: unknown package
+        Hint: Did you mean foo?
+# Return code 5 #
+### opam reinstall foo bax
+[ERROR] bax: unknown package
+        Hint: Did you mean bar?
+# Return code 5 #
+### opam reinstall foo bax quz
+[ERROR] bax: unknown package
+        Hint: Did you mean bar?
+[ERROR] quz: unknown package
+        Hint: Did you mean qux?
+# Return code 5 #
+### : SWITCH SET-INVARIANT
+### opam switch set-invariant --packages=foe
+[ERROR] No packages by these names found: foe 
+        Hint: Did you mean foo?
+# Return code 5 #
+### opam switch set-invariant --packages=foo,bax,quz
+[ERROR] No packages by these names found: bax, quz 
+        Hint: Did you mean bar?
+        Hint: Did you mean qux?
+# Return code 5 #
+### : TREE
+### opam tree foe
+[ERROR] Could not simulate installing the specified package(s) to this switch:
+  * Missing dependency:
+    - (request) -> foe
+    unknown package
+
+
+Hint: Did you mean foo?
+# Return code 20 #
+### opam tree --rev-deps foe
+[WARNING] Not installed package foe, skipping
+          Hint: Did you mean foo?
+[ERROR] No package to display
+# Return code 5 #
+### opam tree --leads-to foe
+[WARNING] Not installed package foe, skipping
+          Hint: Did you mean foo?
+[ERROR] No package to display
+# Return code 5 #
+### opam tree --leads-to foe baw
+[WARNING] Not installed packages baw and foe, skipping
+          Hint: Did you mean bar?
+          Hint: Did you mean foo?
+[ERROR] No package to display
+# Return code 5 #
+### opam tree --leads-to foe bar
+[WARNING] Not installed package foe, skipping
+          Hint: Did you mean foo?
+bar.1

@@ -1182,6 +1182,41 @@ let unavailable_reason_raw st (name, vformula) =
       `MissingDepexts missing
     | None -> `Default
 
+let did_you_mean ?(installed_only=false) st atoms =
+  let open OpamPackage.Set.Op in
+  let all_packages =
+    if installed_only then st.installed
+    else st.packages ++ st.installed
+  in
+  let all_package_names = OpamPackage.names_of_packages all_packages in
+  let choices name =
+    let dict yield =
+      OpamPackage.Name.Set.iter
+        (fun p -> yield (OpamPackage.Name.to_string p)) all_package_names
+    in
+    OpamCompat.String.spellcheck dict name
+  in
+  let missing_names =
+    List.filter_map (fun (name,_) ->
+        if not (OpamPackage.Name.Set.mem name all_package_names) then
+          Some (OpamPackage.Name.to_string name)
+        else
+          None
+      ) atoms
+  in
+  let choices =
+    List.fold_left (fun acc mpn ->
+        match choices mpn with
+        (* Pick the first choice *)
+        | hd::_ -> hd :: acc
+        | [] -> acc)
+      [] missing_names |> List.rev
+  in
+  List.map (fun choice ->
+      Printf.sprintf "\n%s: Did you mean %s?"
+        (OpamConsole.colorise `blue "Hint") (OpamConsole.colorise `bold choice))
+    choices |> String.concat ""
+
 (* Display a meaningful error for an unavailable package *)
 let unavailable_reason st ?(default="") atom =
   match unavailable_reason_raw st atom with

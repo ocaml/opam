@@ -710,18 +710,19 @@ let set_invariant ?(force=false) st invariant =
   let names =
     OpamPackage.Name.Set.of_list (List.map fst (OpamFormula.atoms invariant))
   in
-  let name_unknown =
+  let names_unknown =
     OpamPackage.Name.Set.filter
       (fun n -> not (OpamPackage.has_name st.packages n))
       names
   in
-  if not (OpamPackage.Name.Set.is_empty name_unknown) then
-    (if satisfied || force then OpamConsole.warning
-     else OpamConsole.error_and_exit `Not_found)
-      "No packages by these names found: %s"
-      (OpamStd.List.concat_map ", "
-         OpamPackage.Name.to_string
-         (OpamPackage.Name.Set.elements name_unknown));
+  if not (OpamPackage.Name.Set.is_empty names_unknown) then
+    (let names_unknown = OpamPackage.Name.Set.elements names_unknown in
+     (if satisfied || force then OpamConsole.warning
+      else OpamConsole.error_and_exit `Not_found)
+       "No packages by these names found: %s %s"
+       (OpamStd.List.concat_map ", " OpamPackage.Name.to_string names_unknown)
+       (OpamSwitchState.did_you_mean
+          st (List.map (fun n -> n, None) names_unknown)));
   set_invariant_raw st invariant
 
 let get_compiler_packages ?repos rt =
