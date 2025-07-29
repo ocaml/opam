@@ -167,6 +167,7 @@ users)
   * `OpamStd.List.{cons,find_opt,filter_map}`: were removed. Use `Stdlib.List` instead. [#6442 @kit-ty-kate]
   * `OpamStd.Op.{(@@),(|>)}`: were removed. Use `Stdlib` instead. [#6442 @kit-ty-kate]
   * `OpamStd.Option.{map,iter,compare,equal,to_string,some}`: were removed. Use `Stdlib.Option` instead. [#6442 @kit-ty-kate]
+  * `OpamStd.Map.{find_opt,choose_opt}`: are now the implementation from `Stdlib.Map` [#6442 @kit-ty-kate]
   * `OpamStd.Set.{map,choose_opt}`: are now the implementation from `Stdlib.Set` [#6442 @kit-ty-kate]
   * `OpamStd.String.contains_char`: was removed. Use `Stdlib.String.contains` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.map`: was removed. Use `Stdlib.String.map` instead. [#6442 @kit-ty-kate]

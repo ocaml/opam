@@ -65,8 +65,6 @@ module type MAP = sig
   val of_json: 'a OpamJson.decoder -> 'a t OpamJson.decoder
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
-  val find_opt: key -> 'a t -> 'a option
-  val choose_opt: 'a t -> (key * 'a) option
 
   (** A key will be in the union of [m1] and [m2] if it is appears
       either [m1] or [m2], with the corresponding value. If a key

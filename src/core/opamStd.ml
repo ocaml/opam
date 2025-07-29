@@ -37,8 +37,6 @@ module type MAP = sig
   val of_json: 'a OpamJson.decoder -> 'a t OpamJson.decoder
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
-  val find_opt: key -> 'a t -> 'a option
-  val choose_opt: 'a t -> (key * 'a) option
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val is_singleton: 'a t -> bool
   val of_list: (key * 'a) list -> 'a t
@@ -387,11 +385,6 @@ module Map = struct
           with Not_found -> None
         end
       | _ -> None
-
-    let find_opt k map = try Some (find k map) with Not_found -> None
-
-    let choose_opt m =
-      try Some (choose m) with Not_found -> None
 
     let safe_add k v map =
       if mem k map
