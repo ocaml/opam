@@ -58,7 +58,7 @@ end
 (** Maps with extended interface *)
 module type MAP = sig
 
-  include Map.S
+  include OpamCompat.MAP
 
   val to_string: ('a -> string) -> 'a t  -> string
   val to_json: 'a OpamJson.encoder -> 'a t OpamJson.encoder
@@ -88,8 +88,6 @@ module type MAP = sig
       @raise Invalid_argument on an empty map if [default] is not defined *)
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
-
-  val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
 end
 
 (** A signature for handling abstract keys and collections thereof *)

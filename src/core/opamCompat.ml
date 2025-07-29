@@ -209,3 +209,26 @@ module List = struct
 
   include Stdlib.List
 end
+
+module type MAP = sig
+  include Stdlib.Map.S
+
+  (** NOTE: OCaml >= 4.11 *)
+  val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
+end
+
+module Map(Ord : Stdlib.Map.OrderedType) = struct
+  [@@@warning "-32"]
+
+  module M = Stdlib.Map.Make(Ord)
+
+  (** NOTE: OCaml >= 4.11 *)
+  let filter_map f map =
+    M.fold (fun key value map ->
+        match f key value with
+        | Some value -> M.add key value map
+        | None -> map
+      ) map M.empty
+
+  include M
+end
