@@ -74,7 +74,7 @@ let run_command
   Done (code, out)
 
 let run_query_command ?vars cmd args =
-  let vars = (`set, ("LC_ALL","C"))::OpamStd.Option.to_list vars in
+  let vars = (`set, ("LC_ALL","C"))::Option.to_list vars in
   let code,out = run_command ~vars cmd args in
   if code = 0 then out
   else []
@@ -137,7 +137,7 @@ let family ~env () =
   | None ->
     Printf.ksprintf failwith
       "External dependency unusable, OS family not detected."
-  | Some family when OpamStd.String.starts_with ~prefix:"dummy-" family ->
+  | Some family when OpamCompat.String.starts_with ~prefix:"dummy-" family ->
     let error () =
       OpamConsole.error_and_exit `Bad_arguments
         "Syntax error on dummy depext test family. Syntax is \
@@ -253,7 +253,7 @@ module Cygwin = struct
   let internal_cygcache () = internal_cygwin () / "cache"
   let cygsetup () = internal_cygwin () // setupexe
   let is_internal config =
-    OpamStd.Option.equal OpamFilename.Dir.equal
+    Option.equal OpamFilename.Dir.equal
       (cygroot_opt config)
       (Some (internal_cygroot ()))
 
@@ -309,9 +309,9 @@ module Cygwin = struct
       try Some (OpamHash.sha512 Re.(Group.get (exec re content) 1))
       with Not_found -> None
     in
-    if OpamStd.Option.equal OpamHash.equal current_checksum checksum &&
+    if Option.equal OpamHash.equal current_checksum checksum &&
        dst_exists &&
-       OpamStd.Option.equal OpamHash.equal current_checksum
+       Option.equal OpamHash.equal current_checksum
          (Some (OpamHash.compute ~kind (OpamFilename.to_string dst))) then begin
       log "Up-to-date";
       OpamConsole.clear_status ();
@@ -594,12 +594,12 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       run_command ~discard_err:true pacman ["-Si"]
       |> snd
       |> List.fold_left (fun ((avail, provides, latest) as acc) l ->
-          if OpamStd.String.starts_with ~prefix:"Name" l then
+          if OpamCompat.String.starts_with ~prefix:"Name" l then
             match OpamStd.String.split l ' ' with
             | "Name"::":"::p::_ ->
               p +++ avail, provides, Some (OpamSysPkg.of_string p)
             | _ -> acc
-          else if OpamStd.String.starts_with ~prefix:"Provides" l then
+          else if OpamCompat.String.starts_with ~prefix:"Provides" l then
             match OpamStd.String.split l ' ' with
             | "Provides"::":"::"None"::[] -> acc
             | "Provides"::":"::pkgs ->
@@ -732,7 +732,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       run_query_command (Commands.cygcheck config)
       ([ "-c"; "-d" ] @ to_string_list packages)
       |> (function | _::_::l -> l | _ -> [])
-      |> OpamStd.List.filter_map (fun l ->
+      |> List.filter_map (fun l ->
           match OpamStd.String.split l ' ' with
           | pkg::_ -> Some pkg
           | _ -> None)
@@ -767,10 +767,10 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       run_query_command "apt-cache"
         ["search"; names_re (); "--names-only"; "--full"]
       |> List.fold_left (fun ((avail, provides, latest) as acc) l ->
-          if OpamStd.String.starts_with ~prefix:"Package: " l then
+          if OpamCompat.String.starts_with ~prefix:"Package: " l then
             let p = String.sub l 9 (String.length l - 9) in
             p +++ avail, provides, Some (OpamSysPkg.of_string p)
-          else if OpamStd.String.starts_with ~prefix:"Provides: " l then
+          else if OpamCompat.String.starts_with ~prefix:"Provides: " l then
             let ps =
               List.map package_provided (Re.split ~pos:10 provides_sep l)
               |> OpamSysPkg.Set.of_list
@@ -1241,7 +1241,7 @@ let install ?env st config (packages : OpamSysPkg.to_install) =
     let commands, vars =
       install_packages_commands_t ?env ~to_show:false st config packages
     in
-    let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
+    let vars = Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
          try sudo_run_command ?env ?vars cmd args

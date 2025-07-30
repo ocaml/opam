@@ -70,7 +70,7 @@ let resolve_global gt full_var =
       | "root"          -> Some (V.string (OpamFilename.Dir.to_string gt.root))
       | "make"          -> Some (V.string OpamStateConfig.(Lazy.force !r.makecmd))
       | "exe"           -> Some (V.string (OpamStd.Sys.executable_name ""))
-      | "switch"        -> OpamStd.Option.map (OpamSwitch.to_string @> V.string)
+      | "switch"        -> Option.map (OpamSwitch.to_string @> V.string)
                              (OpamStateConfig.get_switch_opt ())
       | _               -> None
 
@@ -213,7 +213,7 @@ let build_id st opam =
 (* filter handling *)
 let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
   let dirname dir = string (OpamFilename.Dir.to_string dir) in
-  let pkgname = OpamStd.Option.map OpamFile.OPAM.name opam_arg in
+  let pkgname = Option.map OpamFile.OPAM.name opam_arg in
   let read_package_var v =
     let get name =
       try
@@ -268,7 +268,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "name", opam ->
       (* On reinstall, orphan packages are not present in the state, and we
          need to resolve their internal name variable *)
-      if OpamStd.Option.map OpamFile.OPAM.name opam = Some name
+      if Option.map OpamFile.OPAM.name opam = Some name
       || OpamPackage.has_name st.packages name
       then Some (string (OpamPackage.Name.to_string name))
       else None
@@ -306,7 +306,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
         >>= (function [] -> None
                     | h::_ -> Some (string (OpamHash.to_string h))))
     | "dev", Some opam -> Some (bool (is_dev_package st opam))
-    | "build-id", Some opam -> OpamStd.Option.map string (build_id st opam)
+    | "build-id", Some opam -> Option.map string (build_id st opam)
     | "opamfile", Some opam ->
       (* Opamfile path is retrieved from overlay directory for pinned packages,
          or from temporary repository in /tmp *)
@@ -317,7 +317,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
           OpamRepositoryPath.root st.switch_global.root reponame
       in
       OpamFile.OPAM.get_metadata_dir ~repos_roots opam
-      |> OpamStd.Option.map (fun d ->
+      |> Option.map (fun d ->
           OpamFilename.Op.(d//"opam")
           |> OpamFilename.to_string
           |> string

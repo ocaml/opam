@@ -11,6 +11,18 @@
 module String : sig
   (* NOTE: OCaml >= 4.13 *)
   val exists: (char -> bool) -> string -> bool
+
+  (* NOTE: OCaml >= 4.13 *)
+  val starts_with: prefix:string -> string -> bool
+
+  (* NOTE: OCaml >= 4.13 *)
+  val ends_with: suffix:string -> string -> bool
+
+  (* NOTE: OCaml >= 4.13 *)
+  val for_all: (char -> bool) -> string -> bool
+
+  (* NOTE: OCaml >= 4.13 *)
+  val fold_left: ('a -> char -> 'a) -> 'a -> string -> 'a
 end
 
 module Seq : sig
@@ -43,3 +55,17 @@ module Filename: sig
     string -> ?stdin:string -> ?stdout:string -> ?stderr:string
     -> string list -> string
 end
+
+module List : sig
+  (** NOTE: OCaml >= 4.11 *)
+  val fold_left_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a list -> 'acc * 'b list
+end
+
+module type MAP = sig
+  include Stdlib.Map.S
+
+  (** NOTE: OCaml >= 4.11 *)
+  val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
+end
+
+module Map(Ord : Stdlib.Map.OrderedType) : MAP with type key = Ord.t

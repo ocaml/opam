@@ -206,8 +206,6 @@ let init ?noop:_ = initk (fun () -> ())
 
 let search_files = ["findlib"]
 
-open OpamStd.Op
-
 let opam_init ?root_dir ?strict ?solver =
   let open OpamStd.Option.Op in
 
@@ -252,7 +250,7 @@ let opam_init ?root_dir ?strict ?solver =
 
   (* (iii) load from env and options using OpamXxxConfig.init *)
   let log_dir =
-    OpamStd.Option.map OpamFilename.Dir.to_string @@
+    Stdlib.Option.map OpamFilename.Dir.to_string @@
     if log_dir = None && initialised
        && OpamCoreConfig.E.logs () = None then
       (* fixme: in order to not revert [OPAMLOGS] value,

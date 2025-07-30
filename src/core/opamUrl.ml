@@ -9,8 +9,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamStd.Op
-
 type version_control = [ `git | `darcs | `hg ]
 
 type backend = [ `http | `rsync | version_control ]
@@ -34,7 +32,7 @@ let compare {transport; path; hash; backend} u =
   if transport <> 0 then transport else
   let path = String.compare path u.path in
   if path <> 0 then path else
-  let hash = OpamStd.Option.compare String.compare hash u.hash in
+  let hash = Option.compare String.compare hash u.hash in
   if hash <> 0 then hash else
     compare backend u.backend
 
@@ -272,7 +270,7 @@ let root =
     { t with path}
 
 let has_trailing_slash url =
-  OpamStd.String.ends_with ~suffix:"/" url.path
+  OpamCompat.String.ends_with ~suffix:"/" url.path
 
 let to_json url = `String (to_string url)
 let of_json = function

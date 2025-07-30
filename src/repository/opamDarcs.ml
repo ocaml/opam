@@ -169,7 +169,7 @@ module VCS = struct
     darcs repo_root [ "whatsnew"; "--summary" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     let files =
-      OpamStd.List.filter_map (fun line ->
+      List.filter_map (fun line ->
           match OpamStd.String.split line ' ' with
           | ("A" | "M")::file::[]
           | _::"->"::file::[] -> Some file
@@ -187,18 +187,18 @@ module VCS = struct
            | Some (p,rhs) when p = c -> Some rhs
            | _ -> None
          in
-         match OpamStd.List.filter_map (valid "Cache") r.r_stdout with
+         match List.filter_map (valid "Cache") r.r_stdout with
          | [line] ->
            (let repo =
-              OpamStd.List.filter_map (valid "repo")
-              (OpamStd.String.split line ',')
+              List.filter_map (valid "repo")
+                (OpamStd.String.split line ',')
             in
             match repo with
             | [repo] -> Some repo
             | _ -> None)
          | _ -> None)
       in
-      Done (OpamStd.Option.map (fun u ->
+      Done (Option.map (fun u ->
           OpamUrl.parse ~backend:`darcs u) res)
     | { OpamProcess.r_code = 1; _ } -> Done None
     | r -> OpamSystem.process_error r

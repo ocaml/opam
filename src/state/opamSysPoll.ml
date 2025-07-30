@@ -29,8 +29,10 @@ let normalise_arch raw =
   | "powerpc" | "ppc" | "ppcle" -> "ppc32"
   | "ppc64" | "ppc64le" -> "ppc64"
   | "aarch64_be" | "aarch64" -> "arm64"
-  | a when a = "armv8b" || a = "armv8l" || List.exists (fun prefix -> OpamStd.String.starts_with ~prefix a)
-        ["armv5"; "armv6"; "earmv6"; "armv7"; "earmv7"] -> "arm32"
+  | a when a = "armv8b" || a = "armv8l" ||
+           List.exists (fun prefix -> OpamCompat.String.starts_with ~prefix a)
+             ["armv5"; "armv6"; "earmv6"; "armv7"; "earmv7"]
+    -> "arm32"
   | s -> s
 
 let poll_arch () =
@@ -86,7 +88,7 @@ let os_release_field =
   let os_release_file = lazy (
     List.find Sys.file_exists ["/etc/os-release"; "/usr/lib/os-release"] |>
     OpamProcess.read_lines |>
-    OpamStd.List.filter_map (fun s ->
+    List.filter_map (fun s ->
         try
           Scanf.sscanf s "%s@= %s" (fun x v ->
               let contents =
@@ -122,7 +124,7 @@ let poll_os_distribution () =
                                       "/etc/gentoo-release";
                                       "/etc/issue"]
      in
-     match OpamStd.Option.map OpamProcess.read_lines release_file with
+     match Option.map OpamProcess.read_lines release_file with
      | None |  Some [] -> linux
      | Some (s::_) ->
        try Scanf.sscanf s " %s " norm
@@ -151,7 +153,7 @@ let poll_os_version () =
     command_output ["sw_vers"; "-productVersion"] >>= norm
   | Some "win32" ->
     let (major, minor, build, _) = OpamStubs.getWindowsVersion () in
-    OpamStd.Option.some @@ Printf.sprintf "%d.%d.%d" major minor build
+    Option.some @@ Printf.sprintf "%d.%d.%d" major minor build
   | Some "cygwin" ->
     (try
        command_output ["cmd"; "/C"; "ver"] >>= fun s ->
@@ -179,7 +181,7 @@ let variables =
   List.map
     (fun (n, v) ->
        OpamVariable.of_string n,
-       OpamCompat.Lazy.map (OpamStd.Option.map (fun v -> OpamTypes.S v)) v)
+       OpamCompat.Lazy.map (Option.map (fun v -> OpamTypes.S v)) v)
     [
       "arch", arch;
       "os", os;
