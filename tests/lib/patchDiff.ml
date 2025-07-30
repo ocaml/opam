@@ -386,11 +386,11 @@ let diff_patch dir setup =
           (dir / first)
       in
       match result with
-      | None ->
+      | `Patched _ ->
         print "*** %sPATCHED ***\n" git;
         print_dirs dir;
         true
-      | Some exn ->
+      | `Exception exn ->
         print "*** %sPATCH ERROR ***\n" git;
         print "ERROR: %s\n" (rm_hex @@ Printexc.to_string exn);
         false

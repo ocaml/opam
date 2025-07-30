@@ -119,6 +119,7 @@ users)
 ## opam-client
 
 ## opam-repository
+  * `OpamRepository.update` include the list of file-level changes in the return type `['Changes of Patch.operation list]` [#6614 @arozovyk - fix #5824]
 
 ## opam-state
 
@@ -127,3 +128,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamSystem.patch`, `OpamFilename.patch`: change return type from `exn option` to `['Patched of Patch.operation list | 'Exception of exn]` to include the list of applied patch operations [#6614 @arozovyk - fix #5824]
