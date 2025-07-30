@@ -122,3 +122,60 @@ opam-version: "2.0"
 name: "baz"
 version: "1"
 synopsis: "Third package"
+### git init -q --initial-branch=master GITREPO
+### git -C GITREPO config core.autocrlf false
+### <GITREPO/repo>
+opam-version: "2.0"
+### <GITREPO/packages/rename-pkg/rename-pkg.1/opam>
+opam-version: "2.0"
+synopsis: "Package to be renamed"
+### <GITREPO/packages/delete-pkg/delete-pkg.1/opam>
+opam-version: "2.0"
+synopsis: "Package to be deleted"
+### git -C GITREPO add -A
+### git -C GITREPO commit -qm "initial commit"
+### opam repository add git-test --kind=git git+file://${BASEDIR}/GITREPO --this-switch
+[git-test] Initialised
+### opam list --all --all-versions --repo=git-test -s
+delete-pkg.1
+rename-pkg.1
+### : Git rename of opam file
+### mkdir -p GITREPO/packages/rename-pkg/renamed-pkg.1
+### git -C GITREPO mv packages/rename-pkg/rename-pkg.1/opam packages/rename-pkg/renamed-pkg.1/opam
+### git -C GITREPO commit -qm "rename opam file"
+### opam update git-test
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[git-test] synchronised from git+file://${BASEDIR}/GITREPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --all-versions --repo=git-test -s
+delete-pkg.1
+renamed-pkg.1
+### : Git deletion of opam file
+### git -C GITREPO rm packages/delete-pkg/delete-pkg.1/opam
+rm 'packages/delete-pkg/delete-pkg.1/opam'
+### git -C GITREPO commit -qm "delete opam file"
+### opam update git-test
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[git-test] synchronised from git+file://${BASEDIR}/GITREPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --all-versions --repo=git-test -s
+renamed-pkg.1
+### : Git creation of new opam file
+### <GITREPO/packages/new-pkg/new-pkg.1/opam>
+opam-version: "2.0"
+synopsis: "New package created"
+### git -C GITREPO add packages/new-pkg/new-pkg.1/opam
+### git -C GITREPO commit -qm "create new opam file"
+### opam update git-test
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[git-test] synchronised from git+file://${BASEDIR}/GITREPO
+Now run 'opam upgrade' to apply any package updates.
+### : Verify final state
+### opam list --all --all-versions --repo=git-test
+# Packages matching: from-repository(git-test) & any
+# Package     # Installed # Synopsis
+new-pkg.1     --          New package created
+renamed-pkg.1 --          Package to be renamed
