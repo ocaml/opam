@@ -16,6 +16,7 @@ let slog = OpamConsole.slog
 type update =
   | Update_full of dirname
   | Update_patch of filename
+  | Update_diffs of (filename * Patch.t list)
   | Update_empty
   | Update_err of exn
 
@@ -106,6 +107,24 @@ let get_files_for_diff parent_dir dir1 dir2 =
     in
     aux [] files1 files2
 
+(* Needed to be coherent with vcs patches that do not have repo name suffix *)
+let strip_repo_suffix d =
+  let rm_prefix f =
+    match (OpamStd.String.cut_at f '/') with
+    | None ->
+      log "Warning: failed to remove prefix of %s" f;
+      f
+    | Some (_, r) -> r
+  in
+  let operation=
+    match Patch.(d.operation) with
+    | Patch.Create f -> Patch.Create (rm_prefix f)
+    | Patch.Delete f -> Patch.Delete (rm_prefix f)
+    | Patch.Edit (f1, f2) -> Patch.Edit (rm_prefix f1, rm_prefix f2)
+    | Patch.Git_ext (f1, f2, ext) -> Patch.Git_ext (rm_prefix f1, rm_prefix f2, ext)
+  in
+  {d with operation}
+
 let get_diff parent_dir dir1 dir2 =
   let chrono = OpamConsole.timer () in
   log "diff: %a/{%a,%a}"
@@ -176,4 +195,4 @@ let get_diff parent_dir dir1 dir2 =
     let patch = OpamSystem.temp_file ~auto_clean:false "patch" in
     let patch_file = OpamFilename.of_string patch in
     OpamFilename.write patch_file (Format.asprintf "%a" Patch.pp_list diffs);
-    Some patch_file
+    Some (patch_file, List.map strip_repo_suffix diffs)
