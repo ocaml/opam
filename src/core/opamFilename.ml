@@ -443,9 +443,8 @@ let link ?(relative=false) ~target ~link =
   OpamSystem.link target (to_string link)
 [@@ocaml.warning "-16"]
 
-let patch ?preprocess ~allow_unclean filename dirname =
-  OpamSystem.patch ?preprocess ~allow_unclean ~dir:(Dir.to_string dirname)
-    (to_string filename)
+let patch ~allow_unclean patch_source dirname =
+  OpamSystem.patch ~allow_unclean ~dir:(Dir.to_string dirname) patch_source
 
 let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
 

@@ -111,6 +111,53 @@ let load_opams_from_dir repo_name repo_root =
     (fun () -> aux OpamPackage.Map.empty (OpamRepositoryPath.packages_dir repo_root))
     ~finally:OpamConsole.clear_status
 
+let load_opams_incremental repo_name repo_root diffs rt =
+  let existing_opams =
+    match OpamRepositoryName.Map.find_opt repo_name rt.repo_opams with
+    | Some opams -> opams
+    | None -> OpamPackage.Map.empty
+  in
+  let process_file acc file ~is_removal =
+    match OpamPackage.of_filename (OpamFilename.of_string file) with
+    | None ->
+      log "ERR: directory name not a valid package: ignored %s" file;
+      acc
+    | Some nv ->
+      if is_removal then
+        OpamPackage.Map.remove nv acc
+      else
+        let package_dir = OpamFilename.dirname (OpamFilename.Op.(repo_root // file)) in
+        match
+          OpamFileTools.read_repo_opam ~repo_name ~repo_root package_dir
+        with
+        | Some opam ->
+          OpamPackage.Map.add nv opam acc
+        | None ->
+          log "ERR: Could not read opam file %s, ignored" file;
+          acc
+  in
+  let remove_file file acc = process_file acc file ~is_removal:true in
+  let add_file file acc = process_file acc file ~is_removal:false in
+  let process_operation acc = function
+    | Patch.Edit (old_file, new_file) ->
+      if OpamFilename.Dir.equal
+          (OpamFilename.Dir.of_string old_file)
+          (OpamFilename.Dir.of_string new_file)
+      then
+        add_file new_file acc
+      else
+        remove_file old_file acc |> add_file new_file
+    | Patch.Delete file -> remove_file file acc
+    | Patch.Create file -> add_file file acc
+    | Patch.Git_ext (file1, file2, git_ext) ->
+      match git_ext with
+      | Patch.Rename_only (_, _) -> remove_file file1 acc |> add_file file2
+      | Patch.Delete_only -> remove_file file1 acc
+      | Patch.Create_only -> add_file file2 acc
+  in
+  List.fold_left (fun acc o -> process_operation acc o)
+    existing_opams diffs
+
 let load_repo repo repo_root =
   let t = OpamConsole.timer () in
   let repo_def =

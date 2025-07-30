@@ -184,7 +184,7 @@ module B = struct
           (OpamFilename.basename_dir quarantine)
         |> function
         | None -> Done OpamRepositoryBackend.Update_empty
-        | Some p -> Done (OpamRepositoryBackend.Update_patch p)
+        | Some p -> Done (OpamRepositoryBackend.Update_diffs p)
 
   let repo_update_complete _ _ = Done ()
 

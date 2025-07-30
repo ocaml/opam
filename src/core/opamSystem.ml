@@ -1669,25 +1669,27 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
   in
   List.iter apply diffs
 
-let patch ?(preprocess=true) ~allow_unclean ~dir p =
-  if not (Sys.file_exists p) then
-    (OpamConsole.error "Patch file %S not found." p;
-     raise Not_found);
-  let p' =
-    if preprocess then
+let patch ~allow_unclean ~dir patch_source =
+  match patch_source with
+  | `Patch_diffs diffs ->
+    internal_patch ~allow_unclean ~patch_filename:dir ~dir diffs;
+    `Patched (List.map (fun d -> Patch.(d.operation)) diffs)
+  | `Patch_file p ->
+    if not (Sys.file_exists p) then
+      (OpamConsole.error "Patch file %S not found." p;
+       raise Not_found);
+    let p' =
       let p' = temp_file ~auto_clean:false "processed-patch" in
       translate_patch ~dir p p';
       p'
-    else
-      p
-  in
-  let content = read p' in
-  try
-    let diffs = Patch.parse ~p:1 content in
-    internal_patch ~allow_unclean ~patch_filename:p ~dir diffs;
-    if preprocess && not (OpamConsole.debug ()) then Sys.remove p';
-    None
-  with exn -> Some exn
+    in
+    let content = read p' in
+    try
+      let diffs = Patch.parse ~p:1 content in
+      internal_patch ~allow_unclean ~patch_filename:p ~dir diffs;
+      if not (OpamConsole.debug ()) then Sys.remove p';
+      `Patched (List.map (fun d -> Patch.(d.operation)) diffs)
+    with exn -> `Exception exn
 
 let register_printer () =
   Printexc.register_printer (function

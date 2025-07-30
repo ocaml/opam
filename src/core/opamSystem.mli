@@ -344,14 +344,16 @@ val get_lock_fd: lock -> Unix.file_descr
 
 (** {2 Misc} *)
 
-(** Apply a patch file in the current directory. If [preprocess] is set to
-    false, there is no CRLF translation. Returns the error if the patch didn't
-    apply.
+(** Apply a patch in the current directory. Takes either a patch file path or
+    a list of patch diffs. Returns [`Patched patches] on success with the list
+    of applied patch operations, [`Exception exn] on error.
 
     @param allow_unclean decides if applying a patch on a directory which
     differs slightly from the one described in the patch file is allowed.
     Allowing unclean applications imitates the default behaviour of GNU Patch. *)
-val patch: ?preprocess:bool -> allow_unclean:bool -> dir:string -> string -> exn option
+val patch: allow_unclean:bool -> dir:string ->
+  [ `Patch_file of string | `Patch_diffs of Patch.t list] ->
+  [`Patched of Patch.operation list | `Exception of exn]
 
 (** Returns the end-of-line encoding style for the given file. [None] means that
     either the encoding of line endings is mixed, or the file contains no line

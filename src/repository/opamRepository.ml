@@ -491,6 +491,7 @@ let validate_repo_update repo repo_root update =
         | "quorum", _ -> Some (S (string_of_int ta.quorum))
         | "repo", _ -> Some (S (OpamFilename.Dir.to_string repo_root))
         | "patch", Update_patch f -> Some (S (OpamFilename.to_string f))
+        | "patch", Update_diffs (f, _) -> Some (S (OpamFilename.to_string f))
         | "incremental", Update_patch _ -> Some (B true)
         | "incremental", _ -> Some (B false)
         | "dir", Update_full d -> Some (S (OpamFilename.Dir.to_string d))
@@ -524,8 +525,8 @@ let apply_repo_update repo repo_root = function
     OpamConsole.msg "[%s] Initialised\n"
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name));
-    Done ()
-  | Update_patch f ->
+    Done []
+  | Update_patch f | Update_diffs (f, _) as update ->
     OpamConsole.msg "[%s] synchronised from %s\n"
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name))
@@ -533,14 +534,17 @@ let apply_repo_update repo repo_root = function
     log "%a: applying patch update at %a"
       (slog OpamRepositoryName.to_string) repo.repo_name
       (slog OpamFilename.to_string) f;
-    let preprocess =
-      match repo.repo_url.OpamUrl.backend with
-      | `http | `rsync -> false
-      | _ -> true
+    let patch_source =
+      match update with
+      | Update_diffs (_, diffs) -> `Patch_diffs diffs
+      | _ -> (`Patch_file (OpamFilename.to_string f)) in
+    let patch_result =
+      OpamFilename.patch ~allow_unclean:false patch_source repo_root
     in
-    let err = OpamFilename.patch ~preprocess ~allow_unclean:false f repo_root in
     if not (OpamConsole.debug ()) then OpamFilename.remove f;
-    OpamStd.Option.map_default raise (Done ()) err
+    (match patch_result with
+     | `Patched diffs -> Done diffs
+     | `Exception exn -> raise exn)
   | Update_empty ->
     OpamConsole.msg "[%s] no changes from %s\n"
       (OpamConsole.colorise `green
@@ -548,7 +552,7 @@ let apply_repo_update repo repo_root = function
       (OpamUrl.to_string repo.repo_url);
     log "%a: applying empty update"
       (slog OpamRepositoryName.to_string) repo.repo_name;
-    Done ()
+    Done []
   | Update_err _ -> assert false
 
 let cleanup_repo_update upd =
@@ -565,10 +569,10 @@ let update repo repo_root =
   | Update_err e -> raise e
   | Update_empty ->
     log "update empty, no validation performed";
-    apply_repo_update repo repo_root Update_empty @@+ fun () ->
+    apply_repo_update repo repo_root Update_empty @@+ fun _ ->
     B.repo_update_complete repo_root repo.repo_url @@+ fun () ->
     Done `No_changes
-  | (Update_full _ | Update_patch _) as upd ->
+  | (Update_full _ | Update_patch _ | Update_diffs _) as upd ->
     OpamProcess.Job.catch (fun exn ->
         cleanup_repo_update upd;
         raise exn)
@@ -578,9 +582,9 @@ let update repo repo_root =
       cleanup_repo_update upd;
       failwith "Invalid repository signatures, update aborted"
     | true ->
-      apply_repo_update repo repo_root upd @@+ fun () ->
+      apply_repo_update repo repo_root upd @@+ fun diffs ->
       B.repo_update_complete repo_root repo.repo_url @@+ fun () ->
-      Done `Changes
+      Done (`Changes diffs)
 
 let on_local_version_control url ~default f =
   match url.OpamUrl.backend with
