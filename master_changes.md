@@ -131,3 +131,5 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamConsole.log`: does not keep log messages before initialization if the code is ran through a library [#6487 @kit-ty-kate]
+  * `OpamCoreConfig.in_opam`: was added [#6487 @kit-ty-kate]
