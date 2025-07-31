@@ -109,6 +109,7 @@ users)
 ### Tests
 
 ### Engine
+ * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
 
 ## Github Actions
 
