@@ -107,9 +107,11 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test for `opam switch link` to make sure it doesn't remove previous switches [#6450 @kit-ty-kate]
 
 ### Engine
  * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
+  * Fix support for removing local link directories [#6450 @kit-ty-kate]
 
 ## Github Actions
 
@@ -133,3 +135,4 @@ users)
 ## opam-core
   * `OpamConsole.log`: does not keep log messages before initialization if the code is ran through a library [#6487 @kit-ty-kate]
   * `OpamCoreConfig.in_opam`: was added [#6487 @kit-ty-kate]
+  * `OpamSystem.is_reg_dir`: is now exposed, which returns `true` only if its parameter is a directory, exists and is not a symlink. It returns `false` otherwise [#6450 @kit-ty-kate]
