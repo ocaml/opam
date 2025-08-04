@@ -89,6 +89,9 @@ module type MAP = sig
       [f], applied to the current value bound to [k] or [zero] if none *)
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
 
+  (** OCaml 5.1's Map.Make.add_to_list *)
+  val add_to_list: key -> 'a -> 'a list t -> 'a list t
+
   (** [map_reduce f op t] applies [f] to every binding of [t] and combines the
       results using associative operator [op].
       @raise Invalid_argument on an empty map if [default] is not defined *)
