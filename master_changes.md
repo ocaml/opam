@@ -93,6 +93,7 @@ users)
 ## Solver
 
 ## Client
+  * [NEW] Fetch shared archive sources without checksums [#6627 @psafont - fix #5638]
 
 ## Shell
 

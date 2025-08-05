@@ -308,10 +308,8 @@ The following actions will be performed:
   - install foo 1 [required by bar]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved bar.1  (file://${BASEDIR}/shared.tgz)
--> retrieved baz.1  (file://${BASEDIR}/shared.tgz)
+-> retrieved bar.1, baz.1, foo.1  (file://${BASEDIR}/shared.tgz)
 -> installed baz.1
--> retrieved foo.1  (file://${BASEDIR}/shared.tgz)
 -> installed foo.1
 -> installed bar.1
 Done.
