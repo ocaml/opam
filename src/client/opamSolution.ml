@@ -485,16 +485,14 @@ let parallel_apply t
     let sources_needed =
       (* used to factorise fetches: creates [`Fetch] nodes with several
          packages that download once the archive and copies its content in
-         source directories. Handles only http and rsync backend with at least
-         one checksum. *)
+         source directories. Handles only http and rsync backends. *)
       let shared_source =
         OpamPackage.Set.fold (fun nv url_nvs ->
             match OpamSwitchState.url t nv with
             | Some url ->
-              let checksums = OpamFile.URL.checksum url in
               let url = OpamFile.URL.url url in
-              (match url.OpamUrl.backend, checksums with
-               | (`http | `rsync ) , _::_
+              (match url.OpamUrl.backend with
+               | (`http | `rsync )
                  when OpamFilename.is_archive
                      (OpamFilename.of_string url.OpamUrl.path) ->
                  OpamUrl.Map.update url
