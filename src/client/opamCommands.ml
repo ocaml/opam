@@ -3228,7 +3228,7 @@ let pin ?(unpin_only=false) cli =
      displays the hash representing its state.";
     cli_from cli2_1, "scan", `scan, ["DIR"],
     "Lists available packages to pin in directory.";
-    cli_original, "add", `add, ["PACKAGE"; "TARGET"],
+    cli_original, "add", `add, ["[PACKAGE]"; "TARGET"],
     "Pins package $(i,PACKAGE) to $(i,TARGET), which may be a version, a path, \
      or a URL.\n\
      $(i,PACKAGE) can be omitted if $(i,TARGET) contains one or more package \
