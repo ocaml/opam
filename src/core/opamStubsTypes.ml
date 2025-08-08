@@ -124,3 +124,7 @@ external is_executable : string -> bool = "opam_is_executable"
 (** faccessat on Unix; _waccess on Windows. Checks whether a path is executable
     for the current process. On Unix, unlike Unix.access, this is checked using
     the EUID/EGID rather than RUID/RGID. *)
+
+external nproc : unit -> nativeint = "opam_nproc"
+(** Returns the number of logical processors of the current machine.
+    Any value below [1] is an error. *)
