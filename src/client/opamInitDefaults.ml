@@ -47,15 +47,12 @@ let dragonflybsd_filter = os_filter "dragonfly"
 let not_bsd_filter =
   FNot (FOr (FOr (openbsd_filter, netbsd_filter),
              FOr (freebsd_filter, dragonflybsd_filter)))
-let win32_filter = os_filter "win32"
 let not_win32_filter =
   FOp (FIdent ([], OpamVariable.of_string "os", None), `Neq, FString "win32")
 let sandbox_filter = FOr (linux_filter, macos_filter)
 
 let gtar_filter = openbsd_filter
 let tar_filter = FNot gtar_filter
-
-let getconf_filter = FNot (FOr (win32_filter, freebsd_filter))
 
 let sandbox_wrappers =
   let cmd t = [
@@ -129,7 +126,6 @@ let required_tools ~sandboxing () =
     ["tar"], None, Some tar_filter;
     ["gtar"], None, Some gtar_filter;
     ["unzip"], None, None;
-    ["getconf"], None, Some getconf_filter;
   ] @
   if sandboxing then [
     [bwrap_cmd], Some (bwrap_string()), Some bwrap_filter;

@@ -19,6 +19,7 @@ users)
 ## Plugins
 
 ## Init
+  * Remove `getconf` from the list of required runtime tools, which allows `opam init` to work out-of-the-box on Haiku [#6634 @kit-ty-kate - fix #6632]
 
 ## Config report
 
