@@ -92,6 +92,7 @@ users)
 ## Solver
 
 ## Client
+  * [NEW] Fetch shared archive sources without checksums
 
 ## Shell
 
