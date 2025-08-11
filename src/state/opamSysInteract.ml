@@ -14,7 +14,8 @@ let log fmt = OpamConsole.log "XSYS" fmt
 (* Always call this function to run a command, as it handles `dryrun` option *)
 
 let run_command
-    ?vars ?(discard_err=false) ?allow_stdin ?verbose ?(dryrun=false) cmd args =
+    ?vars ?(discard_err=false) ?allow_stdin ?verbose
+    ?(dryrun=OpamStateConfig.(!r.dryrun)) cmd args =
   let clean_output =
     if not discard_err then
       fun k -> k None
@@ -73,15 +74,15 @@ let run_command
   OpamProcess.cleanup r;
   Done (code, out)
 
-let run_query_command ?vars cmd args =
+let run_query_command ?(nonzero=false) ?discard_err ?vars cmd args =
   let vars = (`set, ("LC_ALL","C"))::OpamStd.Option.to_list vars in
-  let code,out = run_command ~vars cmd args in
-  if code = 0 then out
+  let code,out = run_command ?discard_err ~vars cmd args ~dryrun:false in
+  if nonzero || code = 0 then out
   else []
 
 let run_command_exit_code ?vars ?allow_stdin ?verbose cmd args =
   let code,_ =
-    run_command ?vars ?allow_stdin ?verbose ~dryrun:OpamStateConfig.(!r.dryrun)
+    run_command ?vars ?allow_stdin ?verbose
       cmd args
   in
   code
@@ -591,8 +592,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       *)
       (* Discard stderr to not have it pollute output. Plus, exit code is the
          number of packages not found. *)
-      run_command ~discard_err:true pacman ["-Si"]
-      |> snd
+      run_query_command ~nonzero:true ~discard_err:true pacman ["-Si"]
       |> List.fold_left (fun ((avail, provides, latest) as acc) l ->
           if OpamStd.String.starts_with ~prefix:"Name" l then
             match OpamStd.String.split l ' ' with
@@ -811,8 +811,8 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
               ])
       in
       (* discard stderr as just nagging *)
-      run_command ~discard_err:true "dpkg-query" ("-l" :: str_pkgs)
-      |> snd
+      run_query_command ~nonzero:true ~discard_err:true "dpkg-query"
+        ("-l" :: str_pkgs)
       |> with_regexp_sgl re_pkg
     in
     compute_sets_with_virtual get_avail_w_virtuals get_installed
