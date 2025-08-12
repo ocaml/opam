@@ -65,6 +65,7 @@ users)
 ## Opamfile
 
 ## External dependencies
+    * Add missing references to Haiku package manager
 
 ## Format upgrade
 
