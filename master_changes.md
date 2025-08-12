@@ -31,6 +31,7 @@ users)
 ## Remove
 
 ## UI
+  * Show the invalid character when detecting an erroneous package name [#6638 @lefessan - fix #6396]
 
 ## Switch
 
