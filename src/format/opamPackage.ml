@@ -66,22 +66,19 @@ module Name = struct
   let to_string x = x
 
   let of_string x =
-    match
+    if
       OpamStd.String.fold_left (fun acc c ->
-          if acc = Some false then acc else match c with
-            | 'a'..'z' | 'A'..'Z' -> Some true
-            | '0'..'9' | '-' | '_' | '+' -> acc
-            | _ -> Some false)
-        None x
-    with
-    | Some false ->
+          match c with
+          | 'a'..'z' | 'A'..'Z' -> false
+          | '0'..'9' | '-' | '_' | '+' -> acc
+          | c ->
+            failwith
+              (Printf.sprintf "Invalid character '%c' in package name %S" c x))
+        true x
+    then
       failwith
-        (Printf.sprintf "Invalid character in package name %S" x)
-    | None ->
-      failwith
-        (Printf.sprintf "Package name %S should contain at least one letter" x)
-    | Some true ->
-      x
+        (Printf.sprintf "Package name %S should contain at least one letter" x);
+    x
 
   let compare = OpamStd.String.compare_case
 
