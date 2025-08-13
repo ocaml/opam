@@ -82,9 +82,7 @@ let atom_of_string =
       let op = if sop = "." then `Eq else OpamLexer.FullPos.relop sop in
       let version = OpamPackage.Version.of_string sversion in
       name, Some (op, version)
-    with Not_found | Failure _ | OpamLexer.Error _ ->
-      (* TODO: Fix the parsing in here in case of pkg.version pattern
-         and invalid character in the version *)
+    with Not_found | OpamLexer.Error _ ->
       OpamPackage.Name.of_string str, None
 
 type 'a conjunction = 'a list
