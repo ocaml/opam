@@ -28,7 +28,8 @@ module Version = struct
         | 'a'..'z' | 'A'..'Z' | '0'..'9' | '-' | '_' | '+' | '.' | '~' -> ()
         | c ->
           failwith
-            (Printf.sprintf "Invalid character '%c' in package version %S" c x))
+            (Printf.sprintf "Invalid character '%s' in package version %S"
+               (Char.escaped c) x))
       x;
     x
 
@@ -73,7 +74,8 @@ module Name = struct
           | '0'..'9' | '-' | '_' | '+' -> acc
           | c ->
             failwith
-              (Printf.sprintf "Invalid character '%c' in package name %S" c x))
+              (Printf.sprintf "Invalid character '%s' in package name %S"
+                 (Char.escaped c) x))
         true x
     then
       failwith
