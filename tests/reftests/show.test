@@ -450,3 +450,15 @@ opam-version: "2.0"
 version: "4"
 ### opam show ./lorem.opam --field version
 4
+### : Check the error message in case of an invalid character
+### opam show a&b
+opam: PACKAGES… arguments: Invalid character '&' in package name "a&b"
+Usage: opam show [OPTION]… [PACKAGES]…
+Try 'opam show --help' or 'opam --help' for more information.
+# Return code 2 #
+### opam show bépo
+opam: PACKAGES… arguments: Invalid character '�' in package name
+      "b\195\169po"
+Usage: opam show [OPTION]… [PACKAGES]…
+Try 'opam show --help' or 'opam --help' for more information.
+# Return code 2 #

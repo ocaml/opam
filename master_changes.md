@@ -31,6 +31,7 @@ users)
 ## Remove
 
 ## UI
+  * Show the invalid character when detecting an erroneous package name [#6638 @lefessan - fix #6396]
 
 ## Switch
 
@@ -108,6 +109,7 @@ users)
 ## Reftests
 ### Tests
   * Add a test for `opam switch link` to make sure it doesn't remove previous switches [#6450 @kit-ty-kate]
+  * Add a test showing the error message when faced with invalid characters in package names [#6638 @kit-ty-kate]
 
 ### Engine
  * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
