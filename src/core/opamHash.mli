@@ -31,6 +31,7 @@ include OpamStd.ABSTRACT with type t := t
 
 val of_string_opt: string -> t option
 val compare_kind: kind -> kind -> int
+val equal_kind: kind -> kind -> bool
 
 (** Check if [hash] contains only 0 *)
 val is_null: t -> bool

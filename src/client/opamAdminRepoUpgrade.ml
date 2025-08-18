@@ -420,7 +420,8 @@ let do_upgrade repo_root =
       let opam0 = OpamFile.OPAM.read opam_file in
       OpamFile.OPAM.print_errors ~file:opam_file opam0;
       let nv = OpamFile.OPAM.package opam0 in
-      if not (List.mem nv.name ocaml_package_names) &&
+      if not (OpamStd.List.mem OpamPackage.Name.equal
+                nv.name ocaml_package_names) &&
          not (OpamPackage.Name.Set.mem nv.name all_base_packages) then
         let opam = OpamFileTools.add_aux_files ~files_subdir_hashes:true opam0 in
         let opam =

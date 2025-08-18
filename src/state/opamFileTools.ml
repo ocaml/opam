@@ -520,8 +520,8 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        a dependency towards the 'ocaml' package instead for availability, and \
        the 'ocaml:version' package variable for scripts"
       (t.ocaml_version <> None ||
-       List.mem (OpamVariable.Full.of_string "ocaml-version")
-         (all_variables t));
+       OpamStd.List.mem OpamVariable.Full.equal
+         (OpamVariable.Full.of_string "ocaml-version") (all_variables t));
     cond 33 `Error
       "Field 'os' is deprecated, use 'available' and the 'os' variable \
        instead"
@@ -691,7 +691,8 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
     cond 50 `Warning
       "The 'post' flag doesn't make sense with build or optional \
        dependencies"
-      (List.mem (OpamVariable.Full.of_string "post")
+      (OpamStd.List.mem OpamVariable.Full.equal
+         (OpamVariable.Full.of_string "post")
          (List.flatten
             (List.map OpamFilter.variables
                (filters_of_formula t.depopts))) ||
@@ -704,8 +705,10 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
                  | Filter fi -> OpamFilter.variables fi @ vars)
                [] f
            in
-           List.mem (OpamVariable.Full.of_string "build") vars &&
-           List.mem (OpamVariable.Full.of_string "post") vars)
+           OpamStd.List.mem OpamVariable.Full.equal
+             (OpamVariable.Full.of_string "build") vars &&
+           OpamStd.List.mem OpamVariable.Full.equal
+             (OpamVariable.Full.of_string "post") vars)
          false
          t.depends);
     cond 51 `Error

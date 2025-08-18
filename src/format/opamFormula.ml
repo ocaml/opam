@@ -38,6 +38,9 @@ let string_of_atom = function
 let compare_relop x y =
   Stdlib.compare (x : [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]) (y : relop)
 
+let equal_relop x y =
+  compare_relop x y = 0
+
 let compare_version_constraint (relop1, v1) (relop2, v2) =
   let cmp = compare_relop relop1 relop2 in
   if cmp <> 0 then cmp
