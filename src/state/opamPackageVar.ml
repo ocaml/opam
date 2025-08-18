@@ -142,7 +142,8 @@ let filter_depends_formula
   =
   ff |>
   OpamFilter.partial_filter_formula (fun v ->
-      if List.mem v predefined_depends_variables then None
+      if OpamStd.List.mem OpamVariable.Full.equal v predefined_depends_variables
+      then None
       else env v) |>
   OpamFilter.filter_deps ~build ~post ~test ~doc ~dev_setup ~dev ?default
 

@@ -780,7 +780,7 @@ module I = struct
                | Bad_format (pos, msg) ->
                  (field, (pos, msg)) :: errs, acc
              with Not_found ->
-               (if List.mem field mandatory_fields
+               (if OpamStd.List.mem String.equal field mandatory_fields
                 then (field, (Some pos, "Missing field "^field)) :: errs
                 else errs),
                acc)

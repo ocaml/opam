@@ -27,7 +27,7 @@ let update_selection gt ~global ~switches update_fun =
   if global then
     (* ensure all unselected switches aren't modified by changing the default *)
     (List.iter (fun sw ->
-         if not (List.mem sw switches) then
+         if not (OpamStd.List.mem OpamSwitch.equal sw switches) then
            OpamSwitchState.update_repositories gt (fun r -> r) sw)
         (OpamFile.Config.installed_switches gt.config);
      let (), gt =
@@ -230,58 +230,60 @@ let update_with_auto_upgrade rt repo_names =
   else
   let rt, done_upgrade =
     List.fold_left (fun (rt, done_upgrade) r ->
-        if List.mem r.repo_name failed then rt, done_upgrade else
-        let def =
-          OpamRepositoryName.Map.find r.repo_name rt.repos_definitions
-        in
-        let need_upgrade = match OpamFile.Repo.opam_version def with
-          | None ->
-            OpamConsole.note
-              "Repository at %s doesn't define its version, assuming it's 1.2."
-              (OpamUrl.to_string r.repo_url);
-            true
-          | Some v when
-              OpamVersion.compare v OpamAdminRepoUpgrade.upgradeto_version < 0
-            -> true
-          | _ -> false
-        in
-        if need_upgrade then
-          (if not done_upgrade then
-             (OpamConsole.header_msg
-                "Upgrading repositories from older opam format";
-              OpamRepositoryState.Cache.remove ());
-           OpamConsole.msg "Upgrading repository \"%s\"...\n"
-             (OpamRepositoryName.to_string r.repo_name);
-           let open OpamProcess.Job.Op in
-           let repo_root = OpamRepositoryState.get_repo_root rt r in
-           OpamAdminRepoUpgrade.do_upgrade repo_root;
-           if OpamRepositoryConfig.(!r.repo_tarring) then
-             OpamProcess.Job.run
-               (OpamFilename.make_tar_gz_job
-                  (OpamRepositoryPath.tar rt.repos_global.root r.repo_name)
-                  repo_root
-                @@| function
-                | Some e ->
-                  Printf.ksprintf failwith
-                    "Failed to regenerate local repository archive: %s"
-                    (Printexc.to_string e)
-                | None -> ());
-           let def =
-             OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root) |>
-             OpamFile.Repo.with_root_url r.repo_url
-           in
-           let opams =
-             OpamRepositoryState.load_opams_from_dir r.repo_name repo_root
-           in
-           let rt = {
-             rt with
-             repos_definitions =
-               OpamRepositoryName.Map.add r.repo_name def rt.repos_definitions;
-             repo_opams =
-               OpamRepositoryName.Map.add r.repo_name opams rt.repo_opams;
-           } in
-           rt, true)
-        else rt, done_upgrade)
+        if OpamStd.List.mem OpamRepositoryName.equal r.repo_name failed then
+          rt, done_upgrade
+        else
+          let def =
+            OpamRepositoryName.Map.find r.repo_name rt.repos_definitions
+          in
+          let need_upgrade = match OpamFile.Repo.opam_version def with
+            | None ->
+              OpamConsole.note
+                "Repository at %s doesn't define its version, assuming it's 1.2."
+                (OpamUrl.to_string r.repo_url);
+              true
+            | Some v when
+                OpamVersion.compare v OpamAdminRepoUpgrade.upgradeto_version < 0
+              -> true
+            | _ -> false
+          in
+          if need_upgrade then
+            (if not done_upgrade then
+               (OpamConsole.header_msg
+                  "Upgrading repositories from older opam format";
+                OpamRepositoryState.Cache.remove ());
+             OpamConsole.msg "Upgrading repository \"%s\"...\n"
+               (OpamRepositoryName.to_string r.repo_name);
+             let open OpamProcess.Job.Op in
+             let repo_root = OpamRepositoryState.get_repo_root rt r in
+             OpamAdminRepoUpgrade.do_upgrade repo_root;
+             if OpamRepositoryConfig.(!r.repo_tarring) then
+               OpamProcess.Job.run
+                 (OpamFilename.make_tar_gz_job
+                    (OpamRepositoryPath.tar rt.repos_global.root r.repo_name)
+                    repo_root
+                  @@| function
+                  | Some e ->
+                    Printf.ksprintf failwith
+                      "Failed to regenerate local repository archive: %s"
+                      (Printexc.to_string e)
+                  | None -> ());
+             let def =
+               OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root) |>
+               OpamFile.Repo.with_root_url r.repo_url
+             in
+             let opams =
+               OpamRepositoryState.load_opams_from_dir r.repo_name repo_root
+             in
+             let rt = {
+               rt with
+               repos_definitions =
+                 OpamRepositoryName.Map.add r.repo_name def rt.repos_definitions;
+               repo_opams =
+                 OpamRepositoryName.Map.add r.repo_name opams rt.repo_opams;
+             } in
+             rt, true)
+          else rt, done_upgrade)
       (rt, false) repos
   in
   if done_upgrade then OpamRepositoryState.Cache.save rt;

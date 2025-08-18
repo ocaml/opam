@@ -35,8 +35,13 @@ let string_of_atom = function
       (string_of_relop r)
       (OpamPackage.Version.to_string c)
 
+(* TODO: upstream to opam-file-format *)
 let compare_relop x y =
   Stdlib.compare (x : [`Eq|`Neq|`Geq|`Gt|`Leq|`Lt]) (y : relop)
+
+(* TODO: upstream to opam-file-format *)
+let equal_relop x y =
+  compare_relop x y = 0
 
 let compare_version_constraint (relop1, v1) (relop2, v2) =
   let cmp = compare_relop relop1 relop2 in

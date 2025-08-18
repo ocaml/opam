@@ -59,6 +59,9 @@ end
 module List : sig
   (** NOTE: OCaml >= 4.11 *)
   val fold_left_map : ('acc -> 'a -> 'acc * 'b) -> 'acc -> 'a list -> 'acc * 'b list
+
+  (** NOTE: OCaml >= 4.12 *)
+  val equal : ('a -> 'a -> bool) -> 'a list -> 'a list -> bool
 end
 
 module type MAP = sig
@@ -69,3 +72,10 @@ module type MAP = sig
 end
 
 module Map(Ord : Stdlib.Map.OrderedType) : MAP with type key = Ord.t
+
+module Pair : sig
+  (** NOTE: OCaml >= 5.4 *)
+  val equal :
+    ('a -> 'a -> bool) -> ('b -> 'b -> bool) ->
+    ('a * 'b) -> ('a * 'b) -> bool
+end
