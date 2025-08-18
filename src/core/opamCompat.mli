@@ -43,3 +43,15 @@ module Filename: sig
     string -> ?stdin:string -> ?stdout:string -> ?stderr:string
     -> string list -> string
 end
+
+module Pair : sig
+  (** NOTE: OCaml >= 5.4 *)
+  val equal :
+    ('a -> 'a -> bool) -> ('b -> 'b -> bool) ->
+    ('a * 'b) -> ('a * 'b) -> bool
+end
+
+module List : sig
+  (* NOTE: OCaml >= 4.12 *)
+  val equal : ('a -> 'a -> bool) -> 'a list -> 'a list -> bool
+end

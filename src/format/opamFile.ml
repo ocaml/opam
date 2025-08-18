@@ -2702,7 +2702,7 @@ module OPAMSyntax = struct
   let conflict_class t = t.conflict_class
   let available t = t.available
   let flags t = t.flags
-  let has_flag f t = List.mem f t.flags
+  let has_flag f t = OpamStd.List.mem OpamTypesBase.pkg_flag_equal f t.flags
   let env (t:t) =
     List.map
       (fun env -> match t.name, env with
@@ -3180,7 +3180,7 @@ module OPAMSyntax = struct
         List.fold_left (fun (flags, tags) tag ->
             match flag_of_tag tag with
             | Some flag ->
-              if List.mem flag flags then
+              if OpamStd.List.mem OpamTypesBase.pkg_flag_equal flag flags then
                 List.filter ((<>) flag) flags, tag::tags
               else flags, tags
             | None -> flags, tag::tags)
@@ -3433,7 +3433,8 @@ module OPAMSyntax = struct
   let to_list = Syntax.to_list pp
 
   let print_field_as_syntax field t =
-    if List.mem field deprecated_fields then raise Not_found;
+    if OpamStd.List.mem String.equal field deprecated_fields then
+      raise Not_found;
     let field =
       try OpamStd.List.assoc String.equal field alias_fields
       with Not_found -> field
