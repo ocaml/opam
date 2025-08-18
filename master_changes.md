@@ -116,6 +116,7 @@ users)
   * Fix support for removing local link directories [#6450 @kit-ty-kate]
 
 ## Github Actions
+  * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
