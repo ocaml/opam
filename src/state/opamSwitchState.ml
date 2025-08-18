@@ -89,7 +89,8 @@ let infer_switch_invariant_raw
     else compiler
   in
   let env nv v =
-    if List.mem v OpamPackageVar.predefined_depends_variables then
+    if OpamStd.List.mem OpamVariable.Full.equal
+        v OpamPackageVar.predefined_depends_variables then
       match OpamVariable.Full.to_string v with
       | "dev" | "with-test" | "with-doc" | "with-dev-setup" -> Some (B false)
       | _ -> None
@@ -896,7 +897,8 @@ let undefined_filter_variable nv v =
 
 let package_env_t st ~force_dev_deps ~test ~doc ~dev_setup
     ~requested_allpkgs ?(err_undefined=true) nv v =
-  if List.mem v OpamPackageVar.predefined_depends_variables then
+  if OpamStd.List.mem OpamVariable.Full.equal
+      v OpamPackageVar.predefined_depends_variables then
     match OpamVariable.Full.to_string v with
     | "dev" ->
       Some (B (force_dev_deps || is_dev_package st nv))
@@ -917,7 +919,8 @@ let get_dependencies_t st ~force_dev_deps ~test ~doc ~dev_setup
     ~requested_allpkgs deps opams =
   let filter_undefined nv =
     let warn_undefined v =
-      if not (List.mem v OpamPackageVar.predefined_depends_variables) then
+      if not (OpamStd.List.mem OpamVariable.Full.equal
+                v OpamPackageVar.predefined_depends_variables) then
         undefined_filter_variable nv v
     in
     OpamFormula.map (fun (name, fc) ->
@@ -1336,7 +1339,8 @@ let update_repositories gt update_fun switch =
 
 let dependencies_filter_to_formula_t ~build ~post st nv =
   let env v =
-    if List.mem v OpamPackageVar.predefined_depends_variables then
+    if OpamStd.List.mem OpamVariable.Full.equal
+        v OpamPackageVar.predefined_depends_variables then
       match OpamVariable.Full.to_string v with
       | "build" -> Some (B build)
       | "post" -> Some (B post)

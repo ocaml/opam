@@ -800,7 +800,8 @@ let from_2_0_alpha_to_2_0_alpha2 ~on_the_fly:_ root conf =
         ] in
       let remove_vars config =
         OpamFile.Dot_config.with_vars
-          (List.filter (fun (var, _) -> not (List.mem var to_remove_vars))
+          (List.filter (fun (var, _) ->
+               not (OpamStd.List.mem OpamVariable.equal var to_remove_vars))
              (OpamFile.Dot_config.bindings config))
           config
       in
@@ -1023,7 +1024,8 @@ let from_2_0_beta_to_2_0_beta5 ~on_the_fly:_ root conf =
       let config =
         { config with
           C.variables =
-            List.filter (fun (var,_) -> not (List.mem var rem_variables))
+            List.filter (fun (var,_) ->
+                not (OpamStd.List.mem OpamVariable.equal var rem_variables))
               config.C.variables;
         }
       in
@@ -1047,7 +1049,8 @@ let from_2_0_beta_to_2_0_beta5 ~on_the_fly:_ root conf =
     (OpamFile.Config.installed_switches conf);
   let rem_eval_variables = List.map OpamVariable.of_string ["arch"] in
   OpamFile.Config.with_eval_variables
-    (List.filter (fun (v,_,_) -> not (List.mem v rem_eval_variables))
+    (List.filter (fun (v,_,_) ->
+         not (OpamStd.List.mem OpamVariable.equal v rem_eval_variables))
        (OpamFile.Config.eval_variables conf))
     conf, gtc_none
 

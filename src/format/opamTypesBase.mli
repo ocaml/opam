@@ -21,6 +21,8 @@ val string_of_std_path: std_path -> string
 val std_path_of_string: string -> std_path
 val all_std_paths: std_path list
 
+val action_equal : ('a -> 'a -> bool) -> 'a action -> 'a action -> bool
+
 (** Extract a package from a package action. *)
 val action_contents: [< 'a action ] -> 'a list
 
@@ -81,6 +83,8 @@ val filter_ident_of_string_interp:
 val string_of_filter_ident:
   name option list * variable * (string * string) option -> string
 
+val pkg_flag_equal: package_flag -> package_flag -> bool
+
 val pkg_flag_of_string: string -> package_flag
 
 val string_of_pkg_flag: package_flag -> string
@@ -119,3 +123,8 @@ val char_of_separator: separator -> char
 (* Switch selections *)
 val switch_selections_compare : switch_selections -> switch_selections -> int
 val switch_selections_equal : switch_selections -> switch_selections -> bool
+
+val simple_arg_equal : simple_arg -> simple_arg -> bool
+val arg_equal : arg -> arg -> bool
+val filter_equal : filter -> filter -> bool
+val command_equal : command -> command -> bool

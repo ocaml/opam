@@ -160,7 +160,7 @@ let fold_switches f gt acc =
 let switch_exists gt switch =
   if OpamSwitch.is_external switch then
     OpamStateConfig.local_switch_exists gt.root switch
-  else List.mem switch (switches gt)
+  else OpamStd.List.mem OpamSwitch.equal switch (switches gt)
 
 let all_installed gt =
   fold_switches (fun _ sel acc ->
@@ -215,7 +215,8 @@ let fix_switch_list gt =
     match OpamStateConfig.get_switch_opt () with
     | None -> known_switches0
     | Some sw ->
-      if List.mem sw known_switches0 || not (switch_exists gt sw)
+      if OpamStd.List.mem OpamSwitch.equal sw known_switches0 ||
+         not (switch_exists gt sw)
       then known_switches0
       else sw::known_switches0
   in

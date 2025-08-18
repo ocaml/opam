@@ -2379,7 +2379,7 @@ let repository cli =
               OpamConsole.error_and_exit `Not_found
                 "No switch %s found"
                 (OpamSwitch.to_string sw)
-            else if List.mem sw acc then acc
+            else if OpamStd.List.mem OpamSwitch.equal sw acc then acc
             else acc @ [sw]
           | `Current_switch | `This_switch ->
             match OpamStateConfig.get_switch_opt () with
@@ -2388,7 +2388,7 @@ let repository cli =
                                    '--set-default'?";
               acc
             | Some sw ->
-              if List.mem sw acc then acc
+              if OpamStd.List.mem OpamSwitch.equal sw acc then acc
               else acc @ [sw])
         [] scope
     in
@@ -4286,7 +4286,9 @@ let clean cli =
                (OpamPackage.Set.elements st.pinned)
            in
            List.iter (fun d ->
-               if not (List.mem d pinning_overlay_dirs) then rmdir d)
+               if not (OpamStd.List.mem OpamFilename.Dir.equal
+                         d pinning_overlay_dirs) then
+                 rmdir d)
              (OpamFilename.dirs (OpamPath.Switch.Overlay.dir root sw));
            let keep_sources_dir =
              OpamPackage.Set.elements
@@ -4297,7 +4299,9 @@ let clean cli =
            in
            OpamFilename.dirs (OpamPath.Switch.sources_dir root sw) |>
            List.iter (fun d ->
-               if not (List.mem d keep_sources_dir) then rmdir d))
+               if not (OpamStd.List.mem OpamFilename.Dir.equal
+                         d keep_sources_dir) then
+                 rmdir d))
          switches);
     if repos then
       (OpamFilename.with_flock `Lock_write (OpamPath.repos_lock gt.root)

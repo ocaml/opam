@@ -12,7 +12,9 @@ type t = int * int
 
 let supported_versions = [(2, 0); (2, 1); (2,2); (2,3); (2,4)]
 
-let is_supported v = List.mem v supported_versions
+let is_supported v =
+  OpamStd.List.mem (OpamCompat.Pair.equal Int.equal Int.equal)
+    v supported_versions
 
 let of_string s =
   match String.index s '.' with

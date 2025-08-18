@@ -713,7 +713,12 @@ let switch_allowed_fields, switch_allowed_sections =
   in
   let allowed_sections =
     let rem_elem new_elems elems =
-      List.filter (fun n -> not (List.mem n new_elems)) elems
+      List.filter (fun n ->
+          not (OpamStd.List.mem
+                 (OpamCompat.Pair.equal
+                    OpamVariable.equal OpamVariable.variable_contents_equal)
+                 n new_elems))
+        elems
     in
     lazy (
       OpamFile.Switch_config.([

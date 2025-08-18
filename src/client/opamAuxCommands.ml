@@ -287,7 +287,7 @@ let autopin_aux st ?quiet ?recurse ?subpath ?locked
         in
         match OpamStd.Option.Op.( primary_url st nv >>= OpamUrl.local_dir) with
         | Some d ->
-          List.mem d pinning_dirs
+          OpamStd.List.mem OpamFilename.Dir.equal d pinning_dirs
         | None -> false)
       st.pinned
   in
@@ -555,7 +555,8 @@ let check_and_revert_sandboxing root config =
         OpamInitDefaults.sandbox_wrappers
       |> List.flatten
     in
-    List.filter (fun cmd -> List.mem cmd init_sdbx_cmds)
+    List.filter (fun cmd ->
+        OpamStd.List.mem OpamTypesBase.command_equal cmd init_sdbx_cmds)
       OpamFile.Wrappers.(wrap_build w @ wrap_install w @ wrap_remove w)
   in
   let env = fun v ->
@@ -596,7 +597,8 @@ let check_and_revert_sandboxing root config =
     if working_or_noop then config else
     let wrappers =
       let filter sdbx_cmd =
-        List.filter (fun cmd_l -> not (List.mem cmd_l sdbx_cmd))
+        List.filter (fun cmd_l ->
+            not (OpamStd.List.mem OpamTypesBase.command_equal cmd_l sdbx_cmd))
       in
       List.fold_left OpamFile.Wrappers.(fun w -> function
           | `build sdbx_build ->

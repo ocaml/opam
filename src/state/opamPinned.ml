@@ -261,7 +261,7 @@ let files_in_source_w_target ?locked ?recurse ?subpath
             OpamFilename.remove_prefix dir
               (OpamFile.filename name_and_file.pin.pin_file)
           in
-          if List.mem opamfile versioned_files
+          if OpamStd.List.mem String.equal opamfile versioned_files
           || not (OpamStd.String.contains opamfile ~sub:Filename.dir_sep) then
             url
           else
