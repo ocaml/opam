@@ -179,7 +179,8 @@ let def_packages ctx (_preamble, universe, _request) =
           mk_not ctx @@ mk_or ctx @@ List.rev_map
             (fun (name, filter) ->
                let pkgs = Cudf.lookup_packages universe ~filter name in
-               if List.mem pkg pkgs then (* Avoid self-conflict *)
+               (* Avoid self-conflict *)
+               if OpamStd.List.mem Cudf.( =% ) pkg pkgs then
                  mk_constr ctx
                    [ [name, filter]; [name, Some (`Neq, pkg.Cudf.version)] ]
                    (List.filter (fun p -> not (Cudf.( =% ) pkg p)) pkgs)
@@ -202,7 +203,16 @@ let def_packages ctx (_preamble, universe, _request) =
         let zero = Z3.Arithmetic.Integer.mk_numeral_i ctx.z3 0 in
         let one = Z3.Arithmetic.Integer.mk_numeral_i ctx.z3 1 in
         let cft_pkgs =
-          List.filter (fun p -> List.mem (name, None) p.Cudf.conflicts) pkgs
+          List.filter (fun p ->
+              OpamStd.List.mem
+                (* TODO: upstream to cudf *)
+                (OpamCompat.Pair.equal
+                   String.equal
+                   (Stdlib.Option.equal
+                      (OpamCompat.Pair.equal
+                         OpamFormula.equal_relop Int.equal)))
+                (name, None) p.Cudf.conflicts)
+            pkgs
         in
         if List.length cft_pkgs >= 2 then
           Z3.Boolean.mk_implies ctx.z3

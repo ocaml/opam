@@ -16,6 +16,7 @@
 type relop = OpamParserTypes.FullPos.relop_kind (* = [ `Eq | `Neq | `Geq | `Gt | `Leq | `Lt ] *)
 
 val compare_relop : relop -> relop -> int
+val equal_relop : relop -> relop -> bool
 
 (** A list containing each available operator once. *)
 val all_relop : relop list
