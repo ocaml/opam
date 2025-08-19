@@ -194,38 +194,48 @@ let repositories rt repos =
     let repo_depexts =
       OpamRepositoryState.get_declared_depexts opams rt.repos_global
     in
-    try
-      OpamSysInteract.available_packages ~env:rt.repos_global.global_variables
-        rt.repos_global.config repo_depexts
-    with Failure msg ->
-      OpamConsole.note "%s\nYou can disable this check using 'opam \
-                        option --global depext=false'"
-        msg;
-      Suppose_available
+    OpamSysInteract.available_packages ~env:rt.repos_global.global_variables
+      rt.repos_global.config repo_depexts
   in
   let write_config_cache rt =
     OpamRepositoryState.write_config rt;
     OpamRepositoryState.Cache.save rt
   in
   let rt =
+    let failure_note msg =
+      OpamConsole.note "%s\nYou can disable this check using 'opam \
+                        option --global depext=false'" msg;
+    in
     match rt_update with
     | Some rt_update ->
       let rt = rt_update rt in
-      let repos_sys_available_pkgs = get_sys_available rt in
-      let rt = { rt with repos_sys_available_pkgs } in
+      let rt =
+        try
+          let repos_sys_available_pkgs = get_sys_available rt in
+          { rt with repos_sys_available_pkgs }
+        with Failure msg ->
+          failure_note msg;
+          { rt with repos_sys_available_pkgs = Suppose_available }
+      in
       write_config_cache rt;
       rt
     | None ->
-      (* We do an update since the system can (rarely) change as well *)
-      let repos_sys_available_pkgs = get_sys_available rt in
-      if OpamSysPkg.available_equal rt.repos_sys_available_pkgs
-          repos_sys_available_pkgs
-      then
-        rt
-      else
-        let rt = { rt with repos_sys_available_pkgs } in
-        write_config_cache rt;
-        rt
+      try
+        (* We do an update since the system can (rarely) change as well *)
+        let repos_sys_available_pkgs = get_sys_available rt in
+        if OpamSysPkg.available_equal rt.repos_sys_available_pkgs
+            repos_sys_available_pkgs
+        then
+          rt
+        else
+          let rt = { rt with repos_sys_available_pkgs } in
+          write_config_cache rt;
+          rt
+      with Failure msg ->
+        (failure_note msg;
+         let rt = { rt with repos_sys_available_pkgs = Suppose_available } in
+         write_config_cache rt;
+         rt)
   in
   failed, rt
 
