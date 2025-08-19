@@ -1320,7 +1320,7 @@ let update_sys_packages packages st =
       || (not (OpamSysPkg.Set.subset depexts_s pkgs))
       then
         let sys_packages = lazy (
-          OpamPackage.Map.union (fun x _ -> x)
+          OpamPackage.Map.union (fun _ x -> x)
             (Lazy.force st.sys_packages)
             (depexts_status_of_packages st packages)
         ) in
