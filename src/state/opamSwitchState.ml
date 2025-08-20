@@ -1295,25 +1295,25 @@ let update_pin nv opam st =
   ) in
   { st with sys_packages; available_packages }
 
-let update_sys_packages packages st =
+let update_sys_packages pkgs st =
   let depexts_s =
     OpamPackage.Set.fold
       (fun p acc -> OpamSysPkg.Set.Op.(depexts st p ++ acc))
-      packages OpamSysPkg.Set.empty
+      pkgs OpamSysPkg.Set.empty
   in
   if OpamSysPkg.Set.is_empty depexts_s then
     st
   else
     (* Check if an update is to be made *)
     match st.switch_repos.repos_sys_available_pkgs with
-    | OpamSysPkg.Available pkgs ->
-      if OpamSysPkg.Set.is_empty pkgs
-      || (not (OpamSysPkg.Set.subset depexts_s pkgs))
+    | OpamSysPkg.Available available_pkgs ->
+      if OpamSysPkg.Set.is_empty available_pkgs
+      || (not (OpamSysPkg.Set.subset depexts_s available_pkgs))
       then
         let sys_packages = lazy (
           OpamPackage.Map.union (fun _ x -> x)
             (Lazy.force st.sys_packages)
-            (depexts_status_of_packages st packages)
+            (depexts_status_of_packages st pkgs)
         ) in
         {st with sys_packages}
       else
