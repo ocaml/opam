@@ -64,10 +64,6 @@ val get_root: 'a repos_state -> repository_name -> OpamFilename.Dir.t
 (** Same as {!get_root}, but with a repository rather than just a name as argument *)
 val get_repo_root: 'a repos_state -> repository -> OpamFilename.Dir.t
 
-(** Returns the set of depexts required in opam files *)
-val get_declared_depexts: OpamFile.OPAM.t OpamPackage.Map.t ->
-  [< unlocked ] global_state -> OpamSysPkg.Set.t
-
 (* (\** Runs the given function with access to a (possibly temporary) directory
  *     containing the extracted structure of the given repository, and cleans it up
  *     afterwards if temporary. The basename of the directory is guaranteed to

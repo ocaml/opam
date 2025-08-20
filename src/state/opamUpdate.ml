@@ -187,12 +187,13 @@ let repositories rt repos =
       repos
   in
   let get_sys_available rt =
-    let opams =  OpamRepositoryName.Map.fold (fun _ opams acc ->
+    let opams = OpamRepositoryName.Map.fold (fun _ opams acc ->
         OpamPackage.Map.union (fun _ x -> x) acc opams
       ) rt.repo_opams (OpamPackage.Map.empty)
     in
     let repo_depexts =
-      OpamRepositoryState.get_declared_depexts opams rt.repos_global
+      OpamFileTools.extract_depexts_map opams
+        ~env:(OpamPackageVar.resolve_global rt.repos_global)
     in
     OpamSysInteract.available_packages ~env:rt.repos_global.global_variables
       rt.repos_global.config repo_depexts
