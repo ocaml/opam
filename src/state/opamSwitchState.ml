@@ -302,7 +302,7 @@ let load lock_kind gt rt switch =
         sel_pinned = pinned; sel_compiler = compiler_packages; } =
     load_selections ~lock_kind gt switch
   in
-  let pinned, pinned_opams, depexpts_present_pins =
+  let pinned, pinned_opams, depexts_present_pins =
     OpamPackage.Set.fold (fun nv (pinned,opams,depexpts_present) ->
         let overlay_dir =
           OpamPath.Switch.Overlay.package gt.root switch nv.name
@@ -541,7 +541,7 @@ let load lock_kind gt rt switch =
       lazy OpamPackage.Map.empty
     else lazy (
       depexts_status_of_packages_raw
-        ~recompute_available:depexpts_present_pins rt.repos_sys_available_pkgs
+        ~recompute_available:depexts_present_pins rt.repos_sys_available_pkgs
         gt.config switch_config ~env:gt.global_variables
         (Lazy.force available_packages)
         ~depexts:(fun package ->
