@@ -533,7 +533,7 @@ let installed_packages ?(env=OpamVariable.Map.empty) config packages =
         |> OpamSysPkg.Set.add (OpamSysPkg.of_string no_flavor)
       ) OpamSysPkg.Set.empty l
   in
-  let compute_sets_with_virtual get_avail_w_virtuals get_installed  =
+  let compute_installed_with_virtual get_avail_w_virtuals get_installed  =
     let sys_provides = get_avail_w_virtuals () in
     let need_inst_check =
       OpamSysPkg.Map.fold (fun cp vps set ->
@@ -625,7 +625,7 @@ let installed_packages ?(env=OpamVariable.Map.empty) config packages =
       run_query_command pacman ["-Qs" ; names_re ~str_pkgs ()]
       |> with_regexp_sgl re_pkg
     in
-    compute_sets_with_virtual get_avail_w_virtuals get_installed
+    compute_installed_with_virtual get_avail_w_virtuals get_installed
   in
   match family ~env () with
   | Alpine ->
@@ -807,7 +807,7 @@ let installed_packages ?(env=OpamVariable.Map.empty) config packages =
       |> snd
       |> with_regexp_sgl re_pkg
     in
-    compute_sets_with_virtual get_avail_w_virtuals get_installed
+    compute_installed_with_virtual get_avail_w_virtuals get_installed
   | Dummy test ->
     let sys_installed =
       match test.installed with
