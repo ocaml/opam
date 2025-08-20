@@ -31,7 +31,9 @@ val string_of_status: status -> string
 (** System package availability *)
 type available = Available of Set.t | Suppose_available
 
-val available_equal : available -> available -> bool
+(**  Returns [true] if both values are [Suppose_available] or both are
+     [Available] with equal sets, [false] otherwise. *)
+val check_available_equal : available -> available -> bool
 
 (** System packages to install. We need to split per purpose as some
     distribution need to keep up-to-date already installed system packages. See

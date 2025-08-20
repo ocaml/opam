@@ -223,7 +223,7 @@ let repositories rt repos =
       try
         (* We do an update since the system can (rarely) change as well *)
         let repos_sys_available_pkgs = get_sys_available rt in
-        if OpamSysPkg.available_equal rt.repos_sys_available_pkgs
+        if OpamSysPkg.check_available_equal rt.repos_sys_available_pkgs
             repos_sys_available_pkgs
         then
           rt
