@@ -156,21 +156,6 @@ let get_root rt name =
 let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
-let get_declared_depexts opams gt =
-  let env = OpamPackageVar.resolve_global gt in
-  OpamPackage.Map.fold (fun _ opam s ->
-      let open OpamSysPkg.Set.Op in
-      let depexts =
-        List.fold_left (fun depexts (names, filter) ->
-            if OpamFilter.eval_to_bool ~default:false env filter then
-              (names ++ depexts)
-            else
-              depexts)
-          OpamSysPkg.Set.empty (OpamFile.OPAM.depexts opam)
-      in
-      (depexts ++ s))
-    opams (OpamSysPkg.Set.empty)
-
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
@@ -239,9 +224,11 @@ let load lock_kind gt =
           let repo_def, repo_opams =
             load_repo repo (get_root_raw gt.root repos_tmp name)
           in
-          let repo_depexts = get_declared_depexts repo_opams gt in
+          let repo_depexts = OpamFileTools.extract_depexts_map repo_opams
+              ~env:(OpamPackageVar.resolve_global gt)
+          in
           let repo_depexts =
-              OpamSysPkg.Set.Op.(repo_depexts ++ all_depexts)
+            OpamSysPkg.Set.Op.(repo_depexts ++ all_depexts)
           in
           OpamRepositoryName.Map.add name repo_def defs,
           OpamRepositoryName.Map.add name repo_opams opams,

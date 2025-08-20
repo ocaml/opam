@@ -162,17 +162,6 @@ let infer_switch_invariant st =
     st.switch_global st.switch st.switch_config st.opams
     st.packages compiler_packages st.installed_roots available_packages
 
-let depexts_raw ~env nv opams =
-  try
-    let opam = OpamPackage.Map.find nv opams in
-    List.fold_left (fun depexts (names, filter) ->
-        if OpamFilter.eval_to_bool ~default:false env filter then
-          OpamSysPkg.Set.Op.(names ++ depexts)
-        else depexts)
-      OpamSysPkg.Set.empty
-      (OpamFile.OPAM.depexts opam)
-  with Not_found -> OpamSysPkg.Set.empty
-
 module Installed_cache = OpamCached.Make(struct
     type t = OpamFile.OPAM.t OpamPackage.Map.t
     let name = "installed"
@@ -259,7 +248,8 @@ let depexts_unavailable_raw sys_packages nv =
 
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in
- depexts_raw ~env nv st.opams
+  let package_opam = OpamPackage.Map.find nv st.opams in
+ OpamFileTools.extract_depexts ~env package_opam
 
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
@@ -558,7 +548,8 @@ let load lock_kind gt rt switch =
             let env =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
             in
-            depexts_raw ~env package opams)
+            let package_opam = OpamPackage.Map.find package opams in
+            OpamFileTools.extract_depexts ~env package_opam)
     )
   in
   let available_packages =
