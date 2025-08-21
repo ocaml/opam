@@ -541,3 +541,13 @@ Done.
 ### : <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ### : -> installed comp.1
 ### : Done.
+### :VI: Unknown family and installability
+### opam switch create depext-unknown --empty
+### opam var --global os-family=unknown
+### <pkg:unkn.1>
+opam-version: "2.0"
+### opam install unkn.1
+### <pkg:unkn.2>
+opam-version: "2.0"
+depexts: [ "depext" ]
+### opam install unkn.2
