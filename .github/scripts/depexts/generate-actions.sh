@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -ue
 
 #for target in alpine archlinux centos debian fedora gentoo opensuse oraclelinux nix ubuntu; do
 target=$1

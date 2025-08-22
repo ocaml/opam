@@ -124,6 +124,7 @@ users)
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]
   * Fix the nixos depexts tests (git is now already installed in the nix docker image) [#6652 @kit-ty-kate]
+  * Ensure every part of the scripts are run with `set -ue` [#6648 @kit-ty-kate]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
