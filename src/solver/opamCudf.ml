@@ -1342,7 +1342,6 @@ let dump_cudf_request ~version_map (_, univ,_ as cudf) criteria =
   function
   | None   -> None
   | Some f ->
-    ignore ( version_map: int OpamPackage.Map.t );
     incr solver_calls;
     let filename = Printf.sprintf "%s-%d.cudf" f !solver_calls in
     let oc = open_out filename in
@@ -1554,8 +1553,10 @@ let call_external_solver ~version_map univ req =
   if Cudf.universe_size univ > 0 then
     let criteria = OpamSolverConfig.criteria req.criteria in
     let chrono = OpamConsole.timer () in
-    ignore (dump_cudf_request ~version_map cudf_request
-              criteria OpamSolverConfig.(!r.cudf_file));
+    let _ : string option =
+      (dump_cudf_request ~version_map cudf_request
+         criteria OpamSolverConfig.(!r.cudf_file))
+    in
     (* Wrap a return of exn Timeout through Depsolver *)
     let check_request_using ~call_solver ~explain req =
       let timed_out = ref false in
