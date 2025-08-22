@@ -462,3 +462,9 @@ opam: PACKAGES… arguments: Invalid character '�' in package name
 Usage: opam show [OPTION]… [PACKAGES]…
 Try 'opam show --help' or 'opam --help' for more information.
 # Return code 2 #
+### opam show a.bépo
+opam: PACKAGES… arguments: Invalid character '.' in package name
+      "a.b\195\169po"
+Usage: opam show [OPTION]… [PACKAGES]…
+Try 'opam show --help' or 'opam --help' for more information.
+# Return code 2 #
