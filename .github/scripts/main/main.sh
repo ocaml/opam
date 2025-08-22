@@ -230,8 +230,18 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
   if [ -n "$DEPENDS_ERRORS" ]; then
     echo -e "\e[31mErrors detected in dependencies of $DEPENDS_ERRORS\e[0m";
   fi
+  echo "OCAMLVER=$OCAMLVER" >> "$GITHUB_ENV"
+  echo "PR_REF_SHA=$PR_REF_SHA" >> "$GITHUB_ENV"
+
+  SAFE_VER=${OCAMLVER//./_}
+
+  if [ -n "$packages" ]; then
+    echo "ALL_PROJECTS_$SAFE_VER=$(echo "$packages" | tr '\n' ' ')" >> "$GITHUB_ENV"
+  fi
 
   if [ -n "$LIB_ERRORS" ]; then
+    echo "LIB_ERRORS_$SAFE_VER=[Failed to build]($JOB_URL) : $LIB_ERRORS." >> "$GITHUB_ENV"
+
     FAIL=""
     set +x
     for critical in $FAIL_IF_DEPENDENT; do

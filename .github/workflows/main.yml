@@ -1,7 +1,7 @@
 name: Builds, tests & co
 
 on:
-  pull_request:
+  pull_request_target:
     paths:
       - 'src/**'
       - '!src/tools/**'
@@ -33,6 +33,11 @@ env:
   CYGWIN_ROOT: D:\cygwin
   CYGWIN: winsymlinks:native
   CYGWIN_EPOCH: 4
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
 
 defaults:
   run:
@@ -703,6 +708,10 @@ jobs:
       fail-fast: false
     env:
       OPAM_DEPENDS: 1
+    permissions:
+      pull-requests: write
+      issues: write
+      contents: read
     steps:
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
@@ -739,6 +748,25 @@ jobs:
     - name: Create opam bootstrap cache
       if: steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
+    - name: Get job ID
+      id: get-job-id
+      uses: actions/github-script@v7
+      env:
+        OCAMLV: ${{ matrix.ocamlv }}
+      with:
+        script: |
+          const run_id = context.runId;
+          const jobs = await github.rest.actions.listJobsForWorkflowRun({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id
+          });
+          const currentJobName = process.env.GITHUB_JOB;
+          const matrixOCaml = process.env.OCAMLV;
+          const thisJob = jobs.data.jobs.find(j =>
+            j.name.includes(currentJobName) && j.name.includes(matrixOCaml)
+          );
+          core.setOutput("job_url", thisJob.html_url);
     - name: Compile
       env:
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
@@ -747,3 +775,46 @@ jobs:
         JOB_URL: ${{ steps.get-job-id.outputs.job_url }}
         FAIL_IF_DEPENDENT: opam-publish opam-rt opam-build opam-test
       run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
+    - name: Comment or update PR with reverse dependency testing results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      env:
+        OCAMLV: ${{ matrix.ocamlv }}
+      with:
+        script: |
+          const version = process.env.OCAMLV;
+          const vkey = version.replace(/\./g, "_");
+          const errorRaw = process.env[`LIB_ERRORS_${vkey}`];
+          const all = process.env[`ALL_PROJECTS_${vkey}`];
+          const ocamlver = process.env.OCAMLVER;
+          const commit = process.env.PR_REF_SHA;
+          const marker = `<!-- ocaml-${vkey}-error -->`;
+          const lines = [marker];
+          if (all) { lines.push(`Tested projects: ${all}`); }
+          lines.push(`OCaml version: ${ocamlver}. Commit: ${commit}.`);
+          if (errorRaw) {
+            lines.push(`${errorRaw}`);
+          }
+          const body = lines.join("\n");
+          if (lines.length < 2) return;
+          const comments = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.payload.pull_request.number
+          });
+          const existing = comments.data.find(c => c.body.startsWith(marker));
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+          }

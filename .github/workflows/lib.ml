@@ -73,6 +73,9 @@ let emit_env ?indent = emit_map ?indent "env"
 (* Prints an `outputs:` block *)
 let emit_outputs ?indent = emit_map ?indent "outputs"
 
+(* Prints a `permissions:` block *)
+let emit_permissions ?indent = emit_map ?indent "permissions"
+
 (* Prints a string list field (not printed if value = []) *)
 let emit_yaml_list ?(indent=4) ?(force_list=false) ~oc name value =
   if value <> [] then
@@ -127,7 +130,7 @@ let emit_runs_on ~oc runs_on =
 
 (* Continuation for a job. Steps are specified as continuations as for
    the jobs within the workflow, terminated with {!end_job}. *)
-let job ~oc ~workflow ?shell ?section ?(needs = []) ?matrix ?env ?outputs ~runs_on name f =
+let job ~oc ~workflow ?shell ?section ?(needs = []) ?matrix ?env ?outputs ?permissions ~runs_on name f =
   let module M = struct type job += Key end in
   Hashtbl.add jobs M.Key name;
   output_char oc '\n';
@@ -144,6 +147,7 @@ let job ~oc ~workflow ?shell ?section ?(needs = []) ?matrix ?env ?outputs ~runs_
   Option.iter (emit_strategy ~oc) matrix;
   Option.iter (emit_env ~oc) env;
   Option.iter (emit_outputs ~oc) outputs;
+  Option.iter (emit_permissions ~oc) permissions;
   Option.iter (fprintf oc "    defaults:\n      run:\n        shell: %s\n") shell;
   output_string oc "    steps:\n";
   f ~oc ~workflow ~job:M.Key
@@ -226,11 +230,12 @@ let yaml_of_with_entry = function
 | Literal entries -> "|\n          " ^ String.concat "\n          " entries
 | Expression expr -> Printf.sprintf "${{ %s }}" expr
 
-let uses name ?id ?cond ?(continue_on_error=false) ?(withs=[]) action ~oc ~workflow ~job f =
+let uses name ?id ?cond ?env ?(continue_on_error=false) ?(withs=[]) action ~oc ~workflow ~job f =
   fprintf oc "    - name: %s\n" name;
   Option.iter (fprintf oc "      id: %s\n") id;
   emit_condition ~oc ~indent:6 cond;
   fprintf oc "      uses: %s\n" action;
+  Option.iter (emit_env ~indent:6 ~oc) env;
   if continue_on_error then
     output_string oc "      continue-on-error: true\n";
   if withs <> [] then begin
