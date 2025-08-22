@@ -857,18 +857,12 @@ let install ?(warning=default_install_warning) ?exec src dst =
     copy_file_aux ~chmod:(fun _ -> perm) ~src ~dst ()
 
 let cpu_count () =
-  try
-    let ans =
-      let open OpamStd in
-      match Sys.os () with
-      | Sys.Win32 -> [Env.get "NUMBER_OF_PROCESSORS"]
-      | Sys.FreeBSD -> read_command_output ~verbose:(verbose_for_base_commands ())
-                         ["sysctl"; "-n"; "hw.ncpu"]
-      | _ -> read_command_output ~verbose:(verbose_for_base_commands ())
-               ["getconf"; "_NPROCESSORS_ONLN"]
-    in
-    int_of_string (List.hd ans)
-  with Not_found | Process_error _ | Failure _ -> 1
+  let nproc = Nativeint.to_int (OpamStubs.nproc ()) in
+  if nproc < 1 then begin
+    log "OpamStubs.nproc failed";
+    1
+  end else
+    nproc
 
 open OpamProcess.Job.Op
 

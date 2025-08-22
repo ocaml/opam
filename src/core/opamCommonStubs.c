@@ -27,6 +27,7 @@
 #else
 
 #include <io.h>
+#include <sysinfoapi.h>
 
 /* mingw-w64 defines R_OK */
 #ifndef R_OK
@@ -58,6 +59,16 @@ CAMLprim value opam_is_executable(value path)
   caml_leave_blocking_section();
   caml_stat_free(p);
   CAMLreturn(Val_bool(ret == 0));
+}
+
+CAMLprim value opam_nproc(value _unit) {
+#ifdef _WIN32
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo(&sysinfo);
+  return caml_copy_nativeint(sysinfo.dwNumberOfProcessors);
+#else
+  return caml_copy_nativeint(sysconf(_SC_NPROCESSORS_ONLN));
+#endif
 }
 
 /* This is done here as it simplifies the dune file */
