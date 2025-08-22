@@ -230,6 +230,7 @@ The following actions will be performed:
 -> removed   extra.3
 -> removed   no-extra.3
 Done.
+### :: Mismatching hashes
 ### <pkg:extra.3>
 opam-version: "2.0"
 build: [ "ocaml" "shared.ml" ]
@@ -284,3 +285,33 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 
 The former state can be restored with:
 # Return code 40 #
+### : No hash handling
+### <pkg:foo.1>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+url { src: "shared.tgz" }
+### <pkg:bar.1>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+depends: [ "foo" ]
+url { src: "shared.tgz" }
+### <pkg:baz.1>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+url { src: "shared.tgz" }
+### opam switch create no-hash --empty
+### opam install bar baz
+The following actions will be performed:
+=== install 3 packages
+  - install bar 1
+  - install baz 1
+  - install foo 1 [required by bar]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved bar.1  (file://${BASEDIR}/shared.tgz)
+-> retrieved baz.1  (file://${BASEDIR}/shared.tgz)
+-> installed baz.1
+-> retrieved foo.1  (file://${BASEDIR}/shared.tgz)
+-> installed foo.1
+-> installed bar.1
+Done.
