@@ -313,3 +313,50 @@ The following actions will be performed:
 -> installed foo.1
 -> installed bar.1
 Done.
+### : Shared fetch with VCS
+### opam switch create vcs-shared --empty
+### mkdir shared-vcs
+### cp shared.ml shared-vcs
+### git -C shared-vcs init -q --initial-branch=master
+### git -C shared-vcs config core.autocrlf false
+### git -C shared-vcs add shared.ml
+### git -C shared-vcs commit -qm 'init'
+### <pkg:foo-vcs.1>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+### <pkg:bar-vcs.1>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+depends: [ "foo-vcs" ]
+### <pkg:baz-vcs.1>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+### <mkurl.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+for p in "$@"; do
+  file="REPO/packages/${p%.*}/$p/opam"
+  cat << EOF >> "$file"
+url { src: "git+file://$basedir/shared-vcs" }
+EOF
+done
+### sh mkurl.sh foo-vcs.1 bar-vcs.1 baz-vcs.1
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install bar-vcs baz-vcs | unordered
+The following actions will be performed:
+=== install 3 packages
+  - install bar-vcs 1
+  - install baz-vcs 1
+  - install foo-vcs 1 [required by bar-vcs]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved bar-vcs.1  (git+file://${BASEDIR}/shared-vcs)
+-> retrieved baz-vcs.1  (git+file://${BASEDIR}/shared-vcs)
+-> retrieved foo-vcs.1  (git+file://${BASEDIR}/shared-vcs)
+-> installed baz-vcs.1
+-> installed foo-vcs.1
+-> installed bar-vcs.1
+Done.
