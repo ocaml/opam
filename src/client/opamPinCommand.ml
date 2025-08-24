@@ -496,7 +496,8 @@ and source_pin
                       registered in the current switch."
       (OpamPackage.Name.to_string name);
 
-  (match OpamStd.Option.map OpamFile.URL.url cur_urlf, target_url with
+  let cur_urlf_url = OpamStd.Option.map OpamFile.URL.url cur_urlf in
+  (match cur_urlf_url, target_url with
    | Some u, Some target when OpamUrl.(
        u.transport <> target.transport ||
        u.path <> target.path ||
@@ -630,9 +631,10 @@ and source_pin
 
     if not OpamClientConfig.(!r.show) then
       OpamSwitchAction.write_selections st;
-    OpamConsole.msg "%s is now %s\n"
-      (OpamPackage.Name.to_string name)
-      (string_of_pinned opam);
+    if not (OpamStd.Option.equal OpamUrl.equal cur_urlf_url target_url) then
+      OpamConsole.msg "%s is now %s\n"
+        (OpamPackage.Name.to_string name)
+        (string_of_pinned opam);
 
     st
 
