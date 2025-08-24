@@ -27,7 +27,12 @@ module Base: sig
 end
 
 (** Directory names *)
-module Dir: OpamStd.ABSTRACT
+module Dir: sig
+    include OpamStd.ABSTRACT
+
+    (** Resolve tilde (~) into the home directory. *)
+    val of_string_resolved: string -> t
+end
 
 (** Return the current working directory *)
 val cwd: unit -> Dir.t
@@ -124,6 +129,9 @@ val create: Dir.t -> Base.t -> t
 (** Create a file from a basename and the current working directory
     as dirname *)
 val of_basename: Base.t -> t
+
+(** Resolve tilde (~) into the home directory. *)
+val of_string_resolved: string -> t
 
 (** Creation from a raw string, without resolving symlinks, etc. *)
 val raw: string -> t
