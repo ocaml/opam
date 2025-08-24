@@ -96,6 +96,7 @@ val search_files: string list
     sub-libraries, overriding the given arguments *)
 val opam_init:
   ?root_dir:OpamTypes.dirname ->
+  ?safe_mode:bool ->
   ?strict:bool ->
   ?solver:(module OpamCudfSolver.S) Lazy.t ->
   ?skip_version_checks:bool ->
@@ -161,7 +162,6 @@ val opam_init:
   ?disp_status_line:OpamStd.Config.when_ ->
   ?confirm_level:OpamStd.Config.answer ->
   ?yes:bool option ->
-  ?safe_mode:bool ->
   ?keep_log_dir:bool ->
   ?errlog_length:int ->
   ?merged_output:bool ->
