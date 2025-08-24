@@ -95,7 +95,7 @@ opam install "ocamlfind>=1.4.0"
 ```
 
 If package source is not found, opam tries to retrieve it from [Software
-Heritage](www.softwareheritage.org) archives (see related [opam
+Heritage](https://www.softwareheritage.org) archives (see related [opam
 option](Manual.html#configfield-swh-fallback)).
 
 ### opam upgrade
