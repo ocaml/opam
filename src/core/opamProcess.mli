@@ -11,6 +11,8 @@
 
 (** Process and job handling, with logs, termination status, etc. *)
 
+val string_of_cmd : string -> string list -> string
+
 (** The type of shell commands *)
 type command = private {
   cmd: string;

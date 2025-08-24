@@ -582,7 +582,7 @@ let run_process
              ~env ~name ~verbose ?metadata ?allow_stdin ?stdout
              full_cmd args)
       in
-      let str = String.concat " " (cmd :: args) in
+      let str = OpamProcess.string_of_cmd cmd args in
       log ~level:2 "[%a] (in %.3fs) %s"
         (OpamConsole.slog Filename.basename) name
         (chrono ()) str;

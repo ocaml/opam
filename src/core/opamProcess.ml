@@ -211,7 +211,23 @@ type command = {
   cmd_metadata: (string * string) list option;
 }
 
-let string_of_command c = String.concat " " (c.cmd::c.args)
+let string_of_cmd cmd args =
+  let is_not_shell_special_char = function
+    | '0'..'9' | 'a'..'z' | 'A'..'Z'
+    | '+' | '.' | '/' | '@' | '_' -> true
+    | '\\' -> Sys.win32
+    | '%' | ',' | '-' | '^' -> not Sys.win32
+    | _ -> false
+  in
+  let print x =
+    if String.for_all is_not_shell_special_char x then
+      x
+    else
+      Filename.quote x
+  in
+  print cmd ^ List.fold_left (fun acc x -> acc ^ " " ^ print x) "" args
+
+let string_of_command c = string_of_cmd c.cmd c.args
 let text_of_command c = c.cmd_text
 let default_verbose () = OpamCoreConfig.(!r.verbose_level) >= 2
 let is_verbose_command c =
@@ -225,7 +241,7 @@ let make_command_text ?(color=`green) str ?(args=[]) cmd =
           not (String.contains s '/') && not (String.contains s '='))
         args
     with
-    | hd::_ -> String.concat " " [cmd; hd]
+    | hd::_ -> string_of_cmd cmd [hd]
     | [] -> cmd
   in
   Printf.sprintf "[%s: %s]" (OpamConsole.colorise color str) summary
@@ -281,7 +297,7 @@ let make_info ?code ?signal
 
   List.iter (fun (k,v) -> print k v) metadata;
   print     "path"         cwd;
-  print     "command"      (String.concat " " (cmd :: args));
+  print     "command"      (string_of_cmd cmd args);
   print_opt "exit-code"    (OpamStd.Option.map string_of_int code);
   print_opt "signalled"    (OpamStd.Option.map string_of_int signal);
   print_opt "env-file"     env_file;
