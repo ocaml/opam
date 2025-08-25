@@ -54,7 +54,7 @@ let is_valid url =
   let open OpamUrl in
   url.backend = `http
   && (String.equal url.transport "http" || String.equal url.transport "https")
-  && OpamStd.String.starts_with ~prefix url.path
+  && OpamCompat.String.starts_with ~prefix url.path
 
 let of_url url =
   try

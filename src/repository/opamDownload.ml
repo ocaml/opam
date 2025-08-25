@@ -94,16 +94,16 @@ let download_args ~url ~out ~retry ?(with_curl_mitigation=false)
       | "compress" -> Some (B compress)
       | "opam-version" -> Some (S OpamVersion.(to_string current))
       | "checksum" ->
-        OpamStd.Option.map (fun c -> S OpamHash.(to_string c)) checksum
+        Option.map (fun c -> S OpamHash.(to_string c)) checksum
       | "hashalgo" ->
-        OpamStd.Option.map (fun c -> S OpamHash.(string_of_kind (kind c)))
+        Option.map (fun c -> S OpamHash.(string_of_kind (kind c)))
           checksum
       | "hashpath" ->
-        OpamStd.Option.map
+        Option.map
           (fun c -> S (String.concat Filename.dir_sep OpamHash.(to_path c)))
           checksum
       | "hashvalue" ->
-        OpamStd.Option.map (fun c -> S OpamHash.(contents c)) checksum
+        Option.map (fun c -> S OpamHash.(contents c)) checksum
       | _ -> None)
     cmd
 
@@ -219,7 +219,7 @@ let really_download
     OpamSystem.internal_error "The downloaded file will overwrite %s." dst;
   if validate &&
      OpamRepositoryConfig.(!r.force_checksums <> Some false) then
-    OpamStd.Option.iter (fun cksum ->
+    Option.iter (fun cksum ->
         if not (OpamHash.check_file tmp_dst cksum) then
           fail (Some "Bad checksum",
                     Printf.sprintf "Bad checksum, expected %s"
@@ -279,7 +279,7 @@ let get_output ~post ?(args=[]) url =
       | _ -> None
     else Some cmd_args
   in
-  Done (OpamStd.Option.map
+  Done (Option.map
           (OpamSystem.read_command_output ~ignore_stderr:true) cmd_args)
 
 module SWHID = struct
@@ -320,7 +320,7 @@ module SWHID = struct
     | pong::_ ->
       (* curl output after answering the http code *)
       (* https://archive.softwareheritage.org/api/1/ping/ *)
-      OpamStd.String.starts_with ~prefix:"\"pong\"" pong
+      OpamCompat.String.starts_with ~prefix:"\"pong\"" pong
     | _ -> false
 
   (*
@@ -343,9 +343,9 @@ module SWHID = struct
     | Some "NotFoundExc" ->
       (match get_value "reason" json with
        | Some reason ->
-         if OpamStd.String.ends_with ~suffix:"was never requested." reason then
+         if OpamCompat.String.ends_with ~suffix:"was never requested." reason then
            `Uncooked
-         else if OpamStd.String.ends_with ~suffix:"not found." reason then
+         else if OpamCompat.String.ends_with ~suffix:"not found." reason then
            `Not_found
          else `Error
        | None -> `Error)

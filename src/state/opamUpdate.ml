@@ -520,7 +520,7 @@ let active_caches st nvs =
             | Some u -> u
           in
           let cache =
-            OpamStd.List.filter_map (fun rel ->
+            List.filter_map (fun rel ->
                 if OpamStd.String.contains ~sub:"://" rel
                 then
                   let r = OpamUrl.parse_opt ~handle_suffix:false rel in

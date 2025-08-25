@@ -437,7 +437,7 @@ let global_env_keys = lazy (
 
 let updates_from_previous_instance = lazy (
   let get_env env_file =
-    OpamStd.Option.map
+    Option.map
       (map_update_names (Lazy.force global_env_keys))
       (OpamFile.Environment.read_opt env_file)
   in
@@ -539,7 +539,7 @@ let expand updates =
       in
       let var = OpamStd.Env.Name.of_string svar in
       let zip, reverts =
-        match OpamStd.List.find_opt (fun (v, _, _, _) ->
+        match List.find_opt (fun (v, _, _, _) ->
             OpamStd.Env.Name.equal var v) acc with
         | Some (_, z, _doc, _) -> z, reverts
         | None ->
@@ -1021,7 +1021,7 @@ let export_in_shell shell =
   | SH_cmd -> cmd
 
 let env_hook_script shell =
-  OpamStd.Option.map (fun script ->
+  Option.map (fun script ->
       export_in_shell shell ("OPAMNOENVNOTICE", "true", None)
       ^ script)
     (env_hook_script_base shell)
@@ -1149,7 +1149,7 @@ let write_static_init_scripts root ?completion ?env_hook ?(inplace=false) () =
   write_init_shell_scripts root;
   let update_scripts filef scriptf enable =
     let scripts =
-      OpamStd.List.filter_map (fun shell ->
+      List.filter_map (fun shell ->
           match filef shell, scriptf shell with
           | Some f, Some s -> Some (f, s)
           | _ -> None)
@@ -1291,7 +1291,7 @@ let update_dot_profile root dot_profile shell =
 let update_user_setup root ?dot_profile shell =
   if dot_profile <> None then (
     OpamConsole.msg "\nUser configuration:\n";
-    OpamStd.Option.iter (fun f -> update_dot_profile root f shell) dot_profile
+    Option.iter (fun f -> update_dot_profile root f shell) dot_profile
   )
 
 let check_and_print_env_warning st =
@@ -1402,7 +1402,7 @@ let setup
               "Please select a shell to configure"
               ~options: (List.map (fun s -> s, string_of_shell s) OpamStd.Sys.all_shells)
           in
-          menu shell (OpamStd.Option.map OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell))
+          menu shell (Option.map OpamFilename.of_string (OpamStd.Sys.guess_dot_profile shell))
             default
         | `Change_file ->
           let open OpamStd.Option.Op in

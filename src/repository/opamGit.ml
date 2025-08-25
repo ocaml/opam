@@ -89,7 +89,7 @@ module VCS : OpamVCS.VCS = struct
     let opam_ref = remote_ref repo_url in
     let refspec = Printf.sprintf "+%s:%s" branch opam_ref in
     git repo_root [ "remote" ; "set-url"; "origin"; origin ] @@> fun _ ->
-    OpamStd.Option.iter (fun cache ->
+    Option.iter (fun cache ->
         let alternates = repo_root / ".git" / "objects" / "info" // "alternates" in
         if not (OpamFilename.exists alternates) then
           OpamFilename.write alternates
@@ -122,7 +122,7 @@ module VCS : OpamVCS.VCS = struct
       git repo_root [ "fetch" ; "-q"; origin; refspec ] @@> fun r ->
       if OpamProcess.check_success_and_cleanup r then Done ()
       else if
-        OpamStd.String.fold_left (fun acc c -> match acc, c with
+        OpamCompat.String.fold_left (fun acc c -> match acc, c with
             | true, ('0'..'9' | 'a'..'f' | 'A'..'F') -> true
             | _ -> false)
           true branch
@@ -212,7 +212,7 @@ module VCS : OpamVCS.VCS = struct
     let rref = remote_ref repo_url in
     git repo_root ([ "diff" ; "--no-ext-diff" ; "--quiet" ; rref; "--" ]
                    @ List.map OpamFilename.SubPath.to_string
-                     (OpamStd.Option.to_list subpath))
+                     (Option.to_list subpath))
     @@> function
     | { OpamProcess.r_code = 0; _ } -> Done true
     | { OpamProcess.r_code = 1; _ } as r ->
@@ -260,7 +260,7 @@ module VCS : OpamVCS.VCS = struct
     git repo_root ~verbose:false [ "status" ; "--short" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     let files =
-      OpamStd.List.filter_map (fun line ->
+      List.filter_map (fun line ->
           match OpamStd.String.split line ' ' with
           | ("A" | "M" | "AM")::file::[]
           | ("R"|"RM"|"C"|"CM")::_::"->"::file::[] -> Some file

@@ -469,7 +469,7 @@ and source_pin
       let cur_opam = OpamSwitchState.opam st nv in
       let cur_urlf = OpamFile.OPAM.url cur_opam in
       let no_changes =
-        target_url = OpamStd.Option.map OpamFile.URL.url cur_urlf &&
+        target_url = Stdlib.Option.map OpamFile.URL.url cur_urlf &&
         (version = Some cur_version || version = None)
       in
       if not (quiet && no_changes) then
@@ -496,7 +496,7 @@ and source_pin
                       registered in the current switch."
       (OpamPackage.Name.to_string name);
 
-  (match OpamStd.Option.map OpamFile.URL.url cur_urlf, target_url with
+  (match Stdlib.Option.map OpamFile.URL.url cur_urlf, target_url with
    | Some u, Some target when OpamUrl.(
        u.transport <> target.transport ||
        u.path <> target.path ||
@@ -793,7 +793,7 @@ let scan ~normalise ~recurse ?subpath url =
     OpamPinned.files_in_source_w_target
       ?locked:OpamStateConfig.(!r.locked)
       ~recurse ?subpath url dir
-    |> OpamStd.List.filter_map (fun nf ->
+    |> List.filter_map (fun nf ->
         let opam =
           OpamFile.OPAM.(safe_read nf.pin.pin_file
                          |> with_locked_opt nf.pin.pin_locked)
@@ -897,17 +897,17 @@ let parse_pins pins =
       Some Re.Group.{
           pinned_name = OpamPackage.Name.of_string @@ get groups 1;
           pinned_version =
-            OpamStd.Option.map OpamPackage.Version.of_string
+            Stdlib.Option.map OpamPackage.Version.of_string
             @@ OpamStd.Option.of_Not_found (get groups) 2;
           pinned_url = OpamUrl.parse @@ get groups 3;
           pinned_subpath =
-            OpamStd.Option.map OpamFilename.SubPath.of_string
+            Stdlib.Option.map OpamFilename.SubPath.of_string
             @@ OpamStd.Option.of_Not_found (get groups) 4;
           pinned_opam = None;
         }
     with Not_found | Failure _ -> None
   in
-  OpamStd.List.filter_map (fun str ->
+  List.filter_map (fun str ->
       let pin = get str in
       if pin = None then
         (OpamConsole.warning "Argument %S is not correct" str;

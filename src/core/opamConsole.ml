@@ -69,7 +69,7 @@ let utf8, utf8_extended =
           false
     else
       let checkv v =
-        try Some (OpamStd.String.ends_with ~suffix:"UTF-8" (OpamStd.Env.get v))
+        try Some (OpamCompat.String.ends_with ~suffix:"UTF-8" (OpamStd.Env.get v))
         with Not_found -> None
       in
       OpamStd.Option.Op.(checkv "LC_ALL" ++ checkv "LANG" +! false)
