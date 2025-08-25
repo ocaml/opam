@@ -108,6 +108,7 @@ EOF
     mainlibs=${mainlibs/m4/gnum4}
     mainlibs=${mainlibs/make/gnumake}
     mainlibs=${mainlibs/tar/}
+    mainlibs=${mainlibs/git/}
     mainlibs=$(echo "$mainlibs" | sed -E 's/([[:alnum:]]+)/nixpkgs.\1/g')
     additionallibs="gcc diffutils getconf gnused gawk"
     additionallibs=$(echo "$additionallibs" | sed -E 's/([[:alnum:]]+)/nixpkgs.\1/g')
