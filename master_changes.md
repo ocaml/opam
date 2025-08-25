@@ -132,6 +132,8 @@ users)
 
 * Add mention of `opam admin compare-versions` in the Manual. [#6596 @mbarbin]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
