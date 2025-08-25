@@ -104,3 +104,40 @@ Processing  2/4: [submodule: cat]
 -> removed   submodule.1
 -> installed submodule.1
 Done.
+### : Check the handling or error 'git remote' exit code 2
+### opam switch create lock-exit-2 --empty
+### <pin:dep-nip/dep-nip.opam>
+opam-version: "2.0"
+### <pin:nip/nip.opam>
+opam-version: "2.0"
+depends: "dep-nip"
+### git -C dep-nip init -q --initial-branch=master
+### git -C dep-nip config core.autocrlf false
+### git -C dep-nip add dep-nip.opam
+### git -C dep-nip commit -qm 'opam'
+### opam pin -n ./dep-nip
+[NOTE] Package dep-nip does not exist in opam repositories registered in the current switch.
+dep-nip is now pinned to git+file://${BASEDIR}/dep-nip#master (version dev)
+### opam pin -n ./nip
+[NOTE] Package nip does not exist in opam repositories registered in the current switch.
+nip is now pinned to file://${BASEDIR}/nip (version dev)
+### opam install nip -y
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[nip.dev] synchronised (no changes)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep-nip dev (pinned) [required by nip]
+  - install nip     dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved dep-nip.dev  (no changes)
+-> installed dep-nip.dev
+-> retrieved nip.dev  (file://${BASEDIR}/nip)
+-> installed nip.dev
+Done.
+### opam lock nip
+[ERROR] Command "/usr/bin/git remote get-url origin" failed:
+"/usr/bin/git remote get-url origin" exited with code 2 "error: No such remote 'origin'"
+# Return code 99 #
