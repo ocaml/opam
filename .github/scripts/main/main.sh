@@ -54,9 +54,7 @@ if [[ "$OPAM_DOC" -eq 1 ]]; then
   if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
     . .github/scripts/common/hygiene-preamble.sh
     diff="git diff $BASE_REF_SHA..$PR_REF_SHA"
-    set +e
-    files=$($diff --name-only --diff-filter=A -- src/**/*.mli)
-    set -e
+    files=$($diff --name-only --diff-filter=A -- src/**/*.mli || true)
     if [ -n "$files" ]; then
       echo '::group::new module(s) added - check index updated too'
       if $diff --name-only --exit-code -- doc/index.html ; then
@@ -93,9 +91,8 @@ fi
 
 if [ "$OPAM_TEST" = "1" ]; then
   # test if an upgrade is needed
-  set +e
-  opam list 2> /dev/null
-  rcode=$?
+  rcode=0
+  opam list 2> /dev/null || rcode=$?
   if [ $rcode -eq 10 ]; then
     echo "Recompiling for an opam root upgrade"
     (set +x ; echo -en "::group::rebuild opam\r") 2>/dev/null
@@ -103,16 +100,14 @@ if [ "$OPAM_TEST" = "1" ]; then
     make all admin
     rm -f "$PREFIX/bin/opam"
     make install
-    opam list 2> /dev/null
-    rcode=$?
-    set -e
+    rcode=0
+    opam list 2> /dev/null || rcode=$?
     if [ $rcode -ne 10 ]; then
       echo -e "\e[31mBad return code $rcode, should be 10\e[0m";
       exit $rcode
     fi
     (set +x ; echo -en "::endgroup::rebuild opam\r") 2>/dev/null
   fi
-  set -e
 
   # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
   make tests
