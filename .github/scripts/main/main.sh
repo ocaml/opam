@@ -12,11 +12,10 @@ unset-dev-version () {
 export OCAMLRUNPARAM=b
 
 (set +x ; echo -en "::group::build opam\r") 2>/dev/null
-if [[ "$OPAM_TEST" -eq 1 ]] || [[ "$OPAM_DOC" -eq 1 ]] ; then
+if [[ "$OPAM_TEST" -eq 1 ]] || [[ "$OPAM_DOC" -eq 1 ]] || [[ "$OPAM_DEPENDS" -eq 1 ]] ; then
   export OPAMROOT=$OPAMBSROOT
   # If the cached root is newer, regenerate a binary compatible root
   opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
-  eval $(opam env)
 fi
 
 case "$1" in
@@ -49,7 +48,7 @@ export PATH="$PREFIX/bin:$PATH"
 opam --version
 
 if [[ "$OPAM_DOC" -eq 1 ]]; then
-  make -C doc html man-html pages
+  opam exec -- make -C doc html man-html pages
 
   if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
     . .github/scripts/common/hygiene-preamble.sh
@@ -89,6 +88,49 @@ if [[ "$OPAM_DOC" -eq 1 ]]; then
   echo '::endgroup::checking generated files'
 fi
 
+prepare_project () {
+  # warning, perform a cd
+  url=$1
+  project=$2
+
+  (set +x; echo -en "::group::prepare-$project\r") 2>/dev/null
+  dir="$CACHE/$project"
+  if [ ! -d "$CACHE/$project" ]; then
+    git clone "$url" "$dir"
+  fi
+  cd "$dir"
+  git fetch origin
+  if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && git ls-remote --exit-code origin "$GITHUB_PR_USER/$BRANCH" ; then
+    BRANCH=$GITHUB_PR_USER/$BRANCH
+  fi
+  if git ls-remote --exit-code origin "$BRANCH"; then
+    PR_BRANCH=$BRANCH
+  elif [ "$GITHUB_EVENT_NAME" = pull_request ] && git ls-remote --exit-code origin "$GITHUB_BASE_REF"; then
+    PR_BRANCH=$GITHUB_BASE_REF
+  elif git ls-remote --exit-code origin main; then
+    PR_BRANCH=main
+  elif git ls-remote --exit-code origin master; then
+    PR_BRANCH=master
+  elif git ls-remote --exit-code origin trunk; then
+    PR_BRANCH=trunk
+  else
+    echo "No valid default branch found for $project on $url"
+    return 1
+  fi
+
+  # Checkout or create tracking branch
+  if git branch | grep -q "$PR_BRANCH"; then
+    git checkout "$PR_BRANCH"
+    git reset --hard "origin/$PR_BRANCH"
+  else
+    git checkout -b "$PR_BRANCH" "origin/$PR_BRANCH"
+  fi
+
+  test -d _opam || opam switch create . --no-install --formula '"ocaml-system"'
+  opam pin "$GITHUB_WORKSPACE" -yn
+  (set +x ; echo -en "::endgroup::prepare-$project\r") 2>/dev/null
+}
+
 if [ "$OPAM_TEST" = "1" ]; then
   # test if an upgrade is needed
   rcode=0
@@ -116,35 +158,87 @@ if [ "$OPAM_TEST" = "1" ]; then
 
   # Compile and run opam-rt
   (set +x ; echo -en "::group::opam-rt\r") 2>/dev/null
-  opamrt_url="https://github.com/ocaml-opam/opam-rt"
-  if [ ! -d $CACHE/opam-rt ]; then
-    git clone $opamrt_url  $CACHE/opam-rt
-  fi
-  cd $CACHE/opam-rt
-  git fetch origin
-  if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && git ls-remote --exit-code origin "$GITHUB_PR_USER/$BRANCH" ; then
-    BRANCH=$GITHUB_PR_USER/$BRANCH
-  fi
-  if git ls-remote --exit-code origin "$BRANCH"; then
-    OPAM_RT_BRANCH=$BRANCH
-  elif [ "$GITHUB_EVENT_NAME" = pull_request ] && git ls-remote --exit-code origin "$GITHUB_BASE_REF"; then
-    OPAM_RT_BRANCH=$GITHUB_BASE_REF
-  else
-    OPAM_RT_BRANCH=master
-  fi
-  if git branch | grep -q "$OPAM_RT_BRANCH"; then
-    git checkout "$OPAM_RT_BRANCH"
-    git reset --hard "origin/$OPAM_RT_BRANCH"
-  else
-    git checkout -b "$OPAM_RT_BRANCH" "origin/$OPAM_RT_BRANCH"
-  fi
+  prepare_project "https://github.com/ocaml-opam/opam-rt" "opam-rt"
 
-  test -d _opam || opam switch create . --no-install --formula '"ocaml-system"'
-  eval $(opam env)
-  opam pin $GITHUB_WORKSPACE -yn --with-version to-test
   # opam lib pins defined in opam-rt are ignored as there is a local pin
   opam pin . -yn --ignore-pin-depends
-  opam install opam-rt --deps-only opam-devel.to-test
-  make || { opam reinstall opam-client -y; make; }
+  opam install opam-rt --deps-only opam-devel
+  opam exec -- make || { opam reinstall opam-client -y; opam exec -- make; }
   (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
+fi
+
+test_project () {
+  url=$1
+  project=$2
+
+  (set +x; echo -en "::group::depends-$project\r") 2>/dev/null
+  opam pin "$url" --kind git -yn
+  for pkg_name in $(opam show . -f name); do
+    echo "Installing dependencies for $pkg_name"
+    deps_code=0
+    opam install "$pkg_name" --deps-only || deps_code=$?
+    if [ $deps_code -ne 0 ]; then
+      echo "Dependency installation failed for $pkg_name"
+      DEPENDS_ERRORS="$DEPENDS_ERRORS $pkg_name"
+    else
+      echo "Installing opam-client and $pkg_name"
+      opam install opam-client
+      code=0
+      opam install "$pkg_name" || code=$?
+      if [ $code -ne 0 ]; then
+        LIB_ERRORS="$LIB_ERRORS $project"
+        echo -e "\e[31mErrors while installing $pkg_name\e[0m";
+      fi
+    fi
+  done
+  (set +x ; echo -en "::endgroup::depends-$project\r") 2>/dev/null
+}
+
+if [ "$OPAM_DEPENDS" = "1" ]; then
+  DEPENDS_ERRORS=""
+  LIB_ERRORS=""
+  OCAMLVER=$(ocamlc -version)
+
+  (set +x; echo -en "::group::depends\r") 2>/dev/null
+  VERSION="2.4.1"
+  opam_libs=$(opam show . -f name 2>/dev/null)
+  depends_on=$(echo "$opam_libs" | sed "s/\$/.${VERSION}/" | paste -sd, -)
+  packages=$(opam list --or --depends-on "$depends_on" --columns name | tail -n +3)
+  set +x
+  for exclude in $opam_libs; do
+    packages=$(echo "$packages" | grep -vF "$exclude")
+  done
+  set -x
+
+  for pkg in $packages; do
+    dev_repo=$(opam show "$pkg" -f dev-repo 2>/dev/null)
+    dev_repo=$(echo "$dev_repo" | sed -E 's/^"//;s/"$//;s/^git\+//;s/\.git$//')
+
+    if [[ -n "$dev_repo" ]]; then
+      prepare_project "$dev_repo" "$pkg"
+      test_project "$dev_repo" "$pkg"
+    fi
+  done
+
+  if [ -n "$DEPENDS_ERRORS" ]; then
+    echo -e "\e[31mErrors detected in dependencies of $DEPENDS_ERRORS\e[0m";
+  fi
+
+  if [ -n "$LIB_ERRORS" ]; then
+    FAIL=()
+    set +x
+    for critical in $FAIL_IF_DEPENDENT; do
+      if echo "$LIB_ERRORS" | grep -Fq "$critical"; then
+        FAIL+=("$critical")
+      fi
+    done
+    set -x
+    echo "Packages tested: $packages"
+    if [ -n "${FAIL[*]}" ]; then
+      echo "::error ::${FAIL[*]} is broken"
+      exit 1
+    fi
+  fi
+
+  (set +x ; echo -en "::endgroup::depends\r") 2>/dev/null
 fi

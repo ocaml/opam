@@ -126,6 +126,8 @@ users)
   * Fix the nixos depexts tests (git is now already installed in the nix docker image) [#6652 @kit-ty-kate]
   * Ensure every part of the scripts are run with `set -ue` [#6648 @kit-ty-kate]
   * Only run the `get-changed-files` action when in a PR [#6582 @kit-ty-kate]
+  * Add a CI job to test reverse dependencies of opam. Track and report dependency and build failures, hard-failing only on maintained packages. [#6394 @rjbou @arozovyk]
+  * Enhance changed files job dependant handling [#6394 @rjbou]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
@@ -134,8 +136,8 @@ users)
   * Fix URL to Software Heritage [#6650 @gahr]
   * Clarify conditions in subsection titles in the Packaging page [#6653 @jmid]
   * Upgrade the deprecated md5 `checksum` example to sha256 [#6653 @jmid]
-
-* Add mention of `opam admin compare-versions` in the Manual. [#6596 @mbarbin]
+  * Add mention of `opam admin compare-versions` in the Manual. [#6596 @mbarbin]
+  * Update release documentation to add a step updating test repository hash and version number in reverse dependecies test script [#6364 @arozovyk]
 
 ## Security fixes
 
