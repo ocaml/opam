@@ -132,6 +132,7 @@ users)
   * Swapped the use of sha384 for sha512 for the release tarball in the installation documentation [#6620 @kit-ty-kate]
   * Improve the `opam pin` man page by being more explicit about which arguments are optional [#6631 @kit-ty-kate]
   * Fix URL to Software Heritage [#6650 @gahr]
+  * Clarify conditions in subsection titles in the Packaging page [#6653 @jmid]
 
 * Add mention of `opam admin compare-versions` in the Manual. [#6596 @mbarbin]
 

@@ -72,7 +72,7 @@ contribution is merged. You will need a [Github](https://github.com/) account.
 Submitting is most easily done using the `opam-publish` plugin. Run `opam
 publish --help` for more options.
 
-### If the project is hosted on Github
+### Using `opam-publish` with a project hosted on Github
 
 First tag the project. Assuming this is version 0.1:
 ```
@@ -84,7 +84,7 @@ Alternatively, you can create a release using the web UI
 
 Then just run `opam publish` from your source directory and follow the steps.
 
-### If not
+### Using `opam-publish` with a project not hosted on Github
 
 Assuming your release is available as an archive at
 `https://foo.bar/project-0.1.tar.gz`, run:
@@ -103,7 +103,7 @@ package definitions in the current directory rather than in the archive.
 > you need to have your *ssh keys* registered in your [Github
 > account](https://help.github.com/en/articles/connecting-to-github-with-ssh).
 
-### Without opam-publish
+### Publishing without `opam-publish`
 
 First, you will need to add a section in the following format to the package
 definition, to specify where to retrieve the source of the package:
