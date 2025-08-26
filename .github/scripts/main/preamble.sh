@@ -1,3 +1,5 @@
+#!/bin/bash
+
 . .github/scripts/common/preamble.sh
 
 CWD=$PWD
