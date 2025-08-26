@@ -28,6 +28,11 @@ users)
 ## Install
 
 ## Build (package)
+  * ◈ Add `--verbose-on` option to enable verbose mode on specified package names [#5682 @desumn @rjbou]
+  * Remove unnecessary copies/move when fetching archives [#5018 @kit-ty-kate @rjbou]
+  * [BUG] On install driven by `.install` file, track intermediate directories too, in order to have them suppressed at package removal [#5691 @rjbou - fix #5688]
+  * [BUG] With `--assume-built`, resolve variables in depends filter according switch & global environment, not only depends predefined variables [#570 @rjbou - fix #5698]
+  * Check if with-test & with-doc depends are installed to launch a reinstall [#4513 @rjbou - fix #4507]
 
 ## Remove
 
