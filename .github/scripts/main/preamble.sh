@@ -45,7 +45,6 @@ fi
 # used only for TEST jobs
 init-bootstrap () {
   if [ "$OPAM_TEST" = "1" ] || [ "$OPAM_DOC" = "1" ] || [ -n "$SOLVER" ]; then
-    set -e
     export OPAMROOT=$OPAMBSROOT
     # The system compiler will be picked up
     if [ "${OPAM_REPO%.git}" != "${OPAM_REPO_MAIN%.git}" ]; then

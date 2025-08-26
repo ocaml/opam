@@ -27,11 +27,10 @@ if [[ ! -d $OPAM12CACHE/root ]]; then
 else
   cp -r $OPAM12CACHE/root /tmp/opamroot
 fi
-set +e
 $OPAM12 --version
 opam --version
-opam update
-rcode=$?
+rcode=0
+opam update || rcode=$?
 if [ $rcode -ne 10 ]; then
   echo "[31mBad return code $rcode, should be 10[0m";
   exit $rcode
