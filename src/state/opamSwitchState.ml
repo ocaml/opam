@@ -185,7 +185,8 @@ let resolve_depext_availability ?env global_config repos_sys_available_pkgs
     { OpamSysPkg.status_empty with s_available }
 
 let depexts_status_of_packages_raw
-    repos_sys_available_pkgs ~depexts ?(recompute_available=false) ?env
+    repos_sys_available_pkgs ~depexts
+    ?(recompute_available=OpamPackage.Set.empty) ?env
     global_config switch_config packages =
   if OpamPackage.Set.is_empty packages then OpamPackage.Map.empty else
   let open OpamSysPkg.Set.Op in
@@ -204,11 +205,21 @@ let depexts_status_of_packages_raw
   in
   let syspkg_set = syspkg_set -- bypass in
   let status syspkg_set =
-    if recompute_available then
-      OpamSysInteract.packages_status ?env global_config syspkg_set
-    else
+    let status =
       resolve_depext_availability ?env global_config repos_sys_available_pkgs
         syspkg_set
+    in
+    if OpamPackage.Set.is_empty recompute_available then
+      status
+    else
+      let pinned =
+        let syspkgs =
+          OpamPackage.Set.fold (fun nv set -> depexts nv ++ set)
+            recompute_available OpamSysPkg.Set.empty
+        in
+        OpamSysInteract.packages_status ?env global_config syspkgs
+      in
+      OpamSysPkg.combine_status status pinned
   in
   let ret =
     match status syspkg_set with
@@ -303,13 +314,13 @@ let load lock_kind gt rt switch =
     load_selections ~lock_kind gt switch
   in
   let pinned, pinned_opams, pinned_depexts =
-    OpamPackage.Set.fold (fun nv (pinned,opams,depexts_acc) ->
+    OpamPackage.Set.fold (fun nv (pinned,opams,pinned_depexts) ->
         let overlay_dir =
           OpamPath.Switch.Overlay.package gt.root switch nv.name
         in
         match OpamFileTools.read_opam overlay_dir with
         | None -> (* No overlay => just pinned to a version *)
-          OpamPackage.Set.add nv pinned, opams, depexts_acc
+          OpamPackage.Set.add nv pinned, opams, pinned_depexts
         | Some o ->
           let version =
             match OpamFile.OPAM.version_opt o with
@@ -328,12 +339,13 @@ let load lock_kind gt rt switch =
           let env = OpamPackageVar.resolve_switch_raw ~package:nv gt switch
               switch_config
           in
-          let package_depexts = OpamFileTools.extract_depexts ~env o in
+          let depexts = OpamFileTools.extract_depexts ~env o in
           OpamPackage.Set.add nv pinned,
           OpamPackage.Map.add nv o opams,
-          OpamSysPkg.Set.Op.(package_depexts ++ depexts_acc)
+          if OpamSysPkg.Set.is_empty depexts then pinned_depexts else
+          OpamPackage.Set.add nv pinned_depexts
       )
-      pinned (OpamPackage.Set.empty, OpamPackage.Map.empty, OpamSysPkg.Set.empty)
+      pinned OpamPackage.(Set.empty, Map.empty, Set.empty)
   in
   let installed_opams =
     let cache_file = OpamPath.Switch.installed_opams_cache gt.root switch in
@@ -545,15 +557,7 @@ let load lock_kind gt rt switch =
       lazy OpamPackage.Map.empty
     else lazy (
       depexts_status_of_packages_raw
-        ~recompute_available:(
-          (* Recompute only when pinned packages have depexts
-             not covered by cached repos_sys_available_pkgs *)
-          not (OpamSysPkg.Set.is_empty pinned_depexts) &&
-          match rt.repos_sys_available_pkgs with
-          | OpamSysPkg.Available available_pkgs ->
-            not (OpamSysPkg.Set.subset pinned_depexts available_pkgs)
-          | OpamSysPkg.Suppose_available -> false
-        ) rt.repos_sys_available_pkgs
+        ~recompute_available:pinned_depexts rt.repos_sys_available_pkgs
         gt.config switch_config ~env:gt.global_variables
         (Lazy.force available_packages)
         ~depexts:(fun package ->
@@ -812,7 +816,7 @@ let source_dir st nv =
   else OpamPath.Switch.sources st.switch_global.root st.switch nv
 
 let depexts_status_of_packages st set =
-  depexts_status_of_packages_raw ~recompute_available:true
+  depexts_status_of_packages_raw ~recompute_available:set
     st.switch_repos.repos_sys_available_pkgs
     st.switch_global.config st.switch_config set
     ~env:st.switch_global.global_variables ~depexts:(depexts st)

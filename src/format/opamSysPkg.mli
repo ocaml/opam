@@ -28,8 +28,14 @@ val status_empty: status
 
 val string_of_status: status -> string
 
+val combine_status : status -> status -> status
+
 (** System package availability *)
 type available = Available of Set.t | Suppose_available
+
+val string_of_available : available -> string
+
+val combine_available : available -> available -> available
 
 (**  Returns [true] if both values are [Suppose_available] or both are
      [Available] with equal sets, [false] otherwise. *)
