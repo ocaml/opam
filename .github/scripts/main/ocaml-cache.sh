@@ -93,31 +93,32 @@ case "$OCAML_BRANCH" in
 esac
 OCAML_BRANCH="${OCAML_BRANCH/./}"
 
+CONFIGURE_SWITCHES=()
 if [[ $OPAM_TEST -ne 1 ]] ; then
   if [[ -e configure.ac ]]; then
-    CONFIGURE_SWITCHES="--disable-debugger --disable-debug-runtime --disable-ocamldoc --disable-installing-bytecode-programs --disable-installing-source-artifacts"
+    CONFIGURE_SWITCHES=(--disable-debugger --disable-debug-runtime --disable-ocamldoc --disable-installing-bytecode-programs --disable-installing-source-artifacts)
     if [[ $OCAML_BRANCH -eq 408 ]]; then
       curl -L https://github.com/ocaml/ocaml/commit/c8ee39b320207717135d88cad67fb65d0901d6b6.patch -o pr8858.patch
       patch -p1 -i pr8858.patch
-      CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-graph-lib"
+      CONFIGURE_SWITCHES+=(--disable-graph-lib)
     fi
   else
     if [[ -n $HOST ]]; then
       echo "CI doesn't support specifying HOST for OCaml 4.07 and earlier"
       exit 2
     fi
-    CONFIGURE_SWITCHES="-no-graph -no-debugger -no-ocamldoc"
+    CONFIGURE_SWITCHES=(-no-graph -no-debugger -no-ocamldoc)
     if [[ $OCAML_BRANCH = 408 ]]; then
-      CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-graph-lib"
+      CONFIGURE_SWITCHES+=(--disable-graph-lib)
     fi
     if [[ $OCAML_BRANCH -gt 402 ]] ; then
-      CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES -no-ocamlbuild"
+      CONFIGURE_SWITCHES+=(-no-ocamlbuild)
     fi
 
   fi
 fi
 
-if ! ./configure --prefix "$PREFIX$HOST" ${CONFIGURE_SWITCHES:-} ; then
+if ! ./configure --prefix "$PREFIX$HOST" "${CONFIGURE_SWITCHES[@]}" ; then
   echo
   echo -e "[\e[31mERROR\e[0m] OCaml's configure script failed"
   (set +x ; echo -en "::group::config.log contents\r") 2>/dev/null

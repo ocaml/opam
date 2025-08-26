@@ -29,10 +29,13 @@ case "$SOLVER" in
     ;;
 esac
 
+# Convert PKGS to an array
+read -r -a PKGS <<< "$PKGS"
+
 opam update --depexts
 opam switch create "$SOLVER" ocaml-system || true
 opam upgrade --all
-opam install $PKGS
+opam install "${PKGS[@]}"
 opam install . --deps
 opam clean --logs --switch-cleanup
 eval $(opam env)
