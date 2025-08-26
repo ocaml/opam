@@ -2,7 +2,7 @@
 
 . .github/scripts/common/preamble.sh
 
-if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "x" = "x$BASE_REF_SHA$PR_REF_SHA" ] ; then
+if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "" = "$BASE_REF_SHA$PR_REF_SHA" ] ; then
   echo "Variables BASE_REF_SHA and PR_REF_SHA must be defined in a pull request job"
   exit 2
 fi
