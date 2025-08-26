@@ -110,7 +110,7 @@ definition, to specify where to retrieve the source of the package:
 ```
 url {
   src: "https://address/of/project.1.0.tar.gz"
-  checksum: "md5=3ffed1987a040024076c08f4a7af9b21"
+  checksum: "sha256=a42b21dc49a05be658391e63fe64c055d52ec67c0812cf6801f1de0f22733ce3"
 }
 ```
 
