@@ -233,6 +233,19 @@ let install_sys_packages packages ~descr ?cond platforms =
 let install_sys_opam ?cond = install_sys_packages ["opam"] ~descr:"Install system's opam package" ?cond
 let install_sys_dune ?cond = install_sys_packages ["dune"; "ocaml"] ~descr:"Install system's dune and ocaml packages" ?cond
 
+(* The clean way to do it is to have the changed file in their proper job and
+   condition the other job to its output, but it will lead to extra steps
+   (checkout). The choice here is to add for all further steps the condition
+   on the output of 'files' step (modified files). *)
+let changed_files ?withs () =
+  uses "Get changed files" ~id:"files"
+    ~cond:(Predicate(true, Compare("github.event_name", "pull_request")))
+    ?withs
+    (* ~continue_on_error:true see https://github.com/jitterbit/get-changed-files/issues/19 *)
+    "Ana06/get-changed-files@v2.3.0" (* see https://github.com/jitterbit/get-changed-files/issues/55 ; Ana06'fork contains #19 and #55 fixes *)
+
+(** Jobs *)
+
 let analyse_job ~oc ~workflow ~platforms ~keys f =
   let oses = List.map os_of_platform platforms in
   let outputs =
@@ -471,33 +484,18 @@ let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
     ++ end_job f
 
 let hygiene_job (type a) ~analyse_job (platform : a platform) ~oc ~workflow f =
+  let cond = Predicate(false, Compare("steps.files.outputs.all", "")) in
+  let withs = [ "filter", Literal [ "configure.ac"; "shell/install.sh"; "src_ext/**"; ".github/workflows/**"] ] in
   job ~oc ~workflow ~section:"Around opam tests" ~runs_on:(Runner [platform]) ~needs:[analyse_job] "Hygiene"
-    ++ install_sys_dune [os_of_platform platform]
-    ++ checkout ()
-    ++ cache Archives
-    ++ uses "Get changed files" ~id:"files" ~cond:(Predicate(true, Compare("github.event_name", "pull_request"))) (* ~continue_on_error:true see https://github.com/jitterbit/get-changed-files/issues/19 *) "Ana06/get-changed-files@v2.3.0" (* see https://github.com/jitterbit/get-changed-files/issues/55 ; Ana06'fork contains #19 and #55 fixes *)
-    ++ run "Changed files list" [
-         "for changed_file in ${{ steps.files.outputs.modified }}; do";
-         "  echo \"M  ${changed_file}.\"";
-         "done";
-         "for changed_file in ${{ steps.files.outputs.removed }}; do";
-         "  echo \"D  ${changed_file}.\"";
-         "done";
-         "for changed_file in ${{ steps.files.outputs.added }}; do";
-         "  echo \"A  ${changed_file}.\"";
-         "done";
-         "for changed_file in ${{ steps.files.outputs.renamed }}; do";
-         "  echo \"AD ${changed_file}.\"";
-         "done";
-       ]
-    ++ run "Hygiene" ~cond:(Or[Predicate(true, Contains("steps.files.outputs.modified", "configure.ac"));
-                               Predicate(true, Contains("steps.files.outputs.modified", "shell/install.sh"));
-                               Predicate(true, Contains("steps.files.outputs.all", "src_ext"));
-                               Predicate(true, Contains("steps.files.outputs.all", ".github/workflows"))])
-                     ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}");
-                           ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}")]
-                     ["bash -exu .github/scripts/main/hygiene.sh"]
-    ++ end_job f
+  ++ checkout ()
+  ++ changed_files ~withs ()
+  ++ install_sys_dune ~cond [os_of_platform platform]
+  ++ cache ~cond Archives
+  ++ run "Hygiene" ~cond
+    ~env:[("BASE_REF_SHA", "${{ github.event.pull_request.base.sha }}");
+          ("PR_REF_SHA", "${{ github.event.pull_request.head.sha }}")]
+    ["bash -exu .github/scripts/main/hygiene.sh"]
+  ++ end_job f
 
 let empty_job ~oc ~workflow f
 (*    ~analyse_job:_ *)
