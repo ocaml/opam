@@ -67,7 +67,7 @@ if [[ "$OPAM_DOC" -eq 1 ]]; then
     fi
   fi
 
-  mapfile -t htmlfiles < <(ls doc/pages/*.md | sed -e 's/\.md$/.html/')
+  mapfile -t htmlfiles < <(find doc/pages/*.md -prune -print | sed -e 's/\.md$/.html/')
   mapfile -t manfiles < <(opam help topics | sed -e 's|.*|doc/man-html/opam-&.html|')
   mapfile -O "${#manfiles[@]}" -t manfiles < <(opam admin help topics | sed -e 's|.*|doc/man-html/opam-admin-&.html|')
 
