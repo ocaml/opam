@@ -72,8 +72,8 @@ if [[ "$OPAM_DOC" -eq 1 ]]; then
   mapfile -O "${#manfiles[@]}" -t manfiles < <(opam admin help topics | sed -e 's|.*|doc/man-html/opam-admin-&.html|')
 
   echo '::group::checking for generated files'
-  echo "pages: $htmlfiles"
-  echo "topics: $manfiles"
+  echo "pages: ${htmlfiles[*]}"
+  echo "topics: ${manfiles[*]}"
   files=("${htmlfiles[@]}" "${manfiles[@]}")
   missing=""
   for file in "${files[@]}"; do
