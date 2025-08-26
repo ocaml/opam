@@ -302,14 +302,14 @@ let load lock_kind gt rt switch =
         sel_pinned = pinned; sel_compiler = compiler_packages; } =
     load_selections ~lock_kind gt switch
   in
-  let pinned, pinned_opams, depexts_present_pins =
-    OpamPackage.Set.fold (fun nv (pinned,opams,depexpts_present) ->
+  let pinned, pinned_opams, pinned_depexts =
+    OpamPackage.Set.fold (fun nv (pinned,opams,depexts_acc) ->
         let overlay_dir =
           OpamPath.Switch.Overlay.package gt.root switch nv.name
         in
         match OpamFileTools.read_opam overlay_dir with
         | None -> (* No overlay => just pinned to a version *)
-          OpamPackage.Set.add nv pinned, opams, depexpts_present
+          OpamPackage.Set.add nv pinned, opams, depexts_acc
         | Some o ->
           let version =
             match OpamFile.OPAM.version_opt o with
@@ -325,11 +325,15 @@ let load lock_kind gt rt switch =
           in
           let nv = OpamPackage.create nv.name version in
           let o = OpamFile.OPAM.with_version version o in
+          let env = OpamPackageVar.resolve_switch_raw ~package:nv gt switch
+              switch_config
+          in
+          let package_depexts = OpamFileTools.extract_depexts ~env o in
           OpamPackage.Set.add nv pinned,
           OpamPackage.Map.add nv o opams,
-          (OpamFile.OPAM.depexts o) <> [] || depexpts_present
+          OpamSysPkg.Set.Op.(package_depexts ++ depexts_acc)
       )
-      pinned (OpamPackage.Set.empty, OpamPackage.Map.empty, false)
+      pinned (OpamPackage.Set.empty, OpamPackage.Map.empty, OpamSysPkg.Set.empty)
   in
   let installed_opams =
     let cache_file = OpamPath.Switch.installed_opams_cache gt.root switch in
@@ -541,7 +545,15 @@ let load lock_kind gt rt switch =
       lazy OpamPackage.Map.empty
     else lazy (
       depexts_status_of_packages_raw
-        ~recompute_available:depexts_present_pins rt.repos_sys_available_pkgs
+        ~recompute_available:(
+          (* Recompute only when pinned packages have depexts
+             not covered by cached repos_sys_available_pkgs *)
+          not (OpamSysPkg.Set.is_empty pinned_depexts) &&
+          match rt.repos_sys_available_pkgs with
+          | OpamSysPkg.Available available_pkgs ->
+            not (OpamSysPkg.Set.subset pinned_depexts available_pkgs)
+          | OpamSysPkg.Suppose_available -> false
+        ) rt.repos_sys_available_pkgs
         gt.config switch_config ~env:gt.global_variables
         (Lazy.force available_packages)
         ~depexts:(fun package ->
