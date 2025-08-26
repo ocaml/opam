@@ -37,6 +37,7 @@
 
 * finalise the release (publish)
 * add hashes in `install.sh` and `install.ps1` (and check signatures)
+* update `OPAM_TEST_REPO_SHA` in `ci.ml` and update version in `main.sh` for dependencies job
 * bring the changes to the changelog (CHANGES) from the branch of the release to the `master` branch
 * Update doc/pages/Install.md
 * publish opam packages in opam-repository (use `opam publish --pre-release` if this is not a stable version)
