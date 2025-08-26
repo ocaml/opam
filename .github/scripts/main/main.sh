@@ -15,7 +15,7 @@ export OCAMLRUNPARAM=b
 if [[ "$OPAM_TEST" -eq 1 ]] || [[ "$OPAM_DOC" -eq 1 ]] || [[ "$OPAM_DEPENDS" -eq 1 ]] ; then
   export OPAMROOT=$OPAMBSROOT
   # If the cached root is newer, regenerate a binary compatible root
-  opam env || { rm -rf $OPAMBSROOT; init-bootstrap; }
+  opam env || { rm -rf "$OPAMBSROOT"; init-bootstrap; }
 fi
 
 case "$1" in
@@ -32,7 +32,7 @@ if [ "$OPAM_TEST" != "1" ]; then
   echo 'DUNE_PROFILE=dev' >> Makefile.config
 fi
 
-if [ $OPAM_UPGRADE -eq 1 ]; then
+if [ "$OPAM_UPGRADE" -eq 1 ]; then
   unset-dev-version
 fi
 # Disable implicit transitive deps

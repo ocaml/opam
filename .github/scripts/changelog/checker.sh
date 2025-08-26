@@ -32,11 +32,11 @@ release
 changelog=master_changes.md
 diffile=/tmp/diff
 
-git fetch origin $GITHUB_BASE_REF --depth=1 --quiet
+git fetch origin "$GITHUB_BASE_REF" --depth=1 --quiet
 echo "> base commit"
-git show origin/$GITHUB_BASE_REF --format=oneline -s
+git show "origin/$GITHUB_BASE_REF" --format=oneline -s
 
-git diff origin/$GITHUB_BASE_REF --name-only --diff-filter=AMRCX > $diffile
+git diff "origin/$GITHUB_BASE_REF" --name-only --diff-filter=AMRCX > $diffile
 updated=0
 grep -sq $changelog $diffile || updated=1
 
@@ -52,7 +52,7 @@ cat $diffile
 
 num_changes=`wc -l $diffile | cut -f 1 -d ' '`
 
-if [ $num_changes -ne 0 ] ; then
+if [ "$num_changes" -ne 0 ] ; then
   if [ $updated -eq 0 ] ; then
     echo -e "\033[32mChangelog updated\033[m"
   else

@@ -117,7 +117,7 @@ if [[ $OPAM_TEST -ne 1 ]] ; then
   fi
 fi
 
-if ! ./configure --prefix "$PREFIX"$HOST ${CONFIGURE_SWITCHES:-} ; then
+if ! ./configure --prefix "$PREFIX$HOST" ${CONFIGURE_SWITCHES:-} ; then
   echo
   echo -e "[\e[31mERROR\e[0m] OCaml's configure script failed"
   (set +x ; echo -en "::group::config.log contents\r") 2>/dev/null
