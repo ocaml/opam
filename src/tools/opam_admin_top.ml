@@ -52,30 +52,20 @@ let iter_packages_gen ?(quiet=false) f =
           (OpamPackage.to_string package);
       let opam_file = OpamRepositoryPath.opam repo prefix package in
       let opam = OpamFile.OPAM.read opam_file in
-      let descr_file = OpamRepositoryPath.descr repo prefix package in
-      let descr = OpamFile.Descr.read_opt descr_file in
-      let url_file = OpamRepositoryPath.url repo prefix package in
-      let url = OpamFile.URL.read_opt url_file in
       let dot_install_file : OpamFile.Dot_install.t OpamFile.t =
         OpamFile.make
           (OpamRepositoryPath.files repo prefix package
            // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install"))
       in
       let dot_install = OpamFile.Dot_install.read_opt dot_install_file in
-      let opam2, descr2, url2, dot_install2 =
-        f package ~prefix ~opam ~descr ~url ~dot_install
+      let opam2, dot_install2 =
+        f package ~prefix ~opam ~dot_install
       in
-      let descr2 = of_action descr descr2 in
-      let url2 = of_action url url2 in
       let dot_install2 = of_action dot_install dot_install2 in
       let changed = ref false in
       let upd () = changed := true; incr changed_files in
       if opam <> opam2 then
         (upd (); OpamFile.OPAM.write_with_preserved_format opam_file opam2);
-      if descr <> descr2 then
-        (upd (); wopt OpamFile.Descr.write descr_file descr2);
-      if url <> url2 then
-        (upd (); wopt OpamFile.URL.write url_file url2);
       if dot_install <> dot_install2 then
         (upd (); wopt OpamFile.Dot_install.write dot_install_file dot_install2);
       if !changed then
@@ -92,16 +82,15 @@ let iter_packages_gen ?(quiet=false) f =
       !changed_files !changed_pkgs
 
 let iter_packages ?quiet
-    ?(filter=true_) ?f ?(opam=identity) ?descr ?url ?dot_install
+    ?(filter=true_) ?f ?(opam=identity) ?dot_install
     () =
   iter_packages_gen ?quiet
-    (fun p ~prefix ~opam:o ~descr:d ~url:u ~dot_install:i ->
+    (fun p ~prefix ~opam:o ~dot_install:i ->
       if filter p then (
         apply f p prefix o;
-        opam p o, to_action descr p d , to_action url p u,
-        to_action dot_install p i
+        opam p o, to_action dot_install p i
       ) else
-        o, `Keep, `Keep, `Keep)
+        o, `Keep)
 
 let regexps_of_patterns patterns =
   let contains_dot str =

@@ -217,7 +217,9 @@ let do_upgrade repo_root =
       let descr_file =
         OpamFilename.(opt_file (add_extension (chop_extension comp_file) "descr"))
       in
-      let descr = descr_file >>| fun f -> OpamFile.Descr.read (OpamFile.make f) in
+      let descr =
+        descr_file >>| fun f -> OpamFile.Descr.create (OpamFilename.read f)
+      in
       let nv, ocaml_version, variant =
         match OpamStd.String.cut_at c '+' with
         | None ->
@@ -428,11 +430,11 @@ let do_upgrade repo_root =
         in
         if opam <> opam0 then
           (OpamFile.OPAM.write_with_preserved_format opam_file opam;
+           let open OpamFilename.Op in
+           let path = OpamRepositoryPath.packages repo_root prefix package in
            List.iter OpamFilename.remove [
-             OpamFile.filename
-               (OpamRepositoryPath.descr repo_root prefix package);
-             OpamFile.filename
-               (OpamRepositoryPath.url repo_root prefix package);
+             OpamFile.filename (OpamFile.make (path // "descr"));
+             OpamFile.filename (OpamFile.make (path // "url"));
            ];
            OpamConsole.status_line "Updated %s" (OpamFile.to_string opam_file))
     )
