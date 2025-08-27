@@ -3213,7 +3213,7 @@ i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### rm -rf _opam
 ### :V:8:a: From 2.2 root, global
-### ocaml generate.ml $OPAMROOTVERSION
+### ocaml generate.ml 2.2
 ### # ro global state
 ### opam option jobs
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
@@ -3287,7 +3287,7 @@ installed: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 opam-version: "2.0"
 roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### :V:8:b: From 2.2 root, local
-### ocaml generate.ml $OPAMROOTVERSION local
+### ocaml generate.ml 2.2 local
 ### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -3348,7 +3348,7 @@ installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:8:c: From 2.2 root, local unknown from config
-### ocaml generate.ml $OPAMROOTVERSION local
+### ocaml generate.ml 2.2 local
 ### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -3408,7 +3408,7 @@ installed: ["i-am-package.2" "i-am-sys-compiler.2"]
 opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:8:d: Upgraded root and local 2.2 switch not recorded
-### ocaml generate.ml $OPAMROOTVERSION orphaned 2.2
+### ocaml generate.ml 2.2 orphaned 2.2
 ### # ro global state, ro repo state, ro switch state
 ### opam list
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
