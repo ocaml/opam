@@ -168,11 +168,10 @@ if [ "$OPAM_TEST" = "1" ]; then
 fi
 
 test_project () {
-  url=$1
-  project=$2
+  project=$1
 
   (set +x; echo -en "::group::depends-$project\r") 2>/dev/null
-  opam pin "$url" --kind git -yn
+  opam pin . --kind path -yn
   for pkg_name in $(opam show . -f name); do
     echo "Installing dependencies for $pkg_name"
     deps_code=0
@@ -216,7 +215,7 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
 
     if [[ -n "$dev_repo" ]]; then
       prepare_project "$dev_repo" "$pkg"
-      test_project "$dev_repo" "$pkg"
+      test_project "$pkg"
     fi
   done
 
