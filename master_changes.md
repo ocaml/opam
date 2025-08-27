@@ -140,6 +140,8 @@ users)
   * Add mention of `opam admin compare-versions` in the Manual. [#6596 @mbarbin]
   * Update release documentation to add a step updating test repository hash and version number in reverse dependecies test script [#6364 @arozovyk]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
