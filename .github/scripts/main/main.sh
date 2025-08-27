@@ -202,7 +202,10 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
   VERSION="2.4.1"
   opam_libs=$(opam show . -f name 2>/dev/null)
   depends_on=$(echo "$opam_libs" | sed "s/\$/.${VERSION}/" | paste -sd, -)
-  packages=$(opam list --or --depends-on "$depends_on" --columns name | tail -n +3)
+  packages=$(echo "$opam_libs" | while read lib; do
+    opam list --depends-on "${lib}.${VERSION}"  --coinstallable-with \
+    "${lib}.${VERSION}" --depopts --column name -s 2>/dev/null
+    done | sort -u)
   set +x
   for exclude in $opam_libs; do
     packages=$(echo "$packages" | grep -vF "$exclude")

@@ -131,6 +131,7 @@ users)
   * Enhance changed files job dependant handling [#6394 @rjbou]
   * Fix macOS builds by installing rsync [#6656 @kit-ty-kate]
   * Use local pin to correctly detect packages dev repo branch in reverse dependency test job [#6655 @arozovyk]
+  * Filter false positives in dependency test job using `--coinstallable-with` [#6655 @arozovyk]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
