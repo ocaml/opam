@@ -64,6 +64,7 @@ users)
 ## Clean
 
 ## Env
+  * [NEW] Add `--raw` option to output env as environment variable binding, useful for CI environment populating [#6316 @rjbou - fix #5791]
 
 ## Opamfile
 

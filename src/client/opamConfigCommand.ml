@@ -62,6 +62,9 @@ let list t ns =
   OpamStd.Format.align_table |>
   OpamConsole.print_table stdout ~sep:" "
 
+let name_not_in_env n env =
+  not (List.exists (fun (n', _, _) -> String.equal n n') env)
+
 let possibly_unix_path_env_value k v =
   if k = "PATH" then
     (Lazy.force OpamSystem.get_cygpath_path_transform) ~pathlist:true v
@@ -72,8 +75,7 @@ let rec print_env output = function
   | (k, v, comment) :: r ->
     if OpamConsole.verbose () then
       OpamStd.Option.iter (Printf.ksprintf output ": %s;\n") comment;
-    if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
-    then (
+    if name_not_in_env k r || OpamConsole.verbose () then (
       let v' = possibly_unix_path_env_value k v in
       Printf.ksprintf output "%s='%s'; export %s;\n"
         k (OpamStd.Env.escape_single_quotes v') k);
@@ -84,8 +86,7 @@ let rec print_csh_env output = function
   | (k, v, comment) :: r ->
     if OpamConsole.verbose () then
       OpamStd.Option.iter (Printf.ksprintf output ": %s;\n") comment;
-    if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
-    then (
+    if name_not_in_env k r || OpamConsole.verbose () then (
       let v' = possibly_unix_path_env_value k v in
       Printf.ksprintf output "setenv %s '%s';\n"
         k (OpamStd.Env.escape_single_quotes v'));
@@ -94,8 +95,7 @@ let rec print_csh_env output = function
 let rec print_pwsh_env output = function
   | [] -> ()
   | (k, v, _) :: r ->
-    if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
-    then
+    if name_not_in_env k r || OpamConsole.verbose () then
       Printf.ksprintf output "$env:%s = '%s'\n"
         k (OpamStd.Env.escape_powershell v);
     print_pwsh_env output r
@@ -104,8 +104,7 @@ let print_cmd_env output env =
   let rec aux = function
     | [] -> ()
     | (k, v, _) :: r ->
-      if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
-      then begin
+      if name_not_in_env k r || OpamConsole.verbose () then begin
         let is_special = function
         | '(' | ')' | '!' | '^' | '%' | '"' | '<' | '>' | '|' -> true
         | _ -> false
@@ -123,13 +122,23 @@ let print_sexp_env output env =
   let rec aux = function
     | [] -> ()
     | (k, v, _) :: r ->
-      if not (List.exists (fun (k1, _, _) -> k = k1) r) then
+      if name_not_in_env k r then
         Printf.ksprintf output "  (%S %S)\n" k v;
       aux r
   in
   output "(\n";
   aux env;
   output ")\n"
+
+let print_raw_env output env =
+  let rec aux = function
+    | [] -> ()
+    | (k, v, _) :: r ->
+      if name_not_in_env k r then
+        Printf.ksprintf output "%s=%s\n" k v;
+      aux r
+  in
+  aux env
 
 let rec print_fish_env output env =
   let set_arr_cmd ?(modf=fun x -> x) k v =
@@ -156,7 +165,7 @@ let rec print_fish_env output env =
   match env with
   | [] -> ()
   | (k, v, _) :: r ->
-    if not (List.exists (fun (k1, _, _) -> k = k1) r) then
+    if name_not_in_env k r then
       (match k with
        | "PATH" | "CDPATH" ->
          (* This function assumes that `v` does not include any variable
@@ -183,7 +192,7 @@ let print_without_cr s =
     output_string stdout s;
     flush stdout
 
-let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
+let print_eval_env ~csh ~env_format ~fish ~pwsh ~cmd env =
   let env = (env : OpamTypes.env :> (string * string * string option) list) in
   let output_normally = OpamConsole.msg "%s" in
   let never_with_cr =
@@ -192,18 +201,22 @@ let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
     else
       output_normally
   in
-  if sexp then
+  match env_format with
+  | Some `sexp ->
     print_sexp_env output_normally env
-  else if csh then
-    print_csh_env never_with_cr env
-  else if fish then
-    print_fish_env never_with_cr env
-  else if pwsh then
-    print_pwsh_env output_normally env
-  else if cmd then
-    print_cmd_env output_normally env
-  else
-    print_env never_with_cr env
+  | Some `raw ->
+    print_raw_env output_normally env
+  | None ->
+    if csh then
+      print_csh_env never_with_cr env
+    else if fish then
+      print_fish_env never_with_cr env
+    else if pwsh then
+      print_pwsh_env output_normally env
+    else if cmd then
+      print_cmd_env output_normally env
+    else
+      print_env never_with_cr env
 
 let check_writeable l =
   let map_writeable ({OpamTypes.envu_op; _} as update) =
@@ -331,7 +344,7 @@ let ensure_env gt switch =
   ignore (ensure_env_aux gt switch)
 
 let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
-    ~csh ~sexp ~fish ~pwsh ~cmd ~inplace_path =
+    ~csh ~env_format ~fish ~pwsh ~cmd ~inplace_path =
   log "config-env";
   let opamroot_not_current =
     let current = gt.root in
@@ -371,7 +384,7 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
   let env =
     ensure_env_aux ~set_opamroot ~set_opamswitch ~force_path gt switch
   in
-  print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env
+  print_eval_env ~csh ~env_format ~fish ~pwsh ~cmd env
 [@@ocaml.warning "-16"]
 
 let subst gt fs =

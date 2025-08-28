@@ -1313,9 +1313,15 @@ let option cli =
           $global_options cli $fieldvalue $global cli)
 
 module Common_config_flags = struct
-  let sexp cli =
-    mk_flag ~cli cli_original ["sexp"]
-      "Print environment as an s-expression rather than in shell format"
+  let env_format cli =
+    mk_vflag ~cli None [
+      cli_original, Some `sexp, ["sexp"],
+      "Print environment as an s-expression rather than in shell format";
+      cli_from cli2_4, Some `raw, ["raw"],
+      "Print environment as variable bindings rather than in shell format.\
+       Useful to populate CI environment."
+    ]
+
 
   let inplace_path cli =
     mk_flag ~cli cli_original ["inplace-path"]
@@ -1413,7 +1419,7 @@ let config cli =
   let open Common_config_flags in
 
   let config global_options
-      command shell sexp inplace_path
+      command shell env_format inplace_path
       set_opamroot set_opamswitch params () =
     apply_global_options cli global_options;
     let shell = match shell with
@@ -1429,7 +1435,7 @@ let config cli =
        | Some sw ->
          `Ok (OpamConfigCommand.env gt sw
                 ~set_opamroot ~set_opamswitch
-                ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+                ~csh:(shell=SH_csh) ~env_format ~fish:(shell=SH_fish)
                 ~pwsh ~cmd:(shell=SH_cmd)
                 ~inplace_path))
     | Some `revert_env, [] ->
@@ -1439,7 +1445,7 @@ let config cli =
        | Some sw ->
          `Ok (OpamConfigCommand.ensure_env gt sw;
               OpamConfigCommand.print_eval_env
-                ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+                ~csh:(shell=SH_csh) ~env_format ~fish:(shell=SH_fish)
                 ~pwsh ~cmd:(shell=SH_cmd)
                 (OpamEnv.add [] [])))
     | Some `list, [] ->
@@ -1651,7 +1657,8 @@ let config cli =
 
   mk_command_ret  ~cli cli_original "config" ~doc ~man
     Term.(const config
-          $global_options cli $command $shell_opt cli cli_original $sexp cli
+          $global_options cli $command $shell_opt cli cli_original
+          $env_format cli
           $inplace_path cli
           $set_opamroot cli $set_opamswitch cli
           $params)
@@ -1722,7 +1729,7 @@ let env cli =
        after printing the list of not up-to-date variables."
   in
   let env
-      global_options shell sexp inplace_path set_opamroot set_opamswitch
+      global_options shell env_format inplace_path set_opamroot set_opamswitch
       revert check () =
     apply_global_options cli global_options;
     if check then
@@ -1744,19 +1751,19 @@ let env cli =
        | Some sw ->
          OpamConfigCommand.env gt sw
            ~set_opamroot ~set_opamswitch
-           ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+           ~csh:(shell=SH_csh) ~env_format ~fish:(shell=SH_fish)
            ~pwsh ~cmd:(shell=SH_cmd)
            ~inplace_path);
     | true ->
       OpamConfigCommand.print_eval_env
-        ~csh:(shell=SH_csh) ~sexp ~fish:(shell=SH_fish)
+        ~csh:(shell=SH_csh) ~env_format ~fish:(shell=SH_fish)
         ~pwsh ~cmd:(shell=SH_cmd)
         (OpamEnv.add [] [])
   in
   let open Common_config_flags in
   mk_command  ~cli cli_original "env" ~doc ~man
   Term.(const env
-        $global_options cli $shell_opt cli cli_original $sexp cli
+        $global_options cli $shell_opt cli cli_original $env_format cli
         $inplace_path cli $set_opamroot cli $set_opamswitch cli
         $revert $check)
 
