@@ -1,3 +1,5 @@
+module StringSet = Set.Make(String)
+
 let first_line_tags ~path =
   let ic = open_in path in
   let s = input_line ic in
@@ -21,9 +23,6 @@ let diff_rule base_name ~condition =
 |}
     base_name condition base_name base_name condition base_name
 
-let tgz_name ~archive_hash =
-  Printf.sprintf "opam-archive-%s.tar.gz" archive_hash
-
 let repo_directory ~archive_hash =
   Printf.sprintf "opam-repo-%s" archive_hash
 
@@ -42,12 +41,13 @@ let run_rule ~base_name ~archive_hash ~condition =
    (run ./run.exe %%{exe:../../src/client/opamMain.exe.exe} %%{dep:%s.test} %%{read-lines:testing-env}))))
 |} (base_name^".out") (opamroot_directory ~archive_hash) condition base_name
 
-let archive_download_rule archive_hash =
-   Format.sprintf {|
+let archive_download_rule () =
+  Format.sprintf {|
 (rule
- (targets %s)
- (action (run curl --silent -Lo %%{targets} https://github.com/ocaml/opam-repository/archive/%s.tar.gz)))
-|} (tgz_name ~archive_hash) archive_hash
+ (targets opam-repository.git)
+ (action
+  (run git clone -q --bare --single-branch https://github.com/ocaml/opam-repository)))
+|}
 
 let default_repo_rule =
   Format.sprintf {|
@@ -66,10 +66,8 @@ let archive_unpack_rule archive_hash =
 (rule
   (targets %s)
   (action
-   (progn
-    (run mkdir -p %%{targets})
-    (run tar -C %%{targets} -xzf %%{dep:%s} --strip-components=1))))
-|} (repo_directory ~archive_hash) (tgz_name ~archive_hash)
+   (run git -C %%{dep:./opam-repository.git} worktree add -q ../%%{targets} %s)))
+|} (repo_directory ~archive_hash) archive_hash
 
 let opam_init_rule archive_hash =
   Format.sprintf {|
@@ -83,8 +81,6 @@ let opam_init_rule archive_hash =
            --no-setup --bypass-checks --no-opamrc --bare
            file://%%{dep:%s})))))
 |} (opamroot_directory ~archive_hash) (repo_directory ~archive_hash)
-
-module StringSet = Set.Make(String)
 
 let () =
   let () = set_binary_mode_out stdout true in
@@ -138,9 +134,9 @@ let () =
   in
   print_string default_repo_rule;
   print_string (opam_init_rule null_hash);
+  print_string (archive_download_rule ());
   StringSet.iter
     (fun archive_hash ->
-       print_string (archive_download_rule archive_hash);
        print_string (archive_unpack_rule archive_hash);
        print_string (opam_init_rule archive_hash)
     )
