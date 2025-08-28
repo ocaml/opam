@@ -129,6 +129,7 @@ users)
   * Only run the `get-changed-files` action when in a PR [#6582 @kit-ty-kate]
   * Add a CI job to test reverse dependencies of opam. Track and report dependency and build failures, hard-failing only on maintained packages. [#6394 @rjbou @arozovyk]
   * Enhance changed files job dependant handling [#6394 @rjbou]
+  * Fix macOS builds by installing rsync [#6656 @kit-ty-kate]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
