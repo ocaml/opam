@@ -168,11 +168,10 @@ if [ "$OPAM_TEST" = "1" ]; then
 fi
 
 test_project () {
-  url=$1
-  project=$2
+  project=$1
 
   (set +x; echo -en "::group::depends-$project\r") 2>/dev/null
-  opam pin "$url" --kind git -yn
+  opam pin . --kind path -yn
   for pkg_name in $(opam show . -f name); do
     echo "Installing dependencies for $pkg_name"
     deps_code=0
@@ -203,7 +202,10 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
   VERSION="2.4.1"
   opam_libs=$(opam show . -f name 2>/dev/null)
   depends_on=$(echo "$opam_libs" | sed "s/\$/.${VERSION}/" | paste -sd, -)
-  packages=$(opam list --or --depends-on "$depends_on" --columns name | tail -n +3)
+  packages=$(echo "$opam_libs" | while read lib; do
+    opam list --depends-on "${lib}.${VERSION}"  --coinstallable-with \
+    "${lib}.${VERSION}" --depopts --column name -s 2>/dev/null
+    done | sort -u)
   set +x
   for exclude in $opam_libs; do
     packages=$(echo "$packages" | grep -vF "$exclude")
@@ -216,7 +218,7 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
 
     if [[ -n "$dev_repo" ]]; then
       prepare_project "$dev_repo" "$pkg"
-      test_project "$dev_repo" "$pkg"
+      test_project "$pkg"
     fi
   done
 
