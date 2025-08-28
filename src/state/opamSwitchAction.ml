@@ -236,7 +236,7 @@ let remove_from_installed ?(keep_as_root=false) st nv =
       ~reinstall:(rm (Lazy.force st.reinstall))
   in
   let has_setenv =
-    match OpamStd.Option.map OpamFile.OPAM.env (OpamSwitchState.opam_opt st nv)
+    match Option.map OpamFile.OPAM.env (OpamSwitchState.opam_opt st nv)
     with Some (_::_) -> true | _ -> false
   in
   if not OpamStateConfig.(!r.dryrun) &&

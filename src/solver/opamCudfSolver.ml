@@ -240,7 +240,7 @@ let default_solver_selection =
   ]
 
 let extract_solver_param name =
-  if OpamStd.String.ends_with ~suffix:")" name then
+  if OpamCompat.String.ends_with ~suffix:")" name then
     match OpamStd.String.cut_at name '(' with
     | Some (xname, ext2) ->
       xname, Some (OpamStd.String.remove_suffix ~suffix:")" ext2)

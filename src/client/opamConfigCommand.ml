@@ -27,7 +27,7 @@ let list t ns =
         try
           let opam = OpamSwitchState.opam t nv in
           let env = OpamPackageVar.resolve ~opam t in
-          OpamStd.List.filter_map (fun (vname, desc) ->
+          List.filter_map (fun (vname, desc) ->
               let v = OpamVariable.(Full.create name (of_string vname)) in
               try
                 let c = OpamFilter.ident_string env (OpamFilter.ident_of_var v) in
@@ -71,7 +71,7 @@ let rec print_env output = function
   | [] -> ()
   | (k, v, comment) :: r ->
     if OpamConsole.verbose () then
-      OpamStd.Option.iter (Printf.ksprintf output ": %s;\n") comment;
+      Stdlib.Option.iter (Printf.ksprintf output ": %s;\n") comment;
     if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
     then (
       let v' = possibly_unix_path_env_value k v in
@@ -83,7 +83,7 @@ let rec print_csh_env output = function
   | [] -> ()
   | (k, v, comment) :: r ->
     if OpamConsole.verbose () then
-      OpamStd.Option.iter (Printf.ksprintf output ": %s;\n") comment;
+      Stdlib.Option.iter (Printf.ksprintf output ": %s;\n") comment;
     if not (List.exists (fun (k1, _, _) -> k = k1) r) || OpamConsole.verbose ()
     then (
       let v' = possibly_unix_path_env_value k v in
@@ -547,7 +547,7 @@ module OpamPrinter = OpamPrinter.FullPos
 let set_opt ?(inner=false) field value conf =
   let wrap allowed all parse =
     List.map (fun (field, pp) ->
-        match OpamStd.List.find_opt (fun (x,_,_) -> x = field) allowed with
+        match List.find_opt (fun (x,_,_) -> x = field) allowed with
         | None -> field, None
         | Some (_, modd, default) ->
           let parse elem config =
@@ -575,7 +575,7 @@ let set_opt ?(inner=false) field value conf =
         (OpamConsole.colorise `underline field);
       OpamConsole.print_table stderr ~sep:" "
         (OpamStd.Format.as_aligned_table
-           (OpamStd.List.filter_map
+           (List.filter_map
               (function fl, Some _ -> Some fl | _ -> None)
               fields));
       OpamStd.Sys.exit_because `Bad_arguments
@@ -642,7 +642,7 @@ let allwd_wrappers wdef wrappers with_wrappers  =
            let nw = wrappers nc in
            let n_cmd =
              List.filter (fun cmd ->
-                 None = OpamStd.List.find_opt (fun cmd' -> cmd = cmd') (get nw))
+                 None = List.find_opt (fun cmd' -> cmd = cmd') (get nw))
                (get w)
            in
            with_wrappers (set n_cmd w) c)
@@ -690,7 +690,7 @@ let switch_allowed_fields, switch_allowed_sections =
                             envu_value = value; envu_comment = _;
                             envu_rewrite = _ } ->
                        None =
-                       OpamStd.List.find_opt
+                       List.find_opt
                          (fun { envu_var = var'; envu_op = op';
                                 envu_value = value'; envu_comment = _;
                                 envu_rewrite = _ } ->
@@ -776,7 +776,7 @@ let set_opt_switch_t ?inner gt switch switch_config field value =
 let set_opt_switch gt ?st field value =
   with_switch ~display:false gt `Lock_write st @@ fun sw swc ->
   let switch_config = set_opt_switch_t ~inner:false gt sw swc field value in
-  OpamStd.Option.map (fun st -> { st with switch_config }) st
+  Stdlib.Option.map (fun st -> { st with switch_config }) st
 
 let global_allowed_fields, global_allowed_sections =
   let allowed_fields =
@@ -790,7 +790,7 @@ let global_allowed_fields, global_allowed_sections =
         (fun nc c ->
            let gv = get nc in
            set (List.filter (fun (k,v,_) ->
-               None = OpamStd.List.find_opt (fun (k',v',_) -> k = k' && v = v') gv)
+               None = List.find_opt (fun (k',v',_) -> k = k' && v = v') gv)
                (get c)) c)
       in
       [
@@ -810,7 +810,7 @@ let global_allowed_fields, global_allowed_sections =
              let to_remove = Config.dl_cache nc in
              let dl_cache =
                List.filter (fun url ->
-                   None = OpamStd.List.find_opt (OpamUrl.equal url) to_remove)
+                   None = List.find_opt (OpamUrl.equal url) to_remove)
                  (Config.dl_cache c)
              in
              Config.with_dl_cache dl_cache c)),
@@ -869,7 +869,7 @@ let global_allowed_fields, global_allowed_sections =
         Config.with_swh_fallback (Config.swh_fallback Config.empty);
         "git-location", Atomic_pp
           (fun c ->
-             OpamStd.Option.iter (fun git_location ->
+             Stdlib.Option.iter (fun git_location ->
                  if OpamSystem.bin_contains_bash
                      (OpamFilename.Dir.to_string git_location) then
                    OpamConsole.error_and_exit `False
@@ -1042,7 +1042,7 @@ let set_var_switch gt ?st svar value =
              (OpamPackage.Name.to_string n)
          else "")
   in
-  OpamStd.Option.map (fun st -> { st with switch_config }) st
+  Stdlib.Option.map (fun st -> { st with switch_config }) st
 
 (** Option and var list display *)
 
@@ -1063,7 +1063,7 @@ let print_fields fields =
     (OpamStd.Format.align_table fields)
 
 let find_field field name_value =
-  match OpamStd.List.find_opt (fun (name, _) -> name = field) name_value with
+  match List.find_opt (fun (name, _) -> name = field) name_value with
   | None -> (field, None)
   | Some (name, value) -> (name, Some value)
 
@@ -1082,14 +1082,14 @@ let find_section section name_value =
 let options_list_t to_list conf =
   let name_value = to_list conf.stg_config in
   let fields =
-    OpamStd.List.filter_map (fun (field, policy, _) ->
+    List.filter_map (fun (field, policy, _) ->
         match policy with
         | InModifiable _ -> None
         | _ -> Some (find_field field name_value))
       conf.stg_allwd_fields
   in
   let sections =
-    OpamStd.List.filter_map (fun (field, policy, _) ->
+    List.filter_map (fun (field, policy, _) ->
         match policy with
         | InModifiable _ -> None
         | _ -> Some (find_section field name_value))
@@ -1214,7 +1214,7 @@ let option_show to_list conf field =
     if OpamStd.List.mem_assoc String.equal field conf.stg_sections then
       let name_value = to_list conf.stg_config in
       let sections =
-        OpamStd.List.filter_map (fun (name, v) ->
+        List.filter_map (fun (name, v) ->
             match OpamStd.String.cut_at name '.' with
             | Some (name,elem) when name = field ->
               Some [ elem; OpamPrinter.Normalise.value v ]
@@ -1261,7 +1261,7 @@ let is_switch_defined_var switch_config v =
     (OpamVariable.of_string v) <> None
   || (try let _path = OpamTypesBase.std_path_of_string v in true
       with Failure _ -> false)
-  || OpamStd.String.contains_char v ':'
+  || String.contains v ':'
 
 let var_switch_raw gt v =
   match OpamStateConfig.get_switch_opt () with
@@ -1317,7 +1317,7 @@ let get_scope field =
     try fst (parse_update field)
     with Invalid_argument _ -> field
   in
-  let find l = OpamStd.List.find_opt (fun (f,_) -> f = field) l in
+  let find l = List.find_opt (fun (f,_) -> f = field) l in
   if OpamStateConfig.get_switch_opt () <> None
   && (find OpamFile.Switch_config.fields <> None
       || find OpamFile.Switch_config.sections <> None) then

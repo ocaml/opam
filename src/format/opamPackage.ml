@@ -9,8 +9,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamStd.Op
-
 let log fmt = OpamConsole.log "PACKAGE" fmt
 let slog = OpamConsole.slog
 
@@ -68,7 +66,7 @@ module Name = struct
 
   let of_string x =
     if
-      OpamStd.String.fold_left (fun acc c ->
+      OpamCompat.String.fold_left (fun acc c ->
           match c with
           | 'a'..'z' | 'A'..'Z' -> false
           | '0'..'9' | '-' | '_' | '+' -> acc
@@ -123,8 +121,8 @@ let version t = t.version
 let sep = '.'
 
 let of_string_opt s =
-  if OpamStd.String.contains_char s ' ' ||
-     OpamStd.String.contains_char s '\n' then
+  if String.contains s ' ' ||
+     String.contains s '\n' then
     None
   else match OpamStd.String.cut_at s sep with
     | None        -> None

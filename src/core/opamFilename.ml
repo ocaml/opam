@@ -46,7 +46,7 @@ module Dir = struct
     let dirname =
       if dirname = "~" then OpamStd.Sys.home ()
       else if
-        OpamStd.String.starts_with ~prefix:("~"^Filename.dir_sep) dirname
+        OpamCompat.String.starts_with ~prefix:("~"^Filename.dir_sep) dirname
       then
         Filename.concat (OpamStd.Sys.home ())
           (OpamStd.String.remove_prefix ~prefix:("~"^Filename.dir_sep) dirname)
@@ -336,10 +336,10 @@ let is_exec file =
     OpamSystem.internal_error "%s does not exist." (to_string file)
 
 let starts_with dirname filename =
-  OpamStd.String.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
+  OpamCompat.String.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
 
 let dir_starts_with pfx dir =
-  OpamStd.String.starts_with ~prefix:(Dir.to_string pfx) (Dir.to_string dir)
+  OpamCompat.String.starts_with ~prefix:(Dir.to_string pfx) (Dir.to_string dir)
 
 let remove_prefix prefix filename =
   let prefix =
@@ -406,10 +406,10 @@ let extract_generic_file filename dirname =
     )
 
 let ends_with suffix filename =
-  OpamStd.String.ends_with ~suffix (to_string filename)
+  OpamCompat.String.ends_with ~suffix (to_string filename)
 
 let dir_ends_with suffix dirname =
-  OpamStd.String.ends_with ~suffix (Dir.to_string dirname)
+  OpamCompat.String.ends_with ~suffix (Dir.to_string dirname)
 
 let remove_suffix suffix filename =
   let suffix = Base.to_string suffix in
@@ -468,7 +468,7 @@ let with_flock flag ?dontblock file f =
     in
     let r = f fd in
     OpamSystem.funlock lock;
-    OpamStd.Option.iter Stdlib.close_out ch;
+    Option.iter Stdlib.close_out ch;
     r
   with e ->
     OpamStd.Exn.finalise e @@ fun () ->
@@ -503,7 +503,7 @@ let with_flock_write_then_read ?dontblock file write read =
 let prettify_path s =
   let aux ~short ~prefix =
     let prefix = Filename.concat prefix "" in
-    if OpamStd.String.starts_with ~prefix s then
+    if OpamCompat.String.starts_with ~prefix s then
       let suffix = OpamStd.String.remove_prefix ~prefix s in
       Some (Filename.concat short suffix)
     else
@@ -648,7 +648,7 @@ module Attribute = struct
     if base <> 0 then base else
     let md5 = OpamHash.compare md5 a.md5 in
     if md5 <> 0 then md5 else
-      OpamStd.Option.compare Int.compare perm a.perm
+      Option.compare Int.compare perm a.perm
 
   let equal a b = compare a b = 0
 

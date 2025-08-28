@@ -131,7 +131,7 @@ let cache_urls repo_root repo_def =
     |> OpamFile.Config.dl_cache
   in
   let repo_dl_cache =
-    OpamStd.List.filter_map (fun rel ->
+    List.filter_map (fun rel ->
         if OpamStd.String.contains ~sub:"://" rel
         then OpamUrl.parse_opt ~handle_suffix:false rel
         else Some OpamUrl.Op.(OpamUrl.of_string
@@ -182,7 +182,7 @@ let package_files_to_cache repo_root cache_dir cache_urls
         | Some m ->
           OpamPackage.Map.update nv (fun l -> m::l) [] errors
         | None ->
-          OpamStd.Option.iter (fun link_dir ->
+          Stdlib.Option.iter (fun link_dir ->
               let name =
                 OpamStd.Option.default
                   (OpamUrl.basename (OpamFile.URL.url urlf))
@@ -628,7 +628,7 @@ let add_hashes_command cli =
              @@| function
              | Result () | Up_to_date () ->
                OpamHash.compute ~kind (OpamFilename.to_string f)
-               |> OpamStd.Option.some
+               |> Stdlib.Option.some
              | Not_available _ -> None)
       in
       (match h with

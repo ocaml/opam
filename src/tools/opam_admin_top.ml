@@ -10,7 +10,6 @@
 
 (* To be used for quick repo scripts using the toplevel *)
 open OpamFilename.Op
-open OpamStd.Op
 
 let identity _ x = x
 let true_ _ = true

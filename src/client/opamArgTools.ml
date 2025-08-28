@@ -293,7 +293,7 @@ let term_cli_check ~check arg =
 (** Helpers for mk_vflag_all & mk_enum_opt_all *)
 let preprocess_validity_for_all cli find flags elems =
   List.fold_left (fun (newer_cli,older_cli,platform,valid) elem ->
-      match OpamStd.List.find_opt (find elem) flags with
+      match List.find_opt (find elem) flags with
       | Some (validity, flags, _) ->
         check_cli_validity_t cli validity
           ~platform:(fun err ->
@@ -355,7 +355,7 @@ let mk_vflag ~cli ~section default flags =
   in
   let check elem =
     match
-      OpamStd.List.find_opt (fun (validity, _, _) ->
+      List.find_opt (fun (validity, _, _) ->
           validity.content = elem)
         flags
     with
@@ -562,7 +562,7 @@ let mk_enum_opt_all ~cli validity ~section flags value states doc =
           in
           `Error (false, msg)
         else
-          (OpamStd.Option.iter (OpamConsole.warning "%s") (platform_err);
+          (Stdlib.Option.iter (OpamConsole.warning "%s") (platform_err);
            OpamConsole.warning "%s" msg;
            valid_flags elems)
       in
@@ -579,7 +579,7 @@ let mk_enum_opt_all ~cli validity ~section flags value states doc =
       | [], [], [str, platform_err], [] ->
         platform_error (Verbatim (to_str [str])) platform_err
       | [], [str, (c, instead), exp], platform, elems ->
-        OpamStd.Option.iter (OpamConsole.warning "%s")
+        Stdlib.Option.iter (OpamConsole.warning "%s")
           (platform_msg ~string_of_options:to_str platform);
         (OpamConsole.warning "%s"
            (older_flag_msg ~exp cli c instead (to_str [str]));
@@ -685,7 +685,7 @@ let mk_subcommands_aux ~cli my_enum commands =
     let check = function
       | None -> `Ok None
       | Some elem ->
-        match OpamStd.List.find_opt (fun (validity, _, _, _) ->
+        match List.find_opt (fun (validity, _, _, _) ->
             validity.content = elem) commands with
         | Some (validity, sbcmd, _,_) ->
           check_cli_validity cli validity (Some (elem_of_vr elem))
@@ -723,7 +723,7 @@ let bad_subcommand ~cli subcommands (command, usersubcommand, userparams) =
     `Error (false,
             Printf.sprintf "Missing subcommand. Valid subcommands are %s."
               (OpamStd.Format.pretty_list
-                 (OpamStd.List.filter_map (fun (validity,sb,_,_,_) ->
+                 (List.filter_map (fun (validity,sb,_,_,_) ->
                       match validity with
                       | {valid = c; removed = None; _} when cli @>= c -> None
                       | {removed = Some (c,_); _}  when cli @< c -> None
@@ -806,7 +806,7 @@ let env_with_cli environment =
       environment
   in
   let init_env cli =
-    OpamStd.List.filter_map (fun (var, validity, cons, _doc) ->
+    List.filter_map (fun (var, validity, cons, _doc) ->
         check_cli_env_validity cli validity var cons)
       environment
     |> OpamStd.Config.E.updates

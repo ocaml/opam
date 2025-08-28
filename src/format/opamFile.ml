@@ -615,7 +615,7 @@ module Environment = struct include LineFile(struct
         @@ Pp.fallback only_norewrite
         @@ Pp.fallback only_format only_comment
       in
-      (OpamFormat.lines_set ~empty:[] ~add:OpamStd.List.cons
+      (OpamFormat.lines_set ~empty:[] ~add:List.cons
          ~fold:List.fold_right
        @@ (Pp.identity
            ^+ env
@@ -911,7 +911,7 @@ module Syntax = struct
       let it_ident it = match it.pelem with
         | Variable (f, _) -> `Var f.pelem
         | Section ({section_kind = k; section_name = n; _}) ->
-          `Sec (k.pelem, OpamStd.Option.map (fun x -> x.pelem) n)
+          `Sec (k.pelem, Option.map (fun x -> x.pelem) n)
       in
       let lines_index =
         let rec aux acc s =
@@ -976,7 +976,7 @@ module Syntax = struct
                  | vraw :: rraw ->
                    let blank = extract lastpos (pos_index vraw.pos.start) in
                    let rraw, lastpos =
-                     if OpamStd.List.find_opt
+                     if List.find_opt
                          (OpamPrinter.value_equals vraw) vlst <> None then
                        vlst_raw, lastpos
                      else
@@ -1072,15 +1072,15 @@ module Syntax = struct
                      rem, (f :: padding :: strs, stop)
                    with Not_found -> rem0, (strs, pos_index item.pos.stop)
                with Not_found | OpamPp.Bad_format _ ->
-                 if OpamStd.String.starts_with ~prefix:"x-" name &&
-                    OpamStd.List.find_opt (fun i -> it_ident i = `Var name)
+                 if OpamCompat.String.starts_with ~prefix:"x-" name &&
+                    List.find_opt (fun i -> it_ident i = `Var name)
                       syn_t.file_contents <> None then
                    rem, (field_str item lastpos strs)
                  else rem0, (strs, pos_index item.pos.stop))
             | Section {section_kind; section_name; section_items} ->
               let section_kind = section_kind.pelem in
               let section_items = section_items.pelem in
-              let section_name = OpamStd.Option.map (fun x -> x.pelem) section_name in
+              let section_name = Option.map (fun x -> x.pelem) section_name in
               (try
                  rem,
                  let ppa =
@@ -1090,7 +1090,7 @@ module Syntax = struct
                    match snd (Pp.print ppa t) with
                    | None -> None
                    | Some v ->
-                     OpamStd.List.assoc_opt (OpamStd.Option.equal String.equal)
+                     OpamStd.List.assoc_opt (Option.equal String.equal)
                        section_name v
                  in
                  let sec_field_t = print_sec ppa t in
@@ -1415,7 +1415,7 @@ module ConfigSyntax = struct
       | Some switch -> fun x -> not (OpamSwitch.equal switch x)
       | None -> fun _ -> true
     in
-    OpamStd.List.find_opt (fun switch ->
+    List.find_opt (fun switch ->
         not_current switch && not (OpamSwitch.is_external switch))
       t.installed_switches
   let jobs t = t.jobs
@@ -1814,13 +1814,13 @@ module InitConfigSyntax = struct
         with_default_invariant default_invariant
         (Pp.V.package_formula `Disj Pp.V.(constraints Pp.V.version));
       "jobs", Pp.ppacc_opt
-        (with_jobs @* OpamStd.Option.some) jobs
+        (with_jobs @* Option.some) jobs
         Pp.V.pos_int;
       "download-command", Pp.ppacc_opt
-        (with_dl_tool @* OpamStd.Option.some) dl_tool
+        (with_dl_tool @* Option.some) dl_tool
         (Pp.V.map_list ~depth:1 Pp.V.arg);
       "download-jobs", Pp.ppacc_opt
-        (with_dl_jobs @* OpamStd.Option.some) dl_jobs
+        (with_dl_jobs @* Option.some) dl_jobs
         Pp.V.pos_int;
       "archive-mirrors", Pp.ppacc
         with_dl_cache dl_cache
@@ -1835,7 +1835,7 @@ module InitConfigSyntax = struct
         (with_criterion `Fixup) (criterion `Fixup)
         Pp.V.string;
       "solver", Pp.ppacc_opt
-        (with_solver @* OpamStd.Option.some) solver
+        (with_solver @* Option.some) solver
         (Pp.V.map_list ~depth:1 Pp.V.arg);
       "global-variables", Pp.ppacc
         with_global_variables global_variables
@@ -2685,7 +2685,7 @@ module OPAMSyntax = struct
     | Some n -> n
 
   let ext_field_prefix = "x-"
-  let is_ext_field = OpamStd.String.starts_with ~prefix:ext_field_prefix
+  let is_ext_field = OpamCompat.String.starts_with ~prefix:ext_field_prefix
 
   (* Getters *)
 
@@ -2753,7 +2753,7 @@ module OPAMSyntax = struct
 
   let url t = t.url
   let descr t = t.descr
-  let synopsis t = OpamStd.Option.map Descr.synopsis t.descr
+  let synopsis t = Option.map Descr.synopsis t.descr
   let descr_body t = match t.descr with
     | None | Some (_, "") -> None
     | Some (_, text) -> Some text
@@ -2876,7 +2876,7 @@ module OPAMSyntax = struct
   (* Allow 'flag:xxx' tags as flags, for compat *)
   let flag_of_tag tag =
     let prefix = "flags:" in
-    if OpamStd.String.starts_with ~prefix tag then
+    if OpamCompat.String.starts_with ~prefix tag then
       Some (pkg_flag_of_string (OpamStd.String.remove_prefix ~prefix tag))
     else None
 
@@ -2931,14 +2931,14 @@ module OPAMSyntax = struct
     if known_flags <> flags then
       Pp.warn ~pos
         "Unknown package flags %s ignored"
-        (OpamStd.Format.pretty_list (OpamStd.List.filter_map (function
+        (OpamStd.Format.pretty_list (List.filter_map (function
              | Pkgflag_Unknown s -> Some s
              | _ -> None)
              flags));
     known_flags
 
   let cleanup_tags opam_version ~pos tags =
-    let flags = OpamStd.List.filter_map flag_of_tag tags in
+    let flags = List.filter_map flag_of_tag tags in
     ignore (cleanup_flags opam_version ~pos flags);
     tags
 
@@ -3529,7 +3529,7 @@ module OPAM = struct
             else None)
           t.extensions;
 
-      url         = OpamStd.Option.map effective_url t.url;
+      url         = Option.map effective_url t.url;
       descr       = empty.descr;
 
       metadata_dir = empty.metadata_dir;
@@ -4145,7 +4145,7 @@ module CompSyntax = struct
           ])
     in
     let url =
-      OpamStd.Option.map
+      Option.map
         (fun url -> URL.with_url url URL.empty)
         comp.src
     in

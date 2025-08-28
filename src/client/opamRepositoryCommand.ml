@@ -11,7 +11,6 @@
 
 open OpamTypes
 open OpamStateTypes
-open OpamStd.Op
 
 let log fmt = OpamConsole.log "REPOSITORY" fmt
 

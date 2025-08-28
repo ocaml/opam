@@ -60,7 +60,7 @@ module Full = struct
   (* Read the variables overridden through the environment *)
   let read_from_env v =
     let var_str = to_string (variable v) in
-    let undash = OpamStd.String.map (function '-' -> '_' | c -> c) in
+    let undash = String.map (function '-' -> '_' | c -> c) in
     let var_hook =
       match package v with
       | Some n ->

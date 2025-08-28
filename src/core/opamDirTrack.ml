@@ -116,7 +116,7 @@ let item_digest = function
   | _perms, Special (a,b) -> Printf.sprintf "S:%d:%d" a b
 
 let is_precise_digest d =
-  not (OpamStd.String.starts_with ~prefix:"F:S" d)
+  not (OpamCompat.String.starts_with ~prefix:"F:S" d)
 
 let track_t to_track ?(except=OpamFilename.Base.Set.empty) job_f =
   let module SM = OpamStd.String.Map in
@@ -262,7 +262,7 @@ let revert ?title ?(verbose=OpamConsole.verbose()) ?(force=false)
             else
               let nonempty =
                 if List.exists
-                    (OpamStd.String.starts_with ~prefix:fname) nonempty
+                    (OpamCompat.String.starts_with ~prefix:fname) nonempty
                 then nonempty else fname::nonempty
               in
               (already, modified, nonempty, cannot)

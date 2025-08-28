@@ -14,7 +14,7 @@ include OpamStd.AbstractString
 let unset = of_string "#unset#"
 
 let is_external s =
-  OpamStd.String.starts_with ~prefix:"." s ||
+  OpamCompat.String.starts_with ~prefix:"." s ||
   OpamStd.String.contains ~sub:Filename.dir_sep s
 
 let external_dirname = "_opam"

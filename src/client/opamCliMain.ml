@@ -12,7 +12,6 @@
 open Cmdliner
 open OpamStateTypes
 open OpamTypesBase
-open OpamStd.Op
 
 exception InvalidCLI of OpamCLIVersion.Sourced.t
 
@@ -32,7 +31,7 @@ let raise_invalid_cli :
 
 let raise_invalid_confirm_level invalid =
   let invalid =
-    OpamStd.Option.map (fun i ->
+    Stdlib.Option.map (fun i ->
         i, "one of " ^
            (OpamArg.confirm_enum
             |> List.map (fun (_,s,_) -> Printf.sprintf "`%s'" s)
@@ -87,7 +86,7 @@ let rec preprocess_argv cli yes_args confirm args =
     raise_invalid_confirm_level None
   | confirm_level :: cl_arg :: args when is_confirm_level confirm_level ->
     let answer =
-      match OpamStd.List.find_opt (fun (_,n,_) -> n = cl_arg)
+      match List.find_opt (fun (_,n,_) -> n = cl_arg)
               OpamArg.confirm_enum with
       | Some (_, _, a) -> a
       | None -> raise_invalid_confirm_level (Some cl_arg)
@@ -236,7 +235,7 @@ let check_and_run_external_commands () =
           OpamPackage.packages_of_names
             st.packages
             (OpamPackage.Name.Set.of_list @@
-             (OpamStd.List.filter_map
+             (List.filter_map
                 (fun s ->
                    try Some (OpamPackage.Name.of_string s)
                    with Failure _ -> None)
@@ -439,7 +438,7 @@ let rec main_catch_all f =
     exit exit_code
 
 let run () =
-  OpamStd.Option.iter OpamVersion.set_git OpamGitVersion.version;
+  Stdlib.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
   OpamArg.preinit_opam_env_variables ();
   main_catch_all @@ fun () ->

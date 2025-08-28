@@ -53,12 +53,12 @@ let filters_of_formula f =
 
 (* Doesn't include filters in commands *)
 let all_filters ?(exclude_post=false) t =
-  OpamStd.List.filter_map snd t.patches @
-  OpamStd.List.filter_map snd t.messages @
-  (if exclude_post then [] else OpamStd.List.filter_map snd t.post_messages) @
+  List.filter_map snd t.patches @
+  List.filter_map snd t.messages @
+  (if exclude_post then [] else List.filter_map snd t.post_messages) @
   List.map snd t.depexts @
-  OpamStd.List.filter_map snd t.libraries @
-  OpamStd.List.filter_map snd t.syntax @
+  List.filter_map snd t.libraries @
+  List.filter_map snd t.syntax @
   [t.available] @
   filters_of_formula
     (OpamFormula.ands
@@ -84,7 +84,7 @@ let map_all_filters f t =
              | s, Some ft -> s, Some (f ft)
              | nf -> nf)
            args,
-         OpamStd.Option.map f filter)
+         Option.map f filter)
   in
   let map_filtered_formula =
     OpamFormula.map (fun (name, fc) ->
@@ -446,7 +446,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
             "Missing field 'version' or directory in the form 'name.version'";
 *)
     (let empty_fields =
-       OpamStd.List.filter_map (function n,[""] -> Some n | _ -> None)
+       List.filter_map (function n,[""] -> Some n | _ -> None)
          ["maintainer", t.maintainer; "homepage", t.homepage;
           "author", t.author; "license", t.license; "doc", t.doc;
           "tags", t.tags; "bug_reports", t.bug_reports]
@@ -477,7 +477,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
       (t.install <> [] && t.remove = []);
 *)
     (let unk_flags =
-       OpamStd.List.filter_map (function
+       List.filter_map (function
            | Pkgflag_Unknown s -> Some s
            | _ -> None)
          t.flags
@@ -646,7 +646,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        match t.OpamFile.OPAM.name with
        | None -> false
        | Some name ->
-         not (OpamStd.String.starts_with ~prefix:OpamPath.plugin_prefix
+         not (OpamCompat.String.starts_with ~prefix:OpamPath.plugin_prefix
                 (OpamPackage.Name.to_string name)));
     (let unclosed =
        List.fold_left (fun acc s ->
@@ -736,12 +736,12 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        | None, _ | _, None -> []
        | Some fs, Some [] -> List.map fst fs
        | Some efiles, Some ffiles ->
-         OpamStd.List.filter_map (fun (n, _) ->
+         List.filter_map (fun (n, _) ->
              if OpamStd.List.mem_assoc OpamFilename.Base.equal
                  n ffiles then
                None else Some n)
            efiles @
-         OpamStd.List.filter_map (fun (n, check_f) ->
+         List.filter_map (fun (n, check_f) ->
              try
                if check_f (OpamStd.List.assoc OpamFilename.Base.equal
                              n efiles) then
@@ -755,7 +755,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (mismatching_extra_files <> []));
     (let spaced_depexts =
        List.concat (List.map (fun (dl,_) ->
-           OpamStd.List.filter_map
+           List.filter_map
              (fun s ->
                 let d = OpamSysPkg.to_string s in
                 if String.contains d ' ' || String.length d = 0 then
@@ -818,7 +818,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (rem_test || rem_doc));
     cond 59 `Warning "url doesn't contain a checksum"
       (is_url_archive &&
-       OpamStd.Option.map OpamFile.URL.checksum t.url = Some []);
+       Option.map OpamFile.URL.checksum t.url = Some []);
     (let upstream_error =
        if not check_upstream then None else
        match t.url with
@@ -830,7 +830,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
            | [] -> None
            | chks ->
              let not_corresponding =
-               OpamStd.List.filter_map (fun chk ->
+               List.filter_map (fun chk ->
                    match OpamHash.mismatch (OpamFilename.to_string f) chk with
                    | Some m -> Some (m, chk)
                    | None -> None)
@@ -879,7 +879,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
              Some ("Source not found: "^src)
      in
      cond 60 `Error "Upstream check failed"
-       ~detail:(OpamStd.Option.to_list upstream_error)
+       ~detail:(Option.to_list upstream_error)
        (upstream_error <> None));
     (let with_test =
        List.exists ((=) (OpamVariable.Full.of_string "with-test"))
@@ -1003,7 +1003,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        (not_bool_strings <> []));
     cond 67 `Error
       "Checksum specified with a non archive url"
-      ?detail:(OpamStd.Option.map (fun url ->
+      ?detail:(Option.map (fun url ->
           [Printf.sprintf "%s - %s"
              (OpamFile.URL.url url |> OpamUrl.to_string)
              (OpamFile.URL.checksum url
@@ -1120,7 +1120,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
   ]
   in
   format_errors @
-  OpamStd.List.filter_map (fun x -> x) warnings
+  List.filter_map (fun x -> x) warnings
 
 let lint = t_lint ~all:false
 
@@ -1503,5 +1503,5 @@ let sort_opam opam =
   |> with_depexts @@ fst_sort opam.depexts
   |> with_conflicts @@ sort_ff opam.conflicts
   |> with_pin_depends @@ fst_sort ~comp:OpamPackage.compare opam.pin_depends
-  |> with_extra_files_opt @@ OpamStd.Option.map fst_sort opam.extra_files
+  |> with_extra_files_opt @@ Option.map fst_sort opam.extra_files
   |> with_extra_sources @@ fst_sort opam.extra_sources

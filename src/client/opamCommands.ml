@@ -477,7 +477,7 @@ let init cli =
         ~no_default_config_file:no_config_file ~add_config_file:config_file
     in
     let repo =
-      OpamStd.Option.map (fun url ->
+      Stdlib.Option.map (fun url ->
           let repo_url = OpamUrl.parse ?backend:repo_kind ~from_file:false url in
           { repo_name; repo_url; repo_trust = None })
         repo_url
@@ -756,7 +756,7 @@ let list ?(force_search=false) cli =
       (let drop_by_depexts =
          List.fold_left (fun missing str ->
              let is_missing pkgs =
-                 if OpamStd.String.contains_char str '.' then
+                 if String.contains str '.' then
                    let nv = OpamPackage.of_string str in
                    if OpamPackage.Set.mem nv results then None else
                      OpamPackage.Set.find_opt (OpamPackage.equal nv) pkgs
@@ -1088,7 +1088,7 @@ let show cli =
          in
          if opamfs = [] then
            let dirnames =
-             OpamStd.List.filter_map (function
+             List.filter_map (function
                  | `Dirname d -> Some (OpamFilename.Dir.to_string d)
                  | _ -> None)
                atom_locs
@@ -1859,7 +1859,7 @@ let install cli =
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_write gt @@ fun st ->
     let pure_atoms =
-      OpamStd.List.filter_map (function `Atom a -> Some a | _ -> None)
+      List.filter_map (function `Atom a -> Some a | _ -> None)
         atoms_or_locals
     in
     let atoms_or_locals =
@@ -2607,7 +2607,7 @@ let with_repos_rt gt cli repos f =
         repos
     in
     let new_defs =
-      OpamStd.List.filter_map (function
+      List.filter_map (function
           | (_, None) -> None
           | (n, Some url) ->
             let handle_suffix = OpamCLIVersion.Op.(cli @>= cli2_3) in
@@ -3002,7 +3002,7 @@ let switch cli =
                let st =
                  if is_implicit then
                    let local_compilers =
-                     OpamStd.List.filter_map
+                     List.filter_map
                        (fun (name, _) ->
                           (* The opam file for the local package might not be
                              the current pinning (e.g. with deps-only), but it's
@@ -3384,7 +3384,7 @@ let pin ?(unpin_only=false) cli =
                 pinned_version = None;
                 pinned_opam =
                   OpamFile.OPAM.read_opt nf.pin.pin_file
-                  |> OpamStd.Option.map
+                  |> Stdlib.Option.map
                     (OpamFile.OPAM.with_locked_opt nf.pin.pin_locked);
                 pinned_url = nf.pin.pin_url;
                 pinned_subpath = nf.pin.pin_subpath;
@@ -3423,7 +3423,7 @@ let pin ?(unpin_only=false) cli =
                     pinned_version = None;
                     pinned_opam =
                       OpamFile.OPAM.read_opt nf.pin.pin_file
-                      |> OpamStd.Option.map
+                      |> Stdlib.Option.map
                         (OpamFile.OPAM.with_locked_opt nf.pin.pin_locked);
                     pinned_url = url;
                     pinned_subpath = nf.pin.pin_subpath;
@@ -3562,7 +3562,7 @@ let pin ?(unpin_only=false) cli =
                          (match spu with
                           | Some spp ->
                             let open OpamUrl.Op in
-                            OpamStd.String.starts_with
+                            OpamCompat.String.starts_with
                               ~prefix:(url / OpamFilename.SubPath.to_string sp).path
                               (u / OpamFilename.SubPath.to_string spp).path
                           | None -> false)
@@ -3746,7 +3746,7 @@ let source cli =
       else if no_checksums then Some (Some false)
       else None
     in
-    OpamStd.Option.iter (fun force_checksums ->
+    Stdlib.Option.iter (fun force_checksums ->
         OpamRepositoryConfig.update ~force_checksums ())
       force_checksums;
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -4062,10 +4062,10 @@ let lint cli =
                  else OpamConsole.colorise `yellow "Warnings.")
                 (OpamFileTools.warns_to_string warnings);
             if normalise then
-              OpamStd.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
+              Stdlib.Option.iter (OpamFile.OPAM.write_to_channel stdout) opam;
             let json =
-              OpamStd.Option.map
-                (OpamStd.List.cons
+              Stdlib.Option.map
+                (List.cons
                    (OpamFileTools.warns_to_json ?filename:opam_f warnings))
                 json
             in
@@ -4079,7 +4079,7 @@ let lint cli =
             (true, json))
         (false, json) files
     in
-    OpamStd.Option.iter (fun json -> OpamJson.append "lint" (`A json)) json;
+    Stdlib.Option.iter (fun json -> OpamJson.append "lint" (`A json)) json;
     if err then OpamStd.Sys.exit_because `False
   in
   mk_command  ~cli cli_original "lint" ~doc ~man
@@ -4574,14 +4574,14 @@ let name_of_new_api_info info = Cmd.name (Cmd.v info (Term.const ()))
 
 let is_builtin_command prefix =
   List.exists (fun (_,info) ->
-                 OpamStd.String.starts_with ~prefix (name_of_new_api_info info))
+                 OpamCompat.String.starts_with ~prefix (name_of_new_api_info info))
               current_commands
 
 let is_admin_subcommand prefix =
   prefix = "admin" ||
   let matches =
     List.filter (fun (_,info) ->
-                   OpamStd.String.starts_with ~prefix (name_of_new_api_info info))
+                   OpamCompat.String.starts_with ~prefix (name_of_new_api_info info))
                 current_commands in
   match matches with
   | [(_,info)] when name_of_new_api_info info = "admin" -> true

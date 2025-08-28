@@ -229,7 +229,7 @@ let upgrade_t
          let unopt = unopt -- base in
          let conflicts =
            let get_formula pkg =
-             OpamStd.Option.map
+             Stdlib.Option.map
                (fun opam ->
                   OpamFilter.filter_formula ~default:false
                     (OpamPackageVar.resolve_switch ~package:pkg t)
@@ -251,7 +251,7 @@ let upgrade_t
                                (OpamPackage.version unopt_pkg)
                           then
                             OpamPackage.Map.update unopt_pkg
-                              (OpamStd.List.cons (installed_pkg, formula)) [] map
+                              (List.cons (installed_pkg, formula)) [] map
                           else map
                        ) map conflicts_formula
                  ) set map
@@ -262,7 +262,7 @@ let upgrade_t
             dependency formula *)
          let incompatibilities =
            let get_formula pkg =
-             OpamStd.Option.map (OpamPackageVar.all_depends t)
+             Stdlib.Option.map (OpamPackageVar.all_depends t)
                (OpamSwitchState.opam_opt t pkg)
            in
            OpamPackage.Set.fold (fun latest_pkg map ->
@@ -279,7 +279,7 @@ let upgrade_t
                                      (OpamPackage.version unopt_pkg))
                            then
                              OpamPackage.Map.update unopt_pkg
-                               (OpamStd.List.cons (latest_pkg, formula)) [] map
+                               (List.cons (latest_pkg, formula)) [] map
                            else map
                         ) map depends_formula
                    ) unopt map
@@ -605,7 +605,7 @@ let init_checks ?(hard_fail_exn=true) init_config =
                           OpamSysPoll.variables >>= Lazy.force))
   in
   let filter_tools =
-    OpamStd.List.filter_map (fun (cmd,str,oflt) ->
+    List.filter_map (fun (cmd,str,oflt) ->
         match oflt with
         | None -> Some (cmd,str)
         | Some flt -> if (OpamFilter.eval_to_bool env flt) then
@@ -710,7 +710,7 @@ let git_for_windows kind mechanism ~interactive ~cygwin_is_tweakable =
   let gits =
     OpamStd.Env.get "PATH"
     |> OpamStd.Sys.split_path_variable
-    |> OpamStd.List.fold_left_map (fun gits p ->
+    |> OpamCompat.List.fold_left_map (fun gits p ->
         match resolve_git_in p with
         | Some git when not (OpamStd.String.Set.mem git gits) ->
           OpamStd.String.Set.add git gits,
@@ -882,7 +882,7 @@ let git_for_windows kind mechanism ~interactive ~cygwin_is_tweakable =
     | None -> menu ()
   and menu () =
     let prompt () =
-      OpamStd.Option.iter (OpamConsole.warning "%s\n") gfw_message;
+      Stdlib.Option.iter (OpamConsole.warning "%s\n") gfw_message;
       OpamConsole.menu "Which Git should opam use?"
         ~default ~yes:default ~no:default ~options
     in
@@ -919,7 +919,7 @@ let git_for_windows kind mechanism ~interactive ~cygwin_is_tweakable =
       None, install_via_depext
     end
   in
-  OpamStd.Option.iter (fun _ ->
+  Stdlib.Option.iter (fun _ ->
       OpamConsole.msg
         "You can change that later with \
          'opam option \"git-location=C:\\A\\Path\\bin\"'")
@@ -966,7 +966,7 @@ let cygwin_searches ?first () =
       let possibles = OpamStubs.enumRegistry hive key OpamStubsTypes.REG_SZ in
       let map (_, path) =
         let path =
-          if OpamStd.String.starts_with ~prefix:"\\??\\" path then
+          if OpamCompat.String.starts_with ~prefix:"\\??\\" path then
             String.sub path 4 (String.length path - 4)
           else
             path
@@ -1189,7 +1189,7 @@ let rec cygwin_menu ~bypass_checks ~interactive header =
     if not interactive then
       OpamConsole.note "opam will use the %s installation found in your Path"
                        (string_of_kind kind);
-    OpamStd.Option.iter (OpamConsole.warning "%s") warn_path;
+    Stdlib.Option.iter (OpamConsole.warning "%s") warn_path;
     Some mechanism
   | `Specify ->
     begin
@@ -1295,7 +1295,7 @@ let initialise_msys2 root =
 
 let determine_windows_configuration ?cygwin_setup ?git_location
                                     ~bypass_checks ~interactive config =
-  OpamStd.Option.iter
+  Stdlib.Option.iter
     (log "Cygwin (from CLI): %a" (slog string_of_cygwin_setup)) cygwin_setup;
   (* Check whether symlinks can be created. Developer Mode is not the only way
      to do this, but it's the easiest. *)
@@ -1334,7 +1334,7 @@ let determine_windows_configuration ?cygwin_setup ?git_location
       check_git_location_or_exit git_location "--git-location";
       result
   in
-  OpamStd.Option.iter (log "%a" (slog string_of_git_location_cli)) git_location;
+  Stdlib.Option.iter (log "%a" (slog string_of_git_location_cli)) git_location;
 
   (* Checks and initialisation for both Cygwin/MSYS2 and Git (which is made
      mandatory on Windows)
@@ -1636,8 +1636,8 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
       config, None, [], None
   in
 
-  OpamStd.Option.iter initialise_msys2 msys2_check_root;
-  OpamStd.Option.iter OpamSysInteract.Cygwin.install mechanism;
+  Stdlib.Option.iter initialise_msys2 msys2_check_root;
+  Stdlib.Option.iter OpamSysInteract.Cygwin.install mechanism;
   check_for_sys_packages config system_packages;
 
   let _all_ok =
@@ -1651,7 +1651,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
                             (OpamStd.List.assoc OpamVariable.equal vs)
                             OpamSysPoll.variables >>= Lazy.force))
     in
-    OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
+    List.filter_map (fun ((nam,scr),oflt) -> match oflt with
         | None -> Some (nam,scr)
         | Some flt ->
           if OpamFilter.eval_to_bool env flt then Some (nam,scr) else None)
@@ -1675,7 +1675,7 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
   in
   OpamRepositoryState.drop rt
 
-let has_space s = OpamStd.String.contains_char s ' '
+let has_space s = String.contains s ' '
 
 let default_redirect_root = OpamFilename.Dir.of_string "C:\\opamroot"
 
@@ -1866,8 +1866,8 @@ let init
             config, None, [], None
         in
 
-        OpamStd.Option.iter initialise_msys2 msys2_check_root;
-        OpamStd.Option.iter OpamSysInteract.Cygwin.install mechanism;
+        Stdlib.Option.iter initialise_msys2 msys2_check_root;
+        Stdlib.Option.iter OpamSysInteract.Cygwin.install mechanism;
         check_for_sys_packages config system_packages;
 
         let dontswitch =
@@ -1886,7 +1886,7 @@ let init
                                   OpamSysPoll.variables >>= Lazy.force))
           in
           let scripts = OpamFile.InitConfig.init_scripts init_config in
-          OpamStd.List.filter_map (fun ((nam,scr),oflt) -> match oflt with
+          List.filter_map (fun ((nam,scr),oflt) -> match oflt with
               | None -> Some (nam,scr)
               | Some flt -> if OpamFilter.eval_to_bool env flt then
                   Some (nam,scr) else None) scripts
@@ -1932,7 +1932,7 @@ let init
           in
           let univ = { univ with u_invariant = invariant } in
           let default_compiler =
-            OpamStd.List.find_opt
+            List.find_opt
               (OpamSolver.atom_coinstallability_check univ)
             alternatives
             |> OpamStd.Option.default []
@@ -2106,7 +2106,7 @@ let assume_built_restrictions ?available_packages t atoms =
   { t with available_packages }, fixed_atoms
 
 let filter_unpinned_locally t atoms f =
-  OpamStd.List.filter_map (fun at ->
+  List.filter_map (fun at ->
       let n,_ = at in
       if OpamSwitchState.is_pinned t n &&
          OpamStd.Option.Op.(OpamPinned.package_opt t n >>=
@@ -2393,7 +2393,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
             ~download_only ~assume_built solution in
         t, Some (Success res)
   in
-  OpamStd.Option.iter (OpamSolution.check_solution t) solution;
+  Stdlib.Option.iter (OpamSolution.check_solution t) solution;
   t
 
 let install t ?formula ?autoupdate ?add_to_roots

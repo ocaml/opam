@@ -328,7 +328,7 @@ let scrubbed_environment_variables =
     else
       Some ("OPAM" ^ name)
   in
-    OpamStd.List.filter_map f environment_variables
+  List.filter_map f environment_variables
 
 let doc_opam_env_variables, init_opam_env_variabes =
   env_with_cli environment_variables
@@ -518,7 +518,7 @@ let apply_global_options cli o =
       o.external_solver >>| fun s -> lazy (OpamCudfSolver.solver_of_string s)
   in
   let solver_prefs = o.solver_preferences >>| fun p -> lazy (Some p) in
-  let yes = OpamStd.Option.(map some o.yes) in
+  let yes = Stdlib.Option.map Stdlib.Option.some o.yes in
   init_opam_env_variabes cli;
   OpamClientConfig.opam_init
     (* - format options - *)
@@ -620,7 +620,7 @@ let apply_global_options cli o =
             | Some { pelem = Ident "os-distribution"; _},
               { pelem = String "msys2"; _}::_  ->
               let cygbin =
-                OpamStd.Option.map Filename.dirname
+                Stdlib.Option.map Filename.dirname
                   (OpamSystem.resolve_command "cygcheck")
               in
               OpamCoreConfig.update ?cygbin ()
@@ -858,7 +858,7 @@ let atom =
 let atom_or_local =
   let parse str =
     if OpamStd.String.contains ~sub:Filename.dir_sep str ||
-       OpamStd.String.starts_with ~prefix:"." str
+       OpamCompat.String.starts_with ~prefix:"." str
     then
       if OpamFilename.(exists (of_string str)) then
         `Ok (`Filename (OpamFilename.of_string str))
@@ -1006,7 +1006,7 @@ let enum_with_default sl: 'a Arg.converter =
 
 let opamlist_column =
   let parse str =
-    if OpamStd.String.ends_with ~suffix:":" str then
+    if OpamCompat.String.ends_with ~suffix:":" str then
       let fld = OpamStd.String.remove_suffix ~suffix:":" str in
       `Ok (OpamListCommand.Field fld)
     else

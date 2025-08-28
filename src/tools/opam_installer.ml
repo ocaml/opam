@@ -175,7 +175,7 @@ let iter_install f instfile o =
   let dest_global ?fix instdir_f = dest ?fix (instdir_f o.prefix ()) in
   let dest_pkg ?fix instdir_f =
     let fix =
-      OpamStd.Option.map (fun d ->
+      Option.map (fun d ->
           d / OpamPackage.Name.to_string o.pkgname)
         fix
     in

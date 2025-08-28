@@ -141,7 +141,7 @@ let check_locked ?locked default =
 
 let find_opam_file_in_source ?locked name dir =
   let opt =
-    OpamStd.List.find_opt OpamFilename.exists
+    List.find_opt OpamFilename.exists
       (possible_definition_filenames dir name)
   in
   opt
@@ -161,7 +161,7 @@ let name_of_opam_filename ?locked dir file =
     | None -> rel
     | Some suf ->
       let ext = "."^suf in
-      if OpamStd.String.ends_with ~suffix:(suffix^ext) rel then
+      if OpamCompat.String.ends_with ~suffix:(suffix^ext) rel then
         OpamStd.String.remove_suffix ~suffix:ext rel
       else rel
   in
@@ -175,7 +175,7 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
   let files =
     let rec files_aux acc base d =
       let acc =
-        OpamStd.List.filter_map (fun f ->
+        List.filter_map (fun f ->
             if OpamFilename.basename f = baseopam ||
                OpamFilename.check_suffix f ".opam" then
               let base =
@@ -193,7 +193,7 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
       in
       List.fold_left
         (fun acc d ->
-           if OpamStd.String.ends_with ~suffix:".opam"
+           if OpamCompat.String.ends_with ~suffix:".opam"
                (OpamFilename.Dir.to_string d)
            then
              match OpamFilename.opt_file OpamFilename.Op.(d//"opam") with
@@ -205,7 +205,7 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
            if recurse &&
               not (base_dir = OpamFilename.Base.of_string OpamSwitch.external_dirname ||
                    base_dir = OpamFilename.Base.of_string "_build" ||
-                   OpamStd.String.starts_with ~prefix:"." basename)
+                   OpamCompat.String.starts_with ~prefix:"." basename)
            then
              let base = match base with
                | None -> Some basename
@@ -220,7 +220,7 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
   let d = OpamFilename.SubPath.(d /? subpath) in
   files d @ files (d / "opam") |>
   List.map (fun (f,s) -> (check_locked ?locked f), s) |>
-  OpamStd.List.filter_map
+  List.filter_map
     (fun ((f, locked), subpath) ->
        try
          (* Ignore empty files *)
@@ -231,7 +231,7 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
                     pin_file = OpamFile.make f;
                     pin_locked = locked;
                     pin_subpath =
-                      OpamStd.Option.map OpamFilename.SubPath.of_string subpath;
+                      Option.map OpamFilename.SubPath.of_string subpath;
                     pin_url = ();
                   }}
        with Unix.Unix_error _ ->
@@ -241,7 +241,7 @@ let files_in_source ?locked ?(recurse=false) ?subpath d =
 
 let files_in_source_w_target ?locked ?recurse ?subpath
     ?(same_kind=fun _ -> true) url dir =
-  OpamStd.List.filter_map (fun name_and_file ->
+  List.filter_map (fun name_and_file ->
       let pin_url =
         match url.OpamUrl.backend with
         | #OpamUrl.version_control as vc ->
@@ -290,6 +290,6 @@ let orig_opam_file st name opam =
       List.map (fun f -> OpamFilename.add_extension f locked) opam_files
     | None -> []
   in
-  OpamStd.List.find_opt OpamFilename.exists locked_files
-  ++ OpamStd.List.find_opt OpamFilename.exists opam_files
+  List.find_opt OpamFilename.exists locked_files
+  ++ List.find_opt OpamFilename.exists opam_files
   >>| OpamFile.make

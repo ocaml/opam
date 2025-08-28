@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamStd.Op
 open OpamProcess.Job.Op
 
 module type VCS = sig
@@ -109,7 +108,7 @@ module Make (VCS: VCS) = struct
       match subpath with
       | None -> files
       | Some sp ->
-        OpamStd.List.filter_map
+        List.filter_map
           (fun f ->
              if OpamStd.String.remove_prefix
                  ~prefix:(OpamFilename.SubPath.to_string sp ^ Filename.dir_sep) f
@@ -150,7 +149,7 @@ module Make (VCS: VCS) = struct
         in
         OpamStd.String.Set.filter (fun f ->
             List.exists (fun prefix ->
-                OpamStd.String.starts_with ~prefix f)
+                OpamCompat.String.starts_with ~prefix f)
               exc)
           fset
       in

@@ -60,7 +60,7 @@ let is_null h =
   let count_not_zero c =
     function '0' -> c | _ -> succ c
   in
-  OpamStd.String.fold_left count_not_zero 0 (contents h) <> 0
+  OpamCompat.String.fold_left count_not_zero 0 (contents h) <> 0
 
 let make kind s =
   if valid kind s then kind, String.lowercase_ascii s

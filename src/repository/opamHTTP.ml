@@ -10,7 +10,6 @@
 (**************************************************************************)
 
 open OpamTypes
-open OpamStd.Op
 open OpamProcess.Job.Op
 
 let log msg = OpamConsole.log "CURL" msg

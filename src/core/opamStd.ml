@@ -11,10 +11,8 @@
 
 module type SET = sig
   include Set.S
-  val map: (elt -> elt) -> t -> t
   val is_singleton: t -> bool
   val choose_one : t -> elt
-  val choose_opt : t -> elt option
   val of_list: elt list -> t
   val to_list_map: (elt -> 'b) -> t -> 'b list
   val to_string: t -> string
@@ -33,14 +31,12 @@ module type SET = sig
   end
 end
 module type MAP = sig
-  include Map.S
+  include OpamCompat.MAP
   val to_string: ('a -> string) -> 'a t -> string
   val to_json: 'a OpamJson.encoder -> 'a t OpamJson.encoder
   val of_json: 'a OpamJson.decoder -> 'a t OpamJson.decoder
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
-  val find_opt: key -> 'a t -> 'a option
-  val choose_opt: 'a t -> (key * 'a) option
   val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val is_singleton: 'a t -> bool
   val of_list: (key * 'a) list -> 'a t
@@ -48,7 +44,6 @@ module type MAP = sig
   val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
-  val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
 end
 module type ABSTRACT = sig
   type t
@@ -84,8 +79,6 @@ let max_print = 100
 
 module OpamList = struct
 
-  let cons x xs = x :: xs
-
   let concat_map ?(left="") ?(right="") ?nil ?last_sep sep f =
     let last_sep = match last_sep with None -> sep | Some sep -> sep in
     function
@@ -118,10 +111,6 @@ module OpamList = struct
       assert (pos = 0);
       Bytes.to_string buf
 
-  let rec find_opt f = function
-    | [] -> None
-    | x::r -> if f x then Some x else find_opt f r
-
   let to_string f =
     concat_map ~left:"{ " ~right:" }" ~nil:"{}" ", " f
 
@@ -133,16 +122,7 @@ module OpamList = struct
   let sort_nodup cmp l =
     remove_duplicates (fun a b -> cmp a b = 0) (List.sort cmp l)
 
-  let filter_map f l =
-    let rec loop accu = function
-      | []     -> List.rev accu
-      | h :: t ->
-        match f h with
-        | None   -> loop accu t
-        | Some x -> loop (x::accu) t in
-    loop [] l
-
-  let filter_some l = filter_map (fun x -> x) l
+  let filter_some l = List.filter_map (fun x -> x) l
 
   let rec find_map f = function
     | [] -> raise Not_found
@@ -216,15 +196,6 @@ module OpamList = struct
     in
     aux [] l
 
-  let fold_left_map f s l =
-    let s, l_rev =
-      List.fold_left (fun (s, l_rev) x ->
-          let s, y = f s x in
-          s, y :: l_rev)
-        (s, []) l
-    in
-    s, List.rev l_rev
-
 end
 
 
@@ -236,13 +207,6 @@ module Set = struct
 
     include S
 
-    let fold f set i =
-      let r = ref i in
-      S.iter (fun elt ->
-          r := f elt !r
-        ) set;
-      !r
-
     let is_singleton s =
       not (is_empty s) &&
       min_elt s == max_elt s
@@ -251,9 +215,6 @@ module Set = struct
       if is_empty s then raise Not_found
       else if is_singleton s then choose s
       else failwith "choose_one"
-
-    let choose_opt s =
-      try Some (choose s) with Not_found -> None
 
     let of_list l =
       List.fold_left (fun set e -> add e set) empty l
@@ -267,9 +228,6 @@ module Set = struct
       else
         let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
         OpamList.to_string (fun x -> x) (List.rev l)
-
-    let map f t =
-      S.fold (fun e set -> S.add (f e) set) t S.empty
 
     exception Found of elt
 
@@ -337,33 +295,9 @@ module Map = struct
 
   module Make (O : OrderedType) = struct
 
-    module M = Map.Make(O)
+    module M = OpamCompat.Map(O)
 
     include M
-
-    let fold f map i =
-      let r = ref i in
-      M.iter (fun key value->
-          r:= f key value !r
-        ) map;
-      !r
-
-    let map f map =
-      fold (fun key value map ->
-          add key (f value) map
-        ) map empty
-
-    let mapi f map =
-      fold (fun key value map ->
-          add key (f key value) map
-        ) map empty
-
-    let filter_map f map =
-      fold (fun key value map ->
-          match f key value with
-          | Some value -> add key value map
-          | None -> map
-        ) map empty
 
     let values map =
       List.rev (M.fold (fun _ v acc -> v :: acc) map [])
@@ -419,11 +353,6 @@ module Map = struct
           with Not_found -> None
         end
       | _ -> None
-
-    let find_opt k map = try Some (find k map) with Not_found -> None
-
-    let choose_opt m =
-      try Some (choose m) with Not_found -> None
 
     let safe_add k v map =
       if mem k map
@@ -484,14 +413,6 @@ module IntSet = Set.Make(OInt)
 
 
 module Option = struct
-  let map f = function
-    | None -> None
-    | Some x -> Some (f x)
-
-  let iter f = function
-    | None -> ()
-    | Some x -> f x
-
   let default dft = function
     | None -> dft
     | Some x -> x
@@ -508,19 +429,6 @@ module Option = struct
     | None -> dft
     | Some x -> f x
 
-  let compare cmp o1 o2 =
-    match o1,o2 with
-    | None, None -> 0
-    | Some _, None -> 1
-    | None, Some _ -> -1
-    | Some x1, Some x2 -> cmp x1 x2
-
-  let equal f o1 o2 =
-    match o1, o2 with
-    | Some o1, Some o2 -> f o1 o2
-    | None, None -> true
-    | _ , _  -> false
-
   let equal_some f v1 = function
     | None -> false
     | Some v2 -> f v1 v2
@@ -529,11 +437,6 @@ module Option = struct
     | Some x -> f x
     | None -> none
 
-  let to_list = function
-    | None -> []
-    | Some x -> [x]
-
-  let some x = Some x
   let none _ = None
 
   let of_Not_found f x =
@@ -543,7 +446,7 @@ module Option = struct
     let (>>=) = function
       | None -> fun _ -> None
       | Some x -> fun f -> f x
-    let (>>|) opt f = map f opt
+    let (>>|) opt f = Option.map f opt
     let (>>+) opt f = match opt with
       | None -> f ()
       | some -> some
@@ -577,29 +480,6 @@ module OpamString = struct
   module Set = StringSet
   module Map = StringMap
 
-  let starts_with ~prefix s =
-    let x = String.length prefix in
-    let n = String.length s in
-    n >= x &&
-    let rec chk i = i >= x || prefix.[i] = s.[i] && chk (i+1) in
-    chk 0
-
-  let ends_with ~suffix s =
-    let x = String.length suffix in
-    let n = String.length s in
-    n >= x &&
-    let rec chk i = i >= x || suffix.[i] = s.[i+n-x] && chk (i+1) in
-    chk 0
-
-  let for_all f s =
-    let len = String.length s in
-    let rec aux i = i >= len || f s.[i] && aux (i+1) in
-    aux 0
-
-  let contains_char s c =
-    try let _ = String.index s c in true
-    with Not_found -> false
-
   let contains ~sub =
     Re.(execp (compile (str sub)))
 
@@ -627,12 +507,6 @@ module OpamString = struct
         else
           raise Not_found in
       g i
-
-  let map f s =
-    let len = String.length s in
-    let b = Bytes.create len in
-    for i = 0 to len - 1 do Bytes.set b i (f s.[i]) done;
-    Bytes.to_string b
 
   let is_whitespace = function
     | ' ' | '\t' | '\r' | '\n' -> true
@@ -667,7 +541,7 @@ module OpamString = struct
       String.sub s 0 n
 
   let remove_prefix ~prefix s =
-    if starts_with ~prefix s then
+    if OpamCompat.String.starts_with ~prefix s then
       let x = String.length prefix in
       let n = String.length s in
       String.sub s x (n - x)
@@ -675,7 +549,7 @@ module OpamString = struct
       s
 
   let remove_suffix ~suffix s =
-    if ends_with ~suffix s then
+    if OpamCompat.String.ends_with ~suffix s then
       let x = String.length suffix in
       let n = String.length s in
       String.sub s 0 (n - x)
@@ -750,11 +624,6 @@ module OpamString = struct
         f acc next current last normal in
     f [] 0 "" 0 true
 
-  let fold_left f acc s =
-    let acc = ref acc in
-    for i = 0 to String.length s - 1 do acc := f !acc s.[i] done;
-    !acc
-
   let compare_case s1 s2 =
     let l1 = String.length s1 and l2 = String.length s2 in
     let len = min l1 l2 in
@@ -805,7 +674,7 @@ module Env = struct
   (* Remove from a c-separated list of string the one with the given prefix *)
   let reset_value ~prefix c v =
     let v = OpamString.split v c in
-    List.filter (fun v -> not (OpamString.starts_with ~prefix v)) v
+    List.filter (fun v -> not (OpamCompat.String.starts_with ~prefix v)) v
 
   (* Split the list in two according to the first occurrence of the string
      starting with the given prefix.
@@ -815,7 +684,7 @@ module Env = struct
     let rec aux before =
       function
       | [] -> [], List.rev before
-      | curr::after when OpamString.starts_with ~prefix curr ->
+      | curr::after when OpamCompat.String.starts_with ~prefix curr ->
         before, after
       | curr::after -> aux (curr::before) after
     in aux [] v
@@ -1112,13 +981,13 @@ module OpamSys = struct
       | "cmd.exe" -> Some (Accept SH_cmd)
       | "" -> None
       | name ->
-        Option.map
+        Stdlib.Option.map
           (fun shell -> Accept shell)
           (shell_of_string (chop_exe_suffix name))
     in
     lazy (
       let lazy ancestors = windows_process_ancestry in
-      match OpamList.filter_map categorize_process ancestors with
+      match List.filter_map categorize_process ancestors with
       | [] -> None
       | Accept most_relevant_shell :: _ -> Some most_relevant_shell
     )
@@ -1232,7 +1101,7 @@ module OpamSys = struct
     let rec aux i =
       if (i : int) >= len then "" else
       let s = env.(i) in
-      if OpamString.starts_with ~prefix (f s) then
+      if OpamCompat.String.starts_with ~prefix (f s) then
         String.sub s pfxlen (String.length s - pfxlen)
       else aux (i+1)
     in
@@ -1246,7 +1115,7 @@ module OpamSys = struct
         fun x -> x
     in
     let name = forward_to_back name in
-    OpamString.contains_char name Filename.dir_sep.[0]
+    String.contains name Filename.dir_sep.[0]
 
   let resolve_in_path_t env name =
     if not (Filename.is_relative name) || is_external_cmd name then
@@ -1324,15 +1193,15 @@ module OpamSys = struct
           | dll ->
             (* Guard against any risk of stray \r characters *)
             let tdll = String.trim dll in
-            if OpamString.ends_with ~suffix:"cygwin1.dll" tdll then
-              if OpamString.starts_with ~prefix:"  " dll then
+            if OpamCompat.String.ends_with ~suffix:"cygwin1.dll" tdll then
+              if OpamCompat.String.starts_with ~prefix:"  " dll then
                 check_dll `Cygwin
               else if platform = `Native then
                 check_dll (`Tainted `Cygwin)
               else
                 check_dll platform
-            else if OpamString.ends_with ~suffix:"msys-2.0.dll" tdll then
-              if OpamString.starts_with ~prefix:"  " dll then
+            else if OpamCompat.String.ends_with ~suffix:"msys-2.0.dll" tdll then
+              if OpamCompat.String.starts_with ~prefix:"  " dll then
                 check_dll `Msys2
               else if platform = `Native then
                 check_dll (`Tainted `Msys2)
@@ -1755,10 +1624,6 @@ end
 
 module Op = struct
 
-  let (@@) f x = f x
-
-  let (|>) x f = f x
-
   let (@*) g f x = g (f x)
 
   let (@>) f g x = g (f x)
@@ -1791,7 +1656,7 @@ module Config = struct
   type yes_answer = [ `unsafe_yes | `all_yes ]
 
   let env conv var =
-    try Option.map conv (Env.getopt ("OPAM"^var))
+    try Stdlib.Option.map conv (Env.getopt ("OPAM"^var))
     with Failure _ ->
       flush stdout;
       !console.warning

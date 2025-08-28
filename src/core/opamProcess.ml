@@ -181,7 +181,7 @@ let cygwin_create_process_env prog args env fd1 fd2 fd3 =
           Some (key ^ "=" ^ String.concat " " settings)
     | _ ->
         Some item in
-  let env = OpamStd.List.filter_map f env in
+  let env = List.filter_map f env in
   let env =
     if !cygwin_set then
       env
@@ -269,7 +269,7 @@ let make_info ?code ?signal
   let home = OpamStd.Sys.home () in
   let print name str =
     let str =
-      if OpamStd.String.starts_with ~prefix:home str
+      if OpamCompat.String.starts_with ~prefix:home str
       then "~"^OpamStd.String.remove_prefix ~prefix:home str
       else str
     in
@@ -282,8 +282,8 @@ let make_info ?code ?signal
   List.iter (fun (k,v) -> print k v) metadata;
   print     "path"         cwd;
   print     "command"      (String.concat " " (cmd :: args));
-  print_opt "exit-code"    (OpamStd.Option.map string_of_int code);
-  print_opt "signalled"    (OpamStd.Option.map string_of_int signal);
+  print_opt "exit-code"    (Option.map string_of_int code);
+  print_opt "signalled"    (Option.map string_of_int signal);
   print_opt "env-file"     env_file;
   if stderr_file = stdout_file then
     print_opt "output-file"  stdout_file
@@ -375,7 +375,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
       let env = Array.to_list env in
       (* Remove dubious variables *)
       let env =
-        List.filter (fun line -> not (OpamStd.String.contains_char line '$'))
+        List.filter (fun line -> not (String.contains line '$'))
           env
       in
       output_lines chan env;
@@ -638,8 +638,8 @@ let set_verbose_process p =
 
 let exit_status p return =
   let duration = Unix.gettimeofday () -. p.p_time in
-  let stdout = OpamStd.Option.default [] (OpamStd.Option.map read_lines p.p_stdout) in
-  let stderr = OpamStd.Option.default [] (OpamStd.Option.map read_lines p.p_stderr) in
+  let stdout = OpamStd.Option.default [] (Option.map read_lines p.p_stdout) in
+  let stderr = OpamStd.Option.default [] (Option.map read_lines p.p_stderr) in
   let cleanup = p.p_tmp_files in
   let code,signal = match return with
     | Unix.WEXITED r -> Some r, None
@@ -886,7 +886,7 @@ module Job = struct
     let rec aux = function
       | Done x -> x
       | Run (cmd,cont) ->
-        OpamStd.Option.iter
+        Option.iter
           (if OpamConsole.disp_status_line () then
              OpamConsole.status_line "Processing: %s"
            else if OpamConsole.verbose () then
@@ -922,7 +922,7 @@ module Job = struct
   let ignore_errors ~default ?message job =
     catch (fun e ->
         OpamStd.Exn.fatal e;
-        OpamStd.Option.iter (OpamConsole.error "%s") message;
+        Option.iter (OpamConsole.error "%s") message;
         Done default)
       job
 
