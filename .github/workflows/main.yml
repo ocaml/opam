@@ -352,7 +352,7 @@ jobs:
       GITHUB_PR_USER: ${{ github.event.pull_request.user.login }}
     steps:
     - name: Install gnu coreutils
-      run: brew install coreutils gpatch
+      run: brew install coreutils gpatch rsync
     - name: Checkout tree
       uses: actions/checkout@v5
     - name: src_ext/archives and opam-repository Cache
