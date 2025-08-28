@@ -123,6 +123,7 @@ users)
   * Remove `getconf` filtering [#6671 @rjbou]
   * Update/homogenise escaping `BASEDIR` using `printf` [#6671 @rjbou]
   * Homogenise here document usage [#6671 @rjbou]
+  * Add a test showing the behaviour of `opam var <pkg>:opamfile` [#6659 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
