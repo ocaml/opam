@@ -216,11 +216,13 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
   done
   set -x
 
+  dev_repos=()
   for pkg in $packages; do
     dev_repo=$(opam show "$pkg" -f dev-repo 2>/dev/null)
     dev_repo=$(echo "$dev_repo" | sed -E 's/^"//;s/"$//;s/^git\+//;s/\.git$//')
 
-    if [[ -n "$dev_repo" ]]; then
+    if [[ -n "$dev_repo" ]] && echo "${dev_repos[*]}" | grep -qwF "$dev_repo"; then
+      dev_repos+=("$dev_repo")
       prepare_project "$dev_repo" "$pkg"
       test_project "$pkg" "$packages"
     fi

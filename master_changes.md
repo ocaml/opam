@@ -133,6 +133,7 @@ users)
   * Use local pin to correctly detect packages dev repo branch in reverse dependency test job [#6655 @arozovyk]
   * Filter false positives in dependency test job using `--coinstallable-with` [#6655 @arozovyk]
   * Improve the revdeps test by ignoring non-released packages [#6657 @kit-ty-kate]
+  * Avoid re-testing already tested repositories when testing the revdeps [#6657 @kit-ty-kate]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
