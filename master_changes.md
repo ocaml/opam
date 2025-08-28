@@ -77,6 +77,7 @@ users)
 ## VCS
 
 ## Build
+  * Update the dependency constraint on `patch` to now require its stable version [#6663 @kit-ty-kate]
 
 ## Infrastructure
 
@@ -119,8 +120,9 @@ users)
   * Add a test showing the error message when faced with an UTF-8 character in the package version [#6640 @kit-ty-kate]
 
 ### Engine
- * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
+  * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
   * Fix support for removing local link directories [#6450 @kit-ty-kate]
+  * Bump `OPAM_REPO_SHA` in the github action workflows to allow patch 3.0.0 [#6663 @kit-ty-kate]
 
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]
