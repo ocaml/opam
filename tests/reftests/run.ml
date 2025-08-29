@@ -1169,10 +1169,10 @@ let run_test ?(vars=[]) ~opam t =
                  assert (acc = []); List.iter print_endline r
              in
              diffl [] (String.split_on_char '\n' r) out);
-          OpamStd.Option.iter (Printf.printf "# Return code %d #\n") errcode;
+          Option.iter (Printf.printf "# Return code %d #\n") errcode;
           (match output with
-            | None -> vars
-            | Some v -> (v, r) :: List.filter (fun (w,_) -> v <> w) vars)
+           | None -> vars
+           | Some v -> (v, r) :: List.filter (fun (w,_) -> v <> w) vars)
         | Set_os os ->
           ignore @@ run_cmd ~opam ~dir ~vars
             "opam" ["var"; "--global"; Printf.sprintf "os-family=%s" os];
