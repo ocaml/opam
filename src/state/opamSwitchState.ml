@@ -185,7 +185,7 @@ let resolve_depext_availability ?env global_config repos_sys_available_pkgs
     { OpamSysPkg.status_empty with s_available }
 
 let depexts_status_of_packages_raw
-    repos_sys_available_pkgs ~depexts
+    available_syspkgs ~depexts
     ?(recompute_available=OpamPackage.Set.empty) ?env
     global_config switch_config packages =
   if OpamPackage.Set.is_empty packages then OpamPackage.Map.empty else
@@ -206,7 +206,7 @@ let depexts_status_of_packages_raw
   let syspkg_set = syspkg_set -- bypass in
   let status syspkg_set =
     let status =
-      resolve_depext_availability ?env global_config repos_sys_available_pkgs
+      resolve_depext_availability ?env global_config available_syspkgs
         syspkg_set
     in
     if OpamPackage.Set.is_empty recompute_available then
@@ -260,7 +260,7 @@ let depexts_unavailable_raw sys_packages nv =
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in
   let package_opam = OpamPackage.Map.find nv st.opams in
- OpamFileTools.extract_depexts ~env package_opam
+  OpamFileTools.extract_depexts ~env package_opam
 
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
