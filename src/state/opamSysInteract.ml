@@ -1003,12 +1003,12 @@ let available_packages ?(env=OpamVariable.Map.empty) config packages =
       run_command ~discard_err:true pacman ["-Si"]
       |> snd
       |> List.fold_left (fun (avail, current) l ->
-          if OpamStd.String.starts_with ~prefix:"Name" l then
+          if OpamCompat.String.starts_with ~prefix:"Name" l then
             match OpamStd.String.split l ' ' with
             | "Name"::":"::p::_ ->
               p +++ avail, Some (OpamSysPkg.of_string p)
             | _ -> avail, current
-          else if OpamStd.String.starts_with ~prefix:"Provides" l then
+          else if OpamCompat.String.starts_with ~prefix:"Provides" l then
             match OpamStd.String.split l ' ' with
             | "Provides"::":"::"None"::[] -> avail, current
             | "Provides"::":"::pkgs ->
@@ -1118,10 +1118,10 @@ let available_packages ?(env=OpamVariable.Map.empty) config packages =
       run_query_command "apt-cache"
         ["search"; names_re (); "--names-only"; "--full"]
       |> List.fold_left (fun avail l ->
-          if OpamStd.String.starts_with ~prefix:"Package: " l then
+          if OpamCompat.String.starts_with ~prefix:"Package: " l then
             let p = String.sub l 9 (String.length l - 9) in
             p +++ avail
-          else if OpamStd.String.starts_with ~prefix:"Provides: " l then
+          else if OpamCompat.String.starts_with ~prefix:"Provides: " l then
             let ps =
               List.map package_provided (Re.split ~pos:10 provides_sep l)
               |> OpamSysPkg.Set.of_list
