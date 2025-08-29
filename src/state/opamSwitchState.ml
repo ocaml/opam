@@ -183,6 +183,7 @@ let resolve_depext_availability ?env global_config repos_sys_available_pkgs
        In this case, we consider all non installed packages as [available]. *)
     let s_available = syspkg_set -- installed in
     { OpamSysPkg.status_empty with s_available }
+  | No_depexts -> OpamSysPkg.status_empty
 
 let depexts_status_of_packages_raw
     available_syspkgs ~depexts
@@ -1331,7 +1332,7 @@ let update_sys_packages pkgs st =
   else
     (* Check if an update is to be made *)
     match st.switch_repos.repos_sys_available_pkgs with
-    | OpamSysPkg.Available available_pkgs ->
+    | Available available_pkgs ->
       if OpamSysPkg.Set.is_empty available_pkgs
       || (not (OpamSysPkg.Set.subset depexts_s available_pkgs))
       then
@@ -1343,7 +1344,7 @@ let update_sys_packages pkgs st =
         {st with sys_packages}
       else
         st
-    | OpamSysPkg.Suppose_available -> st
+    | Suppose_available | No_depexts -> st
 
 let do_backup lock st = match lock with
   | `Lock_write ->

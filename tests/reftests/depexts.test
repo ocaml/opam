@@ -576,6 +576,7 @@ Done.
 Set to 'false' the field depext in global configuration
 ### opam switch create depext-disabled --empty
 ### opam var --global os-family=unknown
+Added '[os-family "unknown" "Set through 'opam var'"]' to field global-variables in global configuration
 ### <pin:other/other.opam>
 opam-version: "2.0"
 depexts: ["other-depext"]

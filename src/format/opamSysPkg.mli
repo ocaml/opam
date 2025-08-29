@@ -31,7 +31,7 @@ val string_of_status: status -> string
 val combine_status : status -> status -> status
 
 (** System package availability *)
-type available = Available of Set.t | Suppose_available
+type available = Available of Set.t | Suppose_available | No_depexts
 
 val string_of_available : available -> string
 

@@ -238,14 +238,14 @@ let load lock_kind gt =
                    OpamSysPkg.Set.empty)
     in
     let repos_sys_available_pkgs =
-    try
-      OpamSysInteract.available_packages ~env:gt.global_variables
-        gt.config repo_depexts
-    with Failure msg ->
-      OpamConsole.note "%s\nYou can disable this check using 'opam \
-                        option --global depext=false'"
-        msg;
-      Suppose_available
+      try
+        OpamSysInteract.available_packages ~env:gt.global_variables
+          gt.config repo_depexts
+      with Failure msg ->
+        OpamConsole.note "%s\nYou can disable this check using 'opam \
+                          option --global depext=false'"
+          msg;
+        No_depexts
     in
     let rt = make_rt repofiles opams repos_sys_available_pkgs in
     Cache.save_new rt;

@@ -74,11 +74,12 @@ let combine_status st st' =
   }
 
 (* System package availability *)
-type available = Available of Set.t | Suppose_available
+type available = Available of Set.t | Suppose_available | No_depexts
 
 let string_of_available = function
 | Available av -> Set.to_string av
-| Suppose_available -> "suppose available"
+| Suppose_available -> "Suppose available"
+| No_depexts -> "No depexts"
 
 let check_available_equal a b =
   match a, b with
@@ -92,6 +93,10 @@ let combine_available a a' =
   | Suppose_available, Suppose_available -> Suppose_available
   | Available s, Suppose_available | Suppose_available, Available s ->
     Available s
+  | No_depexts, _  |  _, No_depexts ->
+    OpamConsole.error_and_exit `Bad_arguments
+      "Can't combine No_depexts"
+
 
 (** System packages to install *)
 

@@ -1238,6 +1238,7 @@ let packages_status ?(env=OpamVariable.Map.empty) ?sys_available config syspkg_s
   | OpamSysPkg.Suppose_available ->
     let s_available = syspkg_set -- installed in
     { OpamSysPkg.status_empty with s_available }
+  |  OpamSysPkg.No_depexts -> OpamSysPkg.status_empty
 
 let stateless_install ?(env=OpamVariable.Map.empty) () =
   match family ~env () with
@@ -1539,3 +1540,4 @@ let repo_enablers ?(env=OpamVariable.Map.empty) config =
       if OpamSysPkg.Set.equal av epel_release_pkg then
         Some msg
       else None
+    | No_depexts -> None
