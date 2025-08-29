@@ -399,8 +399,7 @@ let import_t ?ask ?(deps_only=false) importfile t =
   in
   OpamHash.Map.iter (fun hash content ->
       let value = Base64.decode_exn ~pad:false content in
-      let my = OpamHash.compute_from_string ~kind:(OpamHash.kind hash) value in
-      if OpamHash.contents my = OpamHash.contents hash then
+      if OpamHash.check_string value hash then
         let dst =
           let base = OpamFilename.Base.of_string (OpamHash.contents hash) in
           OpamFilename.create xfiles_dir base
