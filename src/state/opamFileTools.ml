@@ -1506,16 +1506,16 @@ let sort_opam opam =
   |> with_extra_files_opt @@ Option.map fst_sort opam.extra_files
   |> with_extra_sources @@ fst_sort opam.extra_sources
 
-let extract_depexts ~env opam =
-  List.fold_left (fun depexts (names, filter) ->
-      if OpamFilter.eval_to_bool ~default:false env filter then
-        OpamSysPkg.Set.Op.(names ++ depexts)
-      else depexts)
-    OpamSysPkg.Set.empty
-    (OpamFile.OPAM.depexts opam)
-
-let extract_depexts_map ~env opams =
+let get_depexts ~env opams =
   OpamPackage.Map.fold (fun _ opam s ->
-      let depexts = extract_depexts ~env opam in
+      let depexts =
+        List.fold_left (fun acc (names, filter) ->
+            if OpamFilter.eval_to_bool ~default:false env filter then
+              OpamSysPkg.Set.Op.(names ++ acc)
+            else
+              acc)
+          OpamSysPkg.Set.empty
+          (OpamFile.OPAM.depexts opam)
+      in
       OpamSysPkg.Set.Op.(depexts ++ s))
     opams OpamSysPkg.Set.empty

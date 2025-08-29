@@ -224,7 +224,7 @@ let load lock_kind gt =
           let repo_def, repo_opams =
             load_repo repo (get_root_raw gt.root repos_tmp name)
           in
-          let repo_depexts = OpamFileTools.extract_depexts_map repo_opams
+          let repo_depexts = OpamFileTools.get_depexts repo_opams
               ~env:(OpamPackageVar.resolve_global gt)
           in
           let repo_depexts =

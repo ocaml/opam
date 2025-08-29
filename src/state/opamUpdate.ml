@@ -192,7 +192,7 @@ let repositories rt repos =
       ) rt.repo_opams (OpamPackage.Map.empty)
     in
     let repo_depexts =
-      OpamFileTools.extract_depexts_map opams
+      OpamFileTools.get_depexts opams
         ~env:(OpamPackageVar.resolve_global rt.repos_global)
     in
     try

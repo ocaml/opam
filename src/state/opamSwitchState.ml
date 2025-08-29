@@ -260,7 +260,7 @@ let depexts_unavailable_raw sys_packages nv =
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in
   let package_opam = OpamPackage.Map.find nv st.opams in
-  OpamFileTools.extract_depexts ~env package_opam
+  OpamFileTools.get_depexts ~env (OpamPackage.Map.singleton nv package_opam)
 
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
@@ -339,7 +339,9 @@ let load lock_kind gt rt switch =
           let env = OpamPackageVar.resolve_switch_raw ~package:nv gt switch
               switch_config
           in
-          let depexts = OpamFileTools.extract_depexts ~env o in
+          let depexts =
+            OpamFileTools.get_depexts ~env (OpamPackage.Map.singleton nv o)
+          in
           OpamPackage.Set.add nv pinned,
           OpamPackage.Map.add nv o opams,
           if OpamSysPkg.Set.is_empty depexts then pinned_depexts else
@@ -565,7 +567,8 @@ let load lock_kind gt rt switch =
               OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
             in
             let package_opam = OpamPackage.Map.find package opams in
-            OpamFileTools.extract_depexts ~env package_opam)
+            OpamFileTools.get_depexts ~env
+              (OpamPackage.Map.singleton package package_opam))
     )
   in
   let available_packages =
