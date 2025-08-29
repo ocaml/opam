@@ -132,7 +132,6 @@ users)
   * Use `opam-set-os` in reftests following the depexts update.
 
 ### Engine
-  * `gawk` was re-added to the base fedora images [#6473 @kit-ty-kate]
   * Add `opam-set-os` command that combines setting global `os-family` variable followed by a (silent) `opam update` [#6489 @arozovyk]
 
 ## Github Actions

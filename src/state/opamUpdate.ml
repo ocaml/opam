@@ -202,7 +202,7 @@ let repositories rt repos =
       OpamConsole.note "%s\nYou can disable this check using 'opam \
                         option --global depext=false'"
         msg;
-      Suppose_available
+      No_depexts
   in
   let write_config_cache rt =
     OpamRepositoryState.write_config rt;
