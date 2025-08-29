@@ -144,6 +144,7 @@ users)
   * Upgrade the deprecated md5 `checksum` example to sha256 [#6653 @jmid]
   * Add mention of `opam admin compare-versions` in the Manual. [#6596 @mbarbin]
   * Update release documentation to add a step updating test repository hash and version number in reverse dependecies test script [#6364 @arozovyk]
+  * Correct the docstrings for `OpamPath.Switch.Overlay.*` [#6660 @kit-ty-kate]
 
 ## Security fixes
 

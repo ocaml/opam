@@ -354,19 +354,19 @@ module Switch: sig
     val dir: t -> switch -> dirname
 
     (** Switch metadata overlay (over the global metadata): {i
-        $meta/overlay/$name.$version} *)
+        $meta/overlay/$name} *)
     val package: t -> switch -> name -> dirname
 
     (** OPAM overlay: {i
-        $meta/overlay/$name.$version/opam} *)
+        $meta/overlay/$name/opam} *)
     val opam: t -> switch -> name -> OpamFile.OPAM.t OpamFile.t
 
     (** OPAM temp overlay (for user editing): {i
-        $meta/overlay/$name.$version/opam_} *)
+        $meta/overlay/$name/opam_} *)
     val tmp_opam: t -> switch -> name -> OpamFile.OPAM.t OpamFile.t
 
     (** URL overlay: {i
-        $meta/overlay/$name.$version/url} *)
+        $meta/overlay/$name/url} *)
     val url: t -> switch -> name -> OpamFile.URL.t OpamFile.t
 
     (** Descr orverlay *)
