@@ -183,7 +183,7 @@ users)
   * `OpamUpdate.repositories`: Compute repo's available system packages on opam update [#6489 @arozovyk fix #6461]
   * `OpamRepositoryState.load`: load repo's available system packages [#6489 @arozovyk fix #6461]
   * `OpamSwitchState.update_sys_packages` check for availability of packages in `repo_state` when updating the depexts status of additional packages [#6489 @arozovyk fix #6461]
-  * `OpamFileTools`: add `extract_depexts` and `extract_depexts_map` to consolidate depexts extraction logic from individual opam files and package maps [@arozovyk]
+  * `OpamFileTools`: add `get_depexts` to consolidate depexts extraction logic from individual opam files and package maps [@arozovyk]
 
 ## opam-solver
 

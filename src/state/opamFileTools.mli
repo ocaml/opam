@@ -118,9 +118,6 @@ val dep_formula_to_string: formula -> string
     pin_depends, extra_files, extra_sources *)
 val sort_opam: OpamFile.OPAM.t -> OpamFile.OPAM.t
 
-(** Extract depexts from a single opam file *)
-val extract_depexts : env:OpamFilter.env -> OpamFile.OPAM.t -> OpamSysPkg.Set.t
-
-(** Extract depexts from a package map *)
-val extract_depexts_map : env:OpamFilter.env -> OpamFile.OPAM.t OpamPackage.Map.t ->
+(** Get depexts from all the opam files associated to packages *)
+val get_depexts : env:OpamFilter.env -> OpamFile.OPAM.t OpamPackage.Map.t ->
   OpamSysPkg.Set.t
