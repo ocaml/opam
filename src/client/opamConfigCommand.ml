@@ -131,6 +131,14 @@ let print_sexp_env output env =
   aux env;
   output ")\n"
 
+let rec print_nu_env output env =
+  match env with
+    | [] -> ()
+    | (k,v,_)::r -> begin
+      Printf.ksprintf output "\t\"%s\" : \"%s\",\n" k v;
+      print_nu_env output r
+    end
+
 let rec print_fish_env output env =
   let set_arr_cmd ?(modf=fun x -> x) k v =
     let v = modf @@ OpamStd.String.split v ':' in
@@ -183,7 +191,7 @@ let print_without_cr s =
     output_string stdout s;
     flush stdout
 
-let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
+let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd ~nu env =
   let env = (env : OpamTypes.env :> (string * string * string option) list) in
   let output_normally = OpamConsole.msg "%s" in
   let never_with_cr =
@@ -202,6 +210,11 @@ let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env =
     print_pwsh_env output_normally env
   else if cmd then
     print_cmd_env output_normally env
+  else if nu then begin
+    Printf.ksprintf never_with_cr "{\n";
+    print_nu_env never_with_cr env;
+    Printf.ksprintf never_with_cr "}"
+  end
   else
     print_env never_with_cr env
 
@@ -331,7 +344,7 @@ let ensure_env gt switch =
   ignore (ensure_env_aux gt switch)
 
 let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
-    ~csh ~sexp ~fish ~pwsh ~cmd ~inplace_path =
+    ~csh ~sexp ~fish ~pwsh ~cmd ~nu ~inplace_path =
   log "config-env";
   let opamroot_not_current =
     let current = gt.root in
@@ -371,7 +384,7 @@ let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
   let env =
     ensure_env_aux ~set_opamroot ~set_opamswitch ~force_path gt switch
   in
-  print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd env
+  print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd ~nu env
 [@@ocaml.warning "-16"]
 
 let subst gt fs =
