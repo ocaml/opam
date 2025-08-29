@@ -152,6 +152,7 @@ users)
 ## opam-client
 
 ## opam-repository
+  * `OpamLocal.rsync_*`: Change the return type from `OpamFilename.*` to `unit` [#6658 @kit-ty-kate]
 
 ## opam-state
 

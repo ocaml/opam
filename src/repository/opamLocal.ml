@@ -109,9 +109,9 @@ let rsync_dirs ?args ?exclude_vcdirs url dst =
   rsync ?args ?exclude_vcdirs src_s dst_s @@| function
   | Not_available _ as na -> na
   | Result _ ->
-    if OpamFilename.exists_dir dst then Result dst
+    if OpamFilename.exists_dir dst then Result ()
     else Not_available (None, dst_s)
-  | Up_to_date _ -> Up_to_date dst
+  | Up_to_date _ -> Up_to_date ()
 
 let rsync_file ?(args=[]) url dst =
   let src_s = url.OpamUrl.path in
@@ -120,7 +120,7 @@ let rsync_file ?(args=[]) url dst =
   if not (is_remote url || OpamFilename.(exists (of_string src_s))) then
     Done (Not_available (None, src_s))
   else if src_s = dst_s then
-    Done (Up_to_date dst)
+    Done (Up_to_date ())
   else
     (OpamFilename.mkdir (OpamFilename.dirname dst);
      let convert_path = Lazy.force convert_path in
@@ -128,9 +128,9 @@ let rsync_file ?(args=[]) url dst =
        ( rsync_arg :: args @ [ convert_path src_s; convert_path dst_s ])
      @@| function
      | None -> Not_available (None, src_s)
-     | Some [] -> Up_to_date dst
+     | Some [] -> Up_to_date ()
      | Some [_] ->
-       if OpamFilename.exists dst then Result dst
+       if OpamFilename.exists dst then Result ()
        else Not_available (None, src_s)
      | Some l ->
        OpamSystem.internal_error
@@ -161,7 +161,7 @@ module B = struct
          (* fixme: Would be best to symlink, but at the moment our filename api
             isn't able to cope properly with the symlinks afterwards
             OpamFilename.link_dir ~target:dir ~link:quarantine; *)
-         Done (Result quarantine)
+         Done (Result ())
        | None ->
          if OpamFilename.exists_dir repo_root then
            OpamFilename.copy_dir_except_vcs ~src:repo_root ~dst:quarantine
@@ -171,9 +171,9 @@ module B = struct
     | Not_available (_, msg) ->
       finalise ();
       Done (OpamRepositoryBackend.Update_err (Failure ("rsync error: " ^ msg)))
-    | Up_to_date _ ->
+    | Up_to_date () ->
       finalise (); Done OpamRepositoryBackend.Update_empty
-    | Result _ ->
+    | Result () ->
       if OpamFilename.dir_is_empty repo_root <> Some false then
         Done (OpamRepositoryBackend.Update_full quarantine)
       else
