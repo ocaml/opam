@@ -157,6 +157,7 @@ users)
   * `OpamLocal.rsync_*`: Change the return type from `OpamFilename.*` to `unit` [#6658 @kit-ty-kate]
 
 ## opam-state
+  * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
 
 ## opam-solver
 

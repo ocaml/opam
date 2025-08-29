@@ -116,9 +116,6 @@ val descr: 'a switch_state -> package -> OpamFile.Descr.t
 (** Return the descr field for the given package *)
 val descr_opt: 'a switch_state -> package -> OpamFile.Descr.t option
 
-(** Returns the full paths of overlay files under the files/ directory *)
-val files: 'a switch_state -> package -> filename list
-
 (** Return the installed package's local configuration *)
 val package_config: 'a switch_state -> name -> OpamFile.Dot_config.t
 
