@@ -169,24 +169,28 @@ fi
 
 test_project () {
   project=$1
+  packages=$2
 
   (set +x; echo -en "::group::depends-$project\r") 2>/dev/null
   opam pin . --kind path -yn
   for pkg_name in $(opam show . -f name); do
-    echo "Installing dependencies for $pkg_name"
-    deps_code=0
-    opam install "$pkg_name" --deps-only || deps_code=$?
-    if [ $deps_code -ne 0 ]; then
-      echo "Dependency installation failed for $pkg_name"
-      DEPENDS_ERRORS="$DEPENDS_ERRORS $pkg_name"
-    else
-      echo "Installing opam-client and $pkg_name"
-      opam install opam-client
-      code=0
-      opam install "$pkg_name" || code=$?
-      if [ $code -ne 0 ]; then
-        LIB_ERRORS="$LIB_ERRORS $project"
-        echo -e "\e[31mErrors while installing $pkg_name\e[0m";
+    # Ignore unreleased packages
+    if echo "$packages" | grep -qwF "$pkg_name"; then
+      echo "Installing dependencies for $pkg_name"
+      deps_code=0
+      opam install "$pkg_name" --deps-only || deps_code=$?
+      if [ $deps_code -ne 0 ]; then
+        echo "Dependency installation failed for $pkg_name"
+        DEPENDS_ERRORS="$DEPENDS_ERRORS $pkg_name"
+      else
+        echo "Installing opam-client and $pkg_name"
+        opam install opam-client
+        code=0
+        opam install "$pkg_name" || code=$?
+        if [ $code -ne 0 ]; then
+          LIB_ERRORS="$LIB_ERRORS $project"
+          echo -e "\e[31mErrors while installing $pkg_name\e[0m";
+        fi
       fi
     fi
   done
@@ -212,13 +216,15 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
   done
   set -x
 
+  dev_repos=()
   for pkg in $packages; do
     dev_repo=$(opam show "$pkg" -f dev-repo 2>/dev/null)
     dev_repo=$(echo "$dev_repo" | sed -E 's/^"//;s/"$//;s/^git\+//;s/\.git$//')
 
-    if [[ -n "$dev_repo" ]]; then
+    if [[ -n "$dev_repo" ]] && echo "${dev_repos[*]}" | grep -qwF "$dev_repo"; then
+      dev_repos+=("$dev_repo")
       prepare_project "$dev_repo" "$pkg"
-      test_project "$pkg"
+      test_project "$pkg" "$packages"
     fi
   done
 
