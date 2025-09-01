@@ -136,6 +136,7 @@ users)
   * Filter false positives in dependency test job using `--coinstallable-with` [#6655 @arozovyk]
   * Improve the revdeps test by ignoring non-released packages [#6657 @kit-ty-kate]
   * Avoid re-testing already tested repositories when testing the revdeps [#6657 @kit-ty-kate]
+  * Fix duplication logic in revdeps script [#6666 @arozovyk]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
