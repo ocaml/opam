@@ -49,3 +49,180 @@ Nothing to do.
 [NOTE] w is not installed.
 
 Nothing to do.
+### :::::: remove directory selection, with & without --force (#6570)
+### <pkg:p.1>
+opam-version: "2.0"
+build: "pwd"
+install: "pwd"
+remove: "pwd"
+### <pkg:n.1>
+opam-version: "2.0"
+build: "pwd"
+install: "pwd"
+remove: "pwd"
+### OPAMVERBOSE=2
+### :: remove installed package
+### opam install p | sed-cmd pwd
+The following actions will be performed:
+=== install 1 package
+  - install p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> compiled  p.1
+Processing  3/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> installed p.1
+Done.
+### opam remove p | sed-cmd pwd
+The following actions will be performed:
+=== remove 1 package
+  - remove p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/remove/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/remove/p.1
+-> removed   p.1
+Done.
+### opam install p | sed-cmd pwd
+The following actions will be performed:
+=== install 1 package
+  - install p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> compiled  p.1
+Processing  3/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> installed p.1
+Done.
+### opam remove p --force | sed-cmd pwd
+The following actions will be performed:
+=== remove 1 package
+  - remove p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/remove/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/remove/p.1
+-> removed   p.1
+Done.
+### opam install p --inplace | sed-cmd pwd
+The following actions will be performed:
+=== install 1 package
+  - install p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> compiled  p.1
+Processing  3/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> installed p.1
+Done.
+### opam remove p --inplace | sed-cmd pwd
+The following actions will be performed:
+=== remove 1 package
+  - remove p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/remove/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/remove/p.1
+-> removed   p.1
+Done.
+### :: remove uninstalled package
+### opam remove n
+[NOTE] n is not installed.
+
+Nothing to do.
+### opam remove n --force | sed-cmd pwd
+[NOTE] Forcing removal of (uninstalled) n.1
+[n: pwd]
++ pwd
+- ${BASEDIR}
+-> removed   n.1
+### opam remove n --force --inplace | sed-cmd pwd
+[NOTE] Forcing removal of (uninstalled) n.1
+[n: pwd]
++ pwd
+- ${BASEDIR}
+-> removed   n.1
+### :: remove installed and uninstalled package
+### opam install p | sed-cmd pwd
+The following actions will be performed:
+=== install 1 package
+  - install p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> compiled  p.1
+Processing  3/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> installed p.1
+Done.
+### opam remove n p | sed-cmd pwd
+[NOTE] n is not installed.
+
+The following actions will be performed:
+=== remove 1 package
+  - remove p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/remove/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/remove/p.1
+-> removed   p.1
+Done.
+### opam install p | sed-cmd pwd
+The following actions will be performed:
+=== install 1 package
+  - install p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> compiled  p.1
+Processing  3/3: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/build/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/build/p.1
+-> installed p.1
+Done.
+### opam remove n p --force | sed-cmd pwd
+[NOTE] Forcing removal of (uninstalled) n.1
+[n: pwd]
++ pwd
+- ${BASEDIR}
+-> removed   n.1
+The following actions will be performed:
+=== remove 1 package
+  - remove p 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [p: pwd]
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/remove/p.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/remove/p.1
+-> removed   p.1
+Done.
+### :: remove unknown package
+### opam remove m
+[ERROR] No package named m found.
+'${OPAM} remove m' failed.
+# Return code 5 #
+### opam remove m --force
+[ERROR] No package named m found.
+'${OPAM} remove m --force' failed.
+# Return code 5 #

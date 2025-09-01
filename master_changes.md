@@ -164,6 +164,7 @@ users)
   * Complete `action-disk.test` with the behaviour of `extra-source` [#6679 @rjbou]
   * Add a test showing the behaviour of opam when faced with outdated git submodule in its local cache [#6153 @kit-ty-kate]
   * Add reftest for `--depext-only` option [#6516 @rjbou]
+  * Add a test for `opam remove --force` [#6672 @rjbou]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
