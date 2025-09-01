@@ -46,6 +46,7 @@ users)
 ## Show
 
 ## Var/Option
+  * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
 
 ## Update / Upgrade
 
@@ -118,6 +119,7 @@ users)
   * Add a test for shared fetch without checksum [#6627 @rjbou]
   * Add a test for shared fetch without checksum, and for VCS shared fetch (not handled) [#6627 @rjbou]
   * Add a test showing the error message when faced with an UTF-8 character in the package version [#6640 @kit-ty-kate]
+  * Add a test showing the behaviour of `opam var <pkg>:opamfile` [#6659 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
