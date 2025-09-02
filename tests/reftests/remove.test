@@ -148,14 +148,14 @@ Nothing to do.
 ### opam remove n --force | sed-cmd pwd
 [NOTE] Forcing removal of (uninstalled) n.1
 [n: pwd]
-+ pwd
-- ${BASEDIR}
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/remove/n.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/remove/n.1
 -> removed   n.1
 ### opam remove n --force --inplace | sed-cmd pwd
 [NOTE] Forcing removal of (uninstalled) n.1
 [n: pwd]
-+ pwd
-- ${BASEDIR}
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/remove/n.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/remove/n.1
 -> removed   n.1
 ### :: remove installed and uninstalled package
 ### opam install p | sed-cmd pwd
@@ -204,8 +204,8 @@ Done.
 ### opam remove n p --force | sed-cmd pwd
 [NOTE] Forcing removal of (uninstalled) n.1
 [n: pwd]
-+ pwd
-- ${BASEDIR}
++ pwd (CWD=${BASEDIR}/OPAM/default/.opam-switch/remove/n.1)
+- ${BASEDIR}/OPAM/default/.opam-switch/remove/n.1
 -> removed   n.1
 The following actions will be performed:
 === remove 1 package

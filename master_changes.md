@@ -35,6 +35,7 @@ users)
 ## Build (package)
 
 ## Remove
+  * [BUG] Fix `opam remove --force` launching commands in current directory [#6672 @rjbou - fix #6570]
 
 ## UI
   * Show the invalid character when detecting an erroneous package name [#6638 @lefessan - fix #6396]

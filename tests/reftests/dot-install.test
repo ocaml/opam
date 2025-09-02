@@ -321,6 +321,8 @@ The following actions will be performed:
   - remove no-specified-dir 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/remove/no-specified-dir.1
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/no-specified-dir
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/no-specified-dir
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/share/no-specified-dir/a-file
@@ -337,6 +339,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/install/
 -> removed   no-specified-dir.1
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (write => none)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/remove/no-specified-dir.1
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/opam
