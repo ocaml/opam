@@ -121,10 +121,6 @@ Switch invariant: ["foo"]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1
 Processing  2/3: [foo: touch foo]
 + touch "foo" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1)
 -> compiled  foo.1
@@ -132,6 +128,8 @@ Processing  3/3: [foo: cp foo]
 + cp "foo" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1)
 Installing foo.1.
 -> installed foo.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/packages
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (write => none)
@@ -168,11 +166,6 @@ Switch invariant: ["foo"]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/nip/_opam/.opam-switch/build/foo.1
-SYSTEM                          mkdir ${BASEDIR}/nip
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build/foo.1
 Processing  2/3: [foo: touch foo]
 + touch "foo" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/foo.1)
 -> compiled  foo.1
@@ -180,6 +173,9 @@ Processing  3/3: [foo: cp foo]
 + cp "foo" "${BASEDIR}/nip/_opam/lib/" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/foo.1)
 Installing foo.1.
 -> installed foo.1
+SYSTEM                          mkdir ${BASEDIR}/nip
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch
 SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/packages
 SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (none => write)
 SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (write => none)
@@ -193,8 +189,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 No previous local switch, current contains:
 nip/_opam
 nip/_opam/.opam-switch
-nip/_opam/.opam-switch/build
-nip/_opam/.opam-switch/build/foo.1
 nip/_opam/.opam-switch/packages
 nip/_opam/.opam-switch/packages/cache
 # Return code 2 #
@@ -231,12 +225,10 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/nip/_opam/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build/nip.dev
 Installing nip.dev.
 -> installed nip.dev
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch
 SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/packages
 SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (none => write)
 SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (write => none)
@@ -250,8 +242,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 No previous local switch, current contains:
 nip/_opam
 nip/_opam/.opam-switch
-nip/_opam/.opam-switch/build
-nip/_opam/.opam-switch/build/nip.dev
 nip/_opam/.opam-switch/packages
 nip/_opam/.opam-switch/packages/cache
 # Return code 2 #
@@ -289,10 +279,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/nip/_opam/.opam-switch/build/bar.1
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build
-SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/build/bar.1
 Processing  2/3: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -300,6 +286,8 @@ Processing  3/3: [bar: cp bar]
 + cp "bar" "${BASEDIR}/nip/_opam/lib/" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/bar.1)
 Installing bar.1.
 -> installed bar.1
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam
+SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch
 SYSTEM                          mkdir ${BASEDIR}/nip/_opam/.opam-switch/packages
 SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (none => write)
 SYSTEM                          LOCK ${BASEDIR}/nip/_opam/.opam-switch/packages/cache (write => none)
@@ -313,8 +301,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 No previous local switch, current contains:
 nip/_opam
 nip/_opam/.opam-switch
-nip/_opam/.opam-switch/build
-nip/_opam/.opam-switch/build/bar.1
 nip/_opam/.opam-switch/packages
 nip/_opam/.opam-switch/packages/cache
 # Return code 2 #
@@ -467,7 +453,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 Processing  2/3: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -484,7 +469,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: backup
-Only in OPAM/dr/.opam-switch/build: bar.1
 Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
 # Return code 1 #
 ### :III: Package removal
@@ -633,7 +617,6 @@ The following actions will be simulated:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1/bar
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 Processing  2/4: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -657,7 +640,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in previous/dr/.opam-switch/build/bar.1: bar
+Only in previous/dr/.opam-switch/build: bar.1
 Only in OPAM/dr/.opam-switch: remove
 # Return code 1 #
 ### :V: Update
@@ -711,7 +694,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2
 Processing  3/5: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2)
 -> compiled  bar.2
@@ -739,7 +721,6 @@ SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch/build: bar.2
 Only in previous/dr/.opam-switch/packages: bar.1
 Only in previous/dr/.opam-switch/packages: cache
 Only in OPAM/dr/.opam-switch: remove
@@ -855,10 +836,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
 Installing nip.dev.
 -> installed nip.dev
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
@@ -871,7 +848,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: backup
-Only in OPAM/dr/.opam-switch/build: nip.dev
 Only in OPAM/dr/.opam-switch: overlay
 Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
 Only in OPAM/dr/.opam-switch: sources
@@ -943,11 +919,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/.git
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
 Installing nip.dev.
 -> installed nip.dev
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
@@ -960,13 +931,11 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: backup
-Only in OPAM/dr/.opam-switch/build: nip.dev
 Only in OPAM/dr/.opam-switch: overlay
 Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
 Only in OPAM/dr/.opam-switch: sources
 diff gitPrevious gitCurrent
-0a1,2
-> dr/.opam-switch/build/nip.dev/.git
+0a1
 > dr/.opam-switch/sources/nip/.git
 # Return code 1 #
 ### :VII:3: Pinning directory with no opam file, no vcs
@@ -1020,9 +989,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
-SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1/a-file
 Installing nip.1.
 -> installed nip.1
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
@@ -1035,7 +1001,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: backup
-Only in OPAM/dr/.opam-switch/build: nip.1
 Only in OPAM/dr/.opam-switch: overlay
 Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
 Only in OPAM/dr/.opam-switch: sources
@@ -1086,7 +1051,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
 Installing nip.1.
 -> installed nip.1
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
@@ -1099,7 +1063,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: backup
-Only in OPAM/dr/.opam-switch/build: nip.1
 Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
 # Return code 1 #
 ### :VII:5: Pinning with pin-depends
@@ -1188,16 +1151,9 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip-d.1
-SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip-d.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip-d.1
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d/nip-d.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip-d.1/nip-d.opam
 Installing nip-d.1.
 -> installed nip-d.1
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
 Installing nip.dev.
 -> installed nip.dev
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
@@ -1210,8 +1166,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: backup
-Only in OPAM/dr/.opam-switch/build: nip-d.1
-Only in OPAM/dr/.opam-switch/build: nip.dev
 Only in OPAM/dr/.opam-switch: overlay
 Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
 Only in OPAM/dr/.opam-switch: sources
@@ -1292,12 +1246,6 @@ The following actions will be simulated:
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
 SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
 SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
-SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/.git
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/another-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/another-file
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
 -> removed   nip.dev
@@ -1312,7 +1260,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch/build/nip.dev: another-file
+Only in previous/dr/.opam-switch/build: nip.dev
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
 1a2,3
 > name: "nip"
@@ -1335,6 +1283,9 @@ Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/pa
 Only in OPAM/dr/.opam-switch: reinstall
 Only in OPAM/dr/.opam-switch: remove
 Only in OPAM/dr/.opam-switch/sources/nip: another-file
+diff gitPrevious gitCurrent
+1d0
+< dr/.opam-switch/build/nip.dev/.git
 # Return code 1 #
 ### :VII:7: Pin removal
 ### sh initial.sh unpack
@@ -1447,7 +1398,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
 Installing nip.dev.
 -> installed nip.dev
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => write)
@@ -1459,7 +1409,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: backup
-Only in OPAM/dr/.opam-switch/build: nip.dev
 Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
 # Return code 1 #
 ### :VII:9: Install local package with deps-only
@@ -1499,7 +1448,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 Processing  2/3: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -1516,7 +1464,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: backup
-Only in OPAM/dr/.opam-switch/build: bar.1
 Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/packages/cache differ
 # Return code 1 #
 ### :VII:10: Update of pin source triggered by install command
@@ -1594,7 +1541,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 Processing  3/7: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -1608,11 +1554,6 @@ Installing bar.1.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
 SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
 SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
-SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file-snd -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file-snd
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
 Processing  6/7: [nip: touch a-file-snd]
 + touch "a-file-snd" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev)
 -> compiled  nip.dev
@@ -1627,14 +1568,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch/build: bar.1
-Only in OPAM/dr/.opam-switch/build/nip.dev: a-file-snd
-diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/build/nip.dev/nip.opam OPAM/dr/.opam-switch/build/nip.dev/nip.opam
-10c10,11
-< build: ["touch" "a-file"]
----
-> build: ["touch" "a-file-snd"]
-> depends: "bar"
+Only in previous/dr/.opam-switch/build: nip.dev
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
 1a2,3
 > name: "nip"
@@ -1766,7 +1700,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 Processing  3/7: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -1780,12 +1713,6 @@ Installing bar.1.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
 SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
 SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
-SYSTEM                          copydir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/.git
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file-snd -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file-snd
-SYSTEM                          copy ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam -> ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
 Processing  6/7: [nip: touch a-file-snd]
 + touch "a-file-snd" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev)
 -> compiled  nip.dev
@@ -1800,14 +1727,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch/build: bar.1
-Only in OPAM/dr/.opam-switch/build/nip.dev: a-file-snd
-diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/build/nip.dev/nip.opam OPAM/dr/.opam-switch/build/nip.dev/nip.opam
-10c10,11
-< build: ["touch" "a-file"]
----
-> build: ["touch" "a-file-snd"]
-> depends: "bar"
+Only in previous/dr/.opam-switch/build: nip.dev
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
 1a2,3
 > name: "nip"
@@ -1839,6 +1759,9 @@ diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OP
 ---
 > build: ["touch" "a-file-snd"]
 > depends: "bar"
+diff gitPrevious gitCurrent
+1d0
+< dr/.opam-switch/build/nip.dev/.git
 # Return code 1 #
 ### opam upgrade | unordered
 The following actions will be performed:
