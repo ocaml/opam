@@ -934,7 +934,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: reinstall
 Only in OPAM/dr/.opam-switch/sources/nip: another-file
 # Return code 1 #
 ### :9: pin removal :
@@ -1162,7 +1161,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: reinstall
 Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
 10c10,11
@@ -1172,15 +1170,8 @@ diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OP
 > depends: "bar"
 # Return code 1 #
 ### opam upgrade | unordered
-The following actions will be performed:
-=== recompile 1 package
-  - recompile nip dev (pinned) [upstream or system changes]
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved nip.dev  (no changes)
--> removed   nip.dev
--> installed nip.dev
-Done.
+Already up-to-date.
+Nothing to do.
 ### :12: pinning internal update with install with no changes :
 ### sh initial.sh unpack
 ### <pin:nip/nip.opam>
@@ -1340,7 +1331,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: reinstall
 Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
 10c10,11
@@ -1350,15 +1340,8 @@ diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OP
 > depends: "bar"
 # Return code 1 #
 ### opam upgrade | unordered
-The following actions will be performed:
-=== recompile 1 package
-  - recompile nip dev (pinned) [upstream or system changes]
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved nip.dev  (no changes)
--> removed   nip.dev
--> installed nip.dev
-Done.
+Already up-to-date.
+Nothing to do.
 ### :14: pinning internal update with install with no changes with git :
 ### sh initial.sh unpack
 ### <pin:nip/nip.opam>
