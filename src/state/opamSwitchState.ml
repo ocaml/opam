@@ -419,7 +419,7 @@ let load lock_kind gt rt switch =
       let switch_config =
         {switch_config with invariant = Some invariant; opam_version}
       in
-      if lock_kind = `Lock_write then
+      if lock_kind = `Lock_write && not OpamStateConfig.(!r.dryrun) then
         OpamFile.Switch_config.write
           (OpamPath.Switch.switch_config gt.root switch)
           switch_config;

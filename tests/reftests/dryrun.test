@@ -403,7 +403,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-config)             Wrote ${BASEDIR}/OPAM/dr/.opam-switch/switch-config atomically in 0.000s
 [NOTE] Forcing removal of (uninstalled) bar.1
 -> removed   bar.1
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
