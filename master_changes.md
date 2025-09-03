@@ -25,6 +25,7 @@ users)
 ## Install
 
 ## Build (package)
+  * No longer create build directory in `dry-run` mode [#6788 @rjbou @hannesm - fix #5918]
 
 ## Remove
 
