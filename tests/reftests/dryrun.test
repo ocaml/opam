@@ -383,19 +383,12 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar
 Processing  2/2: [bar: true]
 + ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "remove" "true" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
 -> removed   bar.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1/opam
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/bar.1
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in previous/dr/.opam-switch/packages: bar.1
-Only in previous/dr/.opam-switch/packages: cache
 Only in OPAM/dr/.opam-switch: remove
 # Return code 1 #
 ### :4:b: package removal --force :
@@ -430,16 +423,11 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar
 [bar: true]
 + ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "remove" "true" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
 -> removed   bar.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/bar.1
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in previous/dr/.opam-switch/packages: cache
 Only in OPAM/dr/.opam-switch: remove
 # Return code 1 #
 ### :5: reinstall
@@ -493,7 +481,6 @@ Processing  4/4: [bar: cp bar]
 + ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "install" "cp" "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 Installing bar.1.
 -> installed bar.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
@@ -566,19 +553,12 @@ Processing  5/5: [bar: cp bar]
 + ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "install" "cp" "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2)
 Installing bar.2.
 -> installed bar.2
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/bar.1/opam
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/bar.1
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in previous/dr/.opam-switch/packages: bar.1
-Only in previous/dr/.opam-switch/packages: cache
 Only in OPAM/dr/.opam-switch: remove
 # Return code 1 #
 ### :8z: pinning no action :
@@ -1148,10 +1128,6 @@ The following actions will be simulated:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   nip.dev
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/packages/nip.dev
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/packages/nip.dev/opam
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
@@ -1159,8 +1135,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in previous/dr/.opam-switch/overlay: nip
-Only in previous/dr/.opam-switch/packages: cache
-Only in previous/dr/.opam-switch/packages: nip.dev
 Only in previous/dr/.opam-switch/sources: nip
 # Return code 1 #
 ### :10: install from pin :
