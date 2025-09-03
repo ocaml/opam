@@ -122,7 +122,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam install main-repo.1 | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash | "md5..?${PRE_MD5}" -> md5/pre | grep -v getconf
+### opam install main-repo.1 | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash | "md5..?${PRE_MD5}" -> md5/pre
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -191,7 +191,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall main-repo.1 | sed-cmd tar cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash | grep -v getconf
+### opam reinstall main-repo.1 | sed-cmd tar cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -267,7 +267,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam upgrade main-repo | sed-cmd tar touch mkdir cp | "${PRE_MD5}..?${MD5}" -> pre/hash | grep -v getconf | unordered
+### opam upgrade main-repo | sed-cmd tar touch mkdir cp | "${PRE_MD5}..?${MD5}" -> pre/hash | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -352,7 +352,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam remove main-repo | sed-cmd tar touch | "${PRE_MD5}..?${MD5}" -> pre/hash | grep -v getconf
+### opam remove main-repo | sed-cmd tar touch | "${PRE_MD5}..?${MD5}" -> pre/hash
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -511,7 +511,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam install main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir | grep -v getconf
+### opam install main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -585,7 +585,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir | grep -v getconf
+### opam reinstall main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -673,7 +673,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam remove main-ppin | grep -v '^- ./$' | sed-cmd rsync touch | grep -v getconf
+### opam remove main-ppin | grep -v '^- ./$' | sed-cmd rsync touch
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -775,7 +775,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 '${OPAM} switch create install-from-path-pin-combined--empty' failed.
 # Return code 5 #
-### opam install ./main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir | grep -v getconf
+### opam install ./main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -843,7 +843,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall ./main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir | grep -v getconf
+### opam reinstall ./main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -930,7 +930,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam unpin main-ppin -y | grep -v '^- ./$' | sed-cmd rsync touch | grep -v getconf
+### opam unpin main-ppin -y | grep -v '^- ./$' | sed-cmd rsync touch
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1107,7 +1107,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam install main-gpin | sed-cmd git cp touch mkdir | grep -v "mkdir.*\\.git." | grep -v getconf
+### opam install main-gpin | sed-cmd git cp touch mkdir | grep -v "mkdir.*\\.git."
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1187,7 +1187,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall main-gpin | sed-cmd git cp touch mkdir | grep -v "mkdir.*\\.git." | grep -v getconf
+### opam reinstall main-gpin | sed-cmd git cp touch mkdir | grep -v "mkdir.*\\.git."
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1286,7 +1286,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam remove main-gpin | sed-cmd git touch | grep -v "mkdir.*\\.git." | grep -v getconf
+### opam remove main-gpin | sed-cmd git touch | grep -v "mkdir.*\\.git."
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1391,7 +1391,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 '${OPAM} switch create install-from-git-pin-combined--empty' failed.
 # Return code 5 #
-### opam install ./main-gpin | sed-cmd git cp touch mkdir | grep -v "mkdir.*\\.git." | grep -v "HEAD is now" | grep -v getconf
+### opam install ./main-gpin | sed-cmd git cp touch mkdir | grep -v "mkdir.*\\.git." | grep -v "HEAD is now"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1469,7 +1469,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall ./main-gpin | sed-cmd git cp touch mkdir | grep -v "mkdir.*\\.git." | grep -v "HEAD is now" | grep -v getconf
+### opam reinstall ./main-gpin | sed-cmd git cp touch mkdir | grep -v "mkdir.*\\.git." | grep -v "HEAD is now"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1567,7 +1567,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam unpin main-gpin -y | sed-cmd git touch | grep -v "mkdir.*\\.git." | grep -v "HEAD is now" | grep -v getconf
+### opam unpin main-gpin -y | sed-cmd git touch | grep -v "mkdir.*\\.git." | grep -v "HEAD is now"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1716,7 +1716,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam install main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash | grep -v getconf
+### opam install main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1775,7 +1775,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash | grep -v getconf
+### opam reinstall main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1851,7 +1851,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam remove main-repo | grep -v '^- ./$' | sed-cmd tar rsync touch | "${PRE_MD5}..?${MD5}" -> pre/hash | grep -v getconf
+### opam remove main-repo | grep -v '^- ./$' | sed-cmd tar rsync touch | "${PRE_MD5}..?${MD5}" -> pre/hash
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1945,7 +1945,7 @@ Usage: opam switch [OPTION]… [COMMAND] [ARG]…
 Try 'opam switch --help' or 'opam --help' for more information.
 # Return code 2 #
 ### :III:2: with package
-### opam switch create package-switch --package main-repo | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash | "md5..?${PRE_MD5}" -> md5/pre | grep -v getconf
+### opam switch create package-switch --package main-repo | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash | "md5..?${PRE_MD5}" -> md5/pre
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
@@ -2082,7 +2082,7 @@ SYSTEM                          LOCK ${BASEDIR}/void/_opam/.opam-switch/lock (wr
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### :III:3: from local, with a package
-### opam switch create ./main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir | grep -v getconf
+### opam switch create ./main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
