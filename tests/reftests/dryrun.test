@@ -370,9 +370,6 @@ The following actions will be simulated:
   - remove bar 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
 Processing  2/2: [bar: true]
 + true (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
 -> removed   bar.1
@@ -382,8 +379,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: remove
-# Return code 1 #
 ### :III:a: Package removal --force
 ### sh initial.sh unpack
 ### opam switch create dr --empty
@@ -410,19 +405,12 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/ca
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/dr/.opam-switch/switch-config atomically in 0.000s
 [NOTE] Forcing removal of (uninstalled) bar.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
-[bar: true]
-+ true (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
 -> removed   bar.1
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: remove
-# Return code 1 #
 ### :IV: Package reinstall
 ### sh initial.sh unpack
 ### opam switch create dr foo
@@ -462,9 +450,6 @@ The following actions will be simulated:
 Processing  2/4: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
 Processing  3/4: [bar: true]
 + true (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
 -> removed   bar.1
@@ -478,8 +463,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: remove
-# Return code 1 #
 ### :V: Update
 ### sh initial.sh unpack
 ### sh pre.sh
@@ -532,9 +515,6 @@ The following actions will be simulated:
 Processing  3/5: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2)
 -> compiled  bar.2
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
 Processing  4/5: [bar: true]
 + true (CWD=${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1)
 -> removed   bar.1
@@ -548,8 +528,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: remove
-# Return code 1 #
 ### :VII: Pinning
 ### :VII:1: Pinning with no action
 ### sh initial.sh unpack
@@ -990,8 +968,6 @@ The following actions will be simulated:
   - recompile nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
 -> removed   nip.dev
 Installing nip.dev.
 -> installed nip.dev
@@ -1001,7 +977,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: reinstall
-Only in OPAM/dr/.opam-switch: remove
 Only in OPAM/dr/.opam-switch/sources/nip: another-file
 # Return code 1 #
 ### :VII:7: Pin removal
@@ -1050,8 +1025,6 @@ The following actions will be simulated:
   - remove nip dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
 -> removed   nip.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
@@ -1059,8 +1032,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: remove
-# Return code 1 #
 ### :VII:8: Pin triggered by install
 ### sh initial.sh unpack
 ### <pin:nip/nip.opam>
@@ -1220,8 +1191,6 @@ The following actions will be simulated:
 Processing  3/7: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
 -> removed   nip.dev
 Processing  5/7: [bar: cp bar]
 + cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
@@ -1238,7 +1207,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: reinstall
-Only in OPAM/dr/.opam-switch: remove
 Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
 10c10,11
@@ -1341,8 +1309,6 @@ The following actions will be simulated:
 Processing  3/7: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
 -> removed   nip.dev
 Processing  5/7: [bar: cp bar]
 + cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
@@ -1359,7 +1325,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
 Only in OPAM/dr/.opam-switch: reinstall
-Only in OPAM/dr/.opam-switch: remove
 Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
 10c10,11

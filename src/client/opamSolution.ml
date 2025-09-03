@@ -691,7 +691,8 @@ let parallel_apply t
          store_time ();
          Done (`Exception exn))
     | `Remove nv ->
-      (if OpamAction.removal_needs_download t nv then
+      (if not OpamStateConfig.(!r.dryrun)
+       && OpamAction.removal_needs_download t nv then
          let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
          OpamFilename.rmdir d;
          let source_dir = source_dir nv in

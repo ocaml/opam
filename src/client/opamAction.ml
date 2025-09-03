@@ -846,7 +846,8 @@ let remove_package_aux
     | Some build_dir -> build_dir
     | None ->
       let dir = OpamPath.Switch.remove root t.switch nv in
-      if not (OpamFilename.exists_dir dir) then
+      if not OpamStateConfig.(!r.dryrun)
+      && not (OpamFilename.exists_dir dir) then
         OpamFilename.mkdir dir;
       dir
   in
