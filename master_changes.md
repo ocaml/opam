@@ -137,6 +137,7 @@ users)
   * Improve the revdeps test by ignoring non-released packages [#6657 @kit-ty-kate]
   * Avoid re-testing already tested repositories when testing the revdeps [#6657 @kit-ty-kate]
   * Fix duplication logic in revdeps script [#6666 @arozovyk]
+  * Remove patch dependency in depext actions [#6676 @rjbou]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
