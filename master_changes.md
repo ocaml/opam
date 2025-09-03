@@ -108,6 +108,7 @@ users)
 ## Internal: Windows
 
 ## Test
+  * Display file management log when debug test are enabled (negative values) [#6673 @rjbou]
 
 ## Benchmarks
   * Benchmark `opam update` [#6681 @arozovyk]
