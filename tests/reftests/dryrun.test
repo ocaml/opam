@@ -120,7 +120,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (re
 Switch invariant: ["foo"]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1
 Processing  2/3: [foo: touch foo]
 + touch "foo" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/foo.1)
 -> compiled  foo.1
@@ -158,7 +157,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (re
 Switch invariant: ["foo"]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/nip/_opam/.opam-switch/build/foo.1
 Processing  2/3: [foo: touch foo]
 + touch "foo" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/foo.1)
 -> compiled  foo.1
@@ -205,7 +203,6 @@ The following actions will be simulated:
   - install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/nip/_opam/.opam-switch/build/nip.dev
 Installing nip.dev.
 -> installed nip.dev
 Done.
@@ -248,7 +245,6 @@ The following actions will be simulated:
   - install bar 1 [required by nip]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/nip/_opam/.opam-switch/build/bar.1
 Processing  2/3: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/nip/_opam/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -326,7 +322,6 @@ The following actions will be simulated:
   - install bar 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 Processing  2/3: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -464,8 +459,6 @@ The following actions will be simulated:
   - recompile bar 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1/bar
 Processing  2/4: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -485,7 +478,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in previous/dr/.opam-switch/build: bar.1
 Only in OPAM/dr/.opam-switch: remove
 # Return code 1 #
 ### :V: Update
@@ -537,7 +529,6 @@ The following actions will be simulated:
   - upgrade bar 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2
 Processing  3/5: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.2)
 -> compiled  bar.2
@@ -663,7 +654,6 @@ The following actions will be simulated:
   - install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
 Installing nip.dev.
 -> installed nip.dev
 Done.
@@ -739,7 +729,6 @@ The following actions will be simulated:
   - install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
 Installing nip.dev.
 -> installed nip.dev
 Done.
@@ -802,7 +791,6 @@ The following actions will be simulated:
   - install nip 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
 Installing nip.1.
 -> installed nip.1
 Done.
@@ -857,7 +845,6 @@ The following actions will be simulated:
   - install nip 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.1
 Installing nip.1.
 -> installed nip.1
 Done.
@@ -949,10 +936,8 @@ The following actions will be simulated:
   - install nip-d 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip-d.1
 Installing nip-d.1.
 -> installed nip-d.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
 Installing nip.dev.
 -> installed nip.dev
 Done.
@@ -1036,9 +1021,6 @@ The following actions will be simulated:
   - recompile nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
 -> removed   nip.dev
@@ -1049,7 +1031,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in previous/dr/.opam-switch/build: nip.dev
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
 1a2,3
 > name: "nip"
@@ -1071,9 +1052,6 @@ diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/d
 Only in OPAM/dr/.opam-switch: reinstall
 Only in OPAM/dr/.opam-switch: remove
 Only in OPAM/dr/.opam-switch/sources/nip: another-file
-diff gitPrevious gitCurrent
-1d0
-< dr/.opam-switch/build/nip.dev/.git
 # Return code 1 #
 ### :VII:7: Pin removal
 ### sh initial.sh unpack
@@ -1172,7 +1150,6 @@ The following actions will be simulated:
   - install nip dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
 Installing nip.dev.
 -> installed nip.dev
 Done.
@@ -1214,7 +1191,6 @@ The following actions will be simulated:
   - install bar 1 [required by nip]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 Processing  2/3: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -1300,7 +1276,6 @@ The following actions will be simulated:
   - install   bar 1            [required by nip]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 Processing  3/7: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -1311,9 +1286,6 @@ Processing  5/7: [bar: cp bar]
 + cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 Installing bar.1.
 -> installed bar.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
 Processing  6/7: [nip: touch a-file-snd]
 + touch "a-file-snd" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev)
 -> compiled  nip.dev
@@ -1324,7 +1296,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in previous/dr/.opam-switch/build: nip.dev
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
 1a2,3
 > name: "nip"
@@ -1453,7 +1424,6 @@ The following actions will be simulated:
   - install   bar 1            [required by nip]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1
 Processing  3/7: [bar: touch bar]
 + touch "bar" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 -> compiled  bar.1
@@ -1464,9 +1434,6 @@ Processing  5/7: [bar: cp bar]
 + cp "bar" "${BASEDIR}/OPAM/dr/lib/" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/bar.1)
 Installing bar.1.
 -> installed bar.1
-SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/a-file
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev/nip.opam
 Processing  6/7: [nip: touch a-file-snd]
 + touch "a-file-snd" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/build/nip.dev)
 -> compiled  nip.dev
@@ -1477,7 +1444,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in previous/dr/.opam-switch/build: nip.dev
 diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/overlay/nip/opam OPAM/dr/.opam-switch/overlay/nip/opam
 1a2,3
 > name: "nip"
@@ -1508,9 +1474,6 @@ diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OP
 ---
 > build: ["touch" "a-file-snd"]
 > depends: "bar"
-diff gitPrevious gitCurrent
-1d0
-< dr/.opam-switch/build/nip.dev/.git
 # Return code 1 #
 ### opam upgrade | unordered
 The following actions will be performed:

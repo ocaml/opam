@@ -648,7 +648,8 @@ let parallel_apply t
         try true, OpamPackage.Map.find nv inplace
         with Not_found ->
           let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
-          if not OpamClientConfig.(!r.reuse_build_dir) then
+          if not OpamClientConfig.(!r.reuse_build_dir)
+          && not OpamStateConfig.(!r.dryrun) then
             OpamFilename.rmdir dir;
           false, dir
       in
