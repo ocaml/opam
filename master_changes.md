@@ -76,6 +76,7 @@ users)
 ## Build
   * opam no longer depends on `cmdliner` [#6755 @kit-ty-kate - fix #6425]
   * Clean variables before calling make on different projects to avoid clashes [#6769 @kit-ty-kate]
+  * Add the upcoming OCaml 5.5 (trunk) support when using dune's dev profile [#6670 @kit-ty-kate]
 
 ## Infrastructure
 
