@@ -66,7 +66,12 @@ exception Fetch_Fail of string
 
 let get_source_definition ?version ?subpath ?locked st nv url =
   let root = st.switch_global.root in
-  let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
+  let srcdir =
+    if OpamStateConfig.(!r.dryrun) then
+      OpamFilename.mk_tmp_dir ()
+    else
+      OpamPath.Switch.pinned_package root st.switch nv.name
+  in
   let fix opam =
     OpamFile.OPAM.with_url url @@
     (match version with
