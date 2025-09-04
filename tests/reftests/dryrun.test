@@ -404,8 +404,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 The following actions will be simulated:
 === install 1 package
   - install bar 1
@@ -421,12 +419,9 @@ Installing bar.1.
 -> installed bar.1
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
-# Return code 1 #
 ### :III: Package removal
 ### sh initial.sh unpack
 ### opam switch create dr foo
@@ -458,7 +453,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 The following actions will be simulated:
 === remove 1 package
   - remove bar 1
@@ -478,7 +472,6 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/ba
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
@@ -511,7 +504,6 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/dr/.opam-switch/switch-config atomically in 0.000s
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 [NOTE] Forcing removal of (uninstalled) bar.1
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar.1
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/remove
@@ -525,7 +517,6 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/packages/b
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/bar.1
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
@@ -563,7 +554,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 The following actions will be simulated:
 === recompile 1 package
   - recompile bar 1
@@ -588,7 +578,6 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/bar
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
@@ -639,7 +628,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 The following actions will be simulated:
 === upgrade 1 package
   - upgrade bar 1 to 2
@@ -667,7 +655,6 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/ba
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
@@ -704,8 +691,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
@@ -724,11 +709,9 @@ SYSTEM                          write ${BASEDIR}/OPAM/dr/.opam-switch/overlay/ni
 nip is now pinned to file://${BASEDIR}/nip (version dev)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
 Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 # Return code 1 #
@@ -761,8 +744,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
@@ -791,11 +772,9 @@ Installing nip.dev.
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
 Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 # Return code 1 #
@@ -833,8 +812,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
@@ -871,11 +848,9 @@ Installing nip.dev.
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
 Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 diff gitPrevious gitCurrent
@@ -909,8 +884,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
@@ -938,11 +911,9 @@ Installing nip.1.
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
 Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 # Return code 1 #
@@ -982,8 +953,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 nip is now pinned to version 1
 
 The following actions will be simulated:
@@ -997,12 +966,9 @@ Installing nip.1.
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
-# Return code 1 #
 ### :VII:5: Pinning with pin-depends
 ### sh initial.sh unpack
 ### <pin:nip-d/nip-d.opam>
@@ -1040,8 +1006,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
 SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
@@ -1097,11 +1061,9 @@ Installing nip.dev.
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
 Only in OPAM/dr/.opam-switch: overlay
 Only in OPAM/dr/.opam-switch: sources
 # Return code 1 #
@@ -1151,7 +1113,6 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
@@ -1189,7 +1150,6 @@ Installing nip.dev.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
@@ -1259,7 +1219,6 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
 SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file
 SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam
@@ -1282,7 +1241,6 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/ni
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
@@ -1319,8 +1277,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
 The following actions will be simulated:
 === install 1 package
@@ -1332,12 +1288,9 @@ Installing nip.dev.
 -> installed nip.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
-# Return code 1 #
 ### :VII:9: Install local package with deps-only
 ### sh initial.sh unpack
 ### <pin:nip/nip.opam>
@@ -1366,8 +1319,6 @@ FILE(switch-config)             Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-conf
 FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-state in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/backup
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 FILE(opam)                      Read ${BASEDIR}/nip/nip.opam in 0.000s
 The following actions will be simulated:
 === install 1 package
@@ -1384,12 +1335,9 @@ Installing bar.1.
 -> installed bar.1
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: backup
-# Return code 1 #
 ### :VII:10: Update of pin source triggered by install command
 ### :VII:10:a: Update of pin source triggered by install command, with changes
 ### :VII:10:a:1: Update of path-pin source triggered by install command, with changes
@@ -1439,7 +1387,6 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
@@ -1486,7 +1433,6 @@ Installing nip.dev.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
@@ -1588,7 +1534,6 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
@@ -1642,7 +1587,6 @@ Installing nip.dev.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/remove/nip.dev
 Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
@@ -1736,7 +1680,6 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
@@ -1750,7 +1693,6 @@ SYSTEM                          rmdir ${OPAMTMP}
 
 [NOTE] Package nip is already installed (current version is dev).
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
@@ -1802,7 +1744,6 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export atomically in 0.000s
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
@@ -1824,7 +1765,6 @@ SYSTEM                          rmdir ${OPAMTMP}
 
 [NOTE] Package nip is already installed (current version is dev).
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
-SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh

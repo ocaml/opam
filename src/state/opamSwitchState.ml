@@ -1285,7 +1285,7 @@ let update_pin nv opam st =
   { st with sys_packages; available_packages }
 
 let do_backup lock st = match lock with
-  | `Lock_write ->
+  | `Lock_write when not OpamStateConfig.(!r.dryrun) ->
     let file = OpamPath.Switch.backup st.switch_global.root st.switch in
     let previous_selections = selections st in
     OpamFile.SwitchSelections.write file previous_selections;
