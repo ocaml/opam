@@ -931,7 +931,7 @@ Done.
 ### <nip/another-file>
 otuat
 ### sh pre.sh
-### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --working-dir --dry-run | sed-cmd git rsync | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | 'rsync-files[^ "]*' -> 'rsync-files-xxx' | unordered
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --working-dir --dry-run | sed-cmd git rsync | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | 'rsync-files[^ "]*' -> 'rsync-files-xxx' | grep -v "HEAD is now" | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -949,18 +949,32 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/ca
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam in 0.000s
 SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip.dev: git]
-+ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ rsync "-rLptgoDvc" "--files-from" "${BASEDIR}/OPAM/log/rsync-files-xxx" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
++ git "init" (CWD=${OPAMTMP})
+- Initialized empty Git repository in ${OPAMTMP}/.git/
++ git "config" "--local" "fetch.prune" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "diff.noprefix" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "core.autocrlf" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "core.eol" "lf" (CWD=${OPAMTMP})
++ git "config" "--local" "color.ui" "false" (CWD=${OPAMTMP})
++ git "remote" "add" "origin" "file://${BASEDIR}/nip" (CWD=${OPAMTMP})
++ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${OPAMTMP})
++ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${OPAMTMP})
++ git "reset" "--hard" "refs/remotes/opam-ref-master" "--" (CWD=${OPAMTMP})
++ git "clean" "-fdx" (CWD=${OPAMTMP})
++ rsync "-rLptgoDvc" "--files-from" "${BASEDIR}/OPAM/log/rsync-files-xxx" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${OPAMTMP}"
 - another-file
 - 
 SYSTEM                          rm ${BASEDIR}/OPAM/log/rsync-files-xxx
 SYSTEM                          rmdir ${OPAMTMP}
 [nip.dev] synchronised (git+file://${BASEDIR}/nip#master)
+SYSTEM                          read /${OPAMTMP}/nip.opam
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam
+SYSTEM                          read /${OPAMTMP}/another-file
+SYSTEM                          read /${OPAMTMP}/a-file
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/log/patch-xxx
 
 The following actions will be simulated:
 === recompile 1 package
@@ -975,8 +989,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch/sources/nip: another-file
-# Return code 1 #
 ### :VII:7: Pin removal
 ### sh initial.sh unpack
 ### <pin:nip/nip.opam>
@@ -1170,13 +1182,21 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/ca
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam in 0.000s
 SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip.dev: rsync]
-+ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${OPAMTMP}"
+- a-file
 - a-file-snd
 - nip.opam
 - 
 SYSTEM                          rmdir ${OPAMTMP}
 [nip.dev] synchronised (file://${BASEDIR}/nip)
+SYSTEM                          read /${OPAMTMP}/nip.opam
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam
+SYSTEM                          read /${OPAMTMP}/a-file-snd
+SYSTEM                          read /${OPAMTMP}/a-file
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/log/patch-xxx
 [nip] Installing new package description from upstream file://${BASEDIR}/nip
 
 The following actions will be simulated:
@@ -1204,14 +1224,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
-diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
-10c10,11
-< build: ["touch" "a-file"]
----
-> build: ["touch" "a-file-snd"]
-> depends: "bar"
-# Return code 1 #
 ### opam upgrade | unordered
 Already up-to-date.
 Nothing to do.
@@ -1278,15 +1290,28 @@ Processing  1/1:
 + git "diff" "--no-ext-diff" "--quiet" "HEAD" (CWD=${BASEDIR}/nip)
 + git "ls-files" "--others" "--exclude-standard" (CWD=${BASEDIR}/nip)
 SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip.dev: git]
-+ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "reset" "--hard" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "init" (CWD=${OPAMTMP})
+- Initialized empty Git repository in ${OPAMTMP}/.git/
++ git "config" "--local" "fetch.prune" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "diff.noprefix" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "core.autocrlf" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "core.eol" "lf" (CWD=${OPAMTMP})
++ git "config" "--local" "color.ui" "false" (CWD=${OPAMTMP})
++ git "remote" "add" "origin" "file://${BASEDIR}/nip" (CWD=${OPAMTMP})
++ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${OPAMTMP})
++ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${OPAMTMP})
++ git "reset" "--hard" "refs/remotes/opam-ref-master" "--" (CWD=${OPAMTMP})
++ git "clean" "-fdx" (CWD=${OPAMTMP})
 SYSTEM                          rmdir ${OPAMTMP}
 [nip.dev] synchronised (git+file://${BASEDIR}/nip#master)
+SYSTEM                          read /${OPAMTMP}/nip.opam
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam
+SYSTEM                          read /${OPAMTMP}/a-file-snd
+SYSTEM                          read /${OPAMTMP}/a-file
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/log/patch-xxx
 [nip] Installing new package description from upstream git+file://${BASEDIR}/nip#master
 
 The following actions will be simulated:
@@ -1314,14 +1339,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch/sources/nip: a-file-snd
-diff '--exclude-from=x-diff' -r previous/dr/.opam-switch/sources/nip/nip.opam OPAM/dr/.opam-switch/sources/nip/nip.opam
-10c10,11
-< build: ["touch" "a-file"]
----
-> build: ["touch" "a-file-snd"]
-> depends: "bar"
-# Return code 1 #
 ### opam upgrade | unordered
 Already up-to-date.
 Nothing to do.
@@ -1372,11 +1389,18 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/ca
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam in 0.000s
 SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip.dev: rsync]
-+ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${OPAMTMP}"
+- a-file
+- nip.opam
 - 
 SYSTEM                          rmdir ${OPAMTMP}
-[nip.dev] synchronised (no changes)
+[nip.dev] synchronised (file://${BASEDIR}/nip)
+SYSTEM                          read /${OPAMTMP}/nip.opam
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam
+SYSTEM                          read /${OPAMTMP}/a-file
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file
 
 [NOTE] Package nip is already installed (current version is dev).
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)
@@ -1441,14 +1465,26 @@ Processing  1/1:
 + git "diff" "--no-ext-diff" "--quiet" "HEAD" (CWD=${BASEDIR}/nip)
 + git "ls-files" "--others" "--exclude-standard" (CWD=${BASEDIR}/nip)
 SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip.dev: git]
-+ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "init" (CWD=${OPAMTMP})
+- Initialized empty Git repository in ${OPAMTMP}/.git/
++ git "config" "--local" "fetch.prune" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "diff.noprefix" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "core.autocrlf" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "core.eol" "lf" (CWD=${OPAMTMP})
++ git "config" "--local" "color.ui" "false" (CWD=${OPAMTMP})
++ git "remote" "add" "origin" "file://${BASEDIR}/nip" (CWD=${OPAMTMP})
++ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${OPAMTMP})
++ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${OPAMTMP})
++ git "reset" "--hard" "refs/remotes/opam-ref-master" "--" (CWD=${OPAMTMP})
++ git "clean" "-fdx" (CWD=${OPAMTMP})
 SYSTEM                          rmdir ${OPAMTMP}
-[nip.dev] synchronised (no changes)
+[nip.dev] synchronised (git+file://${BASEDIR}/nip#master)
+SYSTEM                          read /${OPAMTMP}/nip.opam
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/nip.opam
+SYSTEM                          read /${OPAMTMP}/a-file
+SYSTEM                          read /${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/a-file
 
 [NOTE] Package nip is already installed (current version is dev).
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (write => none)

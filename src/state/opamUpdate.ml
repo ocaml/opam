@@ -283,7 +283,24 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
                   Filename.dir_sep ^ OpamFilename.SubPath.to_string sp) subpath))
     @@+ fun () ->
     (* Do the update *)
+    let srcdir0 = srcdir in
+    let srcdir, srcdir_find =
+      if OpamStateConfig.(!r.dryrun) then
+        let tmpdir = OpamFilename.mk_tmp_dir () in
+        tmpdir, OpamFilename.SubPath.(tmpdir /? subpath)
+      else
+        srcdir, srcdir_find
+    in
     fetch_dev_package urlf srcdir ~working_dir ?subpath nv @@+ fun result ->
+    let result =
+      match OpamStateConfig.(!r.dryrun), result with
+      | true, Result () ->
+        let base f = OpamFilename.Base.of_string (OpamFilename.Dir.to_string f) in
+        (match OpamRepositoryBackend.get_diff (OpamFilename.Dir.of_string "/") (base srcdir) (base srcdir0) with
+         | Some _ -> Result ()
+         | None -> Up_to_date ())
+      | _, (Result () | Up_to_date () | Not_available _) -> result
+    in
     let new_source_opam =
       OpamPinned.find_opam_file_in_source ?locked name srcdir_find
       >>= fun (f, lock) ->
