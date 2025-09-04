@@ -557,10 +557,9 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
 SYSTEM                          mkdir ${OPAMTMP}
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip: rsync]
-+ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${OPAMTMP}"
 - a-file
 - nip.opam
 - 
@@ -573,8 +572,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: sources
-# Return code 1 #
 ### :VII:2: Pinning directory with opam file
 ### :VII:2:a: Pinning directory with opam file, no vcs
 ### sh initial.sh unpack
@@ -605,10 +602,9 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
 SYSTEM                          mkdir ${OPAMTMP}
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip: rsync]
-+ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${OPAMTMP}"
 - a-file
 - nip.opam
 - 
@@ -630,8 +626,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: sources
-# Return code 1 #
 ### :VII:2:b: Pinning directory with opam file, vcs
 ### sh initial.sh unpack
 ### <pin:nip/nip.opam>
@@ -667,21 +661,20 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
 SYSTEM                          mkdir ${OPAMTMP}
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip: git]
-+ git "init" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-- Initialized empty Git repository in ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip/.git/
-+ git "config" "--local" "fetch.prune" "false" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "config" "--local" "diff.noprefix" "false" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "config" "--local" "core.autocrlf" "false" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "config" "--local" "core.eol" "lf" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "config" "--local" "color.ui" "false" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "remote" "add" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "reset" "--hard" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
-+ git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/dr/.opam-switch/sources/nip)
++ git "init" (CWD=${OPAMTMP})
+- Initialized empty Git repository in ${OPAMTMP}/.git/
++ git "config" "--local" "fetch.prune" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "diff.noprefix" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "core.autocrlf" "false" (CWD=${OPAMTMP})
++ git "config" "--local" "core.eol" "lf" (CWD=${OPAMTMP})
++ git "config" "--local" "color.ui" "false" (CWD=${OPAMTMP})
++ git "remote" "add" "origin" "file://${BASEDIR}/nip" (CWD=${OPAMTMP})
++ git "remote" "set-url" "origin" "file://${BASEDIR}/nip" (CWD=${OPAMTMP})
++ git "fetch" "-q" "file://${BASEDIR}/nip" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${OPAMTMP})
++ git "reset" "--hard" "refs/remotes/opam-ref-master" "--" (CWD=${OPAMTMP})
++ git "clean" "-fdx" (CWD=${OPAMTMP})
 SYSTEM                          rmdir ${OPAMTMP}
 [NOTE] Package nip does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip
@@ -700,11 +693,6 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/lock (none 
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### sh post.sh
-Only in OPAM/dr/.opam-switch: sources
-diff gitPrevious gitCurrent
-0a1
-> dr/.opam-switch/sources/nip/.git
-# Return code 1 #
 ### :VII:3: Pinning directory with no opam file, no vcs
 ### sh initial.sh unpack
 ### <pkg:nip.1>
@@ -848,10 +836,9 @@ FILE(switch-state)              Read ${BASEDIR}/OPAM/dr/.opam-switch/switch-stat
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/dr/.opam-switch/packages/cache (read => none)
 SYSTEM                          mkdir ${OPAMTMP}
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip: rsync]
-+ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip"
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip/" "${OPAMTMP}"
 - a-file
 - nip.opam
 - 
@@ -861,19 +848,22 @@ The following additional pinnings are required by nip.dev:
   - nip-d.1 at file://${BASEDIR}/nip-d
 Pin and install them? [Y/n] y
 SYSTEM                          mkdir ${OPAMTMP}
-SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d
+SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [nip-d: rsync]
-+ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip-d/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d"
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip-d/" "${OPAMTMP}"
 - nip-d.opam
 - 
 SYSTEM                          rmdir ${OPAMTMP}
 [NOTE] Package nip-d does not exist in opam repositories registered in the current switch.
 SYSTEM                          mkdir ${OPAMTMP}
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources
+SYSTEM                          mkdir ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d
 [nip-d.1: rsync]
 + rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/nip-d/" "${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d"
+- nip-d.opam
 - 
 SYSTEM                          rmdir ${OPAMTMP}
-[nip-d.1] synchronised (no changes)
+[nip-d.1] synchronised (file://${BASEDIR}/nip-d)
 FILE(opam)                      Read ${BASEDIR}/OPAM/dr/.opam-switch/sources/nip-d/nip-d.opam in 0.000s
 SYSTEM                          rmdir ${BASEDIR}/OPAM/dr/.opam-switch/overlay/nip-d
 nip-d is now pinned to file://${BASEDIR}/nip-d (version 1)

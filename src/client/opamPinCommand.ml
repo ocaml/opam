@@ -374,7 +374,12 @@ let fetch_all_pins st ?working_dir pins =
     let command pinned =
       let { pinned_name = name; pinned_url = url;
             pinned_subpath = subpath; _ } = pinned in
-      let srcdir = OpamPath.Switch.pinned_package root st.switch name in
+      let srcdir =
+        if OpamStateConfig.(!r.dryrun) then
+          OpamFilename.mk_tmp_dir ()
+        else
+          OpamPath.Switch.pinned_package root st.switch name
+      in
       let name = OpamPackage.Name.to_string name in
       OpamProcess.Job.Op.(
         OpamRepository.pull_tree ~cache_dir ?subpath ?working_dir
