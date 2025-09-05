@@ -35,11 +35,13 @@ for n in $@; do
   nv=$n.1
   arch=arch-$n.tgz
   file="packages/$n/$nv/opam"
-  echo "url {" >> $file
-  echo "src: \"$arch\"" >> $file
   MD5=$(openssl md5 $arch | cut -d' ' -f2)
-  echo "checksum: \"md5=$MD5\"" >> $file
-  echo "}" >> $file
+  cat >> "$file" << EOF
+url {
+  src: "$arch"
+  checksum: "md5=$MD5"
+}
+EOF
 done
 ### sh add-urls.sh ipsum dolor sit amet
 ### opam admin add-hashes sha256

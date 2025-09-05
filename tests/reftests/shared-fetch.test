@@ -24,11 +24,13 @@ arch=$1
 shift
 for p in $@; do
   file="REPO/packages/${p%.*}/$p/opam"
-  echo "url {" >> $file
-  echo "src: \"$arch.tgz\"" >> $file
   MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
-  echo "checksum: \"md5=$MD5\"" >> $file
-  echo "}" >> $file
+  cat >> "$file" << EOF
+url {
+  src: "$arch.tgz"
+  checksum: "md5=$MD5"
+}
+EOF
 done
 ### sh mkurl.sh shared no-extra.3 extra.3
 ### sh mkurl.sh non-shared non-shared.4
@@ -85,11 +87,13 @@ src=$1
 shift
 for p in $@; do
   file="REPO/packages/${p%.*}/$p/opam"
-  echo "extra-source \"$src\" {" >> $file
-  echo "src: \"extra/$src\"" >> $file
   MD5=$(openssl md5 extra/$src | cut -d' ' -f2)
-  echo "checksum: \"md5=$MD5\"" >> $file
-  echo "}" >> $file
+  cat >> "$file" << EOF
+extra-source "$src" {
+  src: "extra/$src"
+  checksum: "md5=$MD5"
+}
+EOF
 done
 ### sh mkextrasource.sh extra_source.ml extra.3 no-extra.3
 ### opam update
@@ -169,15 +173,19 @@ arch=shared
 pkg=$1
 shift
 file="REPO/packages/${pkg%.*}/$pkg/opam"
-echo "url {" >> $file
-echo "src: \"$arch.tgz\"" >> $file
-echo "checksum: [" >> $file
+cat >> "$file" << EOF
+url {
+src: "$arch.tgz"
+checksum: [
+EOF
 for h in $@; do
   HASH=$(openssl $h $arch.tgz | cut -d' ' -f2)
   echo "\"$h=$HASH\"" >> $file
 done
-echo "  ]" >> $file
-echo "}" >> $file
+cat >> "$file" << EOF
+  ]
+}
+EOF
 ### sh mkurl.sh extra.3 md5 sha512
 ### sh mkurl.sh no-extra.3 sha256 sha512
 ### sh mkurl.sh intra.3 sha512
@@ -239,11 +247,13 @@ depends: [ "no-extra" ]
 p=extra.3
 arch=shared
 file="REPO/packages/${p%.*}/$p/opam"
-echo "url {" >> $file
-echo "src: \"$arch.tgz\"" >> $file
 MD5="01234567890123456789012345678901"
-echo "checksum: \"md5=$MD5\"" >> $file
-echo "}" >> $file
+cat >> "$file" << EOF
+url {
+  src: "$arch.tgz"
+  checksum: "md5=$MD5"
+}
+EOF
 ### sh mkurl.sh
 ### opam update
 
