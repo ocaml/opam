@@ -424,13 +424,12 @@ module Parse = struct
                   char '"';
                   space;
                   char '"'; Re.str cmd; char '"';
-                  space;
                 ]
               in
               let with_quote_set s = set ("\"'"^s) in
               let opt_quoted r = [
-                seq @@ [ char '"'] @  r @ [ char '"'; rep1 space ];
-                seq @@ r @ [ rep1 space ];
+                seq @@ [ char '"'] @ r @ [ char '"' ];
+                seq @@ r;
               ] in
               let unix_prefix cmd =
                 (* Unix & Mac command prefix
@@ -461,9 +460,15 @@ module Parse = struct
                   Re.str cmd;
                   opt @@ Re.str ".exe";
                 ] in
-              let re cmd = alt @@ sandbox cmd :: unix_prefix cmd @ win_prefix cmd in
+              let all_commands cmd = alt @@ sandbox cmd :: unix_prefix cmd @ win_prefix cmd in
               let rec aux cmd r acc =
+                (* Middle of line but with space *)
                 let str = Printf.sprintf "%s " cmd in
+                let re cmd = seq [ all_commands cmd; space; ] in
+                let acc = (re cmd, Sed str) :: acc in
+                (* beginning of line, no space, but with verbose opam logs *)
+                let str = Printf.sprintf "+ %s" cmd in
+                let re cmd = seq [ bos; Re.str "+ "; all_commands cmd; ] in
                 let acc = (re cmd, Sed str) :: acc in
                 match r with
                 | "|" :: _ | [] -> acc, r

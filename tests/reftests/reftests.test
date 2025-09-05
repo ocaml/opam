@@ -448,24 +448,24 @@ echo piou
 echo piou
 
 # with a verbose prefix
-+ /usr/bin/echo
-+ /opt/homebrew/bin/echo
-+ C:\Windows\system32\echo.exe
-+ C:\Windows\system32\echo
-+ C:\Windows\system 32\echo.exe
-+ C:\Windows\system 32\echo
-+ "/usr/bin/echo"
-+ "/opt/homebrew/bin/echo"
-+ "C:\Windows\system32\echo.exe"
-+ "C:\Windows\system32\echo"
-+ "C:\Windows\system 32\echo.exe"
-+ "C:\Windows\system 32\echo"
-+ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo"
-+ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo"
-+ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo"
-+ ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo"
-+ ${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo"
-+ ${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo"
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
 
 # with a verbose prefix and argument
 + echo piou
@@ -549,24 +549,24 @@ echo piou
 echo piou
 
 # with a verbose prefix
-+ /usr/bin/echo
-+ /opt/homebrew/bin/echo
-+ C:\Windows\system32\echo.exe
-+ C:\Windows\system32\echo
-+ C:\Windows\system 32\echo.exe
-+ C:\Windows\system 32\echo
-+ "/usr/bin/echo"
-+ "/opt/homebrew/bin/echo"
-+ "C:\Windows\system32\echo.exe"
-+ "C:\Windows\system32\echo"
-+ "C:\Windows\system 32\echo.exe"
-+ "C:\Windows\system 32\echo"
-+ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo"
-+ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo"
-+ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo"
-+ ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo"
-+ ${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo"
-+ ${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo"
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
 
 # with a verbose prefix and argument
 + echo piou
@@ -649,24 +649,24 @@ smtg piou
 smtg piou
 
 # with a verbose prefix
-+ /usr/bin/smtg
-+ /opt/homebrew/bin/smtg
-+ C:\Windows\system32\smtg.exe
-+ C:\Windows\system32\smtg
-+ C:\Windows\system 32\smtg.exe
-+ C:\Windows\system 32\smtg
-+ "/usr/bin/smtg"
-+ "/opt/homebrew/bin/smtg"
-+ "C:\Windows\system32\smtg.exe"
-+ "C:\Windows\system32\smtg"
-+ "C:\Windows\system 32\smtg.exe"
-+ "C:\Windows\system 32\smtg"
-+ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "smtg"
-+ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "smtg"
-+ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "smtg"
-+ ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "smtg"
-+ ${BASEDIR}/opam-init/hooks/sandbox.sh "install" "smtg"
-+ ${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "smtg"
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
 
 # with a verbose prefix and argument
 + smtg piou
