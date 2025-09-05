@@ -118,11 +118,13 @@ users)
   * Add a test for shared fetch without checksum [#6627 @rjbou]
   * Add a test for shared fetch without checksum, and for VCS shared fetch (not handled) [#6627 @rjbou]
   * Add a test showing the error message when faced with an UTF-8 character in the package version [#6640 @kit-ty-kate]
+  * Update `sed-cmd` reftest reftest [#6675 @rjbou]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
   * Fix support for removing local link directories [#6450 @kit-ty-kate]
   * Bump `OPAM_REPO_SHA` in the github action workflows to allow patch 3.0.0 [#6663 @kit-ty-kate]
+  * Allow `sed-cmd` to parse even if no space is after the command [#6675 @rjbou]
 
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]
