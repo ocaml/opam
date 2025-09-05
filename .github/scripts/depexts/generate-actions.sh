@@ -18,7 +18,7 @@ runs:
 EOF
 
 ### Generate the Dockerfile
-mainlibs="m4 git rsync patch tar unzip bzip2 make wget"
+mainlibs="m4 git rsync tar unzip bzip2 make wget"
 ocaml="ocaml ocaml-compiler-libs"
 
 OCAML_CONSTRAINT=''
