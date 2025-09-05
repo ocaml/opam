@@ -10,7 +10,7 @@ opam-version: "2.0"
 build: [ "test" "-f" "something" ]
 ### <mkurl.sh>
 file="REPO/packages/a/a.1/opam"
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 url="$basedir/$1.tgz"
 echo "url {" >> $file
 echo "src:\"$url\"" >> $file
@@ -55,7 +55,7 @@ opam-version: "2.0"
 install: [ "test" "-f" "i-am-extra-source" ]
 ### <mkxsrc.sh>
 file="REPO/packages/b/b.1/opam"
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 xsrc="$basedir/other-sources/$1"
 echo "extra-source \"i-am-extra-source\" {" >> $file
 echo "src: \"$xsrc\"" >> $file

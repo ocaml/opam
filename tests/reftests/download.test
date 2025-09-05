@@ -165,7 +165,7 @@ Clearing cache of downloaded files
 opam-version: "2.0"
 ### <mkurl.sh>
 file="REPO/packages/foo/foo.1/opam"
-basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 url="$basedir/arch.tgz"
 echo "url {" >> "$file"
 echo "src:\"$url\"" >> "$file"
@@ -213,7 +213,7 @@ content
 opam-version: "2.0"
 ### <mkurl.sh>
 file="REPO/packages/bar/bar.1/opam"
-basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 echo "url {" >> "$file"
 echo "src:\"git+file://$basedir/bar\"" >> "$file"
 echo "}" >> "$file"

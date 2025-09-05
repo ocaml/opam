@@ -80,7 +80,7 @@ install: ["cp" "snd.out" "%{lib}%"]
 dev-repo: "hg+https://pkg@op.am"
 url {
 ### <add-hash.sh>
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 echo "src: \"git+file://${basedir}/nip#snd-head\"}}" >> twice.snd.xp
 ### sh add-hash.sh
 ### opam switch import twice.snd.xp

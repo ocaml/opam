@@ -89,7 +89,7 @@ opam-version: "2.0"
 depends: "qux"
 depexts: [ "inexistant" ]
 ### <add_pin_depends.sh>
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 echo "pin-depends: [ \"qux.dev\" \"file://$basedir/qux\" ]" >> bar/bar.opam
 ### sh add_pin_depends.sh
 ### <pin:qux/qux.opam>

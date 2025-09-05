@@ -142,7 +142,7 @@ Done.
 opam-version:"2.0"
 build:[ "test" "-f" "present"]
 ### <mkurl.sh>
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 echo "url { src:\"file://${basedir}/qux\" }" >> REPO/packages/qux/qux.4/opam
 ### sh mkurl.sh
 ### opam update default

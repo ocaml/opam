@@ -36,7 +36,7 @@ install: [
 p=foo-arch.1
 arch=arch
 file="REPO/packages/${p%.*}/$p/opam"
-basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 MD5=$(openssl md5 "$arch.tgz" | cut -d' ' -f2)
 cat << EOF >> "$file"
 url {

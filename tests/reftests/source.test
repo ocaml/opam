@@ -19,7 +19,7 @@ echo "src: \"$arch.tgz\"" >> $file
 MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
 echo "checksum: \"md5=$MD5\"" >> $file
 echo "}" >> $file
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 echo "dev-repo: \"git+file://${basedir}/pandev\"" >> $file
 ### sh mkurl.sh
 ### opam update
@@ -118,7 +118,7 @@ opam-version: "2.0"
 ### <mkurl.sh>
 p=pandore.4
 file="REPO/packages/${p%.*}/$p/opam"
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 echo "url {" >> $file
 echo "git: \"$basedir/pandev\"" >> $file
 echo "}" >> $file
