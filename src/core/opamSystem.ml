@@ -134,8 +134,9 @@ let get_files_t ~except_vcs dirname =
 let get_files = get_files_t ~except_vcs:false
 let get_files_except_vcs = get_files_t ~except_vcs:true
 
+let file_management_log_level = 4
 let log_for_file_management () =
-  OpamCoreConfig.(!r.debug_level) >= 4
+  abs OpamCoreConfig.(!r.debug_level) >= file_management_log_level
 
 (* From stdune/src/fpath.ml *)
 let win32_unlink fn =
@@ -255,6 +256,7 @@ let string_of_channel ic =
   Buffer.contents b
 
 let read file =
+  log ~level:file_management_log_level "read %s" file;
   let ic =
     try open_in_bin file
     with Sys_error _ -> raise (File_not_found file) in
@@ -264,6 +266,7 @@ let read file =
   s
 
 let write file contents =
+  log ~level:file_management_log_level "write %s" file;
   mkdir (Filename.dirname file);
   let oc =
     try open_out_bin file

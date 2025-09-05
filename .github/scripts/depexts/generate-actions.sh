@@ -110,7 +110,7 @@ EOF
     mainlibs=${mainlibs/tar/}
     mainlibs=${mainlibs/git/}
     mainlibs=$(echo "$mainlibs" | sed -E 's/([[:alnum:]]+)/nixpkgs.\1/g')
-    additionallibs="gcc diffutils getconf gnused gawk"
+    additionallibs="gcc diffutils gnused gawk"
     additionallibs=$(echo "$additionallibs" | sed -E 's/([[:alnum:]]+)/nixpkgs.\1/g')
     # We don't use $ocaml as nix compiler lib is not main ocaml compiler
     cat > "$dir/Dockerfile" << EOF
