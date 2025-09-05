@@ -244,6 +244,7 @@ sed non risus
 suspendisse lectus tortor
 ### :IV:6: sed-cmd
 ### <commands>
+# with space
 /usr/bin/echo piou
 "/usr/bin/echo" "piou"
 C:\Windows\system32\echo.exe piou
@@ -256,7 +257,19 @@ C:\Windows\system 32\echo piou
 ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo" piou
 ${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo" piou
 ${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo" piou
+# without space
 /usr/bin/echo
+"/usr/bin/echo"
+C:\Windows\system32\echo.exe
+C:\Windows\system32\echo
+C:\Windows\system 32\echo.exe
+C:\Windows\system 32\echo
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo"
 ### : cmd need to be followed with at least one space
 ### cat commands | sed-cmd echo
 echo piou
