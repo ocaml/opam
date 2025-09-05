@@ -564,13 +564,18 @@ shift
 for p in $@; do
   p=$p.1
   file="packages/${p%.*}/$p/opam"
-  echo "url {" >> $file
-  echo "src: \"$arch.tgz\"" >> $file
   if [ $hsh -eq 1 ] ; then
     MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
-    echo "checksum: \"md5=$MD5\"" >> $file
+    checksum="checksum: \"md5=$MD5\""
+  else
+    checksum=""
   fi
-  echo "}" >> $file
+  cat >> "$file" << EOF
+url {
+  src: "$arch.tgz"
+  $checksum
+}
+EOF
 done
 ### <check-hash-ca.sh>
 hc=$OPAMROOT/download-cache/hash-cache

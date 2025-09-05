@@ -61,7 +61,7 @@ EOF
   tar czf "$nv.tgz" "$nv.t"
   MD5=$(openssl md5 "$nv.tgz" | cut -d' ' -f2)
   XMD5=$(openssl md5 "$pre/files/$n.install" | cut -d' ' -f2)
-  basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/g"`
+  basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
   cat << EOF > "$pre/opam"
 opam-version:"2.0"
 build: [ "test" "-f" "%{name}%.%{version}%.t" ]
@@ -1351,7 +1351,7 @@ src: "file://${BASEDIR}/over-epr"
 ### <pin-depends.sh>
 #!/bin/sh
 set -eu
-basedir=$(echo "$BASEDIR" | sed 's/\\/\\\\\\\\/g')
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 cat << EOF >> "$1"
 pin-depends: [
   ["$2" "file://$basedir/$3"]

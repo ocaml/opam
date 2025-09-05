@@ -165,13 +165,15 @@ Clearing cache of downloaded files
 opam-version: "2.0"
 ### <mkurl.sh>
 file="REPO/packages/foo/foo.1/opam"
-basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
-url="$basedir/arch.tgz"
-echo "url {" >> "$file"
-echo "src:\"$url\"" >> "$file"
-MD5=$(openssl md5 "$url" | cut -d' ' -f2)
-echo "checksum: \"md5=$MD5\"" >> "$file"
-echo "}" >> "$file"
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+arch=arch.tgz
+MD5=$(openssl md5 "$arch" | cut -d' ' -f2)
+cat >> "$file" << EOF
+url {
+  src:"$arch"
+  checksum: "md5=$MD5"
+}
+EOF
 ### sh mkurl.sh
 ### opam update
 
@@ -213,10 +215,12 @@ content
 opam-version: "2.0"
 ### <mkurl.sh>
 file="REPO/packages/bar/bar.1/opam"
-basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
-echo "url {" >> "$file"
-echo "src:\"git+file://$basedir/bar\"" >> "$file"
-echo "}" >> "$file"
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "$file" << EOF
+url {
+  src:"git+file://$basedir/bar"
+}
+EOF
 ### sh mkurl.sh
 ### opam update
 

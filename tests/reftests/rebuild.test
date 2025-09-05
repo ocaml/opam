@@ -10,13 +10,15 @@ opam-version: "2.0"
 build: [ "test" "-f" "something" ]
 ### <mkurl.sh>
 file="REPO/packages/a/a.1/opam"
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 url="$basedir/$1.tgz"
-echo "url {" >> $file
-echo "src:\"$url\"" >> $file
 MD5=$(openssl md5 $url | cut -d' ' -f2)
-echo "checksum: \"md5=$MD5\"" >> $file
-echo "}" >> $file
+cat >> "$file" << EOF
+url {
+  src:"$url"
+  checksum: "md5=$MD5"
+}
+EOF
 ### sh mkurl.sh source-orig
 ### opam update
 
@@ -55,13 +57,15 @@ opam-version: "2.0"
 install: [ "test" "-f" "i-am-extra-source" ]
 ### <mkxsrc.sh>
 file="REPO/packages/b/b.1/opam"
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 xsrc="$basedir/other-sources/$1"
-echo "extra-source \"i-am-extra-source\" {" >> $file
-echo "src: \"$xsrc\"" >> $file
 MD5=$(openssl md5 $xsrc | cut -d' ' -f2)
-echo "checksum: \"md5=$MD5\"" >> $file
-echo "}" >> $file
+cat >> "$file" << EOF
+extra-source "i-am-extra-source" {
+  src: "$xsrc"
+  checksum: "md5=$MD5"
+}
+EOF
 ### sh mkxsrc.sh original
 ### opam update
 

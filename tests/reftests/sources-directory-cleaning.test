@@ -13,13 +13,15 @@ n=waste
 v=1
 arch=waste.tgz
 file="REPO/packages/$n/$n.$v/opam"
-echo "url {" >> "$file"
-echo "src: \"$arch\"" >> "$file"
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 MD5=$(openssl md5 "$arch" | cut -d' ' -f2)
-echo "checksum: \"md5=$MD5\"" >> "$file"
-echo "}" >> "$file"
-basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
-echo "dev-repo: \"file://${basedir}/$n\"" >> "$file"
+cat >> "$file" << EOF
+url {
+  src: "$arch"
+  checksum: "md5=$MD5"
+}
+dev-repo: "file://${basedir}/$n"
+EOF
 ### sh mkurl.sh
 ### <pkg:waste-local.1>
 opam-version: "2.0"
@@ -27,7 +29,7 @@ opam-version: "2.0"
 n=waste-local
 v=1
 file="REPO/packages/$n/$n.$v/opam"
-basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 echo "url { local: \"file://${basedir}/waste\" }" >> "$file"
 ### sh mkurl.sh
 ### opam update

@@ -903,7 +903,7 @@ license: "ISC"
 dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### <add-url.sh>
-basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 cat << EOF >> lint.opam
 url { src:"file://$basedir/an-archive" }
 EOF
@@ -924,7 +924,7 @@ license: "ISC"
 dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### <add-url.sh>
-basedir=`echo "$BASEDIR" | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 cat << EOF >> lint.opam
 url {
   src:"file://$basedir/an-archive.tgz"

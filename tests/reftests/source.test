@@ -14,13 +14,15 @@ opam-version: "2.0"
 p=pandore.3
 arch=origin
 file="REPO/packages/${p%.*}/$p/opam"
-echo "url {" >> $file
-echo "src: \"$arch.tgz\"" >> $file
 MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
-echo "checksum: \"md5=$MD5\"" >> $file
-echo "}" >> $file
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
-echo "dev-repo: \"git+file://${basedir}/pandev\"" >> $file
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "$file" << EOF
+url {
+  src: "$arch.tgz"
+  checksum: "md5=$MD5"
+}
+dev-repo: "git+file://${basedir}/pandev"
+EOF
 ### sh mkurl.sh
 ### opam update
 
@@ -118,11 +120,13 @@ opam-version: "2.0"
 ### <mkurl.sh>
 p=pandore.4
 file="REPO/packages/${p%.*}/$p/opam"
-basedir=`echo $BASEDIR | sed "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g"`
-echo "url {" >> $file
-echo "git: \"$basedir/pandev\"" >> $file
-echo "}" >> $file
-echo "dev-repo: \"git+file://${basedir}/pandev\"" >> $file
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "$file" << EOF
+url {
+  git: "$basedir/pandev"
+}
+dev-repo: "git+file://${basedir}/pandev"
+EOF
 ### sh mkurl.sh
 ### opam update
 
