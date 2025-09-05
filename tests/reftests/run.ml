@@ -424,7 +424,7 @@ module Parse = struct
                 char '"';
                 space;
                 char '"'; Re.str cmd; char '"';
-                space;
+                opt @@ space;
                 ]
     in
             let with_quote_set s = set ("\"'"^s) in
