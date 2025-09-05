@@ -30,6 +30,7 @@ users)
 ## Build (package)
 
 ## Remove
+  * [BUG] Fix `opam remove --force` launching commands in current directory [#6672 @rjbou - fix #6570]
 
 ## UI
   * Show the invalid character when detecting an erroneous package name [#6638 @lefessan - fix #6396]
@@ -118,6 +119,7 @@ users)
   * Add a test for shared fetch without checksum [#6627 @rjbou]
   * Add a test for shared fetch without checksum, and for VCS shared fetch (not handled) [#6627 @rjbou]
   * Add a test showing the error message when faced with an UTF-8 character in the package version [#6640 @kit-ty-kate]
+  * Add a test for `opam remove --force` [#6672 @rjbou]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
