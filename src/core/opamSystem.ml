@@ -135,7 +135,7 @@ let get_files = get_files_t ~except_vcs:false
 let get_files_except_vcs = get_files_t ~except_vcs:true
 
 let log_for_file_management () =
-  OpamCoreConfig.(!r.debug_level) >= 4
+  abs OpamCoreConfig.(!r.debug_level) >= 4
 
 (* From stdune/src/fpath.ml *)
 let win32_unlink fn =
