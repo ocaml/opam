@@ -67,6 +67,37 @@ let string_of_status sp =
     (Set.to_string sp.s_available)
     (Set.to_string sp.s_not_found)
 
+let combine_status st st' =
+  Set.Op.{
+    s_available = st.s_available ++ st'.s_available;
+    s_not_found = st.s_available ++ st'.s_not_found;
+  }
+
+(* System package availability *)
+type available = Available of Set.t | Suppose_available | No_depexts
+
+let string_of_available = function
+| Available av -> Set.to_string av
+| Suppose_available -> "Suppose available"
+| No_depexts -> "No depexts"
+
+let check_available_equal a b =
+  match a, b with
+  | Suppose_available, Suppose_available -> true
+  | Available os, Available ns -> Set.equal os ns
+  | _ -> false
+
+let combine_available a a' =
+  match a, a' with
+  | Available s, Available s' -> Available (Set.union s s')
+  | Suppose_available, Suppose_available -> Suppose_available
+  | Available s, Suppose_available | Suppose_available, Available s ->
+    Available s
+  | No_depexts, _  |  _, No_depexts ->
+    OpamConsole.error_and_exit `Bad_arguments
+      "Can't combine No_depexts"
+
+
 (** System packages to install *)
 
 type to_install = {
