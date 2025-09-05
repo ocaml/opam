@@ -271,6 +271,8 @@ let update_with_auto_upgrade rt repo_names =
              OpamFile.Repo.with_root_url r.repo_url
            in
            let opams =
+             (* TODO: propagate changed files from opam update to load opams
+                incrementally *)
              OpamRepositoryState.load_opams_from_dir r.repo_name repo_root
            in
            let rt = {

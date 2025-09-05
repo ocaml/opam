@@ -48,6 +48,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Use `OpamRepositoryState.load_opams_incremental` to efficiently update the `repo_opams`, adding/updating/removing only changed packages. [#6614 @arozovyk - fix #5824]
 
 ## Tree
 
@@ -122,6 +123,7 @@ users)
   * Update/homogenise escaping `BASEDIR` using `printf` [#6671 @rjbou]
   * Homogenise here document usage [#6671 @rjbou]
 
+  * Add tests for repository update using `OpamRepositoryState.load_opams_incremental` [#6614 @arozovyk - fix #5824]
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
   * Fix support for removing local link directories [#6450 @kit-ty-kate]
@@ -161,9 +163,14 @@ users)
 
 ## opam-repository
   * `OpamLocal.rsync_*`: Change the return type from `OpamFilename.*` to `unit` [#6658 @kit-ty-kate]
+  * `OpamRepository.update` include the list of file-level changes in the return type `['Changes of Patch.operation list]` [#6614 @arozovyk - fix #5824]
+  * `OpamRepositoryBackend.update` type: Add new `Update_diffs of (filename * Patch.t list)` variant for incremental updates with file-level patch operations
+  * `OpamRepositoryBackend.get_diff`: Change return type from `filename option` to `(filename * Patch.t list) option` to include both patch file and list of operations
+  * Add `strip_repo_suffix` internal function to process patch operations and remove repository path prefixes
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * Add `OpamRepositoryState.load_opams_incremental`: that only updates opam files that actually changed, using a list of `Patch.operation`; use it in `OpamUpdate.repository` [#6614 @arozovyk - fix #5824]
 
 ## opam-solver
 
@@ -189,3 +196,7 @@ users)
   * `OpamStd.String.contains_char`: was removed. Use `Stdlib.String.contains` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.map`: was removed. Use `Stdlib.String.map` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.{starts_with,ends_with,for_all,fold_left}`: were moved to `OpamCompat.String` [#6442 @kit-ty-kate]
+  * `OpamSystem.patch`, `OpamFilename.patch`: change return type from `exn option` to `['Patched of Patch.operation list | 'Exception of exn]` to include the list of applied patch operations [#6614 @arozovyk - fix #5824]
+  * `OpamSystem.patch`, `OpamFilename.patch`: change return type from `exn option` to `['Patched of Patch.operation list | 'Exception of exn]` to include the list of applied patch operations [#6614 @arozovyk - fix #5824]
+  * `OpamSystem.patch`: Remove optional `preprocess` parameter and change signature to accept `['Patch_file of string | 'Patch_diffs of Patch.t list]` instead of just file path
+  * `OpamFilename.patch`: Remove optional `preprocess` parameter and change signature to accept patch source variants instead of just file path

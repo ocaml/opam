@@ -60,7 +60,6 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages/
 SYSTEM                          rmdir ${BASEDIR}/OPAM/repo/default.new
 [default] synchronised from file://${BASEDIR}/REPO
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/default/repo in 0.000s
-Processing: [default: loading data]
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam in 0.000s
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
