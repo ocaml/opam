@@ -270,8 +270,9 @@ C:\Windows\system 32\echo
 ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo"
 ${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo"
 ${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo"
-### : cmd need to be followed with at least one space
+### : cmd can not be followed with at least one space
 ### cat commands | sed-cmd echo
+# with space
 echo piou
 echo "piou"
 echo piou
@@ -284,7 +285,19 @@ echo piou
 echo piou
 echo piou
 echo piou
+# without space
 /usr/bin/echo
+"/usr/bin/echo"
+C:\Windows\system32\echo.exe
+C:\Windows\system32\echo
+C:\Windows\system 32\echo.exe
+C:\Windows\system 32\echo
+echo 
+echo 
+echo 
+echo 
+echo 
+echo 
 ### ###################
 ### :V: Additional commands
 ### ###################
