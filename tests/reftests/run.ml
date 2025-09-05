@@ -435,7 +435,7 @@ module Parse = struct
               let unix_prefix cmd =
                 (* Unix & Mac command prefix
                    >[...] /usr/bin/cmd <
-                   >[...] /usr/bin/cmd <
+                   >[...] /opt/homebrew/bin/cmd <
                    -->
                      >[...] cmd <
                 *)
