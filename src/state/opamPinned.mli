@@ -61,5 +61,5 @@ val name_of_opam_filename: ?locked:string -> dirname -> filename -> name option
 (** Finds back the location of the opam file this package definition was loaded
     from *)
 val orig_opam_file:
-  'a switch_state -> OpamPackage.Name.t -> OpamFile.OPAM.t ->
+  'a switch_state -> OpamPackage.Name.t ->
   OpamFile.OPAM.t OpamFile.t option

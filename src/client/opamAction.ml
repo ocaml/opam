@@ -474,7 +474,7 @@ let prepare_package_source st nv dir =
     let extra_files =
       let extra_files =
         OpamFile.OPAM.get_extra_files
-          ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+          ~get_repo_files:(OpamRepositoryState.get_repo_files st.switch_repos)
           opam
       in
       if extra_files <> [] then extra_files else
@@ -485,27 +485,34 @@ let prepare_package_source st nv dir =
         let extra_files_dir =
           OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
         in
-        List.filter_map (fun (base, hash) ->
-            let src =
-              OpamFilename.create extra_files_dir
-                (OpamFilename.Base.of_string (OpamHash.contents hash))
+        List.map (fun (base, hash) ->
+            let content =
+              let src =
+                OpamFilename.create extra_files_dir
+                  (OpamFilename.Base.of_string (OpamHash.contents hash))
+              in
+              if OpamFilename.exists src then
+                Some (lazy (OpamFilename.read src))
+              else
+                None
             in
-            if OpamFilename.exists src then
-              Some (src, base, hash)
-            else None)
+            (base, content, hash))
           xs
     in
     let bad_hash =
-      List.filter_map (fun (src, base, hash) ->
-          if OpamHash.check_file (OpamFilename.to_string src) hash then
-            (OpamFilename.copy ~src ~dst:(OpamFilename.create dir base); None)
-          else
-            Some src) extra_files
+      List.filter_map (fun (base, content, hash) ->
+          match content with
+          | None -> None
+          | Some (lazy content) when OpamHash.check_string content hash ->
+            OpamFilename.write (OpamFilename.create dir base) content;
+            None
+          | Some _ -> Some base)
+        extra_files
     in
     if bad_hash = [] then None else
       Some (Failure
               (Printf.sprintf "Bad hash for %s"
-                 (OpamStd.Format.itemize OpamFilename.to_string bad_hash)));
+                 (OpamStd.Format.itemize OpamFilename.Base.to_string bad_hash)));
   in
   OpamFilename.mkdir dir;
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
