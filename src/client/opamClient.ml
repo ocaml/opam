@@ -1942,7 +1942,7 @@ let init
             (chrono ());
           default_compiler
         in
-        gt, OpamRepositoryState.unlock ~cleanup:false rt, default_compiler
+        gt, OpamRepositoryState.unlock rt, default_compiler
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
         if not (OpamConsole.debug ()) && root_empty then begin

@@ -160,7 +160,9 @@ let do_upgrade repo_root =
   in
 
   let compilers =
-    let compilers_dir = OpamFilename.Op.(repo_root / "compilers") in
+    let compilers_dir =
+      OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root / "compilers")
+    in
     if OpamFilename.exists_dir compilers_dir then (
       List.fold_left (fun map f ->
           if OpamFilename.check_suffix f ".comp" then
@@ -448,17 +450,19 @@ let clear_cache () =
   OpamFilename.remove (OpamFile.filename cache_file)
 
 let do_upgrade_mirror repo_root base_url =
-  OpamFilename.with_tmp_dir @@ fun tmp_mirror_dir ->
+  OpamRepositoryRoot.Dir.with_tmp @@ fun tmp_mirror_dir ->
   let open OpamFilename.Op in
   let copy_dir d =
-    let src = repo_root / d in
+    let src = OpamRepositoryRoot.Dir.to_dir repo_root / d in
     if OpamFilename.exists_dir src then
-      OpamFilename.copy_dir ~src ~dst:(tmp_mirror_dir / d)
+      OpamFilename.copy_dir
+        ~src ~dst:(OpamRepositoryRoot.Dir.to_dir tmp_mirror_dir / d)
   in
   let copy_file f =
-    let src = repo_root // f in
+    let src = OpamRepositoryRoot.Dir.to_dir repo_root // f in
     if OpamFilename.exists src then
-      OpamFilename.copy ~src ~dst:(tmp_mirror_dir // f)
+      OpamFilename.copy
+        ~src ~dst:(OpamRepositoryRoot.Dir.to_dir tmp_mirror_dir // f)
   in
   copy_dir "packages";
   copy_dir "compilers";
@@ -499,11 +503,16 @@ let do_upgrade_mirror repo_root base_url =
   in
   OpamFile.Repo.write repo_file repo_12;
   OpamFile.Repo.write
-    (OpamFile.make OpamFilename.Op.(tmp_mirror_dir // "repo"))
+    (OpamFile.make
+       OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir tmp_mirror_dir // "repo"))
     repo_20;
-  let dir20 = OpamFilename.Dir.of_string upgradeto_version_string in
-  OpamFilename.rmdir dir20;
-  OpamFilename.move_dir ~src:tmp_mirror_dir ~dst:dir20;
+  let dir20 =
+    OpamRepositoryRoot.Dir.of_dir
+      OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root /
+                       upgradeto_version_string)
+  in
+  OpamRepositoryRoot.Dir.remove dir20;
+  OpamRepositoryRoot.Dir.move ~src:tmp_mirror_dir ~dst:dir20;
   OpamConsole.note
     "Indexes need updating: you should now run\n\
      \n%s\
@@ -513,4 +522,6 @@ let do_upgrade_mirror repo_root base_url =
      then
        "  opam admin index --full-urls-txt\n"
      else "")
-    (OpamFilename.remove_prefix_dir repo_root dir20)
+    (OpamFilename.remove_prefix_dir
+       (OpamRepositoryRoot.Dir.to_dir repo_root)
+       (OpamRepositoryRoot.Dir.to_dir dir20))

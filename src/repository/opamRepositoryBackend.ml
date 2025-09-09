@@ -14,7 +14,7 @@ let log ?level fmt = OpamConsole.log "REPO_BACKEND" ?level fmt
 let slog = OpamConsole.slog
 
 type update =
-  | Update_full of dirname
+  | Update_full of OpamRepositoryRoot.t
   | Update_patch of filename
   | Update_empty
   | Update_err of exn
@@ -26,9 +26,9 @@ module type S = sig
     ?cache_dir:dirname -> ?subpath:subpath -> dirname -> OpamHash.t option -> url ->
     filename option download OpamProcess.job
   val fetch_repo_update:
-    repository_name -> ?cache_dir:dirname -> dirname -> url ->
+    repository_name -> ?cache_dir:dirname -> OpamRepositoryRoot.t -> url ->
     update OpamProcess.job
-  val repo_update_complete: dirname -> url -> unit OpamProcess.job
+  val repo_update_complete: OpamRepositoryRoot.t -> url -> unit OpamProcess.job
   val revision: dirname -> string option OpamProcess.job
   val sync_dirty:
     ?subpath:subpath -> dirname -> url -> filename option download OpamProcess.job
