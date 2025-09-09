@@ -1310,10 +1310,12 @@ let try_read rd f =
 let add_aux_files ?dir ?(files_subdir_hashes=false) opam =
   let dir = match dir with
     | None ->
-      OpamFile.OPAM.get_metadata_dir ~repos_roots:(fun r ->
-          failwith ("Repository "^OpamRepositoryName.to_string r^
-                    " not registered for add_aux_files!"))
-        opam
+      (match OpamFile.OPAM.metadata_dir opam with
+       | None -> None
+       | Some (None, dir) -> Some (OpamFilename.Dir.of_string dir)
+       | Some (Some r, _) ->
+         failwith ("Repository "^OpamRepositoryName.to_string r^
+                   " not registered for add_aux_files!"))
     | some -> some
   in
   match dir with

@@ -351,16 +351,15 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
         then OpamFile.OPAM.with_version version opam
         else opam
       in
-      List.iter (fun (file, rel_file, hash) ->
-          if OpamFilename.exists file &&
-             OpamHash.check_file (OpamFilename.to_string file) hash then
-            OpamFilename.copy ~src:file
-              ~dst:(OpamFilename.create files_dir rel_file)
-          else
+      List.iter (fun (rel_file, content, hash) ->
+          match content with
+          | Some (lazy content) when OpamHash.check_string content hash ->
+            OpamFilename.write (OpamFilename.create files_dir rel_file) content
+          | None | Some _ ->
             OpamConsole.warning "Ignoring file %s with invalid hash"
-              (OpamFilename.to_string file))
+              (OpamFilename.Base.to_string rel_file))
         (OpamFile.OPAM.get_extra_files
-           ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+           ~get_repo_files:(OpamRepositoryState.get_repo_files st.switch_repos)
            opam);
       OpamFile.OPAM.write opam_file
         (OpamFile.OPAM.with_extra_files_opt None opam);

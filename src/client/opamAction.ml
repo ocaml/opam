@@ -476,49 +476,51 @@ let prepare_package_source st nv dir =
     let extra_files =
       let extra_files =
         OpamFile.OPAM.get_extra_files
-          ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+          ~get_repo_files:(OpamRepositoryState.get_repo_files st.switch_repos)
           opam
       in
       if extra_files <> [] then extra_files else
-      match OpamFile.OPAM.extra_files opam with
-      | None -> []
-      | Some xs ->
-        (* lookup in switch-local hashmap overlay *)
-        let extra_files_dir =
-          OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
-        in
-        List.filter_map (fun (base, hash) ->
-            let src =
-              OpamFilename.create extra_files_dir
-                (OpamFilename.Base.of_string (OpamHash.contents hash))
-            in
-            if OpamFilename.exists src then
-              Some (src, base, hash)
-            else None)
-          xs
+        match OpamFile.OPAM.extra_files opam with
+        | None -> []
+        | Some xs ->
+          (* lookup in switch-local hashmap overlay *)
+          let extra_files_dir =
+            OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
+          in
+          List.map (fun (base, hash) ->
+              let content =
+                let src =
+                  OpamFilename.create extra_files_dir
+                    (OpamFilename.Base.of_string (OpamHash.contents hash))
+                in
+                if OpamFilename.exists src then
+                  Some (lazy (OpamFilename.read src))
+                else
+                  None
+              in
+              (base, content, hash))
+            xs
     in
     let bad_hash, missing =
-      List.fold_left (fun (bad_hash, missing) (src, base, hash) ->
-          if OpamFilename.exists src then
-            let file = OpamFilename.to_string src in
-            if OpamHash.check_file file hash then
-              (OpamFilename.copy ~src ~dst:(OpamFilename.create dir base);
-               bad_hash, missing)
-            else
-              (src::bad_hash), missing
-          else
-            bad_hash, (src::missing))
+      List.fold_left (fun (bad_hash, missing) (base, content, hash) ->
+          match content with
+          | None -> bad_hash, (base::missing)
+          | Some (lazy content) when OpamHash.check_string content hash ->
+            OpamFilename.write (OpamFilename.create dir base) content;
+            bad_hash, missing
+          | Some _ ->
+            (base::bad_hash), missing)
         ([], []) extra_files
     in
     let bad_hash_msg bad_hash =
       Printf.sprintf "%s: Bad hash for extra-file\n%s"
         (OpamPackage.to_string nv)
-        (OpamStd.Format.itemize OpamFilename.to_string bad_hash)
+        (OpamStd.Format.itemize OpamFilename.Base.to_string bad_hash)
     in
     let missing_msg missing =
       Printf.sprintf "%s: Missing extra-file for\n%s"
         (OpamPackage.to_string nv)
-        (OpamStd.Format.itemize OpamFilename.to_string missing)
+        (OpamStd.Format.itemize OpamFilename.Base.to_string missing)
     in
     match bad_hash, missing with
     | [], [] -> None
