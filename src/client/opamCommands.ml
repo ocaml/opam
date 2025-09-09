@@ -2512,16 +2512,14 @@ let repository cli =
            fun () -> OpamFilename.copy ~src:target ~dst:tar)
         else
           (let dir = OpamRepositoryPath.root gt.root name in
-           if not (OpamFilename.exists_dir dir) then
+           if not (OpamRepositoryRoot.Dir.exists dir) then
              OpamConsole.error_and_exit `Internal_error
                "Repository not found, consider running 'opam update %s' \
                 to retrieve a consistent state."
                (OpamRepositoryName.to_string name);
-           let target =
-             OpamFilename.(Op.(tmp_dir / Base.to_string (basename_dir dir)))
-           in
-           OpamFilename.copy_dir ~src:dir ~dst:target;
-           fun () -> OpamFilename.copy_dir ~src:target ~dst:dir)
+           let target = OpamRepositoryRoot.Dir.backup ~tmp_dir dir in
+           OpamRepositoryRoot.Dir.copy ~src:dir ~dst:target;
+           fun () -> OpamRepositoryRoot.Dir.copy ~src:target ~dst:dir)
       in
       let rt = OpamRepositoryCommand.set_url rt name url trust_anchors in
       let failed, rt =
@@ -4339,7 +4337,8 @@ let clean cli =
        OpamRepositoryName.Set.iter (fun r ->
            OpamConsole.msg "Removing repository %s\n"
              (OpamRepositoryName.to_string r);
-           rmdir (OpamRepositoryPath.root root r);
+           rmdir
+             (OpamRepositoryRoot.Dir.to_dir (OpamRepositoryPath.root root r));
            rm (OpamRepositoryPath.tar root r))
          unused_repos;
        let repos_config =

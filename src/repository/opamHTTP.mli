@@ -13,6 +13,4 @@
 
 module B: OpamRepositoryBackend.S
 
-open OpamTypes
-
-val make_index_tar_gz: dirname -> unit
+val make_index_tar_gz: OpamRepositoryRoot.Dir.t -> unit
