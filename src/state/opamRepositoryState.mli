@@ -78,6 +78,13 @@ val get_root: 'a repos_state -> repository_name -> OpamFilename.Dir.t
 (** Same as {!get_root}, but with a repository rather than just a name as argument *)
 val get_repo_root: 'a repos_state -> repository -> OpamFilename.Dir.t
 
+(** [get_repo_files rt name dir] Returns files in repository root of repository
+    [name] from subdirectory [dir]. The returned list contains the basenames of
+    files, and the content of each file lazily. It is intended to be used with
+    {OpamFile.get_extra_files} to retrieve `files/` files.  *)
+val get_repo_files:
+  'a repos_state -> repository_name -> string -> (basename * string Lazy.t) list
+
 (* (\** Runs the given function with access to a (possibly temporary) directory
  *     containing the extracted structure of the given repository, and cleans it up
  *     afterwards if temporary. The basename of the directory is guaranteed to

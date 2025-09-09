@@ -29,6 +29,7 @@ users)
 
 ## Install
   * More fine grained error message in case of bad hash or missing extra-files error (and remove raw fatal error) [#6696 @rjbou]
+  * Do not ignore extra-files whose name is invalid and fail early in that case [#6679 @rjbou @kit-ty-kate]
 
 ## Build (package)
 
@@ -38,6 +39,7 @@ users)
   * Show the invalid character when detecting an erroneous package name [#6638 @lefessan - fix #6396]
   * Handle non-displayable characters when detecting an erroneous package name or version [#6640 @kit-ty-kate]
   * Remove duplicated directory separator when displaying some rare filenames [#6703 @rjbou]
+  * The name of missing or erroneous extra-files are not displayed instead of their path in error messages [#6679 @kit-ty-kate @rjbou]
 
 ## Switch
 
@@ -64,6 +66,7 @@ users)
 ## Source
   * Better error message, especially in case of `Failure` [#6696 @rjbou]
   * Raise a warning instead of an error when an item of `extra-files` is missing [#6696 @rjbou]
+  * Do not ignore extra-files whose name is invalid and raise a warning in that case [#6679 @rjbou @kit-ty-kate]
 
 ## Lint
 
@@ -208,11 +211,15 @@ users)
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * `OpamSwitchState.overlay_opam_file`: was added [6679 @rjbou]
   * `OpamRepositoryState` add `load_opams_from_diff` to update package definitions based on file change operations (diff) [#6614 @arozovyk]
+  * `OpamRepositoryState.get_repo_files`: was added [#6679 @kit-ty-kate @rjbou]
 
 ## opam-solver
 
 ## opam-format
+  * `OpamFile.OPAM.get_metadata_dir`: was removed [#6679 @kit-ty-kate]
+  * `OpamFile.OPAM.get_extra_files`: no longer takes a named `repos_roots` argument and instead takes a named `get_repo_files` argument. It also now returns the content of the files instead of their path [#6679 @kit-ty-kate @rjbou]
   * `OpamFormula.equal_relop`: was added [#6644 @kit-ty-kate]
   * `OpamTypesBase.{action,pkg_flag,simple_arg,arg,filter,command}_equal`: were added [#6644 @kit-ty-kate]
   * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]

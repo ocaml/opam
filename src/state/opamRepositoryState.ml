@@ -87,6 +87,15 @@ let get_root rt name =
 let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
+let get_repo_files rt name dir =
+  let dir = OpamFilename.Op.(get_root rt name / dir) in
+  let files = OpamFilename.rec_files dir in
+  List.map (fun file ->
+      OpamFilename.Base.of_string
+        (OpamSystem.back_to_forward (OpamFilename.remove_prefix dir file)),
+      lazy (OpamFilename.read file))
+    files
+
 let read_package_opam ~repo_name ~repo_root package_dir =
   match OpamFileTools.read_repo_opam ~repo_name ~repo_root package_dir with
   | Some opam ->
@@ -220,7 +229,6 @@ let remove_from_repos_tmp rt name =
 let cleanup rt =
   Hashtbl.iter (fun _ tmp_dir -> clean_repo_tmp tmp_dir) rt.repos_tmp;
   Hashtbl.clear rt.repos_tmp
-
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
