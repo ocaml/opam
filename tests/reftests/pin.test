@@ -1179,7 +1179,7 @@ Done.
 ### opam-cat OPAM/overlays/.opam-switch/overlay/over/opam
 authors: "the testing team"
 bug-reports: "https://nobug"
-depends: "dep-over"
+depends: ["dep-over"]
 description: "Two words."
 dev-repo: "hg+https://pkg@op.am"
 homepage: "egapemoh"
@@ -1291,7 +1291,7 @@ Done.
 ### opam-cat OPAM/overlays/.opam-switch/overlay/over-subpath/opam
 authors: "the testing team"
 bug-reports: "https://nobug"
-depends: "dep-over-subpath"
+depends: ["dep-over-subpath"]
 description: "Two words."
 dev-repo: "hg+https://pkg@op.am"
 homepage: "egapemoh"
@@ -1331,7 +1331,7 @@ Done.
 ### opam-cat OPAM/overlays/.opam-switch/overlay/over-epr/opam
 authors: "the testing team"
 bug-reports: "https://nobug"
-depends: "dep-over-epr"
+depends: ["dep-over-epr"]
 description: "Two words."
 dev-repo: "hg+https://pkg@op.am"
 homepage: "egapemoh"

@@ -627,18 +627,19 @@ let export rt ?(freeze=false) ?(full=false)
         opams OpamPackage.Name.Map.empty
     in
     let extra_files =
-      let repos_roots = OpamRepositoryState.get_root rt in
+      let get_repo_files = OpamRepositoryState.get_repo_files rt in
       OpamPackage.Map.fold (fun nv opam hmap ->
-          match OpamFile.OPAM.get_extra_files ~repos_roots opam with
+          match OpamFile.OPAM.get_extra_files ~get_repo_files opam with
           | [] -> hmap
           | files ->
             let hmap, err =
-              List.fold_left (fun (hmap,err) (file, base, hash) ->
-                  if OpamFilename.exists file &&
-                     OpamHash.check_file (OpamFilename.to_string file) hash then
-                    let value = Base64.encode_string ~pad:false (OpamFilename.read file) in
+              List.fold_left (fun (hmap,err) (base, content, hash) ->
+                  match content with
+                  | Some (lazy content) when
+                      OpamHash.check_string content hash ->
+                    let value = Base64.encode_string ~pad:false content in
                     OpamHash.Map.add hash value hmap, err
-                  else hmap, base::err)
+                  | _ -> hmap, base::err)
                 (hmap,[]) files
             in
             if err <> [] then

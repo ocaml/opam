@@ -1085,13 +1085,9 @@ Successfully extracted to ${BASEDIR}/not-mentioned.1
 # Return code 1 #
 ### :II:2: Double extra-source
 ### opam lint --package multiple
-<default>/multiple.1: Errors.
-             error  3: File format error in 'extra-source': Duplicate section extra-source
-# Return code 1 #
+<default>/multiple.1: Passed.
 ### opam lint --package multiple --check-upstream
-<default>/multiple.1: Errors.
-             error  3: File format error in 'extra-source': Duplicate section extra-source
-# Return code 1 #
+<default>/multiple.1: Passed.
 ### opam install multiple
 [ERROR] In the opam file for multiple.1:
           - In ${BASEDIR}/OPAM/repo/default/packages/multiple/multiple.1/opam:
