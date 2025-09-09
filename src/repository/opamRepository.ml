@@ -489,11 +489,11 @@ let validate_repo_update repo repo_root update =
       let env v = match OpamVariable.Full.to_string v, update with
         | "anchors", _ -> Some (S (String.concat "," ta.fingerprints))
         | "quorum", _ -> Some (S (string_of_int ta.quorum))
-        | "repo", _ -> Some (S (OpamFilename.Dir.to_string repo_root))
+        | "repo", _ -> Some (S (OpamRepositoryRoot.to_string repo_root))
         | "patch", Update_patch (f, _)  -> Some (S (OpamFilename.to_string f))
         | "incremental", Update_patch _ -> Some (B true)
         | "incremental", _ -> Some (B false)
-        | "dir", Update_full d -> Some (S (OpamFilename.Dir.to_string d))
+        | "dir", Update_full d -> Some (S (OpamRepositoryRoot.to_string d))
         | _ -> None
       in
       match OpamFilter.single_command env hook with
@@ -514,13 +514,13 @@ let apply_repo_update repo repo_root = function
   | Update_full d ->
     log "%a: applying update from scratch at %a"
       (slog OpamRepositoryName.to_string) repo.repo_name
-      (slog OpamFilename.Dir.to_string) d;
-    OpamFilename.rmdir repo_root;
-    if OpamFilename.is_symlink_dir d then
-      (OpamFilename.copy_dir ~src:d ~dst:repo_root;
-       OpamFilename.rmdir d)
+      (slog OpamRepositoryRoot.to_string) d;
+    OpamRepositoryRoot.remove repo_root;
+    if OpamRepositoryRoot.is_symlink d then
+      (OpamRepositoryRoot.copy ~src:d ~dst:repo_root;
+       OpamRepositoryRoot.remove d)
     else
-      OpamFilename.move_dir ~src:d ~dst:repo_root;
+      OpamRepositoryRoot.move ~src:d ~dst:repo_root;
     OpamConsole.msg "[%s] Initialised\n"
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name));
@@ -553,7 +553,8 @@ let apply_repo_update repo repo_root = function
 let cleanup_repo_update upd =
   if not (OpamConsole.debug ()) then
     match upd with
-    | Update_full d -> OpamFilename.rmdir d
+    | Update_full d -> OpamRepositoryRoot.remove d
+    | Update_patch f -> OpamFilename.remove f
     | Update_patch (f, _) -> OpamFilename.remove f
     | _ -> ()
 

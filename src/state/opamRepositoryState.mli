@@ -49,7 +49,7 @@ val build_index:
     ROOT/repos/) *)
 val get_repo: 'a repos_state -> repository_name -> repository
 
-val load_opams_from_dir: repository_name -> dirname -> OpamFile.OPAM.t OpamPackage.Map.t
+val load_opams_from_dir: repository_name -> OpamRepositoryRoot.Dir.t -> OpamFile.OPAM.t OpamPackage.Map.t
 
 (** [load_opams_from_diff repo diffs rt] incrementally
     updates package definitions by processing only changed files.
@@ -69,14 +69,14 @@ val load_opams_from_diff:
 (** Load all the metadata within the local mirror of the given repository,
     without cache *)
 val load_repo:
-  repository -> OpamFilename.Dir.t ->
+  repository -> OpamRepositoryRoot.t ->
   OpamFile.Repo.t * OpamFile.OPAM.t OpamPackage.Map.t
 
-(** Get the (lazily extracted) repository root for the given repository *)
-val get_root: 'a repos_state -> repository_name -> OpamFilename.Dir.t
+(** Get the repository root for the given repository *)
+val get_root: 'a repos_state -> repository_name -> OpamRepositoryRoot.t
 
 (** Same as {!get_root}, but with a repository rather than just a name as argument *)
-val get_repo_root: 'a repos_state -> repository -> OpamFilename.Dir.t
+val get_repo_root: 'a repos_state -> repository -> OpamRepositoryRoot.t
 
 (** [get_repo_files rt name dir] Returns files in repository root of repository
     [name] from subdirectory [dir]. The returned list contains the basenames of
@@ -91,7 +91,7 @@ val get_repo_files:
  *     match the repository name (this is important for e.g. [tar]) *\)
  * val with_repo_root:
  *   'a global_state -> repository -> (OpamFilename.Dir.t -> 'b) -> 'b
- * 
+ *
  * (\** As {!with_repo_root}, but on jobs *\)
  * val with_repo_root_job:
  *   'a global_state -> repository ->
