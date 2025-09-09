@@ -198,7 +198,7 @@ fetch is now pinned to file://${BASEDIR}/fetch (version 1)
 authors: "the testing team"
 bug-reports: "https://nobug"
 build: ["test" "-f" "pinned-file"]
-depends: "fetch-dep" {= "1"}
+depends: ["fetch-dep" {= "1"}]
 description: "Two words."
 dev-repo: "hg+https://pkg@op.am"
 homepage: "egapemoh"
@@ -239,7 +239,7 @@ Done.
 authors: "the testing team"
 bug-reports: "https://nobug"
 build: ["test" "-f" "pinned-file"]
-depends: "fetch-dep" {= "1"}
+depends: ["fetch-dep" {= "1"}]
 description: "Two words."
 dev-repo: "hg+https://pkg@op.am"
 homepage: "egapemoh"
