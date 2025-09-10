@@ -48,6 +48,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Implement incremental opam file loading to process only changed files during repository updates [#6614 @arozovyk - fix #5824]
 
 ## Tree
 
@@ -78,6 +79,7 @@ users)
 
 ## Build
   * Update the dependency constraint on `patch` to now require its stable version [#6663 @kit-ty-kate]
+  * Add patch library dependency to opam-state [#6614 @arozovyk]
 
 ## Infrastructure
 
@@ -123,6 +125,7 @@ users)
   * Update/homogenise escaping `BASEDIR` using `printf` [#6671 @rjbou]
   * Homogenise here document usage [#6671 @rjbou]
   * Add opam file loading tests to `update.test` to demonstrate current behaviour of loading full repository instead of only changed files. [#6614 @arozovyk]
+  * Update `action-disk`, `repository` and `update` reftests to reflect incremental loading behavior - fewer opam file reads logged during repository updates [#6614 @arozovyk]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
@@ -169,6 +172,7 @@ users)
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * Add `OpamRepositoryState.load_opams_incremental` to update package definitions based on file change operations [#6614 @arozovyk]
 
 ## opam-solver
 

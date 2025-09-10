@@ -5,7 +5,6 @@ opam-version: "2.0"
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
-Processing: [default: loading data]
 Now run 'opam upgrade' to apply any package updates.
 ### : Test incrementality
 ### rm -rf REPO
@@ -181,9 +180,7 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
 REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/beta/beta.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/alpha/alpha.1/opam in 0.000s
 ### opam show gamma.1 --field synopsis
 Gamma package - UPDATED
 ### : Add a new package - update should process only 1 new file
@@ -197,10 +194,7 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
 REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/beta/beta.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/delta/delta.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/alpha/alpha.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam list --all -s --repo=incremental
 alpha
@@ -216,9 +210,6 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
 REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/delta/delta.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/alpha/alpha.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam list --all -s --repo=incremental
 alpha
@@ -240,10 +231,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
 REPO_BACKEND                    Internal diff (non-empty, 4 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/zeta/zeta.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/epsilon/epsilon.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/alpha/alpha.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/epsilon/epsilon.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/zeta/zeta.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### : Verify all changes were applied - 2 added, 1 modified, 1 deleted
 ### opam show alpha.1 --field synopsis
