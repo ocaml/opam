@@ -52,6 +52,7 @@ users)
 
 ## Update / Upgrade
   * Fix the false-positive mismatch debug warning during `opam update` when faced with nested extra-files on Windows [#6715 @kit-ty-kate]
+  * Implement incremental opam file loading to process only changed files during repository updates and repository state loading [#6614 @arozovyk - fix #5824]
 
 ## Tree
 
@@ -88,6 +89,7 @@ users)
   * Remove `seq` from the list of packages to download-if-missing as it is no longer a dependency of `re` [#6700 @kit-ty-kate]
   * `./configure --enable-static` is now supported on OpenBSD [#6705 @flumf]
   * Add missing constraints to avoid cmdliner 2.0.0 [#6707 @kit-ty-kate]
+  * Add patch library dependency to opam-state [#6614 @arozovyk]
 
 ## Infrastructure
 
@@ -196,6 +198,7 @@ users)
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * `OpamRepositoryState` add `load_opams_from_diff` to update package definitions based on file change operations (diff) [#6614 @arozovyk]
 
 ## opam-solver
 
@@ -232,4 +235,4 @@ users)
   * `OpamFilename`: add `parse_patch` that preprocesses and parses a patch file. [#6614 @arozovyk]
   * `OpamSystem`: add lower-level `parse_patch` that preprocesses and parses a patch file. [#6614 @arozovyk]
   * `OpamFilename.patch`: use variants to make the input either `Filename.t` or reuse `Patch.diffs` directly. Remove the `?preprocess` argument since the preprocess logic is moved to the `OpamFilename.parse_patch` function that is called only in `OpamVCS` (mirroring the previous logic). [#6614 @arozovyk]
-  * `OpamSystem.patch` change the signature to work directly with `Patch.diffs` (implementation is now the previously `internal_patch` function), parsing is now done separately. [#6614 @arozovyk]
+  * `OpamSystem.patch`: change the signature to work directly with `Patch.diffs` (implementation is now the previously `internal_patch` function), parsing is now done separately. [#6614 @arozovyk]
