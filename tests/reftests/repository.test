@@ -123,10 +123,6 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 [tarred] synchronised from file://${BASEDIR}/REPO
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/tarred/repo in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.4/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.3/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/opam in 0.000s
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-magicv.cache written in 0.000s
@@ -208,7 +204,6 @@ CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache i
 [repo2] synchronised from file://${BASEDIR}/REPO2
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/repo2/repo in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.1/opam in 0.000s
 [tarred] no changes from file://${BASEDIR}/REPO
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
@@ -245,17 +240,10 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [repo2] synchronised from file://${BASEDIR}/REPO2
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/repo2/repo in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.2/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.3/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/repo2/packages/bar/bar.1/opam in 0.000s
 [tarred] synchronised from file://${BASEDIR}/REPO
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/tarred/repo in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.4/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.6/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.3/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/tarred/packages/foo/foo.5/opam in 0.000s
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-magicv.cache written in 0.000s
@@ -684,7 +672,6 @@ opam-version: "2.0"
 opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.2/opam. Added as dummy unavailable package.
 opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/repo/packages/bad-opam-version/bad-opam-version.3/opam. Added as dummy unavailable package.
 [versions] synchronised from file://${BASEDIR}/VRS
-opam-file                       opam-version "5.0" unsupported on ${BASEDIR}/OPAM/repo/versions/packages/bad-opam-version/bad-opam-version.1/opam. Added as dummy unavailable package.
 Now run 'opam upgrade' to apply any package updates.
 ### opam list -A --all-versions -s
 a.1
