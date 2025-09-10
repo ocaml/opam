@@ -7,3 +7,249 @@ opam-version: "2.0"
 [default] synchronised from file://${BASEDIR}/REPO
 Processing: [default: loading data]
 Now run 'opam upgrade' to apply any package updates.
+### : Test incrementality
+### rm -rf REPO
+### <REPO/repo>
+opam-version: "2.0"
+### <REPO/packages/foo/foo.1/opam>
+opam-version: "2.0"
+synopsis: "Initial package"
+### <REPO/packages/bar/bar.1/opam>
+opam-version: "2.0"
+synopsis: "Another package"
+### <REPO/packages/baz/baz.1/opam>
+opam-version: "2.0"
+synopsis: "Third package"
+### opam switch create repo-update --empty
+### opam repository add default ./REPO --this-switch
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list --all -s
+bar
+baz
+foo
+### : Simple file creation
+### <REPO/packages/newpkg/newpkg.1/opam>
+opam-version: "2.0"
+synopsis: "New package created"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all -s
+bar
+baz
+foo
+newpkg
+### : File deletion
+### rm REPO/packages/bar/bar.1/opam
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all -s
+baz
+foo
+newpkg
+### : File edit
+### <REPO/packages/foo/foo.1/opam>
+opam-version: "2.0"
+synopsis: "Updated package"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam show foo.1 --field synopsis
+Updated package
+### : File move across directories (delete+create operations)
+### mv REPO/packages/foo/foo.1 REPO/packages/foo/newfoo.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all -s
+baz
+newfoo
+newpkg
+### : Package removal
+### rm -rf REPO/packages/newpkg
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all -s
+baz
+newfoo
+### : Test cache after updates
+### opam-cache repo
+=> default:newfoo.1 <=
+opam-version: "2.0"
+name: "newfoo"
+version: "1"
+synopsis: "Updated package"
+=> default:baz.1 <=
+opam-version: "2.0"
+name: "baz"
+version: "1"
+synopsis: "Third package"
+### git init -q --initial-branch=master GITREPO
+### git -C GITREPO config core.autocrlf false
+### <GITREPO/repo>
+opam-version: "2.0"
+### <GITREPO/packages/rename-pkg/rename-pkg.1/opam>
+opam-version: "2.0"
+synopsis: "Package to be renamed"
+### <GITREPO/packages/delete-pkg/delete-pkg.1/opam>
+opam-version: "2.0"
+synopsis: "Package to be deleted"
+### git -C GITREPO add -A
+### git -C GITREPO commit -qm "initial commit"
+### opam repository add git-test --kind=git git+file://${BASEDIR}/GITREPO --this-switch
+[git-test] Initialised
+### opam list --all --repo=git-test -s
+delete-pkg
+rename-pkg
+### : Git rename of opam file
+### mkdir -p GITREPO/packages/renamed-pkg/renamed-pkg.1
+### git -C GITREPO mv packages/rename-pkg/rename-pkg.1/opam packages/renamed-pkg/renamed-pkg.1/opam
+### git -C GITREPO commit -qm "rename opam file"
+### opam update git-test
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[git-test] synchronised from git+file://${BASEDIR}/GITREPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --repo=git-test -s
+delete-pkg
+renamed-pkg
+### : Git deletion of opam file
+### git -C GITREPO rm packages/delete-pkg/delete-pkg.1/opam
+rm 'packages/delete-pkg/delete-pkg.1/opam'
+### git -C GITREPO commit -qm "delete opam file"
+### opam update git-test
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[git-test] synchronised from git+file://${BASEDIR}/GITREPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all --repo=git-test -s
+renamed-pkg
+### : Git creation of new opam file
+### <GITREPO/packages/new-pkg/new-pkg.1/opam>
+opam-version: "2.0"
+synopsis: "New package created"
+### git -C GITREPO add packages/new-pkg/new-pkg.1/opam
+### git -C GITREPO commit -qm "create new opam file"
+### opam update git-test
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[git-test] synchronised from git+file://${BASEDIR}/GITREPO
+Now run 'opam upgrade' to apply any package updates.
+### : Verify final state
+### opam list --all --repo=git-test
+# Packages matching: from-repository(git-test) & any
+# Name      # Installed # Synopsis
+new-pkg     --          New package created
+renamed-pkg --          Package to be renamed
+### : Incremental behavior
+### <INCR_REPO/repo>
+opam-version: "2.0"
+### <INCR_REPO/packages/alpha/alpha.1/opam>
+opam-version: "2.0"
+synopsis: "Alpha package"
+### <INCR_REPO/packages/beta/beta.1/opam>
+opam-version: "2.0"
+synopsis: "Beta package"
+### <INCR_REPO/packages/gamma/gamma.1/opam>
+opam-version: "2.0"
+synopsis: "Gamma package"
+### opam repository add incremental ./INCR_REPO --this-switch
+[incremental] Initialised
+### opam list --all -s --repo=incremental
+alpha
+beta
+gamma
+### : Modify one package - update should process only 1 file
+### <INCR_REPO/packages/gamma/gamma.1/opam>
+opam-version: "2.0"
+synopsis: "Gamma package - UPDATED"
+### OPAMDEBUGSECTIONS="REPO_BACKEND FILE(opam)" OPAMDEBUG=-3 opam update incremental
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
+REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+[incremental] synchronised from file://${BASEDIR}/INCR_REPO
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/beta/beta.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/alpha/alpha.1/opam in 0.000s
+### opam show gamma.1 --field synopsis
+Gamma package - UPDATED
+### : Add a new package - update should process only 1 new file
+### <INCR_REPO/packages/delta/delta.1/opam>
+opam-version: "2.0"
+synopsis: "Delta package - NEW"
+### OPAMDEBUGSECTIONS="REPO_BACKEND FILE(opam)" OPAMDEBUG=-3 opam update incremental
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
+REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+[incremental] synchronised from file://${BASEDIR}/INCR_REPO
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/beta/beta.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/delta/delta.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/alpha/alpha.1/opam in 0.000s
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all -s --repo=incremental
+alpha
+beta
+delta
+gamma
+### : Delete a package - update should process only 1 deletion
+### rm INCR_REPO/packages/beta/beta.1/opam
+### OPAMDEBUGSECTIONS="REPO_BACKEND FILE(opam)" OPAMDEBUG=-3 opam update incremental
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
+REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+[incremental] synchronised from file://${BASEDIR}/INCR_REPO
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/delta/delta.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/alpha/alpha.1/opam in 0.000s
+Now run 'opam upgrade' to apply any package updates.
+### opam list --all -s --repo=incremental
+alpha
+delta
+gamma
+### : Multi-operation
+### <INCR_REPO/packages/alpha/alpha.1/opam>
+opam-version: "2.0"
+synopsis: "Alpha package - MODIFIED"
+### <INCR_REPO/packages/epsilon/epsilon.1/opam>
+opam-version: "2.0"
+### <INCR_REPO/packages/zeta/zeta.1/opam>
+opam-version: "2.0"
+### rm INCR_REPO/packages/delta/delta.1/opam
+### OPAMDEBUGSECTIONS="REPO_BACKEND FILE(opam)" OPAMDEBUG=-3 opam update incremental
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
+REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+[incremental] synchronised from file://${BASEDIR}/INCR_REPO
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/zeta/zeta.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/epsilon/epsilon.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/alpha/alpha.1/opam in 0.000s
+Now run 'opam upgrade' to apply any package updates.
+### : Verify all changes were applied - 2 added, 1 modified, 1 deleted
+### opam show alpha.1 --field synopsis
+Alpha package - MODIFIED
+### opam list --all -s --repo=incremental
+alpha
+epsilon
+gamma
+zeta
