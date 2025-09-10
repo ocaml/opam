@@ -18,12 +18,13 @@ let latest_ocaml5 = "5.4.0-beta2" (* Add this number to ocamls below when the ne
 let ocamls = [
   (* Fully supported versions *)
   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1";
-  "5.0.0"; "5.1.1"; "5.2.1"; "5.3.0";
+  "5.0.0"; "5.1.1"; "5.2.1"; "5.3.0"; "trunk";
 
   (* The last elements of the list after 4.14 will be used as default versions *)
   latest_ocaml4; latest_ocaml5;
 ]
-let start_latests_ocaml = (4, 14)
+let start_latests_ocaml = latest_ocaml4
+let oldest_ocamlv = List.hd ocamls
 
 (* Entry point for the workflow. Workflows are specified as continuations where
    each job is passed as a continuation to the [workflow], terminated with
@@ -69,12 +70,9 @@ jobs:
 
 let end_workflow ~oc:_ ~workflow:_ = ()
 
-let ocamls =
-  List.map (fun v -> Scanf.sscanf v "%u.%u.%u" (fun major minor _ -> ((major, minor), v))) ocamls
-
 let platform_ocaml_matrix ?(dir=List.drop_while) ~fail_fast start_version =
   (fail_fast,
-   [("ocamlv", List.map snd (dir (fun ocaml -> fst ocaml <> start_version) ocamls))],
+   [("ocamlv", dir (fun ocaml -> not (String.equal ocaml start_version)) ocamls)],
    [])
 
 let git_lf_checkouts ?(title="Configure Git") ?cond ?shell () =
@@ -562,7 +560,7 @@ let main oc : unit =
   workflow ~oc ~env "Builds, tests & co"
   ++ analyse_job ~keys ~platforms:[Linux]
   @@ fun analyse_job -> cygwin_job ~analyse_job
-  @@ fun cygwin_job -> main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux (4, 08)
+  @@ fun cygwin_job -> main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux oldest_ocamlv
   @@ fun build_linux_job -> main_build_job ~analyse_job ~cygwin_job Windows start_latests_ocaml
   @@ fun build_windows_job -> main_build_job ~analyse_job ~cygwin_job MacOS start_latests_ocaml
   @@ fun build_macOS_job -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux
