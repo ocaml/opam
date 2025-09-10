@@ -526,7 +526,7 @@ synopsis: "Gamma package - UPDATED"
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/beta/beta.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
@@ -542,7 +542,7 @@ synopsis: "Delta package - NEW"
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/beta/beta.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/delta/delta.1/opam in 0.000s
@@ -561,7 +561,7 @@ gamma
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/delta/delta.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
@@ -585,7 +585,7 @@ opam-version: "2.0"
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 4 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/gamma/gamma.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/zeta/zeta.1/opam in 0.000s
@@ -621,7 +621,7 @@ build: [ "test" "-f" "%{name}%.installl" ]
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 2 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
@@ -646,7 +646,7 @@ build: [ "test" "-f" "%{name}%.installl" ]
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 2 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
@@ -671,7 +671,7 @@ build: [ "test" "-f" "%{name}%.installl" ]
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 2 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
@@ -704,7 +704,7 @@ build: [ "test" "-f" "%{name}%.installl" ]
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
@@ -739,7 +739,7 @@ build: [ "test" "-f" "%{name}%.installl" ]
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 2 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
@@ -776,7 +776,7 @@ build: [ "test" "-f" "%{name}%.installl" ]
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{incremental,incremental.new}
-REPO_BACKEND                    Internal diff (non-empty) done in 0.00s.
+REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s

@@ -1593,9 +1593,12 @@ let translate_patch ~dir orig corrected =
 
 exception Internal_patch_error of string
 
-let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
+let patch ~allow_unclean ?patch_filename ~dir diffs =
   let internal_patch_error fmt =
     Printf.ksprintf (fun str -> raise (Internal_patch_error str)) fmt
+  in
+  let patch_info_path =
+    OpamStd.Option.default ("in directory "^dir) patch_filename
   in
   (* NOTE: It is important to keep this `concat dir ""` to ensure the
      is_prefix_of below doesn't match another similarly named directory *)
@@ -1604,7 +1607,7 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
     let file = real_path (Filename.concat dir file) in
     if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
       internal_patch_error "Patch %S tried to escape its scope."
-        patch_filename;
+        patch_info_path;
     file
   in
   let patch ~file content diff =
@@ -1616,7 +1619,7 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
     | None -> assert false (* See NOTE above *)
     | exception _ when not allow_unclean ->
       internal_patch_error "Patch %S does not apply cleanly."
-        patch_filename
+        patch_info_path
     | exception _ ->
       match Patch.patch ~cleanly:false content diff with
       | Some x ->
@@ -1627,7 +1630,7 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
         Option.iter (write (file^".orig")) content;
         write (file^".rej") (Format.asprintf "%a" Patch.pp diff);
         internal_patch_error "Patch %S does not apply cleanly."
-          patch_filename
+          patch_info_path
   in
   let apply diff = match diff.Patch.operation with
     | Patch.Edit (file1, file2) ->
@@ -1659,25 +1662,18 @@ let internal_patch ~allow_unclean ~patch_filename ~dir diffs =
   in
   List.iter apply diffs
 
-let patch ?(preprocess=true) ~allow_unclean ~dir p =
-  if not (Sys.file_exists p) then
-    (OpamConsole.error "Patch file %S not found." p;
+let parse_patch ~dir ~file =
+  if not (Sys.file_exists file) then
+    (OpamConsole.error "Patch file %S not found." file;
      raise Not_found);
-  let p' =
-    if preprocess then
-      let p' = temp_file ~auto_clean:false "processed-patch" in
-      translate_patch ~dir p p';
-      p'
-    else
-      p
+  let file' =
+    let file' = temp_file ~auto_clean:false "processed-patch" in
+    translate_patch ~dir file file';
+    file'
   in
-  let content = read p' in
-  try
-    let diffs = Patch.parse ~p:1 content in
-    internal_patch ~allow_unclean ~patch_filename:p ~dir diffs;
-    if preprocess && not (OpamConsole.debug ()) then Sys.remove p';
-    None
-  with exn -> Some exn
+  let content = read file' in
+  Fun.protect (fun () -> Patch.parse ~p:1 content)
+    ~finally:(fun () -> if not (OpamConsole.debug ()) then Sys.remove file')
 
 let register_printer () =
   Printexc.register_printer (function

@@ -276,13 +276,21 @@ val remove_prefix_dir: Dir.t -> Dir.t -> string
 (** Remove a suffix from a filename *)
 val remove_suffix: Base.t -> t -> string
 
-(** Apply a patch in a directory. If [preprocess] is set to false, there is no
-    CRLF translation. Returns [None] on success, the process error otherwise.
+(** [patch ~allow_unclean patch_source dir] applies a patch to directory [dir].
+    The patch source can be either [`Patch_file filename] for a patch file, or
+    [`Patch_diffs diffs] for a list of file-level changes.
 
     @param allow_unclean decides if applying a patch on a directory which
     differs slightly from the one described in the patch file is allowed.
     Allowing unclean applications imitates the default behaviour of GNU Patch. *)
-val patch: ?preprocess:bool -> allow_unclean:bool -> t -> Dir.t -> exn option
+val patch: allow_unclean:bool ->
+  [`Patch_file of t | `Patch_diffs of Patch.t list ] -> Dir.t ->
+  (Patch.operation list, exn) result
+
+(** [parse_patch ~dir patch_file] processes and parses a patch file.
+    Returns the parsed patch diffs or raises an exception if the patch file
+    doesn't exist or can't be parsed. *)
+val parse_patch : dir:Dir.t -> t -> Patch.t list
 
 (** Create an empty file *)
 val touch: t -> unit
