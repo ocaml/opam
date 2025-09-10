@@ -18,7 +18,8 @@ let latest_ocaml5 = "5.4.0-beta2" (* Add this number to ocamls below when the ne
 let ocamls = [
   (* Fully supported versions *)
   "4.08.1"; "4.09.1"; "4.10.2"; "4.11.2"; "4.12.1"; "4.13.1";
-  "5.0.0"; "5.1.1"; "5.2.1"; "5.3.0"; "trunk";
+  "5.0.0"; "5.1.1"; "5.2.1"; "5.3.0";
+  "trunk";
 
   (* The last elements of the list after 4.14 will be used as default versions *)
   latest_ocaml4; latest_ocaml5;
@@ -333,7 +334,8 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
   let matrix = ((platform <> Windows), matrix, includes) in
   let needs = if platform = Windows then [analyse_job; cygwin_job] else [analyse_job] in
   let host = host_of_platform platform in
-  job ~oc ~workflow ~runs_on:(Runner [runner]) ?shell ?section ~needs ~matrix ("Build-" ^ name_of_platform platform)
+  let continue_on_error = "${{ matrix.ocamlv == 'trunk' }}" in
+  job ~oc ~workflow ~runs_on:(Runner [runner]) ~continue_on_error ?shell ?section ~needs ~matrix ("Build-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ only_on Linux (run "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
     ++ only_on MacOS (run "Install GNU patch" ["brew install gpatch"])
