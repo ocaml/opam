@@ -136,6 +136,48 @@ let () =
     in
     List.fold_left (+.) 0.0 l /. float_of_int n
   in
+  let init_root tmp_root_dir repo =
+    launch (fmt "rm -rf %s" tmp_root_dir);
+    launch (fmt "mkdir -p %s" tmp_root_dir);
+    launch (fmt "OPAMROOT=%s %s init --bare -n --disable-sandboxing %s" tmp_root_dir bin repo);
+  in
+  let time_update_no_diff_local =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-no-diff" "file:///rep/opam-repository";
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-no-diff %s update" bin)
+  in
+  let time_update_no_diff_git =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-no-diff-git" "git+file:///rep/opam-repository.git";
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-no-diff-git %s update" bin)
+  in
+  let time_update_small_diff_local =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-small-diff" "file:///rep/opam-repository-small-diff";
+    launch (fmt "git -C /rep/opam-repository-small-diff checkout $OPAMREPOSHAPHASE1");
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-small-diff %s update" bin)
+  in
+  let time_update_small_diff_git =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-small-diff-git" "git+file:///rep/opam-repository-small-diff.git";
+    launch (fmt "git -C /rep/opam-repository-small-diff.git update-ref HEAD $OPAMREPOSHAPHASE1");
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-small-diff-git %s update" bin)
+  in
+  let time_update_large_diff_local =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-large-diff" "file:///rep/opam-repository";
+    (* NOTE: this changes the main repository content to a newer commit
+       (currently defined in bench.Dockerfile as $OPAMREPOSHA). This will impact
+       any benchmarks defined in the future that are using /rep/opam-repository. *)
+    launch (fmt "git -C /rep/opam-repository checkout $OPAMREPOSHAPHASE1");
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-large-diff %s update" bin)
+  in
+  let time_update_large_diff_git =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-large-diff-git" "git+file:///rep/opam-repository.git";
+    launch (fmt "git -C /rep/opam-repository.git update-ref HEAD $OPAMREPOSHAPHASE1");
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-large-diff-git %s update" bin)
+  in
   let json = fmt {|{
   "results": [
     {
@@ -214,6 +256,41 @@ let () =
       ]
     },
     {
+      "name": "Update Benchmarks",
+      "metrics": [
+        {
+          "name": "opam update - no diff (local repo)",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam update - no diff (git repo)",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam update - small diff (local repo)",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam update - small diff (git repo)",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam update - large diff (local repo)",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam update - large diff (git repo)",
+          "value": %f,
+          "units": "secs"
+        }
+      ]
+    },
+    {
       "name": "Misc",
       "metrics": [
         {
@@ -239,6 +316,12 @@ let () =
       time_show_raw
       time_show_precise
       time_OpamStd_String_split_10
+      time_update_no_diff_local
+      time_update_no_diff_git
+      time_update_small_diff_local
+      time_update_small_diff_git
+      time_update_large_diff_local
+      time_update_large_diff_git
       bin_size
   in
   print_endline json
