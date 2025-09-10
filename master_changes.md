@@ -110,6 +110,7 @@ users)
 ## Test
 
 ## Benchmarks
+  * Benchmark `opam update` [#6681 @arozovyk]
 
 ## Reftests
 ### Tests
