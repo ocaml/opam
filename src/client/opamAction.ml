@@ -367,9 +367,11 @@ let prepare_package_build env opam nv dir =
 
   let apply_patches ?(dryrun=false) () =
     let patch base =
-      if dryrun then None else
+      if dryrun then
+        Ok []
+      else
         OpamFilename.patch ~allow_unclean:true
-          (dir // OpamFilename.Base.to_string base) dir
+          (`Patch_file (dir // OpamFilename.Base.to_string base)) dir
     in
     let rec aux = function
       | [] -> []
@@ -377,8 +379,8 @@ let prepare_package_build env opam nv dir =
         if OpamFilter.opt_eval_to_bool env filter then
           (print_apply patchname;
            match patch patchname with
-           | None -> aux rest
-           | Some err -> (patchname, err) :: aux rest)
+           | Ok _  -> aux rest
+           | Error e -> (patchname, e) :: aux rest)
         else aux rest
     in
     aux patches
