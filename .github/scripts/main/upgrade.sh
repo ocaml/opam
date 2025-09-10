@@ -16,7 +16,7 @@ if [[ ! -f $OPAM12 ]]; then
   if [ "$RUNNER_OS" = "macOS" ]; then
     os="Darwin"
   fi
-  curl -sL "https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-$os" -o $OPAM12
+  curl -fsSL "https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-$os" -o $OPAM12
   chmod +x $OPAM12
 fi
 export OPAMROOT=/tmp/opamroot

@@ -83,10 +83,10 @@ md %CYGWIN_ROOT%
 :: Download the required setup program: the mingw-w64 compilers are only
 :: installed with Cygwin64.
 if "%1" equ "x86_64-pc-cygwin" (
-  curl -sLo %CYGWIN_ROOT%\setup.exe https://cygwin.com/setup-x86_64.exe
+  curl -fsSLo %CYGWIN_ROOT%\setup.exe https://cygwin.com/setup-x86_64.exe
   set CYGWIN_PACKAGES=,mingw64-i686-gcc-core=14.3.0-0.1,mingw64-x86_64-gcc-core=14.3.0-0.1,mingw64-i686-gcc-g++=14.3.0-0.1,mingw64-x86_64-gcc-g++=14.3.0-0.1
 ) else (
-  curl -sLo %CYGWIN_ROOT%\setup.exe https://cygwin.com/setup-x86.exe
+  curl -fsSLo %CYGWIN_ROOT%\setup.exe https://cygwin.com/setup-x86.exe
   set CYGWIN_PACKAGES=
 )
 
