@@ -261,6 +261,9 @@ let exists filename =
 let opt_file filename =
   if exists filename then Some filename else None
 
+let mk_tmp_file () =
+  of_string @@ OpamSystem.mk_temp_dir ()
+
 let with_tmp_file fn =
   OpamSystem.with_tmp_file (fun file -> fn (of_string file))
 
