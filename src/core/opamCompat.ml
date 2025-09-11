@@ -207,6 +207,13 @@ module List = struct
     in
     s, List.rev l_rev
 
+  (* NOTE: OCaml >= 4.12 *)
+  let rec equal eq x y = match x, y with
+    | [], [] -> true
+    | [], _::_ | _::_, [] -> false
+    | x::_, y::_ when eq x y -> true
+    | _::xs, _::ys -> equal eq xs ys
+
   include Stdlib.List
 end
 
@@ -231,4 +238,10 @@ module Map(Ord : Stdlib.Map.OrderedType) = struct
       ) map M.empty
 
   include M
+end
+
+module Pair = struct
+  (** NOTE: OCaml >= 5.4 *)
+  let equal eq1 eq2 (x1, y1) (x2, y2) =
+    eq1 x1 x2 && eq2 y1 y2
 end

@@ -1799,7 +1799,8 @@ let compute_root_causes g requested reinstall available =
     if c2 = Unknown || depth1 < depth2 then c1, depth1 else
     if c1 = Unknown || depth2 < depth1 then c2, depth2 else
     let (@) =
-      List.fold_left (fun l a -> if List.mem a l then l else a::l)
+      List.fold_left (fun l a ->
+          if OpamStd.List.mem Cudf.( =% ) a l then l else a::l)
     in
     match c1, c2 with
     | Required_by a, Required_by b -> Required_by (a @ b), depth1

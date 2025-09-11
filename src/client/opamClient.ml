@@ -432,8 +432,8 @@ let update
     let all_repos = OpamRepositoryName.Map.keys rt.repositories in
     if dev_only then []
     else if names <> [] then
-      List.filter
-        (fun r -> List.mem (OpamRepositoryName.to_string r) names)
+      List.filter (fun r ->
+          OpamStd.List.mem String.equal (OpamRepositoryName.to_string r) names)
         all_repos
     else if all then all_repos
     else OpamSwitchState.repos_list st
@@ -506,7 +506,8 @@ let update
   let remaining =
     let ps = packages ++ ignore_packages in
     List.filter (fun n -> not (
-        List.mem (OpamRepositoryName.of_string n) repo_names ||
+        OpamStd.List.mem OpamRepositoryName.equal
+          (OpamRepositoryName.of_string n) repo_names ||
         (try OpamPackage.has_name ps (OpamPackage.Name.of_string n)
          with Failure _ -> false) ||
         (try OpamPackage.Set.mem (OpamPackage.of_string n) ps

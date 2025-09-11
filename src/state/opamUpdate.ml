@@ -513,24 +513,28 @@ let active_caches st nvs =
         match OpamRepositoryState.find_package_opt rt repos_list nv with
         | None -> acc
         | Some (repo, _) ->
-          if List.mem repo repos then acc else
-          let repo_def = OpamRepositoryName.Map.find repo rt.repos_definitions in
-          let root_url = match OpamFile.Repo.root_url repo_def with
-            | None -> OpamSystem.internal_error "repo file of unknown origin"
-            | Some u -> u
-          in
-          let cache =
-            List.filter_map (fun rel ->
-                if OpamStd.String.contains ~sub:"://" rel
-                then
-                  let r = OpamUrl.parse_opt ~handle_suffix:false rel in
-                  if r = None then
-                    OpamConsole.warning "Invalid cache url %s, skipping" rel;
-                  r
-                else Some OpamUrl.Op.(root_url / rel))
-              (OpamFile.Repo.dl_cache repo_def)
-          in
-          repo::repos, cache::caches)
+          if OpamStd.List.mem OpamRepositoryName.equal repo repos then
+            acc
+          else
+            let repo_def =
+              OpamRepositoryName.Map.find repo rt.repos_definitions
+            in
+            let root_url = match OpamFile.Repo.root_url repo_def with
+              | None -> OpamSystem.internal_error "repo file of unknown origin"
+              | Some u -> u
+            in
+            let cache =
+              List.filter_map (fun rel ->
+                  if OpamStd.String.contains ~sub:"://" rel
+                  then
+                    let r = OpamUrl.parse_opt ~handle_suffix:false rel in
+                    if r = None then
+                      OpamConsole.warning "Invalid cache url %s, skipping" rel;
+                    r
+                  else Some OpamUrl.Op.(root_url / rel))
+                (OpamFile.Repo.dl_cache repo_def)
+            in
+            repo::repos, cache::caches)
       ([],[]) nvs
     |> snd
     |> List.rev

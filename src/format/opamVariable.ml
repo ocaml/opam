@@ -18,6 +18,14 @@ type variable_contents =
   | S of string
   | L of string list
 
+let variable_contents_equal vc1 vc2 = match vc1, vc2 with
+  | B b1, B b2 -> Bool.equal b1 b2
+  | S s1, S s2 -> String.equal s1 s2
+  | L l1, L l2 -> OpamCompat.List.equal String.equal l1 l2
+  | B _, _
+  | S _, _
+  | L _, _ -> false
+
 let string_of_variable_contents = function
   | B b -> string_of_bool b
   | S s -> s

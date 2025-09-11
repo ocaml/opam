@@ -102,6 +102,7 @@ users)
 ## Shell
 
 ## Internal
+  * Replace every polymorphic uses of `List.mem` by a version that doesn't use `Repr.equal` [#6644 @kit-ty-kate]
 
 ## Internal: Unix
 
@@ -170,6 +171,9 @@ users)
 ## opam-solver
 
 ## opam-format
+  * `OpamFormula.equal_relop`: was added [#6644 @kit-ty-kate]
+  * `OpamTypesBase.{action,pkg_flag,simple_arg,arg,filter,command}_equal`: were added [#6644 @kit-ty-kate]
+  * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
 
 ## opam-core
   * `OpamConsole.log`: does not keep log messages before initialization if the code is ran through a library [#6487 @kit-ty-kate]
@@ -177,12 +181,16 @@ users)
   * `OpamSystem.cpu_count`: now uses a C binding instead of system utilities to get the number of cores of the current machine [#6634 @kit-ty-kate]
   * `OpamSystem.is_reg_dir`: is now exposed, which returns `true` only if its parameter is a directory, exists and is not a symlink. It returns `false` otherwise [#6450 @kit-ty-kate]
   * `OpamCompat.List.fold_left_map`: was added [#6442 @kit-ty-kate]
+  * `OpamCompat.List.equal`: was added [#6644 @kit-ty-kate]
   * `OpamCompat.Map.filter_map`: was added [#6442 @kit-ty-kate]
   * `OpamCompat.MAP`: was added [#6442 @kit-ty-kate]
+  * `OpamCompat.Pair.equal`: was added [#6644 @kit-ty-kate]
   * `OpamCompat.String.{starts_with,ends_with,for_all,fold_left}`: were added [#6442 @kit-ty-kate]
   * `OpamHash.check_string`: was added [#6661 @kit-ty-kate]
+  * `OpamHash.equal_kind`: was added [#6644 @kit-ty-kate]
   * `OpamStd.List.fold_left_map`: was moved to `OpamCompat.List.fold_left_map` [#6442 @kit-ty-kate]
   * `OpamStd.List.{cons,find_opt,filter_map}`: were removed. Use `Stdlib.List` instead. [#6442 @kit-ty-kate]
+  * `OpamStd.List.mem`: was added, having as argument the equality function [#6644 @kit-ty-kate]
   * `OpamStd.Op.{(@@),(|>)}`: were removed. Use `Stdlib` instead. [#6442 @kit-ty-kate]
   * `OpamStd.Option.{map,iter,compare,equal,to_string,some}`: were removed. Use `Stdlib.Option` instead. [#6442 @kit-ty-kate]
   * `OpamStd.Map.filter_map`: is now the implementation from `Stdlib.Map` when using OCaml >= 4.11 [#6442 @kit-ty-kate]

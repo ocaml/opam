@@ -25,6 +25,8 @@ type variable_contents =
   | S of string
   | L of string list
 
+val variable_contents_equal: variable_contents -> variable_contents -> bool
+
 (** Pretty print of variable contents *)
 val string_of_variable_contents: variable_contents -> string
 

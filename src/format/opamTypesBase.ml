@@ -225,6 +225,24 @@ let all_package_flags = [
   Pkgflag_Conf;
 ]
 
+let pkg_flag_equal f1 f2 = match f1, f2 with
+  | Pkgflag_LightUninstall, Pkgflag_LightUninstall
+  | Pkgflag_Verbose, Pkgflag_Verbose
+  | Pkgflag_Plugin, Pkgflag_Plugin
+  | Pkgflag_Compiler, Pkgflag_Compiler
+  | Pkgflag_Conf, Pkgflag_Conf
+  | Pkgflag_AvoidVersion, Pkgflag_AvoidVersion
+  | Pkgflag_Deprecated, Pkgflag_Deprecated -> true
+  | Pkgflag_Unknown s, Pkgflag_Unknown s' -> String.equal s s'
+  | Pkgflag_LightUninstall, _
+  | Pkgflag_Verbose, _
+  | Pkgflag_Plugin, _
+  | Pkgflag_Compiler, _
+  | Pkgflag_Conf, _
+  | Pkgflag_AvoidVersion, _
+  | Pkgflag_Deprecated, _
+  | Pkgflag_Unknown _, _ -> false
+
 let string_of_pkg_flag = function
   | Pkgflag_LightUninstall -> "light-uninstall"
   | Pkgflag_Verbose -> "verbose"
@@ -244,6 +262,23 @@ let pkg_flag_of_string = function
   | "avoid-version" -> Pkgflag_AvoidVersion
   | "deprecated" -> Pkgflag_Deprecated
   | s -> Pkgflag_Unknown s
+
+let action_equal eq x y = match x, y with
+  | `Remove p1, `Remove p2
+  | `Install p1, `Install p2
+  | `Reinstall p1, `Reinstall p2
+  | `Build p1, `Build p2 -> eq p1 p2
+  | `Change (`Up, px1, py1), `Change (`Up, px2, py2)
+  | `Change (`Down, px1, py1), `Change (`Down, px2, py2) ->
+    eq px1 px2 && eq py1 py2
+  | `Fetch pl1, `Fetch pl2 ->
+    (try List.for_all2 eq pl1 pl2 with Invalid_argument _ -> false)
+  | `Remove _, _
+  | `Install _, _
+  | `Reinstall _, _
+  | `Build _, _
+  | `Change _, _
+  | `Fetch _, _ -> false
 
 let action_contents = function
   | `Remove p | `Install p | `Reinstall p | `Build p
@@ -345,3 +380,44 @@ let switch_selections_compare x
 
 let switch_selections_equal x y =
   switch_selections_compare x y = 0
+
+let rec filter_equal x y = match x, y with
+  | FBool b1, FBool b2 -> Bool.equal b1 b2
+  | FString s1, FString s2 -> String.equal s1 s2
+  | FIdent (pkgs1, var1, conv1), FIdent (pkgs2, var2, conv2) ->
+    OpamCompat.List.equal (Option.equal OpamPackage.Name.equal) pkgs1 pkgs2 &&
+    OpamVariable.equal var1 var2 &&
+    Option.equal (OpamCompat.Pair.equal String.equal String.equal) conv1 conv2
+  | FOp (fx1, op1, fy1), FOp (fx2, op2, fy2) ->
+    OpamFormula.equal_relop op1 op2 &&
+    filter_equal fx1 fx2 &&
+    filter_equal fy1 fy2
+  | FAnd (fx1, fy1), FAnd (fx2, fy2)
+  | FOr (fx1, fy1), FOr (fx2, fy2) ->
+    filter_equal fx1 fx2 &&
+    filter_equal fy1 fy2
+  | FNot f1, FNot f2
+  | FDefined f1, FDefined f2
+  | FUndef f1, FUndef f2 -> filter_equal f1 f2
+  | FBool _, _
+  | FString _, _
+  | FIdent _, _
+  | FOp _, _
+  | FAnd _, _
+  | FOr _, _
+  | FNot _, _
+  | FDefined _, _
+  | FUndef _, _ -> false
+
+let simple_arg_equal x y = match x, y with
+  | CString s1, CString s2
+  | CIdent s1, CIdent s2 -> String.equal s1 s2
+  | CString _, _
+  | CIdent _, _ -> false
+
+let arg_equal x y =
+  OpamCompat.Pair.equal simple_arg_equal (Option.equal filter_equal) x y
+
+let command_equal (args1, filter1) (args2, filter2) =
+  OpamCompat.List.equal arg_equal args1 args2 &&
+  Option.equal filter_equal filter1 filter2

@@ -110,7 +110,7 @@ let script_commands project_root ochan =
   let made_dirs = ref [] in
   Printf.fprintf ochan "#!/bin/sh\n";
   let mkdir d =
-    if not (List.mem d !made_dirs) then (
+    if not (OpamStd.List.mem OpamFilename.Dir.equal d !made_dirs) then (
       Printf.fprintf ochan "mkdir -p %S\n" (OpamFilename.Dir.to_string d);
       made_dirs := d :: !made_dirs
     ) in

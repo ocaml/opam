@@ -52,7 +52,7 @@ let link_files ~target f l =
 let fetch_from_cache =
   let currently_downloading = ref [] in
   let rec no_concurrent_dls key f x =
-    if List.mem key !currently_downloading then
+    if OpamStd.List.mem OpamHash.equal key !currently_downloading then
       Run (OpamProcess.command "sleep" ["1"],
            (fun _ -> no_concurrent_dls key f x))
     else
