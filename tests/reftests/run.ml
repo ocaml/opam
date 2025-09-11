@@ -107,10 +107,10 @@ type filt_sort =
 let escape_regexps s =
   let buf = Buffer.create (String.length s * 2) in
   String.iter (function
-    | ('|' | '(' | ')' | '*' | '+' | '?'
-    |  '[' | '.' | '^' | '$' | '{' | '\\') as c -> Buffer.add_char buf '\\'; Buffer.add_char buf c
-    | c -> Buffer.add_char buf c
-  ) s;
+      | '|' | '(' | ')' | '*' | '+' | '?'
+      | '[' | '.' | '^' | '$' | '{' | '\\' as c -> Buffer.add_char buf '\\'; Buffer.add_char buf c
+      | c -> Buffer.add_char buf c
+    ) s;
   Buffer.contents buf
 
 let str_replace_path ?escape whichway filters s =
@@ -170,7 +170,7 @@ let command
       else
         cmd
     in
-      maybe_resolved_cmd, cmd
+    maybe_resolved_cmd, cmd
   in
   let args =
     if orig_cmd = "tar" || orig_cmd = "tar.exe" then
@@ -214,19 +214,19 @@ let command
 let finally f x k = match f x with
   | r -> k (); r
   | exception e ->
-      (* When we're at least 4.05+
-      let bt = Printexc.get_raw_backtrace () in*)
-      (try k () with _ -> ());
-      (*Printexc.raise_with_backtrace e bt*)
-      raise e
+    (* When we're at least 4.05+
+       let bt = Printexc.get_raw_backtrace () in*)
+    (try k () with _ -> ());
+    (*Printexc.raise_with_backtrace e bt*)
+    raise e
 
 (* Borrowed from ocamltest_stdlib.ml *)
 let rec mkdir_p dir =
   if Sys.file_exists dir then ()
   else let () = mkdir_p (Filename.dirname dir) in
-       if not (Sys.file_exists dir) then
-         Unix.mkdir dir 0o777
-       else ()
+    if not (Sys.file_exists dir) then
+      Unix.mkdir dir 0o777
+    else ()
 
 let erase_file path =
   try Sys.remove path
@@ -240,13 +240,13 @@ let rm_rf path =
   let rec erase path =
     if OpamSystem.is_reg_dir path then begin
       Array.iter (fun entry -> erase (Filename.concat path entry))
-                 (Sys.readdir path);
+        (Sys.readdir path);
       Unix.rmdir path
     end else erase_file path
   in
-    try if Sys.file_exists path then erase path
-    with Sys_error err ->
-      raise (Sys_error (Printf.sprintf "Failed to remove %S (%s)" path err))
+  try if Sys.file_exists path then erase path
+  with Sys_error err ->
+    raise (Sys_error (Printf.sprintf "Failed to remove %S (%s)" path err))
 
 let rec with_temp_dir f =
   let s =
@@ -257,8 +257,8 @@ let rec with_temp_dir f =
   if Sys.file_exists s then
     with_temp_dir f
   else
-  (mkdir_p s;
-   finally f s @@ fun () -> rm_rf s)
+    (mkdir_p s;
+     finally f s @@ fun () -> rm_rf s)
 
 type filter = (Re.t * filt_sort) list
 
@@ -270,9 +270,9 @@ type command =
         | `files of string (* file name *) ]
   | Pin_file_content of string
   | Opamfile of { files: string list;
-             filter: filter; }
+                  filter: filter; }
   | Json of { files: string list;
-             filter: filter; }
+              filter: filter; }
   | Cache of { kind: [`installed | `repo];
                switch: string;
                nvs: string list;
@@ -354,283 +354,283 @@ module Parse = struct
              with Not_found -> `opam)
         with Not_found ->
           File_contents (String.sub str 1 (String.length str - 2))
-      else if str.[0] = ':' || str.[0] = '#' then
-        Comment str
+    else if str.[0] = ':' || str.[0] = '#' then
+      Comment str
     else
       let varbinds, pos =
         let gr = exec (compile @@ rep re_varbind) str in
         List.map (fun gr ->
-          Group.get gr 1,
-          (match Group.get gr 2 with
-           | "=" -> `eq
-           | "+=" -> `pluseq
-           | "=+" -> `eqplus
-           | _ -> assert false),
-          get_str (Group.get gr 3))
-        (all (compile @@ re_varbind) (Group.get gr 0)),
-      Group.stop gr 0
-        in
-    let cmd, pos =
-      try
-        let gr = exec ~pos (compile re_str_atom) str in
-        Some (get_str (Group.get gr 0)),
+            Group.get gr 1,
+            (match Group.get gr 2 with
+             | "=" -> `eq
+             | "+=" -> `pluseq
+             | "=+" -> `eqplus
+             | _ -> assert false),
+            get_str (Group.get gr 3))
+          (all (compile @@ re_varbind) (Group.get gr 0)),
         Group.stop gr 0
-          with Not_found -> None, pos
-        in
-    let args =
-      let grs = all ~pos (compile re_str_atom) str in
-      List.map (fun gr -> Group.get gr 0) grs
       in
-    let get_str ?escape s =
-      str_replace_path ?escape OpamSystem.back_to_forward
-        (filters_of_var vars)
-        (get_str s)
-    in
-    let posix_re re =
-      try Posix.re (get_str ~escape:`Regexps re)
-      with Posix.Parse_error ->
-        failwith (Printf.sprintf "Bad POSIX regexp: %s" re)
-    in
-    let rec get_args_rewr acc = function
-      | [] -> List.rev acc, false, false, [], None
-      | ("|"|">$") :: _ as rewr ->
+      let cmd, pos =
+        try
+          let gr = exec ~pos (compile re_str_atom) str in
+          Some (get_str (Group.get gr 0)),
+          Group.stop gr 0
+        with Not_found -> None, pos
+      in
+      let args =
+        let grs = all ~pos (compile re_str_atom) str in
+        List.map (fun gr -> Group.get gr 0) grs
+      in
+      let get_str ?escape s =
+        str_replace_path ?escape OpamSystem.back_to_forward
+          (filters_of_var vars)
+          (get_str s)
+      in
+      let posix_re re =
+        try Posix.re (get_str ~escape:`Regexps re)
+        with Posix.Parse_error ->
+          failwith (Printf.sprintf "Bad POSIX regexp: %s" re)
+      in
+      let rec get_args_rewr acc = function
+        | [] -> List.rev acc, false, false, [], None
+        | ("|"|">$") :: _ as rewr ->
           let rec get_rewr (unordered, sort, acc) = function
             | "|" :: re :: "->" :: str :: r ->
-                get_rewr (unordered, sort, (posix_re re, Sed (get_str str)) :: acc) r
+              get_rewr (unordered, sort, (posix_re re, Sed (get_str str)) :: acc) r
             | "|" :: "grep" :: "-v" :: re :: r ->
-                get_rewr (unordered, sort, (posix_re re, GrepV) :: acc) r
+              get_rewr (unordered, sort, (posix_re re, GrepV) :: acc) r
             | "|" :: "grep" :: re :: r ->
-                get_rewr (unordered, sort, (posix_re re, Grep) :: acc) r
+              get_rewr (unordered, sort, (posix_re re, Grep) :: acc) r
             | "|" :: "sort" :: r ->
-                if acc <> [] then
-                  Printf.printf "Warning: sort should appear _before_ any filters\n%!";
-            get_rewr (unordered, true, acc) r
+              if acc <> [] then
+                Printf.printf "Warning: sort should appear _before_ any filters\n%!";
+              get_rewr (unordered, true, acc) r
             | "|" :: "unordered" :: r ->
-                get_rewr (true, sort, acc) r
+              get_rewr (true, sort, acc) r
             | "|" :: "sed-cmd" :: cmd :: r ->
-                let sandbox cmd =
-                  (* Sandbox prefix
-                 >[...] /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "cmd" <
-                 >[...] ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "cmd" <
-                 -->
+              let sandbox cmd =
+                (* Sandbox prefix
+                   >[...] /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "cmd" <
+                   >[...] ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "cmd" <
+                   -->
                    >[...] cmd <
-              *)
-                  seq [
-                    alt [ char '/'; Re.str "${" ];
-                non_greedy @@ rep1 any; Re.str "sandbox.sh";
-                space;
-                char '"';
-                alt @@ List.map Re.str [ "build"; "install"; "remove" ];
-                char '"';
-                space;
-                char '"'; Re.str cmd; char '"';
-                space;
+                *)
+                seq [
+                  alt [ char '/'; Re.str "${" ];
+                  non_greedy @@ rep1 any; Re.str "sandbox.sh";
+                  space;
+                  char '"';
+                  alt @@ List.map Re.str [ "build"; "install"; "remove" ];
+                  char '"';
+                  space;
+                  char '"'; Re.str cmd; char '"';
+                  space;
                 ]
-    in
-            let with_quote_set s = set ("\"'"^s) in
-            let opt_quoted r = [
-              seq @@ [ char '"'] @  r @ [ char '"'; rep1 space ];
-              seq @@ r @ [ rep1 space ];
+              in
+              let with_quote_set s = set ("\"'"^s) in
+              let opt_quoted r = [
+                seq @@ [ char '"'] @  r @ [ char '"'; rep1 space ];
+                seq @@ r @ [ rep1 space ];
               ] in
-            let unix_prefix cmd =
-              (* Unix & Mac command prefix
-                 >[...] /usr/bin/cmd <
-                 >[...] /usr/bin/cmd <
-                 -->
-                   >[...] cmd <
-              *)
-              opt_quoted @@ [
-                rep1 @@ seq [ char '/'; rep1 @@ diff any (with_quote_set "/ ") ];
-                char '/';
-                Re.str cmd;
+              let unix_prefix cmd =
+                (* Unix & Mac command prefix
+                   >[...] /usr/bin/cmd <
+                   >[...] /usr/bin/cmd <
+                   -->
+                     >[...] cmd <
+                *)
+                opt_quoted @@ [
+                  rep1 @@ seq [ char '/'; rep1 @@ diff any (with_quote_set "/ ") ];
+                  char '/';
+                  Re.str cmd;
                 ]
-            in
-            let win_prefix cmd =
-              (* Windows command prefix
-                 >[...] C:\Windows\system32\cmd.exe <
-                 >[...] C:\Windows\system32\cmd <
-                 >[...] C:\Windows\system 32\cmd <
-                 -->
-                   >[...] cmd <
-              *)
-              opt_quoted @@ [
-                alpha; char ':';
-                rep1 @@ seq [ char '\\'; opt @@ char '\\';
-                              rep1 @@ diff any (with_quote_set "\\") ];
-                char '\\'; opt @@ char '\\';
-                Re.str cmd;
-                opt @@ Re.str ".exe";
+              in
+              let win_prefix cmd =
+                (* Windows command prefix
+                   >[...] C:\Windows\system32\cmd.exe <
+                   >[...] C:\Windows\system32\cmd <
+                   >[...] C:\Windows\system 32\cmd <
+                   -->
+                     >[...] cmd <
+                *)
+                opt_quoted @@ [
+                  alpha; char ':';
+                  rep1 @@ seq [ char '\\'; opt @@ char '\\';
+                                rep1 @@ diff any (with_quote_set "\\") ];
+                  char '\\'; opt @@ char '\\';
+                  Re.str cmd;
+                  opt @@ Re.str ".exe";
                 ] in
-            let re cmd = alt @@ sandbox cmd :: unix_prefix cmd @ win_prefix cmd in
-            let rec aux cmd r acc =
-              let str = Printf.sprintf "%s " cmd in
-              let acc = (re cmd, Sed str) :: acc in
-              match r with
-              | "|" :: _ | [] -> acc, r
-              | cmd :: r -> aux cmd r acc
-            in
-            let acc, r = aux cmd r acc in
-            get_rewr (unordered, sort, acc) r
+              let re cmd = alt @@ sandbox cmd :: unix_prefix cmd @ win_prefix cmd in
+              let rec aux cmd r acc =
+                let str = Printf.sprintf "%s " cmd in
+                let acc = (re cmd, Sed str) :: acc in
+                match r with
+                | "|" :: _ | [] -> acc, r
+                | cmd :: r -> aux cmd r acc
+              in
+              let acc, r = aux cmd r acc in
+              get_rewr (unordered, sort, acc) r
             | ">$" :: output :: [] ->
-                unordered, sort, List.rev acc, Some (get_str output)
+              unordered, sort, List.rev acc, Some (get_str output)
             | [] ->
-                unordered, sort, List.rev acc, None
+              unordered, sort, List.rev acc, None
             | r ->
-                Printf.printf
-              "Bad rewrite %S, expecting '| RE -> STR' or '>$ VAR'\n%!"
-              (String.concat " " r);
-            unordered, sort, List.rev acc, None
-            in
-        let unordered, sort, rewr, out = get_rewr (false, false, []) rewr in
-        List.rev acc, unordered, sort, rewr, out
-            | arg :: r -> get_args_rewr (arg :: acc) r
-        in
-    let args, unordered, sort, rewr, output = get_args_rewr [] args in
-    match cmd with
-    | Some "opam-cat" ->
-        Opamfile { files = args; filter = rewr; }
-    | Some "json-cat" ->
-        Json { files = args; filter = rewr; }
-    | Some "opam-cache" ->
-      let kind, switch, nvs =
-        match args with
-        | "installed"::switch::nvs ->
-          `installed, switch, nvs
-        | "repo"::nvs ->
-          `repo, "", nvs
-        | _ ->
-          failwith
-            (Printf.sprintf
-               "Bad usage of opam-cache %s.\n\
-                expecting 'opam-cache <installed|repo> <switch?> [nvs]"
-             (String.concat " " args))
+              Printf.printf
+                "Bad rewrite %S, expecting '| RE -> STR' or '>$ VAR'\n%!"
+                (String.concat " " r);
+              unordered, sort, List.rev acc, None
+          in
+          let unordered, sort, rewr, out = get_rewr (false, false, []) rewr in
+          List.rev acc, unordered, sort, rewr, out
+        | arg :: r -> get_args_rewr (arg :: acc) r
       in
-      Cache { kind; switch; nvs; filter = rewr; }
-    | Some cmd ->
+      let args, unordered, sort, rewr, output = get_args_rewr [] args in
+      match cmd with
+      | Some "opam-cat" ->
+        Opamfile { files = args; filter = rewr; }
+      | Some "json-cat" ->
+        Json { files = args; filter = rewr; }
+      | Some "opam-cache" ->
+        let kind, switch, nvs =
+          match args with
+          | "installed"::switch::nvs ->
+            `installed, switch, nvs
+          | "repo"::nvs ->
+            `repo, "", nvs
+          | _ ->
+            failwith
+              (Printf.sprintf
+                 "Bad usage of opam-cache %s.\n\
+                  expecting 'opam-cache <installed|repo> <switch?> [nvs]"
+                 (String.concat " " args))
+        in
+        Cache { kind; switch; nvs; filter = rewr; }
+      | Some cmd ->
         let env, plus =
           List.fold_left (fun (env,plus) (v,op,value) ->
-            match op with
-            | `eq -> (v,value)::env, plus
-            | `pluseq -> env, (v^"+="^value)::plus
-            | `eqplus -> env, (v^"=+"^value)::plus)
-          ([],[]) varbinds
-    in
-      (match plus with
-       | [] -> ()
-       | _ ->
+              match op with
+              | `eq -> (v,value)::env, plus
+              | `pluseq -> env, (v^"+="^value)::plus
+              | `eqplus -> env, (v^"=+"^value)::plus)
+            ([],[]) varbinds
+        in
+        (match plus with
+         | [] -> ()
+         | _ ->
            OpamConsole.error
-           "variable bindings at the beginning of a command does not \
-            support '+=' or '=+' operators: %s"
-           (OpamStd.Format.pretty_list plus));
-      Run {
-        env;
-        cmd;
-        args;
-        filter = rewr;
-        output;
-        unordered;
-        sort;
+             "variable bindings at the beginning of a command does not \
+              support '+=' or '=+' operators: %s"
+             (OpamStd.Format.pretty_list plus));
+        Run {
+          env;
+          cmd;
+          args;
+          filter = rewr;
+          output;
+          unordered;
+          sort;
         }
-       | None ->
-           Export varbinds
-    end
+      | None ->
+        Export varbinds
+end
 
 let parse_command = Parse.command
 
 let common_filters ?opam dir =
-   let tmpdir = OpamSystem.real_path (Filename.get_temp_dir_name ()) in
-   let open Re in
-   let dir_to_regex dir =
-     if Sys.win32 then
-       [str dir; str (OpamSystem.back_to_forward dir); str (OpamSystem.apply_cygpath dir)]
-     else
-       [str dir] in
-   let with_hexa_twice prefix =
-     seq [
-       str prefix;
-       char '-';
-       repn xdigit 3 (Some 9);
-       char '-';
-       repn xdigit 3 (Some 9);
-     ]
-   in
-   [
-     seq [ bol;
-           alt [ str "#=== ERROR";
-                 seq [ str "# "; alt @@ List.map str
-                         [ "context";
-                           "path";
-                           "command";
-                           "exit-code";
-                           "env-file";
-                           "output-file"]]]],
-     GrepV;
-     seq [bol; str cmd_prompt],
-     Sed "##% ";
-     alt (dir_to_regex dir),
-     Sed "${BASEDIR}";
-     seq [
-          alt (dir_to_regex tmpdir);
-          rep (set "/\\");
-          str "opam-";
-          rep1 (alt [xdigit; char '-'])],
-     Sed "${OPAMTMP}";
-     seq [
-       str "state-";
-       repn digit 14 (Some 14);
-       str ".export";
-     ],
-     Sed "state-today.export";
-     seq [
-       str "state-";
-       repn xdigit 8 (Some 8);
-       str ".cache";
-     ],
-     Sed "state-magicv.cache";
-     with_hexa_twice "log",
-     Sed "log-xxx";
-     with_hexa_twice "patch",
-     Sed "patch-xxx";
-     (* rsync output
-        Linux
-        >sending incremental file list
-        MacOS
-        >building file list ... done
-     *)
-     alt [
-       seq [
-         rep any;
-         str "sending incremental file list";
-         rep any;
-       ];
-       seq [
-         rep any;
-         str "building file list"; rep any; str "done";
-         rep any;];
-     ],
-     GrepV;
-     (* rsync output
-        >sent 133 bytes  received 12 bytes  290.00 bytes/sec
-     *)
-     seq [
-       str "sent" ; rep1 space; rep1 digit; rep1 space; str "bytes"; rep1 space;
-       str "received"; rep1 space; rep1 digit; rep1 space; str "bytes";
-       rep1 any; str "bytes/sec"
-     ],
-     GrepV;
-     (* rsync output
-        >total size is 383  speedup is 0.58
-     *)
-     seq [
-       str "total"; rep1 space; str "size"; rep1 space; str "is"; rep1 space;
-       rep1 digit; rep1 space;
-       str "speedup"; rep1 space; str "is";
-     ],
-     GrepV
-   ] @
-   (match opam with
-    | None -> []
-    | Some opam -> [ str opam.as_seen_in_opam, Sed "${OPAM}" ])
+  let tmpdir = OpamSystem.real_path (Filename.get_temp_dir_name ()) in
+  let open Re in
+  let dir_to_regex dir =
+    if Sys.win32 then
+      [str dir; str (OpamSystem.back_to_forward dir); str (OpamSystem.apply_cygpath dir)]
+    else
+      [str dir] in
+  let with_hexa_twice prefix =
+    seq [
+      str prefix;
+      char '-';
+      repn xdigit 3 (Some 9);
+      char '-';
+      repn xdigit 3 (Some 9);
+    ]
+  in
+  [
+    seq [ bol;
+          alt [ str "#=== ERROR";
+                seq [ str "# "; alt @@ List.map str
+                        [ "context";
+                          "path";
+                          "command";
+                          "exit-code";
+                          "env-file";
+                          "output-file"]]]],
+    GrepV;
+    seq [bol; str cmd_prompt],
+    Sed "##% ";
+    alt (dir_to_regex dir),
+    Sed "${BASEDIR}";
+    seq [
+      alt (dir_to_regex tmpdir);
+      rep (set "/\\");
+      str "opam-";
+      rep1 (alt [xdigit; char '-'])],
+    Sed "${OPAMTMP}";
+    seq [
+      str "state-";
+      repn digit 14 (Some 14);
+      str ".export";
+    ],
+    Sed "state-today.export";
+    seq [
+      str "state-";
+      repn xdigit 8 (Some 8);
+      str ".cache";
+    ],
+    Sed "state-magicv.cache";
+    with_hexa_twice "log",
+    Sed "log-xxx";
+    with_hexa_twice "patch",
+    Sed "patch-xxx";
+    (* rsync output
+       Linux
+       >sending incremental file list
+       MacOS
+       >building file list ... done
+    *)
+    alt [
+      seq [
+        rep any;
+        str "sending incremental file list";
+        rep any;
+      ];
+      seq [
+        rep any;
+        str "building file list"; rep any; str "done";
+        rep any;];
+    ],
+    GrepV;
+    (* rsync output
+       >sent 133 bytes  received 12 bytes  290.00 bytes/sec
+    *)
+    seq [
+      str "sent" ; rep1 space; rep1 digit; rep1 space; str "bytes"; rep1 space;
+      str "received"; rep1 space; rep1 digit; rep1 space; str "bytes";
+      rep1 any; str "bytes/sec"
+    ],
+    GrepV;
+    (* rsync output
+       >total size is 383  speedup is 0.58
+    *)
+    seq [
+      str "total"; rep1 space; str "size"; rep1 space; str "is"; rep1 space;
+      rep1 digit; rep1 space;
+      str "speedup"; rep1 space; str "is";
+    ],
+    GrepV
+  ] @
+  (match opam with
+   | None -> []
+   | Some opam -> [ str opam.as_seen_in_opam, Sed "${OPAM}" ])
 
 let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) ?(sort=false) cmd args =
   let filter = filter @ common_filters ~opam dir in
