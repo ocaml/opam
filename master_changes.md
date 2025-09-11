@@ -26,6 +26,7 @@ users)
 ## Actions
 
 ## Install
+  * More fine grained error message in case of bad hash or missing extra-files error (and remove raw fatal error) [#XXX @rjbou]
 
 ## Build (package)
 

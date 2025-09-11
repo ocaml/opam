@@ -260,7 +260,8 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+bad-md5.1: Bad hash for extra-file
+  - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
 
 
 
@@ -277,7 +278,8 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+bad-md5.1: Bad hash for extra-file
+  - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
 
 
 
@@ -289,7 +291,8 @@ Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p
 # Return code 31 #
 ### opam source bad-md5 | '.n"' -> '"'
 [WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1:
-            Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+            bad-md5.1: Bad hash for extra-file
+            - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
 
 
 ### test -f bad-md5.1/p.patch
@@ -297,7 +300,8 @@ Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p
 ### rm -r bad-md5.1
 ### opam source bad-md5 --require-checksums | '.n"' -> '"'
 [WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1:
-            Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+            bad-md5.1: Bad hash for extra-file
+            - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
 
 
 ### test -f bad-md5.1/p.patch
@@ -320,7 +324,8 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+good-md5-bad-sha256.1: Bad hash for extra-file
+  - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
 
 
 
@@ -337,7 +342,8 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+good-md5-bad-sha256.1: Bad hash for extra-file
+  - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
 
 
 
@@ -349,14 +355,16 @@ Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-
 # Return code 31 #
 ### opam source good-md5-bad-sha256 | '.n"' -> '"'
 [WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1:
-            Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+            good-md5-bad-sha256.1: Bad hash for extra-file
+            - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
 
 
 ### test -f good-md5-bad-sha256.1/p.patch
 ### rm -r good-md5-bad-sha256.1
 ### opam source good-md5-bad-sha256 --require-checksums | '.n"' -> '"'
 [WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1:
-            Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+            good-md5-bad-sha256.1: Bad hash for extra-file
+            - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
 
 
 ### test -f good-md5-bad-sha256.1/p.patch
@@ -502,7 +510,9 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Sys_error("${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch: No such file or directory")
+not-present.1: Missing extra-file for
+  - ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch
+
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -518,7 +528,9 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Sys_error("${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch: No such file or directory")
+not-present.1: Missing extra-file for
+  - ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch
+
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -528,9 +540,11 @@ Sys_error("${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files
 - No changes have been performed
 # Return code 31 #
 ### opam source not-present
-Fatal error:
-Sys_error("${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch: No such file or directory")
-# Return code 99 #
+[WARNING] Some errors extracting to ${BASEDIR}/not-present.1:
+            not-present.1: Missing extra-file for
+            - ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch
+
+
 ### test -f not-present.1/p.patch
 # Return code 1 #
 ### opam clean --download-cache
@@ -554,7 +568,9 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd: No such file or directory")
+escape-absolute.1: Missing extra-file for
+  - ${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd
+
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -570,7 +586,9 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd: No such file or directory")
+escape-absolute.1: Missing extra-file for
+  - ${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd
+
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -580,9 +598,11 @@ Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute
 - No changes have been performed
 # Return code 31 #
 ### opam source escape-absolute
-Fatal error:
-Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd: No such file or directory")
-# Return code 99 #
+[WARNING] Some errors extracting to ${BASEDIR}/escape-absolute.1:
+            escape-absolute.1: Missing extra-file for
+            - ${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd
+
+
 ### test -f escape-absolute.1/p.patch
 # Return code 1 #
 ### opam clean --download-cache
