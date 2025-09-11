@@ -495,17 +495,37 @@ let prepare_package_source st nv dir =
             else None)
           xs
     in
-    let bad_hash =
-      List.filter_map (fun (src, base, hash) ->
-          if OpamHash.check_file (OpamFilename.to_string src) hash then
-            (OpamFilename.copy ~src ~dst:(OpamFilename.create dir base); None)
+    let bad_hash, missing =
+      List.fold_left (fun (bad_hash, missing) (src, base, hash) ->
+          if OpamFilename.exists src then
+            let file = OpamFilename.to_string src in
+            if OpamHash.check_file file hash then
+              (OpamFilename.copy ~src ~dst:(OpamFilename.create dir base);
+               bad_hash, missing)
+            else
+              (src::bad_hash), missing
           else
-            Some src) extra_files
+            bad_hash, (src::missing))
+        ([], []) extra_files
     in
-    if bad_hash = [] then None else
-      Some (Failure
-              (Printf.sprintf "Bad hash for %s"
-                 (OpamStd.Format.itemize OpamFilename.to_string bad_hash)));
+    let bad_hash_msg bad_hash =
+      Printf.sprintf "%s: Bad hash for extra-file\n%s"
+        (OpamPackage.to_string nv)
+        (OpamStd.Format.itemize OpamFilename.to_string bad_hash)
+    in
+    let missing_msg missing =
+      Printf.sprintf "%s: Missing extra-file for\n%s"
+        (OpamPackage.to_string nv)
+        (OpamStd.Format.itemize OpamFilename.to_string missing)
+    in
+    match bad_hash, missing with
+    | [], [] -> None
+    | _::_ as bad_hash, [] ->
+      Some (Failure (bad_hash_msg bad_hash))
+    | [], (_::_ as missing) ->
+      Some (Failure (missing_msg missing))
+    | bad_hash, missing ->
+      Some (Failure (bad_hash_msg bad_hash ^ "\n" ^ missing_msg missing))
   in
   OpamFilename.mkdir dir;
   get_extra_sources_job @@+ function Some _ as err -> Done err | None ->
