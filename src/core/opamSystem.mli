@@ -57,7 +57,7 @@ val verbose_for_base_commands: unit -> bool
 (** {2 Filesystem management} *)
 
 (** Returns a directory name, in the temporary directory, composed by {i opam}
-    (if [prefix] is not set), pid, and random number. *)
+    (if [prefix] is not set), pid, and random number. Cleaned at exit. *)
 val mk_temp_dir: ?prefix:string -> unit -> string
 
 (** Returns a directory name, in the [~dir], composed by {i opam}
