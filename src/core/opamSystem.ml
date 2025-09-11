@@ -134,8 +134,8 @@ let get_files_t ~except_vcs dirname =
 let get_files = get_files_t ~except_vcs:false
 let get_files_except_vcs = get_files_t ~except_vcs:true
 
-let log_for_file_management () =
-  OpamCoreConfig.(!r.debug_level) >= 4
+let log_for_file_management with_log =
+  if with_log then 1 else 4
 
 (* From stdune/src/fpath.ml *)
 let win32_unlink fn =
@@ -149,8 +149,7 @@ let win32_unlink fn =
 
 let remove_file_t ?(with_log=true) file =
   try
-    if with_log || log_for_file_management () then
-      log "rm %s" file;
+    log ~level:(log_for_file_management with_log) "rm %s" file;
     if Sys.win32 then
       win32_unlink file
     else
@@ -641,8 +640,7 @@ let copy_file_t ?(with_log=true) src dst =
   if file_or_symlink_exists dst
   then remove_file dst;
   mkdir (Filename.dirname dst);
-  if with_log || log_for_file_management () then
-    log "copy %s -> %s" src dst;
+  log ~level:(log_for_file_management with_log) "copy %s -> %s" src dst;
   copy_file_aux ~src ~dst ()
 
 let rec link_t ~except_vcs ?(with_log=true) src dst =
@@ -650,8 +648,7 @@ let rec link_t ~except_vcs ?(with_log=true) src dst =
   if file_or_symlink_exists dst then
     remove_file dst;
   try
-    if with_log || log_for_file_management () then
-      log "ln -s %s %s" src dst;
+    log ~level:(log_for_file_management with_log) "ln -s %s %s" src dst;
     Unix.symlink src dst
   with Unix.Unix_error (Unix.EXDEV, _, _) ->
     (* Fall back to copy if symlinks are not supported *)
@@ -665,8 +662,7 @@ let rec link_t ~except_vcs ?(with_log=true) src dst =
       copy_file_t src dst
 
 and copy_dir_t ~except_vcs ?(with_log=true) src dst_dir =
-  if with_log || log_for_file_management () then
-    log "copydir %s -> %s" src dst_dir;
+  log ~level:(log_for_file_management with_log) "copydir %s -> %s" src dst_dir;
   let files = get_files_t ~except_vcs src in
   mkdir dst_dir;
   let with_log = false in
