@@ -110,25 +110,33 @@ let load_opams_from_dir repo_name repo_root =
     (fun () -> aux OpamPackage.Map.empty (OpamRepositoryPath.packages_dir repo_root))
     ~finally:OpamConsole.clear_status
 
-let load_repo repo repo_root =
-  let t = OpamConsole.timer () in
+let load_repo_from_dir repo repo_root =
   let repo_def =
     OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root)
     |> OpamFile.Repo.with_root_url repo.repo_url
   in
   let opams = load_opams_from_dir repo.repo_name repo_root in
+  repo_def, opams
+
+let load_repo repo repo_root =
+  let t = OpamConsole.timer () in
+  let loaded_repo =
+    match repo_root with
+    | OpamRepositoryRoot.Dir dir ->
+      load_repo_from_dir repo dir
+  in
   log "loaded opam files from repo %s in %.3fs"
     (OpamRepositoryName.to_string repo.repo_name)
     (t ());
-  repo_def, opams
+  loaded_repo
 
 (* Cleaning directories follows the repo path pattern:
    TMPDIR/opam-tmp-dir/repo-dir, defined in [load]. *)
 let clean_repo_tmp tmp_dir =
   if Lazy.is_val tmp_dir then
     (let dir = Lazy.force tmp_dir in
-     OpamFilename.rmdir dir;
-     let parent = OpamFilename.dirname_dir dir in
+     OpamRepositoryRoot.Dir.remove dir;
+     let parent = OpamRepositoryRoot.Dir.dirname dir in
      if OpamFilename.dir_is_empty parent = Some true then
        OpamFilename.rmdir parent)
 
@@ -144,14 +152,17 @@ let cleanup rt =
 
 let get_root_raw root repos_tmp name =
   match Hashtbl.find repos_tmp name with
-  | lazy repo_root -> repo_root
-  | exception Not_found -> OpamRepositoryPath.root root name
+  | lazy repo_root -> OpamRepositoryRoot.Dir repo_root
+  | exception Not_found -> OpamRepositoryRoot.Dir (OpamRepositoryPath.root root name)
 
 let get_root rt name =
   get_root_raw rt.repos_global.root rt.repos_tmp name
 
 let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
+
+let get_repo_files _rt _name _dir =
+  assert false (* TODO *)
 
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
@@ -177,7 +188,7 @@ let load lock_kind gt =
   OpamRepositoryName.Map.iter (fun name repo ->
       let uncompressed_root = OpamRepositoryPath.root gt.root repo.repo_name in
       let tar = OpamRepositoryPath.tar gt.root repo.repo_name in
-      if not (OpamFilename.exists_dir uncompressed_root) &&
+      if not (OpamRepositoryRoot.Dir.exists uncompressed_root) &&
          OpamFilename.exists tar
       then
         let tmp = lazy (
@@ -186,7 +197,7 @@ let load lock_kind gt =
             (* We rely on this path pattern to clean the repo.
                cf. [clean_repo_tmp] *)
             OpamFilename.extract_in tar tmp_root;
-            OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name)
+            OpamRepositoryRoot.Dir.of_dir (OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name))
           with Failure s ->
             OpamFilename.remove tar;
             OpamConsole.error_and_exit `Aborted

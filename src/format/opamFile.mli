@@ -585,22 +585,18 @@ module OPAM: sig
       This can be used to locate e.g. the files/ overlays *)
   val metadata_dir: t -> (repository_name option * string) option
 
-  (** Gets the resolved metadata dir, given a mapping of repository names to
-      their roots *)
-  val get_metadata_dir:
-    repos_roots:(repository_name -> dirname) -> t -> dirname option
-
   (** Names and hashes of the files below files/ *)
   val extra_files: t -> (OpamFilename.Base.t * OpamHash.t) list option
 
   (** From locked opam file *)
   val locked: t -> string option
 
-  (** Looks up the extra files, and returns their full paths, relative path to
-      the package source, and hash. Doesn't check the hashes. *)
+  (** Looks up the extra files, and returns their relative path to
+      the package source, content if it exists and hash.
+      Doesn't check the hashes. *)
   val get_extra_files:
-    repos_roots:(repository_name -> dirname) ->
-    t -> (filename * basename * OpamHash.t) list
+    get_repo_files:(repository_name -> dirname -> (basename * string Lazy.t) list) ->
+    t -> (basename * string Lazy.t option * OpamHash.t) list
 
   (** Returns the errors that were found when parsing the file, associated to
       their fields (that were consequently ignored) *)

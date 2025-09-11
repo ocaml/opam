@@ -102,7 +102,7 @@ let copy_files st opam =
   let name = OpamFile.OPAM.name opam in
   let files =
     OpamFile.OPAM.get_extra_files
-      ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+      ~get_repo_files:(OpamRepositoryState.get_repo_files st.switch_repos)
       opam
   in
   if files = [] then
@@ -118,30 +118,31 @@ let copy_files st opam =
     OpamPath.Switch.Overlay.files st.switch_global.root st.switch name
   in
   let files =
-    List.fold_left (fun acc (src, rel_file, hash) ->
-        if not (OpamFilename.exists src) then
-          (OpamConsole.warning "Overlay file of %s %s not found, ignoring"
-             (OpamPackage.Name.to_string name)
-             (OpamFilename.to_string src);
-           acc)
-        else
-        let hash =
-          if not (OpamHash.check_file (OpamFilename.to_string src) hash) then
-            if OpamFormatConfig.(!r.strict) then
-              OpamConsole.error_and_exit `File_error
-                "Hash mismatch on %s %s (strict mode)"
-                (OpamPackage.Name.to_string name)
-                (OpamFilename.to_string src)
-            else
-              (OpamConsole.warning
-                 "Hash doesn't match for overlay file of %s %s, adjusted"
-                 (OpamPackage.Name.to_string name)
-                 (OpamFilename.to_string src);
-               OpamHash.compute (OpamFilename.to_string src))
-          else hash
-        in
-        OpamFilename.copy ~src ~dst:(OpamFilename.create destdir rel_file);
-        (rel_file, hash) :: acc)
+    List.fold_left (fun acc (rel_file, content, hash) ->
+        match content with
+        | None ->
+          OpamConsole.warning "Overlay file of %s %s not found, ignoring"
+            (OpamPackage.Name.to_string name)
+            (OpamFilename.Base.to_string rel_file);
+          acc
+        | Some (lazy content) ->
+          let hash =
+            if not (OpamHash.check_string content hash) then
+              if OpamFormatConfig.(!r.strict) then
+                OpamConsole.error_and_exit `File_error
+                  "Hash mismatch on %s %s (strict mode)"
+                  (OpamPackage.Name.to_string name)
+                  (OpamFilename.Base.to_string rel_file)
+              else
+                (OpamConsole.warning
+                   "Hash doesn't match for overlay file of %s %s, adjusted"
+                   (OpamPackage.Name.to_string name)
+                   (OpamFilename.Base.to_string rel_file);
+                 OpamHash.compute_from_string content)
+            else hash
+          in
+          OpamFilename.write (OpamFilename.create destdir rel_file) content;
+          (rel_file, hash) :: acc)
       [] files
   in
   OpamFile.OPAM.with_extra_files (List.rev files) opam
@@ -245,7 +246,7 @@ let edit st ?version name =
         | Some o -> OpamFile.OPAM.with_version new_nv.version o
      in
      OpamFile.OPAM.write_with_preserved_format
-       ?format_from:(OpamPinned.orig_opam_file st name base_opam)
+       ?format_from:(OpamPinned.orig_opam_file st name)
        temp_file base_opam);
   match edit_raw name temp_file with
   | None -> st
@@ -584,7 +585,7 @@ and source_pin
       in
       if not (OpamFile.exists temp_file) then
         OpamFile.OPAM.write_with_preserved_format
-          ?format_from:(OpamPinned.orig_opam_file st name opam_base)
+          ?format_from:(OpamPinned.orig_opam_file st name)
           temp_file opam_base;
       edit_raw name temp_file >>|
       (* Preserve metadata_dir so that copy_files below works *)
@@ -620,7 +621,7 @@ and source_pin
     let opam = copy_files st opam in
 
     OpamFile.OPAM.write_with_preserved_format
-      ?format_from:(OpamPinned.orig_opam_file st name opam)
+      ?format_from:(OpamPinned.orig_opam_file st name)
       (OpamPath.Switch.Overlay.opam st.switch_global.root st.switch nv.name)
       opam;
 

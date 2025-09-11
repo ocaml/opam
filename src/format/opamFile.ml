@@ -3552,23 +3552,30 @@ module OPAM = struct
   let equal o1 o2 =
     with_metadata_dir None o1 = with_metadata_dir None o2
 
-  let get_metadata_dir ~repos_roots o =
-      match metadata_dir o with
-      | None -> None
-      | Some (None, abs) ->
-        Some (OpamFilename.Dir.of_string abs)
-      | Some (Some r, rel) ->
-        Some OpamFilename.Op.(repos_roots r / rel)
-
-  let get_extra_files ~repos_roots o =
-    OpamStd.Option.Op.(
-      (get_metadata_dir ~repos_roots o >>= fun mdir ->
-       let files_dir = OpamFilename.Op.(mdir / "files") in
+  let get_extra_files ~get_repo_files o =
+    let open OpamFilename.Op in
+    let open OpamStd.Option.Op in
+    (match metadata_dir o with
+     | None -> None
+     | Some (None, abs) ->
+       let files_dir = OpamFilename.Dir.of_string abs / "files" in
        extra_files o >>| List.map @@ fun (basename, hash) ->
-       OpamFilename.create files_dir basename,
-       basename, hash)
-      +! []
-    )
+       let content =
+         let f = OpamFilename.create files_dir basename in
+         if OpamFilename.exists f then
+           Some (lazy (OpamFilename.read f))
+         else
+           None
+       in
+       (basename, content, hash)
+     | Some (Some r, rel) ->
+       let files = get_repo_files r (OpamFilename.Dir.of_string rel / "files") in
+       extra_files o >>| List.map @@ fun (basename, hash) ->
+       let content =
+         OpamStd.List.assoc_opt OpamFilename.Base.equal basename files
+       in
+       (basename, content, hash))
+    +! []
 
   let print_errors ?file o =
     if o.format_errors <> [] then

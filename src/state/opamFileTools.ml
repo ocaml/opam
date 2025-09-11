@@ -1307,10 +1307,12 @@ let try_read rd f =
 let add_aux_files ?dir ?(files_subdir_hashes=false) opam =
   let dir = match dir with
     | None ->
-      OpamFile.OPAM.get_metadata_dir ~repos_roots:(fun r ->
-          failwith ("Repository "^OpamRepositoryName.to_string r^
-                    " not registered for add_aux_files!"))
-        opam
+      (match OpamFile.OPAM.metadata_dir opam with
+       | None -> None
+       | Some (None, dir) -> Some (OpamFilename.Dir.of_string dir)
+       | Some (Some r, _) ->
+         failwith ("Repository "^OpamRepositoryName.to_string r^
+                   " not registered for add_aux_files!"))
     | some -> some
   in
   match dir with
@@ -1462,7 +1464,9 @@ let read_repo_opam ~repo_name ~repo_root dir =
   let open OpamStd.Option.Op in
   read_opam dir >>|
   OpamFile.OPAM.with_metadata_dir
-    (Some (Some repo_name, OpamFilename.remove_prefix_dir repo_root dir))
+    (Some (Some repo_name,
+           OpamFilename.remove_prefix_dir
+             (OpamRepositoryRoot.Dir.to_dir repo_root) dir))
 
 let dep_formula_to_string f =
   let pp =

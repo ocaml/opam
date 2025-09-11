@@ -81,7 +81,7 @@ type 'a options_fun =
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
   ?scrubbed_environment_variables:string list ->
-  ?verbose_on:OpamTypes.name_set -> 
+  ?verbose_on:OpamTypes.name_set ->
   'a
   (* constraint 'a = 'b -> 'c *)
 
