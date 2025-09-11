@@ -177,6 +177,10 @@ val exists: t -> bool
     a symlink to one *)
 val opt_file: t -> t option
 
+(** Returns an unique filename in temporary directory.
+    If it exists, cleaned at exit *)
+val mk_tmp_file:  unit -> t
+
 (** Execute a function with a file in a temp directory.
     It is always cleaned up afterwards. *)
 val with_tmp_file: (t -> 'a) -> 'a
