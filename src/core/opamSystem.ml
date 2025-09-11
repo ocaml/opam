@@ -89,12 +89,29 @@ let temp_name ?dir ?(prefix="opam") () =
   in
   tmpdir / (temp_basename prefix)
 
+let temp_dir_cleaner =
+  let to_clean = ref OpamStd.String.Set.empty in
+  OpamStd.Sys.at_exit
+    (fun () ->
+       OpamStd.String.Set.iter (fun d ->
+           try
+             if Sys.file_exists d then
+               Unix.rmdir d;
+             (* Only log the item if unlink succeeded *)
+             log ~level:4 "temp_dir_cleaner: rm: %s" d
+           with Unix.Unix_error _ -> ())
+         !to_clean);
+  fun tmp_dir ->
+    to_clean := OpamStd.String.Set.add tmp_dir !to_clean
+
 let rec mk_temp_dir ?prefix () =
   let s = temp_name ?prefix () in
   if Sys.file_exists s then
     mk_temp_dir ?prefix ()
   else
-    real_path s
+    let dir = real_path s in
+    temp_dir_cleaner dir;
+    dir
 
 let rec mk_unique_dir ~dir ?(prefix="opam") () =
   let s = dir / Printf.sprintf "%s-%06x" prefix (Random.int 0xFFFFFF) in

@@ -105,7 +105,8 @@ val with_tmp_dir: (Dir.t -> 'a) -> 'a
 (** Provide an automatically cleaned up temp directory to a job *)
 val with_tmp_dir_job: (Dir.t -> 'a OpamProcess.job) -> 'a OpamProcess.job
 
-(** Raw function to create a temporary directory. No automatic cleanup *)
+(** Raw function to create a temporary directory.
+    If it exists, cleaned automatically at exit. *)
 val mk_tmp_dir: unit -> Dir.t
 
 (** Create a new Dir.t and resolve symlinks *)
