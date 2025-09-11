@@ -288,13 +288,17 @@ Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p
 - No changes have been performed
 # Return code 31 #
 ### opam source bad-md5 | '.n"' -> '"'
-[WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1: Failure("Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch")
+[WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1:
+            Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+
 
 ### test -f bad-md5.1/p.patch
 # Return code 1 #
 ### rm -r bad-md5.1
 ### opam source bad-md5 --require-checksums | '.n"' -> '"'
-[WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1: Failure("Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch")
+[WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1:
+            Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+
 
 ### test -f bad-md5.1/p.patch
 # Return code 1 #
@@ -344,12 +348,16 @@ Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-
 - No changes have been performed
 # Return code 31 #
 ### opam source good-md5-bad-sha256 | '.n"' -> '"'
-[WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1: Failure("Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch")
+[WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1:
+            Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+
 
 ### test -f good-md5-bad-sha256.1/p.patch
 ### rm -r good-md5-bad-sha256.1
 ### opam source good-md5-bad-sha256 --require-checksums | '.n"' -> '"'
-[WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1: Failure("Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch")
+[WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1:
+            Bad hash for   - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+
 
 ### test -f good-md5-bad-sha256.1/p.patch
 ### opam clean --download-cache

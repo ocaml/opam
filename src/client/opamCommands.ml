@@ -3820,8 +3820,11 @@ let source cli =
                OpamConsole.formatted_msg "Successfully extracted to %s\n"
                  (Dir.to_string dir)
              | Some e ->
-               OpamConsole.warning "Some errors extracting to %s: %s\n"
-                 (Dir.to_string dir) (Printexc.to_string e)
+               OpamConsole.warning "Some errors extracting to %s:\n  %s\n"
+                 (Dir.to_string dir)
+                 (match e with
+                  | Failure msg -> msg
+                  | _ -> Printexc.to_string e)
          in
          OpamProcess.Job.run job;
          if OpamPinned.find_opam_file_in_source nv.name

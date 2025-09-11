@@ -55,6 +55,7 @@ users)
 ## Exec
 
 ## Source
+  * Better error message, especially in case of `Failure` [#6696 @rjbou]
 
 ## Lint
 
