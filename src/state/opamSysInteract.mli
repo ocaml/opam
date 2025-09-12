@@ -24,8 +24,11 @@ val available_packages:
   ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
   OpamSysPkg.availability_mode
 
-(* Returns the subset of the given system [pkgs]
-   that are currently installed on the system. *)
+(* Returns the subset of the given system [pkgs] that are currently installed on
+   the system. This function queries the system package manager (e.g., apt, yum,
+   pacman, brew, etc.) to determine which of the provided packages are already
+   installed. It handles different package manager formats and output parsing,
+   including virtual packages. *)
 val installed_packages:
   ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
   OpamSysPkg.Set.t
