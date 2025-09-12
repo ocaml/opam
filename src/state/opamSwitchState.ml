@@ -214,7 +214,7 @@ let depexts_status_of_packages_raw
     if OpamPackage.Set.is_empty recompute_available then
       status
     else
-      let pinned =
+      let status_of_pinned =
         let syspkgs =
           OpamPackage.Set.fold (fun nv set -> depexts nv ++ set)
             recompute_available OpamSysPkg.Set.empty

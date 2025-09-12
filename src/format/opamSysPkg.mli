@@ -28,13 +28,22 @@ val status_empty: status
 
 val string_of_status: status -> string
 
+(* Merge status sets *)
 val combine_status : status -> status -> status
 
 (** System package availability *)
-type available = Available of Set.t | Suppose_available | No_depexts
+type available =
+  (* Set of available system packages )
+  | Available of Set.t
+  (* In this system, all packages are considered available *)
+  | Suppose_available
+  (* Depext system disabled *)
+  | No_depexts
 
 val string_of_available : available -> string
 
+(* Combine two available. If it is not the same variant, the result is 
+   the smallest one. *)
 val combine_available : available -> available -> available
 
 (**  Returns [true] if both values are [Suppose_available] or both are

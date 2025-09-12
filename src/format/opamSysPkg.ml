@@ -83,9 +83,12 @@ let string_of_available = function
 
 let check_available_equal a b =
   match a, b with
-  | Suppose_available, Suppose_available -> true
   | Available os, Available ns -> Set.equal os ns
-  | _ -> false
+  | Suppose_available, Suppose_available
+  | No_depexts, No_depexts -> true
+  | Available _, _
+  | Suppose_available, _
+  | No_depexts, _ -> false
 
 let combine_available a a' =
   match a, a' with
@@ -93,9 +96,7 @@ let combine_available a a' =
   | Suppose_available, Suppose_available -> Suppose_available
   | Available s, Suppose_available | Suppose_available, Available s ->
     Available s
-  | No_depexts, _  |  _, No_depexts ->
-    OpamConsole.error_and_exit `Bad_arguments
-      "Can't combine No_depexts"
+  | No_depexts, _  |  _, No_depexts -> No_depexts
 
 
 (** System packages to install *)

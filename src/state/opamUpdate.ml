@@ -188,8 +188,8 @@ let repositories rt repos =
   in
   let get_sys_available rt =
     let opams = OpamRepositoryName.Map.fold (fun _ opams acc ->
-        OpamPackage.Map.union (fun _ x -> x) acc opams
-      ) rt.repo_opams (OpamPackage.Map.empty)
+        OpamPackage.Map.union (fun _ x -> x) acc opams)
+         rt.repo_opams (OpamPackage.Map.empty)
     in
     let repo_depexts =
       OpamFileTools.get_depexts opams

@@ -224,7 +224,8 @@ let load lock_kind gt =
           let repo_def, repo_opams =
             load_repo repo (get_root_raw gt.root repos_tmp name)
           in
-          let repo_depexts = OpamFileTools.get_depexts repo_opams
+          let repo_depexts =
+            OpamFileTools.get_depexts repo_opams
               ~env:(OpamPackageVar.resolve_global gt)
           in
           let repo_depexts =
@@ -242,8 +243,9 @@ let load lock_kind gt =
         OpamSysInteract.available_packages ~env:gt.global_variables
           gt.config repo_depexts
       with Failure msg ->
-        OpamConsole.note "%s\nYou can disable this check using 'opam \
-                          option --global depext=false'"
+        OpamConsole.note
+          "%s\nYou can disable this check using \
+           'opam option --global depext=false'"
           msg;
         No_depexts
     in

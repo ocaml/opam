@@ -10,7 +10,6 @@
 
 open OpamStateTypes
 
-
 (* [available_packages ?env config pkgs] queries the system to determine which of the
     given system [pkgs] are available (i.e., present in the system’s package database
     or known to the system's package manager).
