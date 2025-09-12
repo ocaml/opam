@@ -10,22 +10,22 @@ export PATH=~/local/bin:$PATH
 
 OPAM12=$OPAM12CACHE/bin/opam
 if [[ ! -f $OPAM12 ]]; then
-  mkdir -p $OPAM12CACHE/bin
+  mkdir -p "$OPAM12CACHE/bin"
 
   os="Linux"
   if [ "$RUNNER_OS" = "macOS" ]; then
     os="Darwin"
   fi
-  curl -sL "https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-$os" -o $OPAM12
-  chmod +x $OPAM12
+  curl -sL "https://github.com/ocaml/opam/releases/download/1.2.2/opam-1.2.2-x86_64-$os" -o "$OPAM12"
+  chmod +x "$OPAM12"
 fi
 export OPAMROOT=/tmp/opamroot
 rm -rf $OPAMROOT
 if [[ ! -d $OPAM12CACHE/root ]]; then
   $OPAM12 init
-  cp -r /tmp/opamroot/ $OPAM12CACHE/root
+  cp -r /tmp/opamroot/ "$OPAM12CACHE/root"
 else
-  cp -r $OPAM12CACHE/root /tmp/opamroot
+  cp -r "$OPAM12CACHE/root" /tmp/opamroot
 fi
 $OPAM12 --version
 opam --version
