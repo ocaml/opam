@@ -127,7 +127,7 @@ let emit_runs_on ~oc runs_on =
 
 (* Continuation for a job. Steps are specified as continuations as for
    the jobs within the workflow, terminated with {!end_job}. *)
-let job ~oc ~workflow ?shell ?section ?(needs = []) ?matrix ?env ?outputs ~runs_on name f =
+let job ~oc ~workflow ?continue_on_error ?shell ?section ?(needs = []) ?matrix ?env ?outputs ~runs_on name f =
   let module M = struct type job += Key end in
   Hashtbl.add jobs M.Key name;
   output_char oc '\n';
@@ -139,6 +139,7 @@ let job ~oc ~workflow ?shell ?section ?(needs = []) ?matrix ?env ?outputs ~runs_
 |} in
   Option.iter emit_section section;
   fprintf oc "  %s:\n" name;
+  Option.iter (fprintf oc "    continue-on-error: %s\n") continue_on_error;
   emit_runs_on ~oc runs_on;
   emit_yaml_list ~oc "needs" (List.map find_need needs);
   Option.iter (emit_strategy ~oc) matrix;
