@@ -3964,26 +3964,11 @@ let lint cli =
              | name, Some v -> OpamPackage.create name v
              | name, None -> OpamSwitchState.get_package st name
            in
-           let opam = OpamSwitchState.opam st nv in
-           match OpamPinned.orig_opam_file st (OpamPackage.name nv) opam with
+           match OpamPinned.orig_opam_file st (OpamPackage.name nv) with
            | None -> raise Not_found
            | Some file ->
              let label =
-               match OpamFile.OPAM.metadata_dir opam with
-               | None -> None
-               | Some (None, abs) ->
-                 let filename =
-                   if OpamFilename.starts_with
-                       (OpamPath.Switch.Overlay.dir gt.root st.switch)
-                       (OpamFilename.of_string abs) then
-                     Printf.sprintf "<pinned>/%s" (OpamPackage.to_string nv)
-                   else abs
-                 in
-                 Some filename
-               | Some (Some repo, _rel) ->
-                 Some (Printf.sprintf "<%s>/%s"
-                         (OpamRepositoryName.to_string repo)
-                         (OpamPackage.to_string nv))
+               Printf.sprintf "<pinned>/%s" (OpamPackage.to_string nv)
              in
              [`pkg (file, label)]
          with Not_found ->
@@ -4018,7 +4003,7 @@ let lint cli =
               | `pkg (file, label) ->
                 OpamFileTools.lint_file ~check_upstream ~handle_dirname:false
                   file,
-                label
+                Some label
               | `stdin ->
                 OpamFileTools.lint_channel ~check_upstream ~handle_dirname:false
                   stdin_f stdin,
