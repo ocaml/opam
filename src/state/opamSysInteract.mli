@@ -22,7 +22,7 @@ open OpamStateTypes
     [config] is used to determine Windows depext installation. *)
 val available_packages:
   ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
-  OpamSysPkg.available
+  OpamSysPkg.availability_mode
 
 (* Returns the subset of the given system [pkgs]
    that are currently installed on the system. *)
@@ -41,7 +41,7 @@ val installed_packages:
     Installed packages are computed using {!installed_packages}.
    [config] is used to determine Windows depext installation. *)
 val packages_status:
-  ?env:gt_variables -> ?sys_available:OpamSysPkg.available ->
+  ?env:gt_variables -> ?sys_available:OpamSysPkg.availability_mode ->
   OpamFile.Config.t -> OpamSysPkg.Set.t -> OpamSysPkg.status
 
 (* Returns [true] if the distribution is a stateless installation. It permits to

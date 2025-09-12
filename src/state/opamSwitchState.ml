@@ -221,7 +221,7 @@ let depexts_status_of_packages_raw
         in
         OpamSysInteract.packages_status ?env global_config syspkgs
       in
-      OpamSysPkg.combine_status status pinned
+      OpamSysPkg.combine_status status status_of_pinned
   in
   let ret =
     match status syspkg_set with

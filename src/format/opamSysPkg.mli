@@ -32,23 +32,24 @@ val string_of_status: status -> string
 val combine_status : status -> status -> status
 
 (** System package availability *)
-type available =
-  (* Set of available system packages )
+type availability_mode =
+  (* Set of available system packages *)
   | Available of Set.t
   (* In this system, all packages are considered available *)
   | Suppose_available
   (* Depext system disabled *)
   | No_depexts
 
-val string_of_available : available -> string
+val string_of_available : availability_mode -> string
 
-(* Combine two available. If it is not the same variant, the result is 
+(* Combine two available. If it is not the same variant, the result is
    the smallest one. *)
-val combine_available : available -> available -> available
+val combine_available : availability_mode -> availability_mode ->
+  availability_mode
 
 (**  Returns [true] if both values are [Suppose_available] or both are
      [Available] with equal sets, [false] otherwise. *)
-val check_available_equal : available -> available -> bool
+val check_available_equal : availability_mode -> availability_mode -> bool
 
 (** System packages to install. We need to split per purpose as some
     distribution need to keep up-to-date already installed system packages. See

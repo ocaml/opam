@@ -74,7 +74,7 @@ let combine_status st st' =
   }
 
 (* System package availability *)
-type available = Available of Set.t | Suppose_available | No_depexts
+type availability_mode = Available of Set.t | Suppose_available | No_depexts
 
 let string_of_available = function
 | Available av -> Set.to_string av

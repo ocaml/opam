@@ -19,7 +19,7 @@ module Cache = struct
   type t = {
     cached_repofiles: (repository_name * OpamFile.Repo.t) list;
     cached_opams: (repository_name * OpamFile.OPAM.t OpamPackage.Map.t) list;
-    cached_sys_available_pkgs: OpamSysPkg.available;
+    cached_sys_available_pkgs: OpamSysPkg.availability_mode;
   }
 
   module C = OpamCached.Make (struct
