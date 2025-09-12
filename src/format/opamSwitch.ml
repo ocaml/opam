@@ -30,7 +30,8 @@ let check s =
             eol
           ])
     in
-    (try ignore @@ Re.exec re s; true with Not_found -> false) then
+    (try let _ : Re.Group.t = Re.exec re s in true
+     with Not_found -> false) then
     failwith (Printf.sprintf "Invalid character in switch name %S" s);
   s
 
