@@ -48,6 +48,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Implement incremental opam file loading to process only changed files during repository updates [#6614 @arozovyk - fix #5824]
 
 ## Tree
 
@@ -78,6 +79,7 @@ users)
 
 ## Build
   * Update the dependency constraint on `patch` to now require its stable version [#6663 @kit-ty-kate]
+  * Add patch library dependency to opam-state [#6614 @arozovyk]
 
 ## Infrastructure
 
@@ -124,6 +126,8 @@ users)
   * Remove `getconf` filtering [#6671 @rjbou]
   * Update/homogenise escaping `BASEDIR` using `printf` [#6671 @rjbou]
   * Homogenise here document usage [#6671 @rjbou]
+  * Add opam file loading tests to `update.test` to demonstrate current behaviour of loading full repository instead of only changed files. [#6614 @arozovyk]
+  * Update `action-disk`, `repository` and `update` reftests to reflect incremental loading behavior - fewer opam file reads logged during repository updates [#6614 @arozovyk]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
@@ -164,9 +168,13 @@ users)
 
 ## opam-repository
   * `OpamLocal.rsync_*`: Change the return type from `OpamFilename.*` to `unit` [#6658 @kit-ty-kate]
+  * `OpamRepository.update` changed the `'Changes` return type to include `Patch.operation list` of changes. [#6614 @arozovyk]
+  * `OpamRepositoryBackend.update` type : include the `Patch.t list` in `Update_patch` variant [#6614 @arozovyk]
+  * `OpamRepositoryBackend.get_diff` include `Patch.t list` in the return type (along with `filename`) [#6614 @arozovyk]
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * Add `OpamRepositoryState.load_opams_incremental` to update package definitions based on file change operations [#6614 @arozovyk]
 
 ## opam-solver
 
@@ -199,3 +207,7 @@ users)
   * `OpamStd.String.contains_char`: was removed. Use `Stdlib.String.contains` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.map`: was removed. Use `Stdlib.String.map` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.{starts_with,ends_with,for_all,fold_left}`: were moved to `OpamCompat.String` [#6442 @kit-ty-kate]
+  * Add `OpamFilename.parse_patch_file` that preprocesses and parses a patch file. [#6614 @arozovyk]
+  * Add lower-level `OpamSystem.parse_patch_file` that preprocesses and parses a patch file. [#6614 @arozovyk]
+  * `OpamFilename.patch` use variants to make the input either `Filename.t` or reuse `Patch.diffs` directly. Remove the `?preprocess` argument since the preprocess logic is moved to the `OpamFilename.parse_patch_file` function that is called only in `OpamVCS` (mirroring the previous logic). [#6614 @arozovyk]
+  * `OpamSystem.patch` change the signaure to work directly with `Patch.diffs` (implementation is now the previouly `internal_patch` function), parsing is now done separetly. [#6614 @arozovyk]
