@@ -58,6 +58,13 @@ RUN yum install -y gcc-c++ diffutils
 RUN sed -i 's/ID="almalinux"/ID="centos"/' /etc/os-release
 EOF
     ;;
+  chimera)
+    cat > "$dir/Dockerfile" << EOF
+FROM chimeralinux/chimera
+RUN apk add $mainlibs $ocaml
+RUN apk add g++
+EOF
+    ;;
   debian)
   cat > "$dir/Dockerfile" << EOF
 FROM debian
