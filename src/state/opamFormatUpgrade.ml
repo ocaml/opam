@@ -1163,7 +1163,7 @@ let v2_4_alpha1 = OpamVersion.of_string "2.4~alpha1"
 
 let from_2_3_to_2_4_alpha1_repo ?config:_ root _conf =
   let f = OpamPath.repos_config root in
-  OpamStd.Option.map (fun old_repoconfig ->
+  Option.map (fun old_repoconfig ->
       OpamRepositoryName.Map.map (fun old_repo ->
           let {OpamFile.Repos_config_Legacy.repoc_url; repoc_trust} =
             old_repo
@@ -1176,7 +1176,7 @@ let from_2_3_to_2_4_alpha1_repo ?config:_ root _conf =
 let from_2_3_to_2_4_alpha1 ~on_the_fly root conf =
   if not on_the_fly then
     (let f = OpamPath.repos_config root in
-     OpamStd.Option.iter (fun repos ->
+     Option.iter (fun repos ->
          OpamFile.Repos_config.write f repos)
        (from_2_3_to_2_4_alpha1_repo root conf));
   conf, gtc_repo

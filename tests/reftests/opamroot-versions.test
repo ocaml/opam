@@ -2208,12 +2208,12 @@ Done.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.1 to current
 FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.1 to version current which can't be reverted.
 You may want to back it up before going further.
 Continue? [Y/n] y
 [NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
            opam option jobs=1 --global
-RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 [root-config] Initialised
 [NOTE] Repository root-config has been added to the selections of switch sw-sys-comp only.
@@ -2576,12 +2576,12 @@ Done.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
 FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~alpha to version current which can't be reverted.
 You may want to back it up before going further.
 Continue? [Y/n] y
 [NOTE] The 'jobs' option was reset, its value was 1 and its new value will vary according to the current number of cores on your machine. You can restore the fixed value using:
            opam option jobs=1 --global
-RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 [root-config] Initialised
 [NOTE] Repository root-config has been added to the selections of switch sw-sys-comp only.
@@ -2949,10 +2949,10 @@ Done.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~beta to current
 FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current, which can't be reverted.
 You may want to back it up before going further.
 Continue? [Y/n] y
-RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 [root-config] Initialised
 [NOTE] Repository root-config has been added to the selections of switch sw-sys-comp only.
@@ -3312,10 +3312,10 @@ Done.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
 FMT_UPG                         Format upgrade done
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version current which can't be reverted.
 You may want to back it up before going further.
 Continue? [Y/n] y
-RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 [root-config] Initialised
 [NOTE] Repository root-config has been added to the selections of switch sw-sys-comp only.

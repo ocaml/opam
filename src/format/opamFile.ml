@@ -2082,7 +2082,7 @@ module Repos_configSyntax = struct
          unknown field errors *)
       (let condition =
          (* we need to propagate the BestEffort condition value *)
-         OpamStd.Option.map (fun cond -> fun () -> cond empty) condition
+         Option.map (fun cond -> fun () -> cond empty) condition
        in
        Pp.I.fields ~name ~empty:() []
        -| Pp.I.show_errors ~name ?condition ()
