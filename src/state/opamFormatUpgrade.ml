@@ -769,11 +769,12 @@ let from_1_3_dev7_to_2_0_alpha ~on_the_fly:_ root conf =
       (OpamFile.Config.repositories conf)
   in
   OpamFile.Repos_config.write (OpamPath.repos_config root)
-    (OpamRepositoryName.Map.of_list
-       (List.map (fun (_, repo_name, repoc_url) ->
-            repo_name,
-            {OpamFile.Repos_config.repoc_url; repoc_trust = None})
-           prio_repositories));
+    (OpamFile.Repos_config.create
+       (OpamRepositoryName.Map.of_list
+          (List.map (fun (_, repo_name, url) ->
+               repo_name,
+               OpamFile.Repo_config.create url)
+              prio_repositories)));
   let prio_repositories =
     List.stable_sort (fun (prio1, _, _) (prio2, _, _) -> prio2 - prio1)
       prio_repositories
@@ -1164,11 +1165,12 @@ let v2_4_alpha1 = OpamVersion.of_string "2.4~alpha1"
 let from_2_3_to_2_4_alpha1_repo ?config:_ root _conf =
   let f = OpamPath.repos_config root in
   Option.map (fun old_repoconfig ->
+      OpamFile.Repos_config.create @@
       OpamRepositoryName.Map.map (fun old_repo ->
           let {OpamFile.Repos_config_Legacy.repoc_url; repoc_trust} =
             old_repo
           in
-          {OpamFile.Repos_config.repoc_url; repoc_trust})
+          OpamFile.Repo_config.create ?trust:repoc_trust repoc_url)
         old_repoconfig)
     (OpamFile.Repos_config_Legacy.BestEffort.read_opt
        (OpamFile.make (OpamFile.filename f)))
