@@ -166,12 +166,12 @@ let repo_config_to_repository name repo_config = {
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
-  let repos_map =
+  let repos_config =
     (match OpamFormatUpgrade.as_necessary_repo lock_kind gt with
     | Some repos_map -> repos_map
     | None -> OpamStateConfig.Repos.safe_read ~lock_kind gt)
-    |> OpamFile.Repos_config.repos
   in
+  let repos_map = OpamFile.Repos_config.repos repos_config in
   if OpamStateConfig.is_newer_than_self ~lock_kind gt then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"
@@ -204,6 +204,7 @@ let load lock_kind gt =
     ) repositories;
   let make_rt repos_definitions opams =
     let rt = {
+      repos_config;
       repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
       repos_tmp;

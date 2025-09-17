@@ -1078,6 +1078,7 @@ let get_virtual_switch_state repo_root env =
     Hashtbl.add t repo.repo_name (lazy repo_root); t
   in
   let rt = {
+    repos_config = OpamFile.Repos_config.empty;
     repos_global = gt;
     repos_lock = OpamSystem.lock_none;
     repositories = singl repo;
