@@ -903,6 +903,69 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:git.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-hooks-variables)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff hooks-variables.test hooks-variables.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-hooks-variables)))
+
+(rule
+ (targets hooks-variables.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:hooks-variables.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-hooks-variables.unix)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff hooks-variables.unix.test hooks-variables.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-hooks-variables.unix)))
+
+(rule
+ (targets hooks-variables.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:hooks-variables.unix.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-hooks-variables.win32)
+ (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff hooks-variables.win32.test hooks-variables.win32.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-hooks-variables.win32)))
+
+(rule
+ (targets hooks-variables.win32.out)
+ (deps root-N0REP0)
+ (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:hooks-variables.win32.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-init-ocaml-eval-variables.unix)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

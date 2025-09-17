@@ -131,6 +131,7 @@ users)
   * Add a test showing that `opam upgrade` allows downgrades when necessary [#6690 @kit-ty-kate]
   * Add a test showing the behaviour of `opam tree` on local packages that happen to be already pinned [#6688 @kit-ty-kate]
   * Add a test showing the behaviour of version pins when one of the dependencies isn't up-to-date [#6691 @kit-ty-kate]
+  * Add a test showing the behaviour of pre-defined variables in command hooks [#6659 @rjbou]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
