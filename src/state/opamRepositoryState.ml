@@ -153,6 +153,16 @@ let get_root rt name =
 let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
+let repository_to_repo_config r =
+  r.repo_name, OpamFile.Repo_config.create ?trust:r.repo_trust r.repo_url
+
+let repo_config_to_repository name repo_config = {
+  repo_name = name;
+  repo_url = OpamFile.Repo_config.url repo_config;
+  repo_trust = OpamFile.Repo_config.trust repo_config;
+  }
+
+
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
@@ -167,11 +177,7 @@ let load lock_kind gt =
          load with best-effort (read-only)"
       (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
       (OpamVersion.to_string (OpamFile.Config.root_version));
-  let mk_repo name repo = {
-    repo_name = name;
-    repo_url = OpamFile.Repo_config.url repo;
-    repo_trust = OpamFile.Repo_config.trust repo;
-  } in
+  let mk_repo = repo_config_to_repository in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
   let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
   let repos_tmp = Hashtbl.create 23 in
