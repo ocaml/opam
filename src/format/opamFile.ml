@@ -2067,26 +2067,33 @@ module Repos_configSyntax = struct
   type t = {
     opam_version: opam_version;
     repos : repo OpamRepositoryName.Map.t;
+    another: int option;
   }
 
   let empty = {
     opam_version = file_format_version;
     repos = OpamRepositoryName.Map.empty;
+    another = Some 0
   }
 
   let create ?opam_version repos = {
     opam_version = OpamStd.Option.default file_format_version opam_version;
     repos;
+    another = Some 0;
   }
 
   let opam_version t = t.opam_version
   let repos t = t.repos
   let with_opam_version opam_version t = { t with opam_version }
   let with_repos repos t = { t with repos }
+  let another t = t.another
+  let with_another another t = { t with another = Some another }
 
   let fields = [
     "opam-version", Pp.ppacc with_opam_version opam_version
       (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+    "another", Pp.ppacc_opt with_another another
+      Pp.V.int;
   ]
 
   let sections = [

@@ -1050,6 +1050,8 @@ module Repo_config: sig
   val url: t -> url
   val trust: t -> trust_anchors option
 
+  val fields: (string * (t, value) OpamPp.field_parser) list
+
   include IO_FILE with type t := t
 end
 
@@ -1058,12 +1060,16 @@ module Repos_config: sig
   type t = {
     opam_version: opam_version;
     repos : repo OpamTypes.repository_name_map;
+    another: int option;
   }
 
   val create:
     ?opam_version:opam_version -> repo OpamTypes.repository_name_map -> t
 
   val repos: t -> repo OpamTypes.repository_name_map
+  val with_repos: repo OpamTypes.repository_name_map -> t -> t
+
+  val fields: (string * (t, value) OpamPp.field_parser) list
 
   include IO_FILE with type t := t
   module BestEffort: BestEffortRead with type t := t
