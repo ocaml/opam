@@ -1850,7 +1850,6 @@ let init
       try
         (* Create the content of ~/.opam/config *)
         let repos =
-          let open OpamFile.Repos_config in
           match repo with
           | Some r ->
             [r.repo_name,
