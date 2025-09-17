@@ -26,6 +26,7 @@ val cli2_1: OpamCLIVersion.t
 val cli2_2: OpamCLIVersion.t
 val cli2_3: OpamCLIVersion.t
 val cli2_4: OpamCLIVersion.t
+val cli2_5: OpamCLIVersion.t
 
 (* [cli_from ?platform ?experimental since] validity flag since [since], and no
    removal version. If [experimental] is true, it is marked as is (warning and
