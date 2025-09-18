@@ -524,3 +524,136 @@ Switch invariant: ["comp"]
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed comp.1
 Done.
+### : <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+### : [default] Initialised
+### : 
+### : <><> Creating initial switch 'comp' (invariant ["comp"]) ><><><><><><><><><><><>
+### : 
+### : <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+### : Switch invariant: ["comp"]
+### : [NOTE] External dependency handling not supported for OS family 'unknown'.
+### :        You can disable this check using 'opam option --global depext=false'
+### : 
+### : <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+### : -> installed comp.1
+### : Done.
+### :VI: Unknown family and installability
+### opam switch create depext-unknown --empty
+### opam var --global os-family=unknown
+Added '[os-family "unknown" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pkg:unkn.1>
+opam-version: "2.0"
+### opam install unkn.1
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+The following actions will be performed:
+=== install 1 package
+  - install unkn 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed unkn.1
+Done.
+### <pkg:unkn.2>
+opam-version: "2.0"
+depexts: [ "depext" ]
+### opam install unkn.2
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade unkn 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   unkn.1
+-> installed unkn.2
+Done.
+### :VII: disabled depexts
+### opam option depext=false
+Set to 'false' the field depext in global configuration
+### opam switch create depext-disabled --empty
+### opam var --global os-family=unknown
+Added '[os-family "unknown" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pin:other/other.opam>
+opam-version: "2.0"
+depexts: ["other-depext"]
+### <pin:foo/foo.opam>
+version: "2.0"
+depends: [
+  "other"
+]
+depexts: ["some-depext"]
+### opam install unkn.1
+The following actions will be performed:
+=== install 1 package
+  - install unkn 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed unkn.1
+Done.
+### opam install unkn.2
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade unkn 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   unkn.1
+-> installed unkn.2
+Done.
+### opam install ./other
+[NOTE] Package other does not exist in opam repositories registered in the current switch.
+other is now pinned to file://${BASEDIR}/other (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install other dev (pinned)
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved other.dev  (file://${BASEDIR}/other)
+-> installed other.dev
+Done.
+### opam remove other
+The following actions will be performed:
+=== remove 1 package
+  - remove other dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   other.dev
+Done.
+### opam install ./foo --deps-only
+The following actions will be performed:
+=== install 1 package
+  - install other dev (pinned) [required by foo]
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved other.dev  (file://${BASEDIR}/other)
+-> installed other.dev
+Done.
+### opam remove other foo
+[NOTE] foo is not installed.
+
+The following actions will be performed:
+=== remove 1 package
+  - remove other dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   other.dev
+Done.
+### opam install ./other ./foo
+foo is now pinned to file://${BASEDIR}/foo (version 2.0)
+[other.dev] synchronised (no changes)
+The following actions will be performed:
+=== install 2 packages
+  - install foo   2.0 (pinned)
+  - install other dev (pinned)
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo.2.0  (file://${BASEDIR}/foo)
+-> retrieved other.dev  (file://${BASEDIR}/other)
+-> installed other.dev
+-> installed foo.2.0
+Done.

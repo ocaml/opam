@@ -115,6 +115,7 @@ users)
 ## Reftests
 ### Tests
   *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
+  * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
 
 ### Engine
 
