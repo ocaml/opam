@@ -28,6 +28,27 @@ val status_empty: status
 
 val string_of_status: status -> string
 
+(** Merge status sets *)
+val combine_status : status -> status -> status
+
+(** System package availability *)
+type availability_mode =
+  | Available of Set.t (** Set of available system packages *)
+  | Suppose_available (** In this system, all packages are considered
+                          available *)
+  | No_depexts (** Depext system disabled *)
+
+val string_of_availability_mode : availability_mode -> string
+
+(** Combine two availability_modes. If it is not the same variant, the result is
+    the smallest one. *)
+val combine_availability_mode : availability_mode -> availability_mode ->
+  availability_mode
+
+(** Returns [true] if both values are [Suppose_available] or both are
+    [Available] with equal sets, [false] otherwise. *)
+val check_availability_mode_equal : availability_mode -> availability_mode -> bool
+
 (** System packages to install. We need to split per purpose as some
     distribution need to keep up-to-date already installed system packages. See
     {!OpamSysInteract.install_packages_commands_t}. *)

@@ -48,6 +48,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Compute the list of available depexts on `opam update` [#6489 @arozovyk - fix #6461]
 
 ## Tree
 
@@ -98,6 +99,10 @@ users)
 
 ## Client
   * [NEW] Fetch shared archive sources without checksums [#6627 @psafont - fix #5638]
+  * `OpamSolution` Remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk fix #6489]
+  * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk fix #6461]
+  * `OpamSolution.install_sys_packages_t` check for availability of system packages in `repo_state` before installing depexts [#6489 @arozovyk fix #6489]
+  * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk fix #6489]
 
 ## Shell
 
@@ -126,11 +131,14 @@ users)
   * Homogenise here document usage [#6671 @rjbou]
   * Add a test showing that `opam upgrade` allows downgrades when necessary [#6690 @kit-ty-kate]
   * Add a test showing the behaviour of `opam tree` on local packages that happen to be already pinned [#6688 @kit-ty-kate]
+  * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
+  * Use the new `opam-set-os` command when applicable [#6489 @arozovyk]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
   * Fix support for removing local link directories [#6450 @kit-ty-kate]
   * Bump `OPAM_REPO_SHA` in the github action workflows to allow patch 3.0.0 [#6663 @kit-ty-kate]
+  * Add `opam-set-os` command for reftests that combines setting global `os-family` variable followed by a (silent) `opam update` [#6489 @arozovyk]
 
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]
@@ -169,6 +177,13 @@ users)
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * `OpamSwitchState`: add `update_sys_packages` to update depexts status of a set of packages. [#6489 @arozovyk]
+  * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly [#6489 @arozovyk]
+  * `OpamStateTypes`: add available system package status field in `repos_state` for all the depexts declared in repo's packages. The new field is also added to the cache [#6489 @arozovyk fix #6461]
+  * `OpamRepositoryState.load`: load repo's available system packages [#6489 @arozovyk fix #6461]
+  * `OpamFileTools`: add `get_depexts` to consolidate depexts extraction logic from individual opam files and package maps [#6489 @arozovyk fix #6461]
+  * `OpamSwitchState.update_sys_packages` check for availability of packages in `repo_state` when updating the depexts status of additional packages [#6489 @arozovyk fix #6461]
+  * `OpamFileTools`: add `get_depexts` to consolidate depexts extraction logic from individual opam files and package maps [@arozovyk]
 
 ## opam-solver
 
@@ -176,6 +191,8 @@ users)
   * `OpamFormula.equal_relop`: was added [#6644 @kit-ty-kate]
   * `OpamTypesBase.{action,pkg_flag,simple_arg,arg,filter,command}_equal`: were added [#6644 @kit-ty-kate]
   * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
+  * `OpamSysPkg`: add `availability_mode` type to indicate the availability of system packages on a given system. [#6489 @arozovyk]
+  * `OpamSysPkg`: add `combine_status` `string_of_availability_mode` `combine_availability_mode` `check_availability_mode_equal` functions. [#6489 @arozovyk]
 
 ## opam-core
   * `OpamConsole.log`: does not keep log messages before initialization if the code is ran through a library [#6487 @kit-ty-kate]
