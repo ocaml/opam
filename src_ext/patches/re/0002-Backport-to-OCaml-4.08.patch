@@ -1,0 +1,38 @@
+diff -Naur a/lib/fake/atomic.ml b/lib/fake/atomic.ml
+--- a/lib/fake/atomic.ml	1970-01-01 00:00:00.000000000 +0000
++++ b/lib/fake/atomic.ml	2025-09-18 19:49:12.046023121 +0000
+@@ -0,0 +1,10 @@
++type 'a t = 'a ref
++
++let make x = ref x
++let get x = !x
++let set atomic v = atomic := v
++
++let fetch_and_add atomic n =
++  let v = !atomic in
++  atomic := v + n;
++  v
+diff -Naur a/lib/import.ml b/lib/import.ml
+--- a/lib/import.ml	2025-09-18 19:49:12.035091716 +0000
++++ b/lib/import.ml	2025-09-18 19:49:12.046114163 +0000
+@@ -1,4 +1,19 @@
+-module List = Stdlib.ListLabels
++module List = struct
++  let[@warning "-32"] rec equal ~eq l1 l2 = match l1, l2 with
++    | [], [] -> true
++    | [], _::_ | _::_, [] -> false
++    | x::xs, y::ys -> if eq x y then equal ~eq xs ys else false
++
++  let[@warning "-32"] rec compare ~cmp l1 l2 = match l1, l2 with
++    | [], [] -> 0
++    | [], _::_ -> -1
++    | _::_, [] -> 1
++    | x::xs, y::ys ->
++        let r = cmp x y in
++        if r = 0 then compare ~cmp xs ys else r
++
++  include Stdlib.ListLabels
++end
+ 
+ module Poly = struct
+   let equal = ( = )
