@@ -3,7 +3,7 @@ N0REP0
 opam-version: "2.0"
 depexts: "depext-1"
 ### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
-### opam var --global os-family=dummy-failure
+### opam-set-os dummy-failure
 Added '[os-family "dummy-failure" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam switch create test --empty
 ### :I: Erroneous package manager install is not blocking :
@@ -38,7 +38,7 @@ opam believes some required external dependencies are missing. opam can:
 ### #         where '*' is for all and '0' for none
 ### #         installed defaults to none, and availabel defaults to all
 ### :II:1:a: SUCCESS, all installed
-### opam var --global os-family=dummy-success
+### opam-set-os dummy-success
 Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
 ### <pkg:foo.1>
 opam-version: "2.0"
@@ -77,7 +77,7 @@ The following actions will be performed:
 -> removed   foo.1
 Done.
 ### :II:1:b: Success, depext-ok installed, all available
-### opam var --global os-family=dummy-success:depext-ok:
+### opam-set-os dummy-success:depext-ok:
 Added '[os-family "dummy-success:depext-ok:" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo | sed-cmd echo
 The following actions will be performed:
@@ -113,7 +113,7 @@ The following actions will be performed:
 -> removed   foo.1
 Done.
 ### :II:1:c: Success, none installed, depext-avail available
-### opam var --global os-family=dummy-success::depext-avail
+### opam-set-os dummy-success::depext-avail
 Added '[os-family "dummy-success::depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo
 [ERROR] Package foo depends on the unavailable system packages 'depext-1', 'depext-ok' and 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
@@ -122,7 +122,7 @@ Added '[os-family "dummy-success::depext-avail" "Set through 'opam var'"]' to fi
 [NOTE] foo is not installed.
 
 Nothing to do.
-### opam var --global os-family=dummy-success:*:
+### opam-set-os dummy-success:*:
 Added '[os-family "dummy-success:*:" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo
 The following actions will be performed:
@@ -141,7 +141,7 @@ The following actions will be performed:
 -> removed   foo.1
 Done.
 ### :II:1:d: Success, none installed, all available
-### opam var --global os-family=dummy-success:0:
+### opam-set-os dummy-success:0:
 Added '[os-family "dummy-success:0:" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo | sed-cmd echo
 The following actions will be performed:
@@ -177,7 +177,7 @@ The following actions will be performed:
 -> removed   foo.1
 Done.
 ### :II:1:e: Success, depext-ok installed, depext-avail available
-### opam var --global os-family=dummy-success:depext-ok:depext-avail
+### opam-set-os dummy-success:depext-ok:depext-avail
 Added '[os-family "dummy-success:depext-ok:depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo
 [ERROR] Package foo depends on the unavailable system packages 'depext-1' and 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
@@ -187,7 +187,7 @@ Added '[os-family "dummy-success:depext-ok:depext-avail" "Set through 'opam var'
 
 Nothing to do.
 ### :II:2:a: SUCCESS, all installed
-### opam var --global os-family=dummy-failure
+### opam-set-os dummy-failure
 Added '[os-family "dummy-failure" "Set through 'opam var'"]' to field global-variables in global configuration
 ### <pkg:foo.1>
 opam-version: "2.0"
@@ -223,7 +223,7 @@ opam believes some required external dependencies are missing. opam can:
 
 Nothing to do.
 ### :II:2:b: Failure, depext-ok installed, all available
-### opam var --global os-family=dummy-failure:depext-ok:
+### opam-set-os dummy-failure:depext-ok:
 Added '[os-family "dummy-failure:depext-ok:" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo | sed-cmd false
 The following actions will be performed:
@@ -256,7 +256,7 @@ opam believes some required external dependencies are missing. opam can:
 
 Nothing to do.
 ### :II:2:c: Failure, none installed, depext-avail available
-### opam var --global os-family=dummy-failure::depext-avail
+### opam-set-os dummy-failure::depext-avail
 Added '[os-family "dummy-failure::depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo
 [ERROR] Package foo depends on the unavailable system packages 'depext-1', 'depext-ok' and 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
@@ -265,7 +265,7 @@ Added '[os-family "dummy-failure::depext-avail" "Set through 'opam var'"]' to fi
 [NOTE] foo is not installed.
 
 Nothing to do.
-### opam var --global os-family=dummy-failure:*:
+### opam-set-os dummy-failure:*:
 Added '[os-family "dummy-failure:*:" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo
 The following actions will be performed:
@@ -284,7 +284,7 @@ The following actions will be performed:
 -> removed   foo.1
 Done.
 ### :II:2:d: Failure, none installed, all available
-### opam var --global os-family=dummy-failure:0:
+### opam-set-os dummy-failure:0:
 Added '[os-family "dummy-failure:0:" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo | sed-cmd false
 The following actions will be performed:
@@ -317,7 +317,7 @@ opam believes some required external dependencies are missing. opam can:
 
 Nothing to do.
 ### :II:2:e: Failure, depext-ok installed, depext-avail available
-### opam var --global os-family=dummy-failure:depext-ok:depext-avail
+### opam-set-os dummy-failure:depext-ok:depext-avail
 Added '[os-family "dummy-failure:depext-ok:depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install foo
 [ERROR] Package foo depends on the unavailable system packages 'depext-1' and 'depext-unav'. You can use `--no-depexts' to attempt installation anyway.
@@ -332,7 +332,7 @@ Nothing to do.
 ### <pkg:bar.1>
 opam-version: "2.0"
 depexts: ["depext-ok" "depext-avail"]
-### opam var --global os-family=dummy-success:depext-ok:depext-avail
+### opam-set-os dummy-success:depext-ok:depext-avail
 Added '[os-family "dummy-success:depext-ok:depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
 ### :III:1:a: normal install
 ### opam install bar | sed-cmd echo
@@ -401,7 +401,7 @@ Done.
 ### <pkg:baz.1>
 opam-version: "2.0"
 depexts: ["depext-ok" "depext-unav"]
-### opam var --global os-family=dummy-success:depext-ok:0
+### opam-set-os dummy-success:depext-ok:0
 Added '[os-family "dummy-success:depext-ok:0" "Set through 'opam var'"]' to field global-variables in global configuration
 ### :III:2:a: normal install
 ### opam install baz
@@ -439,7 +439,7 @@ Reverted field depext-bypass in switch bypass
 ### <pkg:qux.1>
 opam-version: "2.0"
 depexts: ["depext-ok"]
-### opam var --global os-family=dummy-success
+### opam-set-os dummy-success
 Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install qux | sed-cmd echo
 The following actions will be performed:
@@ -465,7 +465,7 @@ opam believes some required external dependencies are missing. opam can:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed qux.1
 Done.
-### opam var --global os-family=dummy-success:depext-ok:
+### opam-set-os dummy-success:depext-ok:
 Added '[os-family "dummy-success:depext-ok:" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam reinstall qux
 The following actions will be performed:
@@ -476,7 +476,7 @@ The following actions will be performed:
 -> removed   qux.1
 -> installed qux.1
 Done.
-### opam var --global os-family=dummy-success:0:
+### opam-set-os dummy-success:0:
 Added '[os-family "dummy-success:0:" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam reinstall qux | sed-cmd echo
 [WARNING] Opam package qux.1 depends on the following system package that can no longer be found: depext-ok
