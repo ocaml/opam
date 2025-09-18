@@ -138,6 +138,7 @@ users)
   * Fix a failure when two hashes start with the same two characters [#6793 @kit-ty-kate]
   * Add a test showing the behaviour of `opam init --config` when the file given does not exist [#5979 @kit-ty-kate @rjbou]
   * Add a test for switch link when a local switch is already present [#6860 @rjbou]
+  * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
 
 ### Engine
 
