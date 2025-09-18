@@ -142,6 +142,7 @@ users)
   * Add a test showing the behaviour of `opam var <pkg>:opamfile` [#6659 @kit-ty-kate]
   * Add a test to show homogeneity of outputs on verbose between sandboxed and non sandboxed commands (with `-vv`) [#6675 @rjbou]
   * Update `sed-cmd` reftest reftest [#6675 @rjbou]
+  * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
