@@ -214,3 +214,4 @@ users)
   * `OpamStd.String.map`: was removed. Use `Stdlib.String.map` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.{starts_with,ends_with,for_all,fold_left}`: were moved to `OpamCompat.String` [#6442 @kit-ty-kate]
   * `OpamFilename.create`: deduplicate the directory separator character when the basename starts with one [#6703 @rjbou]
+  * `OpamCompat.Lazy`: add `map_val` [#6679 @rjbou}
