@@ -1106,6 +1106,7 @@ let get_virtual_switch_state repo_root env =
     repos_definitions = singl repo_def;
     repo_opams = singl opams;
     repos_tmp;
+    repos_sys_available_pkgs = Some OpamSysPkg.Suppose_available;
   } in
   let gt =
     {gt with global_variables =

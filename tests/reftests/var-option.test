@@ -835,6 +835,8 @@ ${BASEDIR}/OPAM/var-opamfile/.opam-switch/packages/test.1/opam
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
+[NOTE] External dependency handling not supported for OS family 'ipsum'.
+       You can disable this check using 'opam option --global depext=false'
 Now run 'opam upgrade' to apply any package updates.
 ### opam var test:opamfile
 ${BASEDIR}/OPAM/var-opamfile/.opam-switch/packages/test.1/opam
