@@ -2133,9 +2133,10 @@ let update cli =
        $(b,--repositories) is also specified)." in
   let depexts_only =
     mk_flag ~cli (cli_from cli2_1) ["depexts"]
-      "Request the system package manager to update its databases (skipping \
-       all opam packages, unless $(b,--development) or $(b,--repositories) is \
-       also specified). This generally requires $(b,sudo) rights." in
+      "Request the system package manager to update its databases and refresh \
+       the cached system package availability (skipping all opam packages, \
+       unless $(b,--development) or $(b,--repositories) is also specified). \
+       This generally requires $(b,sudo) rights." in
   let upgrade =
     mk_flag ~cli cli_original ["u";"upgrade"]
       "Automatically run $(b,opam upgrade) after the update." in
@@ -2163,7 +2164,11 @@ let update cli =
       ();
     OpamClientConfig.update ();
     OpamGlobalState.with_ `Lock_write @@ fun gt ->
-    if depexts_only then OpamSysInteract.update gt.config;
+    if depexts_only then
+      (OpamSysInteract.update gt.config;
+       OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
+       OpamRepositoryState.drop
+         (OpamUpdate.update_sys_available_cache ~force:true rt));
     if depexts_only && not (repos_only || dev_only) then () else
     let success, changed, rt =
       OpamClient.update gt

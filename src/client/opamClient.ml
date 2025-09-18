@@ -2204,6 +2204,9 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
           nvs (t, deps_of_packages))
       dname_map (t, OpamPackage.Set.empty)
   in
+  let t =
+    OpamSwitchState.update_sys_packages deps_of_packages t
+  in
   let pkg_skip, pkg_new =
     get_installed_atoms t atoms in
   let atoms, deps_atoms =

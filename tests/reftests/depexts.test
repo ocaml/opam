@@ -513,6 +513,8 @@ No configuration file found, using built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
 
 <><> Creating initial switch 'comp' (invariant ["comp"]) ><><><><><><><><><><><>
 
@@ -595,6 +597,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved other.dev  (file://${BASEDIR}/other)
 -> installed other.dev
+[NOTE] Requirement for system package other-depext overridden in this switch. Use `opam option 'depext-bypass-="other-depext"'' to revert.
 Done.
 ### opam remove other
 The following actions will be performed:
@@ -636,6 +639,7 @@ The following actions will be performed:
 -> retrieved other.dev  (file://${BASEDIR}/other)
 -> installed other.dev
 -> installed foo.2.0
+[NOTE] Requirement for system package some-depext overridden in this switch. Use `opam option 'depext-bypass-="some-depext"'' to revert.
 Done.
 ### opam option depext=true
 Set to 'true' the field depext in global configuration
@@ -649,8 +653,8 @@ Added '[os-family "dummy-success::poll-sys-dep" "Set through 'opam var'"]' to fi
 ### OPAMDEBUGSECTIONS=XSYS OPAMDEBUG=-3 OPAMDRYRUN=1
 ### opam install test-poll-pkg
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
-XSYS                            Computing depexts installed for 6 system packages
 XSYS                            Computing depexts availability for 6 system packages
+XSYS                            Computing depexts installed for 6 system packages
 The following actions will be simulated:
 === install 1 package
   - install test-poll-pkg 1
@@ -679,7 +683,6 @@ depexts: ["poll-sys-dep"]
 ### opam pin ./test-poll-pkg-pin
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 XSYS                            Computing depexts installed for 6 system packages
-XSYS                            Computing depexts availability for 6 system packages
 [NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
 test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
 
@@ -688,8 +691,6 @@ XSYS                            Computing depexts availability for 1 system pack
 The following actions will be simulated:
 === install 1 package
   - install test-poll-pkg-pin dev (pinned)
-XSYS                            Computing depexts installed for 1 system package
-XSYS                            Computing depexts availability for 1 system package
 
 The following system packages will first need to be installed:
     poll-sys-dep

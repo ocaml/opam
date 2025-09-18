@@ -43,6 +43,10 @@ val available_packages:
   ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
   OpamSysPkg.availability_mode
 
+val available_packages_and_family:
+  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
+  os_family * OpamSysPkg.availability_mode
+
 (* Returns the subset of the given system [pkgs] that are currently installed
     on the system. This function queries the system package manager (e.g., apt,
     yum, pacman, brew, etc.) to determine which of the provided packages are
