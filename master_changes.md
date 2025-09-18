@@ -143,6 +143,7 @@ users)
   * Add a test to show homogeneity of outputs on verbose between sandboxed and non sandboxed commands (with `-vv`) [#6675 @rjbou]
   * Update `sed-cmd` reftest reftest [#6675 @rjbou]
   * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
+  * Use the new `opam-set-os` command when applicable [#6489 @arozovyk]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
@@ -151,6 +152,7 @@ users)
   * Allow `sed-cmd` to parse even if no space is after the command [#6675 @rjbou]
   * Harden the regexp used for substituting variable checksums [#6710 @kit-ty-kate]
   * Add the `unset` builtin [#6708 @kit-ty-kate]
+  * Add `opam-set-os` command for reftests that combines setting global `os-family` variable followed by a (silent) `opam update` [#6489 @arozovyk]
 
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]
