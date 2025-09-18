@@ -510,3 +510,213 @@ The following actions would be performed:
   - recompile baz 2      [uses foo]
 === upgrade 1 package
   - upgrade   foo 3 to 4
+### :::::::::::::::::::::
+### : Make sure opam upgrade can downgrade if necessary
+### :::::::::::::::::::::
+### <pkg:dep.1>
+opam-version: "2.0"
+### <pkg:dep.2>
+opam-version: "2.0"
+### :a: upgrade -a local package
+### opam switch create downgrade-all-local --empty
+### <pin:downgrade/opam>
+opam-version: "2.0"
+depends: "dep" {= "2"}
+### opam pin add ./downgrade
+[NOTE] Package downgrade does not exist in opam repositories registered in the current switch.
+downgrade is now pinned to file://${BASEDIR}/downgrade (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep       2            [required by downgrade]
+  - install downgrade dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep.2
+-> retrieved downgrade.dev  (file://${BASEDIR}/downgrade)
+-> installed downgrade.dev
+Done.
+### <pin:downgrade/opam>
+opam-version: "2.0"
+depends: "dep" {= "1"}
+### opam upgrade -a ./downgrade
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[downgrade.dev] synchronised (file://${BASEDIR}/downgrade)
+[downgrade] Installing new package description from upstream file://${BASEDIR}/downgrade
+
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade dep       2 to 1       [required by downgrade]
+=== recompile 1 package
+  - recompile downgrade dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep.2
+-> installed dep.1
+-> retrieved downgrade.dev  (no changes)
+-> removed   downgrade.dev
+-> installed downgrade.dev
+Done.
+### :b: upgrade local package
+### opam switch create downgrade-local --empty
+### <pin:downgrade/opam>
+opam-version: "2.0"
+depends: "dep" {= "2"}
+### opam pin add ./downgrade
+[NOTE] Package downgrade does not exist in opam repositories registered in the current switch.
+downgrade is now pinned to file://${BASEDIR}/downgrade (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep       2            [required by downgrade]
+  - install downgrade dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep.2
+-> retrieved downgrade.dev  (file://${BASEDIR}/downgrade)
+-> installed downgrade.dev
+Done.
+### <pin:downgrade/opam>
+opam-version: "2.0"
+depends: "dep" {= "1"}
+### opam upgrade ./downgrade
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[downgrade.dev] synchronised (file://${BASEDIR}/downgrade)
+[downgrade] Installing new package description from upstream file://${BASEDIR}/downgrade
+
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade dep       2 to 1       [required by downgrade]
+=== recompile 1 package
+  - recompile downgrade dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep.2
+-> installed dep.1
+-> retrieved downgrade.dev  (no changes)
+-> removed   downgrade.dev
+-> installed downgrade.dev
+Done.
+### :c: upgrade --show -a local package
+### opam switch create downgrade-show-all-local --empty
+### <pin:downgrade/opam>
+opam-version: "2.0"
+depends: "dep" {= "2"}
+### opam pin add ./downgrade
+[NOTE] Package downgrade does not exist in opam repositories registered in the current switch.
+downgrade is now pinned to file://${BASEDIR}/downgrade (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep       2            [required by downgrade]
+  - install downgrade dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep.2
+-> retrieved downgrade.dev  (file://${BASEDIR}/downgrade)
+-> installed downgrade.dev
+Done.
+### <pin:downgrade/opam>
+opam-version: "2.0"
+depends: "dep" {= "1"}
+### opam upgrade --show -a ./downgrade
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[downgrade.dev] synchronised (file://${BASEDIR}/downgrade)
+[downgrade] Installing new package description from upstream file://${BASEDIR}/downgrade
+
+The following actions would be performed:
+=== downgrade 1 package
+  - downgrade dep       2 to 1       [required by downgrade]
+=== recompile 1 package
+  - recompile downgrade dev (pinned)
+### :d: upgrade --show local package
+### opam switch create downgrade-show-local --empty
+### <pin:downgrade/opam>
+opam-version: "2.0"
+depends: "dep" {= "2"}
+### opam pin add ./downgrade
+[NOTE] Package downgrade does not exist in opam repositories registered in the current switch.
+downgrade is now pinned to file://${BASEDIR}/downgrade (version dev)
+
+The following actions will be performed:
+=== install 2 packages
+  - install dep       2            [required by downgrade]
+  - install downgrade dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep.2
+-> retrieved downgrade.dev  (file://${BASEDIR}/downgrade)
+-> installed downgrade.dev
+Done.
+### <pin:downgrade/opam>
+opam-version: "2.0"
+depends: "dep" {= "1"}
+### opam upgrade --show ./downgrade
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[downgrade.dev] synchronised (file://${BASEDIR}/downgrade)
+[downgrade] Installing new package description from upstream file://${BASEDIR}/downgrade
+
+The following actions would be performed:
+=== downgrade 1 package
+  - downgrade dep       2 to 1       [required by downgrade]
+=== recompile 1 package
+  - recompile downgrade dev (pinned)
+### :e: upgrade [-a|--show] repo-pkg
+### opam switch create downgrade-repo-pkg --empty
+### <pkg:pkg.1>
+opam-version: "2.0"
+depends: "dep" {= "2"}
+### opam install pkg
+The following actions will be performed:
+=== install 2 packages
+  - install dep 2 [required by pkg]
+  - install pkg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep.2
+-> installed pkg.1
+Done.
+### <pkg:pkg.1>
+opam-version: "2.0"
+depends: "dep" {= "1"}
+### opam upgrade --show pkg
+The following actions would be performed:
+=== downgrade 1 package
+  - downgrade dep 2 to 1 [required by pkg]
+=== recompile 1 package
+  - recompile pkg 1
+### opam upgrade --all --no pkg
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade dep 2 to 1 [required by pkg]
+=== recompile 1 package
+  - recompile pkg 1
+
+Proceed with 1 downgrade and 1 recompilation? [Y/n] n
+# Return code 10 #
+### opam upgrade --no pkg
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade dep 2 to 1 [required by pkg]
+=== recompile 1 package
+  - recompile pkg 1
+
+Proceed with 1 downgrade and 1 recompilation? [Y/n] n
+# Return code 10 #
+### opam upgrade
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade dep 2 to 1
+=== recompile 1 package
+  - recompile pkg 1      [uses dep]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   dep.2
+-> removed   pkg.1
+-> installed dep.1
+-> installed pkg.1
+Done.

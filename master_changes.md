@@ -124,6 +124,7 @@ users)
   * Remove `getconf` filtering [#6671 @rjbou]
   * Update/homogenise escaping `BASEDIR` using `printf` [#6671 @rjbou]
   * Homogenise here document usage [#6671 @rjbou]
+  * Add a test showing that `opam upgrade` allows downgrades when necessary [#6690 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
