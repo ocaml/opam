@@ -609,8 +609,6 @@ other is now pinned to file://${BASEDIR}/other (version dev)
 The following actions will be performed:
 === install 1 package
   - install other dev (pinned)
-[NOTE] External dependency handling not supported for OS family 'unknown'.
-       You can disable this check using 'opam option --global depext=false'
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved other.dev  (file://${BASEDIR}/other)
@@ -628,8 +626,6 @@ Done.
 The following actions will be performed:
 === install 1 package
   - install other dev (pinned) [required by foo]
-[NOTE] External dependency handling not supported for OS family 'unknown'.
-       You can disable this check using 'opam option --global depext=false'
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved other.dev  (file://${BASEDIR}/other)
@@ -652,8 +648,6 @@ The following actions will be performed:
 === install 2 packages
   - install foo   2.0 (pinned)
   - install other dev (pinned)
-[NOTE] External dependency handling not supported for OS family 'unknown'.
-       You can disable this check using 'opam option --global depext=false'
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved foo.2.0  (file://${BASEDIR}/foo)
@@ -671,11 +665,8 @@ depexts: ["poll-sys-dep"]
 ### opam-set-os dummy-success::poll-sys-dep
 Added '[os-family "dummy-success::poll-sys-dep" "Set through 'opam var'"]' to field global-variables in global configuration
 ### sh -c "OPAMDEBUGSECTIONS=XSYS opam install test-poll-pkg --dry-run --debug-level=3 -y 2>&1 | grep 'computing depexts status' | sed 's/^[0-9:.]*  *//'"
-XSYS                            computing depexts status for 6 system packages (querying system availability)
 ### <pin:test-poll-pkg-pin/test-poll-pkg-pin.opam>
 opam-version: "2.0"
 depexts: ["poll-sys-dep"]
 ### sh -c "OPAMDEBUGSECTIONS=XSYS opam pin ./test-poll-pkg-pin --dry-run --debug-level=3 -y 2>&1 | grep 'computing depexts status' | sed 's/^[0-9:.]*  *//'"
-XSYS                            computing depexts status for 6 system packages (querying system availability)
-XSYS                            computing depexts status for 1 system packages (querying system availability)
 XSYS                            computing depexts status for 1 system packages (querying system availability)
