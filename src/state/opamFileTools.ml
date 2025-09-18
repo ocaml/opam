@@ -1508,3 +1508,18 @@ let sort_opam opam =
   |> with_pin_depends @@ fst_sort ~comp:OpamPackage.compare opam.pin_depends
   |> with_extra_files_opt @@ Option.map fst_sort opam.extra_files
   |> with_extra_sources @@ fst_sort opam.extra_sources
+
+let get_depexts ~env opams =
+  let open OpamSysPkg.Set.Op in
+  OpamPackage.Map.fold (fun _ opam s ->
+      let depexts =
+        List.fold_left (fun acc (names, filter) ->
+            if OpamFilter.eval_to_bool ~default:false env filter then
+              names ++ acc
+            else
+              acc)
+          OpamSysPkg.Set.empty
+          (OpamFile.OPAM.depexts opam)
+      in
+      depexts ++ s)
+    opams OpamSysPkg.Set.empty
