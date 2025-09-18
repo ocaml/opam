@@ -234,6 +234,10 @@ val remove_package_metadata: package -> 'a switch_state -> 'a switch_state
     changed. *)
 val update_pin: package -> OpamFile.OPAM.t -> 'a switch_state -> 'a switch_state
 
+(** Given a [package_set], updates the [sys_pkg_status package_map] with the
+    system dependencies of each package in the set. *)
+val update_sys_packages: package_set -> 'a switch_state -> 'a switch_state
+
 (** Updates the selected repositories in the given switch (does not load the
     full switch state, but takes a transient write lock on the switch, so make
     sure not to hold other locks to avoid deadlocks). Sets the switch
