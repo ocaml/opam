@@ -1313,6 +1313,10 @@ let available_packages ?(env=OpamVariable.Map.empty) config packages =
     | Openbsd -> OpamSysPkg.Suppose_available
   else available_packages_t ~env config packages
 
+let available_packages_and_family ?(env=OpamVariable.Map.empty) config packages =
+  let avail = available_packages ~env config packages in
+  family ~env (), avail
+
 let packages_status ?(env=OpamVariable.Map.empty) ?sys_available config packages =
   if OpamSysPkg.Set.is_empty packages then OpamSysPkg.status_empty else
     let open OpamSysPkg.Set.Op in

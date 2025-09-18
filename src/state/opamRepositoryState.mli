@@ -22,7 +22,8 @@ module Cache: sig
   val load:
     dirname ->
     (OpamFile.Repo.t repository_name_map *
-     OpamFile.OPAM.t package_map repository_name_map)
+     OpamFile.OPAM.t package_map repository_name_map *
+     repo_syspkgs_available)
       option
   val remove: unit -> unit
 end
@@ -71,6 +72,13 @@ val load_opams_from_diff:
 val load_repo:
   repository -> OpamFilename.Dir.t ->
   OpamFile.Repo.t * OpamFile.OPAM.t OpamPackage.Map.t
+
+(** Get the availability status of system packages of loaded repositories.
+    This function also checks if the stored os_family is the same, if not,
+    returns [None] *)
+val syspkgs_available:
+  ?env:gt_variables -> repo_syspkgs_available
+  -> OpamSysPkg.availability_mode option
 
 (** Get the (lazily extracted) repository root for the given repository *)
 val get_root: 'a repos_state -> repository_name -> OpamFilename.Dir.t

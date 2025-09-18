@@ -101,14 +101,6 @@ Try 'opam install --help' or 'opam --help' for more information.
 ### opam option depext=false
 Set to 'false' the field depext in global configuration
 ### opam install foo --depext-only
-
-The following system packages will first need to be installed:
-    sys-foo
-
-<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
-
-+ /usr/bin/echo "sys-foo"
-- sys-foo
 ### opam option depext=true
 Set to 'true' the field depext in global configuration
 ### :I:6: No confirmation
