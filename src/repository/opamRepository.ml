@@ -142,7 +142,8 @@ let fetch_from_cache =
       in
       no_concurrent_dls checksum try_cache_dl cache_urls
 
-let validate_and_add_to_cache label url cache_dir file checksums =
+let validate_and_add_to_cache label url cache_dir file checksums signed_by =
+  ignore signed_by; (* TODO *)
   try
     let mismatch, expected =
       OpamStd.List.find_map (fun c ->
@@ -172,7 +173,7 @@ let validate_and_add_to_cache label url cache_dir file checksums =
 (* [cache_dir] used to add to cache only *)
 let pull_from_upstream
     label ?full_fetch ?(working_dir=false) ?subpath
-    cache_dir destdir checksums url =
+    cache_dir destdir checksums signed_by url =
   let module B = (val url_backend url: OpamRepositoryBackend.S) in
   let cksum = match checksums with [] -> None | c::_ -> Some c in
   let text =
@@ -219,7 +220,7 @@ let pull_from_upstream
   @@| function
   | (Result (Some file) | Up_to_date (Some file)) as ret ->
     if OpamRepositoryConfig.(!r.force_checksums) = Some false
-    || validate_and_add_to_cache label url cache_dir file checksums
+    || validate_and_add_to_cache label url cache_dir file checksums signed_by
     then ret
     else
     let m = "Checksum mismatch" in
@@ -228,16 +229,16 @@ let pull_from_upstream
   | Not_available _ as na -> na
 
 let pull_from_mirrors label ?full_fetch ?working_dir ?subpath
-    cache_dir destdir checksums urls =
+    cache_dir destdir checksums signed_by urls =
   let rec aux = function
     | [] -> invalid_arg "pull_from_mirrors: empty mirror list"
     | [url] ->
       pull_from_upstream label ?full_fetch ?working_dir ?subpath
-        cache_dir destdir checksums url
+        cache_dir destdir checksums signed_by url
       @@| fun r -> url, r
     | url::mirrors ->
       pull_from_upstream label ?full_fetch ?working_dir ?subpath
-        cache_dir destdir checksums url
+        cache_dir destdir checksums signed_by url
       @@+ function
       | Not_available (_,s) ->
         OpamConsole.warning "%s: download of %s failed (%s), trying mirror"
@@ -258,7 +259,7 @@ let pull_from_mirrors label ?full_fetch ?working_dir ?subpath
 (* handle subpathes *)
 let pull_tree_t
     ?full_fetch ?cache_dir ?(cache_urls=[]) ?working_dir
-    dirnames checksums remote_urls =
+    dirnames checksums signed_by remote_urls =
   let extract_archive =
     let fallback success = function
       | None -> success ()
@@ -375,15 +376,15 @@ let pull_tree_t
             subpath
           | _ -> None, tmpdir, None
         in
-        fun label checksums remote_urls ->
+        fun label checksums signed_by remote_urls ->
           pull_from_mirrors (OpamStd.Option.default label label0)
             ?full_fetch ?working_dir ?subpath cache_dir destdir
-            checksums remote_urls
+            checksums signed_by remote_urls
           @@| fun (url, res) ->
           (OpamUrl.to_string_w_subpath subpath url),
           res
       in
-      pull label checksums remote_urls
+      pull label checksums signed_by remote_urls
       @@+ function
       | _, Up_to_date None -> Done (Up_to_date "no changes")
       | url, (Up_to_date (Some archive) | Result (Some archive)) ->
@@ -407,7 +408,7 @@ let revision dirname url =
   B.revision dirname
 
 let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
-    file checksums remote_urls =
+    file checksums signed_by remote_urls =
   (match cache_dir with
    | Some cache_dir ->
      let text = OpamProcess.make_command_text label "dl" in
@@ -439,14 +440,14 @@ let pull_file label ?cache_dir ?(cache_urls=[])  ?(silent_hits=false)
            label ^ ": Missing checksum, and `--require-checksums` was set."))
     else
       OpamFilename.with_tmp_dir_job (fun tmpdir ->
-          pull_from_mirrors label cache_dir tmpdir checksums remote_urls
+          pull_from_mirrors label cache_dir tmpdir checksums signed_by remote_urls
           @@| function
           | _, Up_to_date _ -> assert false
           | _, Result (Some f) -> OpamFilename.move ~src:f ~dst:file; Result ()
           | _, Result None -> let m = "is a directory" in Not_available (Some m, m)
           | _, (Not_available _ as na) -> na)
 
-let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
+let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums signed_by remote_urls =
   let text = OpamProcess.make_command_text label "dl" in
   OpamProcess.Job.with_text text @@
   fetch_from_cache cache_dir cache_urls checksums @@+ function
@@ -456,7 +457,7 @@ let pull_file_to_cache label ~cache_dir ?(cache_urls=[]) checksums remote_urls =
     Done (Result (OpamUrl.to_string url))
   | Not_available _ ->
     OpamFilename.with_tmp_dir_job (fun tmpdir ->
-        pull_from_mirrors label (Some cache_dir) tmpdir checksums remote_urls
+        pull_from_mirrors label (Some cache_dir) tmpdir checksums signed_by remote_urls
         @@| function
         | _, Up_to_date _ -> assert false
         | url, Result (Some _) -> Result (OpamUrl.to_string url)
