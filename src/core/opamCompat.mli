@@ -40,6 +40,9 @@ end
 module Lazy : sig
   (* NOTE: OCaml >= 4.13 *)
   val map : ('a -> 'b) -> 'a Lazy.t -> 'b Lazy.t
+
+  (* NOTE: OCaml >= 4.13 *)
+  val map_val: ('a -> 'b) -> 'a Lazy.t -> 'b Lazy.t
 end
 
 module Unix : sig
