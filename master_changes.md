@@ -179,6 +179,7 @@ users)
   * `OpamStateTypes`: add `os_family` type that was defined and used internally in `OpamSysInteract` [#6489 @rjbou]
   * `OpamSysInteract`: add `disable_depexts_note` to be used to display a note to disable depexts [#6489 @rjbou]
   * `OpamSysInteract`: add some os families helpers `string_of_os_family`, `equal_os_family`, `same_os_family` [#6489 @rjbou]
+  * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly. These funct-ions are now no-op if the given system packages set is empty.  [#6489 @arozovyk]
 
 ## opam-solver
 
@@ -187,6 +188,8 @@ users)
   * `OpamFile.URL` was moved to `OpamFile.URL_legacy` and a simpler `OpamFile.URL` module was created only containing non-IO functions removing the outdated `url` file support [#6827 @kit-ty-kate]
   * `OpamFile.Descr.of_legacy`: was added [#6827 @kit-ty-kate]
   * `OpamFile.URL.of_legacy`: was added [#6827 @kit-ty-kate]
+  * `OpamSysPkg`: add `availability_mode` type to indicate the availability of system packages on a given system [#6489 @arozovyk]
+  * `OpamSysPkg`: add `equal_availability_mode` function [#6489 @arozovyk]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
