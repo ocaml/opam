@@ -95,6 +95,8 @@ Switch invariant: ["meta-compiler" {= "1"}]
 -> installed meta-compiler.1
 -> installed post-dep-compiler.1
 Done.
+### opam option depext=false
+Set to 'false' the field depext in global configuration
 ### <REPO2/repo>
 opam-version: "2.0"
 ### mkdir REPO2/packages
