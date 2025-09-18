@@ -284,6 +284,7 @@ type command =
              output: string option;
              unordered: bool;
              sort: bool;}
+  | Set_os of string
   | Export of (string * [`eq | `pluseq | `eqplus] * string) list
   | Unset of string list
   | Comment of string
@@ -537,6 +538,14 @@ module Parse = struct
         Json { files = args; filter = rewr; }
       | Some "unset" ->
         Unset args
+      | Some "opam-set-os" ->
+        (match args with
+         | os :: [] -> Set_os os
+         | _ -> failwith
+                  (Printf.sprintf
+                     "Bad usage of opam-set-os %s.\n\
+                      expecting 'opam-set-os [depext-test-specification]"
+                     (String.concat " " args)));
       | Some "opam-cache" ->
         let kind, switch, nvs =
           match args with
@@ -1209,9 +1218,13 @@ let run_test ?(vars=[]) ~opam t =
              in
              diffl [] (String.split_on_char '\n' r) out);
           Option.iter (Printf.printf "# Return code %d #\n") errcode;
-          match output with
-          | None -> vars
-          | Some v -> (v, r) :: List.filter (fun (w,_) -> v <> w) vars)
+          (match output with
+           | None -> vars
+           | Some v -> (v, r) :: List.filter (fun (w,_) -> v <> w) vars)
+        | Set_os os ->
+          ignore @@ run_cmd ~opam ~dir ~vars
+            "opam" ["var"; "--global"; Printf.sprintf "os-family=%s" os];
+          vars)
       vars
       t.commands
   in
