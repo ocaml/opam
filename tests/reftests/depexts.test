@@ -510,9 +510,13 @@ opam-version: "2.0"
 flags: compiler
 ### OPAMVAR_os_family=unknown opam init ./REPO --root ./OPAM2 --no-setup --bypass-checks --compiler comp -y
 No configuration file found, using built-in defaults.
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
 
 <><> Creating initial switch 'comp' (invariant ["comp"]) ><><><><><><><><><><><>
 

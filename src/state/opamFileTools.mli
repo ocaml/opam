@@ -117,3 +117,7 @@ val dep_formula_to_string: formula -> string
 (** Sort opam fields: author, tags, depexts, depends, depopts, conflicts,
     pin_depends, extra_files, extra_sources *)
 val sort_opam: OpamFile.OPAM.t -> OpamFile.OPAM.t
+
+(** Get depexts from all the opam files associated to packages *)
+val get_depexts : env:OpamFilter.env -> OpamFile.OPAM.t OpamPackage.Map.t ->
+  OpamSysPkg.Set.t
