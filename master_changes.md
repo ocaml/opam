@@ -207,6 +207,7 @@ users)
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
   * `OpamRepositoryState` add `load_opams_from_diff` to update package definitions based on file change operations (diff) [#6614 @arozovyk]
+  * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly [#6489 @arozovyk]
 
 ## opam-solver
 
@@ -214,6 +215,8 @@ users)
   * `OpamFormula.equal_relop`: was added [#6644 @kit-ty-kate]
   * `OpamTypesBase.{action,pkg_flag,simple_arg,arg,filter,command}_equal`: were added [#6644 @kit-ty-kate]
   * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
+  * `OpamSysPkg`: add `availability_mode` type to indicate the availability of system packages on a given system. [#6489 @arozovyk]
+  * `OpamSysPkg`: add `combine_status` `string_of_availability_mode` `combine_availability_mode` `check_availability_mode_equal` functions. [#6489 @arozovyk]
 
 ## opam-core
   * `OpamConsole.confirm`: now takes an optional `name` argument [#6709 @kit-ty-kate]
