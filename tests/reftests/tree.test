@@ -665,3 +665,57 @@ a.2       1
 [WARNING] Not installed package a (= 2), skipping
 [ERROR] No package to display
 # Return code 5 #
+### : make sure the dependencies are taken from the correct opam description
+### opam switch create opam-description-1 --empty
+### <pkg:miou.0.3.1>
+opam-version: "2.0"
+### <pkg:miou.0.3.0>
+opam-version: "2.0"
+### <pin:test/opam>
+opam-version: "2.0"
+depends: ["miou"]
+### opam pin add test.custom ./test
+[NOTE] Package test does not exist in opam repositories registered in the current switch.
+[test.custom] synchronised (file://${BASEDIR}/test)
+test is now pinned to file://${BASEDIR}/test (version custom)
+
+The following actions will be performed:
+=== install 2 packages
+  - install miou 0.3.1           [required by test]
+  - install test custom (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed miou.0.3.1
+-> retrieved test.custom  (file://${BASEDIR}/test)
+-> installed test.custom
+Done.
+### <pin:test/opam>
+opam-version: "2.0"
+depends: ["miou" {= "0.3.0"}]
+### opam tree ./test
+test.custom
+### : same but with non-pinned packages
+### opam switch create opam-description-2 --empty
+### <pkg:miou.0.3.1>
+opam-version: "2.0"
+### <pkg:miou.0.3.0>
+opam-version: "2.0"
+### <pkg:test.1>
+opam-version: "2.0"
+depends: ["miou"]
+### opam install test
+The following actions will be performed:
+=== install 2 packages
+  - install miou 0.3.1 [required by test]
+  - install test 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed miou.0.3.1
+-> installed test.1
+Done.
+### <pin:test/opam>
+opam-version: "2.0"
+build: "false"
+depends: ["miou" {= "0.3.0"}]
+### opam tree ./test
+test.1
