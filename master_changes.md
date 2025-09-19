@@ -26,6 +26,7 @@ users)
 ## Actions
 
 ## Install
+  * More fine grained error message in case of bad hash or missing extra-files error (and remove raw fatal error) [#6696 @rjbou]
 
 ## Build (package)
 
@@ -55,6 +56,8 @@ users)
 ## Exec
 
 ## Source
+  * Better error message, especially in case of `Failure` [#6696 @rjbou]
+  * Raise a warning instead of an error when an item of `extra-files` is missing [#6696 @rjbou]
 
 ## Lint
 

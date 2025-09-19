@@ -559,7 +559,8 @@ Successfully extracted to ${BASEDIR}/no-checksum.1
 ### test -f no-checksum.1/i-am-a-patch
 ### rm -r no-checksum.1
 ### opam source no-checksum --require-checksums
-[WARNING] Some errors extracting to ${BASEDIR}/no-checksum.1: Failure("no-checksum.1/i-am-a-patch: Missing checksum, and `--require-checksums` was set.")
+[WARNING] Some errors extracting to ${BASEDIR}/no-checksum.1:
+            no-checksum.1/i-am-a-patch: Missing checksum, and `--require-checksums` was set.
 
 ### test -f no-checksum.1/i-am-a-patch
 # Return code 1 #
