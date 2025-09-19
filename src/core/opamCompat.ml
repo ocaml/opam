@@ -101,6 +101,11 @@ module Lazy = struct
   let map f x =
     lazy (f (Lazy.force x))
 
+  let map_val f x =
+    if Lazy.is_val x
+    then Lazy.from_val (f (Lazy.force x))
+    else lazy (f (Lazy.force x))
+
   include Stdlib.Lazy
 end
 

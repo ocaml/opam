@@ -3820,8 +3820,11 @@ let source cli =
                OpamConsole.formatted_msg "Successfully extracted to %s\n"
                  (Dir.to_string dir)
              | Some e ->
-               OpamConsole.warning "Some errors extracting to %s: %s\n"
-                 (Dir.to_string dir) (Printexc.to_string e)
+               OpamConsole.warning "Some errors extracting to %s:\n  %s\n"
+                 (Dir.to_string dir)
+                 (match e with
+                  | Failure msg -> msg
+                  | _ -> Printexc.to_string e)
          in
          OpamProcess.Job.run job;
          if OpamPinned.find_opam_file_in_source nv.name
@@ -3960,30 +3963,38 @@ let lint cli =
         (OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_none gt @@ fun st ->
          try
-           let nv = match pkg with
-             | name, Some v -> OpamPackage.create name v
-             | name, None -> OpamSwitchState.get_package st name
+           let name, nv = match pkg with
+             | name, Some v -> name, OpamPackage.create name v
+             | name, None -> name, OpamSwitchState.get_package st name
            in
-           let opam = OpamSwitchState.opam st nv in
-           match OpamPinned.orig_opam_file st (OpamPackage.name nv) opam with
-           | None -> raise Not_found
+           match OpamSwitchState.overlay_opam_file st name with
+           | None ->
+             if OpamSwitchState.is_pinned st name then raise Not_found
+             else
+               (match
+                  OpamRepositoryState.find_package_opt st.switch_repos
+                    (OpamSwitchState.repos_list st) nv
+                with
+                | Some (reponame, opam) ->
+                  let temp = OpamFilename.mk_tmp_file () in
+                  let opamf = OpamFile.make temp in
+                  OpamFile.OPAM.write opamf opam;
+                  let label =
+                    Printf.sprintf "<%s>/%s"
+                      (OpamRepositoryName.to_string reponame)
+                      (OpamPackage.to_string nv)
+                  in
+                  let files =
+                    OpamFile.OPAM.get_extra_files
+                      ~get_repo_files:(OpamRepositoryState.get_repo_files
+                                         st.switch_repos)
+                      opam
+                  in
+                  [`repo (opamf, label, files)]
+                | None -> raise Not_found)
            | Some file ->
              let label =
-               match OpamFile.OPAM.metadata_dir opam with
-               | None -> None
-               | Some (None, abs) ->
-                 let filename =
-                   if OpamFilename.starts_with
-                       (OpamPath.Switch.Overlay.dir gt.root st.switch)
-                       (OpamFilename.of_string abs) then
-                     Printf.sprintf "<pinned>/%s" (OpamPackage.to_string nv)
-                   else abs
-                 in
-                 Some filename
-               | Some (Some repo, _rel) ->
-                 Some (Printf.sprintf "<%s>/%s"
-                         (OpamRepositoryName.to_string repo)
-                         (OpamPackage.to_string nv))
+               Printf.sprintf "<pinned>/%s" (OpamPackage.to_string nv)
              in
              [`pkg (file, label)]
          with Not_found ->
@@ -4018,11 +4029,31 @@ let lint cli =
               | `pkg (file, label) ->
                 OpamFileTools.lint_file ~check_upstream ~handle_dirname:false
                   file,
-                label
+                Some label
               | `stdin ->
                 OpamFileTools.lint_channel ~check_upstream ~handle_dirname:false
                   stdin_f stdin,
                 None
+              | `repo (f, label, extrafiles) ->
+                let check_extra_files =
+                  List.map
+                    (fun (basename, content, _hash) ->
+                       basename,
+                       match content with
+                       | None -> fun _ -> false
+                       | Some content ->
+                         let check =
+                           OpamCompat.Lazy.map_val OpamHash.check_string content
+                         in
+                         fun hash ->
+                           (Lazy.force check) hash)
+                    extrafiles
+                in
+                (* NOTE-RJBOU: we use don't handle dirname, as it comes from a
+                   repository, there is the guarantee that the layout is good *)
+                OpamFileTools.lint_file ~check_extra_files ~check_upstream
+                  ~handle_dirname:false f,
+                Some label
             in
             let warnings_sel_map = OpamStd.IntMap.of_list warnings_sel in
             let enabled w =

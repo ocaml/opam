@@ -26,6 +26,7 @@ users)
 ## Actions
 
 ## Install
+  * More fine grained error message in case of bad hash or missing extra-files error (and remove raw fatal error) [#XXX @rjbou]
 
 ## Build (package)
 
@@ -54,6 +55,7 @@ users)
 ## Exec
 
 ## Source
+  * Better error message, especially in case of `Failure` [#XXX @rjbou]
 
 ## Lint
 
@@ -202,3 +204,4 @@ users)
   * `OpamStd.String.contains_char`: was removed. Use `Stdlib.String.contains` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.map`: was removed. Use `Stdlib.String.map` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.{starts_with,ends_with,for_all,fold_left}`: were moved to `OpamCompat.String` [#6442 @kit-ty-kate]
+  * `OpamCompat.Lazy`: add `map_val` [#6679 @rjbou}
