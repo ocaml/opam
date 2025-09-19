@@ -159,6 +159,11 @@ let create dirname basename =
   if basename = b2 then
     { dirname; basename }
   else
+    let b1 =
+      if dirname = ""
+      then b1
+      else OpamStd.String.remove_prefix ~prefix:Filename.dir_sep b1
+    in
     { dirname = dirname / b1; basename = b2 }
 
 let of_basename basename =
