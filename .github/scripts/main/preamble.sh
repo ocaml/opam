@@ -22,7 +22,7 @@ OPAM_DOC=${OPAM_DOC:-0}
 OPAM_DEPENDS=${OPAM_DEPENDS:-0}
 OPAM_UPGRADE=${OPAM_UPGRADE:-0}
 
-OPAM_REPO_MAIN=https://github.com/ocaml/opam-repository.git
+OPAM_REPO_MAIN=https://github.com/kit-ty-kate/opam-repository.git
 
 OPAM12CACHE=`eval echo $OPAM12CACHE`
 OPAMBSROOT=`eval echo $OPAMBSROOT`
