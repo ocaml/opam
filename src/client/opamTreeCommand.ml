@@ -12,8 +12,8 @@
 open OpamTypes
 open OpamStateTypes
 
-type deps
-type revdeps
+type deps = private [`deps]
+type revdeps = private [`revdeps]
 type 'a node =
   | Root of package
   | Dependency : {
