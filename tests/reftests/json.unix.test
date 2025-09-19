@@ -84,7 +84,7 @@ Done.
     "remove": [],
     "upgrade": [],
     "all": [],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {
@@ -143,7 +143,7 @@ Done.
     "remove": [],
     "upgrade": [],
     "all": [],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {
@@ -241,7 +241,7 @@ Done.
     "all": [
       "ok"
     ],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {
@@ -311,7 +311,7 @@ The following actions will be performed:
     "all": [
       "ko"
     ],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {
@@ -397,7 +397,7 @@ Done.
     "all": [
       "ok"
     ],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {
@@ -466,7 +466,7 @@ The former state can be restored with:
       "ok",
       "ko"
     ],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {
@@ -581,7 +581,7 @@ Done.
     "all": [
       "nip"
     ],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {
@@ -641,7 +641,7 @@ Done.
     "all": [
       "nip"
     ],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {
@@ -695,7 +695,7 @@ Done.
     "all": [
       "nip.dev"
     ],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {
