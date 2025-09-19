@@ -1136,19 +1136,23 @@ module Var_Option_Common = struct
   let global cli =
     mk_flag ~cli (cli_from cli2_1) ["global"] "Act on global configuration"
 
-  let var_option global global_options cmd var =
+  let var_option global repos repo global_options cmd var =
     let switch_set = (fst global_options).opt_switch <> None in
     if global && switch_set then
       `Error (true, "--global and --switch sw option can't be used together")
     else
     let scope =
-      if global then `Global
-      else if switch_set then `Switch
-      else match var with
-        | None -> `All
-        | Some f -> match cmd with
-          | `var -> `All_var
-          | `option -> OpamConfigCommand.get_scope f
+      if global then `Global else
+      if repos then `Repos else
+        match repo with
+        | Some repo -> `Repo repo
+        | None ->
+          if switch_set then `Switch
+          else match var with
+            | None -> `All
+            | Some f -> match cmd with
+              | `var -> `All_var
+              | `option -> OpamConfigCommand.get_scope f
     in
     let apply =
       match var with
@@ -1179,7 +1183,7 @@ module Var_Option_Common = struct
        | `value_eq _ ->
          `Error (true, "variable setting needs a scope, \
                         use '--global' or '--switch <switch>'"))
-    | (`Global | `Switch) as scope ->
+    | (`Global | `Switch | `Repo _ | `Repos) as scope ->
       match cmd, apply with
       | _ , `empty ->
         (match scope with
@@ -1194,7 +1198,10 @@ module Var_Option_Common = struct
            (match cmd with
             | `var -> OpamConfigCommand.vars_list_global gt
             | `option -> OpamConfigCommand.options_list_global gt);
-           `Ok ())
+           `Ok ()
+         | `Repo _ | `Repos ->
+           (* TODO RJBOU: update *)
+           OpamConsole.error_and_exit `Internal_error "repo list var not implemented")
       | _, `value_wo_eq v ->
         (match scope with
          | `Switch ->
@@ -1208,8 +1215,12 @@ module Var_Option_Common = struct
            (match cmd with
             | `var -> OpamConfigCommand.var_show_global gt v
             | `option -> OpamConfigCommand.option_show_global gt v);
-           `Ok ())
-      | `var, `value_eq (_,#OpamConfigCommand.append_op) ->
+           `Ok ()
+         | `Repo _ | `Repos ->
+           (* TODO RJBOU: update *)
+           OpamConsole.error_and_exit `Internal_error "repo show var not implemented")
+      | `var, `value_eq (_,#OpamConfigCommand.append_op)
+        when scope = `Switch || scope = `Global ->
         `Error (true, "var: append operation are not permitted")
       | _, `value_eq (v,u) ->
         match scope with
@@ -1232,6 +1243,15 @@ module Var_Option_Common = struct
             | `option -> OpamConfigCommand.set_opt_global gt v u
           in
           `Ok ()
+        | `Repo repo ->
+          OpamGlobalState.with_ `Lock_write @@ fun gt ->
+          let _rt = OpamConfigCommand.set_var_repo gt repo v u in
+          `Ok ()
+        | `Repos ->
+          OpamGlobalState.with_ `Lock_write @@ fun gt ->
+          let _rt = OpamConfigCommand.set_opt_repo gt v u in
+          `Ok ()
+
 
 end
 
@@ -1262,11 +1282,21 @@ let var cli =
       "List all variables defined for the given package"
       Arg.(some package_name) None
   in
-  let print_var global_options package varvalue global () =
+  let repo cli =
+    mk_opt ~cli (cli_from cli2_5) ~section:Manpage.s_options
+      ["repository"] "REPOSITORY_NAME"
+      "Act on repository configuration"
+      Arg.(some repository_name) None
+  in
+  let print_var global_options package varvalue global repo () =
     apply_global_options cli global_options;
     match varvalue, package with
     | _, None ->
-      var_option global global_options `var varvalue
+      (match global, repo with
+       | true, Some _ ->
+         `Error (true, "--repo and global can't be specified together")
+       | _, _ ->
+         var_option global false repo global_options `var varvalue)
     | None, Some pkg ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
@@ -1278,7 +1308,7 @@ let var cli =
   in
   mk_command_ret  ~cli cli_original "var" ~doc ~man
     Term.(const print_var
-          $global_options cli $package $varvalue $global cli)
+          $global_options cli $package $varvalue $global cli $repo cli)
 
 (* OPTION *)
 let option_doc = "Global and switch configuration options settings"
@@ -1304,13 +1334,21 @@ let option cli =
     in
     Arg.(value & pos 0 (some string) None & info ~docv ~doc [])
   in
-  let option global_options fieldvalue global () =
+  let repo cli =
+    mk_flag ~cli (cli_from cli2_5) ~section:Manpage.s_options
+      ["repositories"]
+      "Act on repository configuration"
+  in
+  let option global_options fieldvalue global repo () =
     apply_global_options cli global_options;
-    var_option global global_options `option fieldvalue
+    if global && repo then
+      `Error (true, "--repo and global can't be specified together")
+    else
+      var_option global repo None global_options `option fieldvalue
   in
   mk_command_ret  ~cli (cli_from cli2_1) "option" ~doc ~man
     Term.(const option
-          $global_options cli $fieldvalue $global cli)
+          $global_options cli $fieldvalue $global cli $repo cli)
 
 module Common_config_flags = struct
   let sexp cli =
@@ -2547,6 +2585,7 @@ let repository cli =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let repos =
         OpamStateConfig.Repos.safe_read ~lock_kind:`Lock_read gt
+        |> OpamFile.Repos_config.repos
       in
       let not_found =
         List.filter (fun r -> not (OpamRepositoryName.Map.mem r repos)) names
@@ -4308,6 +4347,7 @@ let clean cli =
        @@ fun _lock ->
        let repos_config =
          OpamStateConfig.Repos.safe_read ~lock_kind:`Lock_write gt
+         |> OpamFile.Repos_config.repos
        in
        let all_repos =
          OpamRepositoryName.Map.keys repos_config |>
@@ -4346,7 +4386,8 @@ let clean cli =
        OpamConsole.msg "Updating %s\n"
          (OpamFile.to_string (OpamPath.repos_config root));
        if not dry_run then
-         OpamFile.Repos_config.write (OpamPath.repos_config root) repos_config);
+         OpamFile.Repos_config.write (OpamPath.repos_config root)
+           (OpamFile.Repos_config.create repos_config));
     if repo_cache then
       (OpamConsole.msg "Clearing repository cache\n";
        if not dry_run then OpamRepositoryState.Cache.remove ());

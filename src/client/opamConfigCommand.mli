@@ -86,6 +86,11 @@ val whole_of_update_op: update_op -> whole_op
     modifiable, or the value have a parse error. *)
 val set_opt_global: rw global_state -> string -> update_op -> rw global_state
 
+(* TODO RJBOU check this rw global state *)
+val set_opt_repo:
+    rw global_state -> ?rt:rw repos_state -> string -> update_op ->
+    rw repos_state option
+
 (** As {!set_opt_global}, {!set_opt_switch} updates switch config file in
     <opamroot>/<switch>/.opam-switch/switch-config. If switch state is given,
     uses its config and returns it with then new config. Otherwise, loads the
@@ -103,6 +108,10 @@ val set_opt_switch:
     @raise OpamStd.Sys.Exit ([`Bad_argument], [2]) if field is not modifiable *)
 val set_var_global:
   rw global_state -> string -> whole_op -> rw global_state
+
+val set_var_repo:
+  'a global_state -> ?rt:rw repos_state -> repository_name -> string -> update_op
+  -> rw repos_state option
 
 (** @raise OpamStd.Sys.Exit ([`Configuration_error], [50]) if no switch is set *)
 val set_var_switch:

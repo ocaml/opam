@@ -1849,9 +1849,15 @@ let init
           OpamStd.Sys.exit_because `Aborted);
       try
         (* Create the content of ~/.opam/config *)
-        let repos = match repo with
-          | Some r -> [r.repo_name, (r.repo_url, r.repo_trust)]
-          | None -> OpamFile.InitConfig.repositories init_config
+        let repos =
+          match repo with
+          | Some r ->
+            [r.repo_name,
+             OpamFile.Repo_config.create ?trust:r.repo_trust r.repo_url]
+          | None ->
+            List.map (fun (n,(u,t)) ->
+                n, OpamFile.Repo_config.create ?trust:t u)
+              ( OpamFile.InitConfig.repositories init_config)
         in
         let config =
           update_with_init_config
@@ -1862,7 +1868,7 @@ let init
         let config, mechanism, system_packages, msys2_check_root =
           if Sys.win32 then
             determine_windows_configuration ?cygwin_setup ?git_location
-                                            ~bypass_checks ~interactive config
+              ~bypass_checks ~interactive config
           else
             config, None, [], None
         in
@@ -1899,7 +1905,9 @@ let init
           else config
         in
         OpamFile.Config.write config_f config;
-        let repos_config = OpamRepositoryName.Map.of_list repos in
+        let repos_config =
+          OpamFile.Repos_config.create (OpamRepositoryName.Map.of_list repos)
+        in
         OpamFile.Repos_config.write (OpamPath.repos_config root)
           repos_config;
 

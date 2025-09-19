@@ -532,6 +532,10 @@ let global_doc = "global configuration"
 let switch_doc switch =
   Printf.sprintf "switch %s"
     (OpamConsole.colorise `bold (OpamSwitch.to_string switch))
+let repo_doc repo =
+  Printf.sprintf "repository %s"
+    (OpamConsole.colorise `bold (OpamRepositoryName.to_string repo))
+let repos_doc = "repositories configuration"
 
 let no_self_variable_error () =
   OpamConsole.error_and_exit `Bad_arguments
@@ -627,6 +631,8 @@ let set_opt ?(inner=false) field value conf =
        (OpamConsole.colorise `underline field)
        conf.stg_doc);
   new_config
+
+(* Switch options *)
 
 let allwd_wrappers wdef wrappers with_wrappers  =
   let open OpamFile in
@@ -782,6 +788,173 @@ let set_opt_switch gt ?st field value =
   with_switch ~display:false gt `Lock_write st @@ fun sw swc ->
   let switch_config = set_opt_switch_t ~inner:false gt sw swc field value in
   Stdlib.Option.map (fun st -> { st with switch_config }) st
+
+(* Repo options *)
+
+(* Single repository variables *)
+
+let repo_allowed_fields, repo_allowed_sections =
+  let allowed_fields =
+    lazy (
+      OpamFile.Repo_config.[
+        ("quorum", Atomic,
+         fun t ->
+           match t.trust with
+           | None -> t
+           | Some { quorum = _; fingerprints = [] } ->
+             { t with trust = None }
+           | Some { quorum = _; fingerprints } ->
+             { t with trust = Some { quorum = 1; fingerprints }}
+        );
+        ("fingerprint", Modifiable (
+            (fun nc c ->
+               let trust =
+                 match nc.trust, c.trust with
+                 | Some t', Some t ->
+                   Some { t with fingerprints = t'.fingerprints @ t.fingerprints }
+                 | Some t', None ->
+                   (* add default quorum somewhere *)
+                   Some { quorum = 1; fingerprints = t'.fingerprints }
+                 | None, t -> t
+               in
+               { c with trust }),
+            (fun nc c ->
+               let trust =
+                 match nc.trust, c.trust with
+                 | Some t', Some t ->
+                   let fingerprints =
+                     List.filter
+                       (fun fingerprint ->
+                          None =
+                          List.find_opt
+                            (fun fingerprint' ->
+                               String.equal fingerprint fingerprint')
+                            t'.fingerprints) t.fingerprints
+                   in
+                   Some { t with fingerprints }
+                 | _, t -> t
+               in
+               { c with trust })),
+         fun c ->
+           let trust =
+             match c.trust with
+             | Some t -> Some { t with fingerprints = [] }
+             | None -> None
+           in
+           { c with trust });
+      ])
+  in
+  (fun () -> Lazy.force allowed_fields),
+  fun () -> []
+
+let confset_repo gt repo repos_config =
+  let config_f = OpamPath.repos_config gt.root in
+  let repos = OpamFile.Repos_config.repos repos_config in
+  let repo_config =
+    match OpamRepositoryName.Map.find_opt repo repos
+    with
+    | None -> assert false (* TODO RJBOU : complete *)
+    | Some repo_config -> repo_config
+  in
+  let write new_config =
+    let repos =
+      OpamRepositoryName.Map.update repo
+        (fun _ -> new_config) new_config repos
+    in
+    let new_config =
+      OpamFile.Repos_config.with_repos repos
+        repos_config
+    in
+    OpamFile.Repos_config.write config_f new_config
+  in
+  { stg_fields = OpamFile.Repo_config.fields;
+    stg_allwd_fields = repo_allowed_fields ();
+    stg_sections = [];
+    stg_allwd_sections = repo_allowed_sections ();
+    stg_config = repo_config;
+    stg_write_config = write;
+    stg_doc = repo_doc repo
+  }
+
+let with_repo gt ?rt lock_kind k =
+  match rt with
+  | Some rt -> k rt.repos_config
+  | None ->
+    k @@ OpamStateConfig.Repos.safe_read ~lock_kind gt
+
+let set_var_repo gt ?rt repo field value =
+  with_repo gt ?rt `Lock_write @@ fun repos_config ->
+  let repo_config =
+    set_opt ~inner:false field value (confset_repo gt repo repos_config)
+  in
+  Option.map (fun rt ->
+      let repository =
+        OpamRepositoryState.repo_config_to_repository repo repo_config
+      in
+      let repositories =
+        OpamRepositoryName.Map.add repo repository rt.repositories
+      in
+      { rt with repositories }) rt
+
+let set_var_repo gt ?rt repo field value =
+  let repos_config =
+    match rt with
+    | Some rt -> rt.repos_config
+    | None -> OpamStateConfig.Repos.safe_read ~lock_kind:`Lock_write gt
+  in
+  let repo_config =
+    set_opt ~inner:false field value (confset_repo gt repo repos_config)
+  in
+  Option.map (fun rt ->
+      let repository =
+        OpamRepositoryState.repo_config_to_repository repo repo_config
+      in
+      let repositories =
+        OpamRepositoryName.Map.add repo repository rt.repositories
+      in
+      { rt with repositories }) rt
+
+(* Repositories config options *)
+
+let repos_allowed_fields, repos_allowed_sections =
+  let allowed_fields =
+    lazy (
+      OpamFile.Repos_config.[
+        "another", Modifiable (
+          (fun nc c -> { c with another = nc.another }),
+          (fun _nc c -> { c with another = Some 100 })),
+        fun c -> { c with another = None }
+      ])
+  in
+  let allowed_sections =
+    lazy (
+      OpamFile.Repos_config.[
+      ])
+  in
+  (fun () -> Lazy.force allowed_fields),
+  fun () -> Lazy.force allowed_sections
+
+let confset_repos gt repos_config =
+  let config_f = OpamPath.repos_config gt.root in
+  let write new_config = OpamFile.Repos_config.write config_f new_config in
+  { stg_fields = OpamFile.Repos_config.fields;
+    stg_allwd_fields = repos_allowed_fields ();
+    stg_sections = [];
+    stg_allwd_sections = repos_allowed_sections ();
+    stg_config = repos_config;
+    stg_write_config = write;
+    stg_doc = repos_doc
+  }
+
+let set_opt_repo_t ?inner gt ?rt field value =
+  with_repo gt ?rt `Lock_write @@ fun repos_config ->
+  let _repos_config = set_opt ?inner field value (confset_repos gt repos_config) in
+  (* TODO RJBOU: update *)
+  rt
+
+let set_opt_repo = set_opt_repo_t ~inner:false
+
+(* Global options *)
 
 let global_allowed_fields, global_allowed_sections =
   let allowed_fields =

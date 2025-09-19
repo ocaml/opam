@@ -759,3 +759,28 @@ Set to '["otherpkg"]' the field depext-bypass in global configuration
 ### opam option depext-bypass=["yetanotherpkg"] --switch phantom
 [ERROR] The selected switch phantom is not installed
 # Return code 2 #
+### <OPAM/repo/repos-config>
+opam-version: "2.0"
+repo "default" {
+  url: "file://${BASEDIR}/REPO"
+  quorum : 5
+}
+### cat OPAM/repo/repos-config
+### opam var --repo default quorum=3
+### cat OPAM/repo/repos-config
+### opam var --repo default quorum=
+### cat OPAM/repo/repos-config
+### opam var --repo default fingerprint="toto"
+### cat OPAM/repo/repos-config
+### opam var --repo default fingerprint="tato"
+### cat OPAM/repo/repos-config
+### opam var --repo default fingerprint+="tati"
+### cat OPAM/repo/repos-config
+### opam var --repo default quorum=3
+### cat OPAM/repo/repos-config
+### opam var --repo default fingerprint=
+### cat OPAM/repo/repos-config
+### opam option --repo  another=5
+### cat OPAM/repo/repos-config
+### opam option --repo  another=
+### cat OPAM/repo/repos-config

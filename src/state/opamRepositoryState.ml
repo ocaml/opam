@@ -153,24 +153,31 @@ let get_root rt name =
 let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
+let repository_to_repo_config r =
+  r.repo_name, OpamFile.Repo_config.create ?trust:r.repo_trust r.repo_url
+
+let repo_config_to_repository name repo_config = {
+  repo_name = name;
+  repo_url = OpamFile.Repo_config.url repo_config;
+  repo_trust = OpamFile.Repo_config.trust repo_config;
+  }
+
+
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;
   let lock = OpamFilename.flock lock_kind (OpamPath.repos_lock gt.root) in
-  let repos_map =
-    match OpamFormatUpgrade.as_necessary_repo lock_kind gt with
+  let repos_config =
+    (match OpamFormatUpgrade.as_necessary_repo lock_kind gt with
     | Some repos_map -> repos_map
-    | None -> OpamStateConfig.Repos.safe_read ~lock_kind gt
+    | None -> OpamStateConfig.Repos.safe_read ~lock_kind gt)
   in
+  let repos_map = OpamFile.Repos_config.repos repos_config in
   if OpamStateConfig.is_newer_than_self ~lock_kind gt then
     log "root version (%s) is greater than running binary's (%s); \
          load with best-effort (read-only)"
       (OpamVersion.to_string (OpamFile.Config.opam_root_version gt.config))
       (OpamVersion.to_string (OpamFile.Config.root_version));
-  let mk_repo name (url, ta) = {
-    repo_name = name;
-    repo_url = url;
-    repo_trust = ta;
-  } in
+  let mk_repo = repo_config_to_repository in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
   let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
   let repos_tmp = Hashtbl.create 23 in
@@ -197,6 +204,7 @@ let load lock_kind gt =
     ) repositories;
   let make_rt repos_definitions opams =
     let rt = {
+      repos_config;
       repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
       repos_tmp;
@@ -281,9 +289,11 @@ let with_ lock gt f =
 
 let write_config rt =
   OpamFile.Repos_config.write (OpamPath.repos_config rt.repos_global.root)
+  @@ OpamFile.Repos_config.create
     (OpamRepositoryName.Map.filter_map (fun _ r ->
          if r.repo_url = OpamUrl.empty then None
-         else Some (r.repo_url, r.repo_trust))
+         else
+           Some (OpamFile.Repo_config.create ?trust:r.repo_trust r.repo_url))
         rt.repositories)
 
 let check_last_update () =

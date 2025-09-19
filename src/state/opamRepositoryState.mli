@@ -106,3 +106,6 @@ val write_config: rw repos_state -> unit
 
 (** Display a warning if repository has not been updated since 3 weeks *)
 val check_last_update: unit -> unit
+
+val repository_to_repo_config: repository -> repository_name * OpamFile.Repo_config.t
+val repo_config_to_repository: repository_name -> OpamFile.Repo_config.t -> repository

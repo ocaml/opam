@@ -21,6 +21,13 @@ pinned: ["i-am-compiler.1"]
 ### <OPAM/pinned-comp/.opam-switch/switch-config>
 opam-version: "2.0"
 synopsis: "switch with pinned compiler"
+### <repos.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat > OPAM/repo/repos-config <<EOF
+opam-version: "2.0"
+repositories: [ "default" {"file://${basedir}/REPO"} ]
+EOF
+### sh repos.sh
 ### OPAMDEBUGSECTIONS=STATE opam upgrade --show-action --debug-level=-1
 STATE                           LOAD-SWITCH-STATE @ pinned-comp
 STATE                           Definition missing for installed package i-am-compiler.1, copying from repo

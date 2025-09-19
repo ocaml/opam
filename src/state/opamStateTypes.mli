@@ -77,6 +77,10 @@ type +'lock global_state = {
 (** State corresponding to the repo/ subdir: all available packages and
     metadata, for each repository. *)
 type +'lock repos_state = {
+
+  repos_config : OpamFile.Repos_config.t;
+  (** The configuration file for repositories *)
+
   repos_lock: OpamSystem.lock;
 
   repos_global: unlocked global_state;
