@@ -34,6 +34,7 @@ users)
 ## UI
   * Show the invalid character when detecting an erroneous package name [#6638 @lefessan - fix #6396]
   * Handle non-displayable characters when detecting an erroneous package name or version [#6640 @kit-ty-kate]
+  * Remove duplicated directory separator when displaying some rare filenames [#6703 @rjbou]
 
 ## Switch
 
@@ -202,3 +203,4 @@ users)
   * `OpamStd.String.contains_char`: was removed. Use `Stdlib.String.contains` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.map`: was removed. Use `Stdlib.String.map` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.{starts_with,ends_with,for_all,fold_left}`: were moved to `OpamCompat.String` [#6442 @kit-ty-kate]
+  * `OpamFilename.create`: deduplicate the directory separator character when the basename starts with one [#6703 @rjbou]

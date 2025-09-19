@@ -546,7 +546,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd: No such file or directory")
+Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files/etc/passwdd: No such file or directory")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -562,7 +562,7 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
-Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd: No such file or directory")
+Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files/etc/passwdd: No such file or directory")
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -573,7 +573,7 @@ Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute
 # Return code 31 #
 ### opam source escape-absolute
 Fatal error:
-Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files//etc/passwdd: No such file or directory")
+Sys_error("${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files/etc/passwdd: No such file or directory")
 # Return code 99 #
 ### test -f escape-absolute.1/p.patch
 # Return code 1 #
