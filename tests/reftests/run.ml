@@ -573,6 +573,7 @@ let common_filters ?opam dir =
           alt (dir_to_regex tmpdir);
           rep (set "/\\");
           str "opam-";
+          opt @@ str "pin-cache-";
           rep1 (alt [xdigit; char '-'])],
      Sed "${OPAMTMP}";
      seq [
