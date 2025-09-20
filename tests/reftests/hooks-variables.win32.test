@@ -1,0 +1,336 @@
+N0REP0
+### ## global_variable_names
+### #   exe          Suffix needed for executable filenames (Windows)
+### ::::::::
+### :: Setup
+### ::::::::
+### OPAMVERBOSE=2 OPAMYES=1
+### <printer.sh>
+for i in "$@"; do
+  echo "$i"
+done
+### <pkg:i-am-a-repo-pkg.1>
+opam-version: "2.0"
+build: [ "a-build-command" ]
+install: [ "a-install-command" ]
+remove: [ "a-remove-command" ]
+### tar czf archive.tgz printer.sh
+### openssl md5 archive.tgz | '.*= ' -> '' >$ MD5
+### sh -c "echo '$MD5' | cut -c 1-2" >$ PRE_MD5
+### <add-url.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat << EOF >> REPO/packages/i-am-a-repo-pkg/i-am-a-repo-pkg.1/opam
+url {
+  src:"file://$basedir/archive.tgz"
+  checksum: "md5=$MD5"
+}
+EOF
+### sh add-url.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Processing: [default: loading data]
+Now run 'opam upgrade' to apply any package updates.
+### ::::::::::::::::::
+### :: Global wrappers
+### ::::::::::::::::::
+### mkdir -p OPAM/opam-init/hooks
+### cp printer.sh OPAM/opam-init/hooks/printer.sh
+### cp OPAM/config OPAM/config.bak
+### opam option --global 'pre-build-commands=[ "bash" "%{hooks}%/printer.sh" "...pre building..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...pre building..." "exe:%{exe}%" ]' the field pre-build-commands in global configuration
+### opam option --global 'pre-install-commands=[ "bash" "%{hooks}%/printer.sh" "...pre installing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...pre installing..." "exe:%{exe}%" ]' the field pre-install-commands in global configuration
+### opam option --global 'pre-remove-commands=[ "bash" "%{hooks}%/printer.sh" "...pre removing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...pre removing..." "exe:%{exe}%" ]' the field pre-remove-commands in global configuration
+### opam option --global 'wrap-build-commands=[ "bash" "%{hooks}%/printer.sh" "...building..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...building..." "exe:%{exe}%" ]' the field wrap-build-commands in global configuration
+### opam option --global 'wrap-install-commands=[ "bash" "%{hooks}%/printer.sh" "...installing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...installing..." "exe:%{exe}%" ]' the field wrap-install-commands in global configuration
+### opam option --global 'wrap-remove-commands=[ "bash" "%{hooks}%/printer.sh" "...removing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...removing..." "exe:%{exe}%" ]' the field wrap-remove-commands in global configuration
+### opam option --global 'post-build-commands=[ "bash" "%{hooks}%/printer.sh" "...post-building..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...post-building..." "exe:%{exe}%" ]' the field post-build-commands in global configuration
+### opam option --global 'post-install-commands=[ "bash" "%{hooks}%/printer.sh" "...post-installing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...post-installing..." "exe:%{exe}%" ]' the field post-install-commands in global configuration
+### opam option --global 'post-remove-commands=[ "bash" "%{hooks}%/printer.sh" "...post-removing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...post-removing..." "exe:%{exe}%" ]' the field post-remove-commands in global configuration
+### opam switch create global-wrappers --empty
+### opam install i-am-a-repo-pkg | sed-cmd bash tar rsync
+The following actions will be performed:
+=== install 1 package
+  - install i-am-a-repo-pkg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/3: [i-am-a-repo-pkg.1: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/archive.tgz" "${OPAMTMP}"
+- archive.tgz
+- 
+Processing  1/3: [i-am-a-repo-pkg.1: extract]
++ tar "xfz" "${OPAMTMP}/archive.tgz" "-C" "${OPAMTMP}"
+-> retrieved i-am-a-repo-pkg.1  (file://${BASEDIR}/archive.tgz)
+Processing  2/3: [i-am-a-repo-pkg: bash ...pre building...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...pre building..." "exe:.exe" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...pre building...
+- exe:.exe
+Processing  2/3: [i-am-a-repo-pkg: a-build-command]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...building..." "exe:.exe" "a-build-command" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...building...
+- exe:.exe
+- a-build-command
+Processing  2/3: [i-am-a-repo-pkg: bash ...post-building...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-building..." "exe:.exe" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...post-building...
+- exe:.exe
+-> compiled  i-am-a-repo-pkg.1
+Processing  3/3: [i-am-a-repo-pkg: bash ...pre installing...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...pre installing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...pre installing...
+- exe:.exe
+Processing  3/3: [i-am-a-repo-pkg: a-install-command]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...installing..." "exe:.exe" "a-install-command" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...installing...
+- exe:.exe
+- a-install-command
+Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-installing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...post-installing...
+- exe:.exe
+-> installed i-am-a-repo-pkg.1
+Done.
+### opam remove i-am-a-repo-pkg | '${PRE_MD5}..?${MD5}' -> pre/+archive-hash+ | sed-cmd bash tar
+The following actions will be performed:
+=== remove 1 package
+  - remove i-am-a-repo-pkg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/2: [i-am-a-repo-pkg.1: extract]
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+archive-hash+" "-C" "${OPAMTMP}"
+-> retrieved i-am-a-repo-pkg.1  (cached)
+Processing  2/2: [i-am-a-repo-pkg: bash ...pre removing...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...pre removing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/remove/i-am-a-repo-pkg.1)
+- ...pre removing...
+- exe:.exe
+Processing  2/2: [i-am-a-repo-pkg: a-remove-command]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...removing..." "exe:.exe" "a-remove-command" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/remove/i-am-a-repo-pkg.1)
+- ...removing...
+- exe:.exe
+- a-remove-command
+Processing  2/2: [i-am-a-repo-pkg: bash ...post-removing...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-removing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/remove/i-am-a-repo-pkg.1)
+- ...post-removing...
+- exe:.exe
+-> removed   i-am-a-repo-pkg.1
+Done.
+### cp OPAM/config.bak OPAM/config
+### ::::::::::::::::::
+### :: Switch wrappers
+### ::::::::::::::::::
+### opam switch create switch-wrappers --empty
+### opam option --switch switch-wrappers 'pre-build-commands=[ "bash" "%{hooks}%/printer.sh" "...pre building..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...pre building..." "exe:%{exe}%" ]' the field pre-build-commands in switch switch-wrappers
+### opam option --switch switch-wrappers 'pre-install-commands=[ "bash" "%{hooks}%/printer.sh" "...pre installing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...pre installing..." "exe:%{exe}%" ]' the field pre-install-commands in switch switch-wrappers
+### opam option --switch switch-wrappers 'pre-remove-commands=[ "bash" "%{hooks}%/printer.sh" "...pre removing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...pre removing..." "exe:%{exe}%" ]' the field pre-remove-commands in switch switch-wrappers
+### opam option --switch switch-wrappers 'wrap-build-commands=[ "bash" "%{hooks}%/printer.sh" "...building..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...building..." "exe:%{exe}%" ]' the field wrap-build-commands in switch switch-wrappers
+### opam option --switch switch-wrappers 'wrap-install-commands=[ "bash" "%{hooks}%/printer.sh" "...installing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...installing..." "exe:%{exe}%" ]' the field wrap-install-commands in switch switch-wrappers
+### opam option --switch switch-wrappers 'wrap-remove-commands=[ "bash" "%{hooks}%/printer.sh" "...removing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...removing..." "exe:%{exe}%" ]' the field wrap-remove-commands in switch switch-wrappers
+### opam option --switch switch-wrappers 'post-build-commands=[ "bash" "%{hooks}%/printer.sh" "...post-building..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...post-building..." "exe:%{exe}%" ]' the field post-build-commands in switch switch-wrappers
+### opam option --switch switch-wrappers 'post-install-commands=[ "bash" "%{hooks}%/printer.sh" "...post-installing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...post-installing..." "exe:%{exe}%" ]' the field post-install-commands in switch switch-wrappers
+### opam option --switch switch-wrappers 'post-remove-commands=[ "bash" "%{hooks}%/printer.sh" "...post-removing..." "exe:%{exe}%" ]'
+Set to '[ "bash" "%{hooks}%/printer.sh" "...post-removing..." "exe:%{exe}%" ]' the field post-remove-commands in switch switch-wrappers
+### opam install i-am-a-repo-pkg | '${PRE_MD5}..?${MD5}' -> pre/+archive-hash+ | sed-cmd bash tar
+The following actions will be performed:
+=== install 1 package
+  - install i-am-a-repo-pkg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/3: [i-am-a-repo-pkg.1: extract]
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+archive-hash+" "-C" "${OPAMTMP}"
+-> retrieved i-am-a-repo-pkg.1  (cached)
+Processing  2/3: [i-am-a-repo-pkg: bash ...pre building...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...pre building..." "exe:.exe" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...pre building...
+- exe:.exe
+Processing  2/3: [i-am-a-repo-pkg: a-build-command]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...building..." "exe:.exe" "a-build-command" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...building...
+- exe:.exe
+- a-build-command
+Processing  2/3: [i-am-a-repo-pkg: bash ...post-building...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-building..." "exe:.exe" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...post-building...
+- exe:.exe
+-> compiled  i-am-a-repo-pkg.1
+Processing  3/3: [i-am-a-repo-pkg: bash ...pre installing...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...pre installing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...pre installing...
+- exe:.exe
+Processing  3/3: [i-am-a-repo-pkg: a-install-command]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...installing..." "exe:.exe" "a-install-command" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...installing...
+- exe:.exe
+- a-install-command
+Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-installing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...post-installing...
+- exe:.exe
+-> installed i-am-a-repo-pkg.1
+Done.
+### opam remove i-am-a-repo-pkg | '${PRE_MD5}..?${MD5}' -> pre/+archive-hash+ | sed-cmd bash tar
+The following actions will be performed:
+=== remove 1 package
+  - remove i-am-a-repo-pkg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/2: [i-am-a-repo-pkg.1: extract]
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+archive-hash+" "-C" "${OPAMTMP}"
+-> retrieved i-am-a-repo-pkg.1  (cached)
+Processing  2/2: [i-am-a-repo-pkg: bash ...pre removing...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...pre removing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/remove/i-am-a-repo-pkg.1)
+- ...pre removing...
+- exe:.exe
+Processing  2/2: [i-am-a-repo-pkg: a-remove-command]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...removing..." "exe:.exe" "a-remove-command" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/remove/i-am-a-repo-pkg.1)
+- ...removing...
+- exe:.exe
+- a-remove-command
+Processing  2/2: [i-am-a-repo-pkg: bash ...post-removing...]
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-removing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/remove/i-am-a-repo-pkg.1)
+- ...post-removing...
+- exe:.exe
+-> removed   i-am-a-repo-pkg.1
+Done.
+### ::::::::::::::::::::
+### :: Package from repo
+### ::::::::::::::::::::
+### # "build:%{build}%" "post:%{post}%" "with-test:%{with-test}%" "with-doc:%{with-doc}%" "with-dev-setup:%{with-dev-setup}%" "dev:%{dev}%"
+### <pkg:i-am-a-repo-pkg.1>
+opam-version: "2.0"
+build: [ "bash" "printer.sh" "...building..." "exe:%{exe}%" ]
+install: [ "bash" "printer.sh" "...installing..." "exe:%{exe}%" ]
+remove: [ "bash" "printer.sh" "...removing..." "exe:%{exe}%" ]
+post-messages:
+"""...A last message...
+exe:%{exe}%
+"""
+### <add-url.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat << EOF >> REPO/packages/i-am-a-repo-pkg/i-am-a-repo-pkg.1/opam
+url {
+  src:"file://$basedir/archive.tgz"
+  checksum: "md5=$(openssl md5 archive.tgz | cut -f2 -d' ')"
+}
+EOF
+### sh add-url.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Processing: [default: loading data]
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create pkg-from-repo --empty
+### opam install i-am-a-repo-pkg | '${PRE_MD5}..?${MD5}' -> pre/+archive-hash+ | sed-cmd bash tar
+The following actions will be performed:
+=== install 1 package
+  - install i-am-a-repo-pkg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/3: [i-am-a-repo-pkg.1: extract]
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+archive-hash+" "-C" "${OPAMTMP}"
+-> retrieved i-am-a-repo-pkg.1  (cached)
+Processing  2/3: [i-am-a-repo-pkg: bash printer.sh]
++ bash "printer.sh" "...building..." "exe:.exe" (CWD=${BASEDIR}/OPAM/pkg-from-repo/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...building...
+- exe:.exe
+-> compiled  i-am-a-repo-pkg.1
+Processing  3/3: [i-am-a-repo-pkg: bash printer.sh]
++ bash "printer.sh" "...installing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/pkg-from-repo/.opam-switch/build/i-am-a-repo-pkg.1)
+- ...installing...
+- exe:.exe
+-> installed i-am-a-repo-pkg.1
+Done.
+
+<><> i-am-a-repo-pkg.1 installed successfully <><><><><><><><><><><><><><><><><>
+=> ...A last message...
+   exe:.exe
+### opam remove i-am-a-repo-pkg | '${PRE_MD5}..?${MD5}' -> pre/+archive-hash+ | sed-cmd bash tar
+The following actions will be performed:
+=== remove 1 package
+  - remove i-am-a-repo-pkg 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/2: [i-am-a-repo-pkg.1: extract]
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+archive-hash+" "-C" "${OPAMTMP}"
+-> retrieved i-am-a-repo-pkg.1  (cached)
+Processing  2/2: [i-am-a-repo-pkg: bash printer.sh]
++ bash "printer.sh" "...removing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/pkg-from-repo/.opam-switch/remove/i-am-a-repo-pkg.1)
+- ...removing...
+- exe:.exe
+-> removed   i-am-a-repo-pkg.1
+Done.
+### ::::::::::::::::::::::
+### :: Package from pinned
+### ::::::::::::::::::::::
+### <dir/i-am-a-pin-pkg.opam>
+opam-version: "2.0"
+version: "6.28"
+build: [ "bash" "printer.sh" "...building..." "exe:%{exe}%" ]
+install: [ "bash" "printer.sh" "...installing..." "exe:%{exe}%" ]
+remove: [ "bash" "printer.sh" "...removing..." "exe:%{exe}%" ]
+post-messages:
+"""...A last message...
+exe:%{exe}%
+"""
+### cp printer.sh dir/printer.sh
+### opam switch create pkg-from-pin --empty
+### OPAMVERBOSE=0 opam pin ./dir -yn
+[NOTE] Package i-am-a-pin-pkg does not exist in opam repositories registered in the current switch.
+i-am-a-pin-pkg is now pinned to file://${BASEDIR}/dir (version 6.28)
+### opam install i-am-a-pin-pkg | grep -v "total size" | sed-cmd bash rsync
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [i-am-a-pin-pkg.6.28: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/dir/" "${BASEDIR}/OPAM/pkg-from-pin/.opam-switch/sources/i-am-a-pin-pkg"
+- 
+[i-am-a-pin-pkg.6.28] synchronised (no changes)
+
+The following actions will be performed:
+=== install 1 package
+  - install i-am-a-pin-pkg 6.28 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [i-am-a-pin-pkg: bash printer.sh]
++ bash "printer.sh" "...building..." "exe:.exe" (CWD=${BASEDIR}/OPAM/pkg-from-pin/.opam-switch/build/i-am-a-pin-pkg.6.28)
+- ...building...
+- exe:.exe
+-> compiled  i-am-a-pin-pkg.6.28
+Processing  3/3: [i-am-a-pin-pkg: bash printer.sh]
++ bash "printer.sh" "...installing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/pkg-from-pin/.opam-switch/build/i-am-a-pin-pkg.6.28)
+- ...installing...
+- exe:.exe
+-> installed i-am-a-pin-pkg.6.28
+Done.
+
+<><> i-am-a-pin-pkg.6.28 installed successfully <><><><><><><><><><><><><><><><>
+=> ...A last message...
+   exe:.exe
+### opam remove i-am-a-pin-pkg | sed-cmd bash
+The following actions will be performed:
+=== remove 1 package
+  - remove i-am-a-pin-pkg 6.28 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [i-am-a-pin-pkg: bash printer.sh]
++ bash "printer.sh" "...removing..." "exe:.exe" (CWD=${BASEDIR}/OPAM/pkg-from-pin/.opam-switch/remove/i-am-a-pin-pkg.6.28)
+- ...removing...
+- exe:.exe
+-> removed   i-am-a-pin-pkg.6.28
+Done.

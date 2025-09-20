@@ -759,3 +759,90 @@ Set to '["otherpkg"]' the field depext-bypass in global configuration
 ### opam option depext-bypass=["yetanotherpkg"] --switch phantom
 [ERROR] The selected switch phantom is not installed
 # Return code 2 #
+### ::: What is the path for PKG:opamfile
+### opam switch create --empty var-opamfile
+### :a: present in the repo but not installed
+### <pkg:test.1>
+opam-version: "2.0"
+### opam option --switch=var-opamfile 'pre-build-commands=["cat" opamfile]'
+Set to '["cat" opamfile]' the field pre-build-commands in switch var-opamfile
+### opam var test:opamfile
+[ERROR] Variable test:opamfile not found in switch var-opamfile; package test is not installed in this switch
+# Return code 5 #
+### :b: present in the repo and installed
+### opam install -v test | grep -v '^Processing ' | sed-cmd cat
+The following actions will be performed:
+=== install 1 package
+  - install test 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++ cat "${OPAMTMP}/opam" (CWD=${BASEDIR}/OPAM/var-opamfile/.opam-switch/build/test.1)
+- opam-version: "2.0"
+- name: "test"
+- version: "1"
+-> installed test.1
+Done.
+### opam var test:opamfile
+${BASEDIR}/OPAM/var-opamfile/.opam-switch/packages/test.1/opam
+### :c: not present in the repo but installed
+### rm REPO/packages/test/test.1/opam
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam var test:opamfile
+${BASEDIR}/OPAM/var-opamfile/.opam-switch/packages/test.1/opam
+### :d: not present in the repo and not installed
+### opam remove test
+The following actions will be performed:
+=== remove 1 package
+  - remove test 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   test.1
+Done.
+### opam var test:opamfile
+[ERROR] Variable test:opamfile not found in switch var-opamfile; package test is not installed in this switch
+# Return code 5 #
+### :e: pinned but not installed
+### <pin:pinned-opamfile-test/opam>
+opam-version: "2.0"
+### opam pin add -n ./pinned-opamfile-test
+[NOTE] Package pinned-opamfile-test does not exist in opam repositories registered in the current switch.
+pinned-opamfile-test is now pinned to file://${BASEDIR}/pinned-opamfile-test (version dev)
+### opam var pinned-opamfile-test:opamfile
+[ERROR] Variable pinned-opamfile-test:opamfile not found in switch var-opamfile; package pinned-opamfile-test is not installed in this switch
+# Return code 5 #
+### :f: pinned and installed
+### opam install -v pinned-opamfile-test | grep -v '^Processing ' | sed-cmd cat
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[pinned-opamfile-test.dev] synchronised (no changes)
+
+The following actions will be performed:
+=== install 1 package
+  - install pinned-opamfile-test dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved pinned-opamfile-test.dev  (file://${BASEDIR}/pinned-opamfile-test)
++ cat "${BASEDIR}/OPAM/var-opamfile/.opam-switch/overlay/pinned-opamfile-test/opam" (CWD=${BASEDIR}/OPAM/var-opamfile/.opam-switch/build/pinned-opamfile-test.dev)
+- opam-version: "2.0"
+- synopsis: "A word"
+- description: "Two words."
+- authors: "the testing team"
+- homepage: "egapemoh"
+- maintainer: "maint@tain.er"
+- license: "MIT"
+- dev-repo: "hg+https://pkg@op.am"
+- bug-reports: "https://nobug"
+- name: "pinned-opamfile-test"
+- version: "dev"
+- url {
+-   src:
+-     "file://${BASEDIR}/pinned-opamfile-test"
+- }
+-> installed pinned-opamfile-test.dev
+Done.
+### opam var pinned-opamfile-test:opamfile
+${BASEDIR}/OPAM/var-opamfile/.opam-switch/packages/pinned-opamfile-test.dev/opam

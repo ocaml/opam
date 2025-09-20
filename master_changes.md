@@ -48,6 +48,7 @@ users)
 ## Show
 
 ## Var/Option
+  * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
 
 ## Update / Upgrade
 
@@ -131,6 +132,8 @@ users)
   * Add a test showing that `opam upgrade` allows downgrades when necessary [#6690 @kit-ty-kate]
   * Add a test showing the behaviour of `opam tree` on local packages that happen to be already pinned [#6688 @kit-ty-kate]
   * Add a test showing the behaviour of version pins when one of the dependencies isn't up-to-date [#6691 @kit-ty-kate]
+  * Add a test showing the behaviour of pre-defined variables in command hooks [#6659 @rjbou]
+  * Add a test showing the behaviour of `opam var <pkg>:opamfile` [#6659 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
