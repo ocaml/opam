@@ -52,7 +52,13 @@ module Make (VCS: VCS) = struct
         (VCS.diff repo_root repo_url)
       @@| function
       | None -> OpamRepositoryBackend.Update_empty
-      | Some patch -> OpamRepositoryBackend.Update_patch patch
+      | Some patch_file ->
+        try
+          let diffs =
+            OpamFilename.parse_patch ~dir:repo_root patch_file
+          in
+          OpamRepositoryBackend.Update_patch (patch_file, diffs)
+        with exn -> Update_err exn
     else
       OpamProcess.Job.catch (fun e ->
           OpamFilename.rmdir repo_root;

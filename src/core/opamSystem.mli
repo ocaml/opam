@@ -348,14 +348,15 @@ val get_lock_fd: lock -> Unix.file_descr
 
 (** {2 Misc} *)
 
-(** Apply a patch file in the current directory. If [preprocess] is set to
-    false, there is no CRLF translation. Returns the error if the patch didn't
-    apply.
+(** [patch ~allow_unclean ?patch_filename ~dir diffs] applies a patch to
+    directory [dir].
 
     @param allow_unclean decides if applying a patch on a directory which
     differs slightly from the one described in the patch file is allowed.
     Allowing unclean applications imitates the default behaviour of GNU Patch. *)
-val patch: ?preprocess:bool -> allow_unclean:bool -> dir:string -> string -> exn option
+val patch:
+  allow_unclean:bool -> ?patch_filename:string -> dir:string
+  -> Patch.t list -> unit
 
 (** Returns the end-of-line encoding style for the given file. [None] means that
     either the encoding of line endings is mixed, or the file contains no line
@@ -371,6 +372,11 @@ val get_eol_encoding : string -> bool option
     Git sources will correctly apply to Windows checkouts of the same sources.
 *)
 val translate_patch: dir:string -> string -> string -> unit
+
+(** [parse_patch ~dir patch_file] processes and parses a patch file.
+    Returns the parsed patch diffs or raises [Not_found] if the patch file
+    doesn't exist or can't be parsed. *)
+val parse_patch: dir:string -> file:string -> Patch.t list
 
 (** Create a temporary file in {i ~/.opam/logs/<name>XXX}, if [dir] is not set.
     ?auto_clean controls whether the file is automatically deleted when opam
