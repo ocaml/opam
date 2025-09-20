@@ -83,6 +83,8 @@ users)
 
 ## Build
   * Update the dependency constraint on `patch` to now require its stable version [#6663 @kit-ty-kate]
+  * Update the download-if-missing dependencies to their latest version (re.1.14.0, dune.3.20.2, menhir.20250903) [#6700 @kit-ty-kate]
+  * Remove `seq` from the list of packages to download-if-missing as it is no longer a dependency of `re` [#6700 @kit-ty-kate]
 
 ## Infrastructure
 

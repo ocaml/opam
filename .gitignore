@@ -34,7 +34,6 @@ src_ext/opam-file-format/
 src_ext/re/
 src_ext/result/
 src_ext/secondary/
-src_ext/seq/
 src_ext/sha/
 src_ext/spdx_licenses/
 src_ext/stdlib-shims/

@@ -7,8 +7,8 @@ MD5_extlib = 43fb3bf2989671af1769147b1171d080
 URL_base64 = https://github.com/mirage/ocaml-base64/releases/download/v3.5.1/base64-3.5.1.tbz
 MD5_base64 = bfdd16aa8c136412878109df8791fc01
 
-URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.11.0/re-1.11.0.tbz
-MD5_re = e0199e32947fd33fcc1b8e69de2308a1
+URL_re = https://github.com/ocaml/ocaml-re/archive/refs/tags/1.14.0.tar.gz
+MD5_re = 03f4a83100cb9229a796b85c698076e1
 
 URL_cmdliner = https://erratique.ch/software/cmdliner/releases/cmdliner-1.3.0.tbz
 MD5_cmdliner = 662936095a1613d7254815238e11793f
@@ -36,9 +36,6 @@ MD5_opam-file-format = 5b65ea84fa2e60e89c2c9f2ca3203e31
 
 include Makefile.dune
 
-URL_seq = https://github.com/c-cube/seq/archive/v0.3.1.tar.gz
-MD5_seq = de05d9dedd492fa4e3c0c87bc2792475
-
 URL_stdlib-shims = https://github.com/ocaml/stdlib-shims/releases/download/0.3.0/stdlib-shims-0.3.0.tbz
 MD5_stdlib-shims = 09db7af8b4a3a96048a61cb6ae2496ef
 
@@ -57,8 +54,8 @@ MD5_sha = 08bc953d9a26380bc220b05d680791fb
 URL_swhid_core = https://github.com/OCamlPro/swhid_core/archive/refs/tags/0.1.tar.gz
 MD5_swhid_core = 77d88d4b1d96261c866f140c64d89af8
 
-URL_menhir = https://gitlab.inria.fr/fpottier/menhir/-/archive/20240715/archive.tar.gz
-MD5_menhir = d39a8943fe1be28199e5ec1f4133504c
+URL_menhir = https://gitlab.inria.fr/fpottier/menhir/-/archive/20250903/archive.tar.gz
+MD5_menhir = 5ecb7f71cf374147d3d3137c6e2fe382
 
 URL_patch = https://github.com/hannesm/patch/releases/download/v3.0.0/patch-3.0.0.tar.gz
 MD5_patch = 75aca1ed79a9807e4d4fc6c85aa31b0f
