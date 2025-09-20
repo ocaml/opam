@@ -201,6 +201,7 @@ let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
   let remote_url = OpamFile.URL.url url in
   let mirrors = remote_url :: OpamFile.URL.mirrors url in
   let checksum = OpamFile.URL.checksum url in
+  let signed_by = OpamFile.URL.signed_by url in
   log "updating %a" (slog (OpamUrl.to_string_w_subpath subpath)) remote_url;
 (*
     (slog (OpamStd.Option.to_string OpamFilename.SubPath.pretty_string))
@@ -208,7 +209,7 @@ let fetch_dev_package url srcdir ?(working_dir=false) ?subpath nv =
 *)
   OpamRepository.pull_tree
     ~cache_dir:(OpamRepositoryPath.download_cache OpamStateConfig.(!r.root_dir))
-    (OpamPackage.to_string nv) srcdir checksum ~working_dir ?subpath mirrors
+    (OpamPackage.to_string nv) srcdir checksum signed_by ~working_dir ?subpath mirrors
   @@| OpamRepository.report_fetch_result nv
 
 let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
@@ -578,8 +579,9 @@ let download_package_source_t st url nv_dirs =
           nv_dirs
       in
       let checksums = OpamFile.URL.checksum url in
+      let signed_by = OpamFile.URL.signed_by url in
       (OpamRepository.pull_shared_tree ~cache_dir ~cache_urls
-         dirnames checksums
+         dirnames checksums signed_by
          (OpamFile.URL.url url :: OpamFile.URL.mirrors url))
       @@+ function
       | Not_available (_s,_l) as source_result
@@ -599,6 +601,7 @@ let download_package_source_t st url nv_dirs =
          (OpamPackage.to_string nv ^"/"^ OpamFilename.Base.to_string name)
          ~cache_dir ~cache_urls
          (OpamFile.URL.checksum u)
+         (OpamFile.URL.signed_by u)
          (OpamFile.URL.url u :: OpamFile.URL.mirrors u))
       @@| fun r -> (nv, OpamFilename.Base.to_string name, r) :: ret
   in
