@@ -23,7 +23,7 @@ ifndef FETCH
 endif
 
 SRC_EXTS = \
-  cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format seq \
+  cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format \
   stdlib-shims spdx_licenses opam-0install-cudf 0install-solver uutf \
   jsonm sha swhid_core menhir patch
 

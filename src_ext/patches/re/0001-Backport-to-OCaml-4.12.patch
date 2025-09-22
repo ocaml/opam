@@ -1,0 +1,30 @@
+diff -Naur a/lib/emacs.ml b/lib/emacs.ml
+--- a/lib/emacs.ml	2025-09-18 10:22:10.000000000 +0000
++++ b/lib/emacs.ml	2025-09-18 19:49:12.035021466 +0000
+@@ -21,6 +21,7 @@
+ *)
+ 
+ module Re = Core
++open Import
+ 
+ exception Parse_error
+ exception Not_supported
+diff -Naur a/lib/import.ml b/lib/import.ml
+--- a/lib/import.ml	2025-09-18 10:22:10.000000000 +0000
++++ b/lib/import.ml	2025-09-18 19:49:12.035091716 +0000
+@@ -13,12 +13,13 @@
+ let ( == ) = [ `Use_phys_equal ]
+ let ( < ) (x : int) (y : int) = x < y
+ let ( > ) (x : int) (y : int) = x > y
+-let min = Int.min
+-let max = Int.max
++let min (x : int) (y : int) = Stdlib.min x y
++let max (x : int) (y : int) = Stdlib.max x y
+ let compare = Int.compare
+ 
+ module Int = struct
+   let[@warning "-32"] hash (x : int) = Hashtbl.hash x
++  let[@warning "-32"] max = (max : int -> int -> int)
+ 
+   include Stdlib.Int
+ end
