@@ -5,6 +5,7 @@
 # Microsoft C Compiler Environment Detection Script                                                #
 # ################################################################################################ #
 # Copyright (c) 2016, 2017, 2018, 2019, 2020, 2021 MetaStack Solutions Ltd.                        #
+# Copyright (c) 2022, 2024 David Allsopp Ltd.                                                      #
 # ################################################################################################ #
 # Author: David Allsopp                                                                            #
 # 16-Feb-2016                                                                                      #
@@ -27,7 +28,9 @@
 # of this software, even if advised of the possibility of such damage.                             #
 # ################################################################################################ #
 
-VERSION=0.5.0
+VERSION=0.7.1~dev
+
+set -f
 
 # debug [level=2] message
 debug ()
@@ -74,7 +77,7 @@ find_in ()
   if [[ -z $1 ]] ; then
     STATUS=1
   else
-    IFS=*
+    IFS='*'
     STATUS=1
     for f in $1; do
       if [[ -e "$f/$2" ]] ; then
@@ -140,7 +143,7 @@ check_environment ()
   ASSEMBLER=${ASSEMBLER%86}.exe
   if [[ $ML_REQUIRED -eq 1 ]] ; then
     RET=0
-    find_in "$1" $ASSEMBLER
+    find_in "$1" "$ASSEMBLER"
     if [[ $RET -gt 0 ]] ; then
       warning "Microsoft Assembler ($ASSEMBLER) not found - $4 ($5)"
       return 1
@@ -164,7 +167,7 @@ check_environment ()
 # value (i.e. no change) is output.
 output ()
 {
-  if [[ $3 = $ENV_ARCH ]] ; then
+  if [[ $3 = "$ENV_ARCH" ]] ; then
     VALUE=
   else
     VALUE=$2
@@ -175,6 +178,26 @@ output ()
     1)
       VALUE=${VALUE//#/\\\#}
       echo "$1=${VALUE//\$/\$\$}";;
+    2)
+      case $1 in
+        MSVS_PATH)
+          prefix='bin';;
+        MSVS_INC)
+          prefix='inc';;
+        MSVS_LIB)
+          prefix='lib';;
+        MSVS_ML)
+          prefix='asm';;
+        *)
+          echo Internal fault "$1">&2
+          exit 3;;
+      esac
+      while IFS= read -r entry; do
+        if [[ -n $entry ]] ; then
+          echo "$prefix*$entry"
+        fi
+      done <<< "${VALUE//;/$'\n'}"
+      ;;
   esac
 }
 
@@ -184,9 +207,11 @@ output ()
 #               1 - --all
 #               2 - --help
 #               3 - --version
+#               4 - --installed
 # OUTPUT      --output option
 #               0 - =shell
 #               1 - =make
+#               2 - =data
 # MT_REQUIRED --with-mt
 # ML_REQUIRED --with-assembler
 # TARGET_ARCH Normalised --arch (x86, x64 or blank for both)
@@ -207,18 +232,21 @@ WHICH=$(which which)
 # Parse command-line. At the moment, the short option which usefully combines with anything is -d,
 # so for the time being, combining short options is not permitted, as the loop becomes even less
 # clear with getopts. GNU getopt isn't installed by default on Cygwin...
-if [[ $@ != "" ]] ; then
+if [[ $# -gt 0 ]] ; then
   while true ; do
     case "$1" in
       # Mode settings ($MODE)
       -a|--all)
         MODE=1
         shift 1;;
-      -h|--help)
+      -i|--installed)
         MODE=2
         shift;;
-      -v|--version)
+      -h|--help)
         MODE=3
+        shift;;
+      -v|--version)
+        MODE=4
         shift;;
 
       # Simple flags ($MT_REQUIRED and $ML_REQUIRED)
@@ -236,6 +264,8 @@ if [[ $@ != "" ]] ; then
             ;;
           make)
             OUTPUT=1;;
+          data)
+            OUTPUT=2;;
           *)
             echo "$0: unrecognised option for $1: '$2'">&2
             exit 2;;
@@ -245,6 +275,9 @@ if [[ $@ != "" ]] ; then
         shift;;
       -omake|--output=make)
         OUTPUT=1
+        shift;;
+      -odata|--output=data)
+        OUTPUT=2
         shift;;
       -o*)
         echo "$0: unrecognised option for -o: '${1#-o}'">&2
@@ -256,19 +289,19 @@ if [[ $@ != "" ]] ; then
       # -x, --arch ($TARGET_ARCH)
       -x|--arch)
         case "$2" in
-          86|x86)
+          86|x86|x86_32)
             TARGET_ARCH=x86;;
-          64|x64)
+          64|x64|x86_64)
             TARGET_ARCH=x64;;
           *)
             echo "$0: unrecognised option for $1: '$2'">&2
             exit 2
         esac
         shift 2;;
-      -x86|-xx86|--arch=x86|--arch=86)
+      -x86|-xx86|-xx86_32|--arch=x86|--arch=86|--arch=x86_32)
         TARGET_ARCH=x86
         shift;;
-      -x64|-xx64|--arch=x64|--arch=64)
+      -x64|-xx64|-xx86_64|--arch=x64|--arch=64|--arch=x86_64)
         TARGET_ARCH=x64
         shift;;
       -x*)
@@ -312,11 +345,11 @@ if [[ $@ != "" ]] ; then
   done
 
   if [[ -n ${1+x} ]] ; then
-    if [[ $MODE -eq 1 ]] ; then
-      echo "$0: cannot specify MSVS_PREFERENCE and --all">&2
+    if [[ $MODE -eq 1 || $MODE -eq 2 ]] ; then
+      echo "$0: cannot specify MSVS_PREFERENCE and --all or --installed">&2
       exit 2
     else
-      MSVS_PREFERENCE="$@"
+      MSVS_PREFERENCE="$*"
     fi
   fi
 fi
@@ -324,11 +357,14 @@ fi
 # Options sanitising
 if [[ $MODE -eq 1 ]] ; then
   if [[ -n $TARGET_ARCH ]] ; then
-    echo "$0: --all and --arch are mutually exclusive">&2
+    echo "$0: --all/--installed and --arch are mutually exclusive">&2
     exit 2
   fi
   MSVS_PREFERENCE=
   SCAN_ENV=1
+elif [[ $OUTPUT -eq 2 && -z $TARGET_ARCH ]] ; then
+  echo "$0: --output=data requires --arch">&2
+  exit 2
 elif [[ -z ${MSVS_PREFERENCE+x} ]] ; then
   MSVS_PREFERENCE='@;VS17.*;VS16.*;VS15.*;VS14.0;VS12.0;VS11.0;10.0;9.0;8.0;7.1;7.0'
 fi
@@ -347,7 +383,7 @@ fi
 
 NAME="Microsoft C Compiler Environment Detection Script"
 case $MODE in
-  2)
+  3)
     echo "$NAME"
     echo "Queries the environment and registry to locate Visual Studio / Windows SDK"
     echo "installations and uses their initialisation scripts (SetEnv.cmd, vcvarsall.bat,"
@@ -362,9 +398,17 @@ case $MODE in
     echo "                       to return packages containing both architectures"
     echo "  -d, --debug[=LEVEL]  Set debug messages level"
     echo "  -h, --help           Display this help screen"
+    echo "  -i, --installed      Display all detected compiler packages; similarly to --all,"
+    echo "                       except the list includes versions and may include packages"
+    echo "                       which don't include the required compiler, tools, or libraries."
     echo "  -o, --output=OUTPUT  Set final output. Default is shell. Valid values:"
     echo "                         shell - shell assignments, for use with eval"
     echo "                         make  - make assignments, for inclusion in a Makefile"
+    echo "                         data  - raw data, for parsing in other systems. The first"
+    echo "                                 line is the full path to the batch file which was"
+    echo "                                 analysed. The following lines are the individual"
+    echo "                                 components of MSVS_PATH, MSVS_INC and MSVS_LIB, each"
+    echo "                                 prefixed bin*, inc* or lib* respectively."
     echo "  -v, --version        Display the version"
     echo "      --with-mt        Only consider packages including the Manifest Tool"
     echo "      --with-assembler Only consider packages including an assembler"
@@ -384,7 +428,7 @@ case $MODE in
     echo "The default behaviour is to match the environment compiler followed by the most"
     echo "recent version of the compiler."
     exit 0;;
-  3)
+  4)
     echo "$NAME"
     echo "Version $VERSION"
     exit 0;;
@@ -415,7 +459,9 @@ esac
 # copied to the appropriate version. SDKs after 7.1 do not include compilers, and so are not
 # captured (as of Visual Studio 2015, the Windows SDK is official part of Visual Studio).
 declare -A COMPILERS
+# shellcheck disable=SC2034 # SDK52_KEY is used in COMPILERS which is eval'd...
 SDK52_KEY='HKLM\SOFTWARE\Microsoft\MicrosoftSDK\InstalledSDKs\8F9E5EF3-A9A5-491B-A889-C58EFFECE8B3'
+# shellcheck disable=SC2016 # ... and is therefore intentionally in a quoted string
 COMPILERS=(
   ["VS7.0"]='(
     ["NAME"]="Visual Studio .NET 2002"
@@ -479,6 +525,7 @@ COMPILERS=(
   ["SDK5.2"]='(
     ["NAME"]="Windows Server 2003 SP1 SDK"
     ["VC_VER"]="8.0"
+    ["VERSION"]="5.2"
     ["REG_KEY"]="$SDK52_KEY"
     ["REG_VALUE"]="Install Dir"
     ["SETENV_RELEASE"]="/RETAIL"
@@ -531,10 +578,16 @@ done
 # Reset FOUND for later use.
 FOUND=()
 
+if "$WHICH" cl >/dev/null 2>&1 ; then
+  env_has_cl=1
+else
+  env_has_cl=0
+fi
+
 # Scan the environment for a C compiler, and check that it's valid. Throughout the rest of the
 # script, it is assumed that if ENV_ARCH is set then there is a valid environment compiler.
 if [[ $SCAN_ENV -eq 1 ]] ; then
-  if "$WHICH" cl >/dev/null 2>&1 ; then
+  if [[ $env_has_cl -eq 1 ]]; then
     # Determine its architecture from the Microsoft Logo line.
     ENV_ARCH=$(cl 2>&1 | head -1 | tr -d '\r')
     case "${ENV_ARCH#* for }" in
@@ -570,9 +623,12 @@ if [[ $SCAN_ENV -eq 1 ]] ; then
           ENV_cl=${ENV_CL,,}
           ENV_cl=${ENV_cl/bin\/*_/bin\/}
           debug "Environment appears to include a compiler at $ENV_CL"
-          if [[ -n $TARGET_ARCH && $TARGET_ARCH != $ENV_ARCH ]] ; then
+          # It doesn't matter whether the architecture matches - when the full probe happens in the
+          # next loop, the corresponding architecture should then be selected (so, for example, if
+          # the environment compiler is x86 VS2017, but VS2022 is installed, then by default the
+          # compiler returned for x64 is VS2017's x64 compiler, not VS2022's).
+          if [[ -n $TARGET_ARCH && $TARGET_ARCH != "$ENV_ARCH" ]] ; then
             debug "But architecture doesn't match required value"
-            unset ENV_ARCH
           fi
         else
           unset ENV_ARCH
@@ -604,7 +660,7 @@ declare -A COMPILER
 
 # Scan the registry for compiler package (vswhere is later)
 for i in "${!COMPILERS[@]}" ; do
-  eval COMPILER=${COMPILERS[$i]}
+  eval "COMPILER=${COMPILERS["$i"]}"
 
   if [[ -n ${COMPILER["ENV"]+x} ]] ; then
     # Visual Studio package - test for its environment variable
@@ -612,7 +668,7 @@ for i in "${!COMPILERS[@]}" ; do
     if [[ -n ${!ENV+x} ]] ; then
       debug "$ENV is a candidate"
       TEST_PATH=${!ENV%\"}
-      TEST_PATH=$(cygpath -u -f - <<< ${TEST_PATH#\"})
+      TEST_PATH=$(cygpath -u "${TEST_PATH#\"}")
       if [[ -e $TEST_PATH/vsvars32.bat ]] ; then
         debug "Directory pointed to by $ENV contains vsvars32.bat"
         EXPRESS=0
@@ -646,7 +702,15 @@ for i in "${!COMPILERS[@]}" ; do
             if [[ $EXPRESS -eq 1 ]] ; then
               DISPLAY="$DISPLAY Express"
             fi
-            FOUND+=(["$i"]="$RESULT [\"DISPLAY\"]=\"$DISPLAY\" [\"IS_EXPRESS\"]=\"$EXPRESS\")")
+            ENV=VS${COMPILER["ENV"]}COMNTOOLS
+            ENV=${!ENV%\"}
+            ENV=${ENV#\"}
+            if [[ ${COMPILER["ENV"]}0 -ge 800 ]] ; then
+              SCRIPT="$(cygpath -d "$ENV")\\..\\..\\VC\\vcvarsall.bat"
+            else
+              SCRIPT="$(cygpath -d "$ENV")\\vsvars32.bat"
+            fi
+            FOUND+=(["$i"]="$RESULT [\"DISPLAY\"]=\"$DISPLAY\" [\"IS_EXPRESS\"]=\"$EXPRESS\" [\"SETENV\"]=\"$SCRIPT\")")
             debug "${COMPILER["NAME"]} accepted for further detection"
           else
             warning "$ENV doesn't agree with registry"
@@ -679,6 +743,7 @@ SDK_ROOT='HKLM\SOFTWARE\Microsoft\Microsoft SDKs\Windows'
 for i in $(reg query "$SDK_ROOT" 2>/dev/null | tr -d '\r' | sed -ne '/Windows\\v/s/.*\\//p') ; do
   debug "Analysing SDK key $SDK_ROOT\\$i"
   INSTALL_DIR=$(reg_string "$SDK_ROOT\\$i" InstallationFolder)
+  VERSION=$(reg_string "$SDK_ROOT\\$i" ProductVersion)
   if [[ -n $INSTALL_DIR ]] ; then
     TEST_PATH=$(cygpath -u "$INSTALL_DIR")
     if [[ -e $TEST_PATH/Bin/SetEnv.cmd ]] ; then
@@ -686,11 +751,11 @@ for i in $(reg query "$SDK_ROOT" 2>/dev/null | tr -d '\r' | sed -ne '/Windows\\v
         warning "SDK $i is not known to this script - assuming compatibility"
         DISPLAY="Windows SDK $i"
       else
-        eval COMPILER=${COMPILERS["SDK${i#v}"]}
+        eval "COMPILER=${COMPILERS["SDK${i#v}"]}"
         DISPLAY=${COMPILER['NAME']}
       fi
       RESULT=${COMPILERS['SDK']%)}
-      FOUND+=(["SDK${i/v/}"]="$RESULT [\"DISPLAY\"]=\"$DISPLAY\" [\"SETENV\"]=\"$INSTALL_DIR\\Bin\\SetEnv.cmd\")")
+      FOUND+=(["SDK${i/v/}"]="$RESULT [\"DISPLAY\"]=\"$DISPLAY\" [\"VERSION\"]=\"$VERSION\" [\"SETENV\"]=\"$INSTALL_DIR\\Bin\\SetEnv.cmd\")")
     else
       if [[ -n ${COMPILERS["SDK${i#v}"]+x} ]] ; then
         warning "Registry set for Windows SDK $i, but SetEnv.cmd not found"
@@ -702,10 +767,10 @@ for i in $(reg query "$SDK_ROOT" 2>/dev/null | tr -d '\r' | sed -ne '/Windows\\v
 done
 
 # Now enumerate Visual Studio 2017+ instances
-VSWHERE=$(dirname $(realpath $0))/vswhere.exe
+VSWHERE="$(dirname "$(realpath "$0")")/vswhere.exe"
 if [[ ! -x $VSWHERE ]] ; then
   VSWHERE="$(printenv 'ProgramFiles(x86)')\\Microsoft Visual Studio\\Installer\\vswhere.exe"
-  VSWHERE=$(echo $VSWHERE| cygpath -f -)
+  VSWHERE=$(cygpath "$VSWHERE")
 fi
 if [[ -x $VSWHERE ]] ; then
   debug "$VSWHERE found"
@@ -716,26 +781,38 @@ if [[ -x $VSWHERE ]] ; then
       installationPath)
         INSTANCE_PATH=${line#*: };;
       installationVersion)
-        INSTANCE_VER=${line#*: }
-        INSTANCE_VER=${INSTANCE_VER%.*}
+        INSTANCE_FULL_VER=${line#*: }
+        INSTANCE_VER=${INSTANCE_FULL_VER%.*}
         INSTANCE_VER=${INSTANCE_VER%.*};;
       displayName)
         INSTANCE_NAME=${line#*: }
-        debug "Looking at $INSTANCE in $INSTANCE_PATH ($INSTANCE_VER $INSTANCE_NAME)"
-        if [[ -e "$(echo $INSTANCE_PATH| cygpath -f -)/VC/Auxiliary/Build/vcvarsall.bat" ]] ; then
+        debug "Looking at $INSTANCE in $INSTANCE_PATH ($INSTANCE_FULL_VER $INSTANCE_NAME)"
+        if [[ -e "$(cygpath "$INSTANCE_PATH")/VC/Auxiliary/Build/vcvarsall.bat" ]] ; then
           debug "vcvarsall.bat found"
-          FOUND+=(["VS$INSTANCE_VER"]="([\"DISPLAY\"]=\"$INSTANCE_NAME\" [\"ARCH\"]=\"x86 x64\" [\"SETENV\"]=\"$INSTANCE_PATH\\VC\\Auxiliary\\Build\\vcvarsall.bat\" [\"SETENV_RELEASE\"]=\"\")")
+          if [[ $MODE -eq 2 ]]; then
+            INSTANCE_VER="$INSTANCE_VER-$INSTANCE"
+          fi
+          FOUND+=(["VS$INSTANCE_VER"]="([\"DISPLAY\"]=\"$INSTANCE_NAME\" [\"VERSION\"]=\"$INSTANCE_FULL_VER\" [\"ARCH\"]=\"x86 x64\" [\"SETENV\"]=\"$INSTANCE_PATH\\VC\\Auxiliary\\Build\\vcvarsall.bat\" [\"SETENV_RELEASE\"]=\"\")")
         else
           warning "vcvarsall.bat not found for $INSTANCE"
         fi;;
     esac
-  done < <("$VSWHERE" -all -products '*' -nologo | tr -d '\r')
+  done < <("$VSWHERE" -all -prerelease -products '*' -nologo | tr -d '\r')
 fi
 
-if [[ $DEBUG -gt 1 ]] ; then
+if [[ $DEBUG -gt 1 || $MODE -eq 2 ]] ; then
   for i in "${!FOUND[@]}" ; do
-    echo "Inspect $i">&2
-  done
+    if [[ $MODE -eq 2 ]]; then
+      eval "COMPILER=${FOUND["$i"]}"
+      echo "  $i (${COMPILER["VERSION"]}; ${COMPILER["SETENV"]})"
+    else
+      echo "Inspect $i">&2
+    fi
+  done | sort
+fi
+
+if [[ $MODE -eq 2 ]] ; then
+  exit 0
 fi
 
 # Basic scanning is complete, now interrogate the packages which seem to be installed and ensure
@@ -754,8 +831,9 @@ for i in "${!FOUND[@]}" ; do
   CANDIDATES[$i]="";
 done
 
-# For --all, act as though MSVS_PREFERENCE were "@" because this causes all packages to be tested.
-if [[ $MODE -eq 1 ]] ; then
+# For --all/--installed, act as though MSVS_PREFERENCE were "@" because this causes all packages to
+# be tested.
+if [[ $MODE -gt 0 ]] ; then
   PREFER_ENV=1
   PREFERENCE=("@")
 else
@@ -775,33 +853,33 @@ for i in $MSVS_PREFERENCE ; do
   else
     if [[ -n ${COMPILERS[$i]+x} || -n ${COMPILERS[${i%.*}.*]+x} ]] ; then
       if [[ -n ${CANDIDATES[$i]+x} ]] ; then
-        unset CANDIDATES[$i]
-        TEST+=($i)
-        PREFERENCE+=($i)
+        unset "CANDIDATES[$i]"
+        TEST+=("$i")
+        PREFERENCE+=("$i")
       elif [[ ${i#*.} = "*" ]] ; then
         INSTANCES=
         for j in "${!CANDIDATES[@]}" ; do
-          if [[ "${j%.*}.*" = $i ]] ; then
-            unset CANDIDATES[$j]
+          if [[ "${j%.*}.*" = "$i" ]] ; then
+            unset "CANDIDATES[$j]"
             INSTANCES="$INSTANCES $j"
           fi
         done
         INSTANCES="$(sort -r <<< "${INSTANCES// /$'\n'}")"
-        eval TEST+=($INSTANCES)
-        eval PREFERENCE+=($INSTANCES)
+        eval "TEST+=($INSTANCES)"
+        eval "PREFERENCE+=($INSTANCES)"
       fi
     else
       if [[ -n ${CANDIDATES["VS$i"]+x} ]] ; then
-        unset CANDIDATES["VS$i"]
+        unset "CANDIDATES[VS$i]"
         TEST+=("VS$i")
         PREFERENCE+=("VS$i")
       fi
       SDKS=
       for j in "${!COMPILERS[@]}" ; do
-        eval COMPILER=${COMPILERS[$j]}
+        eval "COMPILER=${COMPILERS["$j"]}"
         if [[ -n ${COMPILER["VC_VER"]+x} ]] ; then
-          if [[ $i = ${COMPILER["VC_VER"]} && -n ${CANDIDATES[$j]+x} ]] ; then
-            unset CANDIDATES[$j]
+          if [[ $i = "${COMPILER["VC_VER"]}" && -n ${CANDIDATES[$j]+x} ]] ; then
+            unset "CANDIDATES[$j]"
             SDKS="$j $SDKS"
           fi
         fi
@@ -809,8 +887,8 @@ for i in $MSVS_PREFERENCE ; do
       SDKS=${SDKS% }
       SDKS="$(sort -r <<< "${SDKS// /$'\n'}")"
       SDKS=${SDKS//$'\n'/ }
-      eval TEST+=($SDKS)
-      eval PREFERENCE+=($SDKS)
+      eval "TEST+=($SDKS)"
+      eval "PREFERENCE+=($SDKS)"
     fi
   fi
 done
@@ -819,9 +897,9 @@ done
 # them from FOUND so that they don't accidentally get reported on later.
 for i in "${!CANDIDATES[@]}" ; do
   if [[ $PREFER_ENV -eq 1 ]] ; then
-    TEST+=($i)
+    TEST+=("$i")
   else
-    unset FOUND[$i]
+    unset "FOUND[$i]"
   fi
 done
 
@@ -852,42 +930,37 @@ declare -A ARCHINFO
 
 for i in "${TEST[@]}" ; do
   CURRENT=${FOUND[$i]}
-  eval COMPILER=$CURRENT
+  eval "COMPILER=$CURRENT"
   # At the end of this process, the keys of FOUND will be augmented with the architecture found in
   # each case (so if "VS14.0" was in FOUND from the scan and both the x86 and x64 compilers are
   # valid, then at the end of this loop FOUND will contain "VS14.0-x86" and "VS14.0-x64").
-  unset FOUND[$i]
+  unset "FOUND[$i]"
 
   if [[ ${COMPILER["IS_EXPRESS"]}0 -gt 0 && -n ${COMPILER["EXPRESS_ARCH_SWITCHES"]+x} ]] ; then
-    eval ARCHINFO=${COMPILER["EXPRESS_ARCH_SWITCHES"]}
+    eval "ARCHINFO=${COMPILER['EXPRESS_ARCH_SWITCHES']}"
   elif [[ -n ${COMPILER["ARCH_SWITCHES"]+x} ]] ; then
-    eval ARCHINFO=${COMPILER["ARCH_SWITCHES"]}
+    eval "ARCHINFO=${COMPILER['ARCH_SWITCHES']}"
   else
     ARCHINFO=()
   fi
 
   # Determine the script to be executed and any non-architecture specific switches needed.
-  # $ENV is will contain the value of the environment variable for the compiler (empty for an SDK)
-  # which is required for Visual Studio 7.x shim later.
+  # $ENV will contain the value of the environment variable for the compiler (empty for an SDK)
+  # which is required for the Visual Studio 7.x shim later.
+  SCRIPT=${COMPILER["SETENV"]}
   if [[ -n ${COMPILER["ENV"]+x} ]] ; then
-    ENV=VS${COMPILER["ENV"]}COMNTOOLS
-    ENV=${!ENV%\"}
-    ENV=${ENV#\"}
-    if [[ ${COMPILER["ENV"]}0 -ge 800 ]] ; then
-      SCRIPT="$(cygpath -d -f - <<< $ENV)\\..\\..\\VC\\vcvarsall.bat"
-      SCRIPT_SWITCHES=
-    else
-      SCRIPT="$(cygpath -d -f - <<< $ENV)\\vsvars32.bat"
-      SCRIPT_SWITCHES=
-    fi
+    SCRIPT_SWITCHES=''
   else
     ENV=
-    SCRIPT=${COMPILER["SETENV"]}
-    SCRIPT_SWITCHES=${COMPILER["SETENV_RELEASE"]}
+    if [[ -n ${COMPILER["SETENV_RELEASE"]} ]]; then
+      SCRIPT_SWITCHES=" ${COMPILER["SETENV_RELEASE"]}"
+    else
+      SCRIPT_SWITCHES=''
+    fi
   fi
   # For reasons of escaping, the script is executed using its basename so the directory needs
   # prepending to PATH.
-  DIR=$(dirname "$SCRIPT" | cygpath -u -f -)
+  DIR=$(cygpath -u "$(dirname "$SCRIPT")")
 
   if [[ ${COMPILER["IS_EXPRESS"]} -gt 0 && -n ${COMPILER["EXPRESS_ARCH"]+x} ]] ; then
     ARCHS=${COMPILER["EXPRESS_ARCH"]}
@@ -909,16 +982,41 @@ for i in "${TEST[@]}" ; do
     MSVS_LIB=
     MSVS_INC=
 
-    COMMAND='%EXEC_SCRIPT% && echo XMARKER && echo !PATH! && echo !LIB! && echo !INCLUDE!'
+    COMMAND='%EXEC_SCRIPT% && echo XMARKER && echo !PATH! && echo !LIB! && echo !INCLUDE! && echo !VCToolsVersion! && echo !VSCMD_VER! && echo !VisualStudioVersion!'
+
+    if [[ $env_has_cl -eq 1 ]]; then
+      if [[ -n $__VSCMD_PREINIT_PATH ]]; then
+        TEST_PATH=$(cygpath -p "$__VSCMD_PREINIT_PATH")
+      elif [[ -n $ORIGINALPATH ]]; then
+        TEST_PATH="$ORIGINALPATH"
+      else
+        TEST_PATH="$PATH"
+      fi
+    else
+      TEST_PATH="$PATH"
+    fi
 
     # Note that EXEC_SCRIPT must have ARCH_SWITCHES first for older Platform SDKs (newer ones parse
     # arguments properly)
     if [[ $DEBUG -gt 3 ]] ; then
-      printf "Scanning %s... " "$(basename "$SCRIPT") $ARCH_SWITCHES $SCRIPT_SWITCHES">&2
+      printf "Scanning %s... " "$(basename "$SCRIPT") $ARCH_SWITCHES$SCRIPT_SWITCHES">&2
     fi
     # Setting MSYS2_ARG_CONV_EXCL to * inhibits attempts to convert the flags to COMSPEC as
     # command line parameters.
     num=0
+    INCLUDE_KEY="$(env | grep -i '^include=')"
+    LIB_KEY="$(env | grep -i '^lib=')"
+    INCLUDE_KEY="${INCLUDE_KEY%=*}"
+    LIB_KEY="${LIB_KEY%=*}"
+    unset_keys=(-u ORIGINAL_PATH -u ORIGINALPATH -u TARGET_CPU -u TARGET_PLATFORM -u DevEnvDir \
+                -u VSINSTALLDIR -u VCToolsVersion -u Framework35Version \
+                -u __VSCMD_PREINIT_VCToolsVersion)
+    if [[ -n $INCLUDE_KEY ]]; then
+      unset_keys+=(-u "$INCLUDE_KEY")
+    fi
+    if [[ -n $LIB_KEY ]]; then
+      unset_keys+=(-u "$LIB_KEY")
+    fi
     while IFS= read -r line; do
       case $num in
         0)
@@ -927,17 +1025,32 @@ for i in "${TEST[@]}" ; do
           MSVS_LIB=${line%% };;
         2)
           MSVS_INC=${line%% };;
+        3)
+          VC_VERSION=${line%% };;
+        4)
+          VSCMD_VER=${line%% };;
+        5)
+          if [[ $VC_VERSION = '!VCToolsVersion!' ]] ; then
+            VC_VERSION=${line%% }
+          fi;;
       esac
       ((num++))
-    done < <(INCLUDE='' LIB='' PATH="?msvs-detect?:$DIR:$PATH" ORIGINALPATH='' \
-             EXEC_SCRIPT="$(basename "$SCRIPT") $ARCH_SWITCHES $SCRIPT_SWITCHES" \
-             MSYS2_ARG_CONV_EXCL='*' \
-             $(cygpath "$COMSPEC") /v:on /c $COMMAND 2>/dev/null | grep -F XMARKER -A 3 | tr -d '\015' | tail -3)
+    done < <(env "${unset_keys[@]}" PATH="?msvs-detect?:$DIR:/usr/bin:$TEST_PATH" \
+                 EXEC_SCRIPT="$(basename "$SCRIPT") $ARCH_SWITCHES$SCRIPT_SWITCHES" \
+                 MSYS2_ARG_CONV_EXCL='*' \
+             "$(cygpath "$COMSPEC")" /d /v:on /c "$COMMAND" 2>/dev/null | grep -F XMARKER -A 6 | tr -d '\015' | tail -6)
+    if [[ $VC_VERSION = '!VisualStudioVersion!' ]] ; then
+      VC_VERSION="${COMPILER["VERSION"]}"
+    fi
+    if [[ $VSCMD_VER = '!VSCMD_VER!' ]]; then
+      VSCMD_VER=''
+    fi
     if [[ $DEBUG -gt 3 ]] ; then
-      echo done>&2
+      echo 'done'>&2
     fi
 
     if [[ -n $MSVS_PATH ]] ; then
+      MSVS_PATH_WIN32="${MSVS_PATH/?msvs-detect?*/}"
       # Translate MSVS_PATH back to Cygwin notation (/cygdrive, etc. and colon-separated)
       MSVS_PATH=$(cygpath "$MSVS_PATH" -p)
       # Remove any trailing / from elements of MSVS_PATH
@@ -956,18 +1069,22 @@ for i in "${TEST[@]}" ; do
     if [[ ${i/.*/} = "VS7" ]] ; then
       find_in "${MSVS_PATH//:/*}" mt.exe
       if [[ $RET -eq 1 ]] ; then
-        MSVS_PATH="$MSVS_PATH$(cygpath -u -f - <<< $ENV\\Bin\\winnt):"
+        MSVS_PATH="$MSVS_PATH$(cygpath -u "$ENV\\Bin\\winnt"):"
         RET=0
       fi
     fi
 
     # Ensure that these derived values give a valid compiler.
-    if check_environment "${MSVS_PATH//:/*}" "${MSVS_INC//;/*}" "${MSVS_LIB//;/*}" "$i" $arch ; then
+    if check_environment "${MSVS_PATH//:/*}" "${MSVS_INC//;/*}" "${MSVS_LIB//;/*}" "$i" "$arch" ; then
       # Put the package back into FOUND, but augmented with the architecture name and with the
       # derived values.
       FOUND["$i-$arch"]="${CURRENT%)} [\"MSVS_PATH\"]=\"$MSVS_PATH\" \
+                                      [\"MSVS_PATH_WIN32\"]=\"$MSVS_PATH_WIN32\" \
                                       [\"MSVS_INC\"]=\"$MSVS_INC\" \
                                       [\"MSVS_LIB\"]=\"$MSVS_LIB\" \
+                                      [\"SETENV_SWITCHES\"]=\"$ARCH_SWITCHES$SCRIPT_SWITCHES\" \
+                                      [\"VC_VERSION\"]=\"$VC_VERSION\" \
+                                      [\"VSCMD_VER\"]=\"$VSCMD_VER\" \
                                       [\"ASSEMBLER\"]=\"$ASSEMBLER\")" #"# fixes vim syn match error
 
       # Check to see if this is a match for the environment C compiler.
@@ -975,7 +1092,7 @@ for i in "${TEST[@]}" ; do
         TEST_cl=$(PATH="$MSVS_PATH:$PATH" "$WHICH" cl)
         TEST_cl=${TEST_cl,,}
         TEST_cl=${TEST_cl/bin\/*_/bin\/}
-        if [[ $TEST_cl = $ENV_cl ]] ; then
+        if [[ $TEST_cl = "$ENV_cl" ]] ; then
           # Create trailing semi-colon versions of the expansions of ENV_ for comparison with MSVS_
           ENV_EXPAND_INC="${!ENV_INC%%;};"
           ENV_EXPAND_LIB="${!ENV_LIB%%;};"
@@ -1012,7 +1129,7 @@ for i in "${TEST[@]}" ; do
   # Does this package match the current preference? Note that PREFERENCE and TEST are constructed in
   # a cunning (and hopefully not too "You are not expected to understand this" way) such that $PREF
   # will always equal $i, unless $PREF = "@".
-  if [[ $PREF = $i ]] ; then
+  if [[ $PREF = "$i" ]] ; then
     # In which case, check that the architecture(s)s were found
     if [[ -n ${FOUND["$i-$LEFT_ARCH"]+x} && -n ${FOUND["$i-$RIGHT_ARCH"]+x} ]] ; then
       debug "Solved TARGET_ARCH=$TARGET_ARCH with $i"
@@ -1041,7 +1158,7 @@ FLIP=(["x86"]="x64" ["x64"]="x86")
 
 if [[ $MODE -eq 0 ]] ; then
   if [[ $PREF = "@" && -n ${ENV_COMPILER} ]] ; then
-    SOLUTION=${ENV_COMPILER%-$ENV_ARCH}
+    SOLUTION=${ENV_COMPILER%-"$ENV_ARCH"}
     # If --arch wasn't specified, then ensure that the other architecture was also found. If --arch
     # was specified, then validate that the compiler was valid. This should always happen, unless
     # something went wrong running the script to get MSVS_PATH, MSVS_LIB and MSVS_INC.
@@ -1057,7 +1174,6 @@ if [[ $MODE -eq 0 ]] ; then
   if [[ -z ${SOLUTION+x} ]] ; then
     ((pref++))
     debug "Search remaining: ${PREFERENCE[*]}"
-    TEST_ARCH=$TARGET_ARCH
     for i in "${PREFERENCE[@]:$pref}" ; do
       if [[ -n ${FOUND["$i-$LEFT_ARCH"]+x} && -n ${FOUND["$i-$RIGHT_ARCH"]+x} ]] ; then
         debug "Solved TARGET_ARCH='$TARGET_ARCH' with $i"
@@ -1076,23 +1192,38 @@ fi
 
 if [[ $MODE -eq 1 ]] ; then
   echo "Installed and usable packages:"
-  for i in "${!FOUND[@]}" ; do
-    echo "  $i"
+  for key in "${!FOUND[@]}" ; do
+    eval "COMPILER=${FOUND["$key"]}"
+    switches="${COMPILER["SETENV_SWITCHES"]}"
+    if [[ $switches != "${switches% *}" ]]; then
+      switches="\"$switches\""
+    fi
+    echo "- ${key/-/ } \"${COMPILER["SETENV"]}\" $switches"
   done | sort
   exit 0
 fi
 
 if [[ -n $SOLUTION ]] ; then
-  eval COMPILER=${FOUND[$SOLUTION-$LEFT_ARCH]}
-  output MSVS_NAME "${COMPILER["DISPLAY"]}" $LEFT_ARCH
-  output MSVS_PATH "${COMPILER["MSVS_PATH"]}" $LEFT_ARCH
+  eval "COMPILER=${FOUND["$SOLUTION-$LEFT_ARCH"]}"
+  if [[ $OUTPUT -ne 2 ]] ; then
+    output MSVS_NAME "${COMPILER["DISPLAY"]}" "always"
+    output MSVS_PATH "${COMPILER["MSVS_PATH"]}" $LEFT_ARCH
+  else
+    echo "${COMPILER["DISPLAY"]} (${COMPILER["VERSION"]})"
+    cmd="${COMPILER["SETENV"]}"
+    if [[ $cmd != "${cmd% *}" ]]; then
+      cmd="\"$cmd\""
+    fi
+    echo "cmd*$cmd ${COMPILER["SETENV_SWITCHES"]}"
+    output MSVS_PATH "${COMPILER["MSVS_PATH_WIN32"]}" $LEFT_ARCH
+  fi
   output MSVS_INC "${COMPILER["MSVS_INC"]}" $LEFT_ARCH
   output MSVS_LIB "${COMPILER["MSVS_LIB"]}" $LEFT_ARCH
   if [[ $ML_REQUIRED -eq 1 ]] ; then
     output MSVS_ML "${COMPILER["ASSEMBLER"]%.exe}" always
   fi
   if [[ -z $TARGET_ARCH ]] ; then
-    eval COMPILER=${FOUND[$SOLUTION-$RIGHT_ARCH]}
+    eval "COMPILER=${FOUND["$SOLUTION-$RIGHT_ARCH"]}"
     output MSVS64_PATH "${COMPILER["MSVS_PATH"]}" $RIGHT_ARCH
     output MSVS64_INC "${COMPILER["MSVS_INC"]}" $RIGHT_ARCH
     output MSVS64_LIB "${COMPILER["MSVS_LIB"]}" $RIGHT_ARCH
