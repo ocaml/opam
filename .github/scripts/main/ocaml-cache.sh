@@ -42,10 +42,11 @@ esac
 FLEXDLL_VERSION=0.43
 MINGW_W64_VERSION=12.0.0
 
-curl -sLO "https://github.com/ocaml/ocaml/archive/refs/tags/${OCAML_VERSION}.tar.gz"
+curl -fsSLO "https://github.com/ocaml/ocaml/archive/refs/tags/${OCAML_VERSION}.tar.gz" || \
+curl -fsSLO "https://github.com/ocaml/ocaml/archive/refs/heads/${OCAML_VERSION}.tar.gz"
 if [[ $PLATFORM = 'Windows' ]] ; then
-  curl -sLO "https://github.com/ocaml/flexdll/archive/refs/tags/$FLEXDLL_VERSION.tar.gz"
-  curl -sLO "https://github.com/mingw-w64/mingw-w64/archive/refs/tags/v${MINGW_W64_VERSION}.tar.gz"
+  curl -fsSLO "https://github.com/ocaml/flexdll/archive/refs/tags/$FLEXDLL_VERSION.tar.gz"
+  curl -fsSLO "https://github.com/mingw-w64/mingw-w64/archive/refs/tags/v${MINGW_W64_VERSION}.tar.gz"
 fi
 
 tar -xzf "$OCAML_VERSION.tar.gz"
@@ -61,7 +62,7 @@ esac
 
 cd "ocaml-$OCAML_VERSION"
 for sha in $PATCHES; do
-  curl -sL "https://github.com/ocaml/ocaml/commit/$sha.patch" -o "../$sha.patch"
+  curl -fsSL "https://github.com/ocaml/ocaml/commit/$sha.patch" -o "../$sha.patch"
   patch -p1 -i "../$sha.patch"
 done
 
@@ -96,8 +97,8 @@ OCAML_BRANCH="${OCAML_BRANCH/./}"
 if [[ $OPAM_TEST -ne 1 ]] ; then
   if [[ -e configure.ac ]]; then
     CONFIGURE_SWITCHES="--disable-debugger --disable-debug-runtime --disable-ocamldoc --disable-installing-bytecode-programs --disable-installing-source-artifacts"
-    if [[ $OCAML_BRANCH -eq 408 ]]; then
-      curl -L https://github.com/ocaml/ocaml/commit/c8ee39b320207717135d88cad67fb65d0901d6b6.patch -o pr8858.patch
+    if [[ $OCAML_BRANCH = 408 ]]; then
+      curl -fsSL https://github.com/ocaml/ocaml/commit/c8ee39b320207717135d88cad67fb65d0901d6b6.patch -o pr8858.patch
       patch -p1 -i pr8858.patch
       CONFIGURE_SWITCHES="$CONFIGURE_SWITCHES --disable-graph-lib"
     fi
