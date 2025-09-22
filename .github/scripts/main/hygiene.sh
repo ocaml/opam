@@ -141,6 +141,12 @@ else
   (set +x; echo -e ".github/scripts/depexts/generate-actions.sh: \e[31mERROR\e[0m") 2>/dev/null
   ERROR=1
 fi
+if shellcheck src_ext/update-sources.sh ; then
+  (set +x; echo "src_ext/update-sources.sh: OK") 2>/dev/null
+else
+  (set +x; echo -e "src_ext/update-sources.sh: \e[31mERROR\e[0m") 2>/dev/null
+  ERROR=1
+fi
 (set +x ; echo -en "::endgroup::check shell scripts using shellcheck\r") 2>/dev/null
 
 exit $ERROR

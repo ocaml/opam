@@ -110,6 +110,7 @@ users)
 
 ## Internal
   * Replace every polymorphic uses of `List.mem` by a version that doesn't use `Repr.equal` [#6644 @kit-ty-kate]
+  * Simplify the `src_ext/update-sources.sh` script [#6701 @kit-ty-kate]
 
 ## Internal: Unix
 
@@ -157,6 +158,7 @@ users)
   * Fix duplication logic in revdeps script [#6666 @arozovyk]
   * Remove patch dependency in depext actions [#6676 @rjbou]
   * Bump opam binary used in depexts actions to 2.4.1 [#6676 @rjbou]
+  * Check `src_ext/update-sources.sh` using shellcheck [#6701 @kit-ty-kate]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
