@@ -172,7 +172,7 @@ let load lock_kind gt =
     repo_trust = ta;
   } in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
-  let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
+  let repos_tmp_root = lazy (OpamFilename.tmp_dir ()) in
   let repos_tmp = Hashtbl.create 23 in
   OpamRepositoryName.Map.iter (fun name repo ->
       let uncompressed_root = OpamRepositoryPath.root gt.root repo.repo_name in
