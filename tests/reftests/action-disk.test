@@ -205,6 +205,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### opam reinstall main-repo.1 | sed-cmd tar cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
@@ -290,6 +293,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### opam upgrade main-repo | sed-cmd tar touch mkdir cp | "${PRE_MD5}..?${MD5}" -> pre/hash | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
@@ -341,6 +345,8 @@ Processing  2/4: [main-repo: touch build-file]
 -> compiled  main-repo.2
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1
 SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/content
 Processing  3/4: [main-repo: touch removal-file]
@@ -457,6 +463,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### :II: Pin
 ### :II:1: path pin
 ### <pin:main-ppin/main-ppin.opam>
@@ -554,7 +561,12 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### opam install main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -633,6 +645,9 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.op
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### opam reinstall main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -731,6 +746,8 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.op
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### opam remove main-ppin | grep -v '^- ./$' | sed-cmd rsync touch | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -914,7 +931,12 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### opam reinstall ./main-ppin | grep -v '^- ./$' | sed-cmd rsync cp touch mkdir | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1012,6 +1034,8 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-path-pin-all/.op
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### opam unpin main-ppin -y | grep -v '^- ./$' | sed-cmd rsync touch | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1199,7 +1223,12 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### opam install main-gpin | sed-cmd git cp touch mkdir | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1282,6 +1311,9 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opa
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### opam reinstall main-gpin | sed-cmd git cp touch mkdir | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1391,6 +1423,8 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opa
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### opam remove main-gpin | sed-cmd git touch | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1587,7 +1621,12 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### opam reinstall ./main-gpin | sed-cmd git cp touch mkdir | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1696,6 +1735,8 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-git-pin-all/.opa
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### opam unpin main-gpin -y | sed-cmd git touch | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | grep -v "HEAD is now" | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1917,7 +1958,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### opam reinstall main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}..?${MD5}" -> pre/hash | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -2003,6 +2046,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opa
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### opam remove main-repo | grep -v '^- ./$' | sed-cmd tar rsync touch | "${PRE_MD5}..?${MD5}" -> pre/hash | unordered
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -2193,6 +2237,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/package-switch/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### :III:3: from local, empty
 ### opam switch create ./void | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -2350,6 +2395,8 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/main-ppin/_opam/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
+SYSTEM                          temp_dir_cleaner: rm: ${OPAMTMP}
 ### :IV: Switch deletion
 ### :IV:1: local
 ### opam switch remove ./main-ppin | unordered
