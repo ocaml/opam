@@ -1,0 +1,34 @@
+N0REP0
+### :: Check that process verbose display is the same with or without sandbox
+### :: (no trailing space or quotes)
+### : disable sandbox for install commands
+### opam option 'wrap-install-commands=[]'
+Set to '[]' the field wrap-install-commands in global configuration
+### <pkg:process.1>
+opam-version: "2.0"
+build: [
+  [ "true" ]
+  [ "true" "with" "option" ]
+]
+install: [
+  [ "true" ]
+  [ "true" "with" "option" ]
+]
+### opam switch create outputs --empty
+### opam install process -vv -y | sed-cmd true
+The following actions will be performed:
+=== install 1 package
+  - install process 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [process: true]
++ true (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
+Processing  2/3: [process: true with]
++ true "with" "option" (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
+-> compiled  process.1
+Processing  3/3: [process: true]
++ true (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
+Processing  3/3: [process: true with]
++ true "with" "option" (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
+-> installed process.1
+Done.
