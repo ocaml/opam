@@ -111,6 +111,7 @@ users)
 ## Internal
   * Replace every polymorphic uses of `List.mem` by a version that doesn't use `Repr.equal` [#6644 @kit-ty-kate]
   * Simplify the `src_ext/update-sources.sh` script [#6701 @kit-ty-kate]
+  * Homogeneise verbose command output between sandboxed and non sandboxed one [#6675 @rjbou]
 
 ## Internal: Unix
 

@@ -27,7 +27,7 @@ Processing  2/3: [process: true with]
 + true "with" "option" (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
 -> compiled  process.1
 Processing  3/3: [process: true]
-+ true  (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
++ true (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
 Processing  3/3: [process: true with]
 + true "with" "option" (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
 -> installed process.1
