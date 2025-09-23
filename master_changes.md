@@ -111,6 +111,7 @@ users)
 ## Internal
   * Replace every polymorphic uses of `List.mem` by a version that doesn't use `Repr.equal` [#6644 @kit-ty-kate]
   * Simplify the `src_ext/update-sources.sh` script [#6701 @kit-ty-kate]
+  * Homogeneise verbose command output between sandboxed and non sandboxed one [#6675 @rjbou]
 
 ## Internal: Unix
 
@@ -137,11 +138,14 @@ users)
   * Add a test showing the behaviour of version pins when one of the dependencies isn't up-to-date [#6691 @kit-ty-kate]
   * Add a test showing the behaviour of pre-defined variables in command hooks [#6659 @rjbou]
   * Add a test showing the behaviour of `opam var <pkg>:opamfile` [#6659 @kit-ty-kate]
+  * Add a test to show homogeneity of outputs on verbose between sandboxed and non sandboxed commands (with `-vv`) [#6675 @rjbou]
+  * Update `sed-cmd` reftest reftest [#6675 @rjbou]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
   * Fix support for removing local link directories [#6450 @kit-ty-kate]
   * Bump `OPAM_REPO_SHA` in the github action workflows to allow patch 3.0.0 [#6663 @kit-ty-kate]
+  * Allow `sed-cmd` to parse even if no space is after the command [#6675 @rjbou]
 
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]

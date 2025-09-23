@@ -243,24 +243,192 @@ lorem ipsum dolor sit amet
 sed non risus
 suspendisse lectus tortor
 ### :IV:6: sed-cmd
-### <commands>
+### <commands.ml>
+let commands =
+  match Sys.argv |> Array.to_list |> List.tl with
+  | [] ->
+    print_endline "needs at least one argument";
+    exit 1
+  | l -> l
+
+let simple_commands cmd = [
+  Printf.sprintf {|/usr/bin/%s|} cmd;
+  Printf.sprintf {|/opt/homebrew/bin/%s|} cmd;
+  Printf.sprintf {|C:\Windows\system32\%s.exe|} cmd;
+  Printf.sprintf {|C:\Windows\system32\%s|} cmd;
+  Printf.sprintf {|C:\Windows\system 32\%s.exe|} cmd;
+  Printf.sprintf {|C:\Windows\system 32\%s|} cmd;
+]
+let quote s = Printf.sprintf "\"%s\"" s
+let simple_commands_quoted cmd = List.map quote (simple_commands cmd)
+let sandbox = [
+  {|/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh|};
+  {|${BASEDIR}/opam-init/hooks/sandbox.sh|};
+]
+let complete_sandboxed_commands cmd =
+  let actions = [ "build"; "install"; "remove" ] in
+  List.map (fun sdbx ->
+      List.map (fun act -> sdbx ^" "^ (quote act) ^" "^ (quote cmd)) actions)
+    sandbox
+  |> List.flatten
+
+let all_commands cmd =
+  simple_commands cmd
+  @ simple_commands_quoted cmd
+  @ complete_sandboxed_commands cmd
+
+let print commands variant =
+  List.iter (fun cmd -> print_endline (variant cmd)) commands;;
+
+let title t = Printf.printf "\n%!# %s\n" t;;
+
+List.iter (fun command ->
+
+    let print = print (all_commands command) in
+
+    title "raw";
+    print Fun.id;
+
+    title "with an argument and EOL";
+    print (fun cmd -> cmd ^ " piou");
+
+    title "with a verbose prefix";
+    print (fun cmd -> "+ " ^ cmd);
+
+    title "with a verbose prefix and argument";
+    print (fun cmd -> "+ " ^ cmd ^ " piou");
+
+    title "In the middle";
+    print (fun cmd -> "Something " ^ cmd ^ " else");
+
+    ())
+  commands
+### : cmd need to be followed with at least one space
+### ocaml commands.ml echo
+
+# raw
+/usr/bin/echo
+/opt/homebrew/bin/echo
+C:\Windows\system32\echo.exe
+C:\Windows\system32\echo
+C:\Windows\system 32\echo.exe
+C:\Windows\system 32\echo
+"/usr/bin/echo"
+"/opt/homebrew/bin/echo"
+"C:\Windows\system32\echo.exe"
+"C:\Windows\system32\echo"
+"C:\Windows\system 32\echo.exe"
+"C:\Windows\system 32\echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo"
+
+# with an argument and EOL
 /usr/bin/echo piou
-"/usr/bin/echo" "piou"
+/opt/homebrew/bin/echo piou
 C:\Windows\system32\echo.exe piou
 C:\Windows\system32\echo piou
 C:\Windows\system 32\echo.exe piou
 C:\Windows\system 32\echo piou
+"/usr/bin/echo" piou
+"/opt/homebrew/bin/echo" piou
+"C:\Windows\system32\echo.exe" piou
+"C:\Windows\system32\echo" piou
+"C:\Windows\system 32\echo.exe" piou
+"C:\Windows\system 32\echo" piou
 /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo" piou
 /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo" piou
 /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo" piou
 ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo" piou
 ${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo" piou
 ${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo" piou
+
+# with a verbose prefix
++ /usr/bin/echo
++ /opt/homebrew/bin/echo
++ C:\Windows\system32\echo.exe
++ C:\Windows\system32\echo
++ C:\Windows\system 32\echo.exe
++ C:\Windows\system 32\echo
++ "/usr/bin/echo"
++ "/opt/homebrew/bin/echo"
++ "C:\Windows\system32\echo.exe"
++ "C:\Windows\system32\echo"
++ "C:\Windows\system 32\echo.exe"
++ "C:\Windows\system 32\echo"
++ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo"
++ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo"
++ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo"
++ ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo"
++ ${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo"
++ ${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo"
+
+# with a verbose prefix and argument
++ /usr/bin/echo piou
++ /opt/homebrew/bin/echo piou
++ C:\Windows\system32\echo.exe piou
++ C:\Windows\system32\echo piou
++ C:\Windows\system 32\echo.exe piou
++ C:\Windows\system 32\echo piou
++ "/usr/bin/echo" piou
++ "/opt/homebrew/bin/echo" piou
++ "C:\Windows\system32\echo.exe" piou
++ "C:\Windows\system32\echo" piou
++ "C:\Windows\system 32\echo.exe" piou
++ "C:\Windows\system 32\echo" piou
++ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo" piou
++ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo" piou
++ /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo" piou
++ ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo" piou
++ ${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo" piou
++ ${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo" piou
+
+# In the middle
+Something /usr/bin/echo else
+Something /opt/homebrew/bin/echo else
+Something C:\Windows\system32\echo.exe else
+Something C:\Windows\system32\echo else
+Something C:\Windows\system 32\echo.exe else
+Something C:\Windows\system 32\echo else
+Something "/usr/bin/echo" else
+Something "/opt/homebrew/bin/echo" else
+Something "C:\Windows\system32\echo.exe" else
+Something "C:\Windows\system32\echo" else
+Something "C:\Windows\system 32\echo.exe" else
+Something "C:\Windows\system 32\echo" else
+Something /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo" else
+Something /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo" else
+Something /tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo" else
+Something ${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo" else
+Something ${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo" else
+Something ${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo" else
+### ocaml commands.ml echo | sed-cmd echo
+
+# raw
 /usr/bin/echo
-### : cmd need to be followed with at least one space
-### cat commands | sed-cmd echo
+/opt/homebrew/bin/echo
+C:\Windows\system32\echo.exe
+C:\Windows\system32\echo
+C:\Windows\system 32\echo.exe
+C:\Windows\system 32\echo
+"/usr/bin/echo"
+"/opt/homebrew/bin/echo"
+"C:\Windows\system32\echo.exe"
+"C:\Windows\system32\echo"
+"C:\Windows\system 32\echo.exe"
+"C:\Windows\system 32\echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo"
+
+# with an argument and EOL
 echo piou
-echo "piou"
 echo piou
 echo piou
 echo piou
@@ -271,7 +439,274 @@ echo piou
 echo piou
 echo piou
 echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+
+# with a verbose prefix
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
+
+# with a verbose prefix and argument
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
+
+# In the middle
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+### ocaml commands.ml echo smtg | sed-cmd echo smtg
+
+# raw
 /usr/bin/echo
+/opt/homebrew/bin/echo
+C:\Windows\system32\echo.exe
+C:\Windows\system32\echo
+C:\Windows\system 32\echo.exe
+C:\Windows\system 32\echo
+"/usr/bin/echo"
+"/opt/homebrew/bin/echo"
+"C:\Windows\system32\echo.exe"
+"C:\Windows\system32\echo"
+"C:\Windows\system 32\echo.exe"
+"C:\Windows\system 32\echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "echo"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "build" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "install" "echo"
+${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "echo"
+
+# with an argument and EOL
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+echo piou
+
+# with a verbose prefix
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
++ echo
+
+# with a verbose prefix and argument
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
++ echo piou
+
+# In the middle
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+Something echo else
+
+# raw
+/usr/bin/smtg
+/opt/homebrew/bin/smtg
+C:\Windows\system32\smtg.exe
+C:\Windows\system32\smtg
+C:\Windows\system 32\smtg.exe
+C:\Windows\system 32\smtg
+"/usr/bin/smtg"
+"/opt/homebrew/bin/smtg"
+"C:\Windows\system32\smtg.exe"
+"C:\Windows\system32\smtg"
+"C:\Windows\system 32\smtg.exe"
+"C:\Windows\system 32\smtg"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "build" "smtg"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "install" "smtg"
+/tmp/build_592d92_dune/opam-reftest-2b89f9/OPAM/opam-init/hooks/sandbox.sh "remove" "smtg"
+${BASEDIR}/opam-init/hooks/sandbox.sh "build" "smtg"
+${BASEDIR}/opam-init/hooks/sandbox.sh "install" "smtg"
+${BASEDIR}/opam-init/hooks/sandbox.sh "remove" "smtg"
+
+# with an argument and EOL
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+smtg piou
+
+# with a verbose prefix
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
++ smtg
+
+# with a verbose prefix and argument
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
++ smtg piou
+
+# In the middle
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
+Something smtg else
 ### ###################
 ### :V: Additional commands
 ### ###################

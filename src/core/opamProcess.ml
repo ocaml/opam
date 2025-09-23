@@ -580,10 +580,15 @@ let dry_run_background c = {
 }
 
 let verbose_print_cmd p =
-  OpamConsole.msg "%s %s %s%s\n"
+  let args =
+    match p.p_args with
+    | [] -> ""
+    | args ->
+      " " ^ OpamStd.List.concat_map " " (Printf.sprintf "%S") args
+  in
+  OpamConsole.msg "%s %s%s%s\n"
     (OpamConsole.colorise `yellow "+")
-    p.p_name
-    (OpamStd.List.concat_map " " (Printf.sprintf "%S") p.p_args)
+    p.p_name args
     (if p.p_cwd = Sys.getcwd () then ""
      else Printf.sprintf " (CWD=%s)" p.p_cwd)
 
