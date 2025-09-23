@@ -2518,7 +2518,9 @@ let repository cli =
                 to retrieve a consistent state."
                (OpamRepositoryName.to_string name);
            let target =
-             OpamFilename.(Op.(tmp_dir / Base.to_string (basename_dir dir)))
+             let open OpamFilename.Op in
+             tmp_dir / OpamFilename.Base.to_string
+               (OpamFilename.basename_dir dir)
            in
            OpamFilename.copy_dir ~src:dir ~dst:target;
            fun () -> OpamFilename.copy_dir ~src:target ~dst:dir)
