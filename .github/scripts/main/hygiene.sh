@@ -58,7 +58,7 @@ case $GITHUB_EVENT_NAME in
     CheckConfigure "$GITHUB_SHA"
     ;;
   pull_request)
-    for commit in $(git rev-list $BASE_REF_SHA...$PR_REF_SHA --reverse)
+    for commit in $(git rev-list "$BASE_REF_SHA...$PR_REF_SHA" --reverse)
     do
       echo "check configure for $commit"
       CheckConfigure "$commit"
@@ -96,9 +96,9 @@ cd ..
 
 if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$BRANCH" = "master" ]; then
   (set +x ; echo -en "::group::check default cli\r") 2>/dev/null
-  CURRENT_MAJOR="`sed -n "s/^AC_INIT(\[opam],\[\([0-9]\+\)[^0-9]*.*])$/\1/p" configure.ac`"
-  DEFAULT_CLI_MAJOR="`sed -n "/let *default *=/s/.*(\([0-9]*\)[^0-9]*.*/\1/p" src/client/opamCLIVersion.ml`"
-  if [ $CURRENT_MAJOR -eq $DEFAULT_CLI_MAJOR ]; then
+  CURRENT_MAJOR=$(sed -n "s/^AC_INIT(\[opam],\[\([0-9]\+\)[^0-9]*.*])$/\1/p" configure.ac)
+  DEFAULT_CLI_MAJOR=$(sed -n "/let *default *=/s/.*(\([0-9]*\)[^0-9]*.*/\1/p" src/client/opamCLIVersion.ml)
+  if [ "$CURRENT_MAJOR" -eq "$DEFAULT_CLI_MAJOR" ]; then
     echo "Major viersion is default cli one: $CURRENT_MAJOR"
   else
     echo -e "[\e[31mERROR\e[0m] Major version $CURRENT_MAJOR and default cli version $DEFAULT_CLI_MAJOR mismatches"
@@ -135,10 +135,10 @@ else
   (set +x; echo -e "shell/install.sh: \e[31mERROR\e[0m") 2>/dev/null
   ERROR=1
 fi
-if shellcheck .github/scripts/depexts/generate-actions.sh ; then
-  (set +x; echo ".github/scripts/depexts/generate-actions.sh: OK") 2>/dev/null
+if shellcheck -e SC2034,SC1007,SC2046 .github/scripts/*/*.sh ; then
+  (set +x; echo "GHA scripts: OK") 2>/dev/null
 else
-  (set +x; echo -e ".github/scripts/depexts/generate-actions.sh: \e[31mERROR\e[0m") 2>/dev/null
+  (set +x; echo -e "GHA scripts: \e[31mERROR\e[0m") 2>/dev/null
   ERROR=1
 fi
 if shellcheck src_ext/update-sources.sh ; then

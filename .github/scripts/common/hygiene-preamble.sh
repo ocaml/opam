@@ -1,6 +1,8 @@
+#!/bin/bash
+
 . .github/scripts/common/preamble.sh
 
-if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "x" = "x$BASE_REF_SHA$PR_REF_SHA" ] ; then
+if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "" = "$BASE_REF_SHA$PR_REF_SHA" ] ; then
   echo "Variables BASE_REF_SHA and PR_REF_SHA must be defined in a pull request job"
   exit 2
 fi
@@ -12,12 +14,12 @@ if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
   # we need to get history from base ref to head ref for check configure
   depth=10
   r=0
-  git cat-file -e $BASE_REF_SHA || r=$?
+  git cat-file -e "$BASE_REF_SHA" || r=$?
   while [ $r -ne 0 ] ; do
-    git fetch origin $GITHUB_REF --depth=$depth
-    depth=$(( $depth + 10 ))
+    git fetch origin "$GITHUB_REF" --depth=$depth
+    depth=$(( depth + 10 ))
     r=0
-    git cat-file -e $BASE_REF_SHA || r=$?
+    git cat-file -e "$BASE_REF_SHA" || r=$?
   done
 fi
 
