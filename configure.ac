@@ -75,7 +75,7 @@ AC_ARG_WITH([private_runtime],
 
 AC_ARG_ENABLE([static],
   AS_HELP_STRING([--enable-static],
-    [Compile the opam binary statically. Only Musl-based Linux distributions and Windows with MinGW is currently supported. This is the default on Windows with MinGW]),
+    [Compile the opam binary statically. Only Musl-based Linux distributions, Windows with MinGW, and OpenBSD are currently supported. This is the default on Windows with MinGW]),
   [],
   [enable_static=auto])
 
@@ -360,6 +360,10 @@ AS_CASE([$TARGET],
     # which still depends on the DLL at runtime instead of libstdc++.a (that looks like a bug in flexlink)
     platform_dependent_stuff="-cclib -l:libstdc++.a -cclib -l:libpthread.a -cclib -Wl,-static -cclib -ladvapi32 -cclib -lgdi32 -cclib -luser32 -cclib -lshell32 -cclib -lole32 -cclib -luuid -cclib -luserenv"
     AS_IF([test "x${SYSTEM}" = "xmingw"], [platform_dependent_stuff="${platform_dependent_stuff} -cclib -lwindowsapp"])
+  ],
+  [*-*-openbsd*],[
+    support_static=yes
+    platform_dependent_stuff="-cclib -lc++ -cclib -lc++abi -cclib -static"
   ])
 AS_CASE([${support_static},${enable_static}],
   [no,yes],[AC_MSG_ERROR([--enable-static is not available on this platform (${TARGET}).])],

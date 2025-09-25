@@ -1379,9 +1379,9 @@ Optional Features:
   --enable-developer-mode Enable developer features
 
   --enable-static         Compile the opam binary statically. Only Musl-based
-                          Linux distributions and Windows with MinGW is
-                          currently supported. This is the default on Windows
-                          with MinGW
+                          Linux distributions, Windows with MinGW, and OpenBSD
+                          are currently supported. This is the default on
+                          Windows with MinGW
   --enable-cold-check     Fail on some check necessary for make cold
   --disable-certificate-check
                           Do not check the certificate of opam's dependency
@@ -5874,6 +5874,11 @@ fi
 then :
   platform_dependent_stuff="${platform_dependent_stuff} -cclib -lwindowsapp"
 fi
+   ;; #(
+  *-*-openbsd*) :
+
+    support_static=yes
+    platform_dependent_stuff="-cclib -lc++ -cclib -lc++abi -cclib -static"
    ;; #(
   *) :
      ;;
