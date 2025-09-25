@@ -90,6 +90,7 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * The OpenBSD binary now a full static binary [#6705 @flumf @kit-ty-kate - fix #6241]
 
 ## Install script
   * Add 2.4.1 to the install scripts [#6617 @kit-ty-kate]
