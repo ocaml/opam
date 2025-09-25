@@ -335,7 +335,10 @@ let copy_file_aux ?chmod ~src ~dst () =
     OpamStd.Exn.finally (fun () -> close_in ic) (fun () -> close_out oc) in
   try
     let ic, oc = setup_copy ?chmod ~src ~dst () in
-    OpamStd.Exn.finally (fun () -> close_channels ic oc)
+    OpamStd.Exn.finally (fun () ->
+        close_channels ic oc;
+        let src_stats = Unix.stat src in
+        Unix.utimes dst src_stats.st_atime src_stats.st_mtime)
       (fun () -> copy_channels ic oc);
   with Unix.Unix_error _ as e ->
     (* Remove the partial destination file, if any. *)
