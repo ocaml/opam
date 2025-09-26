@@ -86,6 +86,7 @@ users)
   * Update the download-if-missing dependencies to their latest version (re.1.14.0, dune.3.20.2, menhir.20250903) [#6700 @kit-ty-kate]
   * Remove `seq` from the list of packages to download-if-missing as it is no longer a dependency of `re` [#6700 @kit-ty-kate]
   * `./configure --enable-static` is now supported on OpenBSD [#6705 @flumf]
+  * Add missing constraints to avoid cmdliner 2.0.0 [#6707 @kit-ty-kate]
 
 ## Infrastructure
 
