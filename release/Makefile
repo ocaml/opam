@@ -30,7 +30,7 @@ $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	mkdir -p "$(OUTDIR)"
 	git clone $(GIT_URL) -b $(TAG) "$(OUTDIR)/opam-full-$(VERSION)"
 	$(MAKE) -C "$(OUTDIR)/opam-full-$(VERSION)" OCAML=$(call pathsearch,ocaml) download-ext
-	cd "$(OUTDIR)" && tar cz -f $(notdir $@) --exclude .git opam-full-$(VERSION)
+	cd "$(OUTDIR)" && tar cz -f $(notdir $@) --exclude .git --no-mac-metadata --no-xattrs opam-full-$(VERSION)
 	rm -rf "$(OUTDIR)/opam-full-$(VERSION)"
 
 build/Dockerfile.x86_64-linux: Dockerfile.in
