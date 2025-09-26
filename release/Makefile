@@ -67,9 +67,12 @@ CLINKING_macos = \
 -lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
 -lstdc++
 
-CLINKING_openbsd = $(CLINKING_macos)
 CLINKING_freebsd = $(CLINKING_macos)
 CLINKING_netbsd = $(CLINKING_macos)
+
+CLINKING_openbsd = \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
+-lstdc++ -lc++ -lc++abi -static
 
 CLINKING_windows = \
 -lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
