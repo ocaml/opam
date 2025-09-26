@@ -155,6 +155,10 @@ val dev_packages: 'a switch_state -> package_set
     on wether it's pinned). *)
 val source_dir: 'a switch_state -> package -> dirname
 
+(** Returns the opam file overlay stored internally for pinned packages *)
+val overlay_opam_file:
+  'a switch_state -> OpamPackage.Name.t -> OpamFile.OPAM.t OpamFile.t option
+
 (** Returns the set of active external dependencies for the package, computed
     from the values of the system-specific variables *)
 val depexts: 'a switch_state -> package -> OpamSysPkg.Set.t
