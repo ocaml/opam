@@ -87,6 +87,8 @@ let environment_variables =
   let open OpamStd.Config in
   let core =
     let open OpamCoreConfig.E in [
+      "AUTOANSWER", cli_from cli2_5, (fun v -> AUTOANSWER (auto_answer v)),
+      "internal use only.";
       "COLOR", cli_original, (fun v -> COLOR (env_when v)),
       "when set to $(i,always) or $(i,never), sets a default value for the \
        `--color' option.";
