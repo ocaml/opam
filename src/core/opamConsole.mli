@@ -125,7 +125,7 @@ val pause: ('a, unit, string, unit) format4 -> 'a
     prompt and wait user input if it is set [`all_yes] (interactive). Its
     default is false. *)
 val confirm:
-  ?require_unsafe_yes:bool -> ?default:bool ->
+  ?require_unsafe_yes:bool -> ?default:bool -> ?name:string ->
   ('a, unit, string, bool) format4 -> 'a
 
 (** Prompts the user with multiple numbered choices [(answer, message)].

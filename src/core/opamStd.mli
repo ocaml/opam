@@ -680,6 +680,8 @@ module Config : sig
 
   val env_answer: env_var -> answer option
 
+  val auto_answer: env_var -> (string * answer) list option
+
   module type Sig = sig
 
     (** Read-only record type containing the lib's configuration options *)
