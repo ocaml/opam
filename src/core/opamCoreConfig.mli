@@ -13,6 +13,7 @@
 
 module E : sig
   type OpamStd.Config.E.t +=
+    | AUTOANSWER of (string * OpamStd.Config.answer) list option
     | COLOR of OpamStd.Config.when_ option
     | CONFIRMLEVEL of OpamStd.Config.answer option
     | DEBUG of int option
@@ -37,6 +38,11 @@ module E : sig
 end
 
 type t = private {
+  auto_answer : (string * OpamStd.Config.answer) list;
+  (** Controls the answer of specific interactive questions.
+      It maps names to its wanted answer and takes precedence
+      over [yes] and [confirm_level] for the questions linked
+      to the specific names listed. *)
   debug_level : int;
   (** Controls debug messages, 0 to disable *)
   debug_sections : OpamStd.Config.sections;
@@ -83,6 +89,7 @@ type t = private {
 }
 
 type 'a options_fun =
+  ?auto_answer:(string * OpamStd.Config.answer) list ->
   ?debug_level:int ->
   ?debug_sections:OpamStd.Config.sections ->
   ?verbose_level:OpamStd.Config.level ->
@@ -132,9 +139,9 @@ val initk: 'a -> 'a options_fun
     [answer_is] and [answer_is_yes] computes the answer lazily, use [answer] in
     case of config update.
 *)
-val answer_is: OpamStd.Config.answer -> bool
-val answer_is_yes : unit -> bool
-val answer: unit -> OpamStd.Config.answer
+val answer_is: name:string option -> OpamStd.Config.answer -> bool
+val answer_is_yes : name:string option -> unit -> bool
+val answer: name:string option -> unit -> OpamStd.Config.answer
 
 (** [true] if OPAM was compiled in developer mode *)
 val developer : bool

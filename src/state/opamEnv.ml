@@ -1356,7 +1356,7 @@ let setup
          \n\
         \  You can always re-run this setup with 'opam init' later.\n\n"
         (OpamConsole.colorise `bold @@ shell_eval_invocation shell (opam_env_invocation shell));
-      if OpamCoreConfig.answer_is_yes () then begin
+      if OpamCoreConfig.answer_is_yes ~name:None () then begin
         if dot_profile <> None then
           OpamConsole.warning "Shell not updated in non-interactive mode: use --shell-setup";
         shell, None, env_hook

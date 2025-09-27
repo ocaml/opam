@@ -1091,7 +1091,7 @@ let dry_run state solution =
 (* Ask confirmation whenever the packages to modify are not exactly
    the packages in the user request *)
 let confirmation ?ask requested solution =
-  OpamCoreConfig.answer_is_yes () ||
+  OpamCoreConfig.answer_is_yes ~name:None () ||
   ask = Some false ||
   let solution_packages =
     OpamPackage.names_of_packages (OpamSolver.all_packages solution)
@@ -1319,7 +1319,7 @@ let install_sys_packages_t ~propagate_st ~map_sysmap ~confirm env config
       "You can retry with '--assume-depexts' to skip this check, or run 'opam \
        option depext=false' to permanently disable handling of system \
        packages.\n%s"
-      (if OpamStd.Sys.tty_in || OpamCoreConfig.answer_is `unsafe_yes then ""
+      (if OpamStd.Sys.tty_in || OpamCoreConfig.answer_is ~name:None `unsafe_yes then ""
        else "Running the system package manager non-interactively requires \
              '--confirm-level=unsafe-yes'.\n")
   and give_up () =

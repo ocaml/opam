@@ -1752,6 +1752,17 @@ module Config = struct
         try if bool s then `all_yes else `all_no
         with Failure _ -> answer s)
 
+  let auto_answer =
+    env (fun s ->
+        List.filter_map (fun s ->
+            match OpamString.cut_at s '=' with
+            | Some (k, x) ->
+              (match answer x with
+               | x -> Some (k, x)
+               | exception Failure _ -> None)
+            | None -> None)
+        (String.split_on_char ':' s))
+
 
   module E = struct
     type t = ..
