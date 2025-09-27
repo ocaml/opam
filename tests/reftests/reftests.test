@@ -944,3 +944,13 @@ name: "baz"
 version: "1"
 extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
 ### opam-cache repo inexistent
+### :V:4: unset
+### env | grep REFTEST_UNSET
+### REFTEST_UNSET=test
+### env | grep REFTEST_UNSET
+REFTEST_UNSET=test
+### REFTEST_UNSET=""
+### env | grep REFTEST_UNSET
+REFTEST_UNSET=
+### unset REFTEST_UNSET
+### env | grep REFTEST_UNSET
