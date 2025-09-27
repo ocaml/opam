@@ -393,17 +393,8 @@ Done.
 local-with-pin-deps.dev    rsync  file://${BASEDIR}/local-with-pin-deps
 pin-dep.dev                rsync  file://${BASEDIR}/pin-dep
 ### : Make sure pin-depends during switch creations are not pinned twice
-### <opam-switch-create-local-pin-deps.ex>
-spawn env -u OPAMCONFIRMLEVEL opam switch create ./local-with-pin-deps
-expect "Pin and install them.*Y/n"
-send -- "n"
-expect "Try to install anyway, assuming.*Y/n"
-send -- "y"
-expect "Switch initialisation failed: clean up.*Y/n"
-send -- "y"
-expect eof
-### expect ./opam-switch-create-local-pin-deps.ex
-spawn env -u OPAMCONFIRMLEVEL opam switch create ./local-with-pin-deps
+### unset OPAMCONFIRMLEVEL
+### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
@@ -420,17 +411,8 @@ Switch invariant: ["ocaml" {>= "4.05.0"}]
 
 
 Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
-### <opam-switch-create-local-pin-deps.ex>
-spawn env -u OPAMCONFIRMLEVEL opam switch create ./local-with-pin-deps --deps-only
-expect "Pin and install them.*Y/n"
-send -- "n"
-expect "Try to install anyway, assuming.*Y/n"
-send -- "y"
-expect "Switch initialisation failed: clean up.*Y/n"
-send -- "y"
-expect eof
-### expect ./opam-switch-create-local-pin-deps.ex
-spawn env -u OPAMCONFIRMLEVEL opam switch create ./local-with-pin-deps --deps-only
+# Return code 20 #
+### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps --deps-only
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
 Pin and install them? [Y/n] n
@@ -445,3 +427,4 @@ Switch invariant: ["ocaml" {>= "4.05.0"}]
 
 
 Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
+# Return code 20 #
