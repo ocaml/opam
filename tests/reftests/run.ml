@@ -285,6 +285,7 @@ type command =
              unordered: bool;
              sort: bool;}
   | Export of (string * [`eq | `pluseq | `eqplus] * string) list
+  | Unset of string list
   | Comment of string
 
 module Parse = struct
@@ -496,6 +497,8 @@ module Parse = struct
         Opamfile { files = args; filter = rewr; }
       | Some "json-cat" ->
         Json { files = args; filter = rewr; }
+      | Some "unset" ->
+        Unset args
       | Some "opam-cache" ->
         let kind, switch, nvs =
           match args with
@@ -984,6 +987,8 @@ let run_test ?(vars=[]) ~opam t =
                in
                (v, value) :: List.filter (fun (w, _) -> not (String.equal v w)) vars)
             vars bindings
+        | Unset l ->
+          List.filter (fun (w, _) -> not (List.exists (fun v -> String.equal v w) l)) vars
         | Opamfile { files; filter } ->
           let files =
             List.map (fun s ->
