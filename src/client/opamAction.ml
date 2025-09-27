@@ -459,6 +459,7 @@ let prepare_package_source st nv dir =
         (OpamPackage.to_string nv ^ "/" ^ OpamFilename.Base.to_string basename)
         (OpamFilename.create dir basename)
         (OpamFile.URL.checksum urlf)
+        (OpamFile.URL.signed_by urlf)
         (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
       @@| function
       | Result () | Up_to_date () -> None
