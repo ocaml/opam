@@ -15,6 +15,7 @@ users)
   * Bump the version number to `2.5.0~alpha1~dev` [#6584 @kit-ty-kate]
 
 ## Global CLI
+  * Add cli version 2.5 [#6709 @kit-ty-kate]
 
 ## Plugins
 
