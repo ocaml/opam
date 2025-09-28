@@ -52,7 +52,7 @@ main is now pinned to version 1
 ### # emulate '(cache (opam-archives (target /home/opam/.opam/download-cache)))'
 ### mkdir -p OPAM/download-cache/md5/$PRE_MD5
 ### cp archive.tgz OPAM/download-cache/md5/$PRE_MD5/$MD5
-### opam reinstall main.1 | sed-cmd tar | "${PRE_MD5}..?${MD5}" -> pre/hash
+### opam reinstall main.1 | sed-cmd tar | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash
 main.1 is not installed. Install it? [Y/n] y
 The following actions will be performed:
 === install 2 packages
@@ -85,7 +85,7 @@ The following actions will be performed:
 Done.
 ### # Third reinstall
 ### # no change in source on cache archive
-### opam reinstall main.1 --with-test -vv | sed-cmd rsync tar | "${PRE_MD5}..?${MD5}" -> pre/hash
+### opam reinstall main.1 --with-test -vv | sed-cmd rsync tar | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash
 The following actions will be performed:
 === recompile 1 package
   - recompile main 1 (pinned)
