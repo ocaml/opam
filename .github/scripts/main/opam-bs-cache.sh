@@ -12,7 +12,7 @@ if [ "$os" = "darwin" ] ; then
   os=macos
 fi
 
-curl -sL -o $OPAM_LOCAL/bin/opam-bootstrap \
+curl -fsSL -o $OPAM_LOCAL/bin/opam-bootstrap \
   "https://github.com/ocaml/opam/releases/download/$OPAMBSVERSION/opam-$OPAMBSVERSION-$(uname -m)-$os"
 cp -f $OPAM_LOCAL/bin/opam-bootstrap $OPAM_LOCAL/bin/opam
 chmod a+x $OPAM_LOCAL/bin/opam
