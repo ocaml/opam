@@ -69,6 +69,7 @@ users)
 ## Clean
 
 ## Env
+  * [NEW] Add support for nushell in the opam env command
 
 ## Opamfile
 
