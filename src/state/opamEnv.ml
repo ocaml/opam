@@ -613,7 +613,7 @@ let env_update_resolved_with_default ?comment var =
   let rewrite = Some (SPF_Resolved (Some (default_sep_fmt_str var))) in
   env_update_resolved ?comment ~rewrite var
 
-let compute_updates ?(force_path=false) st =
+let compute_updates ?(force_path=false) ~build_env st =
   (* Todo: put these back into their packages!
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
@@ -660,7 +660,7 @@ let compute_updates ?(force_path=false) st =
     in
     List.map resolve_separator_and_format updates
   in
-  switch_env @ pkg_env @ man_path @ [path]
+  pkg_env @ build_env @ switch_env @ man_path @ [path]
 
 let updates_common ~set_opamroot ~set_opamswitch root switch =
   let root =
@@ -688,18 +688,18 @@ let updates_nix st =
      | Some env -> List.map resolve_separator_and_format env)
   | _ -> []
 
-let updates ~set_opamroot ~set_opamswitch ?force_path st =
+let updates ~set_opamroot ~set_opamswitch ?force_path ~build_env st =
   let common =
     updates_common ~set_opamroot ~set_opamswitch st.switch_global.root st.switch
   in
-  common @ compute_updates ?force_path st @ updates_nix st
+  compute_updates ?force_path ~build_env st @ common @ updates_nix st
 
 let get_pure ?(updates=[]) () =
   let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
   add env updates
 
 let get_opam ~set_opamroot ~set_opamswitch ~force_path st =
-  add [] (updates ~set_opamroot ~set_opamswitch ~force_path st)
+  add [] (updates ~set_opamroot ~set_opamswitch ~force_path ~build_env:[] st)
 
 let get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch =
   let env_file = OpamPath.Switch.environment root switch in
@@ -740,7 +740,7 @@ let hash_env_updates upd =
   |> Digest.to_hex
 
 let get_full
-    ~set_opamroot ~set_opamswitch ~force_path ?updates:(u=[]) ?(scrub=[])
+    ~set_opamroot ~set_opamswitch ~force_path ~build_env ?updates:(u=[]) ?(scrub=[])
     st =
   let env =
     let env = OpamStd.Env.list () in
@@ -753,10 +753,10 @@ let get_full
     List.filter (fun (name, _) -> not (OpamStd.Env.Name.Set.mem name scrub)) env
   in
   let env0 = List.map (fun (v,va) -> v,va,None) env in
-  let u =
-    (List.map resolve_separator_and_format u) in
+  let u = List.map resolve_separator_and_format u in
+  let build_env = List.map resolve_separator_and_format build_env in
   let updates =
-    u @ updates ~set_opamroot ~set_opamswitch ~force_path st in
+    u @ updates ~set_opamroot ~set_opamswitch ~force_path ~build_env st in
   add env0 updates
 
 let is_up_to_date_raw ?(skip=OpamStateConfig.(!r.no_env_notice)) updates =
@@ -821,7 +821,7 @@ let full_with_path ~force_path ?(updates=[]) root switch =
 
 let is_up_to_date ?skip st =
   is_up_to_date_raw ?skip
-    (updates ~set_opamroot:false ~set_opamswitch:false ~force_path:false st)
+    (updates ~set_opamroot:false ~set_opamswitch:false ~force_path:false ~build_env:[] st)
 
 (** Returns shell-appropriate statement to evaluate [cmd]. *)
 let shell_eval_invocation shell cmd =
@@ -1206,7 +1206,7 @@ let write_dynamic_init_scripts st =
   | _ -> true
   in
   let updates =
-    updates ~set_opamroot:false ~set_opamswitch:false st
+    updates ~set_opamroot:false ~set_opamswitch:false ~build_env:[] st
     |> List.filter is_not_empty_update
   in
   try

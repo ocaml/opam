@@ -95,7 +95,7 @@ let write_selections st =
     let f = OpamPath.Switch.selections st.switch_global.root st.switch in
     let env = OpamPath.Switch.environment st.switch_global.root st.switch in
     OpamFile.SwitchSelections.write f (OpamSwitchState.selections st);
-    OpamFile.Environment.write env (OpamEnv.compute_updates st)
+    OpamFile.Environment.write env (OpamEnv.compute_updates ~build_env:[] st)
 
 let add_to_reinstall st ~unpinned_only packages =
   log "add-to-reinstall unpinned_only:%b packages:%a" unpinned_only

@@ -584,16 +584,14 @@ let compilation_env t opam =
   in
   let scrub = OpamClientConfig.(!r.scrubbed_environment_variables) in
   OpamEnv.get_full ~scrub ~set_opamroot:true ~set_opamswitch:true
-    ~force_path:true t ~updates:([
+    ~force_path:true ~build_env t ~updates:([
         cdpath;
         makeflags;
         makelevel;
         pkg_name;
         pkg_version;
         cli
-      ] @
-        build_env
-        @ cygwin_env)
+      ] @ cygwin_env)
 
 let installed_opam_opt st nv =
   OpamStd.Option.Op.(
