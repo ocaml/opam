@@ -661,3 +661,49 @@ The following actions will be performed:
 Successfully extracted to ${BASEDIR}/escape-good-md5.1
 ### test -f escape-good-md5.1/p.patch
 # Return code 1 #
+### ::::::::::::::::::::::::
+### : Nested extra-files
+### ::::::::::::::::::::::::
+### <pkg:good-nested-md5.1>
+opam-version: "2.0"
+maintainer: "nobody"
+authors: "nobody neither"
+homepage: "https://no.bo.dy"
+bug-reports: "https://still.nobo.dy"
+dev-repo: "git+https://no.were"
+license: "MIT"
+synopsis: "Initially empty"
+build: [ "test" "-f" "dir/p.patch" ]
+extra-files: [
+  ["dir/p.patch" "md5=patch-md5"]
+]
+### <add-nested-files.sh>
+set -ue
+pkg=$1
+pkgpath="REPO/packages/${pkg%.*}/$pkg"
+mkdir -p $pkgpath/files/dir
+cp p.patch $pkgpath/files/dir/
+### sh add-nested-files.sh good-nested-md5.1
+### sh update-hashes.sh
+### OPAMDEBUGSECTIONS=opam-file OPAMDEBUG=-1 opam update default | unordered
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1: wrong checksum (1)
+opam-file                       Missing expected extra files /etc/passwdd at ${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/escape-good-md5/escape-good-md5.1: missing from 'files' directory (1)
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1: missing from 'files' directory (1)
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/good-md5-good-sha256/good-md5-good-sha256.1: missing from 'files' directory (1)
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/good-nested-md5/good-nested-md5.1: missing from 'files' directory (1) and missing from opam file (1)
+opam-file                       Missing extra-files field for p.patch for no-checksum.1, ignoring them.
+opam-file                       Missing extra-files field for p.patch for not-mentioned.1, ignoring them.
+opam-file                       Missing expected extra files p.patch at ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files
+Now run 'opam upgrade' to apply any package updates.
+### opam install good-nested-md5.1
+The following actions will be performed:
+=== install 1 package
+  - install good-nested-md5 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed good-nested-md5.1
+Done.
