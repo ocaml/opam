@@ -69,6 +69,7 @@ users)
 ## Clean
 
 ## Env
+  * Fix parsing of `OPAMFETCH` (support quotes / proper POSIX shell syntax) [#5492 @kit-ty-kate - fix #5490]
 
 ## Opamfile
 
@@ -197,6 +198,7 @@ users)
   * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
 
 ## opam-core
+  * `OpamCmd`: Create the module and add `of_string` [#5492 @kit-ty-kate]
   * `OpamConsole.log`: does not keep log messages before initialization if the code is ran through a library [#6487 @kit-ty-kate]
   * `OpamCoreConfig.in_opam`: was added [#6487 @kit-ty-kate]
   * `OpamSystem.cpu_count`: now uses a C binding instead of system utilities to get the number of cores of the current machine [#6634 @kit-ty-kate]
@@ -209,6 +211,7 @@ users)
   * `OpamCompat.String.{starts_with,ends_with,for_all,fold_left}`: were added [#6442 @kit-ty-kate]
   * `OpamHash.check_string`: was added [#6661 @kit-ty-kate]
   * `OpamHash.equal_kind`: was added [#6644 @kit-ty-kate]
+  * `OpamStd.Char`: Create the module and export `is_whitespace` [#5492 @kit-ty-kate]
   * `OpamStd.List.fold_left_map`: was moved to `OpamCompat.List.fold_left_map` [#6442 @kit-ty-kate]
   * `OpamStd.List.{cons,find_opt,filter_map}`: were removed. Use `Stdlib.List` instead. [#6442 @kit-ty-kate]
   * `OpamStd.List.mem`: was added, having as argument the equality function [#6644 @kit-ty-kate]
