@@ -694,7 +694,6 @@ opam-file                       Missing expected extra files /etc/passwdd at ${B
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/escape-good-md5/escape-good-md5.1: missing from 'files' directory (1)
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1: missing from 'files' directory (1)
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/good-md5-good-sha256/good-md5-good-sha256.1: missing from 'files' directory (1)
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/good-nested-md5/good-nested-md5.1: missing from 'files' directory (1) and missing from opam file (1)
 opam-file                       Missing extra-files field for p.patch for no-checksum.1, ignoring them.
 opam-file                       Missing extra-files field for p.patch for not-mentioned.1, ignoring them.
 opam-file                       Missing expected extra files p.patch at ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files

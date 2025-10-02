@@ -51,6 +51,7 @@ users)
   * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
 
 ## Update / Upgrade
+  * Fix the false-positive mismatch debug warning during `opam update` when faced with nested extra-files on Windows [#6715 @kit-ty-kate]
 
 ## Tree
 
