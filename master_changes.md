@@ -20,6 +20,7 @@ users)
 
 ## Init
   * Remove `getconf` from the list of required runtime tools, which allows `opam init` to work out-of-the-box on Haiku [#6634 @kit-ty-kate - fix #6632]
+  * Display an appropriate error message when the file given to `opam init --config` does not exist or is in a VCS [#5979 @kit-ty-kate - fix #5971]
 
 ## Config report
 
@@ -142,6 +143,7 @@ users)
   * Add a test showing the behaviour of `opam var <pkg>:opamfile` [#6659 @kit-ty-kate]
   * Add a test to show homogeneity of outputs on verbose between sandboxed and non sandboxed commands (with `-vv`) [#6675 @rjbou]
   * Update `sed-cmd` reftest reftest [#6675 @rjbou]
+  * Add a test showing the behaviour of `opam init --config` when the file given does not exist [#5979 @kit-ty-kate @rjbou]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
@@ -221,3 +223,5 @@ users)
   * `OpamStd.String.map`: was removed. Use `Stdlib.String.map` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.{starts_with,ends_with,for_all,fold_left}`: were moved to `OpamCompat.String` [#6442 @kit-ty-kate]
   * `OpamFilename.create`: deduplicate the directory separator character when the basename starts with one [#6703 @rjbou]
+  * `OpamUrl.kind`: was added as an alternative to `OpamUrl.local_{file,dir}` [#5979 @kit-ty-kate]
+  * `OpamUrl`: Expose `string_of_vc` [#5979 @kit-ty-kate]
