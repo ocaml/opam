@@ -140,6 +140,7 @@ users)
   * Add a test for switch link when a local switch is already present [#6860 @rjbou]
   * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
   * Add disabled depexts tests [#6489 @rjbou]
+  * Add depexts tests with debug section that demostrate system availability polling [#6489 @arozovyk]
 
 ### Engine
 

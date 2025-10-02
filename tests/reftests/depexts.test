@@ -643,3 +643,65 @@ The following actions will be performed:
 -> installed other.dev
 -> installed foo.2.0
 Done.
+### opam option depext=true
+Set to 'true' the field depext in global configuration
+### :VIII: Debug output for depexts loading
+### opam switch create state-debug --empty
+### <pkg:test-poll-pkg.1>
+opam-version: "2.0"
+depexts: ["poll-sys-dep"]
+### opam-set-os dummy-success::poll-sys-dep
+Added '[os-family "dummy-success::poll-sys-dep" "Set through 'opam var'"]' to field global-variables in global configuration
+### OPAMDEBUGSECTIONS=XSYS OPAMDEBUG=-3 OPAMDRYRUN=1
+### opam install test-poll-pkg
+The following actions will be simulated:
+=== install 1 package
+  - install test-poll-pkg 1
+
+The following system packages will first need to be installed:
+    poll-sys-dep
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing test-poll-pkg.1.
+-> installed test-poll-pkg.1
+Done.
+### <pin:test-poll-pkg-pin/test-poll-pkg-pin.opam>
+opam-version: "2.0"
+depexts: ["poll-sys-dep"]
+### opam pin ./test-poll-pkg-pin
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+
+The following actions will be simulated:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+
+The following system packages will first need to be installed:
+    poll-sys-dep
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing test-poll-pkg-pin.dev.
+-> installed test-poll-pkg-pin.dev
+Done.
