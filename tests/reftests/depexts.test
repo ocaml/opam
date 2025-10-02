@@ -661,3 +661,21 @@ The following actions will be performed:
 -> installed other.dev
 -> installed foo.2.0
 Done.
+### opam option depext=true
+Set to 'true' the field depext in global configuration
+### :VIII: Debug output for depexts loading
+### opam switch create state-debug --empty
+### <pkg:test-poll-pkg.1>
+opam-version: "2.0"
+depexts: ["poll-sys-dep"]
+### opam-set-os dummy-success::poll-sys-dep
+Added '[os-family "dummy-success::poll-sys-dep" "Set through 'opam var'"]' to field global-variables in global configuration
+### sh -c "OPAMDEBUGSECTIONS=XSYS opam install test-poll-pkg --dry-run --debug-level=3 -y 2>&1 | grep 'computing depexts status' | sed 's/^[0-9:.]*  *//'"
+XSYS                            computing depexts status for 6 system packages (querying system availability)
+### <pin:test-poll-pkg-pin/test-poll-pkg-pin.opam>
+opam-version: "2.0"
+depexts: ["poll-sys-dep"]
+### sh -c "OPAMDEBUGSECTIONS=XSYS opam pin ./test-poll-pkg-pin --dry-run --debug-level=3 -y 2>&1 | grep 'computing depexts status' | sed 's/^[0-9:.]*  *//'"
+XSYS                            computing depexts status for 6 system packages (querying system availability)
+XSYS                            computing depexts status for 1 system packages (querying system availability)
+XSYS                            computing depexts status for 1 system packages (querying system availability)
