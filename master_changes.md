@@ -80,6 +80,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * Check the status of git submodules when checking if a repository is up-to-date [#6132 @kit-ty-kate]
 
 ## Build
   * Update the dependency constraint on `patch` to now require its stable version [#6663 @kit-ty-kate]
@@ -142,6 +143,7 @@ users)
   * Add a test showing the behaviour of `opam var <pkg>:opamfile` [#6659 @kit-ty-kate]
   * Add a test to show homogeneity of outputs on verbose between sandboxed and non sandboxed commands (with `-vv`) [#6675 @rjbou]
   * Update `sed-cmd` reftest reftest [#6675 @rjbou]
+  * Add a test showing the behaviour of opam when faced with outdated git submodule in its local cache [#6153 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
