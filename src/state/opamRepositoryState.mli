@@ -51,6 +51,21 @@ val get_repo: 'a repos_state -> repository_name -> repository
 
 val load_opams_from_dir: repository_name -> dirname -> OpamFile.OPAM.t OpamPackage.Map.t
 
+(** [load_opams_from_diff repo diffs rt] incrementally
+    updates package definitions by processing only changed files.
+
+    Starting from existing packages in [rt.repo_opams], it:
+    - Adds new packages
+    - Removes packages whose opam files were deleted
+    - Updates packages from changed opam files that exist
+
+      @param diffs List of [Patch.operation] representing creations, deletions,
+    and modifications of regular files
+*)
+val load_opams_from_diff:
+  repository -> Patch.operation list -> 'a repos_state
+  -> OpamFile.OPAM.t package_map
+
 (** Load all the metadata within the local mirror of the given repository,
     without cache *)
 val load_repo:

@@ -52,6 +52,7 @@ users)
 
 ## Update / Upgrade
   * Fix the false-positive mismatch debug warning during `opam update` when faced with nested extra-files on Windows [#6715 @kit-ty-kate]
+  * Implement incremental opam file loading to process only changed files during repository updates and repository state loading [#6614 @arozovyk - fix #5824]
 
 ## Tree
 
@@ -88,6 +89,7 @@ users)
   * Remove `seq` from the list of packages to download-if-missing as it is no longer a dependency of `re` [#6700 @kit-ty-kate]
   * `./configure --enable-static` is now supported on OpenBSD [#6705 @flumf]
   * Add missing constraints to avoid cmdliner 2.0.0 [#6707 @kit-ty-kate]
+  * Add patch library dependency to opam-state [#6614 @arozovyk]
 
 ## Infrastructure
 
@@ -145,6 +147,7 @@ users)
   * Add a test to show homogeneity of outputs on verbose between sandboxed and non sandboxed commands (with `-vv`) [#6675 @rjbou]
   * Update `sed-cmd` reftest reftest [#6675 @rjbou]
   * Add a test showing the behaviour of nested extra-files [#6715 @kit-ty-kate]
+  * Add opam file loading tests to `update.test` to demonstrate current behaviour of loading full repository instead of only changed files. [#6614 @arozovyk @rjbou @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
@@ -189,9 +192,13 @@ users)
 
 ## opam-repository
   * `OpamLocal.rsync_*`: Change the return type from `OpamFilename.*` to `unit` [#6658 @kit-ty-kate]
+  * `OpamRepository.update`: changed the `'Changes` return type to include `Patch.operation list` of changes. [#6614 @arozovyk]
+  * `OpamRepositoryBackend.update` type : include the `Patch.t list` in `Update_patch` variant [#6614 @arozovyk]
+  * `OpamRepositoryBackend.get_diff`: include `Patch.t list` in the return type (along with `filename`) [#6614 @arozovyk]
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * `OpamRepositoryState` add `load_opams_from_diff` to update package definitions based on file change operations (diff) [#6614 @arozovyk]
 
 ## opam-solver
 
@@ -225,3 +232,7 @@ users)
   * `OpamStd.String.map`: was removed. Use `Stdlib.String.map` instead. [#6442 @kit-ty-kate]
   * `OpamStd.String.{starts_with,ends_with,for_all,fold_left}`: were moved to `OpamCompat.String` [#6442 @kit-ty-kate]
   * `OpamFilename.create`: deduplicate the directory separator character when the basename starts with one [#6703 @rjbou]
+  * `OpamFilename`: add `parse_patch` that preprocesses and parses a patch file. [#6614 @arozovyk]
+  * `OpamSystem`: add lower-level `parse_patch` that preprocesses and parses a patch file. [#6614 @arozovyk]
+  * `OpamFilename.patch`: use variants to make the input either `Filename.t` or reuse `Patch.diffs` directly. Remove the `?preprocess` argument since the preprocess logic is moved to the `OpamFilename.parse_patch` function that is called only in `OpamVCS` (mirroring the previous logic). [#6614 @arozovyk]
+  * `OpamSystem.patch`: change the signature to work directly with `Patch.diffs` (implementation is now the previously `internal_patch` function), parsing is now done separately. [#6614 @arozovyk]

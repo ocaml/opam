@@ -76,6 +76,35 @@ module Cache = struct
 
 end
 
+let get_root_raw root repos_tmp name =
+  match Hashtbl.find repos_tmp name with
+  | lazy repo_root -> repo_root
+  | exception Not_found -> OpamRepositoryPath.root root name
+
+let get_root rt name =
+  get_root_raw rt.repos_global.root rt.repos_tmp name
+
+let get_repo_root rt repo =
+  get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
+
+let read_package_opam ~repo_name ~repo_root package_dir =
+  match OpamFileTools.read_repo_opam ~repo_name ~repo_root package_dir with
+  | Some opam ->
+    (try
+       let nv =
+         OpamPackage.of_string
+           (OpamFilename.Base.to_string (OpamFilename.basename_dir package_dir))
+       in
+       Some (nv, opam)
+     with Failure _ ->
+       log "ERR: directory name not a valid package: ignored %s"
+         (OpamFilename.to_string OpamFilename.Op.(package_dir // "opam"));
+       None)
+  | None ->
+    log "ERR: Could not load %s, ignored"
+      (OpamFilename.to_string OpamFilename.Op.(package_dir // "opam"));
+    None
+
 let load_opams_from_dir repo_name repo_root =
   if OpamConsole.disp_status_line () || OpamConsole.verbose () then
     OpamConsole.status_line "Processing: [%s: loading data]"
@@ -85,22 +114,9 @@ let load_opams_from_dir repo_name repo_root =
     if OpamFilename.exists_dir dir then
       let fnames = Sys.readdir (OpamFilename.Dir.to_string dir) in
       if Array.exists (fun f -> f = "opam") fnames then
-        match OpamFileTools.read_repo_opam ~repo_name ~repo_root dir with
-        | Some opam ->
-          (try
-             let nv =
-               OpamPackage.of_string
-                 OpamFilename.(Base.to_string (basename_dir dir))
-             in
-             OpamPackage.Map.add nv opam r
-           with Failure _ ->
-             log "ERR: directory name not a valid package: ignored %s"
-               OpamFilename.(to_string Op.(dir // "opam"));
-             r)
-        | None ->
-          log "ERR: Could not load %s, ignored"
-            OpamFilename.(to_string Op.(dir // "opam"));
-          r
+        match read_package_opam ~repo_name ~repo_root dir with
+        | Some (nv, opam) -> OpamPackage.Map.add nv opam r
+        | None -> r
       else
         Array.fold_left (fun r name -> aux r OpamFilename.Op.(dir / name))
           r fnames
@@ -108,6 +124,69 @@ let load_opams_from_dir repo_name repo_root =
   in
   Fun.protect
     (fun () -> aux OpamPackage.Map.empty (OpamRepositoryPath.packages_dir repo_root))
+    ~finally:OpamConsole.clear_status
+
+let load_opams_from_diff repo diffs rt =
+  if OpamConsole.disp_status_line () || OpamConsole.verbose () then
+    OpamConsole.status_line "Processing: [%s: loading data]"
+      (OpamConsole.colorise `blue (OpamRepositoryName.to_string repo.repo_name));
+  let existing_opams =
+    OpamRepositoryName.Map.find repo.repo_name rt.repo_opams
+  in
+  let repo_root = get_repo_root rt repo in
+  let process_file (opams, processed_dirs) file ~is_removal =
+    let pkg_dir =
+      let file = OpamFilename.raw file in
+      let dirname = OpamFilename.dirname file in
+      let basename = OpamFilename.basename_dir dirname in
+      let full_path =
+        Filename.concat
+          (OpamFilename.Dir.to_string repo_root)
+          (OpamFilename.Dir.to_string dirname)
+      in
+      if OpamFilename.Base.to_string basename = "files" then
+        OpamFilename.Dir.of_string (Filename.dirname full_path)
+      else
+        OpamFilename.Dir.of_string full_path
+    in
+    if OpamFilename.Dir.Set.mem pkg_dir processed_dirs then
+      opams, processed_dirs
+    else
+      let processed_dirs = OpamFilename.Dir.Set.add pkg_dir processed_dirs in
+      match read_package_opam ~repo_name:repo.repo_name ~repo_root pkg_dir with
+      | Some (nv, opam) -> OpamPackage.Map.add nv opam opams, processed_dirs
+      | None ->
+        if is_removal then
+          match OpamPackage.of_dirname pkg_dir with
+          | None ->
+            log "ERR: directory name not a valid package: ignored %s"
+              (OpamFilename.Dir.to_string pkg_dir);
+            opams, processed_dirs
+          | Some nv ->
+            OpamPackage.Map.remove nv opams, processed_dirs
+        else
+          opams, processed_dirs
+  in
+  let remove_file file acc = process_file acc file ~is_removal:true in
+  let add_file file acc = process_file acc file ~is_removal:false in
+  let process_operation acc = function
+    | Patch.Edit (old_file, new_file) ->
+      if String.equal old_file new_file
+      then
+        add_file new_file acc
+      else
+        remove_file old_file acc |> add_file new_file
+    | Patch.Delete file -> remove_file file acc
+    | Patch.Create file -> add_file file acc
+    | Patch.Git_ext (file1, file2, git_ext) ->
+      match git_ext with
+      | Patch.Rename_only (_, _) -> remove_file file1 acc |> add_file file2
+      | Patch.Delete_only -> remove_file file1 acc
+      | Patch.Create_only -> add_file file2 acc
+  in
+  Fun.protect
+    (fun () -> List.fold_left process_operation
+        (existing_opams, OpamFilename.Dir.Set.empty) diffs |> fst)
     ~finally:OpamConsole.clear_status
 
 let load_repo repo repo_root =
@@ -141,17 +220,6 @@ let remove_from_repos_tmp rt name =
 let cleanup rt =
   Hashtbl.iter (fun _ tmp_dir -> clean_repo_tmp tmp_dir) rt.repos_tmp;
   Hashtbl.clear rt.repos_tmp
-
-let get_root_raw root repos_tmp name =
-  match Hashtbl.find repos_tmp name with
-  | lazy repo_root -> repo_root
-  | exception Not_found -> OpamRepositoryPath.root root name
-
-let get_root rt name =
-  get_root_raw rt.repos_global.root rt.repos_tmp name
-
-let get_repo_root rt repo =
-  get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
 let load lock_kind gt =
   log "LOAD-REPOSITORY-STATE %@ %a" (slog OpamFilename.Dir.to_string) gt.root;

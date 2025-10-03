@@ -1,7 +1,7 @@
 (library
   (name        opam_state)
   (public_name opam-state)
-  (libraries   opam-repository re spdx_licenses)
+  (libraries   opam-repository re spdx_licenses patch)
   (synopsis    "OCaml Package Manager instance management library")
   (modules_without_implementation OpamStateTypes)
   (modules     :standard)

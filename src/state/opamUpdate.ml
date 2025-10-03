@@ -67,7 +67,7 @@ let repository rt repo =
     in
     OpamProcess.Job.with_text text @@
     OpamRepository.update r repo_root @@+ fun has_changes ->
-    let has_changes = if redirect then `Changes else has_changes in
+    let has_changes = if redirect then `Changes [] else has_changes in
     if n <> max_loop && r = repo then
       (OpamConsole.warning "%s: Cyclic redirections, stopping."
          (OpamRepositoryName.to_string repo.repo_name);
@@ -99,7 +99,7 @@ let repository rt repo =
   | `No_changes ->
     log "Repository did not change: nothing to do.";
     Done None
-  | `Changes ->
+  | `Changes diffs ->
     log "Repository has new changes";
     let repo_file = OpamFile.Repo.safe_read repo_file_path in
     let repo_file = OpamFile.Repo.with_root_url repo.repo_url repo_file in
@@ -134,7 +134,10 @@ let repository rt repo =
         (Printexc.to_string e)
     | None ->
       let opams =
-        OpamRepositoryState.load_opams_from_dir repo.repo_name repo_root
+        match diffs with
+        | [] ->
+          OpamRepositoryState.load_opams_from_dir repo.repo_name repo_root
+        | diffs -> OpamRepositoryState.load_opams_from_diff repo diffs rt
       in
       let local_dir = OpamRepositoryPath.root gt.root repo.repo_name in
       if OpamRepositoryConfig.(!r.repo_tarring) then
