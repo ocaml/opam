@@ -423,7 +423,7 @@ let rec handle_pin_depends st nv opam =
               (OpamConsole.colorise `bold (OpamPackage.to_string nv))
               (OpamConsole.colorise `underline (OpamUrl.to_string url)))
           extra_pins);
-     if OpamConsole.confirm "Pin and install them?" then
+     if OpamConsole.confirm ~name:"install-pin-depends" "Pin and install them?" then
        (let extra_pins =
           fetch_all_pins st (List.map (fun (nv, u) ->
               { pinned_name = OpamPackage.name nv;
@@ -438,7 +438,7 @@ let rec handle_pin_depends st nv opam =
             source_pin st pin.pinned_name ?version:pin.pinned_version
               (Some pin.pinned_url) ~ignore_extra_pins:true)
           st extra_pins)
-     else if OpamConsole.confirm
+     else if OpamConsole.confirm ~name:"ignore-pin-depends"
          "Try to install anyway, assuming `--ignore-pin-depends'?"
      then st else
        OpamStd.Sys.exit_because `Aborted)
