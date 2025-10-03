@@ -828,16 +828,16 @@ The following actions will be performed:
 -> retrieved pinned-opamfile-test.dev  (file://${BASEDIR}/pinned-opamfile-test)
 + cat "${BASEDIR}/OPAM/var-opamfile/.opam-switch/overlay/pinned-opamfile-test/opam" (CWD=${BASEDIR}/OPAM/var-opamfile/.opam-switch/build/pinned-opamfile-test.dev)
 - opam-version: "2.0"
-- synopsis: "A word"
-- description: "Two words."
-- authors: "the testing team"
-- homepage: "egapemoh"
-- maintainer: "maint@tain.er"
-- license: "MIT"
-- dev-repo: "hg+https://pkg@op.am"
-- bug-reports: "https://nobug"
 - name: "pinned-opamfile-test"
 - version: "dev"
+- synopsis: "A word"
+- description: "Two words."
+- maintainer: "maint@tain.er"
+- authors: "the testing team"
+- license: "MIT"
+- homepage: "egapemoh"
+- bug-reports: "https://nobug"
+- dev-repo: "hg+https://pkg@op.am"
 - url {
 -   src:
 -     "file://${BASEDIR}/pinned-opamfile-test"
