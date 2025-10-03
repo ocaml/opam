@@ -22,7 +22,8 @@ module Cache: sig
   val load:
     dirname ->
     (OpamFile.Repo.t repository_name_map *
-     OpamFile.OPAM.t package_map repository_name_map)
+     OpamFile.OPAM.t package_map repository_name_map *
+     OpamSysPkg.availability_mode)
       option
   val remove: unit -> unit
 end

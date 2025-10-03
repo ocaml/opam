@@ -51,6 +51,7 @@ users)
   * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
 
 ## Update / Upgrade
+  * Compute the list of available depexts on `opam update` [#6489 @arozovyk - fix #6461]
 
 ## Tree
 
@@ -108,6 +109,7 @@ users)
 
 ## Client
   * [NEW] Fetch shared archive sources without checksums [#6627 @psafont - fix #5638]
+  * Improved depexts handling by caching system package availability during update, avoiding redundant system checks at install time. [#6489 @arozovyk fix #6461]
 
 ## Shell
 
@@ -143,6 +145,9 @@ users)
   * Add a test showing the behaviour of `opam var <pkg>:opamfile` [#6659 @kit-ty-kate]
   * Add a test to show homogeneity of outputs on verbose between sandboxed and non sandboxed commands (with `-vv`) [#6675 @rjbou]
   * Update `sed-cmd` reftest reftest [#6675 @rjbou]
+  * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
+  * Use the new `opam-set-os` command when applicable [#6489 @arozovyk]
+  * Add depexts tests with debug section that demostrate system availability polling [#6489 @arozovyk]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
@@ -151,6 +156,7 @@ users)
   * Allow `sed-cmd` to parse even if no space is after the command [#6675 @rjbou]
   * Harden the regexp used for substituting variable checksums [#6710 @kit-ty-kate]
   * Add the `unset` builtin [#6708 @kit-ty-kate]
+  * Add `opam-set-os` command for reftests that combines setting global `os-family` variable followed by a (silent) `opam update` [#6489 @arozovyk]
 
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]
@@ -184,12 +190,21 @@ users)
 
 # API updates
 ## opam-client
-
+  * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk fix #6461]
+  * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk fix #6461]
+  * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk fix #6461]
 ## opam-repository
   * `OpamLocal.rsync_*`: Change the return type from `OpamFilename.*` to `unit` [#6658 @kit-ty-kate]
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * `OpamSwitchState`: add `update_sys_packages` to update depexts status of a set of packages. [#6489 @arozovyk]
+  * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly [#6489 @arozovyk]
+  * `OpamStateTypes`: add available system package status field in `repos_state` for all the depexts declared in repo's packages. The new field is also added to the cache [#6489 @arozovyk fix #6461]
+  * `OpamRepositoryState.load`: load repo's available system packages [#6489 @arozovyk fix #6461]
+  * `OpamFileTools`: add `get_depexts` to consolidate depexts extraction logic from individual opam files and package maps [#6489 @arozovyk fix #6461]
+  * `OpamSwitchState.update_sys_packages` check for availability of packages in `repo_state` when updating the depexts status of additional packages [#6489 @arozovyk fix #6461]
+  * `OpamFileTools`: add `get_depexts` to consolidate depexts extraction logic from individual opam files and package maps [@arozovyk]
 
 ## opam-solver
 
@@ -197,6 +212,8 @@ users)
   * `OpamFormula.equal_relop`: was added [#6644 @kit-ty-kate]
   * `OpamTypesBase.{action,pkg_flag,simple_arg,arg,filter,command}_equal`: were added [#6644 @kit-ty-kate]
   * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
+  * `OpamSysPkg`: add `availability_mode` type to indicate the availability of system packages on a given system. [#6489 @arozovyk]
+  * `OpamSysPkg`: add `combine_status` `string_of_availability_mode` `combine_availability_mode` `check_availability_mode_equal` functions. [#6489 @arozovyk]
 
 ## opam-core
   * `OpamConsole.log`: does not keep log messages before initialization if the code is ran through a library [#6487 @kit-ty-kate]

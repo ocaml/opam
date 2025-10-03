@@ -490,21 +490,11 @@ let yum_cmd = lazy begin
     raise (OpamSystem.Command_not_found "yum or dnf")
 end
 
-let packages_status ?(env=OpamVariable.Map.empty) config packages =
+let installed_packages ?(env=OpamVariable.Map.empty) config packages =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
-  (* Some package managers don't permit to request on available packages. In
-     this case, we consider all non installed packages as [available]. *)
   let open OpamSysPkg.Set.Op in
-  let compute_sets ?sys_available sys_installed =
-    let installed = packages %% sys_installed in
-    match sys_available with
-    | Some sys_available ->
-      let s_available = (packages -- installed) %% sys_available in
-      let s_not_found = packages -- installed -- s_available in
-      { OpamSysPkg.s_available; s_not_found }
-    | None ->
-      let s_available = packages -- installed in
-      { OpamSysPkg.status_empty with s_available }
+  let get_relevant sys_installed =
+    packages %% sys_installed
   in
   let to_string_list pkgs =
     OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) pkgs [])
@@ -543,8 +533,8 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
         |> OpamSysPkg.Set.add (OpamSysPkg.of_string no_flavor)
       ) OpamSysPkg.Set.empty l
   in
-  let compute_sets_with_virtual get_avail_w_virtuals get_installed  =
-    let sys_available, sys_provides = get_avail_w_virtuals () in
+  let compute_installed_with_virtual get_avail_w_virtuals get_installed  =
+    let sys_provides = get_avail_w_virtuals () in
     let need_inst_check =
       OpamSysPkg.Map.fold (fun cp vps set ->
           if OpamSysPkg.Set.(is_empty (inter vps packages)) then set else
@@ -562,7 +552,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
           | Some ps -> OpamSysPkg.Set.union acc ps)
         sys_installed sys_installed
     in
-    compute_sets sys_installed ~sys_available
+    get_relevant sys_installed
   in
   let compute_sets_for_arch ~pacman =
     let get_avail_w_virtuals () =
@@ -614,7 +604,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
           else
             acc)
         (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
-      |> (fun (a,p,_) -> a,p)
+      |> (fun (_,p,_) -> p)
     in
     let get_installed str_pkgs =
       (* output:
@@ -635,7 +625,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       run_query_command pacman ["-Qs" ; names_re ~str_pkgs ()]
       |> with_regexp_sgl re_pkg
     in
-    compute_sets_with_virtual get_avail_w_virtuals get_installed
+    compute_installed_with_virtual get_avail_w_virtuals get_installed
   in
   match family ~env () with
   | Alpine ->
@@ -660,7 +650,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
        >    https://dl-cdn.alpinelinux.org/alpine/edge/main
        >    @edge https://dl-cdn.alpinelinux.org/alpine/edge/main
     *)
-    let sys_installed, sys_available =
+    let sys_installed =
       let pkg_name =
         Re.(compile @@ seq
               [ bol;
@@ -679,9 +669,11 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
                 space
               ])
       in
-      let add_pkg pkg repo installed (inst,avail) =
-        let pkg = match repo with Some r -> pkg^"@"^r | None -> pkg in
-        if installed then pkg +++ inst, avail else inst, pkg +++ avail
+      let add_pkg pkg repo installed inst =
+        if installed then
+          let pkg = match repo with Some r -> pkg^"@"^r | None -> pkg in
+          pkg +++ inst
+        else inst
       in
       to_string_list packages
       |> List.map (fun s ->
@@ -689,25 +681,25 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
           | Some (pkg, _repo) -> pkg
           | None -> s)
       |> (fun l -> run_query_command "apk" ("policy"::l))
-      |> List.fold_left (fun (pkg, installed, instavail) l ->
+      |> List.fold_left (fun (pkg, installed, inst) l ->
           try (* package name *)
-            Re.(Group.get (exec pkg_name l) 1), false, instavail
+            Re.(Group.get (exec pkg_name l) 1), false, inst
           with Not_found ->
             if l.[2] <> ' ' then (* only version field is after two spaces *)
-              pkg, false, instavail
+              pkg, false, inst
             else if l = "    lib/apk/db/installed" then
               (* from https://git.alpinelinux.org/apk-tools/tree/src/database.c#n58 *)
-              pkg, true, instavail
+              pkg, true, inst
             else (* repo (tagged and non-tagged) *)
-            let repo =
-              try Some Re.(Group.get (exec repo_name l) 1)
-              with Not_found -> None
-            in
-            pkg, installed, add_pkg pkg repo installed instavail)
-        ("", false, OpamSysPkg.Set.(empty, empty))
-      |> (fun (_,_, instavail) -> instavail)
+              let repo =
+                try Some Re.(Group.get (exec repo_name l) 1)
+                with Not_found -> None
+              in
+              pkg, installed, add_pkg pkg repo installed inst)
+        ("", false, OpamSysPkg.Set.empty)
+      |> (fun (_,_, inst) -> inst)
     in
-    compute_sets sys_installed ~sys_available
+    get_relevant sys_installed
   | Arch ->
     compute_sets_for_arch ~pacman:"pacman"
   | Centos | Altlinux | Suse ->
@@ -720,7 +712,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
-    compute_sets sys_installed
+    get_relevant sys_installed
   | Cygwin ->
     (* Output format:
        >Cygwin Package Information
@@ -730,7 +722,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     *)
     let sys_installed =
       run_query_command (Commands.cygcheck config)
-      ([ "-c"; "-d" ] @ to_string_list packages)
+        ([ "-c"; "-d" ] @ to_string_list packages)
       |> (function | _::_::l -> l | _ -> [])
       |> List.filter_map (fun l ->
           match OpamStd.String.split l ' ' with
@@ -739,7 +731,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
-    compute_sets sys_installed
+    get_relevant sys_installed
   | Debian ->
     let get_avail_w_virtuals () =
       let provides_sep = Re.(compile @@ str ", ") in
@@ -782,7 +774,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
             None
           else acc)
         (OpamSysPkg.Set.empty, OpamSysPkg.Map.empty, None)
-      |> (fun (a,p,_) -> a,p)
+      |> (fun (_,p,_) -> p)
     in
     let get_installed str_pkgs =
       (* ouput:
@@ -815,7 +807,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> snd
       |> with_regexp_sgl re_pkg
     in
-    compute_sets_with_virtual get_avail_w_virtuals get_installed
+    compute_installed_with_virtual get_avail_w_virtuals get_installed
   | Dummy test ->
     let sys_installed =
       match test.installed with
@@ -823,20 +815,14 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       | `none -> OpamSysPkg.Set.empty
       | `set pkgs -> pkgs %% packages
     in
-    let sys_available =
-      match test.available with
-      | `all -> packages
-      | `none -> OpamSysPkg.Set.empty
-      | `set pkgs -> pkgs %% packages
-    in
-    compute_sets ~sys_available sys_installed
+    get_relevant sys_installed
   | Freebsd ->
     let sys_installed =
       run_query_command "pkg" ["query"; "%n\n%o"]
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
-    compute_sets sys_installed
+    get_relevant sys_installed
   | Gentoo ->
     let sys_installed =
       let re_pkg =
@@ -862,7 +848,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
         (OpamFilename.dirs (OpamFilename.Dir.of_string "/var/db/pkg"))
       |> package_set_of_pkgpath
     in
-    compute_sets sys_installed
+    get_relevant sys_installed
   | Homebrew ->
     (* accept 'pkgname' and 'pkgname@version'
        exampe output
@@ -886,7 +872,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> List.map OpamSysPkg.of_string
       |> OpamSysPkg.Set.of_list
     in
-    compute_sets sys_installed
+    get_relevant sys_installed
   | Macports ->
     let variants_map, packages =
       OpamSysPkg.(Set.fold (fun spkg (map, set) ->
@@ -934,6 +920,251 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
           with Not_found -> pkgs)
         OpamSysPkg.Set.empty
     in
+    get_relevant sys_installed
+  | Msys2 ->
+    compute_sets_for_arch ~pacman:(Commands.msys2 config)
+  | Netbsd ->
+    let sys_installed =
+      run_query_command "pkg_info" ["-Q"; "PKGPATH"; "-a"]
+      |> package_set_of_pkgpath
+    in
+    get_relevant sys_installed
+  | Nix ->
+    (* We say all requested packages are available but uninstalled.
+       We could check that these packages are available in Nixpkgs,
+       but that would involve an expensive Nixpkgs evaluation.
+       Saying no packages are installed results in a warning that
+       conf packages depend on a 'system package that can no longer
+       be found.' But omitting them will mean that they won't be
+       added to the Nix derivation.
+    *)
+    OpamSysPkg.Set.empty
+  | Openbsd ->
+    let sys_installed =
+      run_query_command "pkg_info" ["-qP"]
+      |> package_set_of_pkgpath
+    in
+    get_relevant sys_installed
+
+let available_packages ?(env=OpamVariable.Map.empty) config packages =
+  let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
+  (* Some package managers don't permit to request on available packages. In
+     this case, we consider all non installed packages as [available]. *)
+  let open OpamSysPkg.Set.Op in
+  let get_relevant sys_available =
+    packages %% sys_available
+  in
+  let to_string_list pkgs =
+    OpamSysPkg.Set.fold (fun p acc -> OpamSysPkg.to_string p :: acc) pkgs []
+  in
+  let names_re ?str_pkgs () =
+    let str_pkgs =
+      OpamStd.Option.default (to_string_list packages) str_pkgs
+    in
+    let need_escape = Re.compile (Re.group (Re.set "+.")) in
+    Printf.sprintf "^(%s)$"
+      (OpamStd.List.concat_map "|"
+         (Re.replace ~all:true need_escape ~f:(fun g -> "\\"^Re.Group.get g 1))
+         str_pkgs)
+  in
+  let with_regexp_sgl re_pkg l =
+    List.fold_left (fun pkgs s ->
+        try
+          Re.Group.get (Re.exec re_pkg s) 1 +++ pkgs
+        with Not_found -> pkgs)
+      OpamSysPkg.Set.empty l
+  in
+  let compute_sets_for_arch ~pacman =
+    let get_avail_w_virtuals () =
+      let package_provided str =
+        OpamSysPkg.of_string
+          (match OpamStd.String.cut_at str '=' with
+           | None -> str
+           | Some (p, _vc) -> p)
+      in
+      (* Output format:
+         >Repository      : core
+         >Name            : python
+         >Version         : 3.9.6-1
+         >Description     : Next generation of the python high-level scripting language
+         >Architecture    : x86_64
+         >URL             : https://www.python.org/
+         >Licenses        : custom
+         >Groups          : None
+         >Provides        : python3
+         >Depends On      : bzip2  expat  gdbm  libffi  libnsl  libxcrypt  openssl
+         >Optional Deps   : python-setuptools
+         >                  python-pip
+         >[...]
+
+         Format partially described in https://archlinux.org/pacman/PKGBUILD.5.html
+      *)
+      (* Discard stderr to not have it pollute output. Plus, exit code is the
+         number of packages not found. *)
+      run_command ~discard_err:true pacman ["-Si"]
+      |> snd
+      |> List.fold_left (fun (avail, current) l ->
+          if OpamCompat.String.starts_with ~prefix:"Name" l then
+            match OpamStd.String.split l ' ' with
+            | "Name"::":"::p::_ ->
+              p +++ avail, Some (OpamSysPkg.of_string p)
+            | _ -> avail, current
+          else if OpamCompat.String.starts_with ~prefix:"Provides" l then
+            match OpamStd.String.split l ' ' with
+            | "Provides"::":"::"None"::[] -> avail, current
+            | "Provides"::":"::pkgs ->
+              let ps = OpamSysPkg.Set.of_list (List.map package_provided pkgs) in
+              ps ++ avail, None
+            | _ -> avail, current
+          else
+            avail, current)
+        (OpamSysPkg.Set.empty, None)
+      |> fst
+    in
+    get_relevant (get_avail_w_virtuals ())
+  in
+  match family ~env () with
+  | Alpine ->
+    (* Output format
+       >capnproto policy:
+       >  0.8.0-r1:
+       >    lib/apk/db/installed
+       >    @edgecommunity https://dl-cdn.alpinelinux.org/alpine/edge/community
+       >at policy:
+       >  3.2.1-r1:
+       >    https://dl-cdn.alpinelinux.org/alpine/v3.13/community
+       >vim policy:
+       >  8.2.2320-r0:
+       >    lib/apk/db/installed
+       >    https://dl-cdn.alpinelinux.org/alpine/v3.13/main
+       >  8.2.2852-r0:
+       >    @edge https://dl-cdn.alpinelinux.org/alpine/edge/main
+       >hwids-udev policy:
+       >  20201207-r0:
+       >    https://dl-cdn.alpinelinux.org/alpine/v3.13/main
+       >    @edge https://dl-cdn.alpinelinux.org/alpine/v3.13/main
+       >    https://dl-cdn.alpinelinux.org/alpine/edge/main
+       >    @edge https://dl-cdn.alpinelinux.org/alpine/edge/main
+    *)
+    let sys_available =
+      let pkg_name =
+        Re.(compile @@ seq
+              [ bol;
+                group @@ rep1 @@ alt [ alnum; punct ];
+                space;
+                str "policy:";
+                eol
+              ])
+      in
+      let repo_name =
+        Re.(compile @@ seq
+              [ bol;
+                repn space 4 (Some 4);
+                char '@';
+                group @@ rep1 @@ alt [ alnum; punct ];
+                space
+              ])
+      in
+      to_string_list packages
+      |> List.map (fun s ->
+          match OpamStd.String.cut_at s '@' with
+          | Some (pkg, _repo) -> pkg
+          | None -> s)
+      |> (fun l -> run_query_command "apk" ("policy"::l))
+      |> List.fold_left (fun (pkg, avail) l ->
+          try
+            (* package name line *)
+            (Re.Group.get (Re.exec pkg_name l) 1, avail)
+          with Not_found ->
+            if OpamCompat.String.starts_with ~prefix:"  " l then
+              pkg, avail
+            else
+              let repo =
+                try Some (Re.Group.get (Re.exec repo_name l) 1)
+                with Not_found -> None
+              in
+              let pkg = match repo with Some r -> pkg ^ "@" ^ r | None -> pkg in
+              pkg, pkg +++ avail)
+        ("", OpamSysPkg.Set.empty)
+      |> snd
+    in
+    OpamSysPkg.Available (get_relevant sys_available)
+  | Arch -> OpamSysPkg.Available (compute_sets_for_arch ~pacman:"pacman");
+  | Centos | Altlinux | Suse -> OpamSysPkg.Suppose_available
+  | Cygwin -> OpamSysPkg.Suppose_available
+  | Debian ->
+    let get_avail_w_virtuals () =
+      let provides_sep = Re.compile (Re.str ", ") in
+      let package_provided str =
+        OpamSysPkg.of_string
+          (match OpamStd.String.cut_at str ' ' with
+           | None -> str
+           | Some (p, _vc) -> p)
+      in
+      (* Output format:
+         >Package: apt
+         >Version: 2.1.7
+         >Installed-Size: 4136
+         >Maintainer: APT Development Team <deity@lists.debian.org>
+         >Architecture: amd64
+         >Replaces: apt-transport-https (<< 1.5~alpha4~), apt-utils (<< 1.3~exp2~)
+         >Provides: apt-transport-https (= 2.1.7)
+         > [...]
+         >
+         The `Provides' field contains provided virtual package(s) by current
+         `Package:'.
+         * manpages.debian.org/buster/apt/apt-cache.8.en.html
+         * www.debian.org/doc/debian-policy/ch-relationships.html#s-virtual
+      *)
+      run_query_command "apt-cache"
+        ["search"; names_re (); "--names-only"; "--full"]
+      |> List.fold_left (fun avail l ->
+          if OpamCompat.String.starts_with ~prefix:"Package: " l then
+            let p = String.sub l 9 (String.length l - 9) in
+            p +++ avail
+          else if OpamCompat.String.starts_with ~prefix:"Provides: " l then
+            let ps =
+              List.fold_left (fun acc x ->
+                  OpamSysPkg.Set.add (package_provided x) acc)
+                OpamSysPkg.Set.empty (Re.split ~pos:10 provides_sep l)
+            in
+            avail ++ ps
+          else avail)
+        OpamSysPkg.Set.empty
+    in
+    OpamSysPkg.Available (get_relevant (get_avail_w_virtuals ()))
+  | Dummy test ->
+    let sys_available =
+      match test.available with
+      | `all -> packages
+      | `none -> OpamSysPkg.Set.empty
+      | `set pkgs -> pkgs %% packages
+    in
+    OpamSysPkg.Available (get_relevant sys_available)
+  | Freebsd -> OpamSysPkg.Suppose_available
+  | Gentoo -> OpamSysPkg.Suppose_available
+  | Homebrew ->
+    (* From #5372 - modified: no limit to the query length and the header is not present *)
+    let sys_available =
+      let query = Printf.sprintf "/%s/" (names_re ()) in
+      log "Running homebrew query %s" query ;
+      run_query_command "brew" ["search"; "--formula"; query]
+      |> List.fold_left (fun acc x ->
+          OpamSysPkg.Set.add (OpamSysPkg.of_string x) acc)
+        OpamSysPkg.Set.empty
+    in
+    OpamSysPkg.Available (get_relevant sys_available)
+  | Macports ->
+    let variants_map, packages =
+      OpamSysPkg.(Set.fold (fun spkg (map, set) ->
+          match OpamStd.String.cut_at (to_string spkg) ' ' with
+          | Some (pkg, variant) ->
+            OpamStd.String.Map.add pkg variant map,
+            pkg +++ set
+          | None -> map, Set.add spkg set)
+          packages (OpamStd.String.Map.empty, Set.empty))
+    in
+    let str_pkgs = to_string_list packages in
     let sys_available =
       (* example output
          >diffutils  3.7  sysutils textproc devel  GNU diff utilities
@@ -973,33 +1204,43 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
         ) (None, avail)
       |> snd
     in
-    compute_sets sys_installed ~sys_available
+    OpamSysPkg.Available (get_relevant sys_available)
   | Msys2 ->
-    compute_sets_for_arch ~pacman:(Commands.msys2 config)
+    OpamSysPkg.Available (compute_sets_for_arch ~pacman:(Commands.msys2 config))
   | Netbsd ->
-    let sys_installed =
-      run_query_command "pkg_info" ["-Q"; "PKGPATH"; "-a"]
-      |> package_set_of_pkgpath
-    in
-    compute_sets sys_installed
+    Suppose_available
   | Nix ->
-      (* We say all requested packages are available but uninstalled.
-         We could check that these packages are available in Nixpkgs,
-         but that would involve an expensive Nixpkgs evaluation.
-         Saying no packages are installed results in a warning that
-         conf packages depend on a 'system package that can no longer
-         be found.' But omitting them will mean that they won't be
-         added to the Nix derivation.
-      *)
-      let s_available = packages in
-      let s_not_found = OpamSysPkg.Set.empty in
-      { OpamSysPkg.s_available; s_not_found }
-  | Openbsd ->
-    let sys_installed =
-      run_query_command "pkg_info" ["-qP"]
-      |> package_set_of_pkgpath
-    in
-    compute_sets sys_installed
+    (* We say all requested packages are available but uninstalled.
+       We could check that these packages are available in Nixpkgs,
+       but that would involve an expensive Nixpkgs evaluation.
+       Saying no packages are installed results in a warning that
+       conf packages depend on a 'system package that can no longer
+       be found.' But omitting them will mean that they won't be
+       added to the Nix derivation.
+    *)
+    Suppose_available
+  | Openbsd -> Suppose_available
+
+let packages_status ?(env=OpamVariable.Map.empty) ?sys_available config syspkg_set =
+  let open OpamSysPkg.Set.Op in
+  log "computing depexts status for %a system packages (%s availability)"
+    (fun fmt x -> Format.pp_print_int fmt (OpamSysPkg.Set.cardinal x)) syspkg_set
+    (if Option.is_some sys_available then "using provided" else "querying system");
+  let installed = installed_packages ~env config syspkg_set in
+  let sys_available =
+    match sys_available with
+    | Some sys_available -> sys_available
+    | None -> available_packages ~env config syspkg_set
+  in
+  match sys_available with
+  | OpamSysPkg.Available sys_pkgs ->
+    let s_available = (syspkg_set -- installed) %% sys_pkgs in
+    let s_not_found = syspkg_set -- installed -- s_available in
+    { OpamSysPkg.s_available; s_not_found }
+  | OpamSysPkg.Suppose_available ->
+    let s_available = syspkg_set -- installed in
+    { OpamSysPkg.status_empty with s_available }
+  | OpamSysPkg.No_depexts -> OpamSysPkg.status_empty
 
 let stateless_install ?(env=OpamVariable.Map.empty) () =
   match family ~env () with
@@ -1288,15 +1529,19 @@ let update ?(env=OpamVariable.Map.empty) config =
 
 let repo_enablers ?(env=OpamVariable.Map.empty) config =
   if family ~env () <> Centos then None else
-  let status =
-    packages_status ~env config
-      (OpamSysPkg.raw_set
-         (OpamStd.String.Set.singleton "epel-release"))
-  in
-  if OpamSysPkg.Set.is_empty status.s_available then None
-  else
-    Some
+    let epel_release_pkg =
+      OpamSysPkg.of_string "epel-release" |> OpamSysPkg.Set.singleton
+    in
+    let msg =
       "On CentOS/RHEL, many packages may assume that the Extra Packages for \
        Enterprise Linux (EPEL) repository has been enabled. \
        This is typically done by installing the 'epel-release' package. \
        Please see https://fedoraproject.org/wiki/EPEL for more information"
+    in
+    match available_packages ~env config epel_release_pkg with
+    | Suppose_available -> Some msg
+    | Available av ->
+      if OpamSysPkg.Set.equal av epel_release_pkg then
+        Some msg
+      else None
+    | No_depexts -> None
