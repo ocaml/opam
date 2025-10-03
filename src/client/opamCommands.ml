@@ -3410,7 +3410,7 @@ let pin ?(unpin_only=false) cli =
           OpamRepository.pull_tree
             ~cache_dir:(OpamRepositoryPath.download_cache
                           OpamStateConfig.(!r.root_dir))
-            basename pin_cache_dir [] [url] @@| function
+            basename pin_cache_dir [] [] [url] @@| function
           | Not_available (_,u) ->
             OpamConsole.error_and_exit `Sync_error
               "Could not retrieve %s" u
@@ -3798,7 +3798,7 @@ let source cli =
                   ~cache_dir:(OpamRepositoryPath.download_cache
                                 OpamStateConfig.(!r.root_dir))
                   ?subpath
-                  (OpamPackage.to_string nv) dir []
+                  (OpamPackage.to_string nv) dir [] []
                   [url])
            with
            | Not_available (_,u) ->
