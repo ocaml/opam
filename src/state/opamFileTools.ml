@@ -1363,7 +1363,9 @@ let add_aux_files ?dir ?(files_subdir_hashes=false) opam =
         OpamFilename.rec_files dir
         |> List.map (fun file ->
             file,
-            OpamFilename.Base.of_string (OpamFilename.remove_prefix dir file))
+            OpamFilename.Base.of_string
+              (OpamSystem.back_to_forward
+                 (OpamFilename.remove_prefix dir file)))
       in
       match OpamFile.OPAM.extra_files opam, extra_files with
       | None, None -> opam
