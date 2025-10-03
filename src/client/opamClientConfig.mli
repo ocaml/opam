@@ -81,7 +81,7 @@ type 'a options_fun =
   ?assume_depexts:bool ->
   ?cli:OpamCLIVersion.t ->
   ?scrubbed_environment_variables:string list ->
-  ?verbose_on:OpamTypes.name_set -> 
+  ?verbose_on:OpamTypes.name_set ->
   'a
   (* constraint 'a = 'b -> 'c *)
 
@@ -153,6 +153,7 @@ val opam_init:
   ?retries:int ->
   ?force_checksums:bool option ->
   ?repo_tarring:bool ->
+  ?auto_answer:(string * OpamStd.Config.answer) list ->
   ?debug_level:int ->
   ?debug_sections:OpamStd.Config.sections ->
   ?verbose_level:OpamStd.Config.level ->

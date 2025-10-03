@@ -786,7 +786,7 @@ let pause fmt =
   else
     Printf.ifprintf () fmt
 
-let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
+let confirm ?(require_unsafe_yes=false) ?(default=true) ?name fmt =
   Printf.ksprintf (fun s ->
       if OpamCoreConfig.(!r.safe_mode) then false else
       let prompt =
@@ -794,11 +794,11 @@ let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
           (colorise `blue (if default then "Y" else "y"))
           (colorise `blue (if default then "n" else "N"))
       in
-      if OpamCoreConfig.answer_is `unsafe_yes ||
-         not require_unsafe_yes && OpamCoreConfig.answer_is_yes ()
+      if OpamCoreConfig.answer_is ~name `unsafe_yes ||
+         not require_unsafe_yes && OpamCoreConfig.answer_is_yes ~name ()
       then
         (formatted_msg "%sy\n" prompt; true)
-      else if OpamCoreConfig.answer_is `all_no ||
+      else if OpamCoreConfig.answer_is ~name `all_no ||
               OpamStd.Sys.(not tty_in)
       then
         (formatted_msg "%sn\n" prompt; false)
@@ -814,7 +814,7 @@ let confirm ?(require_unsafe_yes=false) ?(default=true) fmt =
 let read fmt =
   Printf.ksprintf (fun s ->
       formatted_msg "%s " s;
-      if OpamCoreConfig.(answer_is `ask && not !r.safe_mode) then (
+      if OpamCoreConfig.(answer_is ~name:None `ask && not !r.safe_mode) then (
         try match read_line () with
           | "" -> None
           | s  -> Some s
@@ -983,7 +983,7 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
     let default_s = OpamStd.(List.assoc Compare.equal default options_nums) in
     let no_s = OpamStd.(List.assoc Compare.equal no options_nums) in
     if OpamCoreConfig.(!r.safe_mode) then no else
-    match OpamCoreConfig.answer(), unsafe_yes, yes with
+    match OpamCoreConfig.answer ~name:None (), unsafe_yes, yes with
     | `unsafe_yes, Some a, _ -> print_string prompt; select a
     | #OpamStd.Config.yes_answer, _, Some a -> print_string prompt; select a
     | `all_no, _, _ -> print_string prompt; select no

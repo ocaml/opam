@@ -30,6 +30,7 @@ val cli2_1: OpamCLIVersion.t
 val cli2_2: OpamCLIVersion.t
 val cli2_3: OpamCLIVersion.t
 val cli2_4: OpamCLIVersion.t
+val cli2_5: OpamCLIVersion.t
 
 val mk_flag:
   cli:OpamCLIVersion.Sourced.t -> validity -> section:string -> string list ->

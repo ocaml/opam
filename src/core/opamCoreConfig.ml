@@ -11,6 +11,7 @@
 module E = struct
 
   type OpamStd.Config.E.t +=
+    | AUTOANSWER of (string * OpamStd.Config.answer) list option
     | COLOR of OpamStd.Config.when_ option
     | CONFIRMLEVEL of OpamStd.Config.answer option
     | DEBUG of int option
@@ -29,6 +30,7 @@ module E = struct
     | YES of bool option
 
   open OpamStd.Config.E
+  let autoanswer = value (function AUTOANSWER l -> l | _ -> None)
   let color = value (function COLOR c -> c | _ -> None)
   let confirmlevel = value (function CONFIRMLEVEL c -> c | _ -> None)
   let debug = value (function DEBUG i -> i | _ -> None)
@@ -49,6 +51,7 @@ module E = struct
 end
 
 type t = {
+  auto_answer: (string * OpamStd.Config.answer) list;
   debug_level: int;
   debug_sections: OpamStd.Config.sections;
   verbose_level: OpamStd.Config.level;
@@ -71,6 +74,7 @@ type t = {
 }
 
 type 'a options_fun =
+  ?auto_answer:(string * OpamStd.Config.answer) list ->
   ?debug_level:int ->
   ?debug_sections:OpamStd.Config.sections ->
   ?verbose_level:OpamStd.Config.level ->
@@ -90,6 +94,7 @@ type 'a options_fun =
   'a
 
 let default = {
+  auto_answer = [];
   debug_level = 0;
   debug_sections = OpamStd.String.Map.empty;
   verbose_level = 0;
@@ -114,6 +119,7 @@ let default = {
 }
 
 let setk k t
+    ?auto_answer
     ?debug_level
     ?debug_sections
     ?verbose_level
@@ -133,6 +139,7 @@ let setk k t
   =
   let (+) x opt = match opt with Some x -> x | None -> x in
   k {
+    auto_answer = t.auto_answer + auto_answer;
     debug_level = t.debug_level + debug_level;
     debug_sections = t.debug_sections + debug_sections;
     verbose_level = t.verbose_level + verbose_level;
@@ -179,6 +186,7 @@ let initk k =
     | _, _ -> None
   in
   (setk (setk (fun c -> r := c; k)) !r)
+    ?auto_answer:(E.autoanswer ())
     ?debug_level:(E.debug ())
     ?debug_sections:(E.debugsections ())
     ?verbose_level:(E.verbose ())
@@ -198,19 +206,26 @@ let initk k =
 
 let init ?noop:_ = initk (fun () -> ())
 
-let answer () =
-  match !r.confirm_level, !r.yes with
-  | #OpamStd.Config.answer as c, _ -> c
-  | _, Some true -> `all_yes
-  | _, Some false -> `all_no
-  | _ -> `ask
+let answer ~name () =
+  let fallback () =
+    match !r.confirm_level, !r.yes with
+    | #OpamStd.Config.answer as c, _ -> c
+    | _, Some true -> `all_yes
+    | _, Some false -> `all_no
+    | _ -> `ask
+  in
+  match !r.auto_answer, name with
+  | _::_ as l, Some name ->
+    (match OpamStd.List.assoc_opt String.equal name l with
+     | Some a -> a
+     | None -> fallback ())
+  | [], _ | _, None -> fallback ()
 
-let answer_is =
-  let answer = lazy (answer ()) in
-  fun a -> Lazy.force answer = a
+let answer_is ~name a =
+  answer ~name () = a
 
-let answer_is_yes () =
-  match answer () with
+let answer_is_yes ~name () =
+  match answer ~name () with
   | #OpamStd.Config.yes_answer -> true
   | _ -> false
 
