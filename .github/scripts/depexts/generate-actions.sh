@@ -58,6 +58,20 @@ RUN yum install -y gcc-c++ diffutils
 RUN sed -i 's/ID="almalinux"/ID="centos"/' /etc/os-release
 EOF
     ;;
+  chimera)
+    mainlibs=${mainlibs/m4/chimerautils-extra}
+    mainlibs=${mainlibs/make/gmake}
+    mainlibs=${mainlibs/tar/gtar}
+    mainlibs=${mainlibs/patch/}
+    cat > "$dir/Dockerfile" << EOF
+FROM chimeralinux/chimera
+RUN mkdir -p /etc/apk/repositories.d
+RUN echo https://repo.chimera-linux.org/current/main > /etc/apk/repositories.d/00-repo-main.list
+RUN echo https://repo.chimera-linux.org/current/user >> /etc/apk/repositories.d/00-repo-main.list
+RUN apk add $mainlibs $ocaml
+RUN apk add gcc
+EOF
+    ;;
   debian)
   cat > "$dir/Dockerfile" << EOF
 FROM debian
