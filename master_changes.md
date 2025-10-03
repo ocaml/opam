@@ -51,6 +51,7 @@ users)
   * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
 
 ## Update / Upgrade
+  * Fix erroneous recompilations on files with empty but present `build`/`runtest`/`install`/`remove` field [#6505 @kit-ty-kate - fix #5814]
 
 ## Tree
 
@@ -142,6 +143,7 @@ users)
   * Add a test showing the behaviour of `opam var <pkg>:opamfile` [#6659 @kit-ty-kate]
   * Add a test to show homogeneity of outputs on verbose between sandboxed and non sandboxed commands (with `-vv`) [#6675 @rjbou]
   * Update `sed-cmd` reftest reftest [#6675 @rjbou]
+  * Add a test showing the behaviour of `opam upgrade` when faced with empty but present `build`/`run-test`/`install`/`build` field [#6505 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]

@@ -720,3 +720,40 @@ The following actions will be performed:
 -> installed dep.1
 -> installed pkg.1
 Done.
+### :::::::::::::::::::::::
+### : Make sure packages with empty-but-present build/run-test/install/remove
+### : don't recompile unnecessarily
+### :::::::::::::::::::::::
+### opam switch create no-recompile --empty
+### <pkg:ocaml.5>
+opam-version: "2.0"
+### : WARN: Do NOT use "<pin:...>" for the following line
+### : See: https://github.com/ocaml/opam-file-format/issues/63
+### <no-recompile/opam>
+opam-version: "2.0"
+synopsis: "A word"
+description: "Two words."
+authors: "the testing team"
+homepage: "egapemoh"
+maintainer: "maint@tain.er"
+license: "MIT"
+dev-repo: "hg+https://pkg@op.am"
+bug-reports: "https://nobug"
+build: []
+run-test: []
+install: []
+remove: []
+### opam install ./no-recompile
+[NOTE] Package no-recompile does not exist in opam repositories registered in the current switch.
+no-recompile is now pinned to file://${BASEDIR}/no-recompile (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install no-recompile dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved no-recompile.dev  (file://${BASEDIR}/no-recompile)
+-> installed no-recompile.dev
+Done.
+### opam upgrade
+Already up-to-date.
+Nothing to do.
