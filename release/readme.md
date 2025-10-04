@@ -65,6 +65,6 @@
 ## Device requirements
 * Mac M1 or above with Rosetta2
 * >=70GB of disk space free
-* brew dependencies: git, git-lfs, gpg, qemu>=8.1.0 (avoid qemu 9.1.x, see https://gitlab.com/qemu-project/qemu/-/issues/2581), docker>=24.0.0, sshpass
+* brew dependencies: git >= 2.40.0, git-lfs, gpg, qemu>=8.1.0 (avoid qemu 9.1.x, see https://gitlab.com/qemu-project/qemu/-/issues/2581), docker>=24.0.0, sshpass
 * opam repo with the tag fetched
 * Have the secret key available
