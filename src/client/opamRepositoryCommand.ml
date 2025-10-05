@@ -219,6 +219,27 @@ let list_all rt ~short =
   OpamStd.Format.align_table |>
   OpamConsole.print_table stdout ~sep:" "
 
+let show_repo rt ~switches repo_name =
+  let repos = List.filter_map (fun sw ->
+    let sw_name = OpamSwitch.to_string sw in
+    match switch_repos rt sw |> List.mapi (fun i repo -> (i+1, repo)) |> List.filter (fun (_, repo) -> repo = repo_name) with
+    | [] -> None
+    | repos -> Some (sw_name, repos)
+  ) switches in
+  List.iter (fun (sw_name, repos)  ->
+    List.iter (fun (rank, repo) ->
+          try
+            let r = OpamRepositoryName.Map.find repo rt.repositories in
+            let url = if r.repo_url = OpamUrl.empty then "-" else
+              OpamUrl.to_string r.repo_url |> OpamConsole.colorise `underline in
+            OpamConsole.msg "switch: %s\n" sw_name;
+            OpamConsole.msg "url: %s\n" url;
+            OpamConsole.msg "rank: %d\n" rank;
+            ()
+          with Not_found -> "not found" |> OpamConsole.colorise `red |> OpamConsole.msg "%s")
+      repos)
+    repos
+
 let update_with_auto_upgrade rt repo_names =
   let repos = List.map (OpamRepositoryState.get_repo rt) repo_names in
   let failed, rt = OpamUpdate.repositories rt repos in
