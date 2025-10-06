@@ -15,6 +15,8 @@ users)
   * Bump the version number to `2.5.0~alpha1~dev` [#6584 @kit-ty-kate]
 
 ## Global CLI
+  * Add cli version 2.5 [#6709 @kit-ty-kate]
+  * Add mechanism for the `OPAMAUTOANSWER` environment variable (for internal use only) [#6709 @kit-ty-kate]
 
 ## Plugins
 
@@ -190,6 +192,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamClientConfig.opam_init`: now takes an optional `auto_answer` argument [#6709 @kit-ty-kate]
 
 ## opam-repository
   * `OpamLocal.rsync_*`: Change the return type from `OpamFilename.*` to `unit` [#6658 @kit-ty-kate]
@@ -209,7 +212,10 @@ users)
   * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
 
 ## opam-core
+  * `OpamConsole.confirm`: now takes an optional `name` argument [#6709 @kit-ty-kate]
   * `OpamConsole.log`: does not keep log messages before initialization if the code is ran through a library [#6487 @kit-ty-kate]
+  * `OpamCoreConfig.auto_answer`: field and arguments were added [#6709 @kit-ty-kate]
+  * `OpamCoreConfig.{answer,anwser_is,answer_is_yes}`: now take a `name` labeled argument [#6709 @kit-ty-kate]
   * `OpamCoreConfig.in_opam`: was added [#6487 @kit-ty-kate]
   * `OpamSystem.cpu_count`: now uses a C binding instead of system utilities to get the number of cores of the current machine [#6634 @kit-ty-kate]
   * `OpamSystem.is_reg_dir`: is now exposed, which returns `true` only if its parameter is a directory, exists and is not a symlink. It returns `false` otherwise [#6450 @kit-ty-kate]
@@ -221,6 +227,7 @@ users)
   * `OpamCompat.String.{starts_with,ends_with,for_all,fold_left}`: were added [#6442 @kit-ty-kate]
   * `OpamHash.check_string`: was added [#6661 @kit-ty-kate]
   * `OpamHash.equal_kind`: was added [#6644 @kit-ty-kate]
+  * `OpamStd.Config.auto_answer`: was added [#6709 @kit-ty-kate]
   * `OpamStd.List.fold_left_map`: was moved to `OpamCompat.List.fold_left_map` [#6442 @kit-ty-kate]
   * `OpamStd.List.{cons,find_opt,filter_map}`: were removed. Use `Stdlib.List` instead. [#6442 @kit-ty-kate]
   * `OpamStd.List.mem`: was added, having as argument the equality function [#6644 @kit-ty-kate]

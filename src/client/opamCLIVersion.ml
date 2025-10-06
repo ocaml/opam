@@ -10,7 +10,7 @@
 
 type t = int * int
 
-let supported_versions = [(2, 0); (2, 1); (2,2); (2,3); (2,4)]
+let supported_versions = [(2, 0); (2, 1); (2,2); (2,3); (2,4); (2,5)]
 
 let is_supported v =
   OpamStd.List.mem (OpamCompat.Pair.equal Int.equal Int.equal)
