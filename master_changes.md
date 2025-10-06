@@ -126,6 +126,7 @@ users)
   * [NEW] Fetch shared archive sources without checksums [#6627 @psafont - fix #5638]
 
 ## Shell
+  * csh: Don't double-set unconditional variables in `variables.csh` and `env_hook.csh` [#6729 @dra27]
 
 ## Internal
   * Replace every polymorphic uses of `List.mem` by a version that doesn't use `Repr.equal` [#6644 @kit-ty-kate]
