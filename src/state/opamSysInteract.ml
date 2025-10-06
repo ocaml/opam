@@ -693,7 +693,8 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
           try (* package name *)
             Re.(Group.get (exec pkg_name l) 1), false, instavail
           with Not_found ->
-            if l.[2] <> ' ' then (* only version field is after two spaces *)
+            if not (OpamCompat.String.starts_with ~prefix:"  " l) then
+              (* only version field is after two spaces *)
               pkg, false, instavail
             else if l = "    lib/apk/db/installed" then
               (* from https://git.alpinelinux.org/apk-tools/tree/src/database.c#n58 *)
