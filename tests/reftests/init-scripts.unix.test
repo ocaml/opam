@@ -74,7 +74,6 @@ set -gx OPAM_SWITCH_PREFIX '${BASEDIR}/root/fake';
 set -gx PATH '${BASEDIR}/root/fake/bin' $PATH;
 ### cat root/opam-init/variables.csh | grep -v man | grep -v MANPATH
 # Prefix of the current opam switch
-if ( ! ${?OPAM_SWITCH_PREFIX} ) setenv OPAM_SWITCH_PREFIX ""
 setenv OPAM_SWITCH_PREFIX '${BASEDIR}/root/fake'
 # Binary dir for opam switch fake
 if ( ! ${?PATH} ) setenv PATH ""
@@ -115,7 +114,6 @@ function __opam_env_export_eval --on-event fish_prompt
     eval (opam env --shell=fish --readonly 2> /dev/null)
 end
 ### cat root/opam-init/env_hook.csh
-if ( ! ${?OPAMNOENVNOTICE} ) setenv OPAMNOENVNOTICE ""
 setenv OPAMNOENVNOTICE true
 alias precmd 'eval `opam env --shell=csh --readonly`'
 ### test -f root/opam-init/env_hook.cmd
