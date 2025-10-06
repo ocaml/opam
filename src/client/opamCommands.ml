@@ -2593,7 +2593,8 @@ let repository cli =
         then switches
         else all_switches
       in
-      OpamRepositoryCommand.show_repo rt ~switches (OpamRepositoryName.of_string repo_name);
+      OpamRepositoryCommand.show_repo rt ~switches
+        (OpamRepositoryName.of_string repo_name);
       `Ok ()
     | command, params -> bad_subcommand ~cli commands ("repository", command, params)
   in
