@@ -34,7 +34,7 @@ let run_rule ~base_name ~archive_hash ~condition =
   Format.sprintf {|
 (rule
  (targets %s)
- (deps %s)%s
+ (deps gitconfig %s)%s
  (package opam)
  (action
   (with-stdout-to

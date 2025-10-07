@@ -1,0 +1,2 @@
+[protocol "file"]
+	allow = always

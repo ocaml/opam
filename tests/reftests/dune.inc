@@ -12,7 +12,7 @@
 
 (rule
  (targets action-disk.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -33,7 +33,7 @@
 
 (rule
  (targets admin-cache.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -54,7 +54,7 @@
 
 (rule
  (targets admin-migrate-extrafiles.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -75,7 +75,7 @@
 
 (rule
  (targets admin.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -96,7 +96,7 @@
 
 (rule
  (targets archive.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -117,7 +117,7 @@
 
 (rule
  (targets assume-built.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -138,7 +138,7 @@
 
 (rule
  (targets autopin.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -159,7 +159,7 @@
 
 (rule
  (targets avoid-version.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -180,7 +180,7 @@
 
 (rule
  (targets best-effort.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -201,7 +201,7 @@
 
 (rule
  (targets cache.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -222,7 +222,7 @@
 
 (rule
  (targets clean.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -243,7 +243,7 @@
 
 (rule
  (targets cli-versioning.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -264,7 +264,7 @@
 
 (rule
  (targets config.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -285,7 +285,7 @@
 
 (rule
  (targets conflict-badversion.out)
- (deps root-f372039d)
+ (deps gitconfig root-f372039d)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -306,7 +306,7 @@
 
 (rule
  (targets conflict-camlp4.out)
- (deps root-f372039d)
+ (deps gitconfig root-f372039d)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -327,7 +327,7 @@
 
 (rule
  (targets conflict-core.out)
- (deps root-f372039d)
+ (deps gitconfig root-f372039d)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -348,7 +348,7 @@
 
 (rule
  (targets conflict-resto.out)
- (deps root-a5d7cdc0)
+ (deps gitconfig root-a5d7cdc0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -369,7 +369,7 @@
 
 (rule
  (targets conflict-solo5.out)
- (deps root-f372039d)
+ (deps gitconfig root-f372039d)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -390,7 +390,7 @@
 
 (rule
  (targets core-config.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -411,7 +411,7 @@
 
 (rule
  (targets core-system.unix.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -432,7 +432,7 @@
 
 (rule
  (targets cudf-preprocess.out)
- (deps root-ad4dd344)
+ (deps gitconfig root-ad4dd344)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -453,7 +453,7 @@
 
 (rule
  (targets depexts.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -474,7 +474,7 @@
 
 (rule
  (targets deprecated.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -495,7 +495,7 @@
 
 (rule
  (targets deps-only.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -516,7 +516,7 @@
 
 (rule
  (targets dot-install.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -537,7 +537,7 @@
 
 (rule
  (targets download.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -558,7 +558,7 @@
 
 (rule
  (targets effectively-equal.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -579,7 +579,7 @@
 
 (rule
  (targets empty-conflicts-001.out)
- (deps root-297366c)
+ (deps gitconfig root-297366c)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -600,7 +600,7 @@
 
 (rule
  (targets empty-conflicts-002.out)
- (deps root-11ea1cb)
+ (deps gitconfig root-11ea1cb)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -621,7 +621,7 @@
 
 (rule
  (targets empty-conflicts-003.out)
- (deps root-3235916)
+ (deps gitconfig root-3235916)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -642,7 +642,7 @@
 
 (rule
  (targets empty-conflicts-004.out)
- (deps root-0070613707)
+ (deps gitconfig root-0070613707)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -663,7 +663,7 @@
 
 (rule
  (targets empty-conflicts-005.out)
- (deps root-de897adf36c4230dfea812f40c98223b31c4521a)
+ (deps gitconfig root-de897adf36c4230dfea812f40c98223b31c4521a)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -684,7 +684,7 @@
 
 (rule
  (targets empty-conflicts-006.out)
- (deps root-c1842d168d)
+ (deps gitconfig root-c1842d168d)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -705,7 +705,7 @@
 
 (rule
  (targets empty-conflicts-007.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -726,7 +726,7 @@
 
 (rule
  (targets env.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -747,7 +747,7 @@
 
 (rule
  (targets env.unix.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -768,7 +768,7 @@
 
 (rule
  (targets env.win32.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -789,7 +789,7 @@
 
 (rule
  (targets extrafile.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -810,7 +810,7 @@
 
 (rule
  (targets extrasource.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -831,7 +831,7 @@
 
 (rule
  (targets fetch-package.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -852,7 +852,7 @@
 
 (rule
  (targets filter-operators.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -873,7 +873,7 @@
 
 (rule
  (targets filter-variable-resolution.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -894,7 +894,7 @@
 
 (rule
  (targets git.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -915,7 +915,7 @@
 
 (rule
  (targets hooks-variables.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -936,7 +936,7 @@
 
 (rule
  (targets hooks-variables.unix.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -957,7 +957,7 @@
 
 (rule
  (targets hooks-variables.win32.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -978,7 +978,7 @@
 
 (rule
  (targets init-ocaml-eval-variables.unix.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -999,7 +999,7 @@
 
 (rule
  (targets init-ocaml-eval-variables.win32.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1020,7 +1020,7 @@
 
 (rule
  (targets init-scripts.unix.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1041,7 +1041,7 @@
 
 (rule
  (targets init-scripts.win32.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1062,7 +1062,7 @@
 
 (rule
  (targets init.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1083,7 +1083,7 @@
 
 (rule
  (targets inplace.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1104,7 +1104,7 @@
 
 (rule
  (targets install-check.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1125,7 +1125,7 @@
 
 (rule
  (targets install-formula.out)
- (deps root-f372039d)
+ (deps gitconfig root-f372039d)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -1146,7 +1146,7 @@
 
 (rule
  (targets install-pgocaml.out)
- (deps root-f372039d)
+ (deps gitconfig root-f372039d)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -1167,7 +1167,7 @@
 
 (rule
  (targets json.unix.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1188,7 +1188,7 @@
 
 (rule
  (targets keep-build-dir.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1209,7 +1209,7 @@
 
 (rule
  (targets legacy-git.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1230,7 +1230,7 @@
 
 (rule
  (targets legacy-local.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1251,7 +1251,7 @@
 
 (rule
  (targets lint.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1272,7 +1272,7 @@
 
 (rule
  (targets list-coinstallable.out)
- (deps root-7371c1d9)
+ (deps gitconfig root-7371c1d9)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -1293,7 +1293,7 @@
 
 (rule
  (targets list-large-dependencies.out)
- (deps root-7371c1d9)
+ (deps gitconfig root-7371c1d9)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -1314,7 +1314,7 @@
 
 (rule
  (targets list.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1335,7 +1335,7 @@
 
 (rule
  (targets list.unix.out)
- (deps root-f372039d)
+ (deps gitconfig root-f372039d)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -1356,7 +1356,7 @@
 
 (rule
  (targets lock.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1377,7 +1377,7 @@
 
 (rule
  (targets opam-pkgvar-with-plus.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1398,7 +1398,7 @@
 
 (rule
  (targets opam-repo-ci.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1419,7 +1419,7 @@
 
 (rule
  (targets opamroot-versions.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1440,7 +1440,7 @@
 
 (rule
  (targets opamrt-big-upgrade.out)
- (deps root-7090735c)
+ (deps gitconfig root-7090735c)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -1461,7 +1461,7 @@
 
 (rule
  (targets opamrt-dep-cycle.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1482,7 +1482,7 @@
 
 (rule
  (targets opamrt-reinstall.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1503,7 +1503,7 @@
 
 (rule
  (targets orphans.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1524,7 +1524,7 @@
 
 (rule
  (targets parallel.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1545,7 +1545,7 @@
 
 (rule
  (targets pat-sub.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1566,7 +1566,7 @@
 
 (rule
  (targets pin-depsonly-wtest-6501.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1587,7 +1587,7 @@
 
 (rule
  (targets pin-legacy.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1608,7 +1608,7 @@
 
 (rule
  (targets pin.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1629,7 +1629,7 @@
 
 (rule
  (targets process-output.unix.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1650,7 +1650,7 @@
 
 (rule
  (targets rebuild.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1671,7 +1671,7 @@
 
 (rule
  (targets rec-pin.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1692,7 +1692,7 @@
 
 (rule
  (targets reftests.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1713,7 +1713,7 @@
 
 (rule
  (targets reinstall.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1734,7 +1734,7 @@
 
 (rule
  (targets remove.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1755,7 +1755,7 @@
 
 (rule
  (targets repository-patchdiff.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1776,7 +1776,7 @@
 
 (rule
  (targets repository.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1797,7 +1797,7 @@
 
 (rule
  (targets resolve-variables.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1818,7 +1818,7 @@
 
 (rule
  (targets shared-fetch.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1839,7 +1839,7 @@
 
 (rule
  (targets show.out)
- (deps root-009e00fa)
+ (deps gitconfig root-009e00fa)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -1860,7 +1860,7 @@
 
 (rule
  (targets simulated-pin.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1881,7 +1881,7 @@
 
 (rule
  (targets source.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1902,7 +1902,7 @@
 
 (rule
  (targets sources-directory-cleaning.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1923,7 +1923,7 @@
 
 (rule
  (targets swhid.unix.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1944,7 +1944,7 @@
 
 (rule
  (targets switch-creation.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1965,7 +1965,7 @@
 
 (rule
  (targets switch-import.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -1986,7 +1986,7 @@
 
 (rule
  (targets switch-invariant.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2007,7 +2007,7 @@
 
 (rule
  (targets switch-link.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2028,7 +2028,7 @@
 
 (rule
  (targets switch-list-available.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2049,7 +2049,7 @@
 
 (rule
  (targets switch-list.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2070,7 +2070,7 @@
 
 (rule
  (targets switch-remove.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2091,7 +2091,7 @@
 
 (rule
  (targets switch-set.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2112,7 +2112,7 @@
 
 (rule
  (targets tree.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2133,7 +2133,7 @@
 
 (rule
  (targets unhelpful-conflicts-001.out)
- (deps root-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
+ (deps gitconfig root-c1ba97dafe95c865d37ad4d88f6e57c9ffbe7f0a)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -2154,7 +2154,7 @@
 
 (rule
  (targets unhelpful-conflicts-002.out)
- (deps root-143dd2a2f59f5befbf3cb90bb2667f911737fbf8)
+ (deps gitconfig root-143dd2a2f59f5befbf3cb90bb2667f911737fbf8)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -2175,7 +2175,7 @@
 
 (rule
  (targets update-upgrade.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2196,7 +2196,7 @@
 
 (rule
  (targets update.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2217,7 +2217,7 @@
 
 (rule
  (targets upgrade-format.out)
- (deps root-009e00fa)
+ (deps gitconfig root-009e00fa)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (package opam)
  (action
@@ -2238,7 +2238,7 @@
 
 (rule
  (targets upgrade-two-point-o.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2259,7 +2259,7 @@
 
 (rule
  (targets upgrade.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2280,7 +2280,7 @@
 
 (rule
  (targets var-option.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2301,7 +2301,7 @@
 
 (rule
  (targets variables-sh.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2322,7 +2322,7 @@
 
 (rule
  (targets verbose-on.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2343,7 +2343,7 @@
 
 (rule
  (targets with-dev-setup.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
@@ -2364,7 +2364,7 @@
 
 (rule
  (targets working-dir.out)
- (deps root-N0REP0)
+ (deps gitconfig root-N0REP0)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action

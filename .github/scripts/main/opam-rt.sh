@@ -10,7 +10,10 @@ export PATH=~/local/bin:$PATH
 export OPAMKEEPLOGS=1
 
 # TODO: Make opam-rt compatible with non-master initial branches
-git config --global init.defaultBranch master
+sudo git config --system init.defaultBranch master
+# TODO: Make opam-rt compatible with a hermetic git configuration
+sudo git config --system user.name 'OPAM test environment'
+sudo git config --system user.email 'noreply@ocaml.org'
 
 cd $CACHE/opam-rt
 make KINDS="local git" run

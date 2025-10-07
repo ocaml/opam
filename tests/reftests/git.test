@@ -13,9 +13,6 @@ N0REP0
 ### git -C ./use-submodule config core.autocrlf false
 ### git -C ./use-submodule config user.name 'OPAM test environment'
 ### git -C ./use-submodule config user.email 'noreply@ocaml.org'
-### ### This test may fail locally depending on your git version
-### ### File protocol is removed locally since git 2.38,
-### ### to fix a CVE: https://www.cve.org/CVERecord?id=CVE-2022-39253
 ### git -C ./use-submodule submodule add ../submodule ./vendor
 Cloning into '${BASEDIR}/use-submodule/vendor'...
 done.

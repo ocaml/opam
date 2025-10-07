@@ -78,6 +78,17 @@ let base_env =
   propagate "TMPDIR" @
   propagate "TMP" @
   propagate "TEMP" @
+  (* Override the user's Git configuration with the one in gitconfig. Allow the
+     system Git configuration to be read. On a correctly configured system, that
+     should mean that settings required for normal Git operation will be
+     applied. Propagate GIT_CONFIG_NOSYSTEM so that the user can easily override
+     this (i.e. set GIT_CONFIG_NOSYSTEM=1 and have the system configuration
+     ignored as well). *)
+  propagate "GIT_CONFIG_NOSYSTEM" @
+  ["GIT_CONFIG_GLOBAL", Filename.concat (Sys.getcwd ()) "gitconfig"] @
+  (* On Windows, allow USERNAME and USERDOMAIN to propagate as Unix.getpwduid
+     isn't available in the pin tests *)
+  (if Sys.win32 then propagate "USERNAME" @ propagate "USERDOMAIN" else []) @
   (if Sys.win32 then ["SHELL", "/bin/sh"] else []) @
   [
     "OPAMKEEPBUILDDIR", "1";
