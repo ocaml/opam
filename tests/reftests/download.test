@@ -207,7 +207,7 @@ Done.
 opam-version: "2.0"
 ### <bar/a-file>
 content
-### git -C bar init -q --initial-branch=master
+### git -C bar init -q --initial-branch=main
 ### git -C bar config core.autocrlf false
 ### git -C bar add opam a-file
 ### git -C bar commit -qm "init"

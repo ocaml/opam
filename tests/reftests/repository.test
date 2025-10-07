@@ -888,7 +888,7 @@ to-many-commits
 oper3
 ### : Make sure the .git directory is not taken into account when synching local non-git repositories
 ### opam switch create local-nongit-git --empty
-### git init -q --initial-branch=master GIT
+### git init -q --initial-branch=main GIT
 ### git -C GIT config core.autocrlf false
 ### <GIT/repo>
 opam-version: "2.0"
