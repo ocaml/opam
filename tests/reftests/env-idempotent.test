@@ -28,4 +28,3 @@ User configuration:
 ### # we need the switch for variables file
 ### opam switch create fake --empty --root root
 ### bash bash-lc.sh "bash bash-lc.sh \"'$OPAMBIN' exec --root root --no-switch -- env\"" | grep -v MANPATH | grep /root/fake/ | '=.*' -> ''
-PATH

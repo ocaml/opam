@@ -1030,6 +1030,23 @@ let env_hook_script shell =
       ^ script)
     (env_hook_script_base shell)
 
+let abort_if_set var shell =
+  (* Each of these incantations aborts the currently running script if [var] is
+     unset or empty ("null") *)
+  match shell with
+  | SH_zsh | SH_bash | SH_sh ->
+    Printf.sprintf "test -z \"${%s:+x}\" || return\n" var
+  | SH_csh ->
+    Printf.sprintf "if ( ${?%s} ) then\n  if ( \"$%s\" != \"\") exit\nendif\n"
+      var var
+  | SH_pwsh _ ->
+    Printf.sprintf "if ($env:%s -ne $null -and $env:%s -ne '') { return }\n"
+      var var
+  | SH_fish ->
+    Printf.sprintf "test -z \"$%s\"; or return\n" var
+  | SH_cmd ->
+    Printf.sprintf "if defined %s if \"%%%s%%\" neq \"\" goto :EOF\n" var var
+
 let source root shell f =
   let fname = OpamFilename.to_string (OpamPath.init root // f) in
   let unix_transform ?using_backslashes () =
@@ -1223,7 +1240,9 @@ let write_dynamic_init_scripts st =
     List.iter
       (fun shell ->
          write_script (OpamPath.init st.switch_global.root)
-           (variables_file shell, string_of_update st shell updates))
+           (variables_file shell,
+            abort_if_set "OPAM_SWITCH_PREFIX" shell
+            ^ string_of_update st shell updates))
       [SH_sh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
   with OpamSystem.Locked ->
     OpamConsole.warning

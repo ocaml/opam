@@ -61,6 +61,7 @@ if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-in
 if Test-Path "${BASEDIR}/root/opam-init/variables.ps1" { . "${BASEDIR}/root/opam-init/variables.ps1" *> $null }
 ### : Variables scripts :
 ### cat root/opam-init/variables.sh | grep -v man | grep -v MANPATH
+test -z "${OPAM_SWITCH_PREFIX:+x}" || return
 # Prefix of the current opam switch
 OPAM_SWITCH_PREFIX='${BASEDIR}/root/fake'; export OPAM_SWITCH_PREFIX;
 # Binary dir for opam switch fake
@@ -68,22 +69,28 @@ PATH='${BASEDIR}/root/fake/bin':"$PATH"; export PATH;
 ### test -f root/opam-init/variables.zsh
 # Return code 1 #
 ### cat root/opam-init/variables.fish | grep -v man | grep -v MANPATH
+test -z "$OPAM_SWITCH_PREFIX"; or return
 # Prefix of the current opam switch
 set -gx OPAM_SWITCH_PREFIX '${BASEDIR}/root/fake';
 # Binary dir for opam switch fake
 set -gx PATH '${BASEDIR}/root/fake/bin' $PATH;
 ### cat root/opam-init/variables.csh | grep -v man | grep -v MANPATH
+if ( ${?OPAM_SWITCH_PREFIX} ) then
+  if ( "$OPAM_SWITCH_PREFIX" != "") exit
+endif
 # Prefix of the current opam switch
 setenv OPAM_SWITCH_PREFIX '${BASEDIR}/root/fake'
 # Binary dir for opam switch fake
 if ( ! ${?PATH} ) setenv PATH ""
 setenv PATH '${BASEDIR}/root/fake/bin':"$PATH"
 ### cat root/opam-init/variables.cmd | grep -v man | grep -v MANPATH
+if defined OPAM_SWITCH_PREFIX if "%OPAM_SWITCH_PREFIX%" neq "" goto :EOF
 :: Prefix of the current opam switch
 set "OPAM_SWITCH_PREFIX=${BASEDIR}/root/fake"
 :: Binary dir for opam switch fake
 set "PATH=${BASEDIR}/root/fake/bin:%PATH%"
 ### cat root/opam-init/variables.ps1 | grep -v man | grep -v MANPATH
+if ($env:OPAM_SWITCH_PREFIX -ne $null -and $env:OPAM_SWITCH_PREFIX -ne '') { return }
 # Prefix of the current opam switch
 $env:OPAM_SWITCH_PREFIX='${BASEDIR}/root/fake'
 # Binary dir for opam switch fake
