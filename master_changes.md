@@ -56,6 +56,7 @@ users)
   * Fix the false-positive mismatch debug warning during `opam update` when faced with nested extra-files on Windows [#6715 @kit-ty-kate]
   * Implement incremental opam file loading to process only changed files during repository updates and repository state loading [#6614 @arozovyk - fix #5824]
   * Compute the list of available depexts on `opam update` [#6489 @arozovyk - fix #6461]
+  * Update depexts availability repository state cache when running `opam update --depexts` [#6489 @arozovyk - fix #6461]
 
 ## Tree
 
@@ -222,6 +223,8 @@ users)
   * `OpamFileTools`: add `get_depexts` to consolidate depexts extraction logic from individual opam files and package maps [#6489 @arozovyk fix #6461]
   * `OpamSwitchState.update_sys_packages` check for availability of packages in `repo_state` when updating the depexts status of additional packages [#6489 @arozovyk fix #6461]
   * `OpamFileTools`: add `get_depexts` to consolidate depexts extraction logic from individual opam files and package maps [#6489 @arozovyk]
+  * `OpamUpdate`: add `update_sys_available_cache` to update the system package availability cache in repository state [#6489 @arozovyk fix #6461]
+  * `OpamUpdate.get_sys_available`: factorize depexts availability computation logic from `OpamUpdate.repositories` [#6489 @arozovyk fix #6461]
 
 ## opam-solver
 
