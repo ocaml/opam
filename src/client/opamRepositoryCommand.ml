@@ -234,16 +234,13 @@ let show_repo rt ~switches repo_name =
   in
   List.iter (fun (sw, repos)  ->
     List.iter (fun (rank, repo) ->
-          try
-            let r = OpamRepositoryName.Map.find repo rt.repositories in
-            let url =
-              OpamConsole.colorise `underline (OpamUrl.to_string r.repo_url)
-            in
-            OpamConsole.msg "switch: %s\n" (OpamSwitch.to_string sw);
-            OpamConsole.msg "url: %s\n" url;
-            OpamConsole.msg "rank: %d\n" rank;
-          with Not_found ->
-            OpamConsole.msg "%s" (OpamConsole.colorise `red "not found"))
+        let r = OpamRepositoryName.Map.find repo rt.repositories in
+        let url =
+          OpamConsole.colorise `underline (OpamUrl.to_string r.repo_url)
+        in
+        OpamConsole.msg "switch: %s\n" (OpamSwitch.to_string sw);
+        OpamConsole.msg "url: %s\n" url;
+        OpamConsole.msg "rank: %d\n" rank)
       repos)
     repos
 
