@@ -1554,6 +1554,48 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pat-sub.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-pin-depends-ignore)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff pin-depends-ignore.test pin-depends-ignore.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-pin-depends-ignore)))
+
+(rule
+ (targets pin-depends-ignore.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pin-depends-ignore.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-pin-depends)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff pin-depends.test pin-depends.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-pin-depends)))
+
+(rule
+ (targets pin-depends.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pin-depends.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-pin-depsonly-wtest-6501)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
