@@ -162,34 +162,10 @@ let repository rt repo =
             }
         ))
 
-let repositories rt repos =
-  let command repo =
-    OpamProcess.Job.catch
-      (fun ex ->
-         OpamStd.Exn.fatal ex;
-         OpamConsole.error "Could not update repository %S: %s"
-           (OpamRepositoryName.to_string repo.repo_name)
-           (match ex with Failure s -> s | ex -> Printexc.to_string ex);
-         Done ([repo], None)) @@
-    fun () -> repository rt repo @@|
-    fun f -> [], f
-  in
-  let merge (failed1, f1) (failed2, f2) =
-    failed1 @ failed2,
-    match f1, f2 with
-    | None, None -> None
-    | Some f1, Some f2 -> Some (f1 @* f2)
-    | Some f, None | None, Some f -> Some f
-  in
-  let failed, rt_update =
-    OpamParallel.reduce
-      ~jobs:OpamStateConfig.(!r.dl_jobs)
-      ~command ~merge
-      ~nil:([], None)
-      ~dry_run:OpamStateConfig.(!r.dryrun)
-      repos
-  in
-  let get_sys_available rt =
+let get_sys_available rt =
+  if not (OpamFile.Config.depext rt.repos_global.config) then
+    None
+  else
     let merged_depexts_opams =
       let depexts_equal (pkgset1, filter1) (pkgset2, filter2) =
         OpamSysPkg.Set.equal pkgset1 pkgset2 &&
@@ -218,34 +194,57 @@ let repositories rt repos =
                         option --global depext=false'"
         msg;
       None
+
+let update_sys_available_cache ?(force=false) rt =
+  let repos_sys_available_pkgs = get_sys_available rt in
+  let equal = match rt.repos_sys_available_pkgs, repos_sys_available_pkgs with
+    | None, None -> true
+    | Some a, Some b -> OpamSysPkg.equal_availability_mode a b
+    | _ -> false
   in
-  let write_config_cache rt =
+  if not force && equal then
+    rt
+  else
+    let rt = { rt with repos_sys_available_pkgs } in
     OpamRepositoryState.write_config rt;
-    OpamRepositoryState.Cache.save rt
+    OpamRepositoryState.Cache.save rt;
+    rt
+
+let repositories rt repos =
+  let command repo =
+    OpamProcess.Job.catch
+      (fun ex ->
+         OpamStd.Exn.fatal ex;
+         OpamConsole.error "Could not update repository %S: %s"
+           (OpamRepositoryName.to_string repo.repo_name)
+           (match ex with Failure s -> s | ex -> Printexc.to_string ex);
+         Done ([repo], None)) @@
+    fun () -> repository rt repo @@|
+    fun f -> [], f
+  in
+  let merge (failed1, f1) (failed2, f2) =
+    failed1 @ failed2,
+    match f1, f2 with
+    | None, None -> None
+    | Some f1, Some f2 -> Some (f1 @* f2)
+    | Some f, None | None, Some f -> Some f
+  in
+  let failed, rt_update =
+    OpamParallel.reduce
+      ~jobs:OpamStateConfig.(!r.dl_jobs)
+      ~command ~merge
+      ~nil:([], None)
+      ~dry_run:OpamStateConfig.(!r.dryrun)
+      repos
   in
   let rt =
     match rt_update with
     | Some rt_update ->
       let rt = rt_update rt in
-      let repos_sys_available_pkgs = get_sys_available rt in
-      let rt = { rt with repos_sys_available_pkgs } in
-      write_config_cache rt;
-      rt
+      update_sys_available_cache ~force:true rt
     | None ->
       (* We do an update since the system can (rarely) change as well *)
-      let repos_sys_available_pkgs = get_sys_available rt in
-      let equal =
-        match rt.repos_sys_available_pkgs, repos_sys_available_pkgs with
-        | None, None -> true
-        | Some a, Some b -> OpamSysPkg.equal_availability_mode a b
-        | _ -> false
-      in
-      if equal then
-        rt
-      else
-        let rt = { rt with repos_sys_available_pkgs } in
-        write_config_cache rt;
-        rt
+      update_sys_available_cache rt
   in
   failed, rt
 
