@@ -1,3 +1,17 @@
+(**************************************************************************)
+(*                                                                        *)
+(*    Copyright 2025 Kate Deplaix                                         *)
+(*                                                                        *)
+(*  All rights reserved. This file is distributed under the terms of the  *)
+(*  GNU Lesser General Public License version 2.1, with the special       *)
+(*  exception on linking described in the file LICENSE.                   *)
+(*                                                                        *)
+(**************************************************************************)
+
+(** This module abstract the notion of repository root over its concrete
+    implementation (could be a database, a file, a directory, etc.) *)
+
+(** Repository root implemented as a directory *)
 module Dir : sig
   type t
 
@@ -5,7 +19,12 @@ module Dir : sig
   val to_dir : t -> OpamFilename.Dir.t
   val to_string : t -> string
 
+  (** [quarantine dir] returns a path to a temporary directory dedicated to the
+      original repository root. The returned directory is not created and
+      points to a statically known directory in the same parent directory
+      as [dir]. *)
   val quarantine : t -> t
+
   val with_tmp : (t -> 'a) -> 'a
   val backup : tmp_dir:OpamFilename.Dir.t -> t -> t
 
@@ -35,7 +54,12 @@ val extract_in_job : OpamFilename.t -> Dir.t -> exn option OpamProcess.job
 type t =
   | Dir of Dir.t
 
+(** [quarantine repo_root] returns a temporary repository root dedicated
+    to [repo_root]. the returned repository is not created on disk and
+    points to a statically known repository located in the same parent
+    directory as [repo_root]. *)
 val quarantine : t -> t
+
 val remove : t -> unit
 val exists : t -> bool
 val is_empty : t -> bool option
