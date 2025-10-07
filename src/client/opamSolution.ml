@@ -1098,7 +1098,8 @@ let confirmation ?ask requested solution =
   in
   ask <> Some true && OpamPackage.Name.Set.equal requested solution_packages ||
   let stats = OpamSolver.stats solution in
-  OpamConsole.confirm "\nProceed with %s?" (OpamSolver.string_of_stats stats)
+  OpamConsole.confirm ~name:"proceed-actions" "\nProceed with %s?"
+    (OpamSolver.string_of_stats stats)
 
 let run_hook_job t name ?(local=[]) ?(allow_stdout=false) w =
   let shell_env = OpamEnv.get_full ~set_opamroot:true ~set_opamswitch:true ~force_path:true t in
