@@ -1101,6 +1101,8 @@ remove: [ "touch" "removal-file" ]
 ### cp content main-gpin/content
 ### git -C main-gpin init -q --initial-branch=main
 ### git -C main-gpin config core.autocrlf false
+### git -C main-gpin config user.name 'OPAM test environment'
+### git -C main-gpin config user.email 'noreply@ocaml.org'
 ### git -C main-gpin add -A
 ### git -C main-gpin commit -qm 'content'
 ### :II:2:a: all operations

@@ -251,6 +251,8 @@ Done.
 ### :::::::::::::::::::::::
 ### mkdir pin-empty
 ### git -C pin-empty init -q --initial-branch=main
+### git -C pin-empty config --local user.name 'OPAM test environment'
+### git -C pin-empty config --local user.email 'noreply@ocaml.org'
 ### git -C pin-empty config core.autocrlf false
 ### <pin:pin-empty/opam>
 opam-version: "2.0"

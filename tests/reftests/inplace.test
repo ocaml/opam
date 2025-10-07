@@ -8,6 +8,8 @@ install: [ "touch" "installed"]
 versionned
 ### git -C ./ongoing init -q --initial-branch=main
 ### git -C ./ongoing config core.autocrlf false
+### git -C ./ongoing config user.name 'OPAM test environment'
+### git -C ./ongoing config user.email 'noreply@ocaml.org'
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "inplace test"
 ### <ongoing/newfile.txt>

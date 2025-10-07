@@ -156,6 +156,8 @@ Done.
 ### rm -rf OPAM/keepbuilddir0/.opam-switch/build
 ### mkdir local-git-no-keep-build-dir
 ### git -C ./local-git-no-keep-build-dir init -q --initial-branch=main
+### git -C ./local-git-no-keep-build-dir config user.name 'OPAM test environment'
+### git -C ./local-git-no-keep-build-dir config user.email 'noreply@ocaml.org'
 ### git -C ./local-git-no-keep-build-dir commit -qm init --allow-empty
 ### <pkg:local-git-no-keep-build-dir.1>
 opam-version: "2.0"
@@ -343,6 +345,8 @@ local-src-keep-build-dir.1
 ### rm -rf OPAM/keepbuilddir1/.opam-switch/build
 ### mkdir local-git-keep-build-dir
 ### git -C ./local-git-keep-build-dir init -q --initial-branch=main
+### git -C ./local-git-keep-build-dir config user.name 'OPAM test environment'
+### git -C ./local-git-keep-build-dir config user.email 'noreply@ocaml.org'
 ### git -C ./local-git-keep-build-dir commit -qm init --allow-empty
 ### <pkg:local-git-keep-build-dir.1>
 opam-version: "2.0"
@@ -533,6 +537,8 @@ local-src-keep-build-dir.1
 ### rm -rf local-git-keep-build-dir
 ### mkdir local-git-keep-build-dir
 ### git -C ./local-git-keep-build-dir init -q --initial-branch=main
+### git -C ./local-git-keep-build-dir config user.name 'OPAM test environment'
+### git -C ./local-git-keep-build-dir config user.email 'noreply@ocaml.org'
 ### git -C ./local-git-keep-build-dir commit -qm init --allow-empty
 ### <pkg:local-git-keep-build-dir.1>
 opam-version: "2.0"

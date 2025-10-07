@@ -57,6 +57,8 @@ piou
 lib: ["root-b_g.t"]
 ### git -C ./pinnes init -q --initial-branch=main
 ### git -C ./pinnes config core.autocrlf false
+### git -C ./pinnes config --local user.name 'OPAM test environment'
+### git -C ./pinnes config --local user.email 'noreply@ocaml.org'
 ### git -C ./pinnes add a/i b root_g.opam root_g.t root_g.install
 ### git -C ./pinnes commit -qm "fst"
 ### opam switch create devnull --empty
@@ -604,6 +606,8 @@ build: [ "false" ]
 version: "l1"
 ### git -C ./pinnes init -q --initial-branch=main
 ### git -C ./pinnes config core.autocrlf false
+### git -C ./pinnes config --local user.name 'OPAM test environment'
+### git -C ./pinnes config --local user.email 'noreply@ocaml.org'
 ### git -C ./pinnes add a/i b root_g.opam root_g.opam.locked
 ### git -C ./pinnes commit -qm "fst"
 ### opam switch create devnull --empty
@@ -1118,6 +1122,8 @@ Now run 'opam upgrade' to apply any package updates.
 I'm here!
 ### git -C ./subpath-git init -q --initial-branch=main
 ### git -C ./subpath-git config core.autocrlf false
+### git -C ./subpath-git config --local user.name 'OPAM test environment'
+### git -C ./subpath-git config --local user.email 'noreply@ocaml.org'
 ### git -C ./subpath-git add inner/
 ### git -C ./subpath-git commit -qm "fst"
 ### opam install subpath-git

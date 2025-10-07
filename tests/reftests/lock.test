@@ -527,6 +527,8 @@ version: "locked-version"
 tolock-scan  locked-version  file://${BASEDIR}/tolock-scan  -
 ### : git pin with lock file :
 ### git -C tolock init -q --initial-branch=main
+### git -C tolock config --local user.name 'OPAM test environment'
+### git -C tolock config --local user.email 'noreply@ocaml.org'
 ### git -C tolock config core.autocrlf false
 ### git -C tolock add content
 ### git -C tolock commit -qm "init"
@@ -1254,6 +1256,8 @@ it's here
 ### mkdir simple-dep
 ### git -C simple-dep init -q --initial-branch=main
 ### git -C simple-dep config core.autocrlf false
+### git -C simple-dep config --local user.name 'OPAM test environment'
+### git -C simple-dep config --local user.email 'noreply@ocaml.org'
 ### <pin:simple-dep/a-simple-dep.opam>
 opam-version: "2.0"
 version: "dev"
@@ -1262,6 +1266,8 @@ version: "dev"
 ### mkdir doc-dep
 ### git -C doc-dep init -q --initial-branch=main
 ### git -C doc-dep config core.autocrlf false
+### git -C doc-dep config --local user.name 'OPAM test environment'
+### git -C doc-dep config --local user.email 'noreply@ocaml.org'
 ### <pin:doc-dep/a-doc-dep.opam>
 opam-version: "2.0"
 version: "dev"
@@ -1270,6 +1276,8 @@ version: "dev"
 ### mkdir test-dep
 ### git -C test-dep init -q --initial-branch=main
 ### git -C test-dep config core.autocrlf false
+### git -C test-dep config --local user.name 'OPAM test environment'
+### git -C test-dep config --local user.email 'noreply@ocaml.org'
 ### <pin:test-dep/a-test-dep.opam>
 opam-version: "2.0"
 version: "dev"

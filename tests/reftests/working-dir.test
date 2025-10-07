@@ -7,6 +7,8 @@ build: [[ "test" "-f" "ongoing.txt" ] [ "cat" "ongoing.txt" ]]
 versionned
 ### git -C ./ongoing init -q --initial-branch=main
 ### git -C ./ongoing config core.autocrlf false
+### git -C ./ongoing config --local user.name 'OPAM test environment'
+### git -C ./ongoing config --local user.email 'noreply@ocaml.org'
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "init"
 ### opam switch create working-dir --empty
@@ -296,6 +298,8 @@ build: [
 I'm a normal file
 ### git -C ./new-url init -q --initial-branch=main
 ### git -C ./new-url config core.autocrlf false
+### git -C ./new-url config --local user.name 'OPAM test environment'
+### git -C ./new-url config --local user.email 'noreply@ocaml.org'
 ### git -C ./new-url add -A
 ### git -C ./new-url commit -qm "init"
 ### <new-url/new-file>

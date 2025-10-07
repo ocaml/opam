@@ -429,6 +429,8 @@ build: [[ "test" "-f" "ongoing.txt" ] [ "cat" "ongoing.txt" ]]
 versionned
 ### git -C ./ongoing init -q --initial-branch=main
 ### git -C ./ongoing config core.autocrlf false
+### git -C ./ongoing config --local user.name 'OPAM test environment'
+### git -C ./ongoing config --local user.email 'noreply@ocaml.org'
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "init"
 ### opam pin ./ongoing

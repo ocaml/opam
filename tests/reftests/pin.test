@@ -35,6 +35,8 @@ echo piou >> "$n/$nv.t"
 if [ "x$git" = "xgit" ]; then
   test -d "$n/.git" || git -C "./$n" init -q --initial-branch=main
   git -C "./$n" config core.autocrlf false
+  git -C "./$n" config user.name 'OPAM test environment'
+  git -C "./$n" config user.email 'noreply@ocaml.org'
   git -C "./$n" add "$n.opam" "$nv.t" "$n.install"
   git -C "./$n" commit -qm "add $nv package"
 fi
@@ -917,6 +919,8 @@ dev3
 opam-version: "2.0"
 ### git -C vcs-local init -q --initial-branch=main
 ### git -C vcs-local config core.autocrlf false
+### git -C vcs-local config --local user.name 'OPAM test environment'
+### git -C vcs-local config --local user.email 'noreply@ocaml.org'
 ### git -C vcs-local add vcs-local.opam
 ### git -C vcs-local commit -qm 'init'
 ### git -C vcs-local ls-files
@@ -1077,6 +1081,8 @@ opam-version: "2.0"
 ### mkdir pin-change
 ### git -C pin-change init -q --initial-branch=main
 ### git -C pin-change config core.autocrlf false
+### git -C pin-change config --local user.name 'OPAM test environment'
+### git -C pin-change config --local user.email 'noreply@ocaml.org'
 ### <pin:pin-change/opam>
 opam-version: "2.0"
 ### git -C pin-change add opam
