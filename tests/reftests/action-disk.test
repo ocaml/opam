@@ -1174,7 +1174,7 @@ SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin
 Processing  1/1: [main-gpin: git]
-+ git "init" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
++ git "-c" "init.defaultBranch=main" "init" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 - Initialized empty Git repository in ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin/.git/
 + git "config" "--local" "fetch.prune" "false" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "config" "--local" "diff.noprefix" "false" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
@@ -1539,7 +1539,7 @@ The following actions will be performed:
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin
 Processing  1/3: [main-gpin.dev: git]
-+ git "init" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
++ git "-c" "init.defaultBranch=main" "init" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 - Initialized empty Git repository in ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin/.git/
 + git "config" "--local" "fetch.prune" "false" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "config" "--local" "diff.noprefix" "false" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
@@ -1729,7 +1729,7 @@ The following actions will be performed:
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev
 Processing  1/2: [main-gpin.dev: git]
-+ git "init" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev)
++ git "-c" "init.defaultBranch=main" "init" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev)
 - Initialized empty Git repository in ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev/.git/
 + git "config" "--local" "fetch.prune" "false" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev)
 + git "config" "--local" "diff.noprefix" "false" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev)
