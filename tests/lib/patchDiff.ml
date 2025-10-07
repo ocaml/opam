@@ -312,7 +312,9 @@ let git_cmds repo_root commands error_msg =
 let make_git_repo dir =
   let first_root = dir / first in
   let commands = [
-    [ "init"];
+    [ "init" ];
+    [ "config"; "user.name"; "OPAM test environment" ];
+    [ "config"; "user.email"; "noreply@ocaml.org" ];
     [ "add"; "--all" ];
     [ "commit"; "-qm"; "first" ];
   ] in
