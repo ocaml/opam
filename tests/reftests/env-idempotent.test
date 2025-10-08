@@ -19,3 +19,8 @@ User configuration:
 ### # we need the switch for variables file
 ### opam switch create fake --empty --root root
 ### sh locally-in-sh.sh sh -lc "sh -lc 'opam exec --root root --no-switch env'" | grep -v MANPATH | grep /root/fake/ | '=.*' -> ''
+### opam switch create fake2 --empty --root root
+### # Simulate nuking a root entirely
+### rm -rf root/fake2
+### sh locally-in-sh.sh sh -lc "opam exec --root root --switch=fake -- env" | grep -v MANPATH | grep /root/fake2/ | '=.*' -> ''
+PATH
