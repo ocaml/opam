@@ -15,7 +15,7 @@ if [[ $GITHUB_EVENT_NAME = 'pull_request' ]]; then
     echo "OPAM_BIN_URL_BASE = $OPAM_BIN_URL_BASE"
     echo "VERSION = $VERSION; DEV_VERSION = $DEV_VERSION"
     DEV_VERSION=${DEV_VERSION//\~/-}
-    if [[ $DEV_VERSION != $VERSION ]]; then
+    if [[ $DEV_VERSION != "$VERSION" ]]; then
       ARCHES=2
     else
       ARCHES=1
@@ -23,9 +23,9 @@ if [[ $GITHUB_EVENT_NAME = 'pull_request' ]]; then
     current_tag=''
 
     while read -r line tag platform sha ; do
-      if [[ $tag != $current_tag ]]; then
+      if [[ $tag != "$current_tag" ]]; then
         current_tag="$tag"
-        if [[ $tag = $VERSION || $tag = $DEV_VERSION ]]; then
+        if [[ $tag = "$VERSION" || $tag = "$DEV_VERSION" ]]; then
           ((ARCHES--))
         fi
         echo "🐪 Checking binaries for opam ${tag//-/\~}"
@@ -33,7 +33,7 @@ if [[ $GITHUB_EVENT_NAME = 'pull_request' ]]; then
       URL="$OPAM_BIN_URL_BASE$tag/opam-$tag-$platform"
       echo "Downloading $URL"
       check=$(curl -Ls "$URL" | sha512sum | cut -d' ' -f1)
-      if [[ $check = $sha ]] ; then
+      if [[ $check = "$sha" ]] ; then
         echo "         as expected ($sha)"
       else
         echo "::error file=shell/install.sh,line=$line::Incorrect checksum; got $check"
