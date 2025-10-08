@@ -172,6 +172,7 @@ users)
   * Add reftest for `--depext-only` option [#6516 @rjbou]
   * Add a test for `opam remove --force` [#6672 @rjbou]
   * Use the new `opam-set-os` command when applicable [#6741 @arozovyk]
+  * Add a test showing that `variables.sh` doesn't re-apply updates if sourced more than once in the same session [#6729 @dra27 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
