@@ -196,7 +196,10 @@ let get_sys_available rt =
       OpamSysPkg.No_depexts
 
 let update_sys_available_cache ?(force=false) rt =
+  if OpamConsole.disp_status_line () then
+    OpamConsole.status_line "Loading system package availability...";
   let repos_sys_available_pkgs = get_sys_available rt in
+  OpamConsole.clear_status ();
   if not force &&
      OpamSysPkg.equal_availability_mode rt.repos_sys_available_pkgs
        repos_sys_available_pkgs

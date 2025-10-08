@@ -57,6 +57,7 @@ users)
   * Implement incremental opam file loading to process only changed files during repository updates and repository state loading [#6614 @arozovyk - fix #5824]
   * Compute the list of available depexts on `opam update` [#6489 @arozovyk - fix #6461]
   * Update depexts availability repository state cache when running `opam update --depexts` [#6489 @arozovyk - fix #6461]
+  * Display status message while loading system package availability during `opam update` [#6489 @arozovyk - fix #6461]
 
 ## Tree
 
