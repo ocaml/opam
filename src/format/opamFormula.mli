@@ -170,6 +170,7 @@ val check_version_formula: version_formula -> OpamPackage.Version.t -> bool
 type t = (OpamPackage.Name.t * version_formula) formula
 
 val compare: t -> t -> int
+val equal: t -> t -> bool
 
 (** Returns [true] if [package] verifies [formula] (i.e. it is within at least
     one package set that is a solution of the formula, and is named in the
