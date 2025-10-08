@@ -174,6 +174,7 @@ users)
   * Add a test for `opam remove --force` [#6672 @rjbou]
   * Use the new `opam-set-os` command when applicable [#6741 @arozovyk]
   * Add a test showing that `variables.sh` doesn't re-apply updates if sourced more than once in the same session [#6729 @dra27 @kit-ty-kate]
+  * Add a test for #6455 showing the effect on opam env if the switch whose settings were applied by `variables.sh` is deleted [#6729 @dra27]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
