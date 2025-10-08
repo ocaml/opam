@@ -43,6 +43,8 @@ Set to '[]' the field wrap-install-commands in global configuration
 Set to '[]' the field wrap-remove-commands in global configuration
 ### opam option jobs=7 --global
 Set to '7' the field jobs in global configuration
+### opam option 'default-invariant=["i-nv" { >= "12.3.4" }]'
+Set to '["i-nv" { >= "12.3.4" }]' the field default-invariant in global configuration
 ### opam install i-got-the-variables --yes
 The following actions will be performed:
 === install 2 packages
@@ -220,6 +222,7 @@ Try 'opam var --help' or 'opam --help' for more information.
 <><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
 archive-mirrors                {}
 best-effort-prefix-criteria    {}
+default-invariant              ["i-nv" {>= "12.3.4"}]
 depext                         true
 depext-bypass                  {}
 depext-cannot-install          false
@@ -484,6 +487,46 @@ Removed '"http://lorem.labore"' from field archive-mirrors in global configurati
 ### opam option archive-mirrors=
 Reverted field archive-mirrors in global configuration
 ### opam option archive-mirrors
+### # Check addition and removal on formulae
+### opam option default-invariant
+["i-nv" {>= "12.3.4"}]
+### opam option 'default-invariant="lmaco"'
+Set to '"lmaco"' the field default-invariant in global configuration
+### opam option default-invariant
+["lmaco"]
+### opam option 'default-invariant=["lmaco" { > "52.5" }]'
+Set to '["lmaco" { > "52.5" }]' the field default-invariant in global configuration
+### opam option default-invariant
+["lmaco" {> "52.5"}]
+### opam option 'default-invariant+="another"'
+Added '"another"' to field default-invariant in global configuration
+### opam option default-invariant
+["another" "lmaco" {> "52.5"}]
+### opam option 'default-invariant+=["another" { = "3.12" }]'
+Added '["another" { = "3.12" }]' to field default-invariant in global configuration
+### opam option default-invariant
+["another" {= "3.12"} "another" "lmaco" {> "52.5"}]
+### opam option 'default-invariant-="another"'
+Removed '"another"' from field default-invariant in global configuration
+### opam option default-invariant
+["another" {= "3.12"} "lmaco" {> "52.5"}]
+### opam option 'default-invariant-=["another" { = "3.12" }]'
+Removed '["another" { = "3.12" }]' from field default-invariant in global configuration
+### opam option default-invariant
+["lmaco" {> "52.5"}]
+### opam option default-invariant=[]
+Set to '[]' the field default-invariant in global configuration
+### opam option default-invariant
+[]
+### # wwe don't want to retrieve the init config one
+### # opam option default-invariant=
+### # Reverted field default-invariant in global configuration
+### # opam option default-invariant
+### # ["ocaml" {>= "4.05.0"}]
+### opam option 'default-invariant=["i-nv" { >= "12.3.4" }]'
+Set to '["i-nv" { >= "12.3.4" }]' the field default-invariant in global configuration
+### opam option default-invariant
+["i-nv" {>= "12.3.4"}]
 ### # Check that eval-variable is removed when a global variable is removed
 ### opam option global-variables
 [[foo "global-foo" "Set through 'opam var'"] [bin "global-bin" "Set through 'opam var'"] [os-version "dolor" "Set through 'opam var'"] [os-family "ipsum" "Set through 'opam var'"] [os-distribution "lorem" "Set through 'opam var'"] [os "linux" "Set through 'opam var'"] [make "make" "Set through 'opam var'"] [arch "x86_64" "Set through 'opam var'"] [sys-ocaml-version "4.08.0" "Set through 'opam var'"]]
@@ -526,7 +569,7 @@ Removed variable dolore in global configuration
 # Return code 2 #
 ### opam option bar=sit --global
 [ERROR] There is no option named 'bar'. The allowed options are:
-jobs download-command download-jobs archive-mirrors solver-criteria solver-upgrade-criteria solver-fixup-criteria best-effort-prefix-criteria solver global-variables eval-variables repository-validation-command depext depext-run-installs depext-cannot-install depext-bypass sys-pkg-manager-cmd git-location swh-fallback pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands
+jobs download-command download-jobs archive-mirrors solver-criteria solver-upgrade-criteria solver-fixup-criteria best-effort-prefix-criteria solver global-variables eval-variables repository-validation-command default-invariant depext depext-run-installs depext-cannot-install depext-bypass sys-pkg-manager-cmd git-location swh-fallback pre-build-commands pre-install-commands pre-remove-commands pre-session-commands wrap-build-commands wrap-install-commands wrap-remove-commands post-build-commands post-install-commands post-remove-commands post-session-commands
 # Return code 2 #
 ### opam option bar=sit --switch var-option
 [ERROR] There is no option named 'bar'. The allowed options are:
@@ -660,6 +703,7 @@ stublibs ${BASEDIR}/OPAM/phantom/lib/stublibs
 <><> Global configuration <><><><><><><><><><><><><><><><><><><><><><><><><><><>
 archive-mirrors                {}
 best-effort-prefix-criteria    {}
+default-invariant              ["i-nv" {>= "12.3.4"}]
 depext                         true
 depext-bypass                  {}
 depext-cannot-install          false
@@ -692,6 +736,7 @@ No switch installed
 ### opam option --global
 archive-mirrors                {}
 best-effort-prefix-criteria    {}
+default-invariant              ["i-nv" {>= "12.3.4"}]
 depext                         true
 depext-bypass                  {}
 depext-cannot-install          false

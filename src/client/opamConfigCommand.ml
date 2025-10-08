@@ -841,6 +841,23 @@ let global_allowed_fields, global_allowed_sections =
         Config.with_eval_variables (InitConfig.eval_variables in_config);
         "repository-validation-command", Atomic,
         Config.with_validation_hook_opt (Config.validation_hook Config.empty);
+        "default-invariant", Modifiable (
+          (fun nc c -> Config.with_default_invariant
+              (OpamFormula.And ((Config.default_invariant nc),
+                                (Config.default_invariant c))) c),
+          (fun nc c ->
+             let to_remove =
+               OpamFormula.ands_to_list (Config.default_invariant nc)
+             in
+             let ndinv =
+               OpamFormula.ands_to_list (Config.default_invariant c)
+               |> List.filter (fun subinv ->
+                   OpamStd.List.mem (fun f f' -> not (OpamFormula.equal f f'))
+                     subinv to_remove)
+               |> OpamFormula.ands
+             in
+             Config.with_default_invariant ndinv c)),
+        Config.with_default_invariant (InitConfig.default_invariant in_config);
         "depext", Atomic,
         Config.with_depext (Config.depext Config.empty);
         "depext-run-installs", Atomic,
