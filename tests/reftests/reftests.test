@@ -4,7 +4,10 @@ N0REP0
 ### ###################
 ### :I:1: opam root
 ### test -d OPAM
-### ls OPAM
+### : log/ may exist on Linux where depexts availability is queried during repo load,
+### : but not on macOS/Windows where we return Suppose_available without system calls
+### : so the log/ directory is not created.
+### ls OPAM | grep -v '^log$'
 config
 config.lock
 lock
@@ -954,3 +957,30 @@ REFTEST_UNSET=test
 REFTEST_UNSET=
 ### unset REFTEST_UNSET
 ### env | grep REFTEST_UNSET
+### :V:4: opam-set-os
+### opam var --global os-distribution=void
+Added '[os-distribution "void" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var --global os-family=void
+Added '[os-family "void" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var --global os=void
+Added '[os "void" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam var os-distribution
+void
+### opam var os-family
+void
+### opam var os
+void
+### opam list -A -s os-family
+### <REPO/packages/os-family/os-family.1/opam>
+opam-version: "2.0"
+### opam list -A -s os-family
+### opam-set-os foo
+Added '[os-family "foo" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam list -A -s os-family
+os-family
+### opam var os-distribution
+void
+### opam var os-family
+foo
+### opam var os
+void
