@@ -4,7 +4,7 @@ OPAM_VERSION = $(subst -,~,$(VERSION))
 GIT_URL = ..
 
 OCAMLV = 4.14.2
-FLEXDLLV = 0.43
+FLEXDLLV = 0.44
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://github.com/ocaml/ocaml/archive/refs/tags/$(OCAMLV).tar.gz
 FLEXDLL_URL = https://github.com/ocaml/flexdll/archive/refs/tags/$(FLEXDLLV).tar.gz
