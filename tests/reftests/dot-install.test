@@ -204,13 +204,15 @@ Done.
 Not found: ${BASEDIR}/OPAM/inst/share/dot/a-file
 ==> dot changes
 Not found: ${BASEDIR}/OPAM/inst/.opam-switch/install/dot.changes
-### OPAMDEBUGSECTIONS="SYSTEM FILE(.config)" OPAMDEBUG=-1
+### OPAMDEBUGSECTIONS="SYSTEM FILE(.config)" OPAMDEBUG=-5
 ### : check install files ordering :
 ### opam install lot-of-files | grep "mkdir\|install\|FILE"
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 === install 1 package
   - install lot-of-files ~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/lot-of-files.install.in
+FILE(.config)                   Read ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/lot-of-files.config in 0.000s
 FILE(.config)                   Wrote ${BASEDIR}/OPAM/inst/.opam-switch/config/lot-of-files.config atomically in 0.000s
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/fichier -> ${BASEDIR}/OPAM/inst/bin/fichier (755)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/lib/lot-of-files
@@ -226,6 +228,7 @@ SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/a-file -> ${BASEDIR}/OPAM/inst/etc/lot-of-files/a-file (644)
 SYSTEM                          install ${BASEDIR}/OPAM/inst/.opam-switch/build/lot-of-files.~dev/a-file -> ${BASEDIR}/OPAM/dosiero (644)
 -> installed lot-of-files.~dev
+FILE(.config)                   Read ${BASEDIR}/OPAM/inst/.opam-switch/config/lot-of-files.config in 0.000s
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev
 SYSTEM                          mkdir ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/lot-of-files/lot-of-files.~dev/files/lot-of-files.install.in -> ${BASEDIR}/OPAM/inst/.opam-switch/packages/lot-of-files.~dev/files/lot-of-files.install.in
@@ -243,8 +246,15 @@ lib_root: [
 share: [ "a-file" ]
 ### <pkg:no-specified-dir.1:a-file>
 touch
-### OPAMDEBUGSECTIONS="SYSTEM TRACK" OPAMDEBUG=-1
+### OPAMDEBUGSECTIONS="SYSTEM TRACK" OPAMDEBUG=-5
 ### opam install no-specified-dir | '[0-9]{14}' -> "now"
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/lock (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (read => none)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup
 The following actions will be performed:
 === install 1 package
@@ -255,6 +265,7 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/no-specified-dir.install
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file
+TRACK                           before install: 2 elements scanned in 0.000s
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another/somedir
 SYSTEM                          install ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file -> ${BASEDIR}/OPAM/rem-dir/lib/another/somedir/an-installed-file (644)
@@ -269,8 +280,13 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packa
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/no-specified-dir.install
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file -> ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/a-file
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (write => none)
 Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/lock (write => none)
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup/state-now.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### ocaml cat.ml rem-dir no-specified-dir
 ==> no-specified-dir installed file
 touch
@@ -286,7 +302,14 @@ added: [
   "share|no-specified-dir" {"D"}
   "share|no-specified-dir|a-file" {"F:af5d4d883c8c9c50711d86a7e1807cab"}
 ]
-### opam remove  no-specified-dir | '[0-9]{14}' -> "now"
+### opam remove  no-specified-dir | '[0-9]{14}' -> "now" | grep -v "were already removed" | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/lock (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (read => none)
 The following actions will be performed:
 === remove 1 package
   - remove no-specified-dir 1
@@ -306,11 +329,20 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/another/somedi
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/lib/another
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/install/no-specified-dir.changes
 -> removed   no-specified-dir.1
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (write => none)
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/opam
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/no-specified-dir.install
+SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/a-file
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/sources/no-specified-dir.1
 Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/lock (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/lock (none => none)
 SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/backup/state-now.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### test -d OPAM/rem-dir/lib/another/somedir
 # Return code 1 #
 ### find OPAM/rem-dir/lib | unordered
