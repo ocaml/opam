@@ -161,7 +161,7 @@ let do_upgrade repo_root =
 
   let compilers =
     let compilers_dir =
-      OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root / "compilers")
+      OpamRepositoryRoot.Dir.Op.(repo_root / "compilers")
     in
     if OpamFilename.exists_dir compilers_dir then (
       List.fold_left (fun map f ->
@@ -452,18 +452,18 @@ let clear_cache () =
 
 let do_upgrade_mirror repo_root base_url =
   OpamRepositoryRoot.Dir.with_tmp @@ fun tmp_mirror_dir ->
-  let open OpamFilename.Op in
+  let open OpamRepositoryRoot.Dir.Op in
   let copy_dir d =
-    let src = OpamRepositoryRoot.Dir.to_dir repo_root / d in
+    let src = repo_root / d in
     if OpamFilename.exists_dir src then
       OpamFilename.copy_dir
-        ~src ~dst:(OpamRepositoryRoot.Dir.to_dir tmp_mirror_dir / d)
+        ~src ~dst:(tmp_mirror_dir / d)
   in
   let copy_file f =
-    let src = OpamRepositoryRoot.Dir.to_dir repo_root // f in
+    let src = repo_root // f in
     if OpamFilename.exists src then
       OpamFilename.copy
-        ~src ~dst:(OpamRepositoryRoot.Dir.to_dir tmp_mirror_dir // f)
+        ~src ~dst:(tmp_mirror_dir // f)
   in
   copy_dir "packages";
   copy_dir "compilers";
@@ -505,12 +505,11 @@ let do_upgrade_mirror repo_root base_url =
   OpamFile.Repo.write repo_file repo_12;
   OpamFile.Repo.write
     (OpamFile.make
-       OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir tmp_mirror_dir // "repo"))
+       OpamRepositoryRoot.Dir.Op.(tmp_mirror_dir // "repo"))
     repo_20;
   let dir20 =
     OpamRepositoryRoot.Dir.of_dir
-      OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root /
-                       upgradeto_version_string)
+      OpamRepositoryRoot.Dir.Op.(repo_root / upgradeto_version_string)
   in
   OpamRepositoryRoot.Dir.remove dir20;
   OpamRepositoryRoot.Dir.move ~src:tmp_mirror_dir ~dst:dir20;

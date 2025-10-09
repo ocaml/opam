@@ -880,7 +880,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
                rdir
            else
              OpamFilename.Dir.to_string
-               OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_dir / rdir)
+               OpamRepositoryRoot.Dir.Op.(repo_dir / rdir)
          | None -> "<nowhere>")
     else if raw && fields = [] then
       OpamFile.OPAM.write_to_channel stdout opam
