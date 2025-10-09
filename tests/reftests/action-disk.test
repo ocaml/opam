@@ -25,11 +25,16 @@ remove: [ "touch" "removal-file" ]
 I'm a file
 ### <x-file>
 I'm an extra-file
+### <x-source>
+I'm an extra-source
 ### tar czf archive.tgz content
 ### openssl md5 archive.tgz | '.*= ' -> '' >$ MD5
 ### sh -c "echo '$MD5' | cut -c 1-2" >$ PRE_MD5
 ### openssl md5 x-file | '.*= ' -> '' >$ XMD5
+### openssl md5 x-source | '.*= ' -> '' >$ XSMD5
+### sh -c "echo '$XSMD5' | cut -c 1-2" >$ PRE_XSMD5
 ### <add-url.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 for nv in "$@"; do
   arch=archive.tgz
   dir="REPO/packages/${nv%.*}/$nv"
@@ -38,10 +43,14 @@ for nv in "$@"; do
   cp x-file "$dir/files/x-file.$nv"
   cat >> "$file" << EOF
 url {
-  src: "$arch"
+  src: "$basedir/$arch"
   checksum: "md5=$MD5"
 }
 extra-files: [ "x-file.$nv" "md5=$XMD5" ]
+extra-source "x-source.$nv" {
+  src: "$basedir/x-source"
+  checksum: "md5=$XSMD5"
+}
 EOF
 done
 ### sh add-url.sh main-repo.1 main-repo.2
@@ -169,7 +178,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam install main-repo.1 | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "md5[^[:alnum:]].?${PRE_MD5}" -> md5/pre
+### opam install main-repo.1 | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "md5[^[:alnum:]].?${PRE_MD5}" -> md5/pre | "${PRE_XSMD5}[^[:alnum:]].?${XSMD5}" -> xspre/xshash | "md5[^[:alnum:]].?${PRE_XSMD5}" -> md5/prexs
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -212,11 +221,21 @@ SYSTEM                          rmdir ${OPAMTMP}
 SYSTEM                          rm ${OPAMTMP}/content
 SYSTEM                          rmdir ${OPAMTMP}
 SYSTEM                          rm ${OPAMTMP}/archive.tgz
+SYSTEM                          mkdir ${OPAMTMP}
+Processing  1/3: [main-repo.1/x-source.main-repo.1: dl]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/x-source" "${OPAMTMP}"
+- x-source
+- 
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/prexs
+SYSTEM                          copy ${OPAMTMP}/x-source -> ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash
+SYSTEM                          rmdir ${OPAMTMP}
+SYSTEM                          rm ${OPAMTMP}/x-source
 -> retrieved main-repo.1  (file://${BASEDIR}/archive.tgz)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
 SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-source.main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-file.main-repo.1
 Processing  2/3: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1)
@@ -245,7 +264,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall main-repo.1 | sed-cmd tar cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam reinstall main-repo.1 | sed-cmd tar cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "${PRE_XSMD5}[^[:alnum:]].?${XSMD5}" -> xspre/xshash | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -280,6 +299,10 @@ SYSTEM                          rm ${OPAMTMP}/content
 -> retrieved main-repo.1  (cached)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/content
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-source.main-repo.1
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-source.main-repo.1
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-file.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/build-file
 SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
@@ -336,7 +359,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam upgrade main-repo | sed-cmd tar touch mkdir cp | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam upgrade main-repo | sed-cmd tar touch mkdir cp | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "${PRE_XSMD5}[^[:alnum:]].?${XSMD5}" -> xspre/xshash | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -382,6 +405,9 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-sw
 SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2/x-source.main-repo.2
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2/x-file.main-repo.2
 Processing  2/4: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2)
@@ -439,7 +465,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam remove main-repo | sed-cmd tar touch | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam remove main-repo | sed-cmd tar touch | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "${PRE_XSMD5}[^[:alnum:]].?${XSMD5}" -> xspre/xshash | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -478,6 +504,8 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-sw
 SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/x-source.main-repo.2
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/x-source.main-repo.2
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/x-file.main-repo.2
 Processing  2/2: [main-repo: touch removal-file]
 + touch "removal-file" (CWD=${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2)
@@ -1933,7 +1961,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam install main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash
+### opam install main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "${PRE_XSMD5}[^[:alnum:]].?${XSMD5}" -> xspre/xshash
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1970,6 +1998,7 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.
 SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-source.main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-file.main-repo.1
 Processing  2/3: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1)
@@ -1998,7 +2027,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam reinstall main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "${PRE_XSMD5}[^[:alnum:]].?${XSMD5}" -> xspre/xshash | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -2033,6 +2062,10 @@ SYSTEM                          rm ${OPAMTMP}/content
 -> retrieved main-repo.1  (cached)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/content
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-source.main-repo.1
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-source.main-repo.1
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-file.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/build-file
 SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
@@ -2089,7 +2122,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam remove main-repo | grep -v '^- ./$' | sed-cmd tar rsync touch | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam remove main-repo | grep -v '^- ./$' | sed-cmd tar rsync touch | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "${PRE_XSMD5}[^[:alnum:]].?${XSMD5}" -> xspre/xshash | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -2126,6 +2159,8 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.
 SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-file.main-repo.1
 Processing  2/2: [main-repo: touch removal-file]
 + touch "removal-file" (CWD=${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1)
@@ -2194,7 +2229,7 @@ Usage: opam switch [OPTION]… [COMMAND] [ARG]…
 Try 'opam switch --help' or 'opam --help' for more information.
 # Return code 2 #
 ### :III:2: with package
-### opam switch create package-switch --package main-repo | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "md5[^[:alnum:]].?${PRE_MD5}" -> md5/pre
+### opam switch create package-switch --package main-repo | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "md5[^[:alnum:]].?${PRE_MD5}" -> md5/pre | "${PRE_XSMD5}[^[:alnum:]].?${XSMD5}" -> xspre/xshash
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
@@ -2255,6 +2290,7 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/package-switch/.opam-switc
 SYSTEM                          copydir ${BASEDIR}/OPAM/package-switch/.opam-switch/sources/main-repo.2 -> ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2
 SYSTEM                          copy ${BASEDIR}/OPAM/package-switch/.opam-switch/sources/main-repo.2/content -> ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/xspre/xshash -> ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/x-source.main-repo.2
 SYSTEM                          copy ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2 -> ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/x-file.main-repo.2
 Processing  2/3: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2)
@@ -2487,6 +2523,7 @@ FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000
 SYSTEM                          rmdir ${BASEDIR}/OPAM/package-switch
 SYSTEM                          rm ${BASEDIR}/OPAM/package-switch/lib/main-repo/content
 SYSTEM                          rm ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/content
+SYSTEM                          rm ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/x-source.main-repo.2
 SYSTEM                          rm ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/x-file.main-repo.2
 SYSTEM                          rm ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/build-file
 SYSTEM                          rm ${BASEDIR}/OPAM/package-switch/.opam-switch/install/main-repo.changes
