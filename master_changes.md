@@ -110,6 +110,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
 
 ## Doc
 
