@@ -35,6 +35,12 @@ module Dir = struct
   let dirname = OpamFilename.dirname_dir
 
   let repo repo_root = OpamFilename.Op.(repo_root // "repo" |> OpamFile.make)
+
+  module Op = struct
+    let (/) d s = OpamFilename.Op.(d / s)
+    let (//) d s = OpamFilename.Op.(d // s)
+  end
+
 end
 
 let make_tar_gz_job = OpamFilename.make_tar_gz_job
@@ -89,3 +95,16 @@ let delayed_read_repo = function
     let repo_file_path = Dir.repo dir in
     let read () = OpamFile.Repo.safe_read repo_file_path in
     (OpamFile.exists repo_file_path, read)
+
+
+module Op = struct
+
+  let (/) d s =
+    match d with
+    | Dir d -> Dir.Op.(d / s)
+
+  let (//) d s =
+    match d with
+    | Dir d -> Dir.Op.(d // s)
+
+end
