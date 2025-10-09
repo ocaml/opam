@@ -179,6 +179,7 @@ users)
   * Remove patch dependency in depext actions [#6676 @rjbou]
   * Bump opam binary used in depexts actions to 2.4.1 [#6676 @rjbou]
   * Check `src_ext/update-sources.sh` using shellcheck [#6701 @kit-ty-kate]
+  * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]
