@@ -314,6 +314,8 @@ first  --
 ### ::: git - rsync :::
 ### git -C ./OPER init -q
 ### git -C ./OPER config core.autocrlf false
+### git -C ./OPER config --local user.name 'OPAM test environment'
+### git -C ./OPER config --local user.email 'noreply@ocaml.org'
 ### git -C ./OPER add repo
 ### git -C ./OPER add packages/first
 ### git -C ./OPER commit -qm "third"
@@ -480,6 +482,8 @@ first  --
 ### :::: git - rsync ::::
 ### git -C ./OPER init -q
 ### git -C ./OPER config core.autocrlf false
+### git -C ./OPER config --local user.name 'OPAM test environment'
+### git -C ./OPER config --local user.email 'noreply@ocaml.org'
 ### git -C ./OPER add repo
 ### git -C ./OPER add packages/first
 ### git -C ./OPER commit -qm "third"
@@ -593,6 +597,8 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### git -C ./TMCS init -q
 ### git -C ./TMCS config core.autocrlf false
+### git -C ./TMCS config --local user.name 'OPAM test environment'
+### git -C ./TMCS config --local user.email 'noreply@ocaml.org'
 ### git -C ./TMCS add repo
 ### git -C ./TMCS add packages/first
 ### git -C ./TMCS commit -qm "init"
@@ -888,8 +894,10 @@ to-many-commits
 oper3
 ### : Make sure the .git directory is not taken into account when synching local non-git repositories
 ### opam switch create local-nongit-git --empty
-### git init -q --initial-branch=master GIT
+### git init -q --initial-branch=main GIT
 ### git -C GIT config core.autocrlf false
+### git -C GIT config --local user.name 'OPAM test environment'
+### git -C GIT config --local user.email 'noreply@ocaml.org'
 ### <GIT/repo>
 opam-version: "2.0"
 ### <GIT/packages/test/test.1/opam>

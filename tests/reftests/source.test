@@ -4,8 +4,10 @@ print_endline "I am a source code"
 ### <pandev/root.ml>
 print_endline "i'm root"
 ### tar czf origin.tgz pandev
-### git -C ./pandev init -q --initial-branch=master
+### git -C ./pandev init -q --initial-branch=main
 ### git -C ./pandev config core.autocrlf false
+### git -C ./pandev config --local user.name 'OPAM test environment'
+### git -C ./pandev config --local user.email 'noreply@ocaml.org'
 ### git -C ./pandev add -A
 ### git -C ./pandev commit -qm "init"
 ### <pkg:pandore.3>

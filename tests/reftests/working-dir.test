@@ -5,14 +5,16 @@ opam-version: "2.0"
 build: [[ "test" "-f" "ongoing.txt" ] [ "cat" "ongoing.txt" ]]
 ### <ongoing/ongoing.txt>
 versionned
-### git -C ./ongoing init -q --initial-branch=master
+### git -C ./ongoing init -q --initial-branch=main
 ### git -C ./ongoing config core.autocrlf false
+### git -C ./ongoing config --local user.name 'OPAM test environment'
+### git -C ./ongoing config --local user.email 'noreply@ocaml.org'
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "init"
 ### opam switch create working-dir --empty
 ### opam pin ./ongoing
 [NOTE] Package ongoing does not exist in opam repositories registered in the current switch.
-ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#main (version dev)
 
 The following actions will be performed:
 === install 1 package
@@ -62,8 +64,8 @@ Done.
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
-[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#master
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
+[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#main
 
 The following actions will be performed:
 === recompile 1 package
@@ -122,7 +124,7 @@ Processing  2/3: [ongoing: test newfile.txt]
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
 
 The following actions will be performed:
 === install 1 package
@@ -207,7 +209,7 @@ build: [[ "test" "-f" "newfile.txt" ] [ "cat" "newfile.txt" ]]
 ### opam install qux ongoing --working-dir -v | '^Processing .+$' -> '\c' | sed-cmd test cat | grep -v "switch import" | unordered
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
 
 The following actions will be performed:
 === install 2 packages
@@ -228,7 +230,7 @@ Done.
 ### : Shows that opam correctly handles updated constraints with --working-dir
 ### : See https://github.com/ocaml/opam/issues/5178
 ### opam pin remove ./ongoing
-Ok, ongoing is no longer pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+Ok, ongoing is no longer pinned to git+file://${BASEDIR}/ongoing#main (version dev)
 The following actions will be performed:
 === remove 1 package
   - remove ongoing dev
@@ -243,8 +245,8 @@ opam-version: "2.0"
 depends: ["qux"]
 ### opam install ./ongoing --working-dir
 [NOTE] Package ongoing does not exist in opam repositories registered in the current switch.
-ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#main (version dev)
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
 The following actions will be performed:
 === install 1 package
   - install ongoing dev (pinned)
@@ -264,8 +266,8 @@ The following actions would be performed:
 ### opam reinstall ./ongoing --working-dir --show-action
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
-[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#master
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
+[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#main
 
 The following actions would be performed:
 === downgrade 1 package
@@ -294,8 +296,10 @@ build: [
 ]
 ### <new-url/file>
 I'm a normal file
-### git -C ./new-url init -q --initial-branch=master
+### git -C ./new-url init -q --initial-branch=main
 ### git -C ./new-url config core.autocrlf false
+### git -C ./new-url config --local user.name 'OPAM test environment'
+### git -C ./new-url config --local user.email 'noreply@ocaml.org'
 ### git -C ./new-url add -A
 ### git -C ./new-url commit -qm "init"
 ### <new-url/new-file>
@@ -309,8 +313,8 @@ I'm a new file, huhu
 change-url is now pinned to file://${BASEDIR}/old-url (version a)
 ### opam install ./new-url --working-dir
 [NOTE] Package change-url is currently pinned to file://${BASEDIR}/old-url (version a).
-change-url is now pinned to git+file://${BASEDIR}/new-url#master (version a)
-[change-url.a] synchronised (git+file://${BASEDIR}/new-url#master)
+change-url is now pinned to git+file://${BASEDIR}/new-url#main (version a)
+[change-url.a] synchronised (git+file://${BASEDIR}/new-url#main)
 The following actions will be performed:
 === install 1 package
   - install change-url a (pinned)
@@ -333,8 +337,8 @@ The following actions will be performed:
 Done.
 ### opam install ./new-url --working-dir
 [NOTE] Package change-url is currently pinned to file://${BASEDIR}/old-url (version a).
-change-url is now pinned to git+file://${BASEDIR}/new-url#master (version a)
-[change-url.a] synchronised (git+file://${BASEDIR}/new-url#master)
+change-url is now pinned to git+file://${BASEDIR}/new-url#main (version a)
+[change-url.a] synchronised (git+file://${BASEDIR}/new-url#main)
 The following actions will be performed:
 === recompile 1 package
   - recompile change-url a (pinned)

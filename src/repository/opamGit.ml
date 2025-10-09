@@ -35,7 +35,7 @@ module VCS : OpamVCS.VCS = struct
   let init repo_root repo_url =
     OpamFilename.mkdir repo_root;
     OpamProcess.Job.of_list [
-      git repo_root [ "init" ];
+      git repo_root [ "-c"; "init.defaultBranch=main"; "init" ];
       (* Enforce this option, it can break our use of git if set *)
       git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
       (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)

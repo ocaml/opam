@@ -10,6 +10,8 @@ I'm some content
 ### :I: Git updates
 ### git -C ./REPO init -q
 ### git -C ./REPO config core.autocrlf false
+### git -C ./REPO config --local user.name 'OPAM test environment'
+### git -C ./REPO config --local user.email 'noreply@ocaml.org'
 ### git -C ./REPO add repo
 ### git -C ./REPO add packages/first
 ### git -C ./REPO commit -qm "first"

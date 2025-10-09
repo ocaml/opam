@@ -6,8 +6,10 @@ build: [[ "test" "-f" "ongoing.txt" ] [ "sh" "-c" "cat ongoing.txt > out" ]]
 install: [ ["test" "-f" "out" ] ["touch" "installed"] ]
 ### <ongoing/ongoing.txt>
 versionned
-### git -C ./ongoing init -q --initial-branch=master
+### git -C ./ongoing init -q --initial-branch=main
 ### git -C ./ongoing config core.autocrlf false
+### git -C ./ongoing config user.name 'OPAM test environment'
+### git -C ./ongoing config user.email 'noreply@ocaml.org'
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "inplace test"
 ### <ongoing/newfile.txt>
@@ -15,7 +17,7 @@ new!
 ### opam switch create assume-built --empty
 ### opam pin ./ongoing -n
 [NOTE] Package ongoing does not exist in opam repositories registered in the current switch.
-ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#main (version dev)
 ### : assume built
 ### opam install ongoing -v | sed-cmd test sh touch
 
@@ -151,8 +153,8 @@ Done.
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
-[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#master
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
+[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#main
 
 The following actions will be performed:
 === install 1 package
@@ -168,7 +170,7 @@ Done.
 ### test -f ./ongoing/installed
 ### : assume built & opam file variables :
 ### opam unpin ongoing
-Ok, ongoing is no longer pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+Ok, ongoing is no longer pinned to git+file://${BASEDIR}/ongoing#main (version dev)
 The following actions will be performed:
 === remove 1 package
   - remove ongoing dev
@@ -200,7 +202,7 @@ install: [
 ### git -C ongoing clean -fdqx
 ### opam pin ./ongoing -n
 [NOTE] Package ongoing does not exist in opam repositories registered in the current switch.
-ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version 1.0)
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#main (version 1.0)
 ### touch ongoing/out
 ### opam install qux
 The following actions will be performed:
@@ -228,7 +230,7 @@ Done.
 ### : assume built & undefined opam file variables :
 ### OPAMSTRICT=0
 ### opam unpin ongoing
-Ok, ongoing is no longer pinned to git+file://${BASEDIR}/ongoing#master (version 1.0)
+Ok, ongoing is no longer pinned to git+file://${BASEDIR}/ongoing#main (version 1.0)
 The following actions will be performed:
 === remove 1 package
   - remove ongoing 1.0
@@ -254,7 +256,7 @@ install: [
 ### git -C ongoing clean -fdqx
 ### opam pin ./ongoing -n
 [NOTE] Package ongoing does not exist in opam repositories registered in the current switch.
-ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#main (version dev)
 ### touch ongoing/out
 ### opam install ongoing --assume-built --with-test
 

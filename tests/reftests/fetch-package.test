@@ -12,8 +12,10 @@ install: [
   [ "cp" "hist" "%{lib}%/%{name}%-hist" ]
 ]
 ### tar czf arch.tgz a-dev
-### git -C ./a-dev init -q --initial-branch=master
+### git -C ./a-dev init -q --initial-branch=main
 ### git -C ./a-dev config core.autocrlf false
+### git -C ./a-dev config user.name 'OPAM test environment'
+### git -C ./a-dev config user.email 'noreply@ocaml.org'
 ### git -C ./a-dev add opam
 ### git -C ./a-dev commit -qm "init"
 ### git -C ./a-dev add root.ml
@@ -109,8 +111,8 @@ opam
 root.ml
 ### opam pin foo-git-pin ./a-dev -y
 [NOTE] Package foo-git-pin does not exist in opam repositories registered in the current switch.
-[foo-git-pin.dev] synchronised (git+file://${BASEDIR}/a-dev#master)
-foo-git-pin is now pinned to git+file://${BASEDIR}/a-dev#master (version dev)
+[foo-git-pin.dev] synchronised (git+file://${BASEDIR}/a-dev#main)
+foo-git-pin is now pinned to git+file://${BASEDIR}/a-dev#main (version dev)
 
 The following actions will be performed:
 === install 1 package

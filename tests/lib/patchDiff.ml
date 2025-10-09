@@ -298,19 +298,23 @@ let git_cmds repo_root commands error_msg =
           ("-C"::(OpamFilename.Dir.to_string repo_root)::args))
       commands
   in
-  try
-    List.iter (fun command ->
-        match OpamProcess.run command with
-        | {OpamProcess.r_code = 0; _ } -> ()
-        | _ -> failwith (OpamProcess.string_of_command command))
-      commands
-  with Failure e ->
-    print "ERROR:%s: %s\n" error_msg (rm_hex e)
+  List.exists (fun command ->
+      match OpamProcess.run command with
+      | {OpamProcess.r_code = 0; _ } -> false
+      | {OpamProcess.r_stderr; _ } ->
+          let cmd = rm_hex (OpamProcess.string_of_command command) in
+          print "ERROR:%s: %s\n" error_msg cmd;
+          List.iter print_endline r_stderr;
+          true)
+    commands
+  |> ignore
 
 let make_git_repo dir =
   let first_root = dir / first in
   let commands = [
-    [ "init"];
+    [ "init" ];
+    [ "config"; "user.name"; "OPAM test environment" ];
+    [ "config"; "user.email"; "noreply@ocaml.org" ];
     [ "add"; "--all" ];
     [ "commit"; "-qm"; "first" ];
   ] in

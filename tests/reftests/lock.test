@@ -526,20 +526,22 @@ version: "locked-version"
 ### opam pin scan ./tolock-scan --locked | grep -v '# Name'
 tolock-scan  locked-version  file://${BASEDIR}/tolock-scan  -
 ### : git pin with lock file :
-### git -C tolock init -q --initial-branch=master
+### git -C tolock init -q --initial-branch=main
+### git -C tolock config --local user.name 'OPAM test environment'
+### git -C tolock config --local user.email 'noreply@ocaml.org'
 ### git -C tolock config core.autocrlf false
 ### git -C tolock add content
 ### git -C tolock commit -qm "init"
 ### opam switch create locking3 --empty
 ### opam pin -n ./tolock --locked
 [NOTE] Package tolock does not exist in opam repositories registered in the current switch.
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version 1)
 ### opam show --normalise tolock --field depends:,depopts:,conflicts:
 depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
 depopts:
 conflicts:
 ### opam unpin -n tolock
-Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1)
+Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#main (version 1)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
@@ -555,7 +557,7 @@ The following actions would be performed:
   - install tolock 1 (pinned)
 ### opam pin ./tolock -n
 [NOTE] Package tolock does not exist in opam repositories registered in the current switch.
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version dev)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
@@ -570,7 +572,7 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock --locked
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version 1)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/tolock (`--working-dir' not specified or specified with no argument).
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
@@ -593,13 +595,13 @@ Done.
 ### opam switch create locking4 --empty
 ### opam pin -n ./tolock --locked
 [NOTE] Package tolock does not exist in opam repositories registered in the current switch.
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version 1)
 ### opam show --normalise tolock --field depends:,depopts:,conflicts:
 depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
 depopts:
 conflicts:
 ### opam unpin -n tolock
-Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1)
+Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#main (version 1)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
@@ -615,7 +617,7 @@ The following actions would be performed:
   - install tolock 1 (pinned)
 ### opam pin ./tolock -n
 [NOTE] Package tolock does not exist in opam repositories registered in the current switch.
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version dev)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
@@ -630,7 +632,7 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock --locked
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version 1)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/tolock (`--working-dir' not specified or specified with no argument).
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
@@ -653,13 +655,13 @@ Done.
 ### opam switch create locking5 --empty
 ### opam pin -n ./tolock --locked
 [NOTE] Package tolock does not exist in opam repositories registered in the current switch.
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version 1)
 ### opam show --normalise tolock --field depends:,depopts:,conflicts:
 depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
 depopts:
 conflicts:
 ### opam unpin -n tolock
-Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1)
+Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#main (version 1)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
@@ -675,7 +677,7 @@ The following actions would be performed:
   - install tolock 1 (pinned)
 ### opam pin ./tolock -n
 [NOTE] Package tolock does not exist in opam repositories registered in the current switch.
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version dev)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version dev)
 ### opam install ./tolock --show
 The following actions would be performed:
 === install 3 packages
@@ -690,7 +692,7 @@ The following actions would be performed:
   - install foo    1          [required by tolock]
   - install tolock 1 (pinned)
 ### opam install ./tolock --locked
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version 1)
 [tolock.1] synchronised (no changes)
 The following actions will be performed:
 === install 4 packages
@@ -707,7 +709,7 @@ The following actions will be performed:
 Done.
 ### : check no repin in case of double 'install .' - with locked :
 ### opam unpin tolock
-Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#master (version 1)
+Ok, tolock is no longer pinned to git+file://${BASEDIR}/tolock#main (version 1)
 The following actions will be performed:
 === remove 1 package
   - remove tolock 1
@@ -717,13 +719,13 @@ The following actions will be performed:
 Done.
 ### opam install ./tolock --locked
 [NOTE] Package tolock does not exist in opam repositories registered in the current switch.
-tolock is now pinned to git+file://${BASEDIR}/tolock#master (version 1)
+tolock is now pinned to git+file://${BASEDIR}/tolock#main (version 1)
 The following actions will be performed:
 === install 1 package
   - install tolock 1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved tolock.1  (git+file://${BASEDIR}/tolock#master)
+-> retrieved tolock.1  (git+file://${BASEDIR}/tolock#main)
 -> installed tolock.1
 Done.
 ### opam remove tolock
@@ -1252,24 +1254,30 @@ EOF
 it's here
 ### : -- :
 ### mkdir simple-dep
-### git -C simple-dep init -q --initial-branch=master
+### git -C simple-dep init -q --initial-branch=main
 ### git -C simple-dep config core.autocrlf false
+### git -C simple-dep config --local user.name 'OPAM test environment'
+### git -C simple-dep config --local user.email 'noreply@ocaml.org'
 ### <pin:simple-dep/a-simple-dep.opam>
 opam-version: "2.0"
 version: "dev"
 ### git -C simple-dep add a-simple-dep.opam
 ### git -C simple-dep commit -qm "simple"
 ### mkdir doc-dep
-### git -C doc-dep init -q --initial-branch=master
+### git -C doc-dep init -q --initial-branch=main
 ### git -C doc-dep config core.autocrlf false
+### git -C doc-dep config --local user.name 'OPAM test environment'
+### git -C doc-dep config --local user.email 'noreply@ocaml.org'
 ### <pin:doc-dep/a-doc-dep.opam>
 opam-version: "2.0"
 version: "dev"
 ### git -C doc-dep add a-doc-dep.opam
 ### git -C doc-dep commit -qm "doc"
 ### mkdir test-dep
-### git -C test-dep init -q --initial-branch=master
+### git -C test-dep init -q --initial-branch=main
 ### git -C test-dep config core.autocrlf false
+### git -C test-dep config --local user.name 'OPAM test environment'
+### git -C test-dep config --local user.email 'noreply@ocaml.org'
 ### <pin:test-dep/a-test-dep.opam>
 opam-version: "2.0"
 version: "dev"

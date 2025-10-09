@@ -3,15 +3,16 @@ N0REP0
 ### mkdir submodule
 ### git -C ./submodule init -q
 ### git -C ./submodule config core.autocrlf false
+### git -C ./submodule config user.name 'OPAM test environment'
+### git -C ./submodule config user.email 'noreply@ocaml.org'
 ### touch ./submodule/some-file
 ### git -C ./submodule add ./some-file
 ### git -C ./submodule commit -qm "first commit"
 ### mkdir use-submodule
 ### git -C ./use-submodule init -q
 ### git -C ./use-submodule config core.autocrlf false
-### ### This test may fail locally depending on your git version
-### ### File protocol is removed locally since git 2.38,
-### ### to fix a CVE: https://www.cve.org/CVERecord?id=CVE-2022-39253
+### git -C ./use-submodule config user.name 'OPAM test environment'
+### git -C ./use-submodule config user.email 'noreply@ocaml.org'
 ### git -C ./use-submodule submodule add ../submodule ./vendor
 Cloning into '${BASEDIR}/use-submodule/vendor'...
 done.

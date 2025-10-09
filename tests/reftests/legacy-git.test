@@ -5,6 +5,8 @@ set -ue
 cd $1
 git init >/dev/null 2>&1
 git config --local core.autocrlf false
+git config --local user.name 'OPAM test environment'
+git config --local user.email 'noreply@ocaml.org'
 echo '*.sh text eol=lf' >.gitattributes
 [ $# -lt 2 ] || touch "$2"
 git add -A

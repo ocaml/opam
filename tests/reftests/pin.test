@@ -33,8 +33,10 @@ lib: ["$nv.t"]
 EOF
 echo piou >> "$n/$nv.t"
 if [ "x$git" = "xgit" ]; then
-  test -d "$n/.git" || git -C "./$n" init -q --initial-branch=master
+  test -d "$n/.git" || git -C "./$n" init -q --initial-branch=main
   git -C "./$n" config core.autocrlf false
+  git -C "./$n" config user.name 'OPAM test environment'
+  git -C "./$n" config user.email 'noreply@ocaml.org'
   git -C "./$n" add "$n.opam" "$nv.t" "$n.install"
   git -C "./$n" commit -qm "add $nv package"
 fi
@@ -90,8 +92,8 @@ Now run 'opam upgrade' to apply any package updates.
 ### : pin with url
 ### opam pin add nip-git git+file://$BASEDIR/nip-git
 [NOTE] Package nip-git does not exist in opam repositories registered in the current switch.
-[nip-git.dev] synchronised (git+file://${BASEDIR}/nip-git#master)
-nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
+[nip-git.dev] synchronised (git+file://${BASEDIR}/nip-git#main)
+nip-git is now pinned to git+file://${BASEDIR}/nip-git#main (version ved)
 
 The following actions will be performed:
 === install 1 package
@@ -102,7 +104,7 @@ The following actions will be performed:
 Done.
 ### opam pin add git+file://$BASEDIR/nip-git2
 [NOTE] Package nip-git2 does not exist in opam repositories registered in the current switch.
-nip-git2 is now pinned to git+file://${BASEDIR}/nip-git2#master (version ved)
+nip-git2 is now pinned to git+file://${BASEDIR}/nip-git2#main (version ved)
 
 The following actions will be performed:
 === install 1 package
@@ -183,8 +185,8 @@ The following actions will be performed:
 Done.
 ### : list
 ### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
-nip-git.ved      git      git+file://${BASEDIR}/nip-git#master   (at HASH)
-nip-git2.ved     git      git+file://${BASEDIR}/nip-git2#master  (at HASH)
+nip-git.ved      git      git+file://${BASEDIR}/nip-git#main   (at HASH)
+nip-git2.ved     git      git+file://${BASEDIR}/nip-git2#main  (at HASH)
 nip-path.ved     rsync    file://${BASEDIR}/nip-path
 nip-path2.ved    rsync    file://${BASEDIR}/nip-path2
 nip-path3.ved    rsync    file://${BASEDIR}/nip-path3
@@ -231,7 +233,7 @@ Done.
 ### : vcs
 ### opam pin add ./nip-git2 --kind git
 [NOTE] Package nip-git2 does not exist in opam repositories registered in the current switch.
-nip-git2 is now pinned to git+file://${BASEDIR}/nip-git2#master (version ved)
+nip-git2 is now pinned to git+file://${BASEDIR}/nip-git2#main (version ved)
 
 The following actions will be performed:
 === install 1 package
@@ -247,7 +249,7 @@ Done.
 ### : auto
 ### opam pin add ./nip-git3 --kind auto
 [NOTE] Package nip-git3 does not exist in opam repositories registered in the current switch.
-nip-git3 is now pinned to git+file://${BASEDIR}/nip-git3#master (version ved)
+nip-git3 is now pinned to git+file://${BASEDIR}/nip-git3#main (version ved)
 
 The following actions will be performed:
 === install 1 package
@@ -335,8 +337,8 @@ The following actions will be performed:
 ### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
 nip.1                         version           1
 nip-git.ved                   rsync             file://${BASEDIR}/nip-git
-nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#master  (at HASH)
-nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#master  (at HASH)
+nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#main  (at HASH)
+nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#main  (at HASH)
 nip-path.ved                  rsync             file://${BASEDIR}/nip-path
 nip-path3.ved                 rsync             file://${BASEDIR}/nip-path3
 no-url.1       (uninstalled)  local definition
@@ -362,7 +364,7 @@ nip-path3
 ### OPAMPINKINDAUTO=1
 ### opam pin add ./nip-git
 [NOTE] Package nip-git does not exist in opam repositories registered in the current switch.
-nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
+nip-git is now pinned to git+file://${BASEDIR}/nip-git#main (version ved)
 
 The following actions will be performed:
 === install 1 package
@@ -408,7 +410,7 @@ The following actions will be performed:
 Done.
 ### : list
 ### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
-nip-git.ved      git    git+file://${BASEDIR}/nip-git#master  (at HASH)
+nip-git.ved      git    git+file://${BASEDIR}/nip-git#main  (at HASH)
 nip-git2.ved     rsync  file://${BASEDIR}/nip-git2
 nip-path.ved     rsync  file://${BASEDIR}/nip-path
 nip-path2.ved    rsync  file://${BASEDIR}/nip-path2
@@ -424,7 +426,7 @@ OPAM/env-kinds/lib/nip-path2/nip-path2.ved.t
 ### opam switch create actions --empty
 ### opam pin add ./nip-git4 --no-action
 [NOTE] Package nip-git4 does not exist in opam repositories registered in the current switch.
-nip-git4 is now pinned to git+file://${BASEDIR}/nip-git4#master (version ved)
+nip-git4 is now pinned to git+file://${BASEDIR}/nip-git4#main (version ved)
 ### opam pin add ./nip-path
 [NOTE] Package nip-path does not exist in opam repositories registered in the current switch.
 nip-path is now pinned to file://${BASEDIR}/nip-path (version ved)
@@ -453,14 +455,14 @@ Done.
 nip-path  ved         pinned to version ved at file://${BASEDIR}/nip-path
 nip-path2 ved         pinned to version ved at file://${BASEDIR}/nip-path2
 ### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
-nip-git4.ved   (uninstalled)  git    git+file://${BASEDIR}/nip-git4#master  (at HASH)
+nip-git4.ved   (uninstalled)  git    git+file://${BASEDIR}/nip-git4#main  (at HASH)
 nip-path.ved                  rsync  file://${BASEDIR}/nip-path
 nip-path2.ved                 rsync  file://${BASEDIR}/nip-path2
 ### find OPAM/actions/lib -name '*.t' | sort
 OPAM/actions/lib/nip-path/nip-path.ved.t
 OPAM/actions/lib/nip-path2/nip-path2.ved.t
 ### opam pin remove ./nip-git4
-Ok, nip-git4 is no longer pinned to git+file://${BASEDIR}/nip-git4#master (version ved)
+Ok, nip-git4 is no longer pinned to git+file://${BASEDIR}/nip-git4#main (version ved)
 ### opam pin remove ./nip-path --no-action
 Ok, nip-path is no longer pinned to file://${BASEDIR}/nip-path (version ved)
 ### opam pin remove ./nip-path2
@@ -543,7 +545,7 @@ The following actions will be performed:
 ### opam pin add ./nip-git --edit
 [NOTE] Package nip-git does not exist in opam repositories registered in the current switch.
 You can edit this file again with "opam pin edit nip-git", export it with "opam show nip-git --raw"
-nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
+nip-git is now pinned to git+file://${BASEDIR}/nip-git#main (version ved)
 
 The following actions will be performed:
 === install 1 package
@@ -573,8 +575,8 @@ The following actions will be performed:
 ### opam pin list | '  \(at [0-9a-f]+\)$' -> '  (at HASH)'
 nip.1                         version           1
 nip-git.ved                   rsync             file://${BASEDIR}/nip-git
-nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#master  (at HASH)
-nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#master  (at HASH)
+nip-git2.ved                  git               git+file://${BASEDIR}/nip-git2#main  (at HASH)
+nip-git3.ved                  git               git+file://${BASEDIR}/nip-git3#main  (at HASH)
 nip-path.ved                  rsync             file://${BASEDIR}/nip-path
 nip-path3.ved                 rsync             file://${BASEDIR}/nip-path3
 no-url.1       (uninstalled)  local definition
@@ -595,7 +597,7 @@ no-url2
 ### : pin scan
 ### opam switch create scans --empty
 ### opam pin scan ./nip-git | grep -v '^#'
-nip-git  ved        git+file://${BASEDIR}/nip-git#master  -
+nip-git  ved        git+file://${BASEDIR}/nip-git#main  -
 ### opam pin scan ./nip-path | grep -v '^#'
 nip-path  ved        file://${BASEDIR}/nip-path  -
 ### mkdir lot_of_pkgs
@@ -768,14 +770,14 @@ Done.
 ### sh add-pin.sh nip-mixed.dev4 git
 ### opam pin nip-mixed
 [NOTE] Package nip-mixed is currently pinned to file://${BASEDIR}/nip-mixed (version dev3).
-nip-mixed is now pinned to git+file://${BASEDIR}/nip-mixed#master (version dev4)
+nip-mixed is now pinned to git+file://${BASEDIR}/nip-mixed#main (version dev4)
 
 The following actions will be performed:
 === upgrade 1 package
   - upgrade nip-mixed dev3 to dev4 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved nip-mixed.dev4  (git+file://${BASEDIR}/nip-mixed#master)
+-> retrieved nip-mixed.dev4  (git+file://${BASEDIR}/nip-mixed#main)
 -> removed   nip-mixed.dev3
 -> installed nip-mixed.dev4
 Done.
@@ -784,8 +786,8 @@ Done.
 "add nip-mixed.dev1 package"
 "add nip-mixed.dev4 package"
 ### opam pin nip-mixed
-[NOTE] Package nip-mixed is already pinned to git+file://${BASEDIR}/nip-mixed#master (version dev4).
-nip-mixed is now pinned to git+file://${BASEDIR}/nip-mixed#master (version dev1)
+[NOTE] Package nip-mixed is already pinned to git+file://${BASEDIR}/nip-mixed#main (version dev4).
+nip-mixed is now pinned to git+file://${BASEDIR}/nip-mixed#main (version dev1)
 
 The following actions will be performed:
 === downgrade 1 package
@@ -805,7 +807,7 @@ Done.
 ### git -C ./nip-of commit -qm "remove opam file"
 ### opam pin ./nip-of
 [NOTE] Package nip-of does not exist in opam repositories registered in the current switch.
-nip-of is now pinned to git+file://${BASEDIR}/nip-of#master (version dev1)
+nip-of is now pinned to git+file://${BASEDIR}/nip-of#main (version dev1)
 
 The following actions will be performed:
 === install 1 package
@@ -819,8 +821,8 @@ Done.
 dev1
 ### sh add-pin.sh nip-of.dev2 git
 ### opam install ./nip-of
-nip-of is now pinned to git+file://${BASEDIR}/nip-of#master (version dev2)
-[nip-of.dev2] synchronised (git+file://${BASEDIR}/nip-of#master)
+nip-of is now pinned to git+file://${BASEDIR}/nip-of#main (version dev2)
+[nip-of.dev2] synchronised (git+file://${BASEDIR}/nip-of#main)
 The following actions will be performed:
 === upgrade 1 package
   - upgrade nip-of dev1 to dev2 (pinned)
@@ -835,8 +837,8 @@ dev2
 ### git -C ./nip-of add nip-of.dev3.t
 ### git -C ./nip-of commit -qm "add install file"
 ### opam pin ./nip-of
-[NOTE] Package nip-of is already pinned to git+file://${BASEDIR}/nip-of#master (version dev2).
-nip-of is now pinned to git+file://${BASEDIR}/nip-of#master (version dev3)
+[NOTE] Package nip-of is already pinned to git+file://${BASEDIR}/nip-of#main (version dev2).
+nip-of is now pinned to git+file://${BASEDIR}/nip-of#main (version dev3)
 
 The following actions will be performed:
 === upgrade 1 package
@@ -855,21 +857,21 @@ dev3
 ### git -C ./nip-fo commit -qm "remove opam file"
 ### opam install ./nip-fo
 [NOTE] Package nip-fo does not exist in opam repositories registered in the current switch.
-nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#master (version dev1)
+nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#main (version dev1)
 The following actions will be performed:
 === install 1 package
   - install nip-fo dev1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved nip-fo.dev1  (git+file://${BASEDIR}/nip-fo#master)
+-> retrieved nip-fo.dev1  (git+file://${BASEDIR}/nip-fo#main)
 -> installed nip-fo.dev1
 Done.
 ### opam show nip-fo --field=version
 dev1
 ### sh add-pin.sh nip-fo.dev2 git
 ### opam install ./nip-fo
-nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#master (version dev2)
-[nip-fo.dev2] synchronised (git+file://${BASEDIR}/nip-fo#master)
+nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#main (version dev2)
+[nip-fo.dev2] synchronised (git+file://${BASEDIR}/nip-fo#main)
 The following actions will be performed:
 === upgrade 1 package
   - upgrade nip-fo dev1 to dev2 (pinned)
@@ -884,9 +886,9 @@ dev2
 ### git -C ./nip-fo add nip-fo.dev3.t
 ### git -C ./nip-fo commit -qm "add install file"
 ### opam install ./nip-fo
-nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#master (version dev3)
+nip-fo is now pinned to git+file://${BASEDIR}/nip-fo#main (version dev3)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/nip-fo (`--working-dir' not specified or specified with no argument).
-[nip-fo.dev3] synchronised (git+file://${BASEDIR}/nip-fo#master)
+[nip-fo.dev3] synchronised (git+file://${BASEDIR}/nip-fo#main)
 The following actions will be performed:
 === upgrade 1 package
   - upgrade nip-fo dev2 to dev3 (pinned)
@@ -915,8 +917,10 @@ dev3
 ### opam switch create vcs-local --empty
 ### <pin:vcs-local/vcs-local.opam>
 opam-version: "2.0"
-### git -C vcs-local init -q --initial-branch=master
+### git -C vcs-local init -q --initial-branch=main
 ### git -C vcs-local config core.autocrlf false
+### git -C vcs-local config --local user.name 'OPAM test environment'
+### git -C vcs-local config --local user.email 'noreply@ocaml.org'
 ### git -C vcs-local add vcs-local.opam
 ### git -C vcs-local commit -qm 'init'
 ### git -C vcs-local ls-files
@@ -928,13 +932,13 @@ opam-version: "2.0"
 build: "false"
 ### opam pin vcs-local ./vcs-local --no-action
 [NOTE] Package vcs-local does not exist in opam repositories registered in the current switch.
-[vcs-local.dev] synchronised (git+file://${BASEDIR}/vcs-local#master)
-vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#master (version dev)
+[vcs-local.dev] synchronised (git+file://${BASEDIR}/vcs-local#main)
+vcs-local is now pinned to git+file://${BASEDIR}/vcs-local#main (version dev)
 ### test -f OPAM/vcs-local/.opam-switch/sources/vcs-local/untracked
 # Return code 1 #
 ### opam show vcs-local --field build:,url.src:
 build:   "false"
-url.src: "git+file://${BASEDIR}/vcs-local#master"
+url.src: "git+file://${BASEDIR}/vcs-local#main"
 ### :C:b: double pinning when the opam file is opam/opam
 ### <pin:double/opam/opam>
 opam-version: "2.0"
@@ -1075,8 +1079,10 @@ opam-version: "2.0"
 ### <pkg:dependency.3>
 opam-version: "2.0"
 ### mkdir pin-change
-### git -C pin-change init -q --initial-branch=master
+### git -C pin-change init -q --initial-branch=main
 ### git -C pin-change config core.autocrlf false
+### git -C pin-change config --local user.name 'OPAM test environment'
+### git -C pin-change config --local user.email 'noreply@ocaml.org'
 ### <pin:pin-change/opam>
 opam-version: "2.0"
 ### git -C pin-change add opam
@@ -1096,13 +1102,13 @@ The following actions would be performed:
 opam-version: "2.0"
 ### opam install ./pin-change
 [NOTE] Package pin-change does not exist in opam repositories registered in the current switch.
-pin-change is now pinned to git+file://${BASEDIR}/pin-change#master (version dev)
+pin-change is now pinned to git+file://${BASEDIR}/pin-change#main (version dev)
 The following actions will be performed:
 === install 1 package
   - install pin-change dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved pin-change.dev  (git+file://${BASEDIR}/pin-change#master)
+-> retrieved pin-change.dev  (git+file://${BASEDIR}/pin-change#main)
 -> installed pin-change.dev
 Done.
 ### <pin:pin-change/opam>
@@ -1110,7 +1116,7 @@ opam-version: "2.0"
 depends: "dependency" {= "1"}
 ### :C:e:3: behaviour when the package is not pinned
 ### opam install ./pin-change
-pin-change is now pinned to git+file://${BASEDIR}/pin-change#master (version dev)
+pin-change is now pinned to git+file://${BASEDIR}/pin-change#main (version dev)
 [NOTE] Ignoring uncommitted changes in ${BASEDIR}/pin-change (`--working-dir' not specified or specified with no argument).
 [pin-change.dev] synchronised (no changes)
 The following actions will be performed:
@@ -1153,7 +1159,7 @@ The following actions will be performed:
 -> installed dependency.3
 Done.
 ### opam pin | '\(at [a-f0-9]+\)' -> '(at HASH)'
-pin-change.dev  (uninstalled)  git  git+file://${BASEDIR}/pin-change#master  (at HASH)
+pin-change.dev  (uninstalled)  git  git+file://${BASEDIR}/pin-change#main  (at HASH)
 ### :C:f: stored overlay opam file
 ### opam switch create --empty overlays
 ### :C:f:1: Common case

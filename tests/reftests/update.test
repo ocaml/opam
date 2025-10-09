@@ -220,8 +220,10 @@ opam-file                       Missing expected extra files qux.installl at ${B
 "qux.installl" "md5=hash"
 ### :II: Git repo
 ### opam switch create repo-git-update --empty
-### git init -q --initial-branch=master GITREPO
+### git init -q --initial-branch=main GITREPO
 ### git -C GITREPO config core.autocrlf false
+### git -C GITREPO config --local user.name 'OPAM test environment'
+### git -C GITREPO config --local user.email 'noreply@ocaml.org'
 ### <GITREPO/repo>
 opam-version: "2.0"
 ### <GITREPO/packages/rename-pkg/rename-pkg.1/opam>

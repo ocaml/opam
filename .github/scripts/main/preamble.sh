@@ -3,9 +3,11 @@
 CWD=$PWD
 if [ "$RUNNER_OS" = Windows ]; then
   CACHE="$(cygpath 'D:\Cache')"
+  SUDO=''
 else
   CACHE=~/.cache
   CACHE=$(eval echo $CACHE)
+  SUDO=sudo
 fi
 echo "Cache -> $CACHE"
 OCAML_LOCAL=$CACHE/ocaml-local
@@ -31,11 +33,7 @@ OPAMBSSWITCH=opam-build
 
 export OPAMCONFIRMLEVEL=unsafe-yes
 
-git config --global user.email "gha@example.com"
-git config --global user.name "Github Actions CI"
-git config --global gc.autoDetach false
-git config --global init.defaultBranch thisShouldNotHappen
-git config --global protocol.file.allow always
+$SUDO git config --system gc.autoDetach false
 
 if [ -d ~/opam-repository ]; then
   OPAM_REPO_CACHE=file://$HOME/opam-repository

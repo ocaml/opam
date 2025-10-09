@@ -207,8 +207,10 @@ Done.
 opam-version: "2.0"
 ### <bar/a-file>
 content
-### git -C bar init -q --initial-branch=master
+### git -C bar init -q --initial-branch=main
 ### git -C bar config core.autocrlf false
+### git -C bar config user.name 'OPAM test environment'
+### git -C bar config user.email 'noreply@ocaml.org'
 ### git -C bar add opam a-file
 ### git -C bar commit -qm "init"
 ### <pkg:bar.1>
@@ -236,7 +238,7 @@ The following actions will be performed:
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1
 Processing  1/1: [bar.1: git]
-+ git "init" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
++ git "-c" "init.defaultBranch=main" "init" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
 + git "config" "--local" "fetch.prune" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
 + git "config" "--local" "diff.noprefix" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
 + git "config" "--local" "core.autocrlf" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1)
@@ -295,7 +297,7 @@ The following actions will be performed:
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1
 Processing  1/1: [qux.1: git]
-+ git "init" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
++ git "-c" "init.defaultBranch=main" "init" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
 + git "config" "--local" "fetch.prune" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
 + git "config" "--local" "diff.noprefix" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
 + git "config" "--local" "core.autocrlf" "false" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)

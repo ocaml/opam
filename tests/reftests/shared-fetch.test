@@ -327,8 +327,10 @@ Done.
 ### opam switch create vcs-shared --empty
 ### mkdir shared-vcs
 ### cp shared.ml shared-vcs
-### git -C shared-vcs init -q --initial-branch=master
+### git -C shared-vcs init -q --initial-branch=main
 ### git -C shared-vcs config core.autocrlf false
+### git -C shared-vcs config --local user.name 'OPAM test environment'
+### git -C shared-vcs config --local user.email 'noreply@ocaml.org'
 ### git -C shared-vcs add shared.ml
 ### git -C shared-vcs commit -qm 'init'
 ### <pkg:foo-vcs.1>

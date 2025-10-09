@@ -427,13 +427,15 @@ opam-version: "2.0"
 build: [[ "test" "-f" "ongoing.txt" ] [ "cat" "ongoing.txt" ]]
 ### <ongoing/ongoing.txt>
 versionned
-### git -C ./ongoing init -q --initial-branch=master
+### git -C ./ongoing init -q --initial-branch=main
 ### git -C ./ongoing config core.autocrlf false
+### git -C ./ongoing config --local user.name 'OPAM test environment'
+### git -C ./ongoing config --local user.email 'noreply@ocaml.org'
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "init"
 ### opam pin ./ongoing
 [NOTE] Package ongoing does not exist in opam repositories registered in the current switch.
-ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#main (version dev)
 
 The following actions will be performed:
 === install 1 package
@@ -471,8 +473,8 @@ build: [[ "test" "-f" "newfile.txt" ] [ "cat" "newfile.txt" ]]
 ### opam update --working-dir ongoing
 
 <><> Synchronising development packages <><><><><><><><><><><><><><><><><><><><>
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
-[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#master
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
+[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#main
 Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --working-dir
 The following actions will be performed:
@@ -481,7 +483,7 @@ The following actions will be performed:
 [NOTE] --working-dir is given but no requested package is pinned
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved ongoing.dev  (git+file://${BASEDIR}/ongoing#master)
+-> retrieved ongoing.dev  (git+file://${BASEDIR}/ongoing#main)
 [ERROR] The compilation of ongoing.dev failed at "test -f newfile.txt".
 
 
@@ -496,7 +498,7 @@ The following actions will be performed:
 ### opam upgrade --working-dir ongoing
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
 
 The following actions will be performed:
 === recompile 1 package

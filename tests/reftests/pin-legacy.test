@@ -250,15 +250,17 @@ Done.
 ### :6: Error retrieving git pin :
 ### :::::::::::::::::::::::
 ### mkdir pin-empty
-### git -C pin-empty init -q --initial-branch=master
+### git -C pin-empty init -q --initial-branch=main
+### git -C pin-empty config --local user.name 'OPAM test environment'
+### git -C pin-empty config --local user.email 'noreply@ocaml.org'
 ### git -C pin-empty config core.autocrlf false
 ### <pin:pin-empty/opam>
 opam-version: "2.0"
 ### opam pin --no-action ./pin-empty
-[ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#master":
+[ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#main":
         Git repository seems just initialized, try again after your first commit
 Could not retrieve some package sources, they will not be pinned nor installed:
-  - pin-empty:git+file://${BASEDIR}/pin-empty#master
+  - pin-empty:git+file://${BASEDIR}/pin-empty#main
 
 Continue anyway? [Y/n] y
 ### opam pin
@@ -266,9 +268,9 @@ Continue anyway? [Y/n] y
 ### git -C pin-empty commit -qm 'opam'
 ### opam pin --no-action ./pin-empty
 [NOTE] Package pin-empty does not exist in opam repositories registered in the current switch.
-pin-empty is now pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
+pin-empty is now pinned to git+file://${BASEDIR}/pin-empty#main (version dev)
 ### opam unpin pin-empty
-Ok, pin-empty is no longer pinned to git+file://${BASEDIR}/pin-empty#master (version dev)
+Ok, pin-empty is no longer pinned to git+file://${BASEDIR}/pin-empty#main (version dev)
 ### opam pin --no-action ./pin-empty#inexistant
 [ERROR] Could not synchronize ${BASEDIR}/OPAM/pinning/.opam-switch/sources/pin-empty from "git+file://${BASEDIR}/pin-empty#inexistant":
         Branch inexistant not found

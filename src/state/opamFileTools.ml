@@ -340,7 +340,13 @@ let template nv =
         | _ -> [email]
       with Not_found -> match email with
         | Some e -> [e]
-        | None -> []
+        | None ->
+            if Sys.win32 then
+              match Sys.getenv_opt "USERNAME", Sys.getenv_opt "USERDOMAIN" with
+              | Some name, Some domain -> [name ^ "@" ^ domain]
+              | _ -> []
+            else
+              []
   in
   create nv
   |> with_name_opt None

@@ -6,8 +6,10 @@ build: [[ "test" "-f" "ongoing.txt" ] [ "cat" "ongoing.txt" ]]
 install: [ "touch" "installed"]
 ### <ongoing/ongoing.txt>
 versionned
-### git -C ./ongoing init -q --initial-branch=master
+### git -C ./ongoing init -q --initial-branch=main
 ### git -C ./ongoing config core.autocrlf false
+### git -C ./ongoing config user.name 'OPAM test environment'
+### git -C ./ongoing config user.email 'noreply@ocaml.org'
 ### git -C ./ongoing add -A
 ### git -C ./ongoing commit -qm "inplace test"
 ### <ongoing/newfile.txt>
@@ -15,7 +17,7 @@ new!
 ### opam switch create inplace --empty
 ### opam pin ./ongoing -n
 [NOTE] Package ongoing does not exist in opam repositories registered in the current switch.
-ongoing is now pinned to git+file://${BASEDIR}/ongoing#master (version dev)
+ongoing is now pinned to git+file://${BASEDIR}/ongoing#main (version dev)
 ### opam install ongoing -v | sed-cmd test cat touch
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
@@ -55,7 +57,7 @@ Done.
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
 
 The following actions will be performed:
 === install 1 package
@@ -93,8 +95,8 @@ Done.
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 Processing  1/1: [ongoing.dev: git]
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
-[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#master
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
+[ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#main
 
 The following actions will be performed:
 === install 1 package
@@ -126,7 +128,7 @@ Done.
 ### opam install ongoing qux --inplace | unordered
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
-[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#master)
+[ongoing.dev] synchronised (git+file://${BASEDIR}/ongoing#main)
 
 The following actions will be performed:
 === install 2 packages
@@ -134,7 +136,7 @@ The following actions will be performed:
   - install qux     u
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved ongoing.dev  (git+file://${BASEDIR}/ongoing#master)
+-> retrieved ongoing.dev  (git+file://${BASEDIR}/ongoing#main)
 -> installed qux.u
 -> installed ongoing.dev
 Done.

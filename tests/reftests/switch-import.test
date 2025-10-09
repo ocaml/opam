@@ -6,6 +6,8 @@ opam-version: "2.0"
 install: [ "cp" "fst.out" "%{lib}%" ]
 ### git -C nip init -q --initial-branch=fst-head
 ### git -C nip config core.autocrlf false
+### git -C nip config --local user.name 'OPAM test environment'
+### git -C nip config --local user.email 'noreply@ocaml.org'
 ### git -C nip add -A
 ### git -C nip commit -qm "init"
 ### git -C nip branch snd-head
