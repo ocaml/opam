@@ -79,7 +79,8 @@ let index_command cli =
   in
   let cmd global_options urls_txt () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = checked_repo_root ()  in
+    let repo_root = checked_repo_root () in
+    let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
     let repo_file = OpamRepositoryPath.repo repo_root in
     let repo_def =
       match OpamFile.Repo.read_opt repo_file with
@@ -103,8 +104,7 @@ let index_command cli =
       | Some vcs ->
         let module VCS = (val OpamRepository.find_backend_by_kind vcs) in
         match
-          OpamProcess.Job.run
-            (VCS.revision (OpamRepositoryRoot.Dir.to_dir repo_root))
+          OpamProcess.Job.run (VCS.revision repo_root_dir)
         with
         | None -> date ()
         | Some hash -> hash
@@ -116,15 +116,13 @@ let index_command cli =
        OpamFilename.of_string "repo" ::
        (if urls_txt = `full_urls_txt then
           OpamFilename.rec_files
-            OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root /
-                             "compilers") @
+            OpamFilename.Op.(repo_root_dir / "compilers") @
           OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo_root)
         else []) |>
        List.fold_left (fun set f ->
            if not (OpamFilename.exists f) then set else
              let attr =
-               OpamFilename.to_attribute
-                 (OpamRepositoryRoot.Dir.to_dir repo_root) f
+               OpamFilename.to_attribute repo_root_dir f
              in
              OpamFilename.Attribute.Set.add attr set
          ) OpamFilename.Attribute.Set.empty |>
