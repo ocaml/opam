@@ -64,11 +64,22 @@ SYSTEM                          copydir ${BASEDIR}/REPO/packages/main-repo/main-
 SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2
 SYSTEM                          copy ${BASEDIR}/REPO/packages/main-repo/main-repo.2/opam -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/opam
 SYSTEM                          copy ${BASEDIR}/REPO/repo -> ${BASEDIR}/OPAM/repo/default.new/repo
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/repo
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/repo
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/opam
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/opam
+SYSTEM                          write ${BASEDIR}/OPAM/log/patch-xxx
 SYSTEM                          rmdir ${BASEDIR}/OPAM/repo/default.new
 SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/opam
 SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/opam
 SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.new/repo
 [default] synchronised from file://${BASEDIR}/REPO
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
+SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
+SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/default/repo in 0.000s
 Processing: [default: loading data]
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam in 0.000s
@@ -128,6 +139,11 @@ FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-sw
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.cmd
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
@@ -512,6 +528,11 @@ FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.cmd
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
@@ -544,8 +565,10 @@ Processing  1/1: [main-ppin: rsync]
 SYSTEM                          rmdir ${OPAMTMP}
 [NOTE] Package main-ppin does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/overlay/main-ppin
+SYSTEM                          read ${BASEDIR}/main-ppin/main-ppin.opam
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/overlay
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/overlay/main-ppin
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/overlay/main-ppin/opam
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/environment atomically in 0.000s
 main-ppin is now pinned to file://${BASEDIR}/main-ppin (version dev)
@@ -860,7 +883,9 @@ FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/
 FILE(opam)                      Read ${BASEDIR}/main-ppin/main-ppin.opam in 0.000s
 [NOTE] Package main-ppin does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/overlay/main-ppin
+SYSTEM                          read ${BASEDIR}/main-ppin/main-ppin.opam
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/overlay/main-ppin
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/overlay/main-ppin/opam
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/environment atomically in 0.000s
 main-ppin is now pinned to file://${BASEDIR}/main-ppin (version dev)
@@ -1147,6 +1172,11 @@ FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.cmd
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
@@ -1189,8 +1219,10 @@ Processing  1/1: [main-gpin: git]
 SYSTEM                          rmdir ${OPAMTMP}
 [NOTE] Package main-gpin does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin
+SYSTEM                          read ${BASEDIR}/main-gpin/main-gpin.opam
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin/opam
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/environment atomically in 0.000s
 main-gpin is now pinned to git+file://${BASEDIR}/main-gpin#master (version dev)
@@ -1525,7 +1557,9 @@ FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.
 FILE(opam)                      Read ${BASEDIR}/main-gpin/main-gpin.opam in 0.000s
 [NOTE] Package main-gpin does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin
+SYSTEM                          read ${BASEDIR}/main-gpin/main-gpin.opam
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin/opam
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/environment atomically in 0.000s
 main-gpin is now pinned to git+file://${BASEDIR}/main-gpin#master (version dev)
@@ -1827,6 +1861,11 @@ FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-version-pin/.
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-config atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.cmd
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
@@ -2189,6 +2228,11 @@ Done.
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/package-switch/.opam-switch/switch-state atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/OPAM/package-switch/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.cmd
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/package-switch/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
@@ -2291,8 +2335,10 @@ FILE(switch-config)             Wrote ${BASEDIR}/main-ppin/_opam/.opam-switch/sw
 FILE(opam)                      Read ${BASEDIR}/main-ppin/main-ppin.opam in 0.000s
 [NOTE] Package main-ppin does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/main-ppin/_opam/.opam-switch/overlay/main-ppin
+SYSTEM                          read ${BASEDIR}/main-ppin/main-ppin.opam
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/.opam-switch/overlay
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/.opam-switch/overlay/main-ppin
+SYSTEM                          write ${BASEDIR}/main-ppin/_opam/.opam-switch/overlay/main-ppin/opam
 FILE(switch-state)              Wrote ${BASEDIR}/main-ppin/_opam/.opam-switch/switch-state atomically in 0.000s
 FILE(environment)               Wrote ${BASEDIR}/main-ppin/_opam/.opam-switch/environment atomically in 0.000s
 main-ppin is now pinned to file://${BASEDIR}/main-ppin (version dev)

@@ -122,6 +122,7 @@ users)
   * Simplify the `src_ext/update-sources.sh` script [#6701 @kit-ty-kate]
   * Homogeneise verbose command output between sandboxed and non sandboxed one [#6675 @rjbou]
   * Add the `install-pin-depends`, `ignore-pin-depends`, `proceed-actions` and `switch-clean-up` named questions [#6611 @kit-ty-kate @rjbou]
+  * Add logging for file reads and writes [#6679 @rjbou]
 
 ## Internal: Unix
 
