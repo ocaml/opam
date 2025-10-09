@@ -1,7 +1,7 @@
 N0REP0
-### ### Ty to keep synchronised with pin-depends-ignore
-### # to change!
-### sed -i.bak 's/"ocaml" {>= "4.05.0"}//' OPAM/config
+### ### Try to keep synchronised with pin-depends-ignore
+### opam option default-invariant=[]
+Set to '[]' the field default-invariant in global configuration
 ### unset OPAMCONFIRMLEVEL
 ### :I: Local install with pin depends
 ### <pin:pin-dep/opam>

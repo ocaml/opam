@@ -51,6 +51,7 @@ users)
 
 ## Var/Option
   * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
+  * Make global option `default-invariant` modifiable [#6730 @rjbou]
 
 ## Update / Upgrade
   * Fix the false-positive mismatch debug warning during `opam update` when faced with nested extra-files on Windows [#6715 @kit-ty-kate]
@@ -212,6 +213,7 @@ users)
   * `OpamFormula.equal_relop`: was added [#6644 @kit-ty-kate]
   * `OpamTypesBase.{action,pkg_flag,simple_arg,arg,filter,command}_equal`: were added [#6644 @kit-ty-kate]
   * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
+  * `OpamFormula`: add `equal` function for `OpamFormula.t` [#6730 @rjbou]
 
 ## opam-core
   * `OpamConsole.confirm`: now takes an optional `name` argument [#6709 @kit-ty-kate]

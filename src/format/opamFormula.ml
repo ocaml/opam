@@ -276,6 +276,8 @@ let compare_nc (n1, c1) (n2, c2) =
 
 let compare = compare_formula compare_nc
 
+let equal f1 f2 = compare f1 f2 = 0
+
 let rec eval atom = function
   | Empty    -> true
   | Atom x   -> atom x
