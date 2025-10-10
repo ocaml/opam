@@ -172,6 +172,7 @@ users)
   * Allow `sed-cmd` to parse even if no space is after the command [#6675 @rjbou]
   * Harden the regexp used for substituting variable checksums [#6710 @kit-ty-kate]
   * Add the `unset` builtin [#6708 @kit-ty-kate]
+  * Add the `sed-hash` command to replace hashes in opam output [#XXX @rjbou]
 
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]

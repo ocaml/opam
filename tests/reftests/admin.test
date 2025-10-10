@@ -589,12 +589,18 @@ else
 fi
 ### sh add-urls.sh arch1 0 dolor
 ### sh add-urls.sh arch2 1 sit
-### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+### openssl md5 arch1.tgz | '.*= ' -> '' >$ ARCH1_MD5
+### openssl sha256 arch1.tgz | '.*= ' -> '' >$ ARCH1_SHA256
+### openssl sha512 arch1.tgz | '.*= ' -> '' >$ ARCH1_SHA512
+### openssl md5 arch2.tgz | '.*= ' -> '' >$ ARCH2_MD5
+### openssl sha256 arch2.tgz | '.*= ' -> '' >$ ARCH2_SHA256
+### openssl sha512 arch2.tgz | '.*= ' -> '' >$ ARCH2_SHA512
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum
 url.src:      file://${BASEDIR}/arch1.tgz
 url.checksum:
-### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | sed-hash $ARCH2_MD5 arch2-md5
 url.src:      file://${BASEDIR}/arch2.tgz
-url.checksum: md5=HASH
+url.checksum: md5=+arch2-md5+
 ### sh check-hash-ca.sh
 root: OPAM
 no hash-cache
@@ -607,12 +613,12 @@ sha256_to_md5: 0
 sha256_to_sha512: 0
 sha512_to_md5: 0
 sha512_to_sha256: 0
-### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | sed-hash $ARCH1_MD5 arch1-md5
 url.src:      file://${BASEDIR}/arch1.tgz
-url.checksum: md5=HASH
-### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.checksum: md5=+arch1-md5+
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | sed-hash $ARCH2_MD5 arch2-md5
 url.src:      file://${BASEDIR}/arch2.tgz
-url.checksum: md5=HASH
+url.checksum: md5=+arch2-md5+
 ### opam admin add-hashes sha256 --packages not-found,dolor,sit.1,sit.2,sed,sed.2
 [WARNING] Not found packages not-found, sit.2 and sed.2. Ignoring them.
 ### sh check-hash-ca.sh
@@ -623,13 +629,13 @@ sha256_to_md5: 0
 sha256_to_sha512: 0
 sha512_to_md5: 0
 sha512_to_sha256: 0
-### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | sed-hash $ARCH1_MD5 arch1-md5 | sed-hash $ARCH1_SHA256 arch1-sha256
 url.src:      file://${BASEDIR}/arch1.tgz
-url.checksum: md5=HASH sha256=HASH
-### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.checksum: md5=+arch1-md5+, sha256=+arch1-sha256+
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | sed-hash $ARCH2_MD5 arch2-md5 | sed-hash $ARCH2_SHA256 arch2-sha256
 url.src:      file://${BASEDIR}/arch2.tgz
-url.checksum: md5=HASH sha256=HASH
-### opam show --just-file ./packages/sed/sed.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.checksum: md5=+arch2-md5+, sha256=+arch2-sha256+
+### opam show --just-file ./packages/sed/sed.1/opam --field url.src,url.checksum
 url.src:
 url.checksum:
 ### rm -r packages/an-old-package
@@ -644,12 +650,12 @@ sha256_to_md5: 0
 sha256_to_sha512: 2
 sha512_to_md5: 0
 sha512_to_sha256: 0
-### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | sed-hash $ARCH1_MD5 arch1-md5 | sed-hash $ARCH1_SHA256 arch1-sha256 | sed-hash $ARCH1_SHA512 arch1-sha512
 url.src:      file://${BASEDIR}/arch1.tgz
-url.checksum: md5=HASH sha256=HASH sha512=HASH
-### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "=[0-9a-f]\+\(,\|$\)" -> =HASH
+url.checksum: md5=+arch1-md5+, sha256=+arch1-sha256+, sha512=+arch1-sha512+
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | sed-hash $ARCH2_MD5 arch2-md5 | sed-hash $ARCH2_SHA256 arch2-sha256 | sed-hash $ARCH2_SHA512 arch2-sha512
 url.src:      file://${BASEDIR}/arch2.tgz
-url.checksum: md5=HASH sha256=HASH sha512=HASH
+url.checksum: md5=+arch2-md5+, sha256=+arch2-sha256+, sha512=+arch2-sha512+
 ### opam lint --check-upstream ./packages/dolor/dolor.1/opam ./packages/sit/sit.1/opam
 ${BASEDIR}/packages/dolor/dolor.1/opam: Passed.
 ${BASEDIR}/packages/sit/sit.1/opam: Passed.
@@ -691,8 +697,8 @@ sed -i.bak "s/xf-md5/$XF_MD5/" packages/with-xf/with-xf.1/opam
 sed -i.bak "s/xf-sha/$XF_SHA256/" packages/with-xf/with-xf.1/opam
 ### sh hash-xf.sh
 ### opam admin update-extrafiles
-### opam-cat packages/with-xf/with-xf.1/opam | "${XF_MD5}" -> "good-md5" | "${XF_SHA256}" -> "good-sha"
-extra-files: [["bad-md5" "md5=good-md5"] ["bad-sha" "sha256=good-sha"] ["good-md5" "md5=good-md5"] ["good-sha" "sha256=good-sha"] ["missing-hash" "md5=good-md5"]]
+### opam-cat packages/with-xf/with-xf.1/opam | sed-hash $XF_MD5 xf-md5 | sed-hash $XF_SHA256 xf-sha256
+extra-files: [["bad-md5" "md5=+xf-md5+"] ["bad-sha" "sha256=+xf-sha256+"] ["good-md5" "md5=+xf-md5+"] ["good-sha" "sha256=+xf-sha256+"] ["missing-hash" "md5=+xf-md5+"]]
 opam-version: "2.0"
 ### <packages/with-xf/with-xf.1/opam>
 opam-version: "2.0"
@@ -704,16 +710,16 @@ extra-files: [
 ]
 ### sh hash-xf.sh
 ### opam admin update-extrafiles --hash sha256
-### opam-cat packages/with-xf/with-xf.1/opam | "${XF_MD5}" -> "good-md5" | "${XF_SHA256}" -> "good-sha"
-extra-files: [["bad-md5" "sha256=good-sha"] ["bad-sha" "sha256=good-sha"] ["good-md5" "sha256=good-sha"] ["good-sha" "sha256=good-sha"] ["missing-hash" "sha256=good-sha"]]
+### opam-cat packages/with-xf/with-xf.1/opam | sed-hash $XF_MD5 xf-md5 | sed-hash $XF_SHA256 xf-sha256
+extra-files: [["bad-md5" "sha256=+xf-sha256+"] ["bad-sha" "sha256=+xf-sha256+"] ["good-md5" "sha256=+xf-sha256+"] ["good-sha" "sha256=+xf-sha256+"] ["missing-hash" "sha256=+xf-sha256+"]]
 opam-version: "2.0"
 ### <packages/with-xf/with-xf.2/opam>
 opam-version: "2.0"
 ### mkdir -p packages/with-xf/with-xf.2/files
 ### cp packages/with-xf/with-xf.1/files/good-md5 packages/with-xf/with-xf.2/files/missing-hash
 ### opam admin update-extrafiles
-### opam-cat packages/with-xf/with-xf.2/opam | "${XF_MD5}" -> "good-md5" | "${XF_SHA256}" -> "good-sha"
-extra-files: ["missing-hash" "md5=good-md5"]
+### opam-cat packages/with-xf/with-xf.2/opam | sed-hash $XF_MD5 xf-md5
+extra-files: ["missing-hash" "md5=+xf-md5+"]
 opam-version: "2.0"
 ### ::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ### :: Cache is tested in admin-cache.test ::

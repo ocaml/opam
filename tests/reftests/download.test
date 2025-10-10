@@ -161,13 +161,13 @@ Clearing cache of downloaded files
 ### :II:1: local
 ### :II:1:a: archive
 ### tar czf arch.tgz REPO/repo
+### openssl md5 arch.tgz | '.*= ' -> '' >$ MD5
 ### <pkg:foo.1>
 opam-version: "2.0"
 ### <mkurl.sh>
 file="REPO/packages/foo/foo.1/opam"
 basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 arch=arch.tgz
-MD5=$(openssl md5 "$arch" | cut -d' ' -f2)
 cat >> "$file" << EOF
 url {
   src:"$arch"
@@ -182,7 +182,7 @@ EOF
 Now run 'opam upgrade' to apply any package updates.
 ### opam clean -c
 Clearing cache of downloaded files
-### opam install foo --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd rsync tar | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/"
+### opam install foo --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd rsync tar | grep -v "state-.*.export" | sed-hash $MD5 arch-md5
 The following actions will be performed:
 === install 1 package
   - install foo 1
@@ -192,8 +192,8 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/download/.opam-switch/sour
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [foo.1: rsync]
 + rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/arch.tgz" "${OPAMTMP}"
-SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5-dir/
-SYSTEM                          copy ${OPAMTMP}/arch.tgz -> ${BASEDIR}/OPAM/download-cache/md5-dir/
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/pre
+SYSTEM                          copy ${OPAMTMP}/arch.tgz -> ${BASEDIR}/OPAM/download-cache/md5/pre/+arch-md5+
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [foo.1: extract]
 + tar "xfz" "${OPAMTMP}/arch.tgz" "-C" "${OPAMTMP}"
@@ -259,7 +259,7 @@ url {
 }
 ### opam clean -c
 Clearing cache of downloaded files
-### opam install baz --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd wget tar | "${OPAMVERSION}" -> "current" | grep -v "state-.*.export" | "md5[/\\].*" -> "md5-dir/" | grep -v "OPAM[/\\]log"
+### opam install baz --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd wget tar | "${OPAMVERSION}" -> "current" | grep -v "state-.*.export"  | grep -v "OPAM[/\\]log"
 The following actions will be performed:
 === install 1 package
   - install baz 1
@@ -270,8 +270,8 @@ SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [baz.1: http]
 + wget "--header=Accept: */*" "-t" "3" "-O" "${OPAMTMP}/v1.0.0.tar.gz.part" "-U" "opam/current" "--" "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
 SYSTEM                          mv ${OPAMTMP}/v1.0.0.tar.gz.part -> ${OPAMTMP}/v1.0.0.tar.gz
-SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5-dir/
-SYSTEM                          copy ${OPAMTMP}/v1.0.0.tar.gz -> ${BASEDIR}/OPAM/download-cache/md5-dir/
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/c9
+SYSTEM                          copy ${OPAMTMP}/v1.0.0.tar.gz -> ${BASEDIR}/OPAM/download-cache/md5/c9/c9c157af4229fbb45d3f59f0d6d75dbe
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [baz.1: extract]
 + tar "xfz" "${OPAMTMP}/v1.0.0.tar.gz" "-C" "${OPAMTMP}"

@@ -64,6 +64,7 @@ output...
     * `| unordered` compares lines without considering their ordering
     * `| sort` sorts output
     * `| sed-cmd command` replaces full path resolved command by `command`
+    * `| sed-hash <HASH|$VAR> [name]` replaces HASH (or hash contained in $VAR) by `+name+` or `+hash+` if unspecified
   * variables from command outputs: `cmd args >$ VAR`
 - additional commands
   * `opam-cat file`: prints a normalised opam file
