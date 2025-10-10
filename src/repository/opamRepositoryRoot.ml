@@ -30,7 +30,7 @@ module Dir = struct
   let copy_except_vcs = OpamFilename.copy_dir_except_vcs
   let is_symlink = OpamFilename.is_symlink_dir
   let patch = OpamFilename.patch
-  let make = OpamFilename.mkdir
+  let make_empty = OpamFilename.mkdir
   let dirs = OpamFilename.dirs
   let is_empty = OpamFilename.dir_is_empty
   let dirname = OpamFilename.dirname_dir
@@ -59,8 +59,8 @@ let remove = function
 let is_empty = function
   | Dir dir -> Dir.is_empty dir
 
-let make = function
-  | Dir dir -> Dir.make dir
+let make_empty = function
+  | Dir dir -> Dir.make_empty dir
 
 let dirname = function
   | Dir dir -> OpamFilename.dirname_dir (Dir.to_dir dir)

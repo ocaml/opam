@@ -43,7 +43,7 @@ module B = struct
   let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
     log "pull-repo-update";
     let quarantine = OpamRepositoryRoot.quarantine repo_root in
-    OpamRepositoryRoot.make quarantine;
+    OpamRepositoryRoot.make_empty quarantine;
     let finalise () = OpamRepositoryRoot.remove quarantine in
     OpamProcess.Job.catch (fun e ->
         finalise ();

@@ -35,7 +35,7 @@ module Dir : sig
   val move : src:t -> dst:t -> unit
   val copy : src:t -> dst:t -> unit
   val copy_except_vcs : src:t -> dst:t -> unit
-  val make : t -> unit
+  val make_empty : t -> unit
   val dirs : t -> OpamFilename.Dir.t list
   val is_empty : t -> bool option
   val dirname : t -> OpamFilename.Dir.t
@@ -62,8 +62,7 @@ val quarantine : t -> t
 
 val remove : t -> unit
 val is_empty : t -> bool option
-(* TODO ORR doc *)
-val make : t -> unit
+val make_empty : t -> unit
 val dirname : t -> OpamFilename.Dir.t
 val basename : t -> OpamFilename.Base.t
 val to_string : t -> string

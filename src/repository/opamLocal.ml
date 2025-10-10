@@ -167,7 +167,7 @@ module B = struct
            if OpamRepositoryRoot.Dir.exists repo_root then
              OpamRepositoryRoot.Dir.copy_except_vcs ~src:repo_root ~dst:quarantine
            else
-             OpamRepositoryRoot.Dir.make quarantine;
+             OpamRepositoryRoot.Dir.make_empty quarantine;
            pull_dir_quiet (OpamRepositoryRoot.Dir.to_dir quarantine) url) @@+ function
       | Not_available (_, msg) ->
         finalise ();
