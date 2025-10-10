@@ -30,6 +30,7 @@ users)
 ## Install
   * More fine grained error message in case of bad hash or missing extra-files error (and remove raw fatal error) [#6696 @rjbou]
   * Do not ignore extra-files whose name is invalid and fail early in that case [#6679 @rjbou @kit-ty-kate]
+  * BUG: Fix `opam install pkg --depext-only` exit with code 0 instead of 20 (not found) [#6516 @rjbou - fix #6488]
 
 ## Build (package)
 
@@ -162,6 +163,7 @@ users)
   * Complete `action-disk.test` with the behaviour of `extra-files` [#6679 @rjbou]
   * Complete `action-disk.test` with the behaviour of `extra-source` [#6679 @rjbou]
   * Add a test showing the behaviour of opam when faced with outdated git submodule in its local cache [#6153 @kit-ty-kate]
+  * Add reftest for `--depext-only` option [#6516 @rjbou]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
