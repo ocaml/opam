@@ -2506,22 +2506,20 @@ let repository cli =
       let rt0 = rt in
       let backup =
         let tar = OpamRepositoryPath.tar gt.root name in
-        if OpamFilename.exists tar then
-          (let target = OpamFilename.create tmp_dir (OpamFilename.basename tar) in
-           OpamFilename.copy ~src:tar ~dst:target;
-           fun () -> OpamFilename.copy ~src:target ~dst:tar)
+        if OpamRepositoryRoot.Tar.exists tar then
+          (let target = OpamRepositoryRoot.Tar.backup ~tmp_dir tar in
+           OpamRepositoryRoot.Tar.copy ~src:tar ~dst:target;
+           fun () -> OpamRepositoryRoot.Tar.copy ~src:target ~dst:tar)
         else
           (let dir = OpamRepositoryPath.root gt.root name in
-           if not (OpamFilename.exists_dir dir) then
+           if not (OpamRepositoryRoot.Dir.exists dir) then
              OpamConsole.error_and_exit `Internal_error
                "Repository not found, consider running 'opam update %s' \
                 to retrieve a consistent state."
                (OpamRepositoryName.to_string name);
-           let target =
-             OpamFilename.(Op.(tmp_dir / Base.to_string (basename_dir dir)))
-           in
-           OpamFilename.copy_dir ~src:dir ~dst:target;
-           fun () -> OpamFilename.copy_dir ~src:target ~dst:dir)
+           let target = OpamRepositoryRoot.Dir.backup ~tmp_dir dir in
+           OpamRepositoryRoot.Dir.copy ~src:dir ~dst:target;
+           fun () -> OpamRepositoryRoot.Dir.copy ~src:target ~dst:dir)
       in
       let rt = OpamRepositoryCommand.set_url rt name url trust_anchors in
       let failed, rt =
@@ -3963,32 +3961,33 @@ let lint cli =
         (OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_none gt @@ fun st ->
          try
-           let nv = match pkg with
-             | name, Some v -> OpamPackage.create name v
-             | name, None -> OpamSwitchState.get_package st name
+           let name, nv = match pkg with
+             | name, Some v -> name, OpamPackage.create name v
+             | name, None -> name, OpamSwitchState.get_package st name
            in
-           let opam = OpamSwitchState.opam st nv in
-           match OpamPinned.orig_opam_file st (OpamPackage.name nv) opam with
-           | None -> raise Not_found
-           | Some file ->
-             let label =
-               match OpamFile.OPAM.metadata_dir opam with
-               | None -> None
-               | Some (None, abs) ->
-                 let filename =
-                   if OpamFilename.starts_with
-                       (OpamPath.Switch.Overlay.dir gt.root st.switch)
-                       (OpamFilename.of_string abs) then
-                     Printf.sprintf "<pinned>/%s" (OpamPackage.to_string nv)
-                   else abs
+           if OpamSwitchState.is_pinned st name then
+             match OpamSwitchState.overlay_opam_file st name with
+             | Some file ->
+               let label =
+                 Printf.sprintf "<pinned>/%s" (OpamPackage.to_string nv)
+               in
+               [`pkg (file, label)]
+             | None -> raise Not_found
+           else
+             let opam = OpamSwitchState.opam st nv in
+             match OpamPinned.orig_opam_file st (OpamPackage.name nv) opam with
+             | None -> raise Not_found
+             | Some file ->
+               let label =
+                 let reponame =
+                   match OpamFile.OPAM.metadata_dir opam with
+                   | None | Some (None, _) -> "repo"
+                   | Some (Some repo, _) -> OpamRepositoryName.to_string repo
                  in
-                 Some filename
-               | Some (Some repo, _rel) ->
-                 Some (Printf.sprintf "<%s>/%s"
-                         (OpamRepositoryName.to_string repo)
-                         (OpamPackage.to_string nv))
-             in
-             [`pkg (file, label)]
+                 Printf.sprintf "<%s>/%s"
+                   reponame (OpamPackage.to_string nv)
+               in
+               [`pkg (file, label)]
          with Not_found ->
            OpamConsole.error_and_exit `Not_found "No opam file found for %s%s"
              (OpamPackage.Name.to_string (fst pkg))
@@ -4021,7 +4020,7 @@ let lint cli =
               | `pkg (file, label) ->
                 OpamFileTools.lint_file ~check_upstream ~handle_dirname:false
                   file,
-                label
+                Some label
               | `stdin ->
                 OpamFileTools.lint_channel ~check_upstream ~handle_dirname:false
                   stdin_f stdin,
@@ -4042,11 +4041,11 @@ let lint cli =
             in
             let warnings =
               if warnings_sel = [] then warnings else
-              List.map (fun ((n, _, s) as warn) ->
-                  match OpamStd.IntMap.find_opt n warnings_sel_map with
-                  | Some `EnableError -> (n, `Error, s)
-                  | Some (`Disable | `Enable) | None -> warn)
-                warnings
+                List.map (fun ((n, _, s) as warn) ->
+                    match OpamStd.IntMap.find_opt n warnings_sel_map with
+                    | Some `EnableError -> (n, `Error, s)
+                    | Some (`Disable | `Enable) | None -> warn)
+                  warnings
             in
             if short then
               (if warnings <> [] then
@@ -4338,8 +4337,9 @@ let clean cli =
        OpamRepositoryName.Set.iter (fun r ->
            OpamConsole.msg "Removing repository %s\n"
              (OpamRepositoryName.to_string r);
-           rmdir (OpamRepositoryPath.root root r);
-           rm (OpamRepositoryPath.tar root r))
+           rmdir
+             (OpamRepositoryRoot.Dir.to_dir (OpamRepositoryPath.root root r));
+           rm (OpamRepositoryRoot.Tar.to_file (OpamRepositoryPath.tar root r)))
          unused_repos;
        let repos_config =
          OpamRepositoryName.Map.filter

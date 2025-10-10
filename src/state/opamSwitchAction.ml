@@ -146,17 +146,23 @@ let install_metadata st nv =
   OpamFile.OPAM.write
     (OpamPath.Switch.installed_opam st.switch_global.root st.switch nv)
     opam;
-  List.iter (fun (f, rel_path, _hash) ->
-      let dst =
-        OpamFilename.create
-          (OpamPath.Switch.installed_opam_files_dir
-             st.switch_global.root st.switch nv)
-          rel_path
-      in
-      OpamFilename.mkdir (OpamFilename.dirname dst);
-      OpamFilename.copy ~src:f ~dst)
+  List.iter (fun (rel_path, content, _hash) ->
+      match content with
+      | None ->
+        log "%s: error installing extra files, empty content for %s"
+          (OpamPackage.to_string nv)
+          (OpamFilename.Base.to_string rel_path)
+      | Some content ->
+        let dst =
+          OpamFilename.create
+            (OpamPath.Switch.installed_opam_files_dir
+               st.switch_global.root st.switch nv)
+            rel_path
+        in
+        OpamFilename.mkdir (OpamFilename.dirname dst);
+        OpamFilename.write dst (Lazy.force content))
     (OpamFile.OPAM.get_extra_files
-       ~repos_roots:(OpamRepositoryState.get_root st.switch_repos)
+       ~get_repo_files:(OpamRepositoryState.get_repo_files st.switch_repos)
        opam)
 
 let remove_metadata st packages =

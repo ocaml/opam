@@ -254,6 +254,7 @@ let string_of_channel ic =
   Buffer.contents b
 
 let read file =
+  log ~level:5 "read %s" file;
   let ic =
     try open_in_bin file
     with Sys_error _ -> raise (File_not_found file) in
@@ -264,6 +265,7 @@ let read file =
 
 let write file contents =
   mkdir (Filename.dirname file);
+  log ~level:5 "write %s" file;
   let oc =
     try open_out_bin file
     with Sys_error _ -> raise (File_not_found file)

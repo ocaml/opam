@@ -152,7 +152,6 @@ val opam_init:
   ?validation_hook:OpamTypes.arg list option ->
   ?retries:int ->
   ?force_checksums:bool option ->
-  ?repo_tarring:bool ->
   ?auto_answer:(string * OpamStd.Config.answer) list ->
   ?debug_level:int ->
   ?debug_sections:OpamStd.Config.sections ->
