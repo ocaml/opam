@@ -76,24 +76,22 @@ module Cache = struct
 
 end
 
-let get_root_raw root repos_tmp name : OpamRepositoryRoot.t =
-    (* TODO 6680 fixing only compil!!! *)
+let get_root_raw root repos_tmp name =
   match Hashtbl.find repos_tmp name with
   | lazy repo_root -> OpamRepositoryRoot.Dir repo_root
   | exception Not_found ->
     OpamRepositoryRoot.Dir (OpamRepositoryPath.root root name)
 
-let get_root rt name  : OpamRepositoryRoot.t =
+let get_root rt name =
   get_root_raw rt.repos_global.root rt.repos_tmp name
 
 let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
 let get_repo_files rt name dir =
-  (* TODO 6680 fixing only compil!!! *)
   match get_root rt name with
   | OpamRepositoryRoot.Dir repo_root ->
-    let dir = OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root / dir) in
+    let dir = OpamRepositoryRoot.Dir.Op.(repo_root / dir) in
     let files = OpamFilename.rec_files dir in
     List.map (fun file ->
         OpamFilename.Base.of_string
@@ -147,45 +145,41 @@ let load_opams_from_diff repo diffs rt =
   let existing_opams =
     OpamRepositoryName.Map.find repo.repo_name rt.repo_opams
   in
-  let repo_root = get_repo_root rt repo in
-  (* TODO 6680 fixing only compil!!! *)
-  match repo_root with
-  | OpamRepositoryRoot.Dir repo_root ->
-  let repo_root = OpamRepositoryRoot.Dir.to_dir repo_root in
-  let process_file (opams, processed_dirs) file ~is_removal =
-    let pkg_dir =
-      let file = OpamFilename.raw file in
-      let dirname = OpamFilename.dirname file in
-      let basename = OpamFilename.basename_dir dirname in
-      let full_path =
-        Filename.concat
-          (OpamFilename.Dir.to_string repo_root)
-          (OpamFilename.Dir.to_string dirname)
-      in
-      if OpamFilename.Base.to_string basename = "files" then
-        OpamFilename.Dir.of_string (Filename.dirname full_path)
-      else
-        OpamFilename.Dir.of_string full_path
-    in
-    if OpamFilename.Dir.Set.mem pkg_dir processed_dirs then
-      opams, processed_dirs
-    else
-      let processed_dirs = OpamFilename.Dir.Set.add pkg_dir processed_dirs in
-      (* TODO 6680 fixing only compil!!! *)
-      let repo_root = OpamRepositoryRoot.Dir.of_dir repo_root in
-      match read_package_opam ~repo_name:repo.repo_name ~repo_root pkg_dir with
-      | Some (nv, opam) -> OpamPackage.Map.add nv opam opams, processed_dirs
-      | None ->
-        if is_removal then
-          match OpamPackage.of_dirname pkg_dir with
-          | None ->
-            log "ERR: directory name not a valid package: ignored %s"
-              (OpamFilename.Dir.to_string pkg_dir);
-            opams, processed_dirs
-          | Some nv ->
-            OpamPackage.Map.remove nv opams, processed_dirs
-        else
+  let process_file =
+    match get_repo_root rt repo with
+    | OpamRepositoryRoot.Dir repo_root ->
+      fun (opams, processed_dirs) file ~is_removal ->
+        let pkg_dir =
+          let file = OpamFilename.raw file in
+          let dirname = OpamFilename.dirname file in
+          let basename = OpamFilename.basename_dir dirname in
+          let full_path =
+            Filename.concat
+              (OpamRepositoryRoot.Dir.to_string repo_root)
+              (OpamFilename.Dir.to_string dirname)
+          in
+          if OpamFilename.Base.to_string basename = "files" then
+            OpamFilename.Dir.of_string (Filename.dirname full_path)
+          else
+            OpamFilename.Dir.of_string full_path
+        in
+        if OpamFilename.Dir.Set.mem pkg_dir processed_dirs then
           opams, processed_dirs
+        else
+          let processed_dirs = OpamFilename.Dir.Set.add pkg_dir processed_dirs in
+          match read_package_opam ~repo_name:repo.repo_name ~repo_root pkg_dir with
+          | Some (nv, opam) -> OpamPackage.Map.add nv opam opams, processed_dirs
+          | None ->
+            if is_removal then
+              match OpamPackage.of_dirname pkg_dir with
+              | None ->
+                log "ERR: directory name not a valid package: ignored %s"
+                  (OpamFilename.Dir.to_string pkg_dir);
+                opams, processed_dirs
+              | Some nv ->
+                OpamPackage.Map.remove nv opams, processed_dirs
+            else
+              opams, processed_dirs
   in
   let remove_file file acc = process_file acc file ~is_removal:true in
   let add_file file acc = process_file acc file ~is_removal:false in
