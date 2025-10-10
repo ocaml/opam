@@ -18,7 +18,8 @@ module Dir = struct
   let quarantine repo_root = OpamFilename.raw_dir (to_string repo_root ^ ".new")
   let with_tmp = OpamFilename.with_tmp_dir
   let backup ~tmp_dir repo_root =
-    OpamFilename.Op.(tmp_dir / OpamFilename.Base.to_string (OpamFilename.basename_dir repo_root))
+    let open OpamFilename.Op in
+    tmp_dir / OpamFilename.Base.to_string (OpamFilename.basename_dir repo_root)
 
   let cwd = OpamFilename.cwd
   let in_dir = OpamFilename.in_dir

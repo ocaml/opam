@@ -160,9 +160,7 @@ let do_upgrade repo_root =
   in
 
   let compilers =
-    let compilers_dir =
-      OpamRepositoryRoot.Dir.Op.(repo_root / "compilers")
-    in
+    let compilers_dir = OpamRepositoryRoot.Dir.Op.(repo_root / "compilers") in
     if OpamFilename.exists_dir compilers_dir then (
       List.fold_left (fun map f ->
           if OpamFilename.check_suffix f ".comp" then
@@ -456,14 +454,12 @@ let do_upgrade_mirror repo_root base_url =
   let copy_dir d =
     let src = repo_root / d in
     if OpamFilename.exists_dir src then
-      OpamFilename.copy_dir
-        ~src ~dst:(tmp_mirror_dir / d)
+      OpamFilename.copy_dir ~src ~dst:(tmp_mirror_dir / d)
   in
   let copy_file f =
     let src = repo_root // f in
     if OpamFilename.exists src then
-      OpamFilename.copy
-        ~src ~dst:(tmp_mirror_dir // f)
+      OpamFilename.copy ~src ~dst:(tmp_mirror_dir // f)
   in
   copy_dir "packages";
   copy_dir "compilers";

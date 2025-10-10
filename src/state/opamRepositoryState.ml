@@ -282,7 +282,8 @@ let load lock_kind gt =
             (* We rely on this path pattern to clean the repo.
                cf. [clean_repo_tmp] *)
             OpamFilename.extract_in tar tmp_root;
-            OpamRepositoryRoot.Dir.of_dir (OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name))
+            OpamRepositoryRoot.Dir.of_dir
+              (OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name))
           with Failure s ->
             OpamFilename.remove tar;
             OpamConsole.error_and_exit `Aborted

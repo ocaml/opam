@@ -11,7 +11,8 @@
 
 open OpamFilename.Op
 
-let root root name = OpamRepositoryRoot.Dir.of_dir (root / "repo" / OpamRepositoryName.to_string name)
+let root root name =
+  OpamRepositoryRoot.Dir.of_dir (root / "repo" / OpamRepositoryName.to_string name)
 
 let tar root name = root / "repo" // (OpamRepositoryName.to_string name ^ ".tar.gz")
 

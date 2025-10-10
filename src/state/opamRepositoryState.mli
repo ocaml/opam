@@ -49,7 +49,9 @@ val build_index:
     ROOT/repos/) *)
 val get_repo: 'a repos_state -> repository_name -> repository
 
-val load_opams_from_dir: repository_name -> OpamRepositoryRoot.Dir.t -> OpamFile.OPAM.t OpamPackage.Map.t
+val load_opams_from_dir:
+  repository_name -> OpamRepositoryRoot.Dir.t ->
+  OpamFile.OPAM.t OpamPackage.Map.t
 
 (** [load_opams_from_diff repo diffs rt] incrementally
     updates package definitions by processing only changed files.
