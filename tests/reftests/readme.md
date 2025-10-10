@@ -64,6 +64,7 @@ output...
     * `| unordered` compares lines without considering their ordering
     * `| sort` sorts output
     * `| sed-cmd command` replaces full path resolved command by `command`
+    * `| sed-hash <HASH|$VAR> [name]` replaces HASH (or hash contained in $VAR) by `+name+` or `+hash+` if unspecified
   * variables from command outputs: `cmd args >$ VAR`
 - additional commands
   * `opam-cat file`: prints a normalised opam file
@@ -75,6 +76,7 @@ output...
     these package names or packages.
   * `opam-cache repo [nvs]`: print the content of repository cache. If
     `[nvs]` is specified, filter over these package names or packages.
+  * `unset FOO` unset variables from environment
 
 - if you need more shell power, create a script using <FILENAME> then run it.
   Or just use `sh -c`... but beware for compatibility.
