@@ -1338,6 +1338,7 @@ Processing  1/1: [main-gpin.dev: git]
 + git "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
++ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 SYSTEM                          rmdir ${OPAMTMP}
 [main-gpin.dev] synchronised (no changes)
 FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/reinstall
@@ -1355,6 +1356,7 @@ Processing  1/3: [main-gpin.dev: git]
 + git "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
++ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 SYSTEM                          rmdir ${OPAMTMP}
 -> retrieved main-gpin.dev  (no changes)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/build/main-gpin.dev
@@ -1420,6 +1422,7 @@ Processing  1/1: [main-gpin.dev: git]
 + git "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
++ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 SYSTEM                          rmdir ${OPAMTMP}
 [main-gpin.dev] synchronised (no changes)
 FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/reinstall
@@ -1437,6 +1440,7 @@ Processing  1/4: [main-gpin.dev: git]
 + git "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
++ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 SYSTEM                          rmdir ${OPAMTMP}
 -> retrieved main-gpin.dev  (no changes)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/build/main-gpin.dev
@@ -1527,6 +1531,7 @@ Processing  1/2: [main-gpin.dev: git]
 + git "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
++ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 SYSTEM                          rmdir ${OPAMTMP}
 -> retrieved main-gpin.dev  (no changes)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/remove/main-gpin.dev
@@ -1728,6 +1733,7 @@ Processing  1/1: [main-gpin.dev: git]
 + git "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
++ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 SYSTEM                          rmdir ${OPAMTMP}
 [main-gpin.dev] synchronised (no changes)
 FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/reinstall
@@ -1745,6 +1751,7 @@ Processing  1/4: [main-gpin.dev: git]
 + git "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 + git "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
++ git "submodule" "status" "--recursive" (CWD=${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin)
 SYSTEM                          rmdir ${OPAMTMP}
 -> retrieved main-gpin.dev  (no changes)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/build/main-gpin.dev
