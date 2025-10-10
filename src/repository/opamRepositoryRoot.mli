@@ -28,6 +28,7 @@ module Dir : sig
   val with_tmp : (t -> 'a) -> 'a
   val backup : tmp_dir:OpamFilename.Dir.t -> t -> t
 
+  val cwd : unit -> t
   val in_dir : t -> (unit -> 'a) -> 'a
   val exists : t -> bool
   val remove : t -> unit

@@ -20,6 +20,7 @@ module Dir = struct
   let backup ~tmp_dir repo_root =
     OpamFilename.Op.(tmp_dir / OpamFilename.Base.to_string (OpamFilename.basename_dir repo_root))
 
+  let cwd = OpamFilename.cwd
   let in_dir = OpamFilename.in_dir
   let exists = OpamFilename.exists_dir
   let remove = OpamFilename.rmdir

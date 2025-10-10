@@ -16,11 +16,8 @@ open Cmdliner
 
 type command = unit Cmdliner.Term.t * Cmdliner.Cmd.info
 
-(* TODO ORR  maybe better name ? *)
-let cwd_repo_root () = OpamRepositoryRoot.Dir.of_dir (OpamFilename.cwd ())
-
 let checked_repo_root () =
-  let repo_root =  cwd_repo_root () in
+  let repo_root = OpamRepositoryRoot.Dir.cwd () in
   if not (OpamFilename.exists_dir (OpamRepositoryPath.packages_dir repo_root))
   then
     OpamConsole.error_and_exit `Bad_arguments
@@ -777,7 +774,7 @@ let upgrade_command cli =
     if clear_cache then OpamAdminRepoUpgrade.clear_cache ()
     else match create_mirror with
       | None ->
-        OpamAdminRepoUpgrade.do_upgrade (cwd_repo_root ());
+        OpamAdminRepoUpgrade.do_upgrade (OpamRepositoryRoot.Dir.cwd ());
         if OpamFilename.exists (OpamFilename.of_string "index.tar.gz") ||
            OpamFilename.exists (OpamFilename.of_string "urls.txt")
         then
@@ -786,7 +783,7 @@ let upgrade_command cli =
              \n\
             \  opam admin index"
       | Some m ->
-        OpamAdminRepoUpgrade.do_upgrade_mirror (cwd_repo_root ()) m
+        OpamAdminRepoUpgrade.do_upgrade_mirror (OpamRepositoryRoot.Dir.cwd ()) m
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $
@@ -831,7 +828,7 @@ let lint_command cli =
   in
   let cmd global_options short list incl excl ign warn_error () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = cwd_repo_root () in
+    let repo_root = OpamRepositoryRoot.Dir.cwd () in
     if not (OpamFilename.exists_dir
               OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root /
                                "packages"))
@@ -1174,7 +1171,7 @@ let list_command cli =
               List.map (fun x -> Atom x) package_selection);
       ]
     in
-    let st = get_virtual_switch_state (cwd_repo_root ()) env in
+    let st = get_virtual_switch_state (OpamRepositoryRoot.Dir.cwd ()) env in
     if not format.OpamListCommand.short && filter <> OpamFormula.Empty then
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
@@ -1215,7 +1212,7 @@ let filter_command cli =
       global_options package_selection disjunction state_selection env
       remove dryrun packages () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = cwd_repo_root () in
+    let repo_root = OpamRepositoryRoot.Dir.cwd () in
     let pattern_selector = OpamListCommand.pattern_selector packages in
     let join =
       if disjunction then OpamFormula.ors else OpamFormula.ands
