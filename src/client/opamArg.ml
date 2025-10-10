@@ -221,16 +221,16 @@ let environment_variables =
        'download-command' value from the main config file.";
       "NOCHECKSUMS", cli_original, (fun v -> NOCHECKSUMS (env_bool v)),
       "enables option --no-checksums when available.";
-      "REQUIRECHECKSUMS", cli_original,
-      (fun v -> REQUIRECHECKSUMS (env_bool v)),
-      "Enables option `--require-checksums' when available \
-       (e.g. for `opam install').";
-      "REPOSITORYTARRING", cli_between cli2_2 cli2_5,
+      "REPOSITORYTARRING", cli_from cli2_2,
       (fun b -> REPOSITORYTARRING (env_bool b)),
       "internally store the repositories as tar.gz files. This can be much \
        faster on filesystems that don't cope well with scanning large trees \
        but have good caching in /tmp. However this is slower in the \
        general case.";
+      "REQUIRECHECKSUMS", cli_original,
+      (fun v -> REQUIRECHECKSUMS (env_bool v)),
+      "Enables option `--require-checksums' when available \
+       (e.g. for `opam install').";
       "RETRIES", cli_original, (fun v -> RETRIES (env_int v)),
       "sets the number of tries before failing downloads.";
       "VALIDATIONHOOK", cli_original, (fun v -> VALIDATIONHOOK (env_string v)),
