@@ -16,7 +16,6 @@ install: [ "a-install-command" ]
 remove: [ "a-remove-command" ]
 ### tar czf archive.tgz printer.sh
 ### openssl md5 archive.tgz | '.*= ' -> '' >$ MD5
-### sh -c "echo '$MD5' | cut -c 1-2" >$ PRE_MD5
 ### <add-url.sh>
 basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 cat << EOF >> REPO/packages/i-am-a-repo-pkg/i-am-a-repo-pkg.1/opam
@@ -57,7 +56,7 @@ Set to '[ "bash" "%{hooks}%/printer.sh" "...post-installing..." "exe:%{exe}%" ]'
 ### opam option --global 'post-remove-commands=[ "bash" "%{hooks}%/printer.sh" "...post-removing..." "exe:%{exe}%" ]'
 Set to '[ "bash" "%{hooks}%/printer.sh" "...post-removing..." "exe:%{exe}%" ]' the field post-remove-commands in global configuration
 ### opam switch create global-wrappers --empty
-### opam install i-am-a-repo-pkg | $MD5 -> +archive-hash+ | sed-cmd bash tar rsync
+### opam install i-am-a-repo-pkg | sed-hash $MD5 archive-hash | sed-cmd bash tar rsync
 The following actions will be performed:
 === install 1 package
   - install i-am-a-repo-pkg 1
@@ -99,7 +98,7 @@ Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
 - exe:
 -> installed i-am-a-repo-pkg.1
 Done.
-### opam remove i-am-a-repo-pkg | $MD5 -> +archive-hash+ | '/md5/$PRE_MD5/' -> '/md5/pre/' | sed-cmd bash tar
+### opam remove i-am-a-repo-pkg | sed-hash $MD5 archive-hash | sed-cmd bash tar
 The following actions will be performed:
 === remove 1 package
   - remove i-am-a-repo-pkg 1
@@ -146,7 +145,7 @@ Set to '[ "bash" "%{hooks}%/printer.sh" "...post-building..." "exe:%{exe}%" ]' t
 Set to '[ "bash" "%{hooks}%/printer.sh" "...post-installing..." "exe:%{exe}%" ]' the field post-install-commands in switch switch-wrappers
 ### opam option --switch switch-wrappers 'post-remove-commands=[ "bash" "%{hooks}%/printer.sh" "...post-removing..." "exe:%{exe}%" ]'
 Set to '[ "bash" "%{hooks}%/printer.sh" "...post-removing..." "exe:%{exe}%" ]' the field post-remove-commands in switch switch-wrappers
-### opam install i-am-a-repo-pkg | $MD5 -> +archive-hash+ | '/md5/$PRE_MD5/' -> '/md5/pre/' | sed-cmd bash tar
+### opam install i-am-a-repo-pkg | sed-hash $MD5 archive-hash | sed-cmd bash tar
 The following actions will be performed:
 === install 1 package
   - install i-am-a-repo-pkg 1
@@ -184,7 +183,7 @@ Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
 - exe:
 -> installed i-am-a-repo-pkg.1
 Done.
-### opam remove i-am-a-repo-pkg | $MD5 -> +archive-hash+ | '/md5/$PRE_MD5/' -> '/md5/pre/' | sed-cmd bash tar
+### opam remove i-am-a-repo-pkg | sed-hash $MD5 archive-hash | sed-cmd bash tar
 The following actions will be performed:
 === remove 1 package
   - remove i-am-a-repo-pkg 1
@@ -237,7 +236,7 @@ EOF
 Processing: [default: loading data]
 Now run 'opam upgrade' to apply any package updates.
 ### opam switch create pkg-from-repo --empty
-### opam install i-am-a-repo-pkg | $MD5 -> +archive-hash+ | '/md5/$PRE_MD5/' -> '/md5/pre/' | sed-cmd bash tar
+### opam install i-am-a-repo-pkg | sed-hash $MD5 archive-hash | sed-cmd bash tar
 The following actions will be performed:
 === install 1 package
   - install i-am-a-repo-pkg 1
@@ -261,7 +260,7 @@ Done.
 <><> i-am-a-repo-pkg.1 installed successfully <><><><><><><><><><><><><><><><><>
 => ...A last message...
    exe:
-### opam remove i-am-a-repo-pkg | $MD5 -> +archive-hash+ | '/md5/$PRE_MD5/' -> '/md5/pre/' | sed-cmd bash tar
+### opam remove i-am-a-repo-pkg | sed-hash $MD5 archive-hash | sed-cmd bash tar
 The following actions will be performed:
 === remove 1 package
   - remove i-am-a-repo-pkg 1

@@ -25,7 +25,6 @@ remove: [ "touch" "removal-file" ]
 I'm a file
 ### tar czf archive.tgz content
 ### openssl md5 archive.tgz | '.*= ' -> '' >$ MD5
-### sh -c "echo '$MD5' | cut -c 1-2" >$ PRE_MD5
 ### <add-url.sh>
 for nv in "$@"; do
   arch=archive.tgz
@@ -132,7 +131,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam install main-repo.1 | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "md5[^[:alnum:]].?${PRE_MD5}" -> md5/pre
+### opam install main-repo.1 | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | sed-hash $MD5 md5
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -163,7 +162,7 @@ Processing  1/3: [main-repo.1: rsync]
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/pre
-SYSTEM                          copy ${OPAMTMP}/archive.tgz -> ${BASEDIR}/OPAM/download-cache/md5/pre/hash
+SYSTEM                          copy ${OPAMTMP}/archive.tgz -> ${BASEDIR}/OPAM/download-cache/md5/pre/+md5+
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/3: [main-repo.1: extract]
 + tar "xfz" "${OPAMTMP}/archive.tgz" "-C" "${OPAMTMP}"
@@ -205,7 +204,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall main-repo.1 | sed-cmd tar cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam reinstall main-repo.1 | sed-cmd tar cp touch mkdir | sed-hash $MD5 md5 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -232,7 +231,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/4: [main-repo.1: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
 SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
 SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content
 SYSTEM                          rmdir ${OPAMTMP}
@@ -290,7 +289,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam upgrade main-repo | sed-cmd tar touch mkdir cp | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam upgrade main-repo | sed-cmd tar touch mkdir cp | sed-hash $MD5 md5 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -316,7 +315,7 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-sw
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/4: [main-repo.1, main-repo.2: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
 SYSTEM                          copydir ${OPAMTMP} -> ${OPAMTMP}
 SYSTEM                          copy ${OPAMTMP}/content -> ${OPAMTMP}/content
 SYSTEM                          rmdir ${OPAMTMP}
@@ -387,7 +386,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam remove main-repo | sed-cmd tar touch | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam remove main-repo | sed-cmd tar touch | sed-hash $MD5 md5 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -416,7 +415,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/2: [main-repo.2: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
 SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
 SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content
 SYSTEM                          rmdir ${OPAMTMP}
@@ -1855,7 +1854,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam install main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash
+### opam install main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | sed-hash $MD5 md5
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1880,7 +1879,7 @@ The following actions will be performed:
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/3: [main-repo.1: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources
 SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
@@ -1917,7 +1916,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam reinstall main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam reinstall main-repo | grep -v '^- ./$' | sed-cmd tar rsync cp touch mkdir | sed-hash $MD5 md5 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1944,7 +1943,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opa
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/4: [main-repo.1: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
 SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content
 SYSTEM                          rmdir ${OPAMTMP}
@@ -2002,7 +2001,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.o
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam remove main-repo | grep -v '^- ./$' | sed-cmd tar rsync touch | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | unordered
+### opam remove main-repo | grep -v '^- ./$' | sed-cmd tar rsync touch | sed-hash $MD5 md5 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -2029,7 +2028,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opa
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/2: [main-repo.1: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
 SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content
 SYSTEM                          rmdir ${OPAMTMP}
@@ -2104,7 +2103,7 @@ Usage: opam switch [OPTION]… [COMMAND] [ARG]…
 Try 'opam switch --help' or 'opam --help' for more information.
 # Return code 2 #
 ### :III:2: with package
-### opam switch create package-switch --package main-repo | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | "${PRE_MD5}[^[:alnum:]].?${MD5}" -> pre/hash | "md5[^[:alnum:]].?${PRE_MD5}" -> md5/pre
+### opam switch create package-switch --package main-repo | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | sed-hash $MD5 md5
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
@@ -2153,7 +2152,7 @@ FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/package-switch/.opam
 SYSTEM                          rmdir ${BASEDIR}/OPAM/package-switch/.opam-switch/sources/main-repo.2
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/3: [main-repo.2: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/hash" "-C" "${OPAMTMP}"
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/.opam-switch/sources
 SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/package-switch/.opam-switch/sources/main-repo.2
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/.opam-switch/sources/main-repo.2

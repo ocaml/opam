@@ -59,7 +59,6 @@ etc: [
 ]
 ### tar czf archive.tgz printer.sh i-am-a-repo-pkg.install
 ### openssl md5 archive.tgz | '.*= ' -> '' >$ MD5
-### sh -c "echo '$MD5' | cut -c 1-2" >$ PRE_MD5
 ### <add-url.sh>
 basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 cat << EOF >> REPO/packages/i-am-a-repo-pkg/i-am-a-repo-pkg.1/opam
@@ -107,7 +106,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed dep.1
 Done.
-### opam install i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | $MD5 -> +archive-hash+ | sed-cmd bash tar rsync | etc -> etc
+### opam install i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | sed-hash $MD5 archive-hash | sed-cmd bash tar rsync | etc -> etc
 The following actions will be performed:
 === install 1 package
   - install i-am-a-repo-pkg 1
@@ -287,7 +286,7 @@ Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
 - installed-files:etc etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer
 -> installed i-am-a-repo-pkg.1
 Done.
-### opam remove i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | '${PRE_MD5}[^[:alnum:]].?${MD5}' -> pre/+archive-hash+ | $MD5 -> +archive-hash+ | sed-cmd bash tar
+### opam remove i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | sed-hash $MD5 archive-hash | sed-cmd bash tar
 The following actions will be performed:
 === remove 1 package
   - remove i-am-a-repo-pkg 1
@@ -411,7 +410,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed dep.1
 Done.
-### opam install i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | '${PRE_MD5}[^[:alnum:]].?${MD5}' -> pre/+archive-hash+ | $MD5 -> +archive-hash+ | sed-cmd bash tar | etc -> etc
+### opam install i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | sed-hash $MD5 archive-hash | sed-cmd bash tar | etc -> etc
 The following actions will be performed:
 === install 1 package
   - install i-am-a-repo-pkg 1
@@ -588,7 +587,7 @@ Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
 - installed-files:etc etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer
 -> installed i-am-a-repo-pkg.1
 Done.
-### opam remove i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | '${PRE_MD5}[^[:alnum:]].?${MD5}' -> pre/+archive-hash+ | $MD5 -> +archive-hash+ | sed-cmd bash tar
+### opam remove i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | sed-hash $MD5 archive-hash | sed-cmd bash tar
 The following actions will be performed:
 === remove 1 package
   - remove i-am-a-repo-pkg 1
@@ -744,7 +743,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed dep.1
 Done.
-### opam install i-am-a-repo-pkg | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | '${PRE_MD5}[^[:alnum:]].?${MD5}' -> pre/+archive-hash+ | $MD5 -> +archive-hash+ | sed-cmd bash tar | etc -> etc
+### opam install i-am-a-repo-pkg | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | sed-hash $MD5 archive-hash | sed-cmd bash tar | etc -> etc
 The following actions will be performed:
 === install 1 package
   - install i-am-a-repo-pkg 1
@@ -783,7 +782,7 @@ Done.
    success:true
    failure:false
    installed-files:
-### opam remove i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | '${PRE_MD5}[^[:alnum:]].?${MD5}' -> pre/+archive-hash+ | $MD5 -> +archive-hash+ | sed-cmd bash tar
+### opam remove i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | sed-hash $MD5 archive-hash | sed-cmd bash tar
 The following actions will be performed:
 === remove 1 package
   - remove i-am-a-repo-pkg 1

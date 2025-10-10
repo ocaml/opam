@@ -575,15 +575,15 @@ Clearing cache of downloaded files
 <default>/multiple-md5.1: Errors.
              error 72: Field 'extra-sources' contains duplicated checksums: "i-am-a-patch have md5: 2 occurences"
 # Return code 1 #
-### opam install multiple-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam install multiple-md5 | sed-hash $PATCH_MD5 patch-md5
 The following actions will be performed:
 === install 1 package
   - install multiple-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] multiple-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Failed to get extra source "i-am-a-patch" of multiple-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -595,15 +595,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam install multiple-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam install multiple-md5 --require-checksums | sed-hash $PATCH_MD5 patch-md5
 The following actions will be performed:
 === install 1 package
   - install multiple-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] multiple-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Failed to get extra source "i-am-a-patch" of multiple-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -615,18 +615,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source multiple-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam source multiple-md5 | sed-hash $PATCH_MD5 patch-md5
 [ERROR] multiple-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f multiple-md5.1/i-am-a-patch
 # Return code 1 #
-### opam source multiple-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam source multiple-md5 --require-checksums | sed-hash $PATCH_MD5 patch-md5
 [ERROR] multiple-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f multiple-md5.1/i-am-a-patch
@@ -638,15 +638,15 @@ Clearing cache of downloaded files
 <default>/bad-md5.1: Passed.
 ### opam lint --package bad-md5 --check-upstream
 <default>/bad-md5.1: Passed.
-### opam install bad-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam install bad-md5 | sed-hash $PATCH_MD5 patch-md5
 The following actions will be performed:
 === install 1 package
   - install bad-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Failed to get extra source "i-am-a-patch" of bad-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -658,15 +658,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam install bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam install bad-md5 --require-checksums
 The following actions will be performed:
 === install 1 package
   - install bad-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=cf8c4c20658f6c3efea4eb2c6b1b34d7
 [ERROR] Failed to get extra source "i-am-a-patch" of bad-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -678,18 +678,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source bad-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam source bad-md5 | sed-hash $PATCH_MD5 patch-md5
 [ERROR] bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f bad-md5.1/i-am-a-patch
 # Return code 1 #
-### opam source bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam source bad-md5 --require-checksums | sed-hash $PATCH_MD5 patch-md5 | sed-hash $PATCH_SHA256 patch-sha256
 [ERROR] bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f bad-md5.1/i-am-a-patch
@@ -714,19 +714,19 @@ Done.
 ### sh check-cache.sh
 MD5: patch, with matching checksum
 SHA256: not found
-### opam install good-md5-bad-sha256 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-md5-bad-sha256 | sed-hash $PATCH_MD5 patch-md5 | sed-hash $PATCH_SHA256 patch-sha256
 The following actions will be performed:
 === install 1 package
   - install good-md5-bad-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - md5=hash (match)
-          - sha256=hash (MISMATCH)
+          - md5=+patch-md5+ (match)
+          - sha256=0000000000000000000000000000000000000000000000000000000000000000 (MISMATCH)
 
 [ERROR] good-md5-bad-sha256.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected sha256=hash
-          got      sha256=hash
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=+patch-sha256+
 [ERROR] Failed to get extra source "i-am-a-patch" of good-md5-bad-sha256.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -764,19 +764,19 @@ Done.
 ### sh check-cache.sh
 MD5: patch, with matching checksum
 SHA256: patch, with matching checksum
-### opam install good-md5-bad-sha256 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-md5-bad-sha256 | sed-hash $PATCH_MD5 patch-md5 | sed-hash $PATCH_SHA256 patch-sha256
 The following actions will be performed:
 === install 1 package
   - install good-md5-bad-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - md5=hash (match)
-          - sha256=hash (MISMATCH)
+          - md5=+patch-md5+ (match)
+          - sha256=0000000000000000000000000000000000000000000000000000000000000000 (MISMATCH)
 
 [ERROR] good-md5-bad-sha256.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected sha256=hash
-          got      sha256=hash
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=+patch-sha256+
 [ERROR] Failed to get extra source "i-am-a-patch" of good-md5-bad-sha256.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -791,15 +791,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 ### sh check-cache.sh
 MD5: not found
 SHA256: patch, with matching checksum
-### opam install good-md5-bad-sha256 --require-checksums | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-md5-bad-sha256 --require-checksums | sed-hash $PATCH_SHA256 patch-sha256
 The following actions will be performed:
 === install 1 package
   - install good-md5-bad-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] good-md5-bad-sha256.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected sha256=hash
-          got      sha256=hash
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=+patch-sha256+
 [ERROR] Failed to get extra source "i-am-a-patch" of good-md5-bad-sha256.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -811,18 +811,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source good-md5-bad-sha256 | '[0-9a-z]{64}' -> 'md5'
+### opam source good-md5-bad-sha256
 [ERROR] good-md5-bad-sha256.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected sha256=md5
-          got      sha256=md5
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=c00eac22da21925d2077b66a29dc911cddc739b1b0d0909a6cb192344fba55ab
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-md5-bad-sha256.1/i-am-a-patch
 # Return code 1 #
-### opam source good-md5-bad-sha256 --require-checksums | '[0-9a-z]{64}' -> 'md5'
+### opam source good-md5-bad-sha256 --require-checksums
 [ERROR] good-md5-bad-sha256.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected sha256=md5
-          got      sha256=md5
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=c00eac22da21925d2077b66a29dc911cddc739b1b0d0909a6cb192344fba55ab
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-md5-bad-sha256.1/i-am-a-patch
@@ -834,15 +834,15 @@ Clearing cache of downloaded files
 <default>/good-sha256-bad-md5.1: Passed.
 ### opam lint --package good-sha256-bad-md5 --check-upstream
 <default>/good-sha256-bad-md5.1: Passed.
-### opam install good-sha256-bad-md5 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256-bad-md5 | sed-hash $PATCH_MD5 patch-md5
 The following actions will be performed:
 === install 1 package
   - install good-sha256-bad-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] good-sha256-bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Failed to get extra source "i-am-a-patch" of good-sha256-bad-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -854,15 +854,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam install good-sha256-bad-md5 --require-checksums | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256-bad-md5 --require-checksums
 The following actions will be performed:
 === install 1 package
   - install good-sha256-bad-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] good-sha256-bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=cf8c4c20658f6c3efea4eb2c6b1b34d7
 [ERROR] Failed to get extra source "i-am-a-patch" of good-sha256-bad-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -874,18 +874,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source good-sha256-bad-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam source good-sha256-bad-md5
 [ERROR] good-sha256-bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=cf8c4c20658f6c3efea4eb2c6b1b34d7
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-sha256-bad-md5.1/i-am-a-patch
 # Return code 1 #
-### opam source good-sha256-bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam source good-sha256-bad-md5 --require-checksums
 [ERROR] good-sha256-bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=cf8c4c20658f6c3efea4eb2c6b1b34d7
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-sha256-bad-md5.1/i-am-a-patch
@@ -901,15 +901,15 @@ Clearing cache of downloaded files
 <default>/clash-with-all-md5s.666: Errors.
              error 72: Field 'extra-sources' contains duplicated checksums: "i-am-a-patch have md5: 17 occurences"
 # Return code 1 #
-### opam install clash-with-all-md5s | '[0-9a-z]{32}' -> 'hash'
+### opam install clash-with-all-md5s | sed-hash $PATCH_MD5 patch-md5
 The following actions will be performed:
 === install 1 package
   - install clash-with-all-md5s 666
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] clash-with-all-md5s.666/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Failed to get extra source "i-am-a-patch" of clash-with-all-md5s.666: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -947,35 +947,35 @@ Done.
 ### sh check-cache.sh
 MD5: patch, with matching checksum
 SHA256: patch, with matching checksum
-### opam install clash-with-all-md5s | '[0-9a-z]{32}' -> 'hash'
+### opam install clash-with-all-md5s | sed-hash $PATCH_MD5 patch-md5
 The following actions will be performed:
 === install 1 package
   - install clash-with-all-md5s 666
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (match)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - sha256=hash0123456789abcdeffedbca9876543210 (MISMATCH)
+          - md5=00000000000000000000000000000000 (MISMATCH)
+          - md5=11111111111111111111111111111111 (MISMATCH)
+          - md5=22222222222222222222222222222222 (MISMATCH)
+          - md5=33333333333333333333333333333333 (MISMATCH)
+          - md5=44444444444444444444444444444444 (MISMATCH)
+          - md5=+patch-md5+ (match)
+          - md5=55555555555555555555555555555555 (MISMATCH)
+          - md5=66666666666666666666666666666666 (MISMATCH)
+          - md5=77777777777777777777777777777777 (MISMATCH)
+          - md5=88888888888888888888888888888888 (MISMATCH)
+          - md5=99999999999999999999999999999999 (MISMATCH)
+          - md5=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (MISMATCH)
+          - md5=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb (MISMATCH)
+          - md5=cccccccccccccccccccccccccccccccc (MISMATCH)
+          - md5=dddddddddddddddddddddddddddddddd (MISMATCH)
+          - md5=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee (MISMATCH)
+          - md5=ffffffffffffffffffffffffffffffff (MISMATCH)
+          - sha256=0123456789abcdeffedcba98765432100123456789abcdeffedbca9876543210 (MISMATCH)
 
 [ERROR] clash-with-all-md5s.666/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Failed to get extra source "i-am-a-patch" of clash-with-all-md5s.666: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -990,15 +990,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 ### sh check-cache.sh
 MD5: not found
 SHA256: patch, with matching checksum
-### opam install clash-with-all-md5s --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam install clash-with-all-md5s --require-checksum | sed-hash $PATCH_MD5 patch-md5s
 The following actions will be performed:
 === install 1 package
   - install clash-with-all-md5s 666
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] clash-with-all-md5s.666/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5s+
 [ERROR] Failed to get extra source "i-am-a-patch" of clash-with-all-md5s.666: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -1010,18 +1010,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source clash-with-all-md5s | '[0-9a-z]{32}' -> 'hash'
+### opam source clash-with-all-md5s | sed-hash $PATCH_MD5 patch-md5
 [ERROR] clash-with-all-md5s.666/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f clash-with-all-md5s.666/i-am-a-patch
 # Return code 1 #
-### opam source clash-with-all-md5s --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam source clash-with-all-md5s --require-checksum | sed-hash $PATCH_MD5 patch-md5s
 [ERROR] clash-with-all-md5s.666/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+patch-md5s+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f clash-with-all-md5s.666/i-am-a-patch
@@ -1213,15 +1213,15 @@ Done.
 ### sh check-cache.sh
 MD5: patch, with mismatching checksum
 SHA256: link, to md5 patch
-### opam install good-sha256-good-md5 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256-good-md5 | sed-hash $PATCH_MD5 patch-md5 | sed-hash $PATCH_SHA256 patch-sha256
 The following actions will be performed:
 === install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - sha256=hash (MISMATCH)
-          - md5=hash (MISMATCH)
+          - sha256=+patch-sha256+ (MISMATCH)
+          - md5=+patch-md5+ (MISMATCH)
 
 -> retrieved good-sha256-good-md5.1  (file://${BASEDIR}/p.patch)
 -> installed good-sha256-good-md5.1
@@ -1247,15 +1247,15 @@ Done.
 ### sh check-cache.sh
 MD5: patch, with matching checksum
 SHA256: patch, with mismatching checksum
-### opam install good-sha256-good-md5 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256-good-md5 | sed-hash $PATCH_MD5 patch-md5 | sed-hash $PATCH_SHA256 patch-sha256
 The following actions will be performed:
 === install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - sha256=hash (MISMATCH)
-          - md5=hash (MISMATCH)
+          - sha256=+patch-sha256+ (MISMATCH)
+          - md5=+patch-md5+ (MISMATCH)
 
 -> retrieved good-sha256-good-md5.1  (file://${BASEDIR}/p.patch)
 -> installed good-sha256-good-md5.1
@@ -1278,15 +1278,15 @@ Done.
 ### sh check-cache.sh
 MD5: patch, with mismatching checksum
 SHA256: patch, with mismatching checksum
-### opam install good-sha256-good-md5 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256-good-md5 | sed-hash $PATCH_MD5 patch-md5 | sed-hash $PATCH_SHA256 patch-sha256
 The following actions will be performed:
 === install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - sha256=hash (MISMATCH)
-          - md5=hash (MISMATCH)
+          - sha256=+patch-sha256+ (MISMATCH)
+          - md5=+patch-md5+ (MISMATCH)
 
 -> retrieved good-sha256-good-md5.1  (file://${BASEDIR}/p.patch)
 -> installed good-sha256-good-md5.1
