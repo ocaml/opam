@@ -157,6 +157,9 @@ let package_files_to_cache repo_root cache_dir cache_urls
       let checksums =
         OpamHash.sort (OpamFile.URL.checksum urlf)
       in
+      let signed_by =
+        OpamSignature.sort (OpamFile.URL.signed_by urlf)
+      in
       match checksums with
       | [] ->
         OpamConsole.warning "[%s] no checksum, not caching"
@@ -172,7 +175,7 @@ let package_files_to_cache repo_root cache_dir cache_urls
           else
             OpamRepository.pull_file_to_cache label
               ~cache_urls ~cache_dir
-              checksums
+              checksums signed_by
               (OpamFile.URL.url urlf :: OpamFile.URL.mirrors urlf)
             @@| fun r -> match OpamRepository.report_fetch_result nv r with
             | Not_available (_,m) -> Some m
@@ -603,7 +606,7 @@ let add_hashes_command cli =
       hash_tables
   in
   let additions_count = ref 0 in
-  let get_hash hash_tables ~cache_urls ~cache_dir kind known_hashes url =
+  let get_hash hash_tables ~cache_urls ~cache_dir kind known_hashes signed_by url =
     let found =
       List.fold_left (fun result hash ->
           match result with
@@ -625,7 +628,7 @@ let add_hashes_command cli =
           (fun () ->
              OpamRepository.pull_file (OpamUrl.to_string url)
                ~cache_dir ~cache_urls
-               f known_hashes [url]
+               f known_hashes signed_by [url]
              @@| function
              | Result () | Up_to_date () ->
                OpamHash.compute ~kind (OpamFilename.to_string f)
@@ -669,6 +672,7 @@ let add_hashes_command cli =
             else has_error
           in
           let process_url has_error urlf =
+            let signed_by = OpamFile.URL.signed_by urlf in
             let hashes = OpamFile.URL.checksum urlf in
             let hashes =
               if replace then
@@ -683,7 +687,7 @@ let add_hashes_command cli =
                   if List.exists (fun h -> OpamHash.kind h = kind) hashes
                   then has_error, hashes else
                     match get_hash hash_tables ~cache_urls ~cache_dir kind
-                            hashes (OpamFile.URL.url urlf) with
+                            hashes signed_by (OpamFile.URL.url urlf) with
                     | Some h -> has_error, hashes @ [h]
                     | None ->
                       OpamConsole.error "Could not get hash for %s: %s"
