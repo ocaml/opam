@@ -769,6 +769,16 @@ let source_dir st nv =
   then OpamPath.Switch.pinned_package st.switch_global.root st.switch nv.name
   else OpamPath.Switch.sources st.switch_global.root st.switch nv
 
+let overlay_opam_file st name =
+  if is_pinned st name then
+    let file =
+      OpamPath.Switch.Overlay.opam st.switch_global.root st.switch name
+    in
+    if OpamFile.exists file then
+      Some file
+    else None
+  else None
+
 let depexts st nv =
   let env v = OpamPackageVar.resolve_switch ~package:nv st v in
  depexts_raw ~env nv st.opams

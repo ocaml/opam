@@ -737,7 +737,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 eta.1: Bad hash for extra-file
-  - ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/files/eta.installl
+  - eta.installl
 
 
 
@@ -773,7 +773,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 eta.1: Missing extra-file for
-  - ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/files/eta.installl
+  - eta.installl
 
 
 

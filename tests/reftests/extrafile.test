@@ -261,7 +261,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 bad-md5.1: Bad hash for extra-file
-  - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+  - p.patch
 
 
 
@@ -279,7 +279,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 bad-md5.1: Bad hash for extra-file
-  - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+  - p.patch
 
 
 
@@ -292,7 +292,7 @@ bad-md5.1: Bad hash for extra-file
 ### opam source bad-md5 | '.n"' -> '"'
 [WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1:
             bad-md5.1: Bad hash for extra-file
-            - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+            - p.patch
 
 
 ### test -f bad-md5.1/p.patch
@@ -301,7 +301,7 @@ bad-md5.1: Bad hash for extra-file
 ### opam source bad-md5 --require-checksums | '.n"' -> '"'
 [WARNING] Some errors extracting to ${BASEDIR}/bad-md5.1:
             bad-md5.1: Bad hash for extra-file
-            - ${BASEDIR}/OPAM/repo/default/packages/bad-md5/bad-md5.1/files/p.patch
+            - p.patch
 
 
 ### test -f bad-md5.1/p.patch
@@ -325,7 +325,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 good-md5-bad-sha256.1: Bad hash for extra-file
-  - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+  - p.patch
 
 
 
@@ -343,7 +343,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 good-md5-bad-sha256.1: Bad hash for extra-file
-  - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+  - p.patch
 
 
 
@@ -356,7 +356,7 @@ good-md5-bad-sha256.1: Bad hash for extra-file
 ### opam source good-md5-bad-sha256 | '.n"' -> '"'
 [WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1:
             good-md5-bad-sha256.1: Bad hash for extra-file
-            - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+            - p.patch
 
 
 ### test -f good-md5-bad-sha256.1/p.patch
@@ -364,7 +364,7 @@ good-md5-bad-sha256.1: Bad hash for extra-file
 ### opam source good-md5-bad-sha256 --require-checksums | '.n"' -> '"'
 [WARNING] Some errors extracting to ${BASEDIR}/good-md5-bad-sha256.1:
             good-md5-bad-sha256.1: Bad hash for extra-file
-            - ${BASEDIR}/OPAM/repo/default/packages/good-md5-bad-sha256/good-md5-bad-sha256.1/files/p.patch
+            - p.patch
 
 
 ### test -f good-md5-bad-sha256.1/p.patch
@@ -511,7 +511,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 not-present.1: Missing extra-file for
-  - ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch
+  - p.patch
 
 
 
@@ -529,7 +529,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 not-present.1: Missing extra-file for
-  - ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch
+  - p.patch
 
 
 
@@ -542,7 +542,7 @@ not-present.1: Missing extra-file for
 ### opam source not-present
 [WARNING] Some errors extracting to ${BASEDIR}/not-present.1:
             not-present.1: Missing extra-file for
-            - ${BASEDIR}/OPAM/repo/default/packages/not-present/not-present.1/files/p.patch
+            - p.patch
 
 
 ### test -f not-present.1/p.patch
@@ -569,7 +569,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 escape-absolute.1: Missing extra-file for
-  - ${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files/etc/passwdd
+  - /etc/passwdd
 
 
 
@@ -587,7 +587,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 escape-absolute.1: Missing extra-file for
-  - ${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files/etc/passwdd
+  - /etc/passwdd
 
 
 
@@ -600,7 +600,7 @@ escape-absolute.1: Missing extra-file for
 ### opam source escape-absolute
 [WARNING] Some errors extracting to ${BASEDIR}/escape-absolute.1:
             escape-absolute.1: Missing extra-file for
-            - ${BASEDIR}/OPAM/repo/default/packages/escape-absolute/escape-absolute.1/files/etc/passwdd
+            - /etc/passwdd
 
 
 ### test -f escape-absolute.1/p.patch
@@ -629,8 +629,9 @@ The following actions will be performed:
   - install escape-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-[ERROR] The compilation of escape-good-md5.1 failed at "test -f p.patch".
 
+escape-good-md5.1: Missing extra-file for
+  - ../../../no-checksum/no-checksum.1/files/p.patch
 
 
 
@@ -646,8 +647,9 @@ The following actions will be performed:
   - install escape-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-[ERROR] The compilation of escape-good-md5.1 failed at "test -f p.patch".
 
+escape-good-md5.1: Missing extra-file for
+  - ../../../no-checksum/no-checksum.1/files/p.patch
 
 
 
@@ -658,7 +660,11 @@ The following actions will be performed:
 - No changes have been performed
 # Return code 31 #
 ### opam source escape-good-md5
-Successfully extracted to ${BASEDIR}/escape-good-md5.1
+[WARNING] Some errors extracting to ${BASEDIR}/escape-good-md5.1:
+            escape-good-md5.1: Missing extra-file for
+            - ../../../no-checksum/no-checksum.1/files/p.patch
+
+
 ### test -f escape-good-md5.1/p.patch
 # Return code 1 #
 ### ::::::::::::::::::::::::
