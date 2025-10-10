@@ -155,8 +155,8 @@ opam-version: "2.0"
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
-### opam show qux --field extra-files: | $INSTALL_MD5 -> hash
-"qux.installl" "md5=hash"
+### opam show qux --field extra-files: | sed-hash $INSTALL_MD5 install-md5
+"qux.installl" "md5=+install-md5+"
 ### :I:6:b: change extra-file with opam file
 ### <REPO/packages/qux/qux.1/opam>
 opam-version: "2.0"
@@ -166,8 +166,8 @@ opam-version: "2.0"
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
-### opam show qux --field extra-files: | $AINSTALL_MD5 -> hash
-"qux.installl" "md5=hash"
+### opam show qux --field extra-files: | sed-hash $AINSTALL_MD5 ainstall-md5
+"qux.installl" "md5=+ainstall-md5+"
 ### :I:6:c: remove extra-file with opam file
 ### <REPO/packages/qux/qux.1/opam>
 opam-version: "2.0"
@@ -203,8 +203,8 @@ opam-version: "2.0"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/qux/qux.1: wrong checksum (1)
 Now run 'opam upgrade' to apply any package updates.
-### opam show qux --field extra-files: | $INSTALL_MD5 -> hash
-"qux.installl" "md5=hash"
+### opam show qux --field extra-files: | sed-hash $INSTALL_MD5 install-md5
+"qux.installl" "md5=+install-md5+"
 ### :I:6:e: remove extra-file without opam file
 ### <REPO/packages/qux/qux.1/opam>
 opam-version: "2.0"
@@ -216,8 +216,8 @@ opam-version: "2.0"
 [default] synchronised from file://${BASEDIR}/REPO
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 opam-file                       Missing expected extra files qux.installl at ${BASEDIR}/OPAM/repo/default/packages/qux/qux.1/files
-### opam show qux --field extra-files: | $INSTALL_MD5 -> hash
-"qux.installl" "md5=hash"
+### opam show qux --field extra-files: | sed-hash $INSTALL_MD5 install-md5
+"qux.installl" "md5=+install-md5+"
 ### :II: Git repo
 ### opam switch create repo-git-update --empty
 ### git init -q --initial-branch=master GITREPO
@@ -291,8 +291,8 @@ opam-version: "2.0"
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [git-test] synchronised from git+file://${BASEDIR}/GITREPO
 Now run 'opam upgrade' to apply any package updates.
-### opam show qux --field extra-files: | $INSTALL_MD5 -> hash
-"qux.installl" "md5=hash"
+### opam show qux --field extra-files: | sed-hash $INSTALL_MD5 install-md5
+"qux.installl" "md5=+install-md5+"
 ### :II:5:b: change extra-file with opam file
 ### <GITREPO/packages/qux/qux.1/opam>
 opam-version: "2.0"
@@ -304,8 +304,8 @@ opam-version: "2.0"
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [git-test] synchronised from git+file://${BASEDIR}/GITREPO
 Now run 'opam upgrade' to apply any package updates.
-### opam show qux --field extra-files: | $AINSTALL_MD5 -> hash
-"qux.installl" "md5=hash"
+### opam show qux --field extra-files: | sed-hash $AINSTALL_MD5 ainstall-md5
+"qux.installl" "md5=+ainstall-md5+"
 ### :II:5:c: remove extra-file with opam file
 ### <GITREPO/packages/qux/qux.1/opam>
 opam-version: "2.0"
@@ -346,8 +346,8 @@ opam-version: "2.0"
 [git-test] synchronised from git+file://${BASEDIR}/GITREPO
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/git-test/packages/qux/qux.1: wrong checksum (1)
 Now run 'opam upgrade' to apply any package updates.
-### opam show qux --field extra-files: | $INSTALL_MD5 -> hash
-"qux.installl" "md5=hash"
+### opam show qux --field extra-files | sed-hash $INSTALL_MD5 install-md5
+"qux.installl" "md5=+install-md5+"
 ### :II:5:e: remove extra-file without opam file
 ### <GITREPO/packages/qux/qux.1/opam>
 opam-version: "2.0"
@@ -360,8 +360,8 @@ opam-version: "2.0"
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [git-test] synchronised from git+file://${BASEDIR}/GITREPO
 opam-file                       Missing expected extra files qux.installl at ${BASEDIR}/OPAM/repo/git-test/packages/qux/qux.1/files
-### opam show qux --field extra-files: | $INSTALL_MD5 -> hash
-"qux.installl" "md5=hash"
+### opam show qux --field extra-files: | sed-hash $INSTALL_MD5 install-md5
+"qux.installl" "md5=+install-md5+"
 ### :II:6: Package removal with prefix directories
 ### <add-pkg.sh>
 set -ue
@@ -607,8 +607,8 @@ REPO_BACKEND                    Internal diff (non-empty, 2 changed files) done 
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
-### opam show eta --field extra-files: | $INSTALL_MD5 -> hash
-"eta.installl" "md5=hash"
+### opam show eta --field extra-files:
+"eta.installl" "md5=d9b673248d119b87a2e1f9766e543aa3"
 ### opam install eta
 The following actions will be performed:
 === install 1 package
@@ -632,8 +632,8 @@ REPO_BACKEND                    Internal diff (non-empty, 2 changed files) done 
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
-### opam show eta --field extra-files: | $AINSTALL_MD5 -> hash
-"eta.installl" "md5=hash"
+### opam show eta --field extra-files: | sed-hash $AINSTALL_MD5 ainstall-md5
+"eta.installl" "md5=+ainstall-md5+"
 ### opam install eta
 The following actions will be performed:
 === install 1 package
@@ -727,8 +727,8 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1: wrong checksum (1)
 Now run 'opam upgrade' to apply any package updates.
-### opam show eta --field extra-files: | $INSTALL_MD5 -> hash
-"eta.installl" "md5=hash"
+### opam show eta --field extra-files:
+"eta.installl" "md5=d9b673248d119b87a2e1f9766e543aa3"
 ### opam install eta
 The following actions will be performed:
 === install 1 package
@@ -763,8 +763,8 @@ REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done 
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 opam-file                       Missing expected extra files eta.installl at ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/files
-### opam show eta --field extra-files: | $INSTALL_MD5 -> hash
-"eta.installl" "md5=hash"
+### opam show eta --field extra-files:
+"eta.installl" "md5=d9b673248d119b87a2e1f9766e543aa3"
 ### opam install eta
 The following actions will be performed:
 === install 1 package

@@ -707,6 +707,108 @@ Something smtg else
 Something smtg else
 Something smtg else
 Something smtg else
+### :IV:7: sed-hash
+### <hashes>
+                - archive: md5=f75b8179e4bbe7e2b4a074dcef62de95, in opam file: md5=f75b8179e4bbe7e2b4a074dcef62de95
+                - archive: sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c, in opam file: sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c
+                - archive: sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c, in opam file: sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...building..." "opam-version:++current++" "switch:global-wrappers" "jobs:2" "root:${BASEDIR}/OPAM" "make:make" "name:i-am-a-repo-pkg" "version:1" "depends:dep.1" "installed:false" "enable:" "pinned:false" "bin:${BASEDIR}/OPAM/global-wrappers/bin" "sbin:${BASEDIR}/OPAM/global-wrappers/sbin" "lib:${BASEDIR}/OPAM/global-wrappers/lib" "man:${BASEDIR}/OPAM/global-wrappers/man" "doc:${BASEDIR}/OPAM/global-wrappers/doc" "share:${BASEDIR}/OPAM/global-wrappers/share" "etc:${BASEDIR}/OPAM/global-wrappers/etc" "build:${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1" "hash:md5=f75b8179e4bbe7e2b4a074dcef62de95" "dev:false" "build-id:+hash+" "opamfile:${OPAMTMP}/opam" "installed-files:" "a-build-command" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+"eta.installl" "md5=f75b8179e4bbe7e2b4a074dcef62de95"
+          expected md5=f75b8179e4bbe7e2b4a074dcef62de95
+          expected sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c
+extra-files: [["bad-md5" "md5=f75b8179e4bbe7e2b4a074dcef62de95"] ["bad-sha" "sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c"] ["good-md5" "md5=f75b8179e4bbe7e2b4a074dcef62de95"] ["good-sha" "sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c"] ["missing-hash" "md5=f75b8179e4bbe7e2b4a074dcef62de95"]]
+extra-files: [["bad-md5" "sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c"] ["bad-sha" "sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c"] ["good-md5" "sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c"] ["good-sha" "sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c"] ["missing-hash" "sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c"]]
+extra-files: ["missing-hash" "md5=f75b8179e4bbe7e2b4a074dcef62de95"]
+          got      md5=f75b8179e4bbe7e2b4a074dcef62de95
+          got      sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c
+   hash:md5=f75b8179e4bbe7e2b4a074dcef62de95
+- hash:md5=f75b8179e4bbe7e2b4a074dcef62de95
+          - md5=f75b8179e4bbe7e2b4a074dcef62de95 (match)
+          - md5=11111111111111111111111111111111 (MISMATCH)
+"qux.installl" "md5=f75b8179e4bbe7e2b4a074dcef62de95"
+          - sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c (MISMATCH)
+          - sha512=a31cffeeaf410435d5b802e87c7f4b17ec8f1ac433f0ed2366989cc7e26f75f1ec76e0f9a031aa8622e2e27e7b1773d2fa63c387191fa3ed6658e652fb15e645 (MISMATCH)
+SYSTEM                          copy ${OPAMTMP}/archive.tgz -> ${BASEDIR}/OPAM/download-cache/md5/f7/f75b8179e4bbe7e2b4a074dcef62de95
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/f7
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/f7/f75b8179e4bbe7e2b4a074dcef62de95" "-C" "${OPAMTMP}"
+url.checksum: md5=f75b8179e4bbe7e2b4a074dcef62de95
+url.checksum: md5=f75b8179e4bbe7e2b4a074dcef62de95, sha512=a31cffeeaf410435d5b802e87c7f4b17ec8f1ac433f0ed2366989cc7e26f75f1ec76e0f9a031aa8622e2e27e7b1773d2fa63c387191fa3ed6658e652fb15e645
+url.checksum: md5=f75b8179e4bbe7e2b4a074dcef62de95, sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c
+url.checksum: md5=f75b8179e4bbe7e2b4a074dcef62de95, sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c, sha512=a31cffeeaf410435d5b802e87c7f4b17ec8f1ac433f0ed2366989cc7e26f75f1ec76e0f9a031aa8622e2e27e7b1773d2fa63c387191fa3ed6658e652fb15e645
+url.checksum: sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c
+url.checksum: sha256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c, md5=f75b8179e4bbe7e2b4a074dcef62de95, sha512=a31cffeeaf410435d5b802e87c7f4b17ec8f1ac433f0ed2366989cc7e26f75f1ec76e0f9a031aa8622e2e27e7b1773d2fa63c387191fa3ed6658e652fb15e645
+### MD5=f75b8179e4bbe7e2b4a074dcef62de95
+### SHA256=3b0a6bcd854adc9a1a590f527751bec278a058b2152ac50b26f4276a1c49e67c
+### SHA512=a31cffeeaf410435d5b802e87c7f4b17ec8f1ac433f0ed2366989cc7e26f75f1ec76e0f9a031aa8622e2e27e7b1773d2fa63c387191fa3ed6658e652fb15e645
+### cat hashes | sed-hash $MD5 md5-hash | sed-hash $SHA256 sha256-hash | sed-hash $SHA512
+                - archive: md5=+md5-hash+, in opam file: md5=+md5-hash+
+                - archive: sha256=+sha256-hash+, in opam file: sha256=+sha256-hash+
+                - archive: sha256=+sha256-hash+, in opam file: sha256=+sha256-hash+
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...building..." "opam-version:++current++" "switch:global-wrappers" "jobs:2" "root:${BASEDIR}/OPAM" "make:make" "name:i-am-a-repo-pkg" "version:1" "depends:dep.1" "installed:false" "enable:" "pinned:false" "bin:${BASEDIR}/OPAM/global-wrappers/bin" "sbin:${BASEDIR}/OPAM/global-wrappers/sbin" "lib:${BASEDIR}/OPAM/global-wrappers/lib" "man:${BASEDIR}/OPAM/global-wrappers/man" "doc:${BASEDIR}/OPAM/global-wrappers/doc" "share:${BASEDIR}/OPAM/global-wrappers/share" "etc:${BASEDIR}/OPAM/global-wrappers/etc" "build:${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1" "hash:md5=+md5-hash+" "dev:false" "build-id:+hash+" "opamfile:${OPAMTMP}/opam" "installed-files:" "a-build-command" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
+"eta.installl" "md5=+md5-hash+"
+          expected md5=+md5-hash+
+          expected sha256=+sha256-hash+
+extra-files: [["bad-md5" "md5=+md5-hash+"] ["bad-sha" "sha256=+sha256-hash+"] ["good-md5" "md5=+md5-hash+"] ["good-sha" "sha256=+sha256-hash+"] ["missing-hash" "md5=+md5-hash+"]]
+extra-files: [["bad-md5" "sha256=+sha256-hash+"] ["bad-sha" "sha256=+sha256-hash+"] ["good-md5" "sha256=+sha256-hash+"] ["good-sha" "sha256=+sha256-hash+"] ["missing-hash" "sha256=+sha256-hash+"]]
+extra-files: ["missing-hash" "md5=+md5-hash+"]
+          got      md5=+md5-hash+
+          got      sha256=+sha256-hash+
+   hash:md5=+md5-hash+
+- hash:md5=+md5-hash+
+          - md5=+md5-hash+ (match)
+          - md5=11111111111111111111111111111111 (MISMATCH)
+"qux.installl" "md5=+md5-hash+"
+          - sha256=+sha256-hash+ (MISMATCH)
+          - sha512=+hash+ (MISMATCH)
+SYSTEM                          copy ${OPAMTMP}/archive.tgz -> ${BASEDIR}/OPAM/download-cache/md5/pre/+md5-hash+
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/pre
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5-hash+" "-C" "${OPAMTMP}"
+url.checksum: md5=+md5-hash+
+url.checksum: md5=+md5-hash+, sha512=+hash+
+url.checksum: md5=+md5-hash+, sha256=+sha256-hash+
+url.checksum: md5=+md5-hash+, sha256=+sha256-hash+, sha512=+hash+
+url.checksum: sha256=+sha256-hash+
+url.checksum: sha256=+sha256-hash+, md5=+md5-hash+, sha512=+hash+
+### <hashes-d5>
+SYSTEM                          copy ${OPAMTMP}/archive.tgz -> ${BASEDIR}/OPAM/download-cache/md5/d5/d55b8179e4bbe7e2b4a074dcef62de95
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/d5
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/d5/d55b8179e4bbe7e2b4a074dcef62de95" "-C" "${OPAMTMP}"
+### MD5=d55b8179e4bbe7e2b4a074dcef62de95
+### cat hashes-d5 | sed-hash $MD5 md5-hash
+SYSTEM                          copy ${OPAMTMP}/archive.tgz -> ${BASEDIR}/OPAM/download-cache/md5/pre/+md5-hash+
+SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/pre
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5-hash+" "-C" "${OPAMTMP}"
+### <hashes-basic>
+0123456789abcdef0123456789abcdef
+0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
+### cat hashes-basic | sed-hash $MD5
+0123456789abcdef0123456789abcdef
+0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
+### cat hashes-basic | sed-hash 0123456789abcdef0123456789abcdef
++hash+
+0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
+### cat hashes-basic | sed-hash 0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
+0123456789abcdef0123456789abcdef
++hash+
+### cat hashes-basic | sed-hash 0123456789abcdef0123456789
+Bad 'sed-hash' argument (0123456789abcdef0123456789), expecting a environment variable beginning with '$' or a hash of 32, 64, or 128 characters0123456789abcdef0123456789abcdef
+0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
+### cat hashes-basic | sed-hash 0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67
+Bad 'sed-hash' argument (0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67), expecting a environment variable beginning with '$' or a hash of 32, 64, or 128 characters0123456789abcdef0123456789abcdef
+0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
+### cat hashes-basic | sed-hash 0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f678999999
+Bad 'sed-hash' argument (0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f678999999), expecting a environment variable beginning with '$' or a hash of 32, 64, or 128 characters0123456789abcdef0123456789abcdef
+0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
+### cat hashes-basic | sed-hash FOO
+Bad 'sed-hash' argument (FOO), expecting a environment variable beginning with '$' or a hash of 32, 64, or 128 characters0123456789abcdef0123456789abcdef
+0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
+### cat hashes-basic | sed-hash $FOO
+0123456789abcdef0123456789abcdef
+0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
+### cat hashes-basic | sed-hash
+Bad rewrite "| sed-hash", expecting '| RE -> STR' or '>$ VAR'
+0123456789abcdef0123456789abcdef
+0a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789
 ### ###################
 ### :V: Additional commands
 ### ###################

@@ -497,26 +497,26 @@ Successfully extracted to ${BASEDIR}/no-checksum.1
 ### opam clean --download-cache
 Clearing cache of downloaded files
 ### :I:6: multiple md5
-### opam lint --package multiple-md5
+### opam lint --package multiple-md5 | sed-hash $ARCHIVE_MD5 archive-md5
 <default>/multiple-md5.1: Errors.
              error 71: Field 'url.checksum' contains duplicated checksums: "md5: 2 occurences"
 # Return code 1 #
-### opam lint --package multiple-md5 --check-upstream | '[0-9a-z]{32}' -> 'hash'
+### opam lint --package multiple-md5 --check-upstream | sed-hash $ARCHIVE_MD5 archive-md5
 <default>/multiple-md5.1: Errors.
              error 60: Upstream check failed: "The archive doesn't match checksum:
-                - archive: md5=hash, in opam file: md5=hash
+                - archive: md5=+archive-md5+, in opam file: md5=00000000000000000000000000000000
               ."
              error 71: Field 'url.checksum' contains duplicated checksums: "md5: 2 occurences"
 # Return code 1 #
-### opam install multiple-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam install multiple-md5 | sed-hash $ARCHIVE_MD5 archive-md5
 The following actions will be performed:
 === install 1 package
   - install multiple-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] multiple-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Failed to get sources of multiple-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -528,15 +528,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam install multiple-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam install multiple-md5 --require-checksums | sed-hash $ARCHIVE_MD5 archive-md5
 The following actions will be performed:
 === install 1 package
   - install multiple-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] multiple-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Failed to get sources of multiple-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -548,18 +548,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source multiple-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam source multiple-md5 | sed-hash $ARCHIVE_MD5 archive-md5
 [ERROR] multiple-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f multiple-md5.1/hello
 # Return code 1 #
-### opam source multiple-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam source multiple-md5 --require-checksums | sed-hash $ARCHIVE_MD5 archive-md5
 [ERROR] multiple-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f multiple-md5.1/hello
@@ -569,21 +569,21 @@ Clearing cache of downloaded files
 ### :I:7: bad md5
 ### opam lint --package bad-md5
 <default>/bad-md5.1: Passed.
-### opam lint --package bad-md5 --check-upstream | '[0-9a-z]{32}' -> 'hash'
+### opam lint --package bad-md5 --check-upstream | sed-hash $ARCHIVE_MD5 archive-md5
 <default>/bad-md5.1: Errors.
              error 60: Upstream check failed: "The archive doesn't match checksum:
-                - archive: md5=hash, in opam file: md5=hash
+                - archive: md5=+archive-md5+, in opam file: md5=00000000000000000000000000000000
               ."
 # Return code 1 #
-### opam install bad-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam install bad-md5 | sed-hash $ARCHIVE_MD5 archive-md5
 The following actions will be performed:
 === install 1 package
   - install bad-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Failed to get sources of bad-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -595,15 +595,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam install bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam install bad-md5 --require-checksums | sed-hash $ARCHIVE_MD5 archive-md5
 The following actions will be performed:
 === install 1 package
   - install bad-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Failed to get sources of bad-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -615,18 +615,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source bad-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam source bad-md5 | sed-hash $ARCHIVE_MD5 archive-md5
 [ERROR] bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f bad-md5.1/hello
 # Return code 1 #
-### opam source bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam source bad-md5 --require-checksums | sed-hash $ARCHIVE_MD5 archive-md5
 [ERROR] bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f bad-md5.1/hello
@@ -636,10 +636,10 @@ Clearing cache of downloaded files
 ### :I:8: good md5 & bad sha256
 ### opam lint --package good-md5-bad-sha256
 <default>/good-md5-bad-sha256.1: Passed.
-### opam lint --package good-md5-bad-sha256 --check-upstream | '[0-9a-z]{64}' -> 'hash'
+### opam lint --package good-md5-bad-sha256 --check-upstream | sed-hash $ARCHIVE_SHA256 archive-sha256
 <default>/good-md5-bad-sha256.1: Errors.
              error 60: Upstream check failed: "The archive doesn't match checksum:
-                - archive: sha256=hash, in opam file: sha256=hash
+                - archive: sha256=+archive-sha256+, in opam file: sha256=0000000000000000000000000000000000000000000000000000000000000000
               ."
 # Return code 1 #
 ### opam reinstall good-md5
@@ -655,19 +655,19 @@ Done.
 ### sh check-cache.sh
 MD5: archive, with matching checksum
 SHA256: not found
-### opam install good-md5-bad-sha256 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-md5-bad-sha256 | sed-hash $ARCHIVE_MD5 archive-md5 | sed-hash $ARCHIVE_SHA256 archive-sha256
 The following actions will be performed:
 === install 1 package
   - install good-md5-bad-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - md5=hash (match)
-          - sha256=hash (MISMATCH)
+          - md5=+archive-md5+ (match)
+          - sha256=0000000000000000000000000000000000000000000000000000000000000000 (MISMATCH)
 
 [ERROR] good-md5-bad-sha256.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected sha256=hash
-          got      sha256=hash
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=+archive-sha256+
 [ERROR] Failed to get sources of good-md5-bad-sha256.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -705,19 +705,19 @@ Done.
 ### sh check-cache.sh
 MD5: archive, with matching checksum
 SHA256: archive, with matching checksum
-### opam install good-md5-bad-sha256 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-md5-bad-sha256 | sed-hash $ARCHIVE_MD5 archive-md5 | sed-hash $ARCHIVE_SHA256 archive-sha256
 The following actions will be performed:
 === install 1 package
   - install good-md5-bad-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - md5=hash (match)
-          - sha256=hash (MISMATCH)
+          - md5=+archive-md5+ (match)
+          - sha256=0000000000000000000000000000000000000000000000000000000000000000 (MISMATCH)
 
 [ERROR] good-md5-bad-sha256.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected sha256=hash
-          got      sha256=hash
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=+archive-sha256+
 [ERROR] Failed to get sources of good-md5-bad-sha256.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -732,15 +732,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 ### sh check-cache.sh
 MD5: not found
 SHA256: archive, with matching checksum
-### opam install good-md5-bad-sha256 --require-checksums | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-md5-bad-sha256 --require-checksum | sed-hash $ARCHIVE_SHA256 archive-sha256
 The following actions will be performed:
 === install 1 package
   - install good-md5-bad-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] good-md5-bad-sha256.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected sha256=hash
-          got      sha256=hash
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=+archive-sha256+
 [ERROR] Failed to get sources of good-md5-bad-sha256.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -752,18 +752,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source good-md5-bad-sha256 | '[0-9a-z]{64}' -> 'md5'
+### opam source good-md5-bad-sha256 | sed-hash $ARCHIVE_SHA256 archive-sha256 | sed-hash $ARCHIVE_SHA256 archive-sha256
 [ERROR] good-md5-bad-sha256.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected sha256=md5
-          got      sha256=md5
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=+archive-sha256+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-md5-bad-sha256.1/hello
 # Return code 1 #
-### opam source good-md5-bad-sha256 --require-checksums | '[0-9a-z]{64}' -> 'md5'
+### opam source good-md5-bad-sha256 --require-checksums | sed-hash $ARCHIVE_SHA256 archive-sha256
 [ERROR] good-md5-bad-sha256.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected sha256=md5
-          got      sha256=md5
+          expected sha256=0000000000000000000000000000000000000000000000000000000000000000
+          got      sha256=+archive-sha256+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-md5-bad-sha256.1/hello
@@ -773,21 +773,21 @@ Clearing cache of downloaded files
 ### :I:9: good sha256 & bad md5
 ### opam lint --package good-sha256-bad-md5
 <default>/good-sha256-bad-md5.1: Passed.
-### opam lint --package good-sha256-bad-md5 --check-upstream | '[0-9a-z]{32}' -> 'hash'
+### opam lint --package good-sha256-bad-md5 --check-upstream | sed-hash $ARCHIVE_MD5 archive-md5
 <default>/good-sha256-bad-md5.1: Errors.
              error 60: Upstream check failed: "The archive doesn't match checksum:
-                - archive: md5=hash, in opam file: md5=hash
+                - archive: md5=+archive-md5+, in opam file: md5=00000000000000000000000000000000
               ."
 # Return code 1 #
-### opam install good-sha256-bad-md5 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256-bad-md5 | sed-hash $ARCHIVE_MD5 archive-md5
 The following actions will be performed:
 === install 1 package
   - install good-sha256-bad-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] good-sha256-bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Failed to get sources of good-sha256-bad-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -799,15 +799,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam install good-sha256-bad-md5 --require-checksums | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256-bad-md5 --require-checksums | sed-hash $ARCHIVE_MD5 archive-md5
 The following actions will be performed:
 === install 1 package
   - install good-sha256-bad-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] good-sha256-bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Failed to get sources of good-sha256-bad-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -819,18 +819,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source good-sha256-bad-md5 | '[0-9a-z]{32}' -> 'hash'
+### opam source good-sha256-bad-md5 | sed-hash $ARCHIVE_MD5 archive-md5
 [ERROR] good-sha256-bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-sha256-bad-md5.1/hello
 # Return code 1 #
-### opam source good-sha256-bad-md5 --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam source good-sha256-bad-md5 --require-checksums | sed-hash $ARCHIVE_MD5 archive-md5
 [ERROR] good-sha256-bad-md5.1: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-sha256-bad-md5.1/hello
@@ -842,38 +842,38 @@ Clearing cache of downloaded files
 <default>/clash-with-all-md5s.666: Errors.
              error 71: Field 'url.checksum' contains duplicated checksums: "md5: 17 occurences"
 # Return code 1 #
-### opam lint --package clash-with-all-md5s --check-upstream | '[0-9a-z]{32,64}' -> 'hash'
+### opam lint --package clash-with-all-md5s --check-upstream | sed-hash $ARCHIVE_MD5 archive-md5 | sed-hash $ARCHIVE_SHA256 archive-sha256
 <default>/clash-with-all-md5s.666: Errors.
              error 60: Upstream check failed: "The archive doesn't match checksums:
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: md5=hash, in opam file: md5=hash
-                - archive: sha256=hash, in opam file: sha256=hash
+                - archive: md5=+archive-md5+, in opam file: md5=00000000000000000000000000000000
+                - archive: md5=+archive-md5+, in opam file: md5=11111111111111111111111111111111
+                - archive: md5=+archive-md5+, in opam file: md5=22222222222222222222222222222222
+                - archive: md5=+archive-md5+, in opam file: md5=33333333333333333333333333333333
+                - archive: md5=+archive-md5+, in opam file: md5=44444444444444444444444444444444
+                - archive: md5=+archive-md5+, in opam file: md5=55555555555555555555555555555555
+                - archive: md5=+archive-md5+, in opam file: md5=66666666666666666666666666666666
+                - archive: md5=+archive-md5+, in opam file: md5=77777777777777777777777777777777
+                - archive: md5=+archive-md5+, in opam file: md5=88888888888888888888888888888888
+                - archive: md5=+archive-md5+, in opam file: md5=99999999999999999999999999999999
+                - archive: md5=+archive-md5+, in opam file: md5=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                - archive: md5=+archive-md5+, in opam file: md5=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+                - archive: md5=+archive-md5+, in opam file: md5=cccccccccccccccccccccccccccccccc
+                - archive: md5=+archive-md5+, in opam file: md5=dddddddddddddddddddddddddddddddd
+                - archive: md5=+archive-md5+, in opam file: md5=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+                - archive: md5=+archive-md5+, in opam file: md5=ffffffffffffffffffffffffffffffff
+                - archive: sha256=+archive-sha256+, in opam file: sha256=0123456789abcdeffedcba98765432100123456789abcdeffedbca9876543210
               ."
              error 71: Field 'url.checksum' contains duplicated checksums: "md5: 17 occurences"
 # Return code 1 #
-### opam install clash-with-all-md5s | '[0-9a-z]{32}' -> 'hash'
+### opam install clash-with-all-md5s | sed-hash $ARCHIVE_MD5 archive-md5
 The following actions will be performed:
 === install 1 package
   - install clash-with-all-md5s 666
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] clash-with-all-md5s.666: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Failed to get sources of clash-with-all-md5s.666: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -911,35 +911,35 @@ Done.
 ### sh check-cache.sh
 MD5: archive, with matching checksum
 SHA256: archive, with matching checksum
-### opam install clash-with-all-md5s | '[0-9a-z]{32,64}' -> 'hash'
+### opam install clash-with-all-md5s | sed-hash $ARCHIVE_MD5 archive-md5
 The following actions will be performed:
 === install 1 package
   - install clash-with-all-md5s 666
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (match)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - md5=hash (MISMATCH)
-          - sha256=hash (MISMATCH)
+          - md5=00000000000000000000000000000000 (MISMATCH)
+          - md5=11111111111111111111111111111111 (MISMATCH)
+          - md5=22222222222222222222222222222222 (MISMATCH)
+          - md5=33333333333333333333333333333333 (MISMATCH)
+          - md5=44444444444444444444444444444444 (MISMATCH)
+          - md5=+archive-md5+ (match)
+          - md5=55555555555555555555555555555555 (MISMATCH)
+          - md5=66666666666666666666666666666666 (MISMATCH)
+          - md5=77777777777777777777777777777777 (MISMATCH)
+          - md5=88888888888888888888888888888888 (MISMATCH)
+          - md5=99999999999999999999999999999999 (MISMATCH)
+          - md5=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa (MISMATCH)
+          - md5=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb (MISMATCH)
+          - md5=cccccccccccccccccccccccccccccccc (MISMATCH)
+          - md5=dddddddddddddddddddddddddddddddd (MISMATCH)
+          - md5=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee (MISMATCH)
+          - md5=ffffffffffffffffffffffffffffffff (MISMATCH)
+          - sha256=0123456789abcdeffedcba98765432100123456789abcdeffedbca9876543210 (MISMATCH)
 
 [ERROR] clash-with-all-md5s.666: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Failed to get sources of clash-with-all-md5s.666: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -954,15 +954,15 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 ### sh check-cache.sh
 MD5: not found
 SHA256: archive, with matching checksum
-### opam install clash-with-all-md5s --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam install clash-with-all-md5s --require-checksums | sed-hash $ARCHIVE_MD5 archive-md5
 The following actions will be performed:
 === install 1 package
   - install clash-with-all-md5s 666
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] clash-with-all-md5s.666: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Failed to get sources of clash-with-all-md5s.666: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -974,18 +974,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source clash-with-all-md5s | '[0-9a-z]{32}' -> 'hash'
+### opam source clash-with-all-md5s | sed-hash $ARCHIVE_MD5 archive-md5
 [ERROR] clash-with-all-md5s.666: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f clash-with-all-md5s.666/hello
 # Return code 1 #
-### opam source clash-with-all-md5s --require-checksums | '[0-9a-z]{32}' -> 'hash'
+### opam source clash-with-all-md5s --require-checksums | sed-hash $ARCHIVE_MD5 archive-md5
 [ERROR] clash-with-all-md5s.666: Checksum mismatch for file://${BASEDIR}/archive.tgz:
-          expected md5=hash
-          got      md5=hash
+          expected md5=00000000000000000000000000000000
+          got      md5=+archive-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f clash-with-all-md5s.666/hello
@@ -1122,15 +1122,15 @@ Done.
 MD5: archive, with matching checksum
 SHA256: archive, with mismatching checksum
 ### # what happens here is that sha256 is checked first, there is a mismatch on sha256 archive (checking its sha256 & md5), so it is remove, returns file not available, and then it downloads the archive from url
-### opam install good-sha256-good-md5 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256-good-md5 | sed-hash $ARCHIVE_MD5 archive-md5 | sed-hash $ARCHIVE_SHA256 archive-sha256
 The following actions will be performed:
 === install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - sha256=hash (MISMATCH)
-          - md5=hash (MISMATCH)
+          - sha256=+archive-sha256+ (MISMATCH)
+          - md5=+archive-md5+ (MISMATCH)
 
 -> retrieved good-sha256-good-md5.1  (file://${BASEDIR}/archive.tgz)
 -> installed good-sha256-good-md5.1
@@ -1154,15 +1154,15 @@ Done.
 ### sh check-cache.sh
 MD5: archive, with mismatching checksum
 SHA256: archive, with mismatching checksum
-### opam install good-sha256-good-md5 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256-good-md5 | sed-hash $ARCHIVE_MD5 archive-md | sed-hash $ARCHIVE_SHA256 archive-sha2565
 The following actions will be performed:
 === install 1 package
   - install good-sha256-good-md5 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - sha256=hash (MISMATCH)
-          - md5=hash (MISMATCH)
+          - sha256=+archive-sha2565+ (MISMATCH)
+          - md5=+archive-md+ (MISMATCH)
 
 -> retrieved good-sha256-good-md5.1  (file://${BASEDIR}/archive.tgz)
 -> installed good-sha256-good-md5.1
@@ -1220,14 +1220,14 @@ Done.
 ### sh check-cache.sh
 MD5: link, to sha256 archive
 SHA256: archive, with mismatching checksum
-### opam install good-sha256.1 | '[0-9a-z]{32,64}' -> 'hash'
+### opam install good-sha256.1 | sed-hash $ARCHIVE_SHA256 archive-sha256
 The following actions will be performed:
 === install 1 package
   - install good-sha256 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - sha256=hash (MISMATCH)
+          - sha256=+archive-sha256+ (MISMATCH)
 
 -> retrieved good-sha256.1  (file://${BASEDIR}/archive.tgz)
 -> installed good-sha256.1

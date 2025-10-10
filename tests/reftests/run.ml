@@ -477,6 +477,44 @@ module Parse = struct
               in
               let acc, r = aux cmd r acc in
               get_rewr (unordered, sort, acc) r
+            | "|" :: "sed-hash" :: hash :: r ->
+              let length = String.length hash in
+              if hash.[0] <> '$'
+              && length <> 32
+              && length <> 64
+              && length <> 128
+              then
+                (Printf.printf
+                   "Bad 'sed-hash' argument (%s), expecting a environment \
+                    variable beginning with '$' or a hash of 32, 64, \
+                    or 128 characters" hash;
+                 unordered, sort, List.rev acc, None)
+              else
+                let name, r =
+                  match r with
+                  | "|" :: _ | [] -> "hash", r
+                  | name :: r -> name, r
+                in
+                let name = "+"^name^"+" in
+                let re_hash = posix_re hash in
+                let sep = alt [ char '/' ; seq [ char '\\'; opt @@ char '\\'] ] in
+                let pre_t =
+                  seq [
+                    sep;
+                    repn xdigit 2 (Some 2);
+                  ] in
+                let pre_hash =
+                  seq [
+                    pre_t;
+                    sep;
+                    re_hash;
+                  ] in
+                let pre = seq [ pre_t; eos ] in
+                (* The order is important *)
+                let acc = (pre_hash, Sed ("/pre/"^name))::acc in
+                let acc = (re_hash, Sed name)::acc in
+                let acc = (pre, Sed "/pre")::acc in
+                get_rewr (unordered, sort, acc) r
             | ">$" :: output :: [] ->
               unordered, sort, List.rev acc, Some (get_str output)
             | [] ->
