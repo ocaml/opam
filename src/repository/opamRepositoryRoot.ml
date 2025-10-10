@@ -68,8 +68,8 @@ let move ~src ~dst =
 let is_symlink = function
   | Dir dir -> Dir.is_symlink dir
 
-let patch ?preprocess ~allow_unclean patch = function
-  | Dir dir -> Dir.patch ?preprocess ~allow_unclean patch dir
+let patch ~allow_unclean patch = function
+  | Dir dir -> Dir.patch ~allow_unclean patch dir
 
 let clean = function
   | Dir dir -> Dir.clean dir

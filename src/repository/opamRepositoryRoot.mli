@@ -17,7 +17,7 @@ module Dir : sig
   val copy : src:t -> dst:t -> unit
   val copy_except_vcs : src:t -> dst:t -> unit
   val is_symlink : t -> bool
-  val patch : ?preprocess:bool -> allow_unclean:bool -> OpamFilename.t -> t -> exn option
+  val patch : allow_unclean:bool -> [`Patch_file of OpamFilename.t | `Patch_diffs of Patch.t list ] -> t -> (Patch.operation list, exn) result
   val make : t -> unit
   val dirs : t -> OpamFilename.Dir.t list
   val is_empty : t -> bool option
@@ -43,6 +43,6 @@ val to_string : t -> string
 val copy : src:t -> dst:t -> unit
 val move : src:t -> dst:t -> unit
 val is_symlink : t -> bool
-val patch : ?preprocess:bool -> allow_unclean:bool -> OpamFilename.t -> t -> exn option
+val patch : allow_unclean:bool -> [`Patch_file of OpamFilename.t | `Patch_diffs of Patch.t list ] -> t -> (Patch.operation list, exn) result
 val clean : t -> unit
 val delayed_read_repo : t -> bool * (unit -> OpamFile.Repo.t)
