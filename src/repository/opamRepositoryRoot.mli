@@ -32,15 +32,9 @@ module Dir : sig
   val in_dir : t -> (unit -> 'a) -> 'a
   val exists : t -> bool
   val remove : t -> unit
-  val clean : t -> unit
   val move : src:t -> dst:t -> unit
   val copy : src:t -> dst:t -> unit
   val copy_except_vcs : src:t -> dst:t -> unit
-  val is_symlink : t -> bool
-  val patch :
-    allow_unclean:bool ->
-    [`Patch_file of OpamFilename.t | `Patch_diffs of Patch.t list ] -> t ->
-    (Patch.operation list, exn) result
   val make : t -> unit
   val dirs : t -> OpamFilename.Dir.t list
   val is_empty : t -> bool option
@@ -49,8 +43,8 @@ module Dir : sig
   val repo : t -> OpamFile.Repo.t OpamFile.t
 
   module Op: sig
-    val (/): t -> string -> OpamFilename.Dir.t
-    val (//): t -> string -> OpamFilename.t
+    val ( / ) : t -> string -> OpamFilename.Dir.t
+    val ( // ) : t -> string -> OpamFilename.t
   end
 end
 
@@ -67,7 +61,6 @@ type t =
 val quarantine : t -> t
 
 val remove : t -> unit
-val exists : t -> bool
 val is_empty : t -> bool option
 (* TODO ORR doc *)
 val make : t -> unit
@@ -85,8 +78,3 @@ val patch :
 val clean : t -> unit
 (* TODO ORR doc *)
 val delayed_read_repo : t -> bool * (unit -> OpamFile.Repo.t)
-
-module Op: sig
-  val (/): t -> string -> OpamFilename.Dir.t
-  val (//): t -> string -> OpamFilename.t
-end

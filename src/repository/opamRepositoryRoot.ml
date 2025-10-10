@@ -56,9 +56,6 @@ let quarantine = function
 let remove = function
   | Dir dir -> Dir.remove dir
 
-let exists = function
-  | Dir dir -> Dir.exists dir
-
 let is_empty = function
   | Dir dir -> Dir.is_empty dir
 
@@ -96,16 +93,3 @@ let delayed_read_repo = function
     let repo_file_path = Dir.repo dir in
     let read () = OpamFile.Repo.safe_read repo_file_path in
     (OpamFile.exists repo_file_path, read)
-
-
-module Op = struct
-
-  let (/) d s =
-    match d with
-    | Dir d -> Dir.Op.(d / s)
-
-  let (//) d s =
-    match d with
-    | Dir d -> Dir.Op.(d // s)
-
-end
