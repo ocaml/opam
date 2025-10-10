@@ -24,7 +24,6 @@ module Dir = struct
   let in_dir = OpamFilename.in_dir
   let exists = OpamFilename.exists_dir
   let remove = OpamFilename.rmdir
-  let clean = OpamFilename.cleandir
   let move = OpamFilename.move_dir
   let copy = OpamFilename.copy_dir
   let copy_except_vcs = OpamFilename.copy_dir_except_vcs
@@ -84,9 +83,6 @@ let is_symlink = function
 
 let patch ~allow_unclean patch = function
   | Dir dir -> Dir.patch ~allow_unclean patch dir
-
-let clean = function
-  | Dir dir -> Dir.clean dir
 
 let delayed_read_repo = function
   | Dir dir ->

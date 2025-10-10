@@ -78,7 +78,8 @@ let repository rt repo =
     else match eval_redirect gt r repo_root with
       | None -> Done (r, has_changes)
       | Some (new_url, f) ->
-        OpamRepositoryRoot.clean repo_root;
+        OpamRepositoryRoot.remove repo_root;
+        OpamRepositoryRoot.make_empty repo_root;
         let reason = match f with
           | None   -> ""
           | Some f -> Printf.sprintf " (%s)" (OpamFilter.to_string f) in

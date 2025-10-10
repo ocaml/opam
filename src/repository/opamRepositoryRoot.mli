@@ -73,7 +73,6 @@ val patch :
   allow_unclean:bool ->
   [`Patch_file of OpamFilename.t | `Patch_diffs of Patch.t list ] -> t ->
   (Patch.operation list, exn) result
-(* TODO ORR doc *)
-val clean : t -> unit
+
 (* TODO ORR doc *)
 val delayed_read_repo : t -> bool * (unit -> OpamFile.Repo.t)
