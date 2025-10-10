@@ -74,5 +74,6 @@ val patch :
   [`Patch_file of OpamFilename.t | `Patch_diffs of Patch.t list ] -> t ->
   (Patch.operation list, exn) result
 
-(* TODO ORR doc *)
+(** Returns a pair [(exists, f)] where [exists] tells whether the
+    [repo] file exists in the repository and [f] reads it *)
 val delayed_read_repo : t -> bool * (unit -> OpamFile.Repo.t)
