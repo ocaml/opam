@@ -76,25 +76,30 @@ module Cache = struct
 
 end
 
-let get_root_raw root repos_tmp name =
+let get_root_raw root repos_tmp name : OpamRepositoryRoot.t =
+    (* TODO 6680 fixing only compil!!! *)
   match Hashtbl.find repos_tmp name with
-  | lazy repo_root -> repo_root
-  | exception Not_found -> OpamRepositoryPath.root root name
+  | lazy repo_root -> OpamRepositoryRoot.Dir repo_root
+  | exception Not_found ->
+    OpamRepositoryRoot.Dir (OpamRepositoryPath.root root name)
 
-let get_root rt name =
+let get_root rt name  : OpamRepositoryRoot.t =
   get_root_raw rt.repos_global.root rt.repos_tmp name
 
 let get_repo_root rt repo =
   get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
 
 let get_repo_files rt name dir =
-  let dir = OpamFilename.Op.(get_root rt name / dir) in
-  let files = OpamFilename.rec_files dir in
-  List.map (fun file ->
-      OpamFilename.Base.of_string
-        (OpamSystem.back_to_forward (OpamFilename.remove_prefix dir file)),
-      lazy (OpamFilename.read file))
-    files
+  (* TODO 6680 fixing only compil!!! *)
+  match get_root rt name with
+  | OpamRepositoryRoot.Dir repo_root ->
+    let dir = OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root / dir) in
+    let files = OpamFilename.rec_files dir in
+    List.map (fun file ->
+        OpamFilename.Base.of_string
+          (OpamSystem.back_to_forward (OpamFilename.remove_prefix dir file)),
+        lazy (OpamFilename.read file))
+      files
 
 let read_package_opam ~repo_name ~repo_root package_dir =
   match OpamFileTools.read_repo_opam ~repo_name ~repo_root package_dir with
@@ -143,6 +148,10 @@ let load_opams_from_diff repo diffs rt =
     OpamRepositoryName.Map.find repo.repo_name rt.repo_opams
   in
   let repo_root = get_repo_root rt repo in
+  (* TODO 6680 fixing only compil!!! *)
+  match repo_root with
+  | OpamRepositoryRoot.Dir repo_root ->
+  let repo_root = OpamRepositoryRoot.Dir.to_dir repo_root in
   let process_file (opams, processed_dirs) file ~is_removal =
     let pkg_dir =
       let file = OpamFilename.raw file in
@@ -162,6 +171,8 @@ let load_opams_from_diff repo diffs rt =
       opams, processed_dirs
     else
       let processed_dirs = OpamFilename.Dir.Set.add pkg_dir processed_dirs in
+      (* TODO 6680 fixing only compil!!! *)
+      let repo_root = OpamRepositoryRoot.Dir.of_dir repo_root in
       match read_package_opam ~repo_name:repo.repo_name ~repo_root pkg_dir with
       | Some (nv, opam) -> OpamPackage.Map.add nv opam opams, processed_dirs
       | None ->
