@@ -534,7 +534,8 @@ let apply_repo_update repo repo_root = function
       (slog OpamRepositoryName.to_string) repo.repo_name
       (slog OpamFilename.to_string) f;
     let patch_result =
-      OpamFilename.patch ~allow_unclean:false (`Patch_diffs diffs) repo_root
+      OpamRepositoryRoot.patch ~allow_unclean:false (`Patch_diffs diffs)
+        repo_root
     in
     if not (OpamConsole.debug ()) then OpamFilename.remove f;
     (match patch_result with
@@ -554,7 +555,6 @@ let cleanup_repo_update upd =
   if not (OpamConsole.debug ()) then
     match upd with
     | Update_full d -> OpamRepositoryRoot.remove d
-    | Update_patch f -> OpamFilename.remove f
     | Update_patch (f, _) -> OpamFilename.remove f
     | _ -> ()
 

@@ -132,7 +132,7 @@ let repository rt repo =
       | OpamRepositoryRoot.Dir dir ->
         match diffs with
         | [] ->
-          OpamRepositoryState.load_opams_from_dir repo.repo_name repo_root
+          OpamRepositoryState.load_opams_from_dir repo.repo_name dir
         | diffs -> OpamRepositoryState.load_opams_from_diff repo diffs rt
     in
     begin match repo_root with
