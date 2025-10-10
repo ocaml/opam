@@ -100,9 +100,7 @@ let index_command cli =
       | None -> date ()
       | Some vcs ->
         let module VCS = (val OpamRepository.find_backend_by_kind vcs) in
-        match
-          OpamProcess.Job.run (VCS.revision repo_root_dir)
-        with
+        match OpamProcess.Job.run (VCS.revision repo_root_dir) with
         | None -> date ()
         | Some hash -> hash
     in
@@ -112,15 +110,12 @@ let index_command cli =
       (OpamConsole.msg "Generating urls.txt...\n";
        OpamFilename.of_string "repo" ::
        (if urls_txt = `full_urls_txt then
-          OpamFilename.rec_files
-            OpamFilename.Op.(repo_root_dir / "compilers") @
+          OpamFilename.rec_files OpamFilename.Op.(repo_root_dir / "compilers") @
           OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo_root)
         else []) |>
        List.fold_left (fun set f ->
            if not (OpamFilename.exists f) then set else
-             let attr =
-               OpamFilename.to_attribute repo_root_dir f
-             in
+             let attr = OpamFilename.to_attribute repo_root_dir f in
              OpamFilename.Attribute.Set.add attr set
          ) OpamFilename.Attribute.Set.empty |>
        OpamFile.File_attributes.write
