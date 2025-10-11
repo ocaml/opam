@@ -27,6 +27,9 @@ val list:
     are selected in. *)
 val list_all: 'a repos_state -> short:bool -> unit
 
+(** Show the URL and priority (rank) of the given repository *)
+val show_repo: 'a repos_state -> switches:switch list -> repository_name -> unit
+
 (** Add a new repository to ~/.opam/repos, without updating any selections *)
 val add:
   rw repos_state -> repository_name -> url -> trust_anchors option ->
