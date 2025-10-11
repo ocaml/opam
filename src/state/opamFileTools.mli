@@ -93,7 +93,7 @@ val read_opam: dirname -> OpamFile.OPAM.t option
 (** Like {!read_opam}, but additionally fills in the [metadata_dir] info
     correctly for the given repository. *)
 val read_repo_opam:
-  repo_name:repository_name -> repo_root:dirname ->
+  repo_name:repository_name -> repo_root:OpamRepositoryRoot.Dir.t ->
   dirname -> OpamFile.OPAM.t option
 
 (** Adds data from 'url' and 'descr' files found in the specified dir or the
