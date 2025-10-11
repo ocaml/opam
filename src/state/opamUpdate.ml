@@ -18,14 +18,10 @@ open OpamFilename.Op
 let log fmt = OpamConsole.log "UPDATE" fmt
 let slog = OpamConsole.slog
 
-let safe_read_repo_file = function
-  | OpamRepositoryRoot.Dir dir ->
-    OpamFile.Repo.safe_read (OpamRepositoryPath.repo dir)
-
 let eval_redirect gt repo repo_root =
   if repo.repo_url.OpamUrl.backend <> `http then None else
   let redirect =
-    safe_read_repo_file repo_root
+    snd (OpamRepositoryRoot.delayed_read_repo repo_root) ()
     |> OpamFile.Repo.redirect
   in
   let redirect = List.fold_left (fun acc (redirect, filter) ->
