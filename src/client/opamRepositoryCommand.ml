@@ -124,6 +124,7 @@ let set_url rt name url trust_anchors =
   OpamFilename.remove
     (OpamRepositoryPath.tar rt.repos_global.root name);
   let repo = { repo with repo_url = url; repo_trust = trust_anchors; } in
+  OpamRepositoryState.remove_from_repos_tmp  rt name;
   update_repos_config rt (OpamRepositoryName.Map.add name repo rt.repositories)
 
 let print_selection rt ~short repos_list =
