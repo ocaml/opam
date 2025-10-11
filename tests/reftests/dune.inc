@@ -735,6 +735,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:empty-conflicts-007.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-env-idempotent)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff env-idempotent.test env-idempotent.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-env-idempotent)))
+
+(rule
+ (targets env-idempotent.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:env-idempotent.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-env)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
