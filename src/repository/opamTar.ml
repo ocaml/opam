@@ -68,21 +68,21 @@ let fold_reg_files f acc fname =
 
 module Inplace = struct
   module Map = OpamStd.String.Map
-  type t = string Map.t
+  type t = Unix.file_descr * string Map.t
 
   let with_open_out fname f =
     let fd = Unix.openfile (OpamFilename.to_string fname) [Unix.O_RDWR] 0o640 in
     Fun.protect ~finally:(fun () -> Unix.close fd) @@ fun () ->
-    f (fold_reg_files_aux (fun acc k x -> Map.add k x acc) Map.empty fd)
+    f (fd, fold_reg_files_aux (fun acc k x -> Map.add k x acc) Map.empty fd)
 
-  let fold_reg_files f acc t =
+  let fold_reg_files f acc (_fd, t) =
     Map.fold (fun k x acc -> f acc k x) t acc
 
-  let add ~fname ~content t = Map.add fname content t
+  let add ~fname ~content (fd, t) = (fd, Map.add fname content t)
 
-  let remove fname t = Map.remove fname t
+  let remove fname (fd, t) = (fd, Map.remove fname t)
 
-  let write t =
+  let write (fd, t) =
     let to_buffer buf t =
       let rec run : type a. Buffer.t -> (a, 'err, _) Tar.t -> a = fun buf -> function
         | Tar.Write str -> Buffer.add_string buf str
@@ -113,5 +113,7 @@ module Inplace = struct
     let t = Tar_gz.out_gzipped ~level:4 ~mtime:0l Gz.Unix t in
     let buf = Buffer.create 10_485_760 in
     to_buffer buf t;
-    Buffer.contents buf
+    let str = Buffer.contents buf in
+    let _ : int = Unix.write_substring fd str 0 (String.length str) in
+    ()
 end
