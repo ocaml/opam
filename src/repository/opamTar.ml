@@ -82,6 +82,36 @@ module Inplace = struct
 
   let remove fname t = Map.remove fname t
 
-  let write _ =
-    assert false (* TODO *)
+  let write t =
+    let to_buffer buf t =
+      let rec run : type a. Buffer.t -> (a, 'err, _) Tar.t -> a = fun buf -> function
+        | Tar.Write str -> Buffer.add_string buf str
+        | Tar.Read _ | Tar.Really_read _ | Tar.Seek _ | Tar.High _ -> assert false
+        | Tar.Return (Ok value) -> value
+        | Tar.Return (Error _) -> failwith "something went wrong"
+        | Tar.Bind (x, f) -> run buf (f (run buf x))
+      in
+      run buf t
+    in
+    let entries =
+      let x =
+        Map.fold (fun path content acc ->
+            let hdr =
+              Tar.Header.make ~file_mode:0 ~mod_time:0L ~user_id:0 ~group_id:0
+                path (Int64.of_int (String.length content))
+            in
+            (Some Tar.Header.Ustar, hdr, fun () -> Tar.return (Ok (Some content))) :: acc)
+          t []
+      in
+      let r = ref x in
+      fun () ->
+        match !r with
+        | [] -> Tar.return (Ok None)
+        | x::xs -> r := xs; Tar.return (Ok (Some x))
+    in
+    let t = Tar.out ~level:Ustar entries in
+    let t = Tar_gz.out_gzipped ~level:4 ~mtime:0l Gz.Unix t in
+    let buf = Buffer.create 10_485_760 in
+    to_buffer buf t;
+    Buffer.contents buf
 end
