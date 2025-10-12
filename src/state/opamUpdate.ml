@@ -123,7 +123,8 @@ let repository rt repo =
             msg)
       (OpamFile.Repo.announce repo_file);
     let tarred_repo = OpamRepositoryPath.tar gt.root repo.repo_name in
-    (if OpamRepositoryConfig.(!r.repo_tarring) then
+    (if OpamRepositoryConfig.(!r.repo_tarring) &&
+        repo.repo_url.backend <> `http then
        match repo_root with
        | Dir dir -> OpamRepositoryRoot.make_tar_gz_job tarred_repo dir
      else Done None)
@@ -143,7 +144,8 @@ let repository rt repo =
           | diffs -> OpamRepositoryState.load_opams_from_diff repo diffs rt
       in
       let local_dir = OpamRepositoryPath.root gt.root repo.repo_name in
-      if OpamRepositoryConfig.(!r.repo_tarring) then
+      if OpamRepositoryConfig.(!r.repo_tarring) &&
+         repo.repo_url.backend <> `http then
         (if OpamRepositoryRoot.Dir.exists local_dir then
            (* Mark the obsolete local directory for deletion once we complete: it's
               no longer needed once we have a tar.gz *)
