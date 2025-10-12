@@ -137,7 +137,7 @@ let delayed_read_repo = function
         OpamTar.fold_reg_files (fun () fname content ->
             if fname = "repo" then
               raise (Found content))
-          () (Unix.openfile (Tar.to_string tar) [Unix.O_RDONLY] 0);
+          () (Tar.to_file tar);
         None
       with Found content -> Some content
     in

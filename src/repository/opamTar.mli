@@ -10,4 +10,16 @@
 
 val fold_reg_files :
   ('acc -> string -> string -> 'acc) ->
-  'acc -> Unix.file_descr -> 'acc
+  'acc -> OpamFilename.t -> 'acc
+
+module Inplace : sig
+  type t
+
+  val with_open_out : OpamFilename.t -> (t -> 'a) -> 'a
+  val fold_reg_files :
+    ('acc -> string -> string -> 'acc) ->
+    'acc -> t -> 'acc
+  val add : fname:string -> content:string -> t -> t
+  val remove : string -> t -> t
+  val write : t -> unit
+end

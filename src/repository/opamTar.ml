@@ -41,7 +41,7 @@ let rec run : type a. Unix.file_descr -> (a, _, _) Tar.t -> a = fun fd -> functi
   | Tar.High _ | Tar.Write _ | Tar.Seek _ -> assert false
   | Tar.Bind (x, f) -> run fd (f (run fd x))
 
-let fold_reg_files f acc fd =
+let fold_reg_files_aux f acc fd =
   let go ?global:_ hdr acc =
     match hdr.Tar.Header.link_indicator with
     | Normal ->
@@ -60,3 +60,28 @@ let fold_reg_files f acc fd =
     | LongName -> failwith "longnames unsupported"
   in
   run fd (Tar_gz.in_gzipped (Tar.fold go acc))
+
+let fold_reg_files f acc fname =
+  let fd = Unix.openfile (OpamFilename.to_string fname) [Unix.O_RDONLY] 0 in
+  Fun.protect ~finally:(fun () -> Unix.close fd) @@ fun () ->
+  fold_reg_files_aux f acc fd
+
+module Inplace = struct
+  module Map = OpamStd.String.Map
+  type t = string Map.t
+
+  let with_open_out fname f =
+    let fd = Unix.openfile (OpamFilename.to_string fname) [Unix.O_RDWR] 0o640 in
+    Fun.protect ~finally:(fun () -> Unix.close fd) @@ fun () ->
+    f (fold_reg_files_aux (fun acc k x -> Map.add k x acc) Map.empty fd)
+
+  let fold_reg_files f acc t =
+    Map.fold (fun k x acc -> f acc k x) t acc
+
+  let add ~fname ~content t = Map.add fname content t
+
+  let remove fname t = Map.remove fname t
+
+  let write _ =
+    assert false (* TODO *)
+end
