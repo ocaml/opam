@@ -147,6 +147,7 @@ module B = struct
   let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
     log "pull-repo-update";
     match repo_root with
+    | OpamRepositoryRoot.Tar _ -> assert false
     | OpamRepositoryRoot.Dir repo_root ->
       let quarantine = OpamRepositoryRoot.Dir.quarantine repo_root in
       let finalise () = OpamRepositoryRoot.Dir.remove quarantine in

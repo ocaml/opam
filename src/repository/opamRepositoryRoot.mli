@@ -48,11 +48,35 @@ module Dir : sig
   end
 end
 
-val make_tar_gz_job : OpamFilename.t -> Dir.t -> exn option OpamProcess.job
-val extract_in_job : OpamFilename.t -> Dir.t -> exn option OpamProcess.job
+module Tar : sig
+  type t
+
+  val of_file : OpamFilename.t -> t
+  val to_file : t -> OpamFilename.t
+  val to_string : t -> string
+
+  val backup : tmp_dir:OpamFilename.Dir.t -> t -> t
+
+  val exists : t -> bool
+  val remove : t -> unit
+  val extract_in : t -> OpamFilename.Dir.t -> unit
+  val download_as :
+    ?quiet:bool ->
+    ?validate:bool ->
+    overwrite:bool ->
+    ?compress:bool ->
+    ?checksum:OpamHash.t ->
+    OpamUrl.t -> t -> unit OpamProcess.job
+  val copy : src:t -> dst:t -> unit
+  val move : src:t -> dst:t -> unit
+end
+
+val make_tar_gz_job : Tar.t -> Dir.t -> exn option OpamProcess.job
+val extract_in_job : Tar.t -> Dir.t -> exn option OpamProcess.job
 
 type t =
   | Dir of Dir.t
+  | Tar of Tar.t
 
 (** [quarantine repo_root] returns a temporary repository root dedicated
     to [repo_root]. the returned repository is not created on disk and
@@ -66,8 +90,8 @@ val make_empty : t -> unit
 val dirname : t -> OpamFilename.Dir.t
 val basename : t -> OpamFilename.Base.t
 val to_string : t -> string
-val copy : src:t -> dst:t -> unit
-val move : src:t -> dst:t -> unit
+val copy : src:t -> dst:t -> exn option OpamProcess.job
+val move : src:t -> dst:t -> exn option OpamProcess.job
 val is_symlink : t -> bool
 val patch :
   allow_unclean:bool ->

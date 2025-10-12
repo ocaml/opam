@@ -14,7 +14,7 @@ open OpamFilename.Op
 let root root name =
   OpamRepositoryRoot.Dir.of_dir (root / "repo" / OpamRepositoryName.to_string name)
 
-let tar root name = root / "repo" // (OpamRepositoryName.to_string name ^ ".tar.gz")
+let tar root name = OpamRepositoryRoot.Tar.of_file (root / "repo" // (OpamRepositoryName.to_string name ^ ".tar.gz"))
 
 let download_cache root = root / "download-cache"
 

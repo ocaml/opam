@@ -283,7 +283,10 @@ let orig_opam_file st name opam =
      Some (OpamFilename.Dir.of_string abs)
    | Some (Some r, rel) ->
      Some ((match OpamRepositoryState.get_root st.switch_repos r with
-     | OpamRepositoryRoot.Dir r -> OpamRepositoryRoot.Dir.to_dir r) / rel))
+     | OpamRepositoryRoot.Dir r -> OpamRepositoryRoot.Dir.to_dir r
+     | OpamRepositoryRoot.Tar _ -> assert false (* TODO *)
+     ) / rel)
+   )
   >>= fun dir ->
   let opam_files = [
     dir // (OpamPackage.Name.to_string name ^ ".opam");
