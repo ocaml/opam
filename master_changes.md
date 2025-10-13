@@ -212,6 +212,10 @@ users)
   * `OpamRepository.update`: changed the `'Changes` return type to include `Patch.operation list` of changes. [#6614 @arozovyk]
   * `OpamRepositoryBackend.update` type : include the `Patch.t list` in `Update_patch` variant [#6614 @arozovyk]
   * `OpamRepositoryBackend.get_diff`: include `Patch.t list` in the return type (along with `filename`) [#6614 @arozovyk]
+  * `OpamRepositoryBackend`: add `get_diff_tars` to compute diffs between two tar.gz repository archives [#XXX @arozovyk]
+  * `OpamRepositoryBackend`: add `get_diff_tar_dir` to compute diffs between a tar.gz archive and a directory [#XXX @arozovyk]
+  * `OpamRepositoryBackend`: add `get_diff_dir_tar` to compute diffs between a directory and a tar.gz archive [#XXX @arozovyk]
+  * `OpamRepositoryBackend`: renamed `get_diff` to `get_diff_dirs` [#XXX @arozovyk]
 
 ## opam-state
   * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]

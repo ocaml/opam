@@ -117,4 +117,23 @@ val job_text:
     Unsupported file types: symlinks, character devices, block devices,
     named pipes, sockets.
     Unsupported comparison: comparison between regular files and directories. *)
-val get_diff: dirname -> basename -> basename -> (filename * Patch.t list) option
+val get_diff_dirs: dirname -> basename -> basename -> (filename * Patch.t list) option
+
+(** [get_diff_tars tar1 tar2] computes the diff between two tar.gz files.
+    Returns None if they are equal, and the corresponding
+    patch and the list of file-changes otherwise. *)
+val get_diff_tars: filename -> filename -> (filename * Patch.t list) option
+
+(** [get_diff_tar_dir tar_file dir] computes the diff between a tar.gz file
+    and a directory. Returns None if they are equal, and the corresponding
+    patch and the list of file-changes otherwise.
+
+    Treats the tar file as the old state and the directory as the new state. *)
+val get_diff_tar_dir: filename -> dirname -> (filename * Patch.t list) option
+
+(** [get_diff_dir_tar dir tar_file] computes the diff between a directory
+    and a tar.gz file. Returns None if they are equal, and the corresponding
+    patch and the list of file-changes otherwise.
+
+    Treats the directory as the old state and the tar file as the new state. *)
+val get_diff_dir_tar: dirname -> filename -> (filename * Patch.t list) option
