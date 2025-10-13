@@ -48,7 +48,17 @@ module B = struct
 
   let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
     log "pull-repo-update";
-    let quarantine = OpamRepositoryRoot.quarantine repo_root in
+    let quarantine =
+      match repo_root, url.OpamUrl.backend with
+      | OpamRepositoryRoot.Dir dir, `http ->
+        (* Force tar type *)
+        let dir_str = OpamRepositoryRoot.Dir.to_string dir in
+        let quarantine_tar_str = dir_str ^ ".tar.gz.new" in
+        OpamRepositoryRoot.Tar
+         (OpamRepositoryRoot.Tar.of_file (OpamFilename.raw quarantine_tar_str))
+      | _ ->
+        OpamRepositoryRoot.quarantine repo_root
+    in
     OpamRepositoryRoot.make_empty quarantine;
     let finalise () = OpamRepositoryRoot.remove quarantine in
     OpamProcess.Job.catch (fun e ->
@@ -60,14 +70,41 @@ module B = struct
     if OpamRepositoryRoot.is_empty repo_root <> Some false then
       Done (OpamRepositoryBackend.Update_full quarantine)
     else
-      OpamStd.Exn.finally finalise @@ fun () ->
-      OpamRepositoryBackend.get_diff_dirs
-        (OpamRepositoryRoot.dirname repo_root)
-        (OpamRepositoryRoot.basename repo_root)
-        (OpamRepositoryRoot.basename quarantine)
-      |> function
-      | None -> Done OpamRepositoryBackend.Update_empty
-      | Some patch -> Done (OpamRepositoryBackend.Update_patch patch)
+      (* Check for format mismatch: if repo_root and quarantine have different types,
+         return Update_full to trigger format conversion via OpamRepositoryRoot.copy *)
+      let needs_conversion =
+        match repo_root, quarantine with
+        | OpamRepositoryRoot.Dir _, OpamRepositoryRoot.Tar _ ->
+          true
+        | OpamRepositoryRoot.Tar _, OpamRepositoryRoot.Dir _ ->
+          assert false (* Not happening *)
+        | _ ->
+          false
+      in
+      if needs_conversion then
+        Done (OpamRepositoryBackend.Update_full quarantine)
+      else
+        OpamStd.Exn.finally finalise @@ fun () ->
+        (match repo_root, quarantine with
+         | OpamRepositoryRoot.Tar old_tar, OpamRepositoryRoot.Tar new_tar ->
+           OpamRepositoryBackend.get_diff_tars
+             (OpamRepositoryRoot.Tar.to_file old_tar)
+             (OpamRepositoryRoot.Tar.to_file new_tar)
+         | OpamRepositoryRoot.Dir _dir, OpamRepositoryRoot.Dir _dir2 ->
+           OpamRepositoryBackend.get_diff_dirs
+             (OpamRepositoryRoot.dirname repo_root)
+             (OpamRepositoryRoot.basename repo_root)
+             (OpamRepositoryRoot.basename quarantine)
+         | OpamRepositoryRoot.Tar tar, OpamRepositoryRoot.Dir dir ->
+           OpamRepositoryBackend.get_diff_tar_dir
+             (OpamRepositoryRoot.Tar.to_file tar) (OpamRepositoryRoot.Dir.to_dir dir)
+         | OpamRepositoryRoot.Dir dir, OpamRepositoryRoot.Tar tar ->
+           OpamRepositoryBackend.get_diff_dir_tar
+             (OpamRepositoryRoot.Dir.to_dir dir) (OpamRepositoryRoot.Tar.to_file tar)
+        )
+        |> function
+        | None -> Done OpamRepositoryBackend.Update_empty
+        | Some patch -> Done (OpamRepositoryBackend.Update_patch patch)
 
   let repo_update_complete _ _ = Done ()
 
