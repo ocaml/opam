@@ -94,20 +94,22 @@ module Inplace = struct
       run buf t
     in
     let entries =
-      let x =
+      let dispenser =
         Map.fold (fun path content acc ->
             let hdr =
               Tar.Header.make ~file_mode:0 ~mod_time:0L ~user_id:0 ~group_id:0
                 path (Int64.of_int (String.length content))
             in
-            (Some Tar.Header.Ustar, hdr, fun () -> Tar.return (Ok (Some content))) :: acc)
-          t []
+            let data = fun () -> Tar.return (Ok (Some content)) in
+            let entry = (Some Tar.Header.Ustar, hdr, data) in
+            OpamCompat.Seq.cons entry acc)
+          t Seq.empty
+        |> OpamCompat.Seq.to_dispenser
       in
-      let r = ref x in
       fun () ->
-        match !r with
-        | [] -> Tar.return (Ok None)
-        | x::xs -> r := xs; Tar.return (Ok (Some x))
+        match dispenser () with
+        | None -> Tar.return (Ok None)
+        | Some x -> Tar.return (Ok (Some x))
     in
     let t = Tar.out ~level:Ustar entries in
     let t = Tar_gz.out_gzipped ~level:4 ~mtime:0l Gz.Unix t in
