@@ -681,12 +681,13 @@ let safe_wait fallback_pid f x =
   let cleanup () =
     match sh with
     | Some sh ->
-      ignore (Unix.alarm 0); (* cancels the alarm *)
+      let _ : int = Unix.alarm 0 in (* cancels the alarm *)
       Sys.set_signal Sys.sigalrm sh
     | None -> ()
   in
   let rec aux () =
-    if sh <> None then ignore (Unix.alarm 1);
+    (if sh <> None then
+      let _ : int = Unix.alarm 1 in ());
     match
       try f x with
       | Unix.Unix_error (Unix.EINTR,_,_) -> aux () (* handled signal *)
