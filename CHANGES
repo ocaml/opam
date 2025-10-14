@@ -3,6 +3,11 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.4.1:
+* Fix pin-depends being ignored on simulated pins
+  (e.g. `opam install --deps-only`) [#6612 @kit-ty-kate - fix #6610]
+* Improve and extend the testsuite [#6612 @kit-ty-kate]
+
 2.4.0:
 * Fix a regression in `opam pin list` which crashed when the source of the
   pinned package doesn't exist [#6598 @kit-ty-kate - fix #6600]
