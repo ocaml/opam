@@ -9,7 +9,7 @@ export OCAMLRUNPARAM=b
 # All environment variable are overwritten in job description
 # One cache per solver, $CACHE/opam.<solver>.cached
 export OPAMROOT=$OPAMBSROOT
-echo $OPAMROOT
+echo "$OPAMROOT"
 
 case "$SOLVER" in
   z3)
@@ -29,10 +29,13 @@ case "$SOLVER" in
     ;;
 esac
 
+# Convert PKGS to an array
+read -r -a PKGS <<< "$PKGS"
+
 opam update --depexts
-opam switch create $SOLVER ocaml-system || true
+opam switch create "$SOLVER" ocaml-system || true
 opam upgrade --all
-opam install $PKGS
+opam install "${PKGS[@]}"
 opam install . --deps
 opam clean --logs --switch-cleanup
 eval $(opam env)
