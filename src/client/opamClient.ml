@@ -2413,30 +2413,41 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
   log "REMOVE autoremove:%b %a" autoremove
     (slog OpamFormula.string_of_atoms) atoms;
 
-  let nothing_to_do = ref true in
-  let packages, not_installed =
-    get_installed_atoms t atoms in
-  if not_installed <> [] then (
-    if force then
+  let packages, not_installed = get_installed_atoms t atoms in
+
+  let nothing_to_do =
+    if not_installed = [] then
+      true
+    else if force then
       let force_remove atom =
-        let candidates = OpamPackage.Set.filter (OpamFormula.check atom) t.packages in
+        let candidates =
+          OpamPackage.Set.filter (OpamFormula.check atom) t.packages
+        in
         try
           let nv = OpamPackage.max_version candidates (fst atom) in
-          OpamConsole.note "Forcing removal of (uninstalled) %s" (OpamPackage.to_string nv);
+          OpamConsole.note "Forcing removal of (uninstalled) %s"
+            (OpamPackage.to_string nv);
+          let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
+          OpamFilename.rmdir d;
+          OpamFilename.mkdir d;
           OpamProcess.Job.run (OpamAction.remove_package t nv);
           OpamAction.cleanup_package_artefacts t nv;
-          nothing_to_do := false
+          false
         with Not_found ->
           OpamConsole.error "No package %s found for (forced) removal.\n"
-            (OpamFormula.short_string_of_atom atom)
+            (OpamFormula.short_string_of_atom atom);
+          true
       in
-      List.iter force_remove not_installed
+      List.fold_left (fun nothing_to_do atom ->
+          force_remove atom && nothing_to_do)
+        true not_installed
     else
-      OpamConsole.note "%s %s not installed.\n"
-        (OpamStd.Format.pretty_list
-           (List.map OpamFormula.short_string_of_atom not_installed))
-        (match not_installed with [_] -> "is" | _ -> "are")
-  );
+      (OpamConsole.note "%s %s not installed.\n"
+         (OpamStd.Format.pretty_list
+            (List.map OpamFormula.short_string_of_atom not_installed))
+         (match not_installed with [_] -> "is" | _ -> "are");
+       true)
+  in
 
   if autoremove || packages <> [] then (
     let packages = OpamPackage.Set.of_list packages in
@@ -2489,7 +2500,7 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
     in
     OpamSolution.check_solution t solution;
     t
-  ) else if !nothing_to_do then (
+  ) else if nothing_to_do then (
     OpamConsole.msg "Nothing to do.\n";
     t
   ) else t

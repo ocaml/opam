@@ -842,13 +842,16 @@ let remove_package_aux
 
   (* Run the remove script *)
   let build_dir =
-    OpamStd.Option.default_map
-      (OpamFilename.opt_dir
-        (OpamPath.Switch.remove root t.switch nv))
-       build_dir
+    match build_dir with
+    | Some build_dir -> build_dir
+    | None ->
+      let dir = OpamPath.Switch.remove root t.switch nv in
+      if not (OpamFilename.exists_dir dir) then
+        OpamFilename.mkdir dir;
+      dir
   in
   let wrappers = get_wrappers t in
-  let mk_cmd = make_command t opam ?dir:build_dir in
+  let mk_cmd = make_command t opam ~dir:build_dir in
   OpamProcess.Job.of_fun_list ~keep_going:true
     (List.map (fun cmd () -> mk_cmd cmd)
        (get_wrapper t opam wrappers OpamFile.Wrappers.pre_remove))
