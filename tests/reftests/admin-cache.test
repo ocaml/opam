@@ -53,29 +53,17 @@ done
 ### rm -rf cache
 ### : computes hashes
 ### openssl md5 arch-ipsum.tgz | '.*= ' -> '' >$ IP_MD5
-### sh -c "echo '$IP_MD5' | cut -c 1-2" >$ PRE_IP_MD5
 ### openssl sha256 arch-ipsum.tgz | '.*= ' -> '' >$ IP_SHA256
-### sh -c "echo '$IP_SHA256' | cut -c 1-2" >$ PRE_IP_SHA256
 ### openssl sha512 arch-ipsum.tgz | '.*= ' -> '' >$ IP_SHA512
-### sh -c "echo '$IP_SHA512' | cut -c 1-2" >$ PRE_IP_SHA512
 ### openssl md5 arch-dolor.tgz | '.*= ' -> '' >$ DL_MD5
-### sh -c "echo '$DL_MD5' | cut -c 1-2" >$ PRE_DL_MD5
 ### openssl sha256 arch-dolor.tgz | '.*= ' -> '' >$ DL_SHA256
-### sh -c "echo '$DL_SHA256' | cut -c 1-2" >$ PRE_DL_SHA256
 ### openssl sha512 arch-dolor.tgz | '.*= ' -> '' >$ DL_SHA512
-### sh -c "echo '$DL_SHA512' | cut -c 1-2" >$ PRE_DL_SHA512
 ### openssl md5 arch-sit.tgz | '.*= ' -> '' >$ ST_MD5
-### sh -c "echo '$ST_MD5' | cut -c 1-2" >$ PRE_ST_MD5
 ### openssl sha256 arch-sit.tgz | '.*= ' -> '' >$ ST_SHA256
-### sh -c "echo '$ST_SHA256' | cut -c 1-2" >$ PRE_ST_SHA256
 ### openssl sha512 arch-sit.tgz | '.*= ' -> '' >$ ST_SHA512
-### sh -c "echo '$ST_SHA512' | cut -c 1-2" >$ PRE_ST_SHA512
 ### openssl md5 arch-amet.tgz | '.*= ' -> '' >$ MT_MD5
-### sh -c "echo '$MT_MD5' | cut -c 1-2" >$ PRE_MT_MD5
 ### openssl sha256 arch-amet.tgz | '.*= ' -> '' >$ MT_SHA256
-### sh -c "echo '$MT_SHA256' | cut -c 1-2" >$ PRE_MT_SHA256
 ### openssl sha512 arch-amet.tgz | '.*= ' -> '' >$ MT_SHA512
-### sh -c "echo '$MT_SHA512' | cut -c 1-2" >$ PRE_MT_SHA512
 ### <analysi.sh>
 pkg=$1
 kind=$2
@@ -269,15 +257,15 @@ mv "$file.tmp" "$file"
 ### sh sedi.sh '/"sha512=.*/d' packages/dolor/dolor.1/opam
 ### sh sedi.sh '/"md5=.*/d' packages/sit/sit.1/opam
 ### sh sedi.sh '/"sha512=.*/d' packages/sit/sit.1/opam
-### opam show --just-file ./packages/ipsum/ipsum.1/opam --field url.src,url.checksum | "${IP_MD5}" -> IP_MD5
+### opam show --just-file ./packages/ipsum/ipsum.1/opam --field url.src,url.checksum | sed-hash $IP_MD5 ip-md5
 url.src:      file://${BASEDIR}/arch-ipsum.tgz
-url.checksum: md5=IP_MD5
-### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "${DL_MD5}" -> DL_MD5 | "${DL_SHA256}" -> DL_SHA256
+url.checksum: md5=+ip-md5+
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | sed-hash $DL_MD5 dl-md5 | sed-hash $DL_SHA256 dl-sha256
 url.src:      file://${BASEDIR}/arch-dolor.tgz
-url.checksum: md5=DL_MD5, sha256=DL_SHA256
-### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "${ST_SHA256}" -> ST_SHA256
+url.checksum: md5=+dl-md5+, sha256=+dl-sha256+
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | sed-hash $ST_SHA256 st-sha256
 url.src:      file://${BASEDIR}/arch-sit.tgz
-url.checksum: sha256=ST_SHA256
+url.checksum: sha256=+st-sha256+
 ### rm -rf cache
 ### opam admin cache | unordered
 [dolor.1] synchronised (file://${BASEDIR}/arch-dolor.tgz)
@@ -307,15 +295,15 @@ amet : sha512 : exists
 ### opam admin add-hashes md5    --package sit
 [file://${BASEDIR}/arch-sit.tgz] found in cache
 ### opam admin add-hashes sha512 --package sit
-### opam show --just-file ./packages/ipsum/ipsum.1/opam --field url.src,url.checksum | "${IP_MD5}" -> IP_MD5 | "${IP_SHA512}" -> IP_SHA512
+### opam show --just-file ./packages/ipsum/ipsum.1/opam --field url.src,url.checksum | sed-hash $IP_MD5 ip-md5 | sed-hash $IP_SHA512 ip-sha512
 url.src:      file://${BASEDIR}/arch-ipsum.tgz
-url.checksum: md5=IP_MD5, sha512=IP_SHA512
-### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | "${DL_MD5}" -> DL_MD5 | "${DL_SHA256}" -> DL_SHA256 | "${DL_SHA512}" -> DL_SHA512
+url.checksum: md5=+ip-md5+, sha512=+ip-sha512+
+### opam show --just-file ./packages/dolor/dolor.1/opam --field url.src,url.checksum | sed-hash $DL_MD5 dl-md5 | sed-hash $DL_SHA256 dl-sha256 | sed-hash $DL_SHA512 dl-sha512
 url.src:      file://${BASEDIR}/arch-dolor.tgz
-url.checksum: md5=DL_MD5, sha256=DL_SHA256, sha512=DL_SHA512
-### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | "${ST_MD5}" -> ST_MD5 | "${ST_SHA256}" -> ST_SHA256 | "${ST_SHA512}" -> ST_SHA512
+url.checksum: md5=+dl-md5+, sha256=+dl-sha256+, sha512=+dl-sha512+
+### opam show --just-file ./packages/sit/sit.1/opam --field url.src,url.checksum | sed-hash $ST_SHA256 st-sha256 | sed-hash $ST_MD5 st-md5 | sed-hash $ST_SHA512 st-sha512
 url.src:      file://${BASEDIR}/arch-sit.tgz
-url.checksum: sha256=ST_SHA256, md5=ST_MD5, sha512=ST_SHA512
+url.checksum: sha256=+st-sha256+, md5=+st-md5+, sha512=+st-sha512+
 ### sh cache-analysi.sh
 ipsum : md5 : exists
 ipsum : sha256 : not found
@@ -368,9 +356,7 @@ opam-version: "2.0"
 ### openssl md5 arch-lorem.tgz | '.*= ' -> '' >$ LR_MD5
 ### sh -c "echo '$LR_MD5' | cut -c 1-2" >$ PRE_LR_MD5
 ### openssl sha256 arch-lorem.tgz | '.*= ' -> '' >$ LR_SHA256
-### sh -c "echo '$LR_SHA256' | cut -c 1-2" >$ PRE_LR_SHA256
 ### openssl sha512 arch-lorem.tgz | '.*= ' -> '' >$ LR_SHA512
-### sh -c "echo '$LR_SHA512' | cut -c 1-2" >$ PRE_LR_SHA512
 ### openssl md5 arch-evil.tgz | "${LR_MD5}" -> LR_MD5
 MD5(arch-evil.tgz)= LR_MD5
 ### sh add-urls.sh lorem
@@ -401,11 +387,11 @@ lorem : sha512 : not found
 lorem : md5 : exists
 lorem : sha256 : exists, link to md5
 lorem : sha512 : not found
-### opam admin cache | "${LR_MD5}" -> LR_MD5 | "${LR_SHA256}" -> LR_SHA256 | "${LR_SHA512}" -> LR_SHA512
+### opam admin cache | sed-hash $LR_SHA512 lr-sha512 | sed-hash $LR_SHA256 lr-sha256 | sed-hash $LR_MD5 lr-md5
 [ERROR] Conflicting file hashes, or broken or compromised cache!
-          - sha512=LR_SHA512 (MISMATCH)
-          - sha256=LR_SHA256 (MISMATCH)
-          - md5=LR_MD5 (match)
+          - sha512=+lr-sha512+ (MISMATCH)
+          - sha256=+lr-sha256+ (MISMATCH)
+          - md5=+lr-md5+ (match)
 
 [lorem.1] synchronised (file://${BASEDIR}/arch-lorem.tgz)
 Done.
