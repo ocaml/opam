@@ -39,7 +39,7 @@ case "$HOST" in
     PREFIX="$OCAML_LOCAL";;
 esac
 
-FLEXDLL_VERSION=0.43
+FLEXDLL_VERSION=0.44
 MINGW_W64_VERSION=12.0.0
 
 curl -sLO "https://github.com/ocaml/ocaml/archive/refs/tags/${OCAML_VERSION}.tar.gz"
