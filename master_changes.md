@@ -170,6 +170,7 @@ users)
   * Add a test showing the behaviour of opam when faced with outdated git submodule in its local cache [#6153 @kit-ty-kate]
   * Add reftest for `--depext-only` option [#6516 @rjbou]
   * Add a test for `opam remove --force` [#6672 @rjbou]
+  * Use the new `opam-set-os` command when applicable [#6741 @arozovyk]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
@@ -179,6 +180,7 @@ users)
   * Harden the regexp used for substituting variable checksums [#6710 @kit-ty-kate]
   * Add the `unset` builtin [#6708 @kit-ty-kate]
   * Add the `sed-hash` command to replace hashes in opam output [#XXX @rjbou]
+  * Add `opam-set-os` command for reftests that combines setting global `os-family` variable. [#6741 @arozovyk]
 
 ## Github Actions
   * bump `actions/checkout` from 4 to 5 [#6643 @kit-ty-kate]

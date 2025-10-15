@@ -38,7 +38,7 @@ depends: [
 ]
 depexts: ["some-depext"]
 ### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
-### opam var --global os-family=dummy-success
+### opam-set-os dummy-success
 Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam switch create ./foo --deps-only | sed-cmd echo
 
