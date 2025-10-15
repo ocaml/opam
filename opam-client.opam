@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.5.0~alpha1~dev"
+version: "2.5.0~alpha1"
 synopsis: "Client library for opam 2.4"
 description: """
 Actions on the opam root, switches, installations, and front-end.
