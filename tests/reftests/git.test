@@ -139,6 +139,6 @@ The following actions will be performed:
 Done.
 ### opam lock nip
 [ERROR] Remote branch not found for dep-nip.dev
-[WARNING] Dependency dep-nip.dev is pinned to local target git+file://${BASEDIR}/dep-nip#master
+[WARNING] Dependency dep-nip.dev is pinned to local target git+file://${BASEDIR}/dep-nip#master, skipping
 Generated lock files for:
   - nip.dev: ${BASEDIR}/nip.opam.locked

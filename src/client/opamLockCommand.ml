@@ -299,7 +299,8 @@ let lock_opam ~only_direct ~keep_local st opam =
             (nv, u) :: acc
           | Some d ->
             let local_warn () =
-              OpamConsole.warning "Dependency %s is pinned to local target %s"
+              OpamConsole.warning
+                "Dependency %s is pinned to local target %s, skipping"
                 (OpamPackage.to_string nv) (OpamUrl.to_string u);
               acc
             in

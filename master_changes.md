@@ -78,7 +78,7 @@ users)
 
 ## Lock
   * [BUG] Fix opam lock error on pinned packages with no remote [#6422 @rjbou]
-  * Update warning messages for remote not found [#6422 @rjbou]
+  * Update warning messages for remote not found and skipping local pins [#6422 @rjbou]
 
 ## Clean
 
