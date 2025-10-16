@@ -17,7 +17,7 @@ open Cmdliner
 type command = unit Cmdliner.Term.t * Cmdliner.Cmd.info
 
 let checked_repo_root () =
-  let repo_root = OpamFilename.cwd () in
+  let repo_root = OpamRepositoryRoot.Dir.cwd () in
   if not (OpamFilename.exists_dir (OpamRepositoryPath.packages_dir repo_root))
   then
     OpamConsole.error_and_exit `Bad_arguments
@@ -76,7 +76,8 @@ let index_command cli =
   in
   let cmd global_options urls_txt () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = checked_repo_root ()  in
+    let repo_root = checked_repo_root () in
+    let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
     let repo_file = OpamRepositoryPath.repo repo_root in
     let repo_def =
       match OpamFile.Repo.read_opt repo_file with
@@ -92,12 +93,14 @@ let index_command cli =
           (t.Unix.tm_year + 1900) (t.Unix.tm_mon +1) t.Unix.tm_mday
           t.Unix.tm_hour t.Unix.tm_min
       in
-      match OpamUrl.guess_version_control (OpamFilename.Dir.to_string repo_root)
+      match
+        OpamUrl.guess_version_control
+          (OpamRepositoryRoot.Dir.to_string repo_root)
       with
       | None -> date ()
       | Some vcs ->
         let module VCS = (val OpamRepository.find_backend_by_kind vcs) in
-        match OpamProcess.Job.run (VCS.revision repo_root) with
+        match OpamProcess.Job.run (VCS.revision repo_root_dir) with
         | None -> date ()
         | Some hash -> hash
     in
@@ -107,13 +110,13 @@ let index_command cli =
       (OpamConsole.msg "Generating urls.txt...\n";
        OpamFilename.of_string "repo" ::
        (if urls_txt = `full_urls_txt then
-          OpamFilename.rec_files OpamFilename.Op.(repo_root / "compilers") @
+          OpamFilename.rec_files OpamFilename.Op.(repo_root_dir / "compilers") @
           OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo_root)
         else []) |>
        List.fold_left (fun set f ->
            if not (OpamFilename.exists f) then set else
-           let attr = OpamFilename.to_attribute repo_root f in
-           OpamFilename.Attribute.Set.add attr set
+             let attr = OpamFilename.to_attribute repo_root_dir f in
+             OpamFilename.Attribute.Set.add attr set
          ) OpamFilename.Attribute.Set.empty |>
        OpamFile.File_attributes.write
          (OpamFile.make (OpamFilename.of_string "urls.txt")));
@@ -134,8 +137,10 @@ let cache_urls repo_root repo_def =
     List.filter_map (fun rel ->
         if OpamStd.String.contains ~sub:"://" rel
         then OpamUrl.parse_opt ~handle_suffix:false rel
-        else Some OpamUrl.Op.(OpamUrl.of_string
-                                (OpamFilename.Dir.to_string repo_root) / rel))
+        else
+          Some
+            OpamUrl.Op.(OpamUrl.of_string
+                          (OpamRepositoryRoot.Dir.to_string repo_root) / rel))
       (OpamFile.Repo.dl_cache repo_def)
   in
   repo_dl_cache @ global_dl_cache
@@ -269,7 +274,10 @@ let cache_command cli =
             (OpamPackage.Map.bindings pkg_prefixes))
     in
 
-    let cache_dir_url = OpamFilename.remove_prefix_dir repo_root cache_dir in
+    let cache_dir_url =
+      OpamFilename.remove_prefix_dir
+        (OpamRepositoryRoot.Dir.to_dir repo_root) cache_dir
+    in
     if not no_repo_update then
       if not (OpamStd.List.mem String.equal
                 cache_dir_url (OpamFile.Repo.dl_cache repo_def)) then
@@ -761,7 +769,7 @@ let upgrade_command cli =
     if clear_cache then OpamAdminRepoUpgrade.clear_cache ()
     else match create_mirror with
       | None ->
-        OpamAdminRepoUpgrade.do_upgrade (OpamFilename.cwd ());
+        OpamAdminRepoUpgrade.do_upgrade (OpamRepositoryRoot.Dir.cwd ());
         if OpamFilename.exists (OpamFilename.of_string "index.tar.gz") ||
            OpamFilename.exists (OpamFilename.of_string "urls.txt")
         then
@@ -769,7 +777,8 @@ let upgrade_command cli =
             "Indexes need updating: you should now run:\n\
              \n\
             \  opam admin index"
-      | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror (OpamFilename.cwd ()) m
+      | Some m ->
+        OpamAdminRepoUpgrade.do_upgrade_mirror (OpamRepositoryRoot.Dir.cwd ()) m
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $
@@ -814,8 +823,10 @@ let lint_command cli =
   in
   let cmd global_options short list incl excl ign warn_error () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = OpamFilename.cwd () in
-    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
+    let repo_root = OpamRepositoryRoot.Dir.cwd () in
+    if not (OpamFilename.exists_dir
+              OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root /
+                               "packages"))
     then
         OpamConsole.error_and_exit `Bad_arguments
           "No repository found in current directory.\n\
@@ -1073,17 +1084,12 @@ let get_virtual_switch_state repo_root env =
     global_state_to_upgrade = { gtc_repo = false; gtc_switch = false; };
   } in
   let singl x = OpamRepositoryName.Map.singleton repo.repo_name x in
-  let repos_tmp =
-    let t = Hashtbl.create 1 in
-    Hashtbl.add t repo.repo_name (lazy repo_root); t
-  in
   let rt = {
     repos_global = gt;
     repos_lock = OpamSystem.lock_none;
     repositories = singl repo;
     repos_definitions = singl repo_def;
     repo_opams = singl opams;
-    repos_tmp;
   } in
   let gt =
     {gt with global_variables =
@@ -1155,7 +1161,7 @@ let list_command cli =
               List.map (fun x -> Atom x) package_selection);
       ]
     in
-    let st = get_virtual_switch_state (OpamFilename.cwd ()) env in
+    let st = get_virtual_switch_state (OpamRepositoryRoot.Dir.cwd ()) env in
     if not format.OpamListCommand.short && filter <> OpamFormula.Empty then
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
@@ -1196,7 +1202,7 @@ let filter_command cli =
       global_options package_selection disjunction state_selection env
       remove dryrun packages () =
     OpamArg.apply_global_options cli global_options;
-    let repo_root = OpamFilename.cwd () in
+    let repo_root = OpamRepositoryRoot.Dir.cwd () in
     let pattern_selector = OpamListCommand.pattern_selector packages in
     let join =
       if disjunction then OpamFormula.ors else OpamFormula.ands

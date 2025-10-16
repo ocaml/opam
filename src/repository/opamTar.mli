@@ -1,7 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2016 OCamlPro                                        *)
-(*    Copyright 2012 INRIA                                                *)
+(*    Copyright 2025 Kate Deplaix                                         *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -9,8 +8,18 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Main HTTP repository backend, based on Curl *)
+val fold_reg_files :
+  ('acc -> string -> string -> 'acc) ->
+  'acc -> OpamFilename.t -> 'acc
 
-module B: OpamRepositoryBackend.S
+module Inplace : sig
+  type t
 
-val make_index_tar_gz: OpamRepositoryRoot.Dir.t -> unit
+  val with_open_out : OpamFilename.t -> (t -> 'a) -> 'a
+  val fold_reg_files :
+    ('acc -> string -> string -> 'acc) ->
+    'acc -> t -> 'acc
+  val add : fname:string -> content:string -> t -> t
+  val remove : string -> t -> t
+  val write : t -> unit
+end

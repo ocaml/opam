@@ -25,7 +25,8 @@ endif
 SRC_EXTS = \
   cppo base64 extlib re cmdliner ocamlgraph cudf dose3 opam-file-format \
   stdlib-shims spdx_licenses opam-0install-cudf 0install-solver uutf \
-  jsonm sha swhid_core menhir patch
+  jsonm sha swhid_core menhir patch checkseum optint decompress tar \
+  dune-local
 
 ifeq ($(MCCS_ENABLED),true)
 SRC_EXTS := $(SRC_EXTS) mccs

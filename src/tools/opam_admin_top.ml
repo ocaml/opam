@@ -14,7 +14,7 @@ open OpamFilename.Op
 let identity _ x = x
 let true_ _ = true
 
-let repo = OpamFilename.cwd ()
+let repo = OpamRepositoryRoot.Dir.cwd ()
 let packages = OpamRepository.packages repo
 
 let wopt w f = function

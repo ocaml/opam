@@ -15,9 +15,9 @@ open OpamTypes
 
 (** Type returned by repository updates. *)
 type update =
-  | Update_full of dirname
+  | Update_full of OpamRepositoryRoot.t
   (** No previous known state, the full contents have been put in the given
-      temporary directory *)
+      directory *)
   | Update_patch of (filename * Patch.t list)
   (** A patch file that corresponds to the update, i.e. applying it to the
       local repository with 'patch -p1' would get it to the upstream state,
@@ -61,7 +61,7 @@ module type S = sig
       verifications. The file or directory returned is always temporary and
       should be cleaned up by the caller. *)
   val fetch_repo_update:
-    repository_name -> ?cache_dir:dirname -> dirname -> url ->
+    repository_name -> ?cache_dir:dirname -> OpamRepositoryRoot.t -> url ->
     update OpamProcess.job
 
   (** [repo_update_complete dirname url] finalizes the update of the repository
@@ -69,7 +69,7 @@ module type S = sig
       [Update_patch file] is applied. Version control systems, e.g. Mercurial,
       that track the state of the working directory automatically use this to
       update internal caches. *)
-  val repo_update_complete: dirname -> url -> unit OpamProcess.job
+  val repo_update_complete: OpamRepositoryRoot.t -> url -> unit OpamProcess.job
 
   (** Return the (optional) revision of a given repository. Only useful for VCS
       backends. Is not expected to work with [fetch_repo_update], which doesn't
@@ -117,4 +117,23 @@ val job_text:
     Unsupported file types: symlinks, character devices, block devices,
     named pipes, sockets.
     Unsupported comparison: comparison between regular files and directories. *)
-val get_diff: dirname -> basename -> basename -> (filename * Patch.t list) option
+val get_diff_dirs: dirname -> basename -> basename -> (filename * Patch.t list) option
+
+(** [get_diff_tars tar1 tar2] computes the diff between two tar.gz files.
+    Returns None if they are equal, and the corresponding
+    patch and the list of file-changes otherwise. *)
+val get_diff_tars: filename -> filename -> (filename * Patch.t list) option
+
+(** [get_diff_tar_dir tar_file dir] computes the diff between a tar.gz file
+    and a directory. Returns None if they are equal, and the corresponding
+    patch and the list of file-changes otherwise.
+
+    Treats the tar file as the old state and the directory as the new state. *)
+val get_diff_tar_dir: filename -> dirname -> (filename * Patch.t list) option
+
+(** [get_diff_dir_tar dir tar_file] computes the diff between a directory
+    and a tar.gz file. Returns None if they are equal, and the corresponding
+    patch and the list of file-changes otherwise.
+
+    Treats the directory as the old state and the tar file as the new state. *)
+val get_diff_dir_tar: dirname -> filename -> (filename * Patch.t list) option

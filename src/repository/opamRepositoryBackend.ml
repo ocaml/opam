@@ -14,7 +14,7 @@ let log ?level fmt = OpamConsole.log "REPO_BACKEND" ?level fmt
 let slog = OpamConsole.slog
 
 type update =
-  | Update_full of dirname
+  | Update_full of OpamRepositoryRoot.t
   | Update_patch of (filename * Patch.t list)
   | Update_empty
   | Update_err of exn
@@ -26,9 +26,9 @@ module type S = sig
     ?cache_dir:dirname -> ?subpath:subpath -> dirname -> OpamHash.t option -> url ->
     filename option download OpamProcess.job
   val fetch_repo_update:
-    repository_name -> ?cache_dir:dirname -> dirname -> url ->
+    repository_name -> ?cache_dir:dirname -> OpamRepositoryRoot.t -> url ->
     update OpamProcess.job
-  val repo_update_complete: dirname -> url -> unit OpamProcess.job
+  val repo_update_complete: OpamRepositoryRoot.t -> url -> unit OpamProcess.job
   val revision: dirname -> string option OpamProcess.job
   val sync_dirty:
     ?subpath:subpath -> dirname -> url -> filename option download OpamProcess.job
@@ -126,7 +126,20 @@ let strip_repo_suffix patch =
   in
   {patch with operation}
 
-let get_diff parent_dir dir1 dir2 =
+let return_patch_diffs diffs kind chrono =
+  match diffs with
+  | [] ->
+    log "Internal diff (%s, empty) done in %.2fs." kind (chrono ());
+    None
+  | diffs ->
+    log "Internal diff (%s, non-empty, %a changed files) done in %.2fs."
+      kind (slog (fun l -> string_of_int (List.length l))) diffs (chrono ());
+    let patch = OpamSystem.temp_file ~auto_clean:false "patch" in
+    let patch_file = OpamFilename.of_string patch in
+    OpamFilename.write patch_file (Format.asprintf "%a" Patch.pp_list diffs);
+    Some (patch_file, List.map strip_repo_suffix diffs)
+
+let get_diff_dirs parent_dir dir1 dir2 =
   let chrono = OpamConsole.timer () in
   log "diff: %a/{%a,%a}"
     (slog OpamFilename.Dir.to_string) parent_dir
@@ -182,18 +195,121 @@ let get_diff parent_dir dir1 dir2 =
     in
     diffs
   in
-  match
-    aux []
-      (Some (OpamFilename.Base.to_string dir1))
-      (Some (OpamFilename.Base.to_string dir2))
-  with
-  | [] ->
-    log "Internal diff (empty) done in %.2fs." (chrono ());
-    None
-  | diffs ->
-    log "Internal diff (non-empty, %a changed files) done in %.2fs."
-      (slog (fun l -> string_of_int (List.length l))) diffs (chrono ());
-    let patch = OpamSystem.temp_file ~auto_clean:false "patch" in
-    let patch_file = OpamFilename.of_string patch in
-    OpamFilename.write patch_file (Format.asprintf "%a" Patch.pp_list diffs);
-    Some (patch_file, List.map strip_repo_suffix diffs)
+  return_patch_diffs
+    (aux [] (Some (OpamFilename.Base.to_string dir1))
+       (Some (OpamFilename.Base.to_string dir2))) "dir-dir" chrono
+
+(** Compute content diffs for a single file.
+    Compares [content2] (new) against [contents1] (old state map).
+    Adds [filename] to [seen] set and generates a diff if contents differ.
+    Returns updated (diffs, seen) accumulator pair *)
+let get_content_diffs filename contents1 content2 diffs seen =
+  let seen = OpamStd.String.Set.add filename seen in
+  match OpamStd.String.Map.find_opt filename contents1 with
+  | Some content1 when String.equal content1 content2 ->
+    (diffs, seen)
+  | content1_opt ->
+    let content1 = Option.map (fun c -> (filename, c)) content1_opt in
+    let content2 = Some (filename, content2) in
+    match Patch.diff content1 content2 with
+    | None -> (diffs, seen)
+    | Some diff -> (diff :: diffs, seen)
+
+let get_tar_contents tar =
+  OpamTar.fold_reg_files
+    (fun acc filename content ->
+       OpamStd.String.Map.add filename content acc)
+    OpamStd.String.Map.empty tar
+
+(** Recursively read directory contents into a string map.
+    Returns a map from relative file paths to their contents. *)
+let read_dir_contents dir =
+  let rec aux acc prefix current_dir =
+    let dir_path = OpamFilename.Dir.to_string current_dir in
+    let entries = OpamSystem.get_files_except_vcs dir_path in
+    List.fold_left (fun acc entry ->
+        let full_path = Filename.concat dir_path entry in
+        let relative_path = if prefix = "" then entry else prefix ^ "/" ^ entry in
+        let stat = Unix.lstat full_path in
+        match stat.Unix.st_kind with
+        | Unix.S_REG ->
+          let content = OpamSystem.read full_path in
+          OpamStd.String.Map.add relative_path content acc
+        | Unix.S_DIR ->
+          aux acc relative_path (OpamFilename.Dir.of_string full_path)
+        | Unix.S_LNK -> failwith "Symlinks are unsupported"
+        | Unix.S_CHR -> failwith "Character devices are unsupported"
+        | Unix.S_BLK -> failwith "Block devices are unsupported"
+        | Unix.S_FIFO -> failwith "Named pipes are unsupported"
+        | Unix.S_SOCK -> failwith "Sockets are unsupported"
+      ) acc entries
+  in
+  aux OpamStd.String.Map.empty "" dir
+
+let get_deletion_diffs contents diffs seen  =
+  OpamStd.String.Map.fold (fun filename content diffs ->
+      if OpamStd.String.Set.mem filename seen then diffs
+      else
+        match Patch.diff (Some (filename, content)) None with
+        | None -> diffs
+        | Some diff -> diff :: diffs
+    ) contents diffs
+
+let get_diff_tars tar1 tar2 =
+  let chrono = OpamConsole.timer () in
+  let hash1 = OpamHash.compute (OpamFilename.to_string tar1) in
+  let hash2 = OpamHash.compute (OpamFilename.to_string tar2) in
+  if OpamHash.equal hash1 hash2 then
+    (log "Tars identical, no diff needed in %.2fs." (chrono ());
+     None)
+  else
+    ( log "diff: tar %a vs tar %a"
+        (slog OpamFilename.to_string) tar1
+        (slog OpamFilename.to_string) tar2;
+      let contents1 = get_tar_contents tar1
+      in
+      let diffs, seen = OpamTar.fold_reg_files
+          (fun (diffs, seen) filename content2 ->
+             get_content_diffs filename contents1 content2 diffs seen
+          ) ([],  OpamStd.String.Set.empty) tar2
+      in
+      let diffs =
+        get_deletion_diffs contents1 diffs seen
+      in
+      return_patch_diffs diffs "tar-tar" chrono)
+
+let get_diff_tar_dir tar_file dir =
+  let chrono = OpamConsole.timer () in
+  log "diff: tar %a vs dir %a"
+    (slog OpamFilename.to_string) tar_file
+    (slog OpamFilename.Dir.to_string) dir;
+
+  let tar_contents = get_tar_contents tar_file in
+  let dir_contents = read_dir_contents dir in
+  let diffs, seen = OpamStd.String.Map.fold
+      (fun filename content_dir (diffs, seen) ->
+         get_content_diffs filename tar_contents content_dir diffs seen
+      ) dir_contents ([], OpamStd.String.Set.empty)
+  in
+  let diffs =
+    get_deletion_diffs tar_contents diffs seen
+  in
+  return_patch_diffs diffs "tar-dir" chrono
+
+let get_diff_dir_tar dir tar_file =
+  let chrono = OpamConsole.timer () in
+  log "diff: dir %a vs tar %a"
+    (slog OpamFilename.Dir.to_string) dir
+    (slog OpamFilename.to_string) tar_file;
+
+  let dir_contents = read_dir_contents dir in
+  let tar_contents = get_tar_contents tar_file in
+  let diffs, seen = OpamStd.String.Map.fold
+      (fun filename content_tar (diffs, seen) ->
+         get_content_diffs filename dir_contents content_tar diffs seen
+      ) tar_contents ([], OpamStd.String.Set.empty)
+  in
+  let diffs =
+    get_deletion_diffs dir_contents diffs seen
+  in
+  return_patch_diffs diffs "dir-tar" chrono

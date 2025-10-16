@@ -28,6 +28,12 @@ end
 module Seq : sig
   (* NOTE: OCaml >= 4.14 *)
   val find_map: ('a -> 'b option) -> 'a Seq.t -> 'b option
+
+  (* NOTE: OCaml >= 4.11 *)
+  val cons : 'a -> 'a Seq.t -> 'a Seq.t
+
+  (* NOTE: OCaml >= 4.14 *)
+  val to_dispenser : 'a Seq.t -> unit -> 'a option
 end
 
 module Either : sig

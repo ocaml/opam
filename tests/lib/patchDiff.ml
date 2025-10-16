@@ -363,7 +363,7 @@ let diff_patch dir setup =
     | DiffPatch ->
       print "*** DIFF ***\n";
       match
-        OpamRepositoryBackend.get_diff dir
+        OpamRepositoryBackend.get_diff_dirs dir
           (OpamFilename.Base.of_string first)
           (OpamFilename.Base.of_string second)
       with
