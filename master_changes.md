@@ -231,6 +231,7 @@ users)
 # API updates
 ## opam-client
   * `OpamClientConfig.opam_init`: now takes an optional `auto_answer` argument [#6709 @kit-ty-kate]
+  * `OpamAdminRepoUpgrade`: add `upgradefrom_version` that have version "1.2" hardcoded [#6391 @rjbou]
 
 ## opam-repository
   * `OpamLocal.rsync_*`: Change the return type from `OpamFilename.*` to `unit` [#6658 @kit-ty-kate]

@@ -16,6 +16,8 @@ module O = OpamFile.OPAM
 
 let upgradeto_version_string = "2.0"
 let upgradeto_version = OpamVersion.of_string upgradeto_version_string
+let upgradefrom_version_string = "1.2"
+let upgradefrom_version = OpamVersion.of_string upgradefrom_version_string
 
 let ocaml_wrapper_pkgname = OpamPackage.Name.of_string "ocaml"
 let ocaml_official_pkgname = OpamPackage.Name.of_string "ocaml-base-compiler"

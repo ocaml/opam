@@ -11,6 +11,7 @@
 val clear_cache: unit -> unit
 
 val upgradeto_version: OpamVersion.t
+val upgradefrom_version: OpamVersion.t
 
 val do_upgrade: OpamTypes.dirname -> unit
 
