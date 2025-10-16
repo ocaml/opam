@@ -205,6 +205,7 @@ users)
   * Bump opam binary used in depexts actions to 2.4.1 [#6676 @rjbou]
   * Check `src_ext/update-sources.sh` using shellcheck [#6701 @kit-ty-kate]
   * Remove upgrade from 1.2 to current root macos job [#6745 @rjbou]
+  * Enable macOS solver job only if `src/solver` has changed [#6745 @rjbou]
 
 ## Doc
   * Update the installation documentation with the release of opam 2.4.1 [#6620 @kit-ty-kate]

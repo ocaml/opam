@@ -549,8 +549,15 @@ jobs:
     steps:
     - name: Checkout tree
       uses: actions/checkout@v5
+    - name: Get changed files
+      id: files
+      if: github.event_name == 'pull_request'
+      uses: Ana06/get-changed-files@v2.3.0
+      with:
+        filter: src/solver/**
     - name: src_ext/archives and opam-repository Cache
       id: archives
+      if: steps.files.outputs.all != ''
       uses: actions/cache@v4
       with:
         path: |
@@ -560,15 +567,17 @@ jobs:
         enableCrossOsArchive: true
     - name: OCaml ${{ matrix.ocamlv }} Cache
       id: ocaml-cache
+      if: steps.files.outputs.all != ''
       uses: actions/cache@v4
       with:
         path: ~/.cache/ocaml-local/**
         key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
     - name: Create OCaml ${{ matrix.ocamlv }} cache
-      if: steps.ocaml-cache.outputs.cache-hit != 'true'
+      if: steps.files.outputs.all != '' && steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: opam bootstrap Cache
       id: opam-bootstrap
+      if: steps.files.outputs.all != ''
       uses: actions/cache@v4
       with:
         path: |
@@ -576,9 +585,10 @@ jobs:
           ~/.cache/opam-local/bin/**
         key: opam-${{ matrix.solver }}-${{ runner.os }}-${{ env.OPAMBSVERSION }}-${{ matrix.ocamlv }}-${{ env.OPAM_REPO_SHA }}-${{ needs.Analyse.outputs.opam-bs-cache }}
     - name: Create opam bootstrap cache
-      if: steps.opam-bootstrap.outputs.cache-hit != 'true'
+      if: steps.files.outputs.all != '' && steps.opam-bootstrap.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/opam-bs-cache.sh
     - name: Compile
+      if: steps.files.outputs.all != ''
       run: bash -exu .github/scripts/main/solvers.sh
 
 ####
