@@ -1,0 +1,146 @@
+N0REP0
+### OPAMYES=1
+### :I: check in-commands opam calls & depexts
+### <pkg:foo.1>
+opam-version: "2.0"
+build: [ "sh" "build.sh" ]
+### <pkg:bar.1>
+opam-version: "2.0"
+depexts: [ "xbar" ]
+### <build.sh>
+
+OPAM=$(cygpath "${OPAM}" 2>/dev/null || echo "${OPAM}")
+echo ---
+echo +++ BIN
+"${OPAM}" var bin
+echo +++ BAR/lib
+"${OPAM}" var bar:lib
+echo ---
+### tar czf foo.tgz build.sh
+### openssl md5 foo.tgz | '.*= ' -> '' >$ FOOMD5
+### <mkurl.sh>
+n=$1
+nv="$n.$2"
+file="REPO/packages/$n/$nv/opam"
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+  cat >> "$file" << EOF
+url {
+  src: "file://$basedir/$n.tgz"
+  checksum: "md5=$FOOMD5"
+}
+EOF
+### sh mkurl.sh foo 1
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### :I:1: Polling for availabilty
+### : We use here debian because it launches commands to poll availability
+### opam switch create internals-debian --empty
+### opam-set-os dummy-success:xbar:
+Added '[os-family "dummy-success:xbar:" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install bar
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### opam-set-os debian
+Added '[os-family "debian" "Set through 'opam var'"]' to field global-variables in global configuration
+### sh -c "rm OPAM/repo/state-*.cache"
+### OPAMVERBOSE=2 OPAMNODEPEXTS=1 OPAMDEBUG=-1 OPAMDEBUGSECTIONS="XSYS RSTATE"
+### opam install foo | sed-cmd rsync
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+Processing: [default: loading data]
+RSTATE                          loaded opam files from repo default in 0.000s
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/3: [foo.1: rsync]
++ rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/foo.tgz" "${OPAMTMP}"
+- foo.tgz
+- 
+Processing  1/3: [foo.1: extract]
++ /usr/bin/tar "xfz" "${OPAMTMP}/foo.tgz" "-C" "${OPAMTMP}"
+-> retrieved foo.1  (file://${BASEDIR}/foo.tgz)
+Processing  2/3: [foo: sh build.sh]
++ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "sh" "build.sh" (CWD=${BASEDIR}/OPAM/internals-debian/.opam-switch/build/foo.1)
+- ---
+- +++ BIN
+- CLI                             Parsing CLI version 2.0
+- GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+- ${BASEDIR}/OPAM/internals-debian/bin
+- +++ BAR/lib
+- CLI                             Parsing CLI version 2.0
+- GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+- RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+- CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
+- RSTATE                          Cache found
+- STATE                           LOAD-SWITCH-STATE @ internals-debian
+- CACHE(installed)                Loaded ${BASEDIR}/OPAM/internals-debian/.opam-switch/packages/cache in 0.000s
+- STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+- STATE                           Switch state loaded in 0.000s
+- ${BASEDIR}/OPAM/internals-debian/lib/bar
+- ---
+-> compiled  foo.1
+-> installed foo.1
+Done.
+### :I:2: Not polling for availabilty
+### : We use here Suse because it doesn't launch commands to poll availability (suppose available)
+### OPAMVERBOSE=0 OPAMDEBUG=0
+### unset OPAMNODEPEXTS
+### opam switch create internals-suse --empty
+### opam install bar
+The following actions will be performed:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed bar.1
+Done.
+### opam-set-os suse
+Added '[os-family "suse" "Set through 'opam var'"]' to field global-variables in global configuration
+### sh -c "rm OPAM/repo/state-*.cache"
+### OPAMVERBOSE=2 OPAMNODEPEXTS=1 OPAMDEBUG=-1 OPAMDEBUGSECTIONS="XSYS RSTATE"
+### opam reinstall foo | sed-cmd tar | sed-hash $FOOMD5 hash
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+Processing: [default: loading data]
+RSTATE                          loaded opam files from repo default in 0.000s
+foo is not installed. Install it? [Y/n] y
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/3: [foo.1: extract]
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+hash+" "-C" "${OPAMTMP}"
+-> retrieved foo.1  (cached)
+Processing  2/3: [foo: sh build.sh]
++ ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "sh" "build.sh" (CWD=${BASEDIR}/OPAM/internals-suse/.opam-switch/build/foo.1)
+- ---
+- +++ BIN
+- CLI                             Parsing CLI version 2.0
+- GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+- ${BASEDIR}/OPAM/internals-suse/bin
+- +++ BAR/lib
+- CLI                             Parsing CLI version 2.0
+- GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+- RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+- CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
+- RSTATE                          Cache found
+- STATE                           LOAD-SWITCH-STATE @ internals-suse
+- CACHE(installed)                Loaded ${BASEDIR}/OPAM/internals-suse/.opam-switch/packages/cache in 0.000s
+- STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+- STATE                           Switch state loaded in 0.000s
+- ${BASEDIR}/OPAM/internals-suse/lib/bar
+- ---
+-> compiled  foo.1
+-> installed foo.1
+Done.

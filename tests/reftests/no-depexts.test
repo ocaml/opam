@@ -1,0 +1,285 @@
+N0REP0
+### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
+### opam-set-os dummy-success:0:*
+Added '[os-family "dummy-success:0:*" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pkg:no-dpx.1>
+opam-version: "2.0"
+depexts: [ "dont-check-me" ]
+### <pkg:dpx.1>
+opam-version: "2.0"
+depexts: [ "check-me" ]
+### opam option depext
+true
+### :I: via config
+### :I:1: enable depexts via config
+### opam option depext=true
+No modification in global configuration
+### opam switch create dpx-config --empty
+### opam install dpx | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install dpx 1
+
+The following system packages will first need to be installed:
+    check-me
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "check-me"
+- check-me
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dpx.1
+Done.
+### :I:2: disable depexts via config
+### opam option depext=false
+Set to 'false' the field depext in global configuration
+### opam switch create no-dpx-config --empty
+### opam install no-dpx
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### :I:3: re enable via config
+### opam option depext=true
+Set to 'true' the field depext in global configuration
+### opam switch create re-dpx-config --empty
+### opam install dpx | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install dpx 1
+
+The following system packages will first need to be installed:
+    check-me
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "check-me"
+- check-me
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dpx.1
+Done.
+### :II: with env var
+### opam option depext=true
+No modification in global configuration
+### :II:1: disable depexts via envvar
+### OPAMNODEPEXTS=0
+### opam switch create dpx-envvar --empty
+### opam install dpx | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install dpx 1
+
+The following system packages will first need to be installed:
+    check-me
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "check-me"
+- check-me
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dpx.1
+Done.
+### :II:2: disable depexts via envvar
+### OPAMNODEPEXTS=1
+### opam switch create no-dpx-envvar --empty
+### opam install no-dpx
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### :II:3: re enable via envvar
+### OPAMNODEPEXTS=0
+### opam switch create re-dpx-envvar --empty
+### opam install dpx | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install dpx 1
+
+The following system packages will first need to be installed:
+    check-me
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "check-me"
+- check-me
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dpx.1
+Done.
+### :III: with flag
+### :III:1: disable depexts via flag
+### opam switch create no-dpx-flag --empty
+### opam install no-dpx --no-depexts
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### ::IV: combination
+### : config is true at depexts=true
+### : envvar is true at OPAMNODEPEXTS=0
+### : flag is true at its absence (presence of flag is false)
+### :IV:1: config: #f - envvar: #f - flag: #f
+### opam option depext=false
+Set to 'false' the field depext in global configuration
+### OPAMNODEPEXTS=1
+### opam switch create C0-V0-F0 --empty
+### opam install no-dpx --no-depexts
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### :IV:2: config: #f - envvar: #f - flag: #t
+### opam option depext=false
+No modification in global configuration
+### OPAMNODEPEXTS=1
+### opam switch create C0-V0-F1 --empty
+### opam install no-dpx
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### :IV:3: config: #f - envvar: #t - flag: #f
+### opam option depext=false
+No modification in global configuration
+### OPAMNODEPEXTS=0
+### opam switch create C0-V1-F0 --empty
+### opam install no-dpx --no-depexts
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### :IV:4: config: #f - envvar: #t - flag: #t
+### opam option depext=false
+No modification in global configuration
+### OPAMNODEPEXTS=0
+### opam switch create C0-V1-F1 --empty
+### opam install no-dpx
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### :IV:5: config: #t - envvar: #f - flag: #f
+### opam option depext=true
+Set to 'true' the field depext in global configuration
+### OPAMNODEPEXTS=1
+### opam switch create C1-V0-F0 --empty
+### opam install no-dpx --no-depexts
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### :IV:6: config: #t - envvar: #f - flag: #t
+### opam option depext=true
+No modification in global configuration
+### OPAMNODEPEXTS=1
+### opam switch create C1-V0-F1 --empty
+### opam install no-dpx
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### :IV:7: config: #t - envvar: #t - flag: #f
+### opam option depext=true
+No modification in global configuration
+### OPAMNODEPEXTS=0
+### opam switch create C1-V1-F0 --empty
+### opam install no-dpx --no-depexts
+The following actions will be performed:
+=== install 1 package
+  - install no-dpx 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed no-dpx.1
+Done.
+### :IV:8: config: #t - envvar: #t - flag: #t
+### opam option depext=true
+No modification in global configuration
+### OPAMNODEPEXTS=0
+### opam switch create C1-V1-F1 --empty
+### opam install dpx | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install dpx 1
+
+The following system packages will first need to be installed:
+    check-me
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "check-me"
+- check-me
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dpx.1
+Done.
+### :V: with depext-only, see depext-only test I:5

@@ -139,6 +139,7 @@ users)
   * Add a test showing the behaviour of `opam init --config` when the file given does not exist [#5979 @kit-ty-kate @rjbou]
   * Add a test for switch link when a local switch is already present [#6860 @rjbou]
   * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
+  * Add disabled depexts tests [#6489 @rjbou]
 
 ### Engine
 
