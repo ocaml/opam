@@ -572,7 +572,6 @@ let main oc : unit =
   @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile solver backends" Linux
   @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
   @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux
-  @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
   @@ fun _ -> hygiene_job ~analyse_job (Specific (Linux, "22.04"))
   @@ fun _ -> depends_job ~analyse_job ~build_linux_job Linux
   @@ fun _ -> end_workflow

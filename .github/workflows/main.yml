@@ -619,37 +619,6 @@ jobs:
     - name: Test (upgrade)
       run: bash -exu .github/scripts/main/upgrade.sh
 
-  Upgrade-macOS:
-    runs-on: macos-latest
-    needs: [ Analyse, Build-macOS ]
-    strategy:
-      matrix:
-        ocamlv: [ 4.14.2, 5.3.0 ]
-      fail-fast: false
-    steps:
-    - name: Checkout tree
-      uses: actions/checkout@v5
-    - name: opam 1.2 root Cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.OPAM12CACHE }}
-        key: ${{ runner.os }}-opam1.2-root
-    - name: OCaml ${{ matrix.ocamlv }} Cache
-      id: ocaml-cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/ocaml-local/**
-        key: ${{ runner.os }}-ocaml-${{ matrix.ocamlv }}-${{ needs.Analyse.outputs.ocaml-cache }}
-    - name: Create OCaml ${{ matrix.ocamlv }} cache
-      if: steps.ocaml-cache.outputs.cache-hit != 'true'
-      run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
-    - name: Build
-      env:
-        OPAM_UPGRADE: 1
-      run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
-    - name: Test (upgrade)
-      run: bash -exu .github/scripts/main/upgrade.sh
-
 ####
 # Around opam tests
 ####
