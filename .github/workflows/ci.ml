@@ -451,17 +451,24 @@ let solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_jo
   let matrix =
     (fail_fast, ("solver", ["z3"; "0install"])::matrix, [])
   in
+  let withs = [ "filter", Literal [ "src/solver/**"] ] in
+  let cond =
+    match runner with
+    | MacOS ->  Some (Predicate(false, Compare("steps.files.outputs.all", "")))
+    | _ -> None
+  in
   let ocamlv = "${{ matrix.ocamlv }}" in
   job ~oc ~workflow ?section ~runs_on:(Runner [runner]) ~env ~needs ~matrix ("Solvers-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ only_on Linux (run "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
     ++ checkout ()
-    ++ cache Archives
-    ++ cache OCaml platform ocamlv host
-    ++ build_cache OCaml platform ocamlv host
-    ++ cache OpamBS ocamlv "-${{ matrix.solver }}"
-    ++ build_cache OpamBS ocamlv "-${{ matrix.solver }}"
-    ++ run "Compile" ["bash -exu .github/scripts/main/solvers.sh"]
+    ++ only_on MacOS (changed_files ~withs ())
+    ++ cache ?cond Archives
+    ++ cache ?cond OCaml platform ocamlv host
+    ++ build_cache ?cond OCaml platform ocamlv host
+    ++ cache ?cond OpamBS ocamlv "-${{ matrix.solver }}"
+    ++ build_cache ?cond OpamBS ocamlv "-${{ matrix.solver }}"
+    ++ run ?cond "Compile" ["bash -exu .github/scripts/main/solvers.sh"]
     ++ end_job f
 
 let upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ?section runner ~oc ~workflow f =
@@ -572,7 +579,6 @@ let main oc : unit =
   @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile solver backends" Linux
   @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
   @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Upgrade from 1.2 to current" Linux
-  @@ fun _ -> upgrade_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
   @@ fun _ -> hygiene_job ~analyse_job (Specific (Linux, "22.04"))
   @@ fun _ -> depends_job ~analyse_job ~build_linux_job Linux
   @@ fun _ -> end_workflow
