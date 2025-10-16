@@ -124,7 +124,7 @@ let get_git_url url nv dir =
          (OpamUrl.to_string u);
      Some u)
   | _ ->
-    (OpamConsole.error "Can't retrieve remote informations for %s"
+    (OpamConsole.error "Remote branch not found for %s"
        (OpamPackage.to_string nv);
      None)
 

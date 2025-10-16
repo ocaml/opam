@@ -138,7 +138,7 @@ The following actions will be performed:
 -> installed nip.dev
 Done.
 ### opam lock nip
-[ERROR] Can't retrieve remote informations for dep-nip.dev
+[ERROR] Remote branch not found for dep-nip.dev
 [WARNING] Dependency dep-nip.dev is pinned to local target git+file://${BASEDIR}/dep-nip#master
 Generated lock files for:
   - nip.dev: ${BASEDIR}/nip.opam.locked
