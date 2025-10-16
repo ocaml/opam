@@ -3470,6 +3470,9 @@ module OPAM = struct
         URL.with_checksum [cksum] URL.empty
         (* ignore actual url and extra checksums *)
     in
+    let filter_empty_cmd field =
+      List.filter (fun (cmd, _) -> cmd <> []) field
+    in
     {
       opam_version = empty.opam_version;
 
@@ -3495,10 +3498,10 @@ module OPAM = struct
             t.flags);
       env        = t.env;
 
-      build      = t.build;
-      run_test   = t.deprecated_build_test @ t.run_test;
-      install    = t.install;
-      remove     = t.remove;
+      build      = filter_empty_cmd t.build;
+      run_test   = filter_empty_cmd (t.deprecated_build_test @ t.run_test);
+      install    = filter_empty_cmd t.install;
+      remove     = filter_empty_cmd t.remove;
 
       substs     = t.substs;
       patches    = t.patches;

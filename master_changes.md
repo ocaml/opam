@@ -61,6 +61,7 @@ users)
 ## Update / Upgrade
   * Fix the false-positive mismatch debug warning during `opam update` when faced with nested extra-files on Windows [#6715 @kit-ty-kate]
   * Implement incremental opam file loading to process only changed files during repository updates and repository state loading [#6614 @arozovyk - fix #5824]
+  * Fix erroneous recompilations on files with empty but present `build`/`runtest`/`install`/`remove` field [#6505 @kit-ty-kate - fix #5814]
 
 ## Tree
 
@@ -175,6 +176,7 @@ users)
   * Use the new `opam-set-os` command when applicable [#6741 @arozovyk]
   * Add a test showing that `variables.sh` doesn't re-apply updates if sourced more than once in the same session [#6729 @dra27 @kit-ty-kate]
   * Add a test for #6455 showing the effect on opam env if the switch whose settings were applied by `variables.sh` is deleted [#6729 @dra27]
+  * Add a test showing the behaviour of `opam upgrade` when faced with empty but present `build`/`run-test`/`install`/`build` field [#6505 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
