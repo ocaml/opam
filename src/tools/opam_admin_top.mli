@@ -12,7 +12,7 @@
 (** Small lib for writing opam-repo admin scripts *)
 
 (** The current repo (taken from CWD!) *)
-val repo : OpamTypes.dirname
+val repo : OpamRepositoryRoot.Dir.t
 
 (** All defined packages in the current repo *)
 val packages : OpamPackage.Set.t
