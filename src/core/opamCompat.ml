@@ -8,6 +8,16 @@
 (*                                                                        *)
 (**************************************************************************)
 
+module Gc = struct
+  [@@@warning "-32"]
+
+  let ramp_up f = (f (), ())
+
+  include Gc
+
+  let ramp_up f = fst (ramp_up f)
+end
+
 module String = struct
   [@@@warning "-32"]
 
@@ -228,6 +238,9 @@ module type MAP = sig
 
   (** NOTE: OCaml >= 4.11 *)
   val filter_map: (key -> 'a -> 'b option) -> 'a t -> 'b t
+
+  (** NOTE: OCaml >= 5.1 *)
+  val add_to_list: key -> 'a -> 'a list t -> 'a list t
 end
 
 module Map(Ord : Stdlib.Map.OrderedType) = struct
@@ -243,6 +256,11 @@ module Map(Ord : Stdlib.Map.OrderedType) = struct
         | None -> map
       ) map M.empty
 
+  (** NOTE: OCaml >= 5.1 *)
+  let add_to_list x data m =
+    let add = function None -> Some [data] | Some l -> Some (data :: l) in
+    M.update x add m
+
   include M
 end
 
@@ -250,4 +268,13 @@ module Pair = struct
   (** NOTE: OCaml >= 5.4 *)
   let equal eq1 eq2 (x1, y1) (x2, y2) =
     eq1 x1 x2 && eq2 y1 y2
+end
+
+module Int = struct
+  [@@@warning "-32"]
+
+  (* NOTE: OCaml >= 4.13 *)
+  let min : int -> int -> int = Stdlib.min
+
+  include Stdlib.Int
 end

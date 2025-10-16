@@ -25,18 +25,6 @@ let rec skip_while_from i f w m =
   if (i : int) = m then i
   else if f w.[i] then skip_while_from (i + 1) f w m else i
 
-(* splits a version into (prefix,revision). The revision starts on the
- * right-most occurrence of '-', or is empty in case the version does
- * not contain '-'.  *)
-let extract_revision x =
-  try
-    let di = String.rindex x '-' in
-    let before = String.sub x 0 di in
-    let after = String.sub x (di+1) (String.length x - di -1) in
-    (before,after)
-  with
-    | Not_found -> (x,"")
-
 (* character comparison uses a modified character ordering: '~' first,
    then letters, then anything else *)
 let compare_chars c1 c2 = match c1 with
@@ -59,12 +47,7 @@ let skip_zeros x xi xl = skip_while_from xi (fun c -> c = '0') x xl
 (* compare versions chunks, that is parts of version strings that are
  * epoch, upstream version, or revisision. Alternates string comparison
  * and numerical comparison.  *)
-let compare_chunks x y =
-  (* x and y may be empty *)
-  let xl = String.length x
-  and yl = String.length y
-  in
-  let rec loop_lexical xi yi =
+  let rec loop_lexical xl yl x y xi yi =
     assert ((xi : int) <= xl && (yi : int) <= yl);
     match ((xi : int) = xl, (yi : int) = yl) with (* which of x and y is exhausted? *)
       | true,true -> 0
@@ -87,15 +70,15 @@ let compare_chunks x y =
             (* both continue numerically. Skip leading zeros in the
              * remaining parts, and then continue by
              * comparing numerically. *)
-            compare_numerical (skip_zeros x xi xl) (skip_zeros y yi yl)
+            compare_numerical xl yl x y (skip_zeros x xi xl) (skip_zeros y yi yl)
           | true,false -> (* '~' is smaller than any numeric part *)
             if y.[yi]='~' then 1 else -1
           | false,true -> (* '~' is smaller than any numeric part *)
             if x.[xi]='~' then -1 else 1
           | false,false -> (* continue comparing lexically *)
             let comp = compare_chars x.[xi] y.[yi]
-            in if comp = 0 then loop_lexical (xi+1) (yi+1) else comp
-  and compare_numerical xi yi =
+            in if comp = 0 then loop_lexical xl yl x y (xi+1) (yi+1) else comp
+  and compare_numerical xl yl x y xi yi =
     assert ((xi : int) = xl || ((xi : int) < xl && x.[xi] <> '0'));
     (* leading zeros have been stripped *)
     assert ((yi : int) = yl || ((yi : int) < yl && y.[yi] <> '0'));
@@ -106,13 +89,13 @@ let compare_chunks x y =
     let comp = Int.compare (xn-xi) (yn-yi)
     in if comp = 0
       then (* both numerical parts have same length: compare digit by digit *)
-        loop_numerical xi yi yn
+        loop_numerical xl yl x y xi yi yn
       else
         (* if one numerical part is longer than the other we have found the
          * answer since leading 0 have been striped when switching
          * to numerical comparison.  *)
         comp
-  and loop_numerical xi yi yn =
+  and loop_numerical xl yl x y xi yi yn =
     assert ((xi : int) <= xl && (yi : int) <= yn && (yn : int) <= yl);
     (* invariant: the two numerical parts that remain to compare are
        of the same length *)
@@ -120,24 +103,33 @@ let compare_chunks x y =
     then
       (* both numerical parts are exhausted, we switch to lexical
          comparison *)
-      loop_lexical xi yi
+      loop_lexical xl yl x y xi yi
     else
       (* both numerical parts are not exhausted, we continue comparing
          digit by digit *)
       let comp = Char.compare x.[xi] y.[yi]
-      in if comp = 0 then loop_numerical (xi+1) (yi+1) yn else comp
-  in loop_lexical 0 0
+      in if comp = 0 then loop_numerical xl yl x y (xi+1) (yi+1) yn else comp
 
 let compare (x : string) (y : string) =
   let normalize_comp_result x = if x=0 then 0 else if x < 0 then -1 else 1
   in
   if (x : string) = y then 0
   else
-    let (u1,r1) = extract_revision x
-    and (u2,r2) = extract_revision y in
-    let u_comp = compare_chunks u1 u2 in
-    if u_comp <> 0 then normalize_comp_result u_comp
-    else normalize_comp_result (compare_chunks r1 r2)
+    let lx = String.length x in
+    let ly = String.length y in
+    let rx =
+      try String.rindex x '-'
+      with Not_found -> lx in
+    let ry =
+      try String.rindex y '-'
+      with Not_found -> ly in
+    let u_comp = loop_lexical rx ry x y 0 0 in
+    if u_comp <> 0 then
+      normalize_comp_result u_comp
+    else
+      normalize_comp_result
+        (loop_lexical lx ly x y
+           (OpamCompat.Int.min (rx + 1) lx) (OpamCompat.Int.min (ry + 1) ly))
 
 let equal (x : string) (y : string) =
   if (x : string) = y then true else (compare x y) = 0

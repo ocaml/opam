@@ -53,6 +53,7 @@ users)
 ## List
 
 ## Show
+  * Improve performance of `opam show` by reading switch selection only once instead of once per package-version [#6515 @dra27]
 
 ## Var/Option
   * Make the computation of `pkg:opamfile` match its specification [#6659 @kit-ty-kate - fix #5346]
@@ -139,6 +140,7 @@ users)
   * Homogeneise verbose command output between sandboxed and non sandboxed one [#6675 @rjbou]
   * Add the `install-pin-depends`, `ignore-pin-depends`, `proceed-actions` and `switch-clean-up` named questions [#6611 @kit-ty-kate @rjbou]
   * Add logging for file reads and writes [#6679 @rjbou]
+  * Improve cache-loading performance when using OCaml >= 5.4 by using `Gc.ramp_up` [#6515 @dra27]
 
 ## Internal: Unix
 
@@ -239,6 +241,7 @@ users)
   * `OpamSwitchState.overlay_opam_file`: was added [6679 @rjbou]
   * `OpamRepositoryState` add `load_opams_from_diff` to update package definitions based on file change operations (diff) [#6614 @arozovyk]
   * `OpamRepositoryState.get_repo_files`: was added [#6679 @kit-ty-kate @rjbou]
+  * `OpamGlobalState.all_installed_versions`: was added [#6515 @dra27]
 
 ## opam-solver
 
@@ -258,9 +261,12 @@ users)
   * `OpamCoreConfig.in_opam`: was added [#6487 @kit-ty-kate]
   * `OpamSystem.cpu_count`: now uses a C binding instead of system utilities to get the number of cores of the current machine [#6634 @kit-ty-kate]
   * `OpamSystem.is_reg_dir`: is now exposed, which returns `true` only if its parameter is a directory, exists and is not a symlink. It returns `false` otherwise [#6450 @kit-ty-kate]
+  * `OpamCompat.Gc.ramp_up`: was added [#6515 @dra27]
+  * `OpamCompat.Int.min`: was added [#6515 @kit-ty-kate]
   * `OpamCompat.List.fold_left_map`: was added [#6442 @kit-ty-kate]
   * `OpamCompat.List.equal`: was added [#6644 @kit-ty-kate]
   * `OpamCompat.Map.filter_map`: was added [#6442 @kit-ty-kate]
+  * `OpamCompat.Map.add_to_list`: was added [#6515 @dra27]
   * `OpamCompat.MAP`: was added [#6442 @kit-ty-kate]
   * `OpamCompat.Pair.equal`: was added [#6644 @kit-ty-kate]
   * `OpamCompat.String.{starts_with,ends_with,for_all,fold_left}`: were added [#6442 @kit-ty-kate]
@@ -284,3 +290,4 @@ users)
   * `OpamFilename.patch`: use variants to make the input either `Filename.t` or reuse `Patch.diffs` directly. Remove the `?preprocess` argument since the preprocess logic is moved to the `OpamFilename.parse_patch` function that is called only in `OpamVCS` (mirroring the previous logic). [#6614 @arozovyk]
   * `OpamSystem.patch`: change the signature to work directly with `Patch.diffs` (implementation is now the previously `internal_patch` function), parsing is now done separately. [#6614 @arozovyk]
   * `OpamCompat.Lazy`: add `map_val` [#6679 @rjbou]
+  * `OpamVersionCompare.{compare,equal}`: are now allocation free [#6515 @dra27]
