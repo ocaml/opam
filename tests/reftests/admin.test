@@ -852,3 +852,23 @@ no-extra.1
 no-extra.2
 ### opam admin list --short --all-versions --latests-only
 no-extra.2
+### ::: Test opam repo version warning
+### rm -rf packages
+### <packages/dummy/dummy.1/opam>
+opam-version: "2.0"
+### : repo 1.2
+### <repo>
+opam-version: "1.2"
+### opam admin list --short
+[WARNING] The repository is at version 1.2, please consider upgrading to 2.0 with 'opam admin upgrade'
+dummy
+### : missing repo, assuming 1.2
+### rm repo
+### opam admin list --short
+[WARNING] The repository is at version 1.2, please consider upgrading to 2.0 with 'opam admin upgrade'
+dummy
+### : repo 2.0
+### <repo>
+opam-version: "2.0"
+### opam admin list --short
+dummy

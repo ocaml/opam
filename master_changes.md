@@ -119,6 +119,8 @@ users)
   * Add 2.4.1 to the install scripts [#6617 @kit-ty-kate]
 
 ## Admin
+  * Enforce repository root check for all command [#6385 @rjbou]
+  * Add an upgrade advice if the repository is 1.2 version, for all command except upgrade [#6385 @rjbou]
 
 ## Opam installer
 
@@ -183,6 +185,7 @@ users)
   * Add a test showing the behaviour of `opam upgrade` when faced with empty but present `build`/`run-test`/`install`/`build` field [#6505 @kit-ty-kate]
   * Add a test for `git remote`'s exit code 2 [#6422 @rjbou]
   * Add a test showing how `OPAMFETCH` is parsed [#5492 @kit-ty-kate]
+  * Add a test in admin to test repository version upgrade advice [#6385 @rjbou]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
@@ -229,6 +232,7 @@ users)
 # API updates
 ## opam-client
   * `OpamClientConfig.opam_init`: now takes an optional `auto_answer` argument [#6709 @kit-ty-kate]
+  * `OpamAdminRepoUpgrade`: add `upgradefrom_version` that have version "1.2" hardcoded [#6391 @rjbou]
 
 ## opam-repository
   * `OpamLocal.rsync_*`: Change the return type from `OpamFilename.*` to `unit` [#6658 @kit-ty-kate]
