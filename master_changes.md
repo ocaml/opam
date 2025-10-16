@@ -22,6 +22,7 @@ users)
 
 ## Init
   * Remove `getconf` from the list of required runtime tools, which allows `opam init` to work out-of-the-box on Haiku [#6634 @kit-ty-kate - fix #6632]
+  * The variables scripts now only updates the environment if `OPAM_SWITCH_PREFIX` is unset-or-empty [#6729 @dra27 - fix dbuenzli/topkg#142, #4649, #5761]
 
 ## Config report
 
@@ -126,6 +127,7 @@ users)
   * [NEW] Fetch shared archive sources without checksums [#6627 @psafont - fix #5638]
 
 ## Shell
+  * csh: Don't double-set unconditional variables in `variables.csh` and `env_hook.csh` [#6729 @dra27]
 
 ## Internal
   * Replace every polymorphic uses of `List.mem` by a version that doesn't use `Repr.equal` [#6644 @kit-ty-kate]
@@ -171,6 +173,8 @@ users)
   * Add reftest for `--depext-only` option [#6516 @rjbou]
   * Add a test for `opam remove --force` [#6672 @rjbou]
   * Use the new `opam-set-os` command when applicable [#6741 @arozovyk]
+  * Add a test showing that `variables.sh` doesn't re-apply updates if sourced more than once in the same session [#6729 @dra27 @kit-ty-kate]
+  * Add a test for #6455 showing the effect on opam env if the switch whose settings were applied by `variables.sh` is deleted [#6729 @dra27]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]

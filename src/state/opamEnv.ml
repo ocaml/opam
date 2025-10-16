@@ -970,7 +970,7 @@ let env_hook_script_base = function
   | SH_fish -> Some OpamScript.env_hook_fish
   | SH_pwsh _ | SH_cmd -> None
 
-let export_in_shell shell =
+let export_in_shell ~unconditional shell =
   let make_comment comment_opt =
     OpamStd.Option.to_string (Printf.sprintf "# %s\n") comment_opt
   in
@@ -978,8 +978,12 @@ let export_in_shell shell =
     Printf.sprintf "%s%s=%s; export %s;\n"
       (make_comment comment) k v k in
   let csh  (k,v,comment) =
-    Printf.sprintf "%sif ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %s\n"
-      (make_comment comment) k k k v in
+    if unconditional then
+      Printf.sprintf "%ssetenv %s %s\n"
+        (make_comment comment) k v
+    else
+      Printf.sprintf "%sif ( ! ${?%s} ) setenv %s \"\"\nsetenv %s %s\n"
+        (make_comment comment) k k k v in
   let fish (k,v,comment) =
     (* Fish converts some colon-separated vars to arrays, which have to be
        treated differently. MANPATH is handled automatically, so better not to
@@ -1022,9 +1026,26 @@ let export_in_shell shell =
 
 let env_hook_script shell =
   Option.map (fun script ->
-      export_in_shell shell ("OPAMNOENVNOTICE", "true", None)
+      export_in_shell shell ~unconditional:true ("OPAMNOENVNOTICE", "true", None)
       ^ script)
     (env_hook_script_base shell)
+
+let abort_if_set var shell =
+  (* Each of these incantations aborts the currently running script if [var] is
+     unset or empty ("null") *)
+  match shell with
+  | SH_zsh | SH_bash | SH_sh ->
+    Printf.sprintf "test -z \"${%s:+x}\" || return\n" var
+  | SH_csh ->
+    Printf.sprintf "if ( ${?%s} ) then\n  if ( \"$%s\" != \"\") exit\nendif\n"
+      var var
+  | SH_pwsh _ ->
+    Printf.sprintf "if ($env:%s -ne $null -and $env:%s -ne '') { return }\n"
+      var var
+  | SH_fish ->
+    Printf.sprintf "test -z \"$%s\"; or return\n" var
+  | SH_cmd ->
+    Printf.sprintf "if defined %s if \"%%%s%%\" neq \"\" goto :EOF\n" var var
 
 let source root shell f =
   let fname = OpamFilename.to_string (OpamPath.init root // f) in
@@ -1129,7 +1150,7 @@ let string_of_update st shell updates =
          | SH_cmd -> Printf.sprintf "%%%s%%%c%s" envu_var sep string
          | _ -> Printf.sprintf "\"$%s\":'%s'" envu_var string)
     in
-    export_in_shell shell (key, value, envu_comment) in
+    export_in_shell shell ~unconditional:(envu_op = Eq) (key, value, envu_comment) in
   OpamStd.List.concat_map "" aux updates
 
 let write_script dir (name, body) =
@@ -1219,7 +1240,9 @@ let write_dynamic_init_scripts st =
     List.iter
       (fun shell ->
          write_script (OpamPath.init st.switch_global.root)
-           (variables_file shell, string_of_update st shell updates))
+           (variables_file shell,
+            abort_if_set "OPAM_SWITCH_PREFIX" shell
+            ^ string_of_update st shell updates))
       [SH_sh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
   with OpamSystem.Locked ->
     OpamConsole.warning
