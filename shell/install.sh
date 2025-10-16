@@ -774,7 +774,7 @@ EOF
     else
       echo "## The opam-local AppArmor profile already exists and differs from the expected content."
       printf "Would you like to overwrite it? [Y/n] "
-      read R
+      read -r R
       case "$R" in
       ""|"y"|"Y"|"yes")
         ;;

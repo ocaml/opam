@@ -3,6 +3,216 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.5.0~alpha1:
+* Implement incremental opam file loading to process only changed files during
+  repository updates and repository state loading [#6614 @arozovyk - fix #5824]
+* The `variables.*sh` script used for shell hooks now only updates the
+  environment if `OPAM_SWITCH_PREFIX` is unset-or-empty
+  [#6729 @dra27 - fix dbuenzli/topkg#142, #4649, #5761]
+* Default to the `.bashrc` file instead of the `.profile` when writing the
+  shell hook with `bash` during `opam init`
+  [#6603 @kit-ty-kate - fix #5819 #4201 #3990]
+* Remove `getconf` from the list of required runtime tools, which allows
+  `opam init` to work out-of-the-box on Haiku [#6634 @kit-ty-kate - fix #6632]
+* Archives without checksums now fetch only once per call of `opam install` if
+  their url match [#6627 @psafont - fix #5638]
+* Do not ignore extra-files whose name is invalid and fail early in that case
+  [#6679 @rjbou @kit-ty-kate]
+* Refine the specification of `pkg:opamfile` variable and update
+  its computation accordingly [#6659 @kit-ty-kate - fix #5346]
+* Make global option `default-invariant` modifiable [#6730 @rjbou]
+* Raise a warning instead of a fatal uncaught exception when an item of
+  `extra-files` is missing [#6696 @rjbou]
+* No longer ignore `extra-files` whose name is invalid and raise a warning
+  in that case [#6679 @rjbou @kit-ty-kate]
+* csh: Don't double-set unconditional variables in `variables.csh` and
+  `env_hook.csh` [#6729 @dra27]
+* The `shell/install.sh` script now installs an appropriate apparmor profile
+  on systems configured with apparmor [#6647 @kit-ty-kate - fix #5968]
+* Improve the UI:
+  * Show the invalid character when detecting an erroneous package name
+    [#6638 @lefessan - fix #6396]
+  * Improve the error messages on `opam source`, especially in case of
+    `Failure` [#6696 @rjbou]
+  * The name of missing or erroneous `extra-files` are now displayed instead
+    of their path in error messages [#6679 @kit-ty-kate @rjbou]
+  * Remove duplicated directory separator when displaying some rare filenames
+    [#6703 @rjbou]
+  * Handle non-displayable characters when detecting an erroneous package name
+    or version [#6640 @kit-ty-kate]
+  * More fine grained error message in `opam install` in case of bad hash
+    or missing `extra-files` error (and remove raw fatal error) [#6696 @rjbou]
+  * Update warning messages when the git remote is not found and when skipping
+    local pins [#6422 @rjbou]
+  * Add an upgrade advice if the repository is 1.2 version, for all `opam admin`
+    commands except `upgrade` [#6385 @rjbou]
+* Bug fixes:
+  * Fix erroneous recompilations on opam files with empty but present
+    `build`/`runtest`/`install`/`remove` field [#6505 @kit-ty-kate - fix #5814]
+  * Fix parsing of `OPAMFETCH` (support quotes / proper POSIX shell syntax)
+    [#5492 @kit-ty-kate - fix #5490]
+  * Fix `opam remove --force` that was launching commands in current
+    directory [#6672 @rjbou - fix #6570]
+  * Fix `opam lock`'s error message on pinned packages with no git remote
+    by handling exit code 2 from `git remote get-url` [#6422 @rjbou]
+  * Fix `opam install pkg --depext-only` exiting with code 0 instead of 20
+    (not found) [#6516 @rjbou - fix #6488]
+  * Fix the false-positive mismatch debug warning during `opam update`
+    when faced with nested extra-files on Windows [#6715 @kit-ty-kate]
+  * Check the status of git submodules when checking if a repository is
+    up-to-date [#6132 @kit-ty-kate]
+  * Harden the parsing of `apk policy` on Alpine [#6742 @kit-ty-kate]
+* Build changes:
+  * Update the dependency constraint on `patch` to now require its stable
+    version [#6663 @kit-ty-kate]
+  * Update the download-if-missing dependencies to their latest version
+    (re.1.14.0, dune.3.20.2, menhir.20250903) [#6700 @kit-ty-kate]
+  * Remove `seq` from the list of packages to download-if-missing as it is
+    no longer a dependency of `re` [#6700 @kit-ty-kate]
+  * `./configure --enable-static` is now supported on OpenBSD [#6705 @flumf]
+  * Add missing constraints to avoid cmdliner 2.0.0 [#6707 @kit-ty-kate]
+  * Add patch library dependency to opam-state [#6614 @arozovyk]
+  * Update the bootstrap compiler's flexdll to 0.44 [#6592 @MisterDA]
+  * Update the `msvs-detect` script used on Windows during compiler bootstrap
+    to 0.7.0 [#6592 @MisterDA]
+* Improve the release script:
+  * The OpenBSD binary now a full static binary
+    [#6705 @flumf @kit-ty-kate - fix #6241]
+  * The release archive (`opam-full-*.tar.gz`) is now reproducible
+    [#6706 @kit-ty-kate - fix #6619]
+* Various internal changes:
+  * Replace every polymorphic uses of `List.mem` by a version that doesn't
+    use `Repr.equal` [#6644 @kit-ty-kate]
+  * Simplify the `src_ext/update-sources.sh` script [#6701 @kit-ty-kate]
+  * Homogeneise verbose command output between sandboxed and non sandboxed
+    one [#6675 @rjbou]
+  * Add the `install-pin-depends`, `ignore-pin-depends`, `proceed-actions`
+    and `switch-clean-up` named questions (for opam developers use only)
+    [#6611 @kit-ty-kate @rjbou]
+  * Add logging for file reads and writes [#6679 @rjbou]
+  * Add cli version 2.5 [#6709 @kit-ty-kate]
+  * Add mechanism for the `OPAMAUTOANSWER` environment variable
+    (for opam developers use only) [#6709 @kit-ty-kate]
+  * Complete upgrade mechanism to permit on the fly upgrade and write upgrade
+    from repo and switch level [#6416 @rjbou]
+  * Enforce repository root check for every `opam admin` commands [#6385 @rjbou]
+* Improve and extend the testsuite
+  [#6673 #6450 #6638 #6627 #6640 #6671 #6690 #6688 #6691
+   #6659 #6659 #6675 #6715 #6614 #6719 #6611 #6679 #6153
+   #6516 #6672 #6741 #6729 #6505 #6422 #5492 #6385
+   @rjbou @kit-ty-kate @arozovyk @dra27]
+* Improve and extend the benchmarks [#6681 @arozovyk]
+* Improve and extend the test infrastructure
+  [#6624 #6450 #6663 #6675 #6710 #6708 #6734 #6643 #6652
+   #6648 #6582 #6394 #6656 #6655 #6657 #6666 #6676 #6701
+   #6741 #6745 @kit-ty-kate @rjbou @arozovyk]
+* Improve and extend the documentation
+  [#6620 #6631 #6650 #6653 #6653 #6596 #6364 #6660
+   @kit-ty-kate @jmid @gahr @mbarbin @arozovyk]
+* API changes in `opam-client`:
+  * `OpamAdminRepoUpgrade`: add `upgradefrom_version` that have version "1.2"
+    hardcoded [#6391 @rjbou]
+  * `OpamClientConfig.opam_init`: now takes an optional `auto_answer` argument
+    [#6709 @kit-ty-kate]
+* API changes in `opam-repository`:
+  * `OpamLocal.rsync_*`: change the return type from `OpamFilename.*` to `unit`
+    [#6658 @kit-ty-kate]
+  * `OpamRepository.update`: changed the `'Changes` return type to include
+    `Patch.operation list` of changes. [#6614 @arozovyk]
+  * `OpamRepositoryBackend.update` type : include the `Patch.t list` in
+    `Update_patch` variant [#6614 @arozovyk]
+  * `OpamRepositoryBackend.get_diff`: include `Patch.t list` in the return type
+    (along with `filename`) [#6614 @arozovyk]
+* API changes in `opam-state`:
+  * `OpamRepositoryState`: add `load_opams_from_diff` to update package
+    definitions based on file change operations (diff) [#6614 @arozovyk]
+  * `OpamRepositoryState.get_repo_files`: was added [#6679 @kit-ty-kate @rjbou]
+  * `OpamSwitchState.files`: was removed [#6662 @kit-ty-kate]
+  * `OpamSwitchState.overlay_opam_file`: was added [6679 @rjbou]
+* API changes in `opam-format`:
+  * `OpamFile.OPAM.get_metadata_dir`: was removed [#6679 @kit-ty-kate]
+  * `OpamFile.OPAM.get_extra_files`: no longer takes a named `repos_roots`
+    argument and instead takes a named `get_repo_files` argument.
+    It also now returns the content of the files instead of their path
+    [#6679 @kit-ty-kate @rjbou]
+  * `OpamFormula`: add `equal` function for `OpamFormula.t` [#6730 @rjbou]
+  * `OpamFormula.equal_relop`: was added [#6644 @kit-ty-kate]
+  * `OpamTypesBase.{action,pkg_flag,simple_arg,arg,filter,command}_equal`:
+    were added [#6644 @kit-ty-kate]
+  * `OpamVariable.variable_contents_equal`: was added [#6644 @kit-ty-kate]
+* API changes in `opam-core`:
+  * `OpamConsole.confirm`: now takes an optional `name` argument
+    (for opam developers use only) [#6709 @kit-ty-kate]
+  * `OpamConsole.log`: does not keep log messages before initialization
+    if the code is ran through a library [#6487 @kit-ty-kate]
+  * `OpamCoreConfig.auto_answer`: field and arguments were added
+    [#6709 @kit-ty-kate]
+  * `OpamCoreConfig.{answer,anwser_is,answer_is_yes}`: now take a `name`
+    labeled argument (for opam developers use only) [#6709 @kit-ty-kate]
+  * `OpamCoreConfig.in_opam`: was added [#6487 @kit-ty-kate]
+  * `OpamCompat.Lazy`: add `map_val` [#6679 @rjbou]
+  * `OpamCompat.List.fold_left_map`: was added [#6442 @kit-ty-kate]
+  * `OpamCompat.List.equal`: was added [#6644 @kit-ty-kate]
+  * `OpamCompat.Map.filter_map`: was added [#6442 @kit-ty-kate]
+  * `OpamCompat.MAP`: was added [#6442 @kit-ty-kate]
+  * `OpamCompat.Pair.equal`: was added [#6644 @kit-ty-kate]
+  * `OpamCompat.String.{starts_with,ends_with,for_all,fold_left}`: were added
+    [#6442 @kit-ty-kate]
+  * `OpamFilename.create`: deduplicate the directory separator character
+    when the basename starts with one [#6703 @rjbou]
+  * `OpamFilename`: add `parse_patch` that preprocesses and parses a patch file.
+    [#6614 @arozovyk]
+  * `OpamFilename.patch`: use variants to make the input either `Filename.t`
+    or reuse `Patch.diffs` directly. Remove the `?preprocess` argument since
+    the preprocess logic is moved to the `OpamFilename.parse_patch` function
+    that is called only in `OpamVCS` (mirroring the previous logic).
+    [#6614 @arozovyk]
+  * `OpamHash.check_string`: was added [#6661 @kit-ty-kate]
+  * `OpamHash.equal_kind`: was added [#6644 @kit-ty-kate]
+  * `OpamShellCommand`: create the module and add `of_string`
+    [#5492 @kit-ty-kate]
+  * `OpamStd.Char`: Create the module and export `is_whitespace`
+    [#5492 @kit-ty-kate]
+  * `OpamStd.Config.auto_answer`: was added (for opam developers use only)
+    [#6709 @kit-ty-kate]
+  * `OpamStd.List.fold_left_map`: was moved to `OpamCompat.List.fold_left_map`
+    [#6442 @kit-ty-kate]
+  * `OpamStd.List.{cons,find_opt,filter_map}`: were removed.
+    Use `Stdlib.List` instead. [#6442 @kit-ty-kate]
+  * `OpamStd.List.mem`: was added, having as argument the equality function
+    [#6644 @kit-ty-kate]
+  * `OpamStd.Map.filter_map`: is now the implementation from `Stdlib.Map`
+    when using OCaml >= 4.11 [#6442 @kit-ty-kate]
+  * `OpamStd.Map.{find_opt,choose_opt,fold,map,mapi}`: are now the
+    implementation from `Stdlib.Map` [#6442 @kit-ty-kate]
+  * `OpamStd.Op.{(@@),(|>)}`: were removed. Use `Stdlib` instead.
+    [#6442 @kit-ty-kate]
+  * `OpamStd.Option.{map,iter,compare,equal,to_string,some}`: were removed.
+    Use `Stdlib.Option` instead. [#6442 @kit-ty-kate]
+  * `OpamStd.Set.{map,choose_opt,fold}`: are now the implementation from
+    `Stdlib.Set` [#6442 @kit-ty-kate]
+  * `OpamStd.String.contains_char`: was removed. Use `Stdlib.String.contains`
+    instead. [#6442 @kit-ty-kate]
+  * `OpamStd.String.map`: was removed. Use `Stdlib.String.map` instead.
+    [#6442 @kit-ty-kate]
+  * `OpamStd.String.{starts_with,ends_with,for_all,fold_left}`:
+    were moved to `OpamCompat.String` [#6442 @kit-ty-kate]
+  * `OpamSystem.cpu_count`: now uses a C binding instead of system utilities
+    to get the number of cores of the current machine [#6634 @kit-ty-kate]
+  * `OpamSystem.is_reg_dir`: is now exposed, which returns `true` only if
+    its parameter is a directory, exists and is not a symlink.
+    It returns `false` otherwise [#6450 @kit-ty-kate]
+  * `OpamSystem.patch`: change the signature to work directly with `Patch.diffs`
+    (implementation is now the previously `internal_patch` function),
+    parsing is now done separately. [#6614 @arozovyk]
+  * `OpamSystem`: add lower-level `parse_patch` that preprocesses and parses
+    a patch file. [#6614 @arozovyk]
+
+2.4.1:
+* Fix pin-depends being ignored on simulated pins
+  (e.g. `opam install --deps-only`) [#6612 @kit-ty-kate - fix #6610]
+* Improve and extend the testsuite [#6612 @kit-ty-kate]
+
 2.4.0:
 * Fix a regression in `opam pin list` which crashed when the source of the
   pinned package doesn't exist [#6598 @kit-ty-kate - fix #6600]
