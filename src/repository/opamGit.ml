@@ -328,22 +328,26 @@ module VCS : OpamVCS.VCS = struct
     | { OpamProcess.r_code = 0; OpamProcess.r_stdout = [url]; _ } ->
       (let u = OpamUrl.parse ~backend:`git url in
        if OpamUrl.local_dir u <> None then Done None else
-       let hash_in_remote =
-         match hash with
+         let hash_in_remote =
+           match hash with
+           | None ->
+             (current_branch repo_root @@+ function
+               | None | Some "HEAD" -> Done None
+               | Some hash -> check_remote repo_root hash)
+           | Some hash -> check_remote repo_root hash
+         in
+         hash_in_remote @@+ function
+         | Some _ as hash ->
+           Done (Some { u with OpamUrl.hash = hash })
          | None ->
-           (current_branch repo_root @@+ function
-             | None | Some "HEAD" -> Done None
-             | Some hash -> check_remote repo_root hash)
-         | Some hash -> check_remote repo_root hash
-       in
-       hash_in_remote @@+ function
-       | Some _ as hash ->
-         Done (Some { u with OpamUrl.hash = hash })
-       | None ->
-         Done (Some { u with OpamUrl.hash = None })
+           Done (Some { u with OpamUrl.hash = None })
       )
     | { OpamProcess.r_code = 0; _ }
-    | { OpamProcess.r_code = 1; _ } -> Done None
+    | { OpamProcess.r_code = 1; _ }
+    | { OpamProcess.r_code = 2; _ }
+      (* When subcommands such as add, rename, and remove can’t find the remote
+         in question, the exit status is 2 *)
+      -> Done None
     | r -> OpamSystem.process_error r
 
 end

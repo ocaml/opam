@@ -124,7 +124,7 @@ let get_git_url url nv dir =
          (OpamUrl.to_string u);
      Some u)
   | _ ->
-    (OpamConsole.error "Can't retrieve remote informations for %s"
+    (OpamConsole.error "Remote branch not found for %s"
        (OpamPackage.to_string nv);
      None)
 
@@ -299,7 +299,8 @@ let lock_opam ~only_direct ~keep_local st opam =
             (nv, u) :: acc
           | Some d ->
             let local_warn () =
-              OpamConsole.warning "Dependency %s is pinned to local target %s"
+              OpamConsole.warning
+                "Dependency %s is pinned to local target %s, skipping"
                 (OpamPackage.to_string nv) (OpamUrl.to_string u);
               acc
             in
