@@ -214,7 +214,8 @@ let environment_variables =
       "CURL", cli_original, (fun v -> CURL (env_string v)),
       "can be used to select a given 'curl' program. See $(i,OPAMFETCH) for \
        more options.";
-      "FETCH", cli_original, (fun v -> FETCH (env_string v)),
+      "FETCH", cli_original, (fun v ->
+        FETCH (Option.map OpamShellCommand.of_string (env_string v))),
       "specifies how to download files: either `wget', `curl' or a custom \
        command where variables $(b,%{url}%), $(b,%{out}%), $(b,%{retry}%), \
        $(b,%{compress}%) and $(b,%{checksum}%) will be replaced. Overrides the \

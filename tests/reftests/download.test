@@ -311,3 +311,35 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/git
 + git "clean" "-fdx" (CWD=${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1)
 SYSTEM                          rmdir ${OPAMTMP}
 Done.
+### :::::::::::::::
+### : OPAMFETCH shell syntax
+### :::::::::::::::
+### <pkg:qux.1>
+opam-version: "2.0"
+url {
+  src: "https://example.com/archive.tar.gz"
+}
+### <fetch.sh>
+set -eu
+for arg in "$@"; do
+  echo "$arg"
+done
+### OPAMFETCH='sh ./fetch.sh "a b" c' opam install --download-only -vv qux | sed-cmd sh
+The following actions will be performed:
+=== install 1 package
+  - install qux 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [qux.1: http]
++ sh "./fetch.sh" "a b" "c"
+- a b
+- c
+[ERROR] Failed to get sources of qux.1: Downloaded file not found
+
+OpamSolution.Fetch_fail("https://example.com/archive.tar.gz (Download command succeeded, but resulting file not found)")
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+- No changes have been performed
+'${OPAM} install --download-only -vv qux' failed.
+# Return code 40 #

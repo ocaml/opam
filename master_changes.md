@@ -83,6 +83,7 @@ users)
 ## Clean
 
 ## Env
+  * Fix parsing of `OPAMFETCH` (support quotes / proper POSIX shell syntax) [#5492 @kit-ty-kate - fix #5490]
 
 ## Opamfile
 
@@ -181,6 +182,7 @@ users)
   * Add a test for #6455 showing the effect on opam env if the switch whose settings were applied by `variables.sh` is deleted [#6729 @dra27]
   * Add a test showing the behaviour of `opam upgrade` when faced with empty but present `build`/`run-test`/`install`/`build` field [#6505 @kit-ty-kate]
   * Add a test for `git remote`'s exit code 2 [#6422 @rjbou]
+  * Add a test showing how `OPAMFETCH` is parsed [#5492 @kit-ty-kate]
 
 ### Engine
   * Fix gcc < 14.3 bug on mingw i686 [#6624 @kit-ty-kate]
@@ -267,6 +269,7 @@ users)
   * `OpamHash.check_string`: was added [#6661 @kit-ty-kate]
   * `OpamHash.equal_kind`: was added [#6644 @kit-ty-kate]
   * `OpamStd.Config.auto_answer`: was added [#6709 @kit-ty-kate]
+  * `OpamStd.Char`: Create the module and export `is_whitespace` [#5492 @kit-ty-kate]
   * `OpamStd.List.fold_left_map`: was moved to `OpamCompat.List.fold_left_map` [#6442 @kit-ty-kate]
   * `OpamStd.List.{cons,find_opt,filter_map}`: were removed. Use `Stdlib.List` instead. [#6442 @kit-ty-kate]
   * `OpamStd.List.mem`: was added, having as argument the equality function [#6644 @kit-ty-kate]
@@ -284,3 +287,4 @@ users)
   * `OpamFilename.patch`: use variants to make the input either `Filename.t` or reuse `Patch.diffs` directly. Remove the `?preprocess` argument since the preprocess logic is moved to the `OpamFilename.parse_patch` function that is called only in `OpamVCS` (mirroring the previous logic). [#6614 @arozovyk]
   * `OpamSystem.patch`: change the signature to work directly with `Patch.diffs` (implementation is now the previously `internal_patch` function), parsing is now done separately. [#6614 @arozovyk]
   * `OpamCompat.Lazy`: add `map_val` [#6679 @rjbou]
+  * `OpamShellCommand`: Create the module and add `of_string` [#5492 @kit-ty-kate]
