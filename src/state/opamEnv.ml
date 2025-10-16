@@ -1274,11 +1274,13 @@ let dot_profile_needs_update root dot_profile =
 let update_dot_profile root dot_profile shell =
   let pretty_dot_profile = OpamFilename.prettify dot_profile in
   let bash_src () =
-    if (shell = SH_bash || shell = SH_sh)
-    && OpamFilename.(Base.to_string (basename dot_profile)) <> ".bashrc" then
-      OpamConsole.note "Make sure that %s is well %s in your ~/.bashrc.\n"
-        pretty_dot_profile
-        (OpamConsole.colorise `underline "sourced")
+    if shell = SH_bash then
+      let bash_dot_profile =
+        OpamFilename.prettify
+          (OpamFilename.of_string (OpamStd.Sys.guess_bash_dot_profile ()))
+      in
+      OpamConsole.note "Make sure that ~/.bashrc is well %s in your %s.\n"
+        (OpamConsole.colorise `underline "sourced") bash_dot_profile
   in
   match dot_profile_needs_update root dot_profile with
   | `no        -> OpamConsole.msg "  %s is already up-to-date.\n" pretty_dot_profile; bash_src()

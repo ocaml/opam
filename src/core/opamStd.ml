@@ -1049,6 +1049,28 @@ module OpamSys = struct
       in
       Option.default unix_default_shell shell
 
+  let guess_bash_dot_profile () =
+    let home f =
+      try Filename.concat (home ()) f
+      with Not_found -> f
+    in
+    try
+      List.find Sys.file_exists [
+        (* Bash looks up these 3 files in order and only loads the first,
+           for LOGIN shells *)
+        home ".bash_profile";
+        home ".bash_login";
+        home ".profile";
+        (* Bash loads .bashrc INSTEAD, for interactive NON login shells only;
+           but it's often included from the above.
+           We may include our variables in both to be sure ; for now we rely
+           on non-login shells inheriting their env from a login shell
+           somewhere... *)
+      ]
+    with Not_found ->
+      (* iff none of the above exist, creating this should be safe *)
+      home ".bash_profile"
+
   let guess_dot_profile shell =
     let home f =
       try Filename.concat (home ()) f
@@ -1062,25 +1084,7 @@ module OpamSys = struct
         with Not_found -> home f in
       Some (zsh_home ".zshrc")
     | SH_bash ->
-      let shell =
-        (try
-           List.find Sys.file_exists [
-             (* Bash looks up these 3 files in order and only loads the first,
-                for LOGIN shells *)
-             home ".bash_profile";
-             home ".bash_login";
-             home ".profile";
-             (* Bash loads .bashrc INSTEAD, for interactive NON login shells only;
-                but it's often included from the above.
-                We may include our variables in both to be sure ; for now we rely
-                on non-login shells inheriting their env from a login shell
-                somewhere... *)
-           ]
-         with Not_found ->
-           (* iff none of the above exist, creating this should be safe *)
-           home ".bash_profile")
-      in
-      Some shell
+      Some (home ".bashrc")
     | SH_csh ->
       let cshrc = home ".cshrc" in
       let tcshrc = home ".tcshrc" in
