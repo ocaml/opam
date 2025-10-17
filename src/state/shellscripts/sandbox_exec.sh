@@ -8,6 +8,8 @@ POL='(version 1)(allow default)(deny network*)(deny file-write*)'
 POL="$POL"'(allow network* (remote unix))'
 POL="$POL"'(allow file-write* (literal "/dev/null") (literal "/dev/dtracehelper"))'
 POL="$POL"'(allow file-write* (regex #"^(/private)?(/var)?/tmp/"))'
+POL="$POL"'(allow file-write* (regex #"^(/private)?/var/folders/"))'
+POL="$POL"'(allow file-write* (regex #"^(/private)?/var/db/mds/"))'
 
 add_mounts() {
     if [ -d "$2" ]; then
