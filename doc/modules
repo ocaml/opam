@@ -103,17 +103,4 @@ src
 │   └── opamMain.ml                     Main, including cmdliner command handling
 │
 └── tools
-    │   [ opam-admin tool ]
-    ├── opam_mk_repo.ml                 Repo index and archives generation
-    ├── opam_depexts_change.ml          Operation on external dependencies in a repo
-    ├── opam_findlib.ml                 Automatically add some findlib information to a repo
-    ├── opam_rename.ml                  Package renaming
-    ├── opam_stats.ml                   Repo stats & graphs generation
-    ├── opam_repo_check.ml              Check the repo for errors
-    ├── opam_admin.ml                   Source of the opam-admin tool, main
-    │   [ other stand-alone tools ]
-    ├── opam_admin_top.ml               Tiny library for admin-scripts, included in opam-admin.top
-    ├── opam-putenv.c                   Tiny C tool used on Windows for cross-architecture process injection
-    ├── opam_check.ml                   Tiny tool used in internal checks ("make tests")
-    ├── opam_installer.ml               Handles OPAM's ".install" files
-    └── opamlfind.ml                    Experimental ocamlfind wrapper tool
+    └─── opam_installer.ml               Handles OPAM's ".install" files

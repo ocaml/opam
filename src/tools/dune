@@ -1,27 +1,3 @@
-(library
-  (name         opam_admin_top)
-  (public_name  opam-admin.top)
-  (synopsis     "OCaml Package Manager admin toplevel")
-  (modules      opam_admin_top)
-  ; TODO: Remove (re_export ...) when CI uses the OCaml version that includes https://github.com/ocaml/ocaml/pull/11989
-  (libraries    opam-client opam-file-format (re_export compiler-libs.toplevel) re)
-  (wrapped      false))
-
-(executable
-  (name         opam_admin_topstart)
-  (public_name  opam-admin.top)
-  (package      opam-admin)
-  (modes        byte)
-  (modules      opam_admin_topstart)
-  (libraries    opam-admin.top)
-  (ocamlc_flags (:standard
-                (:include ../ocaml-flags-standard.sexp)
-                (:include ../ocaml-flags-configure.sexp)
-                (:include ../ocaml-context-flags.sexp)
-                -linkall)))
-
-(rule (with-stdout-to opam_admin_topstart.ml (echo "include Opam_admin_top\n\nlet _ = Topmain.main ()")))
-
 (rule (write-file opam_installer.mli ""))
 
 (executable
