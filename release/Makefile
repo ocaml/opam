@@ -11,8 +11,8 @@ FLEXDLL_URL = https://github.com/ocaml/flexdll/archive/refs/tags/$(FLEXDLLV).tar
 
 ALPINE_VERSION = 3.21
 
-HOST_OS = $(shell uname -s | tr A-Z a-z | sed -e 's/_.*//' -e 's/darwin/macos/' -e 's/cygwin/windows/')
-HOST = $(shell uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
+HOST_OS = $(shell set -o pipefail && uname -s | tr A-Z a-z | sed -e 's/_.*//' -e 's/darwin/macos/' -e 's/cygwin/windows/')
+HOST = $(shell set -o pipefail && uname -m | sed 's/amd64/x86_64/')-$(HOST_OS)
 OUTDIR = out/$(TAG)
 
 # The equivalent of "which <cmd>". Taken from the GNU Make documentation
@@ -34,7 +34,7 @@ $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	  cd "$(OUTDIR)/opam-full-$(VERSION)" && \
 	  git archive "$(TAG)" \
 		--prefix "opam-full-$(VERSION)/" \
-		--mtime "$$(git show -s --format=%ct "$(TAG)" | tail -1)" \
+		--mtime "$$(set -o pipefail && git show -s --format=%ct "$(TAG)" | tail -1)" \
 		-o "$(abspath $(OUTDIR)/opam-full-$(VERSION).tar)" \
 		$$(for f in $$(git ls-files -i -o -x '*'); do echo "--add-file=$$f" || exit 1; done) && \
 	  gzip --no-name --best "$(abspath $(OUTDIR)/opam-full-$(VERSION).tar)" )
@@ -119,6 +119,7 @@ build/$(HOST).env:
 	cd build/$(HOST)/ocaml-$(OCAMLV) && curl -OL $(FLEXDLL_URL)
 	cd build/$(HOST)/ocaml-$(OCAMLV) && tar xzf $(shell basename "$(FLEXDLL_URL)")
 	cd build/$(HOST)/ocaml-$(OCAMLV) && rmdir flexdll && mv "flexdll-$(FLEXDLLV)" flexdll
+	set -euo pipefail && \
 	cd build/$(HOST)/ocaml-$(OCAMLV) && \
 	  ./configure --prefix "$(shell pwd)/build/$(HOST)" \
 	    --disable-debug-runtime --disable-debugger --disable-instrumented-runtime \
@@ -134,7 +135,8 @@ build/$(HOST).env:
 host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	rm -rf build/opam-full-$(VERSION)
 	cd build && tar xzf ../$<
-	( export \
+	( set -euo pipefail && \
+	  export \
 	    PATH=$(shell pwd)/build/$(HOST)/bin:$$PATH \
 	    MAKE=$(MAKE) \
 	    $(EXPORTS_$(HOST_OS)); \
@@ -185,6 +187,7 @@ qemu: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	$(SCP) -P "$(QEMU_PORT)" "$(SSH_USER)@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
+	set -euo pipefail && \
 	LOCAL_RELEASE_DIR=$(shell mktemp -d); \
           mkdir -p "$${LOCAL_RELEASE_DIR}/${OUTDIR}" && \
           cp Makefile "$^" "$${LOCAL_RELEASE_DIR}" && \
