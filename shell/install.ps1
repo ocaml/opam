@@ -20,7 +20,7 @@ param (
   [string]$OpamBinDir = $null
 )
 
-$DevVersion = "2.4.1"
+$DevVersion = "2.5.0~alpha1"
 $IsAdmin = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 $DefaultBinDir = If ($IsAdmin) {"$Env:ProgramFiles\opam\bin"} Else {"$Env:LOCALAPPDATA\Programs\opam\bin"}
 
@@ -41,6 +41,7 @@ $SHA512s = @{
   "opam-2.4.0-rc1-x86_64-windows.exe"    = "418f0933d7c53a96f0a53e757d172e4e16df6927f7d668b119894c9775a573c3b3e13f20c4b173eafae633a590e9b71f04c8eca92be108755c310168646c1322";
   "opam-2.4.0-x86_64-windows.exe"        = "e28439bed67fc2b367114f0d5e176690117a0b045066584ca67ec852caaa951354c19892579083122b1c50cd27d323de3b9eb514e54bfd221227190765ede874";
   "opam-2.4.1-x86_64-windows.exe"        = "0b7bed0ea3b009aadb04882568b261c693395f400a79983a42b342b7d78536168dd0d5fab252382b622acbde61be40e3c0b036b974148e78be0edd6c1337d19c";
+  "opam-2.5.0-alpha1-x86_64-windows.exe" = "11f1ec33154967a3d625e9d06f1c11700a24b8b7262025e63b124e9a58100e0f75bbc9afbc8b35eaec5c40254b020cea7fec8dcaad98368ee463bab7074ae7f9";
 }
 
 Function DownloadAndCheck {
