@@ -25,7 +25,7 @@ ifeq ($(DUNE),)
   ifeq ($(shell command -v cygpath 2>/dev/null),)
     DUNE := $(DUNE_EXE)
   else
-    DUNE := $(shell echo "$(DUNE_EXE)" | cygpath -f - -a)
+    DUNE := $(shell set -o pipefail && echo "$(DUNE_EXE)" | cygpath -f - -a)
   endif
 else
   DUNE_EXE=
@@ -102,8 +102,8 @@ distclean: clean clean-ext
 	rm -rf autom4te.cache bootstrap
 	rm -f Makefile.config config.log config.status aclocal.m4
 	rm -f src/*.META src/*/.merlin src/manifest/dune src/manifest/install.inc \
-        src/stubs/win32/dune src/core/cc64 src/ocaml-flags-configure.sexp \
-        src/state/opamEmbeddedCygwinSetup.ml
+          src/stubs/win32/dune src/core/cc64 src/ocaml-flags-configure.sexp \
+          src/state/opamEmbeddedCygwinSetup.ml
 	rm -f src/client/linking.sexp src/core/c-flags.sexp src/core/developer src/core/version
 
 OPAMINSTALLER_FLAGS = --prefix "$(call CYGPATH,$(DESTDIR)$(prefix))"
@@ -169,6 +169,7 @@ libinstall: $(DUNE_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
 	@
 
 custom-libinstall: $(DUNE_DEP) opam-lib opam
+	set -euo pipefail && \
 	for p in $(OPAMLIBS); do \
 	  ./opam$(EXE) custom-install --no-recompilations opam-$$p.$(version) -- \
 	    $(DUNE) install --root . opam-$$p; \
@@ -196,6 +197,7 @@ bench:
 	@$(DUNE) exec --display=quiet $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) -- ./tests/bench/bench.exe
 
 define tests-summary =
+  set -euo pipefail && \
   ret=$$?; \
   echo "###     TESTS RESULT SUMMARY     ###"; \
   for t in _build/default/tests/reftests/*.test; do \
@@ -254,6 +256,7 @@ reftest-%: $(DUNE_DEP) src/client/no-git-version
 	$(DUNE) build $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . @reftest-$* --force
 
 reftests-meld:
+	set -euo pipefail && \
 	meld `for t in tests/reftests/*.test; do \
 	  out=_build/default/$${t%.test}.out; \
 	  if test -f $$out && ! diff -q $$t $$out 2> /dev/null > /dev/null; then \
