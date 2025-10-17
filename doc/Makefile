@@ -36,6 +36,7 @@ man-html:
 	echo '</head><body>' >>$@/index.html
 	echo '<h1>Opam $(version) man-pages index</h1>' >>$@/index.html
 	echo '<ul>' >>$@/index.html
+	set -eu &&\
 	for f in ${MANDIR}/*; do\
 	  man2html -r $$f | sed 1,2d > $@/$$(basename $$f .1).html;\
 	  echo "  <li><a href=\"$$(basename $$f .1).html\">$$(basename $$f .1)</a></li>" >>$@/index.html;\
@@ -51,6 +52,7 @@ html:
 	sed 's/%{OPAMVERSION}%/'$(version)'/g' index.html > html/index.html
 # Not to break older links, add manpages to the `ocamldoc` dir
 	mkdir -p html/ocamldoc
+	set -eu &&\
 	cd html/ocamldoc && for f in ../*/*/index.html; do\
 	  ln -sf $$f $$(basename $$(dirname $$f)).html;\
 	done
