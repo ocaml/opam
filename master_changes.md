@@ -71,6 +71,7 @@ users)
 ## VCS
 
 ## Build
+  * Revert the `msvs-detect` script used on Windows during compiler bootstrap to 0.5.0 [#6746 @kit-ty-kate - revert #6592]
 
 ## Infrastructure
 
