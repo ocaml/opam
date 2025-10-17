@@ -72,6 +72,7 @@ users)
 
 ## Build
   * Revert the `msvs-detect` script used on Windows during compiler bootstrap to 0.5.0 [#6746 @kit-ty-kate - revert #6592]
+  * Revert the bootstrap compiler's flexdll to 0.43 [#6746 @kit-ty-kate - revert #6592]
 
 ## Infrastructure
 
