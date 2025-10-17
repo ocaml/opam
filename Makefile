@@ -5,9 +5,6 @@ endif
 all: opam opam-installer
 	@
 
-admin:
-	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) opam-admin.install
-
 # $(call CYGPATH,file) will convert file to a Windows path if opam is being
 # compiled for native Windows _and_ cygpath is available in PATH. The check
 # on PATH is done once only.
@@ -79,10 +76,6 @@ opam-stripped: $(DUNE_DEP) build-opam processed-opam.install
 opam-installer: $(DUNE_DEP) build-opam-installer processed-opam-installer.install
 	@$(LN_S) -f _build/default/src/tools/opam_installer.exe $@$(EXE)
 
-opam-admin.top: $(DUNE_DEP)
-	$(DUNE) build $(DUNE_PROFILE_ARG) --root . $(DUNE_ARGS) src/tools/opam_admin_topstart.bc
-	$(LN_S) -f _build/default/src/tools/opam_admin_topstart.bc $@$(EXE)
-
 lib-ext:
 	$(MAKE) -j -C src_ext lib-ext
 
@@ -94,7 +87,7 @@ clean-ext:
 
 clean:
 	$(MAKE) -C doc $@
-	rm -f *.install *.env *.err *.info *.out opam$(EXE) opam-admin.top$(EXE) opam-installer$(EXE)
+	rm -f *.install *.env *.err *.info *.out opam$(EXE) opam-installer$(EXE)
 	rm -f src/client/no-git-version
 	rm -rf _build Opam.Runtime.*
 
@@ -165,7 +158,7 @@ endif
 uninstalllib-%: opam-installer opam-%.install
 	$(OPAMINSTALLER) -u $(OPAMINSTALLER_FLAGS) opam-$*.install
 
-libinstall: $(DUNE_DEP) opam-admin.top $(OPAMLIBS:%=installlib-%)
+libinstall: $(DUNE_DEP) $(OPAMLIBS:%=installlib-%)
 	@
 
 custom-libinstall: $(DUNE_DEP) opam-lib opam

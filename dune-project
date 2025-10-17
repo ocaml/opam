@@ -14,4 +14,3 @@
 
 ; Meta packages
 (package (name opam))
-(package (name opam-admin))

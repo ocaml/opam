@@ -37,7 +37,7 @@ if [ $OPAM_UPGRADE -eq 1 ]; then
 fi
 # Disable implicit transitive deps
 sed -i -e '/(implicit_transitive_deps /s/true/false/' dune-project
-make all admin opam-stripped
+make all opam-stripped
 sed -i -e '/(implicit_transitive_deps /s/false/true/' dune-project
 
 rm -f "$PREFIX/bin/opam"
@@ -139,7 +139,7 @@ if [ "$OPAM_TEST" = "1" ]; then
     echo "Recompiling for an opam root upgrade"
     (set +x ; echo -en "::group::rebuild opam\r") 2>/dev/null
     unset-dev-version
-    make all admin
+    make all
     rm -f "$PREFIX/bin/opam"
     make install
     rcode=0
