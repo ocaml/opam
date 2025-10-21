@@ -2582,10 +2582,14 @@ let repository cli =
            '--all' to see all configured repositories.";
       OpamRepositoryCommand.list rt ~global ~switches ~short;
       `Ok ()
+    | Some `show_repo, [] ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      OpamRepositoryCommand.show_repo rt ~switches None;
+      `Ok ()
     | Some `show_repo, [ repo_name ] ->
       OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      OpamRepositoryCommand.show_repo rt ~switches
-        (OpamRepositoryName.of_string repo_name);
+      let repo_name = if scope = [ `All ] then None else Some (OpamRepositoryName.of_string repo_name) in
+      OpamRepositoryCommand.show_repo rt ~switches repo_name;
       `Ok ()
     | command, params -> bad_subcommand ~cli commands ("repository", command, params)
   in
