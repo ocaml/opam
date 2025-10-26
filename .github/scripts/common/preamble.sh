@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -ue
 
 case $GITHUB_EVENT_NAME in
