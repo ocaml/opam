@@ -992,7 +992,7 @@ CAMLprim value OPAMW_GetErrorMode(value mode)
 
 CAMLprim value OPAMW_SetConsoleToUTF8(value _unit) {
   /* NOTE: Setting Input (SetConsoleCP) is necessary for more.com
-   * called by cmdliner to correctly output UTF-8 characters */
+   * called by opam-core.cmdliner to correctly output UTF-8 characters */
   SetConsoleCP(CP_UTF8);
   SetConsoleOutputCP(CP_UTF8);
   return Val_unit;

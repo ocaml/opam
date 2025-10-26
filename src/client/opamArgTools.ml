@@ -9,7 +9,7 @@
 (**************************************************************************)
 
 open OpamStd.Op
-open Cmdliner
+open OpamCmdliner
 open OpamCLIVersion.Op
 
 let cli2_0 = OpamCLIVersion.of_string "2.0"

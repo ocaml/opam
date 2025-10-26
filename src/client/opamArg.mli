@@ -12,7 +12,7 @@
 (** Command-line argument parsers and helpers *)
 
 open OpamTypes
-open Cmdliner
+open OpamCmdliner
 
 (** {2 Helpers and argument constructors} *)
 
@@ -369,7 +369,7 @@ val mk_command:
 val mk_command_ret:
   cli:OpamCLIVersion.Sourced.t -> validity -> string -> doc:string ->
   man:Manpage.block list -> (unit -> unit Term.ret) Term.t -> command
-  (* Same as {!mk_command} but [term] returns a [Cmdliner.Term.ret] *)
+  (* Same as {!mk_command} but [term] returns a [OpamCmdliner.Term.ret] *)
 
 (** {2 Documentation} *)
 

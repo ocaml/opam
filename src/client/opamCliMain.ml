@@ -9,7 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open Cmdliner
+open OpamCmdliner
 open OpamStateTypes
 open OpamTypesBase
 open OpamStd.Op

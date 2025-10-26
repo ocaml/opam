@@ -634,7 +634,6 @@ OCAML_PKG_dose3_algo
 OCAML_PKG_dose3_common
 OCAML_PKG_cudf
 OCAML_PKG_ocamlgraph
-OCAML_PKG_cmdliner
 OCAML_PKG_base64
 OCAML_PKG_re
 OCAML_PKG_unix
@@ -6092,30 +6091,6 @@ fi
 
 
 
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package cmdliner" >&5
-printf %s "checking for OCaml findlib package cmdliner... " >&6; }
-
-  unset found
-  unset pkg
-  found=no
-  for pkg in cmdliner  ; do
-    if $OCAMLFIND query $pkg >/dev/null 2>/dev/null; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: found" >&5
-printf "%s\n" "found" >&6; }
-      OCAML_PKG_cmdliner=$pkg
-      found=yes
-      break
-    fi
-  done
-  if test "$found" = "no" ; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-printf "%s\n" "not found" >&6; }
-    OCAML_PKG_cmdliner=no
-  fi
-
-
-
-
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package ocamlgraph" >&5
 printf %s "checking for OCaml findlib package ocamlgraph... " >&6; }
 
@@ -7108,7 +7083,6 @@ if test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_extlib" = "xno" ||
        test "x$OCAML_PKG_re" = "xno" ||
        test "x$OCAML_PKG_base64" = "xno" ||
-       test "x$OCAML_PKG_cmdliner" = "xno" ||
        test "x$OCAML_PKG_ocamlgraph" = "xno" ||
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||

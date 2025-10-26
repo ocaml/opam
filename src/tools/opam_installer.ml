@@ -9,7 +9,7 @@
 (**************************************************************************)
 
 open OpamTypes
-open Cmdliner
+open OpamCmdliner
 
 type options = {
   file: OpamFile.Dot_install.t OpamFile.t;

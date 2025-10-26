@@ -11,7 +11,7 @@
 
 open OpamTypes
 open OpamTypesBase
-open Cmdliner
+open OpamCmdliner
 open OpamStd.Op
 
 include OpamArgTools
@@ -473,7 +473,7 @@ type global_options = {
   cli : OpamCLIVersion.t;
 }
 
-(* The --cli passed by cmdliner is ignored (it's only there for --help) *)
+(* The --cli passed by opam-core.cmdliner is ignored (it's only there for --help) *)
 let create_global_options
     git_version debug debug_level verbose quiet color opt_switch
     yes confirm_level

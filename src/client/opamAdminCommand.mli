@@ -11,6 +11,6 @@
 
 val admin_command_doc: string
 
-type command = unit Cmdliner.Term.t * Cmdliner.Cmd.info
+type command = unit OpamCmdliner.Term.t * OpamCmdliner.Cmd.info
 
 val get_cmdliner_parser: OpamCLIVersion.Sourced.t -> command * command list

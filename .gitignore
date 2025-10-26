@@ -16,7 +16,6 @@ src_ext/*.tbz
 src_ext/0install-solver/
 src_ext/archives/*
 src_ext/base64/
-src_ext/cmdliner/
 src_ext/cppo/
 src_ext/cudf/
 src_ext/dose3/

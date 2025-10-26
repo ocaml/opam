@@ -382,7 +382,6 @@ echo
 AC_CHECK_OCAML_PKG([unix])
 AC_CHECK_OCAML_PKG_AT_LEAST([re], [1.9.0])
 AC_CHECK_OCAML_PKG_AT_LEAST([base64], [3.1.0])
-AC_CHECK_OCAML_PKG([cmdliner])
 AC_CHECK_OCAML_PKG([ocamlgraph])
 AC_CHECK_OCAML_PKG_AT_LEAST([cudf], [0.7])
 AC_CHECK_OCAML_PKG_AT_LEAST([dose3.common], [6.1])
@@ -431,7 +430,6 @@ AS_IF([test "x${enable_checks}" != "xno" && {
        test "x$OCAML_PKG_extlib" = "xno" ||
        test "x$OCAML_PKG_re" = "xno" ||
        test "x$OCAML_PKG_base64" = "xno" ||
-       test "x$OCAML_PKG_cmdliner" = "xno" ||
        test "x$OCAML_PKG_ocamlgraph" = "xno" ||
        test "x$OCAML_PKG_cudf" = "xno" ||
        test "x$OCAML_PKG_dose3_common" = "xno" ||

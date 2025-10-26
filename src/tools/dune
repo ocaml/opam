@@ -29,7 +29,7 @@
   (package     opam-installer)
   (public_name opam-installer)
   (modules     opam_installer)
-  (libraries   opam-format cmdliner)
+  (libraries   opam-format opam-core.cmdliner)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)
                (:include ../ocaml-flags-configure.sexp)

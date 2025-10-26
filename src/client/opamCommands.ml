@@ -9,7 +9,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open Cmdliner
+open OpamCmdliner
 open OpamArg
 open OpamTypes
 open OpamStateTypes
@@ -4468,7 +4468,7 @@ let help =
     | None       -> `Help (`Pager, None)
     | Some topic ->
       let topics = "topics" :: cmds in
-      let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+      let conv, _ = OpamCmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
       match conv topic with
       | `Error e -> `Error (false, e)
       | `Ok t when t = "topics" ->
@@ -4530,7 +4530,7 @@ let default cli =
     ~man
 
 let admin =
-  (* cmdliner never sees the admin subcommand, so this "can't happen" *)
+  (* opam-core.cmdliner never sees the admin subcommand, so this "can't happen" *)
   let doc = "Internal opam error - main admin command invoked" in
   Term.(ret (const (`Error (true, doc)))),
   Cmd.info "admin" ~doc:OpamAdminCommand.admin_command_doc

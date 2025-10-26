@@ -10,9 +10,6 @@ MD5_base64 = bfdd16aa8c136412878109df8791fc01
 URL_re = https://github.com/ocaml/ocaml-re/releases/download/1.11.0/re-1.11.0.tbz
 MD5_re = e0199e32947fd33fcc1b8e69de2308a1
 
-URL_cmdliner = https://erratique.ch/software/cmdliner/releases/cmdliner-1.3.0.tbz
-MD5_cmdliner = 662936095a1613d7254815238e11793f
-
 URL_ocamlgraph = https://github.com/backtracking/ocamlgraph/releases/download/2.2.0/ocamlgraph-2.2.0.tbz
 MD5_ocamlgraph = 3195404bc06fce560d5336d7614028bc
 
