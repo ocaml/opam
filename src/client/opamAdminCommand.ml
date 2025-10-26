@@ -12,9 +12,9 @@
 open OpamTypes
 open OpamProcess.Job.Op
 open OpamStateTypes
-open Cmdliner
+open OpamCmdliner
 
-type command = unit Cmdliner.Term.t * Cmdliner.Cmd.info
+type command = unit OpamCmdliner.Term.t * OpamCmdliner.Cmd.info
 
 let repo_version_lt repo_root v =
   let v' =
@@ -1407,7 +1407,7 @@ let help =
     | None       -> `Help (`Pager, None)
     | Some topic ->
       let topics = "topics" :: cmds in
-      let conv, _ = Cmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+      let conv, _ = OpamCmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
       match conv topic with
       | `Error e -> `Error (false, e)
       | `Ok t when t = "topics" ->
