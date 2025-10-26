@@ -34,7 +34,7 @@ This is all you need for installing and using opam, but if you want to use the
 libraries. It's easier to already have a working opam installation in this case,
 so you can do it as a second step.
 
-* Make sure to have `ocamlfind`, `ocamlgraph`, `cmdliner` >= 1.0.0, `cudf` >= 0.7,
+* Make sure to have `ocamlfind`, `ocamlgraph`, `cudf` >= 0.7,
   `dose3` >= 6.1, `re` >= 1.9.0, `opam-file-format` installed. Or run `opam install
   . --deps-only` if you already have a working instance. Re-run
   `./configure` once done
