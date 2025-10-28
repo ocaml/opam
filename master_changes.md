@@ -91,6 +91,7 @@ users)
   * Add `2.5.0~alpha1` to the installers [#6748 @kit-ty-kate]
   * Add `2.5.0~beta1` to the installers [#6795 @kit-ty-kate]
   * Add `2.5.0~rc1` to the installers [#6802 @kit-ty-kate]
+  * Fix apparmor profile remplacement option [#6760 @rjbou]
 
 ## Admin
 

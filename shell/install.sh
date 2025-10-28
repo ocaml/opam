@@ -809,6 +809,7 @@ profile opam-local "$BINDIR/opam" flags=(unconfined) {
 EOF
 
   SKIP_APPARMOR=0
+  APPARMOR_CREATION_OPTION="-a"
   if [ -e /etc/apparmor.d/opam-local ]; then
     if diff -q /tmp/opam-local.aa.tmp /etc/apparmor.d/opam-local; then
       SKIP_APPARMOR=1
@@ -818,6 +819,7 @@ EOF
       read -r R
       case "$R" in
       ""|"y"|"Y"|"yes")
+        APPARMOR_CREATION_OPTION="-r"
         ;;
       *)
         SKIP_APPARMOR=1;;
@@ -829,7 +831,7 @@ EOF
     xsudo mv /tmp/opam-local.aa.tmp /etc/apparmor.d/opam-local
     xsudo chmod 644 /etc/apparmor.d/opam-local
     xsudo chown root:root /etc/apparmor.d/opam-local
-    xsudo apparmor_parser -a /etc/apparmor.d/opam-local
+    xsudo apparmor_parser $APPARMOR_CREATION_OPTION /etc/apparmor.d/opam-local
     echo "AppArmor profile successfully added."
   else
     echo "Warning: Please make sure an AppArmor profile exists for opam. See /tmp/opam-local.aa.tmp"
