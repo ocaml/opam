@@ -835,7 +835,9 @@ EOF
     rm "$TMP_APPARMOR_PROFILE"
     echo "AppArmor profile successfully added."
   else
-    echo "Warning: Please make sure an AppArmor profile exists for opam. See $TMP_APPARMOR_PROFILE"
+    echo "Warning: Please make sure an AppArmor profile exists for locally installed opam."
+    echo "  You can find our proposed profile in $TMP_APPARMOR_PROFILE,"
+    echo "  and see if there is any difference with the one installed in $APPARMOR_PROFILE."
   fi
 fi
 
