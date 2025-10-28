@@ -79,6 +79,7 @@ users)
 
 ## Install script
   * Add `2.5.0~alpha1` to the installers [#6748 @kit-ty-kate]
+  * Fix apparmor profile remplacement option [#6760 @rjbou]
 
 ## Admin
 
