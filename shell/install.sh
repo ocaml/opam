@@ -767,7 +767,9 @@ echo "## opam $VERSION installed to $BINDIR"
 
 # Handle AppArmor which makes it impossible to use bwrap (e.g. Ubuntu >= 24.04)
 if [ -d /etc/apparmor.d ] && [ "$(aa-enabled 2> /dev/null)" = Yes ]; then
-  cat << EOF > /tmp/opam-local.aa.tmp
+  TMP_APPARMOR_PROFILE=/tmp/opam-local.aa.tmp
+  APPARMOR_PROFILE=/etc/apparmor.d/opam-local
+  cat << EOF > "$TMP_APPARMOR_PROFILE"
 # This profile allows everything and only exists to give the
 # application a name instead of having the label "unconfined"
 
@@ -783,8 +785,9 @@ profile opam-local "$BINDIR/opam" flags=(unconfined) {
 EOF
 
   SKIP_APPARMOR=0
-  if [ -e /etc/apparmor.d/opam-local ]; then
-    if diff -q /tmp/opam-local.aa.tmp /etc/apparmor.d/opam-local; then
+  APPARMOR_CREATION_OPTION="-a"
+  if [ -e "$APPARMOR_PROFILE" ]; then
+    if diff -q "$TMP_APPARMOR_PROFILE" "$APPARMOR_PROFILE"; then
       SKIP_APPARMOR=1
     else
       echo "## The opam-local AppArmor profile already exists and differs from the expected content."
@@ -792,6 +795,7 @@ EOF
       read -r R
       case "$R" in
       ""|"y"|"Y"|"yes")
+        APPARMOR_CREATION_OPTION="-r"
         ;;
       *)
         SKIP_APPARMOR=1;;
@@ -800,13 +804,14 @@ EOF
   fi
 
   if [ "$SKIP_APPARMOR" = 0 ]; then
-    xsudo mv /tmp/opam-local.aa.tmp /etc/apparmor.d/opam-local
-    xsudo chmod 644 /etc/apparmor.d/opam-local
-    xsudo chown root:root /etc/apparmor.d/opam-local
-    xsudo apparmor_parser -a /etc/apparmor.d/opam-local
+    xsudo install -m 644 "$TMP_APPARMOR_PROFILE" "$APPARMOR_PROFILE"
+    xsudo apparmor_parser $APPARMOR_CREATION_OPTION "$APPARMOR_PROFILE"
+    rm "$TMP_APPARMOR_PROFILE"
     echo "AppArmor profile successfully added."
   else
-    echo "Warning: Please make sure an AppArmor profile exists for opam. See /tmp/opam-local.aa.tmp"
+    echo "Warning: Please make sure an AppArmor profile exists for locally installed opam."
+    echo "  You can find our proposed profile in $TMP_APPARMOR_PROFILE,"
+    echo "  and see if there is any difference with the one installed in $APPARMOR_PROFILE."
   fi
 fi
 
