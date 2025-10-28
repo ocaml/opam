@@ -828,9 +828,7 @@ EOF
   fi
 
   if [ "$SKIP_APPARMOR" = 0 ]; then
-    xsudo mv /tmp/opam-local.aa.tmp /etc/apparmor.d/opam-local
-    xsudo chmod 644 /etc/apparmor.d/opam-local
-    xsudo chown root:root /etc/apparmor.d/opam-local
+    xsudo install -m 644 /tmp/opam-local.aa.tmp /etc/apparmor.d/opam-local
     xsudo apparmor_parser $APPARMOR_CREATION_OPTION /etc/apparmor.d/opam-local
     echo "AppArmor profile successfully added."
   else
