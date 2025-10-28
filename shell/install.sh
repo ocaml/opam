@@ -830,6 +830,7 @@ EOF
   if [ "$SKIP_APPARMOR" = 0 ]; then
     xsudo install -m 644 /tmp/opam-local.aa.tmp /etc/apparmor.d/opam-local
     xsudo apparmor_parser $APPARMOR_CREATION_OPTION /etc/apparmor.d/opam-local
+    rm /tmp/opam-local.aa.tmp
     echo "AppArmor profile successfully added."
   else
     echo "Warning: Please make sure an AppArmor profile exists for opam. See /tmp/opam-local.aa.tmp"

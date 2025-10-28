@@ -93,6 +93,7 @@ users)
   * Add `2.5.0~rc1` to the installers [#6802 @kit-ty-kate]
   * Fix apparmor profile remplacement option [#6760 @rjbou]
   * Use `install` instead of `mv`+`chmod`+`chown` [#6760 @rjbou]
+  * Clean apparmor temporary file [#6760 @rjbou]
 
 ## Admin
 
