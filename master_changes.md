@@ -94,6 +94,7 @@ users)
   * Fix apparmor profile remplacement option [#6760 @rjbou]
   * Use `install` instead of `mv`+`chmod`+`chown` [#6760 @rjbou]
   * Clean apparmor temporary file [#6760 @rjbou]
+  * Use variables instead of plain paths [#6760 @rjbou]
 
 ## Admin
 
