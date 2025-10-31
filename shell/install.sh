@@ -766,7 +766,7 @@ xsudo install -m 755 "$TMP/$OPAM_BIN" "$BINDIR/opam"
 echo "## opam $VERSION installed to $BINDIR"
 
 # Handle AppArmor which makes it impossible to use bwrap (e.g. Ubuntu >= 24.04)
-if [ -d /etc/apparmor.d ] && [ "$(aa-enabled 2> /dev/null)" = Yes ]; then
+if [ -f /etc/apparmor.d/abi/4.0 ] && [ "$(aa-enabled 2> /dev/null)" = Yes ]; then
   cat << EOF > /tmp/opam-local.aa.tmp
 # This profile allows everything and only exists to give the
 # application a name instead of having the label "unconfined"
