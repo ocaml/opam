@@ -75,6 +75,7 @@ users)
 ## Infrastructure
 
 ## Release scripts
+  * Fix the placement of the vendored archives in the release tarball [#6765 @kit-ty-kate - fix #6762]
 
 ## Install script
 
