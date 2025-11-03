@@ -121,6 +121,7 @@ users)
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
   * Ensure `curl`'s exit status to be non-zero on failure [#6684 @kit-ty-kate]
   * Add OCaml trunk to the test matrix [#6684 #6670 @kit-ty-kate]
+  * Rename the hygiene script for `shell/install.sh` to install-check [#6768 @kit-ty-kate]
 
 ## Doc
 
