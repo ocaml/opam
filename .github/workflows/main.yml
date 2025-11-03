@@ -224,15 +224,6 @@ jobs:
     - name: Test "static" binaries on Windows
       if: endsWith(matrix.host, '-pc-cygwin') == false
       run: ldd ./opam.exe | test "$(grep -v -F /cygdrive/c/Windows/)" = ''
-    - name: Upload opam binaries for Windows
-      if: endsWith(matrix.host, '-pc-windows')
-      uses: actions/upload-artifact@v4
-      with:
-        name: opam-exe-${{ matrix.host }}-${{ matrix.ocamlv }}-${{ matrix.build }}
-        path: |
-          D:\Local\bin\opam.exe
-          D:\Local\bin\opam-installer.exe
-          D:\Local\bin\opam-putenv.exe
     - name: Test (basic - Cygwin)
       if: endsWith(matrix.host, '-pc-cygwin')
       run: bash -exu .github/scripts/main/test.sh
