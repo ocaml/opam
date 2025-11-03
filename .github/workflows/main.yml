@@ -242,7 +242,8 @@ jobs:
         opam init --yes --bare default git+file://%cd%/../../../opam-repository#${{ env.OPAM_TEST_REPO_SHA }} --no-git-location || exit /b 1
         opam switch --yes create default ocaml-system || exit /b 1
         opam env || exit /b 1
-        opam install --yes lwt || exit /b 1
+        opam pin add -yn git+https://github.com/dra27/ocamlfind.git#c9efeea72743b2ff59ef67d354e0a88a08804a2c || exit /b 1
+        opam pin add --yes lwt 5.9.1 || exit /b 1
         opam list || exit /b 1
         opam config report || exit /b 1
     - name: Test (reftests)

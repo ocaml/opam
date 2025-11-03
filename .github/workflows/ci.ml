@@ -365,7 +365,12 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
            {|opam init --yes --bare default git+file://%cd%/../../../opam-repository#${{ env.OPAM_TEST_REPO_SHA }} --no-git-location|};
            {|opam switch --yes create default ocaml-system|};
            {|opam env|};
-           {|opam install --yes lwt|};
+           (* TODO: Temporary: revert back to « opam install lwt » once the following tickets are fixed *)
+           (*       https://github.com/ocaml/ocamlfind/pull/112 *)
+           (*       https://github.com/ocsigen/lwt/issues/1081 *)
+           (*       https://github.com/ocsigen/lwt/issues/1082 *)
+           {|opam pin add -yn git+https://github.com/dra27/ocamlfind.git#c9efeea72743b2ff59ef67d354e0a88a08804a2c|};
+           {|opam pin add --yes lwt 5.9.1|};
            {|opam list|};
            {|opam config report|};
           ]))
