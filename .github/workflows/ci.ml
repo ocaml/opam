@@ -52,7 +52,7 @@ on:
       - '.github/workflows/main.yml'
       - 'tests/**'
       - '!tests/bench/**'
-      - 'shell/'
+      - 'shell/**'
   push:
     branches:
       - 'master'
