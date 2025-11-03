@@ -282,10 +282,10 @@ endif
 
 .PHONY: compiler cold
 compiler:
-	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS= BOOTSTRAP_TARGETS=world.opt BOOTSTRAP_ROOT=.. BOOTSTRAP_DIR=bootstrap ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
+	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS= BOOTSTRAP_TARGETS=world.opt BOOTSTRAP_ROOT=.. BOOTSTRAP_DIR=bootstrap MAKEFLAGS= MAKEOVERRIDES= ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
 
 src_ext/secondary/ocaml/bin/ocaml:
-	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS="--disable-ocamldoc --disable-debug-runtime --disable-debugger" BOOTSTRAP_TARGETS="world opt" BOOTSTRAP_ROOT=../.. BOOTSTRAP_DIR=src_ext/secondary ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
+	env MAKE=$(MAKE) BOOTSTRAP_EXTRA_OPTS="--disable-ocamldoc --disable-debug-runtime --disable-debugger" BOOTSTRAP_TARGETS="world opt" BOOTSTRAP_ROOT=../.. BOOTSTRAP_DIR=src_ext/secondary MAKEFLAGS= MAKEOVERRIDES= ./shell/bootstrap-ocaml.sh $(OCAML_PORT)
 
 cold: compiler
 	env PATH="`pwd`/bootstrap/ocaml/bin:$$PATH" CAML_LD_LIBRARY_PATH= OPAM_SWITCH_PREFIX= ./configure --with-vendored-deps --without-dune --enable-cold-check $(CONFIGURE_ARGS)
