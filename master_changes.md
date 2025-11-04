@@ -114,6 +114,7 @@ users)
 ## Github Actions
 
 ## Doc
+  * Document how to create a switch with some OCaml compiler configure-time options [#6777 @kit-ty-kate - fix #6645]
 
 ## Security fixes
 
