@@ -68,6 +68,7 @@ users)
 ## Format upgrade
 
 ## Sandbox
+  * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
 
 ## VCS
 
