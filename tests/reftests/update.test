@@ -783,3 +783,120 @@ eta.1: Missing extra-file for
 +- 
 - No changes have been performed
 # Return code 31 #
+### :IV:1: Version-equivalent rename
+### <INCR_REPO/packages/some-pkg/some-pkg.00/opam>
+opam-version: "2.0"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[incremental] synchronised from file://${BASEDIR}/INCR_REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install --show some-pkg
+The following actions would be performed:
+=== install 1 package
+  - install some-pkg 00
+### mv INCR_REPO/packages/some-pkg/some-pkg.00 INCR_REPO/packages/some-pkg/some-pkg.0
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[incremental] synchronised from file://${BASEDIR}/INCR_REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install --show some-pkg
+[ERROR] No package named some-pkg found.
+# Return code 5 #
+### :IV:2: Multiple version-equivalent renames in one batch
+### <INCR_REPO/packages/pkg-a/pkg-a.00/opam>
+opam-version: "2.0"
+### <INCR_REPO/packages/pkg-b/pkg-b.1.00/opam>
+opam-version: "2.0"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[incremental] synchronised from file://${BASEDIR}/INCR_REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install --show pkg-a pkg-b
+The following actions would be performed:
+=== install 2 packages
+  - install pkg-a 00
+  - install pkg-b 1.00
+### mv INCR_REPO/packages/pkg-a/pkg-a.00 INCR_REPO/packages/pkg-a/pkg-a.0
+### mv INCR_REPO/packages/pkg-b/pkg-b.1.00 INCR_REPO/packages/pkg-b/pkg-b.1.0
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[incremental] synchronised from file://${BASEDIR}/INCR_REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install --show pkg-a pkg-b
+[ERROR] No package named pkg-a found.
+[ERROR] No package named pkg-b found.
+# Return code 5 #
+### :IV:3: Git repo version-equivalent rename
+### <GITREPO/packages/git-pkg/git-pkg.00/opam>
+opam-version: "2.0"
+### git -C GITREPO add -A
+### git -C GITREPO commit -qm "add git-pkg.00"
+### opam repository add git-ver ./GITREPO --kind=git --this-switch
+[git-ver] Initialised
+### opam install --show git-pkg
+The following actions would be performed:
+=== install 1 package
+  - install git-pkg 00
+### git -C GITREPO mv packages/git-pkg/git-pkg.00 packages/git-pkg/git-pkg.0
+### git -C GITREPO commit -qm "rename git-pkg.00 to git-pkg.0"
+### opam update git-ver
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[git-ver] synchronised from git+file://${BASEDIR}/GITREPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install --show git-pkg
+The following actions would be performed:
+=== install 1 package
+  - install git-pkg 0
+### opam switch create git-version-switch --empty
+### <GITREPO/repo>
+opam-version: "2.0"
+### <GITREPO/packages/pkg-foo/pkg-foo.1.0.0~alpha1/opam>
+opam-version: "2.0"
+### git -C GITREPO add -A
+### git -C GITREPO commit -qm "initial: pkg-foo.1.0.0~alpha1"
+### opam repository add git-ver ./GITREPO --kind=git --this-switch
+[git-ver] synchronised from git+file://${BASEDIR}/GITREPO
+### opam install pkg-foo.1.0.0~alpha1
+The following actions will be performed:
+=== install 1 package
+  - install pkg-foo 1.0.0~alpha1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg-foo.1.0.0~alpha1
+Done.
+### :IV:4: Version equivalent rename involved in a conflict
+### <GITREPO/packages/lib-foo/lib-foo.1.0.0~alpha1/opam>
+opam-version: "2.0"
+### <GITREPO/packages/pkg-foo/pkg-foo.1.0.0~alpha2~pre00/opam>
+opam-version: "2.0"
+depends: [ "lib-foo" {= "1.0.0~alpha2~pre00"} ]
+### git -C GITREPO add -A
+### git -C GITREPO commit -qm "add: pkg-foo.1.0.0~alpha2~pre00 with unsatisfiable deps"
+### opam repository add git-ver ./GITREPO --kind=git --this-switch
+[git-ver] synchronised from git+file://${BASEDIR}/GITREPO
+### opam install pkg-foo.1.0.0~alpha2~pre00 --show
+[ERROR] Package conflict!
+  * Missing dependency:
+    - pkg-foo >= 1.0.0~alpha2~pre00 -> lib-foo >= 1.0.0~alpha2~pre00
+    no matching version
+
+No solution found, exiting
+# Return code 20 #
+### <GITREPO/packages/pkg-foo/pkg-foo.1.0.0~alpha2~pre0/opam>
+opam-version: "2.0"
+depends: [ "lib-foo" {= "1.0.0~alpha1"} ]
+### git -C GITREPO rm -r packages/pkg-foo/pkg-foo.1.0.0~alpha2~pre00
+rm 'packages/pkg-foo/pkg-foo.1.0.0~alpha2~pre00/opam'
+### git -C GITREPO add -A
+### git -C GITREPO commit -qm "fix: remove bad deps and rename pkg-foo from pre00 to pre0"
+### : Running opam repo add to sync after git change
+### opam repository add git-ver ./GITREPO --kind=git --this-switch
+[git-ver] synchronised from git+file://${BASEDIR}/GITREPO
+### opam install pkg-foo.1.0.0~alpha2~pre0 --show
+[ERROR] Package pkg-foo has no version 1.0.0~alpha2~pre0.
+# Return code 5 #
