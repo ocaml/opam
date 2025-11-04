@@ -114,6 +114,7 @@ users)
 ## Github Actions
 
 ## Doc
+  * Document how opam chooses the default compiler during `opam init` and `opam switch create` [#6778 @kit-ty-kate - fix #6407]
 
 ## Security fixes
 
