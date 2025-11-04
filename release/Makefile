@@ -33,10 +33,10 @@ $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	( set -euo pipefail && \
 	  cd "$(OUTDIR)/opam-full-$(VERSION)" && \
 	  git archive "$(TAG)" \
-		--prefix "opam-full-$(VERSION)/" \
 		--mtime "$$(git show -s --format=%ct "$(TAG)" | tail -1)" \
 		-o "$(abspath $(OUTDIR)/opam-full-$(VERSION).tar)" \
-		$$(for f in $$(git ls-files -i -o -x '*'); do echo "--add-file=$$f" || exit 1; done) && \
+		$$(for f in $$(git ls-files -i -o -x '*'); do echo "--prefix=opam-full-$(VERSION)/$$(dirname -- $$f)/ --add-file=$$f" || exit 1; done) \
+		--prefix "opam-full-$(VERSION)/" && \
 	  gzip --no-name --best "$(abspath $(OUTDIR)/opam-full-$(VERSION).tar)" )
 	rm -rf "$(OUTDIR)/opam-full-$(VERSION)"
 
