@@ -802,8 +802,9 @@ The following actions would be performed:
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 Now run 'opam upgrade' to apply any package updates.
 ### opam install --show some-pkg
-[ERROR] No package named some-pkg found.
-# Return code 5 #
+The following actions would be performed:
+=== install 1 package
+  - install some-pkg 0
 ### :IV:2: Multiple version-equivalent renames in one batch
 ### <INCR_REPO/packages/pkg-a/pkg-a.00/opam>
 opam-version: "2.0"
@@ -827,9 +828,10 @@ The following actions would be performed:
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 Now run 'opam upgrade' to apply any package updates.
 ### opam install --show pkg-a pkg-b
-[ERROR] No package named pkg-a found.
-[ERROR] No package named pkg-b found.
-# Return code 5 #
+The following actions would be performed:
+=== install 2 packages
+  - install pkg-a 0
+  - install pkg-b 1.0
 ### :IV:3: Git repo version-equivalent rename
 ### <GITREPO/packages/git-pkg/git-pkg.00/opam>
 opam-version: "2.0"
@@ -898,5 +900,8 @@ rm 'packages/pkg-foo/pkg-foo.1.0.0~alpha2~pre00/opam'
 ### opam repository add git-ver ./GITREPO --kind=git --this-switch
 [git-ver] synchronised from git+file://${BASEDIR}/GITREPO
 ### opam install pkg-foo.1.0.0~alpha2~pre0 --show
-[ERROR] Package pkg-foo has no version 1.0.0~alpha2~pre0.
-# Return code 5 #
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade pkg-foo 1.0.0~alpha1 to 1.0.0~alpha2~pre0
+=== install 1 package
+  - install lib-foo 1.0.0~alpha1                      [required by pkg-foo]
