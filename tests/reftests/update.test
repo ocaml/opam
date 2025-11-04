@@ -783,3 +783,24 @@ eta.1: Missing extra-file for
 +- 
 - No changes have been performed
 # Return code 31 #
+### :V:1: Check that a file can become a directory
+### <CORNER_CASE_REPO/repo>
+opam-version: "2.0"
+### <CORNER_CASE_REPO/packages/pkg/pkg.1>
+opam-version: "2.0"
+### opam repo add --dont-select corner-case ./CORNER_CASE_REPO
+[corner-case] Initialised
+### opam list --repos=corner-case -A
+# Packages matching: from-repository(corner-case) & any
+# No matches found
+### mv CORNER_CASE_REPO/packages/pkg/pkg.1 CORNER_CASE_REPO/tmp
+### mkdir CORNER_CASE_REPO/packages/pkg/pkg.1
+### mv CORNER_CASE_REPO/tmp CORNER_CASE_REPO/packages/pkg/pkg.1/opam
+### opam update corner-case
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Could not update repository "corner-case": Change from a regular file to a directory is unsupported
+# Return code 40 #
+### opam list --repos=corner-case -A
+# Packages matching: from-repository(corner-case) & any
+# No matches found
