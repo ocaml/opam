@@ -106,7 +106,7 @@ jobs:
     needs: Analyse
     strategy:
       matrix:
-        ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.1, 4.13.1, 5.0.0, 5.1.1, 5.2.1, 5.3.0, 4.14.2, 5.4.0 ]
+        ocamlv: [ 4.08.1, 4.09.1, 4.10.2, 4.11.2, 4.12.1, 4.13.1, 5.0.0, 5.1.1, 5.2.1, 5.3.0, trunk, 4.14.2, 5.4.0 ]
       fail-fast: true
     steps:
     - name: Install bubblewrap
@@ -134,8 +134,11 @@ jobs:
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
+      id: build
+      continue-on-error: ${{ matrix.ocamlv == 'trunk' }}
       run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
     - name: Test (basic)
+      if: steps.build.outcome != 'failure'
       run: bash -exu .github/scripts/main/test.sh
 
   Build-Windows:
@@ -214,6 +217,8 @@ jobs:
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }} ${{ matrix.host }}
     - name: Build
+      id: build
+      continue-on-error: ${{ matrix.ocamlv == 'trunk' }}
       run: bash -exu .github/scripts/main/main.sh ${{ matrix.host }}
     - name: Test "static" binaries on Windows
       if: endsWith(matrix.host, '-pc-cygwin') == false
@@ -280,8 +285,11 @@ jobs:
       if: steps.ocaml-cache.outputs.cache-hit != 'true'
       run: bash -exu .github/scripts/main/ocaml-cache.sh ${{ runner.os }} ${{ matrix.ocamlv }}
     - name: Build
+      id: build
+      continue-on-error: ${{ matrix.ocamlv == 'trunk' }}
       run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
     - name: Test (basic)
+      if: steps.build.outcome != 'failure'
       run: bash -exu .github/scripts/main/test.sh
 
 ####
