@@ -783,3 +783,44 @@ eta.1: Missing extra-file for
 +- 
 - No changes have been performed
 # Return code 31 #
+### opam switch create version-test --empty
+### git -C GITREPO config core.autocrlf false
+### <GITREPO/repo>
+opam-version: "2.0"
+### <GITREPO/packages/foo/foo.1.0~pre00/opam>
+opam-version: "2.0"
+depends: ["conf-pkg"]
+### <GITREPO/packages/conf-pkg/conf-pkg.1/opam>
+opam-version: "2.0"
+### git -C GITREPO add -A
+### git -C GITREPO commit -qm "initial commit with foo.1.0~pre00"
+### opam repository add ver-test --kind=git ./GITREPO --this-switch
+[ver-test] Initialised
+### mkdir -p GITREPO/packages/foo/foo.1.0~pre0
+### git -C GITREPO mv packages/foo/foo.1.0~pre00/opam packages/foo/foo.1.0~pre0/opam
+### <GITREPO/packages/foo/foo.1.0~pre0/opam>
+opam-version: "2.0"
+synopsis: "Renamed version pre0"
+depends: ["conf-pkg"]
+### git -C GITREPO add -A
+### git -C GITREPO commit -qm "rename from pre00 to pre0"
+### opam repository add ver-test ./GITREPO
+[ver-test] synchronised from git+file://${BASEDIR}/GITREPO
+[NOTE] Repository ver-test has been added to the selections of switch version-test only.
+       Run `opam repository add ver-test --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam install --show foo.1.0~pre00
+The following actions would be performed:
+=== install 2 packages
+  - install conf-pkg 1         [required by foo]
+  - install foo      1.0~pre00
+### opam repository add ver-test ./GITREPO
+[ver-test] synchronised from git+file://${BASEDIR}/GITREPO
+[NOTE] Repository ver-test has been added to the selections of switch version-test only.
+       Run `opam repository add ver-test --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
+
+### opam install --show foo.1.0~pre00
+The following actions would be performed:
+=== install 2 packages
+  - install conf-pkg 1        [required by foo]
+  - install foo      1.0~pre0
