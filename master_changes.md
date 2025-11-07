@@ -75,11 +75,13 @@ users)
 
 ## Build
   * opam no longer depends on `cmdliner` [#6755 @kit-ty-kate - fix #6425]
+  * Clean variables before calling make on different projects to avoid clashes [#6769 @kit-ty-kate]
 
 ## Infrastructure
 
 ## Release scripts
   * Fix the placement of the vendored archives in the release tarball [#6765 @kit-ty-kate - fix #6762]
+  * Fix the Windows build [#6769 @kit-ty-kate]
 
 ## Install script
   * Add `2.5.0~alpha1` to the installers [#6748 @kit-ty-kate]
