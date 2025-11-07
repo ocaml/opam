@@ -29,7 +29,8 @@ riscv64-linux: $(OUTDIR)/opam-$(VERSION)-riscv64-linux
 $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	mkdir -p "$(OUTDIR)"
 	git clone $(GIT_URL) -b $(TAG) "$(OUTDIR)/opam-full-$(VERSION)"
-	$(MAKE) -C "$(OUTDIR)/opam-full-$(VERSION)" OCAML=$(call pathsearch,ocaml) download-ext
+	unset MAKEFLAGS MAKEOVERRIDES && \
+	  $(MAKE) -C "$(OUTDIR)/opam-full-$(VERSION)" OCAML=$(call pathsearch,ocaml) download-ext
 	( set -euo pipefail && \
 	  cd "$(OUTDIR)/opam-full-$(VERSION)" && \
 	  git archive "$(TAG)" \
@@ -119,7 +120,8 @@ build/$(HOST).env:
 	cd build/$(HOST)/ocaml-$(OCAMLV) && curl -OL $(FLEXDLL_URL)
 	cd build/$(HOST)/ocaml-$(OCAMLV) && tar xzf $(shell basename "$(FLEXDLL_URL)")
 	cd build/$(HOST)/ocaml-$(OCAMLV) && rmdir flexdll && mv "flexdll-$(FLEXDLLV)" flexdll
-	cd build/$(HOST)/ocaml-$(OCAMLV) && \
+	unset MAKEFLAGS MAKEOVERRIDES && \
+	  cd build/$(HOST)/ocaml-$(OCAMLV) && \
 	  ./configure --prefix "$(shell pwd)/build/$(HOST)" \
 	    --disable-debug-runtime --disable-debugger --disable-instrumented-runtime \
 	    --disable-ocamldoc --disable-stdlib-manpages --disable-ocamltest \
@@ -139,6 +141,7 @@ host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	    MAKE=$(MAKE) \
 	    $(EXPORTS_$(HOST_OS)); \
 	  cd build/opam-full-$(VERSION) && \
+	  unset MAKEFLAGS MAKEOVERRIDES && \
 	  ./configure --with-vendored-deps --with-mccs \
 	    $(EXTRA_OPAM_CONFIGURE_ARGS_$(HOST_OS)) && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
