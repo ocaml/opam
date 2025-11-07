@@ -1,0 +1,4 @@
+(library
+ (name opamCmdliner)
+ (public_name opam-core.cmdliner)
+ (flags :standard -w -27-32-35-50))

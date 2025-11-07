@@ -74,6 +74,7 @@ users)
 ## VCS
 
 ## Build
+  * opam no longer depends on `cmdliner` [#6755 @kit-ty-kate - fix #6425]
 
 ## Infrastructure
 
@@ -133,3 +134,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
