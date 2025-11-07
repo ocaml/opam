@@ -10,10 +10,10 @@
 
 (** CLI version helpers *)
 
-(* Defines Cmdliner optional argument function-helpers, with the cli
+(* Defines OpamCmdliner optional argument function-helpers, with the cli
    version. *)
 
-open Cmdliner
+open OpamCmdliner
 
 type validity
 
