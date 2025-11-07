@@ -44,6 +44,7 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
+  * Fixed the bug occuring on version-equivalent package rename (i.e `pkg.00 -> pkg.0`) leading to the package being completely removed. [#6774 @arozovyk fix #6754]
 
 ## Tree
 
@@ -108,6 +109,7 @@ users)
 
 ## Reftests
 ### Tests
+  *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
 
 ### Engine
 
@@ -124,6 +126,7 @@ users)
 ## opam-repository
 
 ## opam-state
+  * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
 
 ## opam-solver
 
