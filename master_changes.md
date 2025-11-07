@@ -112,6 +112,7 @@ users)
 ## Reftests
 ### Tests
   *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
+  * Add a test case for `opam switch create --dry-run` [#6540 @kit-ty-kate]
 
 ### Engine
 
