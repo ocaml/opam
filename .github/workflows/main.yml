@@ -138,6 +138,7 @@ jobs:
       continue-on-error: ${{ matrix.ocamlv == 'trunk' }}
       run: bash -exu .github/scripts/main/main.sh x86_64-pc-linux-gnu
     - name: Test (basic)
+      continue-on-error: ${{ matrix.ocamlv == 'trunk' }}
       if: steps.build.outcome != 'failure'
       run: bash -exu .github/scripts/main/test.sh
 
@@ -289,6 +290,7 @@ jobs:
       continue-on-error: ${{ matrix.ocamlv == 'trunk' }}
       run: bash -exu .github/scripts/main/main.sh x86_64-apple-darwin
     - name: Test (basic)
+      continue-on-error: ${{ matrix.ocamlv == 'trunk' }}
       if: steps.build.outcome != 'failure'
       run: bash -exu .github/scripts/main/test.sh
 

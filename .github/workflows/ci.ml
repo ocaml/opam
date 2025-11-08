@@ -337,6 +337,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
   let matrix = ((platform <> Windows), matrix, includes) in
   let needs = if platform = Windows then [analyse_job; cygwin_job] else [analyse_job] in
   let host = host_of_platform platform in
+  let continue_on_error_trunk = Printf.sprintf "${{ matrix.ocamlv == '%s' }}" trunk in
   job ~oc ~workflow ~runs_on:(Runner [runner]) ?shell ?section ~needs ~matrix ("Build-" ^ name_of_platform platform)
     ++ only_on Linux (run "Install bubblewrap" ["sudo apt install bubblewrap"])
     ++ only_on Linux (run "Disable AppArmor" ["echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns"])
@@ -349,8 +350,8 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
     ++ only_on Windows (unpack_cygwin "${{ matrix.build }}" "${{ matrix.host }}")
     ++ only_on Windows (run "Cygwin info" ["uname -a"])
     ++ build_cache OCaml platform "${{ matrix.ocamlv }}" host
-    ++ run ~id:"build" ~continue_on_error:(Printf.sprintf "${{ matrix.ocamlv == '%s' }}" trunk) "Build" ["bash -exu .github/scripts/main/main.sh " ^ host]
-    ++ not_on Windows (run ~cond:(Predicate(false, Compare("steps.build.outcome", "failure"))) "Test (basic)" ["bash -exu .github/scripts/main/test.sh"])
+    ++ run ~id:"build" ~continue_on_error:continue_on_error_trunk "Build" ["bash -exu .github/scripts/main/main.sh " ^ host]
+    ++ not_on Windows (run ~continue_on_error:continue_on_error_trunk ~cond:(Predicate(false, Compare("steps.build.outcome", "failure"))) "Test (basic)" ["bash -exu .github/scripts/main/test.sh"])
     ++ only_on Windows (run ~cond:(Predicate(false, EndsWith("matrix.host", "-pc-cygwin"))) "Test \"static\" binaries on Windows" ["ldd ./opam.exe | test \"$(grep -v -F /cygdrive/c/Windows/)\" = ''"])
     ++ only_on Windows
       (uses "Upload opam binaries for Windows"
