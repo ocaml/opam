@@ -118,6 +118,7 @@ users)
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
+  * Ensure `curl`'s exit status to be non-zero on failure [#6684 @kit-ty-kate]
 
 ## Doc
 

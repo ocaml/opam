@@ -32,7 +32,7 @@ if [[ $GITHUB_EVENT_NAME = 'pull_request' ]]; then
       fi
       URL="$OPAM_BIN_URL_BASE$tag/opam-$tag-$platform"
       echo "Downloading $URL"
-      check=$(curl -Ls "$URL" | sha512sum | cut -d' ' -f1)
+      check=$(curl -fsSL "$URL" | sha512sum | cut -d' ' -f1)
       if [[ $check = $sha ]] ; then
         echo "         as expected ($sha)"
       else

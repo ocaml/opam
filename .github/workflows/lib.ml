@@ -203,10 +203,11 @@ let emit_condition ~oc ~indent =
   let convert cond = fprintf oc "%sif: %s\n" indent (to_yaml cond) in
   Option.iter convert
 
-let run name ?id ?cond ?shell ?env run ~oc ~workflow ~job f =
+let run name ?id ?continue_on_error ?cond ?shell ?env run ~oc ~workflow ~job f =
   fprintf oc "    - name: %s\n" name;
   Option.iter (emit_env ~indent:6 ~oc) env;
   Option.iter (fprintf oc "      id: %s\n") id;
+  Option.iter (fprintf oc "      continue-on-error: %s\n") continue_on_error;
   emit_condition ~oc ~indent:6 cond;
   Option.iter (fprintf oc "      shell: %s\n") shell;
   begin match run with
