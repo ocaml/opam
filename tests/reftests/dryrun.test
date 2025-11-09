@@ -65,8 +65,8 @@ previous=$1
 current=$2
 drcode=0
 diff --exclude-from="x-diff" -r $previous $current || drcode=$?
-find $previous -name .git | cut -f 2- -d '/' > gitprevious
-find $current -name .git | cut -f 2- -d '/' > gitcurrent
+find $previous -name .git | cut -f 2- -d '/' | sort > gitprevious
+find $current -name .git | cut -f 2- -d '/' | sort > gitcurrent
 gitDiff=$(diff gitprevious gitcurrent)
 gdrcode=$?
 if [ "$gdrcode" -ne 0 ]; then
@@ -325,7 +325,7 @@ Switch invariant: ["foo"]
 -> installed foo.1
 Done.
 ### sh pre.sh
-### OPAMVERBOSE=2 OPAMDEBUG=-5 opam switch remove dr --dry-run
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam switch remove dr --dry-run | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
@@ -363,7 +363,7 @@ Switch invariant: ["foo"]
 -> installed foo.1
 Done.
 ### sh pre.sh nip
-### OPAMVERBOSE=2 OPAMDEBUG=-5 OPAMDEBUGSECTIONS="" opam switch remove ./nip --dry-run
+### OPAMVERBOSE=2 OPAMDEBUG=-5 OPAMDEBUGSECTIONS="" opam switch remove ./nip --dry-run | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 CLI                             Parsing CLI version 2.6
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
@@ -956,8 +956,8 @@ Binary files previous/dr/.opam-switch/packages/cache and OPAM/dr/.opam-switch/pa
 Only in OPAM/dr/.opam-switch: sources
 diff gitPrevious gitCurrent
 0a1,2
-> dr/.opam-switch/sources/nip/.git
 > dr/.opam-switch/build/nip.dev/.git
+> dr/.opam-switch/sources/nip/.git
 # Return code 1 #
 ### :VII:3: Pinning directory with no opam file, no vcs
 ### sh initial.sh unpack
@@ -1239,7 +1239,7 @@ Done.
 ### <nip/another-file>
 otuat
 ### sh pre.sh
-### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --working-dir --dry-run | sed-cmd git rsync | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | 'rsync-files[^ "]*' -> 'rsync-files-xxx'
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --working-dir --dry-run | sed-cmd git rsync | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | 'rsync-files[^ "]*' -> 'rsync-files-xxx' | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1353,7 +1353,7 @@ The following actions will be performed:
 -> installed nip.dev
 Done.
 ### sh pre.sh
-### OPAMVERBOSE=2 OPAMDEBUG=-5 opam pin remove ./nip --dry-run
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam pin remove ./nip --dry-run | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1545,7 +1545,7 @@ depends: "bar"
 ### <nip/a-file-snd>
 tautond
 ### sh pre.sh
-### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --dry-run | sed-cmd rsync touch cp | grep -v '- ./'
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --dry-run | sed-cmd rsync touch cp | grep -v '- ./' | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -1710,7 +1710,7 @@ tautond
 ### git -C nip add -A
 ### git -C nip commit -qm 'update'
 ### sh pre.sh
-### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --dry-run | sed-cmd git touch cp | grep -v '- ./' | grep -v "HEAD is now" | grep -v "(mkdir|copy|copydir|rm) .*\\.git."
+### OPAMVERBOSE=2 OPAMDEBUG=-5 opam install nip --dry-run | sed-cmd git touch cp | grep -v '- ./' | grep -v "HEAD is now" | grep -v "(mkdir|copy|copydir|rm) .*\\.git." | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
