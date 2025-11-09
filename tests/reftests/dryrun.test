@@ -64,6 +64,13 @@ set -u
 previous=$1
 current=$2
 drcode=0
+# If pathes are long, there is a diff between OSes
+for d in $previous $current; do
+  if test -f $d/config; then
+    sed -i.bak 's/: /:\n  /' $d/config
+    rm -f $d/config.bak
+  fi
+done
 diff --exclude-from="x-diff" -r $previous $current || drcode=$?
 find $previous -name .git | cut -f 2- -d '/' | sort > gitprevious
 find $current -name .git | cut -f 2- -d '/' | sort > gitcurrent
@@ -345,9 +352,11 @@ SYSTEM                          rm ${BASEDIR}/OPAM/dr/.opam-switch/environment
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 ### sh post.sh
 diff '--exclude-from=x-diff' -r previous/config OPAM/config
-4,5d3
-< installed-switches: "dr"
-< switch: "dr"
+7,10d6
+< installed-switches:
+<   "dr"
+< switch:
+<   "dr"
 Only in previous: dr
 # Return code 1 #
 ### :I:2:b: Local switch removal
@@ -387,8 +396,9 @@ SYSTEM                          rm ${BASEDIR}/nip/_opam/.opam-switch/environment
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 ### sh post.sh
 diff '--exclude-from=x-diff' -r previous/config OPAM/config
-4d3
-< installed-switches: "${BASEDIR}/nip"
+7,8d6
+< installed-switches:
+<   "${BASEDIR}/nip"
 # Return code 1 #
 ### sh post-local.sh nip
 Local switch disappeared *woosh*
