@@ -2427,10 +2427,13 @@ let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
           let nv = OpamPackage.max_version candidates (fst atom) in
           OpamConsole.note "Forcing removal of (uninstalled) %s"
             (OpamPackage.to_string nv);
-          let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
-          OpamFilename.rmdir d;
-          OpamFilename.mkdir d;
-          OpamProcess.Job.run (OpamAction.remove_package t nv);
+          if OpamStateConfig.(!r.dryrun) then
+            OpamProcess.Job.dry_run (OpamAction.remove_package t nv)
+          else
+            (let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
+             OpamFilename.rmdir d;
+             OpamFilename.mkdir d;
+             OpamProcess.Job.run (OpamAction.remove_package t nv));
           OpamAction.cleanup_package_artefacts t nv;
           false
         with Not_found ->
