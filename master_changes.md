@@ -31,6 +31,8 @@ users)
 ## UI
 
 ## Switch
+  * [BUG] Stop `opam switch create --dry-run` from creating a directory: no longer create build dir and save switch-state cache. [#6540 @hannesm - fix #5918]
+  * No longer clean build directory [#6540 @hannesm]
 
 ## Config
 
@@ -112,6 +114,7 @@ users)
 ## Reftests
 ### Tests
   *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
+  * Add a test case for `opam switch create --dry-run` [#6540 @kit-ty-kate]
 
 ### Engine
 

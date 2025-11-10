@@ -1,0 +1,34 @@
+N0REP0
+### <pkg:comp.1>
+opam-version: "2.0"
+flags: compiler
+### ::: opam switch create --dry-run local
+### opam switch create --dry-run --empty ./local
+### test -d ./local
+# Return code 1 #
+### opam switch create --dry-run ./local comp
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["comp"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing comp.1.
+-> installed comp.1
+Done.
+### test -d ./local
+# Return code 1 #
+### ::: opam switch create --dry-run global
+### opam switch create --dry-run --empty global
+### test -d OPAM/global
+# Return code 1 #
+### opam switch create --dry-run global comp
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["comp"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing comp.1.
+-> installed comp.1
+Done.
+### test -d OPAM/global
+# Return code 1 #
