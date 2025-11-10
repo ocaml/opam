@@ -116,6 +116,7 @@ users)
 ## Reftests
 ### Tests
   *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
+  * Fix a failure when two hashes start with the same two characters [#6793 @kit-ty-kate]
 
 ### Engine
 
