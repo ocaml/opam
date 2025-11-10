@@ -86,6 +86,7 @@ users)
 
 ## Install script
   * Add `2.5.0~alpha1` to the installers [#6748 @kit-ty-kate]
+  * Add `2.5.0~beta1` to the installers [#6795 @kit-ty-kate]
 
 ## Admin
 
