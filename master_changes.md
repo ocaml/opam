@@ -31,8 +31,6 @@ users)
 ## UI
 
 ## Switch
-  * [BUG] Stop `opam switch create --dry-run` from creating a directory: no longer create build dir and save switch-state cache. [#6540 @hannesm - fix #5918]
-  * No longer clean build directory [#6540 @hannesm]
 
 ## Config
 
@@ -45,7 +43,6 @@ users)
 ## Var/Option
 
 ## Update / Upgrade
-  * Fixed the bug occuring on version-equivalent package rename (i.e `pkg.00 -> pkg.0`) leading to the package being completely removed. [#6774 @arozovyk fix #6754]
 
 ## Tree
 
@@ -70,20 +67,14 @@ users)
 ## Format upgrade
 
 ## Sandbox
-  * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
 
 ## VCS
 
 ## Build
-  * opam no longer depends on `cmdliner` [#6755 @kit-ty-kate - fix #6425]
-  * Clean variables before calling make on different projects to avoid clashes [#6769 @kit-ty-kate]
-  * Add the upcoming OCaml 5.5 (trunk) support when using dune's dev profile [#6670 @kit-ty-kate]
 
 ## Infrastructure
 
 ## Release scripts
-  * Fix the placement of the vendored archives in the release tarball [#6765 @kit-ty-kate - fix #6762]
-  * Fix the Windows build [#6769 @kit-ty-kate]
 
 ## Install script
 
@@ -113,13 +104,10 @@ users)
 
 ## Reftests
 ### Tests
-  *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
-  * Add a test case for `opam switch create --dry-run` [#6540 @kit-ty-kate]
 
 ### Engine
 
 ## Github Actions
-  * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
 
 ## Doc
 
@@ -131,11 +119,9 @@ users)
 ## opam-repository
 
 ## opam-state
-  * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
 
 ## opam-solver
 
 ## opam-format
 
 ## opam-core
-  * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
