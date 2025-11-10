@@ -6,12 +6,16 @@ ENV OPAMREPOSHA 26770281fa1ea8b13aab979c1dfbd326e9ab512c
 ENV OPAMREPOSHAPHASE1DELTA 1db3104e98a25ff2b5f859189c9408dc760260e7
 ENV OPAMREPOSHAPHASE1 2d85539cd05071ec4f91d6c4ee35d2adc44aa283
 ENV OPAMREPOSHAPHASE3 2cd8e78594a8943245b8061dbdabd39e7ca492fb
+ENV OPAMREPOSHACOMPREHENSIVE 32468d4aa3fbf7824d4bbe40b6b140490e542a19
 RUN git clone https://github.com/ocaml/opam-repository /rep/opam-repository
 RUN git -C /rep/opam-repository checkout $OPAMREPOSHA
 RUN git clone /rep/opam-repository /rep/opam-repository-small-diff
 RUN git -C /rep/opam-repository-small-diff checkout $OPAMREPOSHAPHASE1DELTA
+RUN git clone --no-hardlinks /rep/opam-repository /rep/opam-repository-comprehensive-diff
+RUN git -C /rep/opam-repository-comprehensive-diff checkout $OPAMREPOSHACOMPREHENSIVE
 RUN git clone --bare --no-hardlinks /rep/opam-repository /rep/opam-repository.git
 RUN git clone --bare --no-hardlinks /rep/opam-repository-small-diff /rep/opam-repository-small-diff.git
+RUN git clone --bare --no-hardlinks /rep/opam-repository-comprehensive-diff /rep/opam-repository-comprehensive-diff.git
 RUN chown -R opam:opam /rep
 USER opam
 COPY --chown=opam:opam . /src

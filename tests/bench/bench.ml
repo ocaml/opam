@@ -193,6 +193,18 @@ let () =
     launch (fmt "git -C /rep/opam-repository.git update-ref HEAD $OPAMREPOSHAPHASE3");
     time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-phase1-phase3-git %s update" bin)
   in
+  let time_update_comprehensive_diff_local =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-comprehensive-diff" "file:///rep/opam-repository-comprehensive-diff";
+    launch (fmt "git -C /rep/opam-repository-comprehensive-diff checkout $OPAMREPOSHAPHASE3");
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-comprehensive-diff %s update" bin)
+  in
+  let time_update_comprehensive_diff_git =
+    Gc.compact ();
+    init_root "/tmp/opam-update-test-comprehensive-diff-git" "git+file:///rep/opam-repository-comprehensive-diff.git";
+    launch (fmt "git -C /rep/opam-repository-comprehensive-diff.git update-ref HEAD $OPAMREPOSHAPHASE3");
+    time_cmd ~exit:0 (fmt "OPAMROOT=/tmp/opam-update-test-comprehensive-diff-git %s update" bin)
+  in
   let json = fmt {|{
   "results": [
     {
@@ -312,6 +324,16 @@ let () =
           "name": "opam update - phase1 to phase3 (git repo)",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "opam update - comprehensive diff (local repo)",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam update - comprehensive diff (git repo)",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -349,6 +371,8 @@ let () =
       time_update_large_diff_git
       time_update_phase1_phase3_local
       time_update_phase1_phase3_git
+      time_update_comprehensive_diff_local
+      time_update_comprehensive_diff_git
       bin_size
   in
   print_endline json
