@@ -127,7 +127,7 @@ if you want to tweak the configuration of the compiler, you can switch to the op
 opam switch create <name> ocaml-variants.<ocaml-version>+options <option_list>...
 ```
 
-where `<option_list>` is a space separated list of `ocaml-option-*` packages.
+where `<option_list>` is a space-separated list of `ocaml-option-*` packages.
 For instance, to create a switch with OCaml 5.4.0 with both `flambda` and `no-flat-float-array` enabled:
 ```
 opam switch create 5.4.0+flambda+nffa ocaml-variants.5.4.0+options ocaml-option-flambda ocaml-option-no-flat-float-array
