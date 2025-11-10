@@ -353,12 +353,6 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
     ++ run ~id:"build" ~continue_on_error:continue_on_error_trunk "Build" ["bash -exu .github/scripts/main/main.sh " ^ host]
     ++ not_on Windows (run ~continue_on_error:continue_on_error_trunk ~cond:(Predicate(false, Compare("steps.build.outcome", "failure"))) "Test (basic)" ["bash -exu .github/scripts/main/test.sh"])
     ++ only_on Windows (run ~cond:(Predicate(false, EndsWith("matrix.host", "-pc-cygwin"))) "Test \"static\" binaries on Windows" ["ldd ./opam.exe | test \"$(grep -v -F /cygdrive/c/Windows/)\" = ''"])
-    ++ only_on Windows
-      (uses "Upload opam binaries for Windows"
-         ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-windows")))
-         ~withs:[ ("name", Literal ["opam-exe-${{ matrix.host }}-${{ matrix.ocamlv }}-${{ matrix.build }}"]);
-                  ("path", Literal ["D:\\Local\\bin\\opam.exe"; "D:\\Local\\bin\\opam-installer.exe"; "D:\\Local\\bin\\opam-putenv.exe"]) ]
-         "actions/upload-artifact@v4")
     ++ only_on Windows (run "Test (basic - Cygwin)" ~cond:(Predicate(true, EndsWith("matrix.host", "-pc-cygwin"))) ["bash -exu .github/scripts/main/test.sh"])
     ++ only_on Windows (run "Test (basic - native Windows)" ~env:[("OPAMROOT", {|D:\a\opam\opam\.opam|})] ~shell:"cmd" ~cond:(Predicate(false, EndsWith("matrix.host", "-pc-cygwin")))
          ({|set Path=D:\Cache\ocaml-local\bin;%Path%|} ::
