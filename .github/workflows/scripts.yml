@@ -5,7 +5,7 @@ on:
     paths:
       - 'shell/install.sh'
       - '.github/workflows/scripts.yml'
-      - '.github/scripts/scripts/hygiene.sh'
+      - '.github/scripts/scripts/install-check.sh'
       - '.github/scripts/common/hygiene-preamble.sh'
   push:
     branches:
@@ -17,7 +17,7 @@ defaults:
     shell: bash
 
 jobs:
-  hygiene-scripts:
+  install-check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -26,4 +26,4 @@ jobs:
         # Defined only on pull request jobs
         BASE_REF_SHA: ${{ github.event.pull_request.base.sha }}
         PR_REF_SHA: ${{ github.event.pull_request.head.sha }}
-      run: bash -exu .github/scripts/scripts/hygiene.sh
+      run: bash -exu .github/scripts/scripts/install-check.sh
