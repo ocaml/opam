@@ -3,6 +3,39 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.5.0~beta1:
+* Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/`
+  directories as it is required by some of macOS core tools
+  [#4797 @kit-ty-kate - fix #4389 #6460]
+* Fixed a bug occuring on version-equivalent package rename
+  (i.e. `pkg.00 -> pkg.0`) leading to the package being completely removed
+  [#6774 @arozovyk - fix #6754]
+* Stop `opam switch create --dry-run` from creating switch root directory
+  by stopping the creation of build directory and writing the switch-state
+  cache [#6540 @hannesm - fix #5918]
+* Stop cleaning the build directory when installing packages with `--dry-run`
+  [#6540 @hannesm]
+* Build changes:
+  * Add the upcoming OCaml 5.5 (trunk) support when using dune's dev profile
+    [#6670 @kit-ty-kate]
+  * opam no longer depends on `cmdliner` [#6755 @kit-ty-kate - fix #6425]
+  * Clean variables before calling `make` on different projects
+    (e.g. downlodad-if-missing OCaml compiler) to avoid clashes with other
+    variables set by these projects [#6769 @kit-ty-kate]
+* Improve the release script:
+  * Fix the placement of the vendored archives in the release tarball
+    [#6765 @kit-ty-kate - fix #6762]
+  * Fix the Windows build [#6769 @kit-ty-kate]
+* Improve and extend the testsuite [#6540 #6774 @arozovyk @kit-ty-kate]
+* Improve and extend the test infrastructure [#6732 @kit-ty-kate]
+* API changes in `opam-state`:
+  * `OpamRepositoryState.load_opams_from_diff`: track added packages to avoid
+    removing version-equivalent packages [#6774 @arozovyk - fix #6754]
+* API changes in `opam-core`:
+  * `OpamCmdliner` was added. It is the new internal interface for `Cmdliner`,
+     accessible through a new `opam-core.cmdliner` sub-library, however it is
+     meant for internal use only. [#6755 @kit-ty-kate]
+
 2.5.0~alpha1:
 * Implement incremental opam file loading to process only changed files during
   repository updates and repository state loading [#6614 @arozovyk - fix #5824]
