@@ -45,6 +45,9 @@ users)
 
 ## Update / Upgrade
   * Fixed the bug occuring on version-equivalent package rename (i.e `pkg.00 -> pkg.0`) leading to the package being completely removed. [#6774 @arozovyk fix #6754]
+  * Compute the list of available depexts on `opam update` [#6489 @arozovyk - fix #6461]
+  * Update depexts availability repository state cache when running `opam update --depexts` [#6489 @arozovyk - fix #6461]
+  * Display status message while loading system package availability during `opam update` [#6489 @arozovyk - fix #6461]
 
 ## Tree
 
@@ -99,6 +102,7 @@ users)
 ## Solver
 
 ## Client
+  * Improved depexts handling by caching system package availability during update, avoiding redundant system checks at install time. [#6489 @arozovyk fix #6461]
 
 ## Shell
 
@@ -115,8 +119,11 @@ users)
 ## Reftests
 ### Tests
   *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
+  * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
+  * Add depexts tests with debug section that demostrate system availability polling [#6489 @arozovyk]
 
 ### Engine
+  * Add a silent `opam update default` to `opam-set-os` command [#6489 @arozovyk]
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
@@ -131,15 +138,27 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk fix #6461]
+  * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk fix #6461]
+  * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk fix #6461]
 
 ## opam-repository
 
 ## opam-state
   * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
+  * `OpamSwitchState`: add `update_sys_packages` to update depexts status of a set of packages. [#6489 @arozovyk]
+  * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly [#6489 @arozovyk]
+  * `OpamStateTypes`: add available system package status field in `repos_state` for all the depexts declared in repo's packages. The new field is also added to the cache [#6489 @arozovyk fix #6461]
+  * `OpamRepositoryState.load`: load repo's available system packages [#6489 @arozovyk fix #6461]
+  * `OpamFileTools`: add `get_depexts` to consolidate depexts extraction logic from individual opam files and package maps [#6489 @arozovyk fix #6461]
+  * `OpamUpdate`: add `update_sys_available_cache` to update the system package availability cache in repository state [#6489 @arozovyk fix #6461]
+  * `OpamUpdate.get_sys_available`: factorize depexts availability computation logic from `OpamUpdate.repositories` [#6489 @arozovyk fix #6461]
 
 ## opam-solver
 
 ## opam-format
+  * `OpamSysPkg`: add `availability_mode` type to indicate the availability of system packages on a given system. [#6489 @arozovyk]
+  * `OpamSysPkg`: add `combine_status` and `equal_availability_mode` functions. [#6489 @arozovyk]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]

@@ -67,6 +67,25 @@ let string_of_status sp =
     (Set.to_string sp.s_available)
     (Set.to_string sp.s_not_found)
 
+let combine_status st st' =
+  Set.Op.{
+    s_available = st.s_available ++ st'.s_available;
+    s_not_found = st.s_available ++ st'.s_not_found;
+  }
+
+(* System package availability *)
+type availability_mode =
+  | Available of Set.t
+  | Suppose_available
+
+let equal_availability_mode a b =
+  match a, b with
+  | Available os, Available ns -> Set.equal os ns
+  | Suppose_available, Suppose_available -> true
+  | Available _, _
+  | Suppose_available, _ -> false
+
+
 (** System packages to install *)
 
 type to_install = {

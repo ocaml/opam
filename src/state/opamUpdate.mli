@@ -23,6 +23,12 @@ open OpamStateTypes
     ('a repos_state -> 'a repos_state) option OpamProcess.job
 *)
 
+(** Update the system package availability cache. Queries the system package
+    manager to determine which depexts are available and updates the repository
+    state cache. If [force] is true, always update the cache regardless of
+    whether it has changed. *)
+val update_sys_available_cache: ?force:bool -> rw repos_state -> rw repos_state
+
 (** Update the given repositories from their upstream, and returns the updated
     state. This also saves the updated cached state, and the updated repository
     config (it may be changed by e.g. redirects). The returned list is the list
