@@ -162,6 +162,57 @@ let repository rt repo =
             }
         ))
 
+let get_sys_available rt =
+  if not (OpamFile.Config.depext rt.repos_global.config) then
+    None
+  else
+    let merged_depexts_opams =
+      let depexts_equal (pkgset1, filter1) (pkgset2, filter2) =
+        OpamSysPkg.Set.equal pkgset1 pkgset2 &&
+        OpamTypesBase.filter_equal filter1 filter2
+      in
+      OpamRepositoryName.Map.fold (fun _ opams acc ->
+          OpamPackage.Map.union (fun x y ->
+              let depexts_x = OpamFile.OPAM.depexts x in
+              let depexts_y = OpamFile.OPAM.depexts y in
+              if OpamCompat.List.equal depexts_equal depexts_x depexts_y then
+                x
+              else
+                OpamFile.OPAM.with_depexts (depexts_x @ depexts_y) x)
+            acc opams)
+        rt.repo_opams OpamPackage.Map.empty
+    in
+    let repo_depexts =
+      OpamFileTools.get_depexts merged_depexts_opams
+        ~env:(OpamPackageVar.resolve_global rt.repos_global)
+    in
+    try
+      Some (OpamSysInteract.available_packages ~env:rt.repos_global.global_variables
+              rt.repos_global.config repo_depexts)
+    with Failure msg ->
+      OpamConsole.note "%s\nYou can disable this check using 'opam \
+                        option --global depext=false'"
+        msg;
+      None
+
+let update_sys_available_cache ?(force=false) rt =
+  if OpamConsole.disp_status_line () then
+    OpamConsole.status_line "Loading system package availability...";
+  let repos_sys_available_pkgs = get_sys_available rt in
+  OpamConsole.clear_status ();
+  let equal = match rt.repos_sys_available_pkgs, repos_sys_available_pkgs with
+    | None, None -> true
+    | Some a, Some b -> OpamSysPkg.equal_availability_mode a b
+    | _ -> false
+  in
+  if not force && equal then
+    rt
+  else
+    let rt = { rt with repos_sys_available_pkgs } in
+    OpamRepositoryState.write_config rt;
+    OpamRepositoryState.Cache.save rt;
+    rt
+
 let repositories rt repos =
   let command repo =
     OpamProcess.Job.catch
@@ -193,10 +244,10 @@ let repositories rt repos =
     match rt_update with
     | Some rt_update ->
       let rt = rt_update rt in
-      OpamRepositoryState.write_config rt;
-      OpamRepositoryState.Cache.save rt;
-      rt
-    | None -> rt
+      update_sys_available_cache ~force:true rt
+    | None ->
+      (* We do an update since the system can (rarely) change as well *)
+      update_sys_available_cache rt
   in
   failed, rt
 

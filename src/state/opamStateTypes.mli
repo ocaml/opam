@@ -90,6 +90,10 @@ type +'lock repos_state = {
   repo_opams: OpamFile.OPAM.t package_map repository_name_map;
   (** All opam files that can be found in the configured repositories *)
 
+  repos_sys_available_pkgs : OpamSysPkg.availability_mode option;
+  (** All available system packages required by the repo's packages.
+      [None] when depext system is disabled or unavailable. *)
+
   repos_tmp: (OpamRepositoryName.t, OpamFilename.Dir.t Lazy.t) Hashtbl.t;
   (** Temporary directories containing the uncompressed contents of the
       repositories *)

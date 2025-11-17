@@ -10,16 +10,45 @@
 
 open OpamStateTypes
 
+(** [available_packages ?env config pkgs] queries the system to determine
+    which of the given system [pkgs] are available (i.e., present in the
+    system’s package database  or known to the system's package manager).
+
+    The result is an {!OpamSysPkg.availability_mode} type, which may either be
+    a set of available packages or a flag indicating that availability should
+    be assumed (e.g., on systems where querying is unsupported or skipped),
+    or a flag that indicates that depexts are disabled.
+
+    [env] is used to determine host specification.
+    [config] is used to determine Windows depext installation. *)
+val available_packages:
+  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
+  OpamSysPkg.availability_mode
+
+(** Returns the subset of the given system [pkgs] that are currently installed
+    on the system. This function queries the system package manager (e.g., apt,
+    yum, pacman, brew, etc.) to determine which of the provided packages are
+    already installed. It handles different package manager formats and output
+    parsing, including virtual packages. *)
+val installed_packages:
+  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
+  OpamSysPkg.Set.t
+
 (* Given a list of system packages, retrieve their installation status from the
    system and returns a {!OpamSysInteract.packages_status} record with,
      * available set: package that exist on the default
        repositories, but not installed
      * not found set: packages not found on the defined repositories
+
    [env] is used to determine host specification.
+   [sys_available], if provided, is used directly to determine the
+   availability of system packages depending on system; otherwise,
+   {!available_packages} is called to query the system.
+   Installed packages are computed using {!installed_packages}.
    [config] is used to determine Windows depext installation. *)
 val packages_status:
-  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
-  OpamSysPkg.status
+  ?env:gt_variables -> ?sys_available:OpamSysPkg.availability_mode ->
+  OpamFile.Config.t -> OpamSysPkg.Set.t -> OpamSysPkg.status
 
 (* Returns [true] if the distribution is a stateless installation. It permits to
    define where there is a need to handle installed system packages or not. *)
