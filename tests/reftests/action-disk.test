@@ -176,7 +176,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
-### opam install main-repo.1 | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | sed-hash $MD5 md5 | sed-hash $XSMD5 xs-hash
+### : we need to remove mkdir log because it is not deterministic:
+### : if the 2 hashes have the same prefix, the directory is created once
+### opam install main-repo.1 | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | sed-hash $MD5 md5 | sed-hash $XSMD5 xs-hash | grep -v "mkdir .*.download-cache.md5.pre$"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -206,7 +208,6 @@ Processing  1/3: [main-repo.1: rsync]
 - 
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5
-SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/pre
 SYSTEM                          copy ${OPAMTMP}/archive.tgz -> ${BASEDIR}/OPAM/download-cache/md5/pre/+md5+
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/3: [main-repo.1: extract]
@@ -224,7 +225,6 @@ Processing  1/3: [main-repo.1/x-source.main-repo.1: dl]
 + rsync "-rLptgoDvc" "--exclude" ".git" "--exclude" "_darcs" "--exclude" ".hg" "--exclude" ".#*" "--exclude" "_opam*" "--exclude" "_build" "--delete" "--delete-excluded" "${BASEDIR}/x-source" "${OPAMTMP}"
 - x-source
 - 
-SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/md5/pre
 SYSTEM                          copy ${OPAMTMP}/x-source -> ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+
 SYSTEM                          rmdir ${OPAMTMP}
 SYSTEM                          rm ${OPAMTMP}/x-source
