@@ -54,5 +54,5 @@ MD5_swhid_core = 77d88d4b1d96261c866f140c64d89af8
 URL_menhir = https://gitlab.inria.fr/fpottier/menhir/-/archive/20250903/archive.tar.gz
 MD5_menhir = 5ecb7f71cf374147d3d3137c6e2fe382
 
-URL_patch = https://github.com/hannesm/patch/releases/download/v3.0.0/patch-3.0.0.tar.gz
-MD5_patch = 75aca1ed79a9807e4d4fc6c85aa31b0f
+URL_patch = https://github.com/hannesm/patch/releases/download/v3.1.0/patch-3.1.0.tbz
+MD5_patch = afda4079f824f3c2ae69f5064bcf870b
