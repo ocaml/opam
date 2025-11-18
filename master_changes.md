@@ -103,6 +103,7 @@ users)
 ## Shell
 
 ## Internal
+  * Remove the unused `admin-scripts` folder [#6750 @kit-ty-kate]
 
 ## Internal: Unix
 
