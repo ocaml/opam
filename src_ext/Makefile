@@ -136,18 +136,18 @@ GET_ARCHIVE=\
 	 rm -rf "tmp-$*"
 	@if [ -d patches/$* ]; then \
           cd $* && \
-     for p in ../patches/$*/*.patch; do \
-       $(PATCH) -p1 < $$p $(if $(SILENT),> /dev/null); \
-     done; \
-   fi
+          for p in ../patches/$*/*.patch; do \
+            $(PATCH) -p1 < $$p $(if $(SILENT),> /dev/null); \
+          done; \
+         fi
 	@if [ "$*" != "dune-local" ] ; then \
-     for j in $(wildcard dune-$* dune-$*-*); do \
-       cp $$j $*$$(echo "$$j" | sed -e "s/dune-$*//" -e "s|-|/|g")/dune; \
-       echo "(lang dune 1.2)" > $*/dune-project; \
-       echo "(name $*)" >> $*/dune-project; \
-       touch $*/$*.opam; \
-     done; \
-   fi
+          for j in $(wildcard dune-$* dune-$*-*); do \
+            cp $$j $*$$(echo "$$j" | sed -e "s/dune-$*//" -e "s|-|/|g")/dune; \
+            echo "(lang dune 1.2)" > $*/dune-project; \
+            echo "(name $*)" >> $*/dune-project; \
+            touch $*/$*.opam; \
+          done; \
+         fi
 	@touch $@
 
 clean:
@@ -155,6 +155,5 @@ clean:
 
 distclean: clean
 	rm -rf dune-local secondary $(SRC_EXTS)
-	rm -f *.tar.gz *.tbz *.*stamp *.*download dune \
-        Makefile.config
+	rm -f *.tar.gz *.tbz *.*stamp *.*download dune Makefile.config
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true
