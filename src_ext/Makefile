@@ -128,6 +128,7 @@ GET_ARCHIVE=\
     cp archives/$(notdir $(URL_$*)) $(call ARCHIVE_FILE,$*) 2>/dev/null || $(call GET_ARCHIVE,$*)
 
 %.stamp: %.download
+	$(SILENT)rm -rf tmp-$*
 	$(SILENT)mkdir -p tmp-$*
 	$(SILENT)cd tmp-$* && $(if $(patsubst %.tar.gz,,$(URL_$*)),bunzip2,gunzip) -c ../$(call ARCHIVE_FILE,$*) | tar xf -
 	$(SILENT)rm -rf $*
