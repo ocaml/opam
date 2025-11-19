@@ -1,3 +1,5 @@
+.SHELLFLAGS := -eu$(if $(shell (set -o pipefail 2>/dev/null > /dev/null && echo yes)),o pipefail) $(.SHELLFLAGS)
+
 TAG = master
 VERSION = $(shell git describe $(TAG))
 OPAM_VERSION = $(subst -,~,$(VERSION))
@@ -31,8 +33,7 @@ $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	git clone $(GIT_URL) -b $(TAG) "$(OUTDIR)/opam-full-$(VERSION)"
 	unset MAKEFLAGS MAKEOVERRIDES && \
 	  $(MAKE) -C "$(OUTDIR)/opam-full-$(VERSION)" OCAML=$(call pathsearch,ocaml) download-ext
-	( set -euo pipefail && \
-	  cd "$(OUTDIR)/opam-full-$(VERSION)" && \
+	( cd "$(OUTDIR)/opam-full-$(VERSION)" && \
 	  git archive "$(TAG)" \
 		--mtime "$$(git show -s --format=%ct "$(TAG)" | tail -1)" \
 		-o "$(abspath $(OUTDIR)/opam-full-$(VERSION).tar)" \

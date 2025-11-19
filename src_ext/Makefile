@@ -1,3 +1,5 @@
+.SHELLFLAGS := -eu$(if $(shell (set -o pipefail 2>/dev/null > /dev/null && echo yes)),o pipefail) $(.SHELLFLAGS)
+
 ifneq ($(wildcard ../Makefile.config)$(filter-out archives cache-archives,$(MAKECMDGOALS)),)
 -include ../Makefile.config
 endif
