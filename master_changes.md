@@ -78,12 +78,14 @@ users)
   * Clean variables before calling make on different projects to avoid clashes [#6769 @kit-ty-kate]
   * Add the upcoming OCaml 5.5 (trunk) support when using dune's dev profile [#6670 @kit-ty-kate]
   * Update the download-if-missing patch to 3.1.0 [#6772 @kit-ty-kate]
+  * Harden the Makefile's inline shell scripts [#6751 @kit-ty-kate]
 
 ## Infrastructure
 
 ## Release scripts
   * Fix the placement of the vendored archives in the release tarball [#6765 @kit-ty-kate - fix #6762]
   * Fix the Windows build [#6769 @kit-ty-kate]
+  * Harden the Makefile's inline shell scripts [#6751 @kit-ty-kate]
 
 ## Install script
   * Add `2.5.0~alpha1` to the installers [#6748 @kit-ty-kate]

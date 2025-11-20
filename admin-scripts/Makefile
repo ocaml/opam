@@ -1,3 +1,5 @@
+.SHELLFLAGS := -eu$(if $(shell (set -o pipefail 2>/dev/null > /dev/null && echo yes)),o pipefail) $(.SHELLFLAGS)
+
 DEPS = core format repository
 
 INCLUDE = $(patsubst %,-I ../src/%,$(DEPS)) -I ../src/tools
