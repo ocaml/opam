@@ -132,6 +132,7 @@ users)
   * Remove the unconditional Windows binary uploads on PRs [#6771 @kit-ty-kate]
 
 ## Doc
+  * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
 
 ## Security fixes
 
