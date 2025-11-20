@@ -1418,7 +1418,7 @@ let locked ?section cli =
      of the file with an added .$(i,locked) extension is found (e.g. \
      $(b,foo.opam.locked) besides $(b,foo.opam)), that will be used instead. \
      This is typically useful to offer a more specific set of dependencies \
-     and reproduce similar build contexts, hence the name. The $(i, lock)\
+     and reproduce similar build contexts, hence the name. The $(i, lock) \
      option can be used to generate such files, based on the versions \
      of the dependencies currently installed on the host. This is equivalent \
      to setting the $(b,\\$OPAMLOCKED) environment variable. Note that this \
