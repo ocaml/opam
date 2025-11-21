@@ -158,3 +158,4 @@ users)
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
+  * `OpamUrl`: rename and expose `local_path` as `looks_like_local_path` [#5979 @kit-ty-kate]

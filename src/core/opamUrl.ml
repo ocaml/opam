@@ -209,7 +209,7 @@ let base_url url =
   | "" -> url.path
   | tr -> Printf.sprintf "%s://%s" tr url.path
 
-let local_path = function
+let looks_like_local_path = function
   | { transport = ("file"|"path"|"local"|"rsync"); path;
       hash = _; backend = (#version_control | `rsync); }
     when looks_like_ssh_path path = None ->
@@ -218,14 +218,14 @@ let local_path = function
 
 let local_dir url =
   let open OpamStd.Option.Op in
-  local_path url >>|
+  looks_like_local_path url >>|
   OpamFilename.Dir.of_string >>= fun d ->
   if OpamFilename.exists_dir d then Some d
   else None
 
 let local_file url =
   let open OpamStd.Option.Op in
-  local_path url >>|
+  looks_like_local_path url >>|
   OpamFilename.of_string >>= fun f ->
   if OpamFilename.exists f then Some f
   else None
