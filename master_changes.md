@@ -92,6 +92,11 @@ users)
   * Add `2.5.0~alpha1` to the installers [#6748 @kit-ty-kate]
   * Add `2.5.0~beta1` to the installers [#6795 @kit-ty-kate]
   * Add `2.5.0~rc1` to the installers [#6802 @kit-ty-kate]
+  * Fix apparmor profile remplacement option [#6760 @rjbou]
+  * Use `install` instead of `mv`+`chmod`+`chown` [#6760 @rjbou]
+  * Clean apparmor temporary file [#6760 @rjbou]
+  * Use variables instead of plain paths [#6760 @rjbou]
+  * Reword apparmor message when user need to check the profile [#6760 @rjbou]
 
 ## Admin
 
