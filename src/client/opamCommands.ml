@@ -131,9 +131,27 @@ let get_init_config ~no_sandboxing ~no_default_config_file ~add_config_file =
     (if no_default_config_file then []
      else List.filter OpamFile.exists (OpamPath.init_config_files ()))
     @ List.map (fun url ->
-        match OpamUrl.local_file url with
-        | Some f -> OpamFile.make f
-        | None ->
+        match url.OpamUrl.backend with
+        | #OpamUrl.version_control ->
+          OpamConsole.error_and_exit `Bad_arguments
+            "Version control url not supported for %S"
+            (OpamUrl.to_string url);
+        | `rsync ->
+          begin match OpamUrl.looks_like_local_path url with
+          | Some path ->
+            let file = OpamFilename.of_string path in
+            if OpamFilename.exists file then
+              OpamFile.make file
+            else
+              OpamConsole.error_and_exit `Bad_arguments
+                "File does not exist: %s."
+                (OpamFilename.to_string file)
+          | None ->
+            OpamConsole.error_and_exit `Bad_arguments
+              "SSH url not supported for %S"
+              (OpamUrl.to_string url)
+          end
+        | `http ->
           let f = OpamFilename.of_string (OpamSystem.temp_file "conf") in
           OpamProcess.Job.run (OpamDownload.download_as ~overwrite:false url f);
           let hash = OpamHash.compute ~kind:`SHA256 (OpamFilename.to_string f) in
