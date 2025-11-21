@@ -374,17 +374,8 @@ Here is a full example:
 > Here is an example of an ordered sequence: `~~`, `~`, `~beta2`, `~beta10`,
 > `0.1`, `1.0~beta`, `1.0`, `1.0-test`, `1.0.1`, `1.0.10`, `dev`, `trunk`.
 
-For quick sanity checks, you can compare package versions using the OCaml REPL:
-
-```
-#use "topfind";;
-#require "opam-core";;
-# OpamVersionCompare.compare "1.2.10" "1.2.9";;
-- : int = 1
-```
-
-You can also compare package versions using the `opam` command line (available
-from opam version `2.4.0`):
+For quick sanity checks, you can compare package versions using the `opam`
+command line (available from opam version `2.4.0`):
 
 ```shell
 $ opam admin compare-versions 1.2.10 1.2.9
@@ -400,6 +391,9 @@ $ opam admin compare-versions 0.0.9 --lt 0.0.10
 ```
 
 Refer to the command help page for more details.
+
+You can also use the [OpamVersionCompare](/doc/api/opam-core/OpamVersionCompare) API
+for opam < `2.4.0` users.
 
 ### Variables
 
