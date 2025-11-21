@@ -14,6 +14,7 @@ users)
   * Bump version to 2.6.0~alpha1~dev [#6749 @rjbou]
 
 ## Global CLI
+  * Update Kate's email address [#6808 @kit-ty-kate]
 
 ## Plugins
 
