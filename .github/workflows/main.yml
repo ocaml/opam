@@ -52,7 +52,7 @@ jobs:
       opam-bs-cache: ${{ steps.keys.outputs.opam-bs-cache }}
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: Determine cache keys
       id: keys
       run: |
@@ -92,7 +92,7 @@ jobs:
         enableCrossOsArchive: true
     - name: Checkout tree
       if: steps.cygwin64.outputs.cache-hit != 'true'
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: Create Cygwin64 cache
       if: steps.cygwin64.outputs.cache-hit != 'true'
       shell: cmd
@@ -114,7 +114,7 @@ jobs:
     - name: Disable AppArmor
       run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: actions/cache@v4
@@ -184,7 +184,7 @@ jobs:
         git config --system core.autocrlf false
         git config --system core.eol lf
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: Cygwin64 Cache
       id: cygwin64
       if: matrix.build == 'x86_64-pc-cygwin'
@@ -257,7 +257,7 @@ jobs:
     - name: Install GNU patch
       run: brew install gpatch
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: actions/cache@v4
@@ -300,7 +300,7 @@ jobs:
       GITHUB_PR_USER: ${{ github.event.pull_request.user.login }}
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: Install bubblewrap
       run: sudo apt install bubblewrap
     - name: Disable AppArmor
@@ -359,7 +359,7 @@ jobs:
     - name: Install gnu coreutils
       run: brew install coreutils gpatch rsync
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: actions/cache@v4
@@ -414,7 +414,7 @@ jobs:
     - name: Disable AppArmor
       run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: actions/cache@v4
@@ -451,7 +451,7 @@ jobs:
     - name: Install man2html
       run: sudo apt install man2html
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: actions/cache@v4
@@ -507,7 +507,7 @@ jobs:
     - name: Disable AppArmor
       run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: src_ext/archives and opam-repository Cache
       id: archives
       uses: actions/cache@v4
@@ -553,7 +553,7 @@ jobs:
       OPAMBSROOT: ~/.cache/opam.${{ matrix.solver }}.cached
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: Get changed files
       id: files
       if: github.event_name == 'pull_request'
@@ -612,7 +612,7 @@ jobs:
     - name: Disable AppArmor
       run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: opam 1.2 root Cache
       uses: actions/cache@v4
       with:
@@ -642,7 +642,7 @@ jobs:
     needs: Analyse
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: Get changed files
       id: files
       if: github.event_name == 'pull_request'
@@ -684,7 +684,7 @@ jobs:
       OPAM_DEPENDS: 1
     steps:
     - name: Checkout tree
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
     - name: Get changed files
       id: files
       if: github.event_name == 'pull_request'

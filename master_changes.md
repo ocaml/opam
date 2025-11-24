@@ -136,6 +136,7 @@ users)
   * Add OCaml trunk to the test matrix [#6684 #6670 @kit-ty-kate]
   * Rename the hygiene script for `shell/install.sh` to install-check [#6768 @kit-ty-kate]
   * Remove the unconditional Windows binary uploads on PRs [#6771 @kit-ty-kate]
+  * Bump the `actions/checkout` to version 6 [#6811 @kit-ty-kate]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]

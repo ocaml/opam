@@ -20,7 +20,7 @@ jobs:
   install-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Check scripts
       env:
         # Defined only on pull request jobs
