@@ -20,6 +20,7 @@ module E = struct
     | REQUIRECHECKSUMS of bool option
     | RETRIES of int option
     | VALIDATIONHOOK of string option
+    | TRUSTCACHE of bool option
 
   open OpamStd.Config.E
   let curl = value (function CURL s -> s | _ -> None)
@@ -29,6 +30,7 @@ module E = struct
   let requirechecksums = value (function REQUIRECHECKSUMS b -> b | _ -> None)
   let retries = value (function RETRIES i -> i | _ -> None)
   let validationhook = value (function VALIDATIONHOOK s -> s | _ -> None)
+  let trustcache = value (function TRUSTCACHE b -> b | _ -> None)
 
   let curl_t () = value_t (function CURL s -> s | _ -> None)
   let fetch_t () = value_t (function FETCH s -> s | _ -> None)
@@ -39,6 +41,7 @@ type dl_tool_kind = [ `Curl | `Default ]
 type t = {
   download_tool: (arg list * dl_tool_kind) Lazy.t;
   validation_hook: arg list option;
+  trust_cache: bool;
   retries: int;
   force_checksums: bool option;
   repo_tarring : bool;
@@ -47,6 +50,7 @@ type t = {
 type 'a options_fun =
   ?download_tool:(OpamTypes.arg list * dl_tool_kind) Lazy.t ->
   ?validation_hook:arg list option ->
+  ?trust_cache:bool ->
   ?retries:int ->
   ?force_checksums:bool option ->
   ?repo_tarring:bool ->
@@ -80,6 +84,7 @@ let default = {
          | _ -> "either \"curl\" or \"wget\"")
   );
   validation_hook = None;
+  trust_cache = false;
   retries = 3;
   force_checksums = None;
   repo_tarring = false;
@@ -88,6 +93,7 @@ let default = {
 let setk k t
     ?download_tool
     ?validation_hook
+    ?trust_cache
     ?retries
     ?force_checksums
     ?repo_tarring
@@ -96,6 +102,7 @@ let setk k t
   k {
     download_tool = t.download_tool + download_tool;
     validation_hook = t.validation_hook + validation_hook;
+    trust_cache = t.trust_cache + trust_cache;
     retries = t.retries + retries;
     force_checksums = t.force_checksums + force_checksums;
     repo_tarring = t.repo_tarring + repo_tarring;
@@ -151,6 +158,7 @@ let initk k =
   setk (setk (fun c -> r := c; k)) !r
     ?download_tool
     ?validation_hook
+    ?trust_cache:(E.trustcache ())
     ?retries:(E.retries ())
     ?force_checksums
     ?repo_tarring:(E.repositorytarring ())
