@@ -1155,6 +1155,11 @@ let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
+       * If it is a repo or switch upgrade:
+         * define 'on the fly' function
+         * add it in the main function with a write action if not 'on the fly'
+         * add it in [as_necessary_swich] or [as_necessary_repo] functions
+           upgrades list.
    * [Should not happen] If it is an hard upgrade, performs repo & switch
      upgrade in upgrade function.
 *)
