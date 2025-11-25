@@ -71,6 +71,10 @@ val root: t -> t
 
 val has_trailing_slash: t -> bool
 
+(** Check if the URL looks like a local path and returns [Some url.path]
+    if it does. Return [None] otherwise. *)
+val looks_like_local_path: t -> string option
+
 (** Check if the URL matches an existing local directory, and return it *)
 val local_dir: t -> OpamFilename.Dir.t option
 

@@ -19,6 +19,7 @@ users)
 ## Plugins
 
 ## Init
+  * ✘ Display an appropriate error message when the file given to `opam init --config` does not exist or is in a VCS. This changes the behaviour for VCS local urls that was previously retrieved. [#5979 @kit-ty-kate - fix #5971]
 
 ## Config report
 
@@ -127,6 +128,7 @@ users)
 ### Tests
   *  Add test cases to `update.test` for version-equivalent renames [#6774 @arozovyk fix #6754]
   * Fix a failure when two hashes start with the same two characters [#6793 @kit-ty-kate]
+  * Add a test showing the behaviour of `opam init --config` when the file given does not exist [#5979 @kit-ty-kate @rjbou]
 
 ### Engine
 
@@ -157,3 +159,4 @@ users)
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
+  * `OpamUrl`: rename and expose `local_path` as `looks_like_local_path` [#5979 @kit-ty-kate]
