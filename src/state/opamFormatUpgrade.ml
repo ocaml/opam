@@ -352,7 +352,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
 
 (* Global state changes that need to be propagated *)
 let gtc_none = { gtc_repo = false; gtc_switch = false }
-let _gtc_repo = { gtc_repo = true; gtc_switch = false }
+let gtc_repo = { gtc_repo = true; gtc_switch = false }
 let _gtc_switch = { gtc_repo = false; gtc_switch = true }
 let _gtc_both = { gtc_repo = true; gtc_switch = true }
 
@@ -769,8 +769,12 @@ let from_1_3_dev7_to_2_0_alpha ~on_the_fly:_ root conf =
       (OpamFile.Config.repositories conf)
   in
   OpamFile.Repos_config.write (OpamPath.repos_config root)
-    (OpamRepositoryName.Map.of_list
-       (List.map (fun (_, r, u) -> r, (u,None)) prio_repositories));
+    (OpamFile.Repos_config.create
+       (OpamRepositoryName.Map.of_list
+          (List.map (fun (_, repo_name, url) ->
+               repo_name,
+               OpamFile.Repo_config.create url)
+              prio_repositories)));
   let prio_repositories =
     List.stable_sort (fun (prio1, _, _) (prio2, _, _) -> prio2 - prio1)
       prio_repositories
@@ -1152,6 +1156,27 @@ let v2_2 = OpamVersion.of_string "2.2"
 
 let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 
+let v2_6_alpha1 = OpamVersion.of_string "2.6~alpha1"
+
+let from_2_2_to_2_6_alpha1_repo ?config:_ root _conf =
+  let f = OpamPath.repos_config root in
+  Option.map (fun old_repoconfig ->
+      OpamFile.Repos_config.create @@
+      OpamRepositoryName.Map.map (fun old_repo ->
+          let (repoc_url, repoc_trust) = old_repo in
+          OpamFile.Repo_config.create ?trust:repoc_trust repoc_url)
+        old_repoconfig)
+    (OpamFile.Repos_config_Legacy.BestEffort.read_opt
+       (OpamFile.make (OpamFile.filename f)))
+
+let from_2_2_to_2_6_alpha1 ~on_the_fly root conf =
+  if not on_the_fly then
+    (let f = OpamPath.repos_config root in
+     Option.iter (fun repos ->
+         OpamFile.Repos_config.write f repos)
+       (from_2_2_to_2_6_alpha1_repo root conf));
+  conf, gtc_repo
+
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
@@ -1247,6 +1272,7 @@ let upgrades root_version =
     v2_2_alpha,  from_2_1_to_2_2_alpha;
     v2_2_beta,   from_2_2_alpha_to_2_2_beta;
     v2_2,        from_2_2_beta_to_2_2;
+    v2_6_alpha1, from_2_2_to_2_6_alpha1;
   ]
   |> List.filter (fun (v,_) ->
       OpamVersion.compare root_version v < 0)
@@ -1442,6 +1468,7 @@ let as_necessary_repo lock_kind gt =
   (* No upgrade to do *)
   if not gt.global_state_to_upgrade.gtc_repo then None else
     let updates = [
+      v2_6_alpha1, from_2_2_to_2_6_alpha1_repo;
     ] in
     as_necessary_repo_switch_t
       updates
