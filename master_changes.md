@@ -143,6 +143,8 @@ users)
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
