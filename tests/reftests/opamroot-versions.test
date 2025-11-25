@@ -687,12 +687,12 @@ No configuration file found, using built-in defaults.
 ### :V:1:a: From 2.0 root, global
 ### ocaml generate.ml 2.0
 ### # ro global state
-### opam option jobs | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
 ### # ro global state, ro repo state, ro switch state
-### opam list | "${OPAMROOTVERSION}$" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
@@ -708,7 +708,7 @@ i-am-another-package 2           One-line description
 i-am-package         2           One-line description
 i-am-sys-compiler    1           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
@@ -856,7 +856,7 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:1:c: From 2.0 root, local unknown from config
 ### ocaml generate.ml 2.0 orphaned
 ### # ro global state, ro repo state, ro switch state
-### opam list | "${OPAMROOTVERSION}$" -> " current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> " current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to  current
 FMT_UPG                         Format upgrade done
@@ -870,7 +870,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-package | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.0 to current
 FMT_UPG                         Format upgrade done
@@ -2132,12 +2132,12 @@ wrap-remove-commands: ["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "ma
 ### :V:5:a: From 2.1 root, global
 ### ocaml generate.ml 2.1
 ### # ro global state
-### opam option jobs | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.1 to current
 FMT_UPG                         Format upgrade done
 ### # ro global state, ro repo state, ro switch state
-### opam list | "${OPAMROOTVERSION}$" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.1 to current
 FMT_UPG                         Format upgrade done
@@ -2152,7 +2152,7 @@ i-am-another-package 2           One-line description
 i-am-package         2           One-line description
 i-am-sys-compiler    1           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.1 to current
 FMT_UPG                         Format upgrade done
@@ -2170,7 +2170,7 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-compiler.2 }
 Done.
 ### # ro global state, rw repo state
-### opam repo add root-config ./root-config | "${OPAMROOTVERSION}$" -> "current"
+### opam repo add root-config ./root-config | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.1 to current
 FMT_UPG                         Format upgrade done
@@ -2233,7 +2233,7 @@ STATE                           Switch state loaded in 0.000s
 # Packages matching: installed
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
-### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-package | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.1 to current
 FMT_UPG                         Format upgrade done
@@ -2367,7 +2367,7 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:5:d: Upgraded root and local 2.1 switch not recorded
 ### ocaml generate.ml 2.1 orphaned 2.1
 ### # ro global state, ro repo state, ro switch state
-### opam list | "${OPAMROOTVERSION}$" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.1 to current
 FMT_UPG                         Format upgrade done
@@ -2380,7 +2380,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-package | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.1 to current
 FMT_UPG                         Format upgrade done
@@ -2493,12 +2493,12 @@ i-am-sys-compiler 2           One-line description
 ### :V:6:a: From 2.2~alpha root, global
 ### ocaml generate.ml 2.2~alpha
 ### # ro global state
-### opam option jobs | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
 FMT_UPG                         Format upgrade done
 ### # ro global state, ro repo state, ro switch state
-### opam list | "${OPAMROOTVERSION}$" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
 FMT_UPG                         Format upgrade done
@@ -2513,7 +2513,7 @@ i-am-another-package 2           One-line description
 i-am-package         2           One-line description
 i-am-sys-compiler    1           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
 FMT_UPG                         Format upgrade done
@@ -2531,7 +2531,7 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-compiler.2 }
 Done.
 ### # ro global state, rw repo state
-### opam repo add root-config ./root-config | "${OPAMROOTVERSION}$" -> "current"
+### opam repo add root-config ./root-config | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
 FMT_UPG                         Format upgrade done
@@ -2596,7 +2596,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-package | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
 FMT_UPG                         Format upgrade done
@@ -2731,7 +2731,7 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:6:d: Upgraded root and local 2.2~alpha switch not recorded
 ### ocaml generate.ml 2.2~alpha orphaned 2.2~alpha
 ### # ro global state, ro repo state, ro switch state
-### opam list | "${OPAMROOTVERSION}$" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
 FMT_UPG                         Format upgrade done
@@ -2744,7 +2744,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-package | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~alpha to current
 FMT_UPG                         Format upgrade done
@@ -2859,12 +2859,12 @@ i-am-sys-compiler 2           One-line description
 ### :V:7:a: From 2.2~beta root, global
 ### ocaml generate.ml 2.2~beta
 ### # ro global state
-### opam option jobs | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~beta to current
 FMT_UPG                         Format upgrade done
 ### # ro global state, ro repo state, ro switch state
-### opam list | "${OPAMROOTVERSION}$" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~beta to current
 FMT_UPG                         Format upgrade done
@@ -2879,7 +2879,7 @@ i-am-another-package 2           One-line description
 i-am-package         2           One-line description
 i-am-sys-compiler    1           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~beta to current
 FMT_UPG                         Format upgrade done
@@ -2897,7 +2897,7 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-compiler.2 }
 Done.
 ### # ro global state, rw repo state
-### opam repo add root-config ./root-config | "${OPAMROOTVERSION}$" -> "current"
+### opam repo add root-config ./root-config | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~beta to current
 FMT_UPG                         Format upgrade done
@@ -2908,11 +2908,11 @@ RSTATE                          Cache found
        Run `opam repository add root-config --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
 
 ### # rw global state
-### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.2~beta to current
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
@@ -2960,7 +2960,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-package | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~beta to current
 FMT_UPG                         Format upgrade done
@@ -2979,11 +2979,11 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
-### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.2~beta to current
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
@@ -3050,11 +3050,11 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
-### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.2~beta to current
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
@@ -3091,7 +3091,7 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:7:d: Upgraded root and local 2.2~beta switch not recorded
 ### ocaml generate.ml 2.2~beta orphaned 2.2~beta
 ### # ro global state, ro repo state, ro switch state
-### opam list | "${OPAMROOTVERSION}$" -> "current"
+### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~beta to current
 FMT_UPG                         Format upgrade done
@@ -3104,7 +3104,7 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
+### opam install i-am-package | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FMT_UPG                         On-the-fly config upgrade, from 2.2~beta to current
 FMT_UPG                         Format upgrade done
@@ -3122,11 +3122,11 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
-### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.2~beta to current
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
@@ -3162,12 +3162,12 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:7:e: reinit from 2.2~beta
 ### ocaml generate.ml 2.2~beta
-### opam init --reinit --bypass-checks --no-setup | grep -v Cygwin
+### opam init --reinit --bypass-checks --no-setup | grep -v Cygwin | '${OPAMROOTVERSION}($|,)' -> current
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
-FMT_UPG                         Light config upgrade, from 2.2~beta to 2.2
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+FMT_UPG                         Light config upgrade, from 2.2~beta to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
