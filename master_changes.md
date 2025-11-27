@@ -42,6 +42,7 @@ users)
 ## List
 
 ## Show
+  * Improve performance of `opam show` by reading switch selection only once instead of once per package-version [#6515 @dra27]
 
 ## Var/Option
 
@@ -153,6 +154,7 @@ users)
 
 ## opam-state
   * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
+  * `OpamGlobalState.all_installed_versions`: was added [#6515 @dra27]
 
 ## opam-solver
 
@@ -161,3 +163,4 @@ users)
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
   * `OpamUrl`: rename and expose `local_path` as `looks_like_local_path` [#5979 @kit-ty-kate]
+  * `OpamCompat.Map.add_to_list`: was added [#6515 @dra27]
