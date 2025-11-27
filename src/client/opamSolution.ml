@@ -1102,7 +1102,8 @@ let confirmation ?ask requested solution =
     (OpamSolver.string_of_stats stats)
 
 let run_hook_job t name ?(local=[]) ?(allow_stdout=false) w =
-  let shell_env = OpamEnv.get_full ~set_opamroot:true ~set_opamswitch:true ~force_path:true t in
+  (* TODO: ????? *)
+  let shell_env = OpamEnv.get_full ~set_opamroot:true ~set_opamswitch:true ~force_path:true ~build_env:[] t in
   let mk_cmd = function
     | cmd :: args ->
       let text = OpamProcess.make_command_text name ~args cmd in
