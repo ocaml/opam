@@ -3,6 +3,12 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.5.0:
+* (no difference compared to 2.5.0~rc1)
+
+2.5.0~rc1:
+* (no difference compared to 2.5.0~beta1)
+
 2.5.0~beta1:
 * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/`
   directories as it is required by some of macOS core tools
