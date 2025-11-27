@@ -167,23 +167,21 @@ let all_installed gt =
       OpamPackage.Set.union acc sel.sel_installed)
     gt  OpamPackage.Set.empty
 
-let installed_versions gt name =
-  fold_switches (fun switch sel acc ->
-      let installed =
-        OpamPackage.packages_of_name sel.sel_installed name
-      in
-      try
-        let nv = OpamPackage.Set.choose installed in
-        try OpamPackage.Map.add nv (switch::OpamPackage.Map.find nv acc) acc
-        with Not_found -> OpamPackage.Map.add nv [switch] acc
-      with Not_found -> acc)
-    gt OpamPackage.Map.empty
-
-let all_installed_versions gt =
+let installed_versions_t gt ~cond =
   fold_switches (fun switch sel acc ->
       OpamPackage.Set.fold (fun nv acc ->
-        OpamPackage.Map.add_to_list nv switch acc) sel.sel_installed acc)
+          if cond nv then
+            OpamPackage.Map.add_to_list nv switch acc
+          else acc)
+        sel.sel_installed acc)
     gt OpamPackage.Map.empty
+
+let installed_versions gt name =
+  installed_versions_t gt
+    ~cond:(fun nv -> OpamPackage.Name.equal name (OpamPackage.name nv))
+
+let all_installed_versions gt =
+  installed_versions_t gt ~cond:(fun _ -> true)
 
 let repos_list gt = OpamFile.Config.repositories gt.config
 
