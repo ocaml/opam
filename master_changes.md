@@ -151,6 +151,7 @@ users)
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
+  * Update the Install page with the new opam 2.5.0 release [#6821 @kit-ty-kate]
 
 ## Security fixes
 
