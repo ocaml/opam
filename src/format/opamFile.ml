@@ -2421,34 +2421,38 @@ module URLSyntax = struct
     url     : url;
     mirrors : url list;
     checksum: OpamHash.t list;
+    signed_by: OpamSignature.t list;
     swhid: OpamSWHID.t option;
     errors  : (string * Pp.bad_format) list;
     subpath : subpath option;
   }
 
-  let create ?(mirrors=[]) ?(checksum=[]) ?swhid ?subpath url =
+  let create ?(mirrors=[]) ?(checksum=[]) ?(signed_by=[]) ?swhid ?subpath url =
     {
-      url; mirrors; checksum; swhid; errors = []; subpath;
+      url; mirrors; checksum; signed_by; swhid; errors = []; subpath;
     }
 
   let empty = {
-    url     = OpamUrl.empty;
-    mirrors = [];
-    checksum= [];
-    swhid = None;
-    errors  = [];
-    subpath = None;
+    url      = OpamUrl.empty;
+    mirrors  = [];
+    checksum = [];
+    signed_by= [];
+    swhid    = None;
+    errors   = [];
+    subpath  = None;
   }
 
   let url t = t.url
   let mirrors t = t.mirrors
   let checksum t = t.checksum
+  let signed_by t = t.signed_by
   let swhid t = t.swhid
   let subpath t = t.subpath
 
   let with_url url t = { t with url }
   let with_mirrors mirrors t = { t with mirrors }
   let with_checksum checksum t = { t with checksum = checksum }
+  let with_signed_by signed_by t = { t with signed_by = signed_by }
   let with_swhid swhid t = { t with swhid = Some swhid }
   let with_swhid_opt swhid t = { t with swhid = swhid }
   let with_subpath subpath t = { t with subpath = Some subpath }
@@ -2477,6 +2481,9 @@ module URLSyntax = struct
       "checksum", Pp.ppacc with_checksum checksum
         (Pp.V.map_list ~depth:1
            (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
+      "signed_by", Pp.ppacc with_signed_by signed_by
+        (Pp.V.map_list ~depth:1
+           (Pp.V.string -| Pp.of_module "signed_by" (module OpamSignature)));
       "mirrors", Pp.ppacc with_mirrors mirrors
         (Pp.V.map_list ~depth:1 Pp.V.url);
       "subpath", Pp.ppacc_opt
