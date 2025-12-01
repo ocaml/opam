@@ -110,6 +110,9 @@ distclean: clean clean-ext
 
 OPAMINSTALLER_FLAGS = --prefix "$(call CYGPATH,$(DESTDIR)$(prefix))"
 OPAMINSTALLER_FLAGS += --mandir "$(call CYGPATH,$(DESTDIR)$(mandir))"
+OPAMINSTALLER_FLAGS += --bindir "$(call CYGPATH,$(DESTDIR)$(bindir))"
+OPAMINSTALLER_FLAGS += --sbindir "$(call CYGPATH,$(DESTDIR)$(sbindir))"
+OPAMINSTALLER_FLAGS += --etcdir "$(call CYGPATH,$(DESTDIR)$(etcdir))"
 
 # With ocamlfind, prefer to install to the standard directory rather
 # than $(prefix) if there are no overrides
