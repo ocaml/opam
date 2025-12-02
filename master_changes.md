@@ -99,6 +99,7 @@ users)
   * Use variables instead of plain paths [#6760 @rjbou]
   * Reword apparmor message when user need to check the profile [#6760 @rjbou]
   * Add `2.5.0` to the installers [#6817 @kit-ty-kate]
+  * Fix the AppArmor support when installing in `/usr/bin` [#6823 @kit-ty-kate - fix #6820]
 
 ## Admin
 

@@ -808,6 +808,7 @@ echo "## opam $VERSION installed to $BINDIR"
 if [ -f /etc/apparmor.d/abi/4.0 ] && [ "$(aa-enabled 2> /dev/null)" = Yes ]; then
   TMP_APPARMOR_PROFILE=/tmp/opam-local.aa.tmp
   APPARMOR_PROFILE=/etc/apparmor.d/opam-local
+  UPSTREAM_APPARMOR_PROFILE=/etc/apparmor.d/opam
   cat << EOF > "$TMP_APPARMOR_PROFILE"
 # This profile allows everything and only exists to give the
 # application a name instead of having the label "unconfined"
@@ -826,7 +827,10 @@ EOF
   SKIP_APPARMOR=0
   APPARMOR_CREATION_OPTION="-a"
   if [ -e "$APPARMOR_PROFILE" ]; then
-    if diff -q "$TMP_APPARMOR_PROFILE" "$APPARMOR_PROFILE"; then
+    if [ -f "$UPSTREAM_APPARMOR_PROFILE" ] && [ "$(realpath "$BINDIR")" = /usr/bin ]; then
+      APPARMOR_PROFILE=$UPSTREAM_APPARMOR_PROFILE
+      SKIP_APPARMOR=1
+    elif diff -q "$TMP_APPARMOR_PROFILE" "$APPARMOR_PROFILE"; then
       SKIP_APPARMOR=1
     else
       echo "## The opam-local AppArmor profile already exists and differs from the expected content."
