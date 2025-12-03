@@ -37,10 +37,6 @@ val fold_switches:
     local switch with a configuration file pointing to the current root *)
 val switch_exists: 'a global_state -> switch -> bool
 
-(** Returns the map of installed instances of the package name towards the list
-    of switches they are installed in *)
-val installed_versions: 'a global_state -> name -> switch list package_map
-
 (** Returns the map of all installed packages to the list of switch(es) they're
     installed in. *)
 val all_installed_versions: 'a global_state -> switch list package_map

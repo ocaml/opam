@@ -158,6 +158,7 @@ users)
 ## opam-state
   * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
   * `OpamGlobalState.all_installed_versions`: was added [#6818 @dra27]
+  * `OpamGlobalState.installed_versions`: was removed [#6818 @dra27]
 
 ## opam-solver
 
