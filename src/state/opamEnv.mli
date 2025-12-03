@@ -75,7 +75,7 @@ val add: env -> (spf_resolved, euok_internal) env_update list -> env
 (** Like {!get_opam} computes environment modification by OPAM , but returns
     these [updates] instead of the new environment. *)
 val updates:
-  set_opamroot:bool -> set_opamswitch:bool -> ?force_path:bool ->
+  set_opamroot:bool -> set_opamswitch:bool -> ?force_path:bool -> ?shell:shell option ->
   'a switch_state -> (spf_resolved, [> euok_writeable ]) env_update list
 
 (** Check if the shell environment is in sync with the current OPAM switch,
@@ -89,7 +89,9 @@ val is_up_to_date_switch: dirname -> switch -> bool
 
 (** Returns the current environment updates to configure the current switch with
     its set of installed packages *)
-val compute_updates: ?force_path:bool -> 'a switch_state -> (spf_resolved, [> euok_writeable ]) env_update list
+val compute_updates:
+  ?force_path:bool -> ?shell:shell option -> 'a switch_state ->
+  (spf_resolved, [> euok_writeable ]) env_update list
 
 (** Returns shell-appropriate statement to evaluate [cmd]. *)
 val shell_eval_invocation:
