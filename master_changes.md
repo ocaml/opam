@@ -42,6 +42,7 @@ users)
 ## List
 
 ## Show
+  * Improve performance of `opam show` by reading switch selection only once instead of once per package-version [#6818 @dra27]
 
 ## Var/Option
 
@@ -156,6 +157,8 @@ users)
 
 ## opam-state
   * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
+  * `OpamGlobalState.all_installed_versions`: was added [#6818 @dra27]
+  * `OpamGlobalState.installed_versions`: was removed [#6818 @dra27]
 
 ## opam-solver
 
@@ -168,3 +171,4 @@ users)
   * `OpamCompat.Int.min`: was added [#6515 @kit-ty-kate]
   * `OpamStd.String.compare_case`: is now allocation free [#6515 @dra27]
   * `OpamVersionCompare.{compare,equal}`: are now allocation free [#6515 @dra27]
+  * `OpamCompat.Map.add_to_list`: was added [#6818 @dra27]
