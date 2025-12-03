@@ -58,6 +58,7 @@ init-bootstrap () {
     if [ "${OPAM_REPO%.git}" != "${OPAM_REPO_MAIN%.git}" ]; then
       opam init --no-setup git+$OPAM_REPO_MAIN#$REPO_SHA
     else
+      git -C "${OPAM_REPO_CACHE#file://}" fetch origin
       opam init --no-setup git+$OPAM_REPO_CACHE#$REPO_SHA
     fi
 

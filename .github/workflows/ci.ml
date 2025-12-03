@@ -359,6 +359,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
           {|if "${{ matrix.host }}" equ "x86_64-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"|} ::
           {|if "${{ matrix.host }}" equ "i686-pc-windows" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"|} ::
           run_or_fail [
+           {|git -C %cd%/../../../opam-repository fetch origin|};
            {|opam init --yes --bare default git+file://%cd%/../../../opam-repository#${{ env.OPAM_TEST_REPO_SHA }} --no-git-location|};
            {|opam switch --yes create default ocaml-system|};
            {|opam env|};
@@ -553,7 +554,7 @@ let main oc : unit =
     ("OPAM12CACHE", "~/.cache/opam1.2/cache");
     (* These should be identical to the values in appveyor.yml *)
     ("OPAM_REPO", "https://github.com/ocaml/opam-repository.git");
-    ("OPAM_TEST_REPO_SHA", "38a1469dbbc69c770e534e26f79c97256a442b71");
+    ("OPAM_TEST_REPO_SHA", "eb45f7ec868b0ffc828b9d59cccc72cfec100333");
     ("OPAM_REPO_SHA", "38a1469dbbc69c770e534e26f79c97256a442b71");
     ("SOLVER", "");
     (* Cygwin configuration *)
