@@ -367,10 +367,10 @@ module Switch: sig
 
     (** URL overlay: {i
         $meta/overlay/$name/url} *)
-    val url: t -> switch -> name -> OpamFile.URL.t OpamFile.t
+    val url: t -> switch -> name -> OpamFile.URL_legacy.t OpamFile.t
 
     (** Descr orverlay *)
-    val descr: t -> switch -> name -> OpamFile.Descr.t OpamFile.t
+    val descr: t -> switch -> name -> OpamFile.Descr_legacy.t OpamFile.t
 
     (** Files overlay *)
     val files: t -> switch -> name -> dirname

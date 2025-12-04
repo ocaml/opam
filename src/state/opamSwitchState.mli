@@ -110,12 +110,6 @@ val primary_url: 'a switch_state -> package -> url option
 
 val primary_url_with_subpath: 'a switch_state -> package -> url option
 
-(** Return the descr field for the given package (or an empty descr if none) *)
-val descr: 'a switch_state -> package -> OpamFile.Descr.t
-
-(** Return the descr field for the given package *)
-val descr_opt: 'a switch_state -> package -> OpamFile.Descr.t option
-
 (** Return the installed package's local configuration *)
 val package_config: 'a switch_state -> name -> OpamFile.Dot_config.t
 

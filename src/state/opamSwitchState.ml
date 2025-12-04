@@ -699,12 +699,6 @@ let opam st nv = OpamPackage.Map.find nv st.opams
 
 let opam_opt st nv = try Some (opam st nv) with Not_found -> None
 
-let descr_opt st nv =
-  OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.descr)
-
-let descr st nv =
-  OpamStd.Option.Op.(descr_opt st nv +! OpamFile.Descr.empty)
-
 let url st nv =
   OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.url)
 

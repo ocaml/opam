@@ -669,8 +669,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
          Re.(compile (seq [bos; diff any (alt [blank; lower]); rep any;
                            diff any (alt [blank; char '.']); eos]))
        in
-       match t.descr with None -> false | Some d ->
-         let synopsis = OpamFile.Descr.synopsis d in
+       match t.synopsis with None -> false | Some synopsis ->
          synopsis <> "" && not (Re.execp valid_re synopsis));
     cond 48 `Warning
       "The fields 'build-test:' and 'build-doc:' are deprecated, and should be \
@@ -802,7 +801,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
 *)
     cond 57 `Error
       "Synopsis must not be empty"
-      (match t.descr with None -> true | Some d -> String.equal (OpamFile.Descr.synopsis d) "");
+      (match t.synopsis with None -> true | Some synopsis -> String.equal synopsis "");
     (let vars = all_variables ~exclude_post:false ~command:[] t in
      let exists svar =
        List.exists (fun v -> v = OpamVariable.Full.of_string svar) vars
@@ -1321,20 +1320,21 @@ let add_aux_files ?dir ?(files_subdir_hashes=false) opam =
   match dir with
   | None -> opam
   | Some dir ->
-    let (url_file: OpamFile.URL.t OpamFile.t) =
+    let (url_file: OpamFile.URL_legacy.t OpamFile.t) =
       OpamFile.make (dir // "url")
     in
-    let (descr_file: OpamFile.Descr.t OpamFile.t)  =
+    let (descr_file: OpamFile.Descr_legacy.t OpamFile.t)  =
       OpamFile.make (dir // "descr")
     in
     let files_dir =
       OpamFilename.Op.(dir / "files")
     in
     let opam =
-      match OpamFile.OPAM.url opam, try_read OpamFile.URL.read_opt url_file with
-      | None, (Some url, None) -> OpamFile.OPAM.with_url url opam
+      match OpamFile.OPAM.url opam, try_read OpamFile.URL_legacy.read_opt url_file with
+      | None, (Some url, None) ->
+        OpamFile.OPAM.with_url_legacy url opam
       | Some opam_url, (Some url, errs) ->
-        if url = opam_url && errs = None then
+        if OpamFile.URL.of_legacy url = opam_url && errs = None then
           log "Duplicate definition of url in '%s' and opam file"
             (OpamFile.to_string url_file)
         else
@@ -1348,10 +1348,11 @@ let add_aux_files ?dir ?(files_subdir_hashes=false) opam =
       | _, (None, None) -> opam
     in
     let opam =
-      match OpamFile.OPAM.descr opam,
-            try_read OpamFile.Descr.read_opt descr_file with
-      | None, (Some descr, None) -> OpamFile.OPAM.with_descr descr opam
-      | Some _, (Some _, _) ->
+      match (OpamFile.OPAM.synopsis opam, OpamFile.OPAM.description opam),
+            try_read OpamFile.Descr_legacy.read_opt descr_file with
+      | (None, None), (Some descr, None) ->
+        OpamFile.OPAM.with_descr_legacy descr opam
+      | ((Some _, _) | (_, Some _)), (Some _, _) ->
         log "Duplicate descr in '%s' and opam file"
           (OpamFile.to_string descr_file);
         opam
@@ -1457,7 +1458,7 @@ let read_opam dir =
        |> OpamFile.OPAM.with_available
          (FOp (FIdent ([], OpamVariable.of_string "opam-version", None),
                `Geq, FString sversion))
-       |> OpamFile.OPAM.with_descr_body
+       |> OpamFile.OPAM.with_description
          (Printf.sprintf
             "This package uses opam %s file format which opam %s cannot \
              read.\n\n\

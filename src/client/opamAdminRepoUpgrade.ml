@@ -219,7 +219,7 @@ let do_upgrade repo_root =
       let descr_file =
         OpamFilename.(opt_file (add_extension (chop_extension comp_file) "descr"))
       in
-      let descr = descr_file >>| fun f -> OpamFile.Descr.read (OpamFile.make f) in
+      let descr = descr_file >>| fun f -> OpamFile.Descr_legacy.read (OpamFile.make f) in
       let nv, ocaml_version, variant =
         match OpamStd.String.cut_at c '+' with
         | None ->
@@ -319,9 +319,8 @@ let do_upgrade repo_root =
             )) |>
           O.with_maintainer [ "platform@lists.ocaml.org" ] |>
           O.with_flags [Pkgflag_Compiler] |>
-          O.with_descr
-            (OpamFile.Descr.create
-                 "The OCaml compiler (system version, from outside of opam)") |>
+          O.with_synopsis
+            "The OCaml compiler (system version, from outside of opam)" |>
           O.with_available
             (FOp (FIdent ([],OpamVariable.of_string "sys-ocaml-version",None),
                   `Eq,
@@ -381,12 +380,12 @@ let do_upgrade repo_root =
       (* leave the Compiler flag to the implementations (since the user
          needs to select one)
          O.with_flags [Pkgflag_Compiler] |> *)
-      O.with_descr
-        (OpamFile.Descr.create
-           "The OCaml compiler (virtual package)\n\
-            This package requires a matching implementation of OCaml,\n\
-            and polls it to initialise specific variables like \
-            `ocaml:native-dynlink`") |>
+      O.with_synopsis
+        "The OCaml compiler (virtual package)" |>
+      O.with_description
+        "This package requires a matching implementation of OCaml,\n\
+         and polls it to initialise specific variables like \
+         `ocaml:native-dynlink`" |>
       O.with_depends
         (OpamFormula.ors [
             Atom (

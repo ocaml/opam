@@ -297,35 +297,39 @@ module InitConfig: sig
 end
 
 (** Package descriptions: [$opam/descr/] *)
-module Descr: sig
+module Descr_legacy: sig
 
   include IO_FILE
 
   val create: string -> t
-
-  (** Create an abstract description file from a string *)
-  val of_string: t typed_file -> string -> t
-
-  (** Return the first line *)
   val synopsis: t -> string
-
-  (** Return the body *)
   val body: t -> string
 
-  (** Return the full description *)
-  val full: t -> string
+end
+
+module URL_legacy: sig
+
+  include IO_FILE
+
+  val url: t -> url
+  val mirrors: t -> url list
+  val checksum: t -> OpamHash.t list
 
 end
 
 (** {2 Urls for OPAM repositories} *)
 module URL: sig
 
-  include IO_FILE
+  type t
 
   val create:
     ?mirrors:url list -> ?checksum:OpamHash.t list ->
     ?swhid:OpamSWHID.t -> ?subpath:subpath ->
     url -> t
+
+  val empty : t
+
+  val of_legacy : URL_legacy.t -> t
 
   (** URL address *)
   val url: t -> url
@@ -404,7 +408,8 @@ module OPAM: sig
 
     (* Extra sections *)
     url        : URL.t option;
-    descr      : Descr.t option;
+    synopsis   : string option;
+    description: string option;
 
     (* Related metadata directory (not an actual field of the file)
        This can be used to locate e.g. the files/ overlays.
@@ -570,10 +575,8 @@ module OPAM: sig
   (** The environment variables that this package exports *)
   val env: t -> (spf_unresolved, [> euok_writeable]) env_update list
 
-  val descr: t -> Descr.t option
-
   val synopsis: t -> string option
-  val descr_body: t -> string option
+  val description: t -> string option
 
   val url: t -> URL.t option
 
@@ -697,16 +700,14 @@ module OPAM: sig
 
   val with_deprecated_build_test: command list -> t -> t
 
-  val with_descr: Descr.t -> t -> t
-  val with_descr_opt: Descr.t option -> t -> t
+  val with_description: string -> t -> t
+  val with_description_opt: string option -> t -> t
   val with_synopsis: string -> t -> t
-
-  (** If [synopsis] is not already set, split the string and use the first line
-      as synopsis. *)
-  val with_descr_body: string -> t -> t
+  val with_descr_legacy: Descr_legacy.t -> t -> t
 
   val with_url: URL.t -> t -> t
   val with_url_opt: URL.t option -> t -> t
+  val with_url_legacy: URL_legacy.t -> t -> t
 
   val with_metadata_dir: (repository_name option * string) option -> t -> t
 
@@ -872,7 +873,7 @@ module Comp: sig
       created with "VARIANT" the part of the compiler name on the right of the
       "+". In both case, the version corresponds to the OCaml version and is
       [version comp]. *)
-  val to_package: ?package:package -> t -> Descr.t option -> OPAM.t
+  val to_package: ?package:package -> t -> Descr_legacy.t option -> OPAM.t
 
 end
 
