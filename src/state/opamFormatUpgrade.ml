@@ -561,9 +561,9 @@ let from_1_3_dev2_to_1_3_dev5 ~on_the_fly:_ root conf =
           in
           let descr =
             OpamStd.Option.default
-              (OpamFile.Descr.create
+              (OpamFile.Descr_legacy.create
                  "Switch relying on a system-wide installation of OCaml")
-              (OpamFile.Descr.read_opt descr_f)
+              (OpamFile.Descr_legacy.read_opt descr_f)
           in
           let comp_opam =
             OpamFile.Comp.to_package comp (Some descr)

@@ -649,7 +649,6 @@ good-opam-version.1
 opam-version: "2.0"
 name: "bad-opam-version"
 version: "1"
-synopsis: ""
 description: """\
 This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
 
@@ -708,7 +707,6 @@ good-opam-version.1
 opam-version: "2.0"
 name: "bad-opam-version"
 version: "1"
-synopsis: ""
 description: """\
 This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
 
@@ -718,7 +716,6 @@ available: opam-version >= "5.0"
 opam-version: "2.0"
 name: "bad-opam-version"
 version: "2"
-synopsis: ""
 description: """\
 This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
 
@@ -728,7 +725,6 @@ available: opam-version >= "5.0"
 opam-version: "2.0"
 name: "bad-opam-version"
 version: "3"
-synopsis: ""
 description: """\
 This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
 

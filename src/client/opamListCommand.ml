@@ -562,9 +562,7 @@ let detail_printer ?prettify ?normalise ?(sort=false) installed st nv =
     (OpamPackage.name_to_string nv % (`bold :: root_sty)) ^
     ("." ^ OpamPackage.version_to_string nv) % root_sty
   | Synopsis ->
-    (get_opam st nv |>
-     OpamFile.OPAM.descr >>| OpamFile.Descr.synopsis)
-    +! ""
+    (get_opam st nv |> OpamFile.OPAM.synopsis) +! ""
   | Synopsis_or_target ->
     (match OpamPinned.package_opt st nv.name with
      | Some nv ->
@@ -582,14 +580,9 @@ let detail_printer ?prettify ?normalise ?(sort=false) installed st nv =
               (fun u -> OpamUrl.to_string u % [`underline])
               (OpamFile.OPAM.get_url opam))
      | None ->
-       (get_opam st nv |>
-        OpamFile.OPAM.descr >>| OpamFile.Descr.synopsis)
-       +! "")
+       (get_opam st nv |> OpamFile.OPAM.synopsis) +! "")
   | Description ->
-    (get_opam st nv |>
-     OpamFile.OPAM.descr >>|
-     OpamFile.Descr.body)
-    +! ""
+    (get_opam st nv |> OpamFile.OPAM.description) +! ""
   | Raw_field f | Field f ->
     (try
        let open OpamStd.Option.Op in
