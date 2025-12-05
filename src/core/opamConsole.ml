@@ -716,52 +716,16 @@ let short_user_input ~prompt ?default ?on_eof f =
   let on_eof = OpamStd.Option.Op.(on_eof ++ default) in
   let prompt () = print_string prompt; flush stdout in
   try
-    if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
-      let rec loop () =
-        prompt ();
-        let input = match String.lowercase_ascii (read_line ()) with
-          | "" -> default
-          | s -> Some s
-        in
-        match OpamStd.Option.Op.(input >>= f) with
-        | Some a -> a
-        | None -> loop ()
-      in
-      loop ()
-    else
-    let open Unix in
-    prompt ();
-    let buf = Bytes.create 3 in
     let rec loop () =
-      let input =
-        match
-          (* Some keystrokes, e.g. arrows, can return 3 chars *)
-          let nr = read stdin buf 0 3 in
-          if nr < 1 then raise End_of_file
-          else String.uncapitalize_ascii (Bytes.sub_string buf 0 nr)
-        with
-        | "\n" -> default
+      prompt ();
+      let input = match String.lowercase_ascii (read_line ()) with
+        | "" -> default
         | s -> Some s
-        | exception Unix.Unix_error (Unix.EINTR,_,_) -> None
-        | exception Unix.Unix_error _ -> raise End_of_file
       in
-      match input with
+      match OpamStd.Option.Op.(input >>= f) with
+      | Some a -> a
       | None -> loop ()
-      | Some i -> match f i with
-        | Some a when String.length i > 0 && i.[0] = '\027' ->
-          print_newline (); a
-        | Some a -> print_endline i; a
-        | None -> loop ()
     in
-    let attr = tcgetattr stdin in
-    let reset () =
-      tcsetattr stdin TCSAFLUSH attr;
-      tcflush stdin TCIFLUSH;
-    in
-    OpamStd.Exn.finally reset @@ fun () ->
-    tcsetattr stdin TCSAFLUSH
-      {attr with c_icanon = false; c_echo = false};
-    tcflush stdin TCIFLUSH;
     loop ()
   with
   | Sys.Break as e -> OpamStd.Exn.finalise e (fun () -> msg "\n")
