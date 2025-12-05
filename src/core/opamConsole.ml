@@ -716,7 +716,7 @@ let short_user_input ~prompt ?default ?on_eof f =
   let on_eof = OpamStd.Option.Op.(on_eof ++ default) in
   let prompt () = print_string prompt; flush stdout in
   try
-    if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin) then
+    if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin || Lazy.force dumb_term) then
       let rec loop () =
         prompt ();
         let input = match String.lowercase_ascii (read_line ()) with
