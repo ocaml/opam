@@ -79,7 +79,7 @@ val opam_file:
 (** Convert the comp file to an opam one, using {!OpamFile.Comp.to_package} and
     applying filter rewriting *)
 val comp_file:
-  ?package:package -> ?descr:OpamFile.Descr.t -> OpamFile.Comp.t ->
+  ?package:package -> ?descr:OpamFile.Descr_legacy.t -> OpamFile.Comp.t ->
   OpamFile.OPAM.t
 
 (** Runs the opam file format from the file's format to current, and adds data

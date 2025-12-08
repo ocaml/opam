@@ -297,7 +297,7 @@ module InitConfig: sig
 end
 
 (** Package descriptions: [$opam/descr/] *)
-module Descr: sig
+module Descr_legacy: sig
 
   include IO_FILE
 
@@ -317,10 +317,52 @@ module Descr: sig
 
 end
 
+module Descr: sig
+
+  type t
+
+  val empty: t
+  val create: string -> t
+
+  (** Return the first line *)
+  val synopsis: t -> string
+
+  (** Return the body *)
+  val body: t -> string
+
+  val of_legacy: Descr_legacy.t -> t
+
+end
+
 (** {2 Urls for OPAM repositories} *)
-module URL: sig
+module URL_legacy: sig
 
   include IO_FILE
+
+  val create:
+    ?mirrors:url list -> ?checksum:OpamHash.t list ->
+    url -> t
+
+  (** URL address *)
+  val url: t -> url
+
+  val mirrors: t -> url list
+
+  (** Archive checksum *)
+  val checksum: t -> OpamHash.t list
+
+  (** Constructor *)
+  val with_url: url -> t -> t
+  val with_checksum: OpamHash.t list -> t -> t
+  val with_mirrors: OpamUrl.t list -> t -> t
+
+end
+
+module URL: sig
+
+  type t
+
+  val empty: t
 
   val create:
     ?mirrors:url list -> ?checksum:OpamHash.t list ->
@@ -347,6 +389,7 @@ module URL: sig
 
   val subpath: t -> subpath option
 
+  val of_legacy: URL_legacy.t -> t
 end
 
 (** OPAM files *)
@@ -872,7 +915,7 @@ module Comp: sig
       created with "VARIANT" the part of the compiler name on the right of the
       "+". In both case, the version corresponds to the OCaml version and is
       [version comp]. *)
-  val to_package: ?package:package -> t -> Descr.t option -> OPAM.t
+  val to_package: ?package:package -> t -> Descr_legacy.t option -> OPAM.t
 
 end
 

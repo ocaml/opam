@@ -52,9 +52,9 @@ let iter_packages_gen ?(quiet=false) f =
       let opam_file = OpamRepositoryPath.opam repo prefix package in
       let opam = OpamFile.OPAM.read opam_file in
       let descr_file = OpamRepositoryPath.descr repo prefix package in
-      let descr = OpamFile.Descr.read_opt descr_file in
+      let descr = OpamFile.Descr_legacy.read_opt descr_file in
       let url_file = OpamRepositoryPath.url repo prefix package in
-      let url = OpamFile.URL.read_opt url_file in
+      let url = OpamFile.URL_legacy.read_opt url_file in
       let dot_install_file : OpamFile.Dot_install.t OpamFile.t =
         OpamFile.make
           (OpamRepositoryPath.files repo prefix package
@@ -72,9 +72,9 @@ let iter_packages_gen ?(quiet=false) f =
       if opam <> opam2 then
         (upd (); OpamFile.OPAM.write_with_preserved_format opam_file opam2);
       if descr <> descr2 then
-        (upd (); wopt OpamFile.Descr.write descr_file descr2);
+        (upd (); wopt OpamFile.Descr_legacy.write descr_file descr2);
       if url <> url2 then
-        (upd (); wopt OpamFile.URL.write url_file url2);
+        (upd (); wopt OpamFile.URL_legacy.write url_file url2);
       if dot_install <> dot_install2 then
         (upd (); wopt OpamFile.Dot_install.write dot_install_file dot_install2);
       if !changed then

@@ -170,7 +170,7 @@ end
     content. Formerly, (<repo>/packages/.../descr,
     <repo>/compilers/.../<v>.descr) *)
 
-module DescrIO = struct
+module Descr_legacyIO = struct
 
   let internal = "descr"
   let format_version = OpamVersion.of_string "0"
@@ -217,9 +217,34 @@ module DescrIO = struct
   let to_string _ = full
 
 end
+module Descr_legacy = struct
+  include Descr_legacyIO
+  include MakeIO(Descr_legacyIO)
+end
+
 module Descr = struct
-  include DescrIO
-  include MakeIO(DescrIO)
+  type t = string * string
+
+  let empty = "", ""
+
+  let synopsis = fst
+  let body = snd
+
+  let to_string (x,y) =
+    match y with
+    | "" -> x ^ "\n"
+    | y -> String.concat "" [x; "\n\n"; y; "\n"]
+
+  let of_string str =
+    let head, tail =
+      match OpamStd.String.cut_at str '\n' with
+      | None       -> str, ""
+      | Some (h,t) -> h, t in
+    OpamStd.String.strip head, OpamStd.String.strip tail
+
+  let create = of_string
+
+  let of_legacy (x : Descr_legacy.t) : t = x
 end
 
 (* module Comp_descr = Descr *)
@@ -2412,10 +2437,85 @@ end
 (** Package url field in opam file. Formerly, file
     (<repo>/packages/.../url) *)
 
-module URLSyntax = struct
+module URL_legacySyntax = struct
 
   let internal = "url-file"
   let format_version = OpamVersion.of_string "1.2"
+
+  type t = {
+    url     : url;
+    mirrors : url list;
+    checksum: OpamHash.t list;
+    errors  : (string * Pp.bad_format) list;
+  }
+
+  let create ?(mirrors=[]) ?(checksum=[]) url =
+    {
+      url; mirrors; checksum; errors = [];
+    }
+
+  let empty = {
+    url     = OpamUrl.empty;
+    mirrors = [];
+    checksum= [];
+    errors  = [];
+  }
+
+  let url t = t.url
+  let mirrors t = t.mirrors
+  let checksum t = t.checksum
+
+  let with_url url t = { t with url }
+  let with_mirrors mirrors t = { t with mirrors }
+  let with_checksum checksum t = { t with checksum = checksum }
+
+  let fields =
+    let with_url url t =
+      if t.url <> OpamUrl.empty then Pp.bad_format "Too many URLS"
+      else with_url url t
+    in
+    [
+      "src", Pp.ppacc with_url url
+        Pp.V.url;
+      "archive", Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `http);
+      "http", Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `http);
+      "git",  Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `git);
+      "darcs",  Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `darcs);
+      "hg",  Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `hg);
+      "local",  Pp.ppacc_opt with_url OpamStd.Option.none
+        (Pp.V.url_with_backend `rsync);
+      "checksum", Pp.ppacc with_checksum checksum
+        (Pp.V.map_list ~depth:1
+           (Pp.V.string -| Pp.of_module "checksum" (module OpamHash)));
+      "mirrors", Pp.ppacc with_mirrors mirrors
+        (Pp.V.map_list ~depth:1 Pp.V.url);
+    ]
+
+  let pp_contents =
+    let name = internal in
+    Pp.I.fields ~name ~empty fields -|
+    Pp.I.on_errors ~name (fun t e -> {t with errors = e::t.errors}) -|
+    Pp.pp ~name
+      (fun ~pos t ->
+         if t.url = OpamUrl.empty then OpamPp.bad_format ~pos "missing URL"
+         else t)
+      (fun x -> x)
+
+  let pp = Pp.I.map_file pp_contents
+
+end
+module URL_legacy = struct
+  include URL_legacySyntax
+  include SyntaxFile(URL_legacySyntax)
+end
+
+module URL = struct
+  let internal = "url-section"
 
   type t = {
     url     : url;
@@ -2513,12 +2613,8 @@ module URLSyntax = struct
              swhid = None;
              mirrors = OpamSWHID.to_url swhid :: t.mirrors })
 
-  let pp = Pp.I.map_file pp_contents
-
-end
-module URL = struct
-  include URLSyntax
-  include SyntaxFile(URLSyntax)
+  let of_legacy {URL_legacy.url; mirrors; checksum; errors} =
+    {empty with mirrors; checksum; errors; url}
 end
 
 
@@ -3102,7 +3198,7 @@ module OPAMSyntax = struct
         Pp.V.os_constraint;
       "descr", no_cleanup Pp.ppacc_opt with_descr OpamStd.Option.none
         (Pp.V.string_tr -|
-         Pp.of_pair "descr" Descr.(of_string (), to_string ()));
+         Pp.of_pair "descr" Descr.(of_string, to_string));
       "extra-sources", no_cleanup Pp.ppacc_opt
         with_extra_sources OpamStd.Option.none
         (Pp.V.map_list ~depth:2 @@
@@ -4199,7 +4295,7 @@ module CompSyntax = struct
       env = comp.env;
       flags = [Pkgflag_Compiler];
       url;
-      descr = descr_opt;
+      descr = Option.map Descr.of_legacy descr_opt;
     }
 
 end

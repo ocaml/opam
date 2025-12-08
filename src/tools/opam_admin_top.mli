@@ -28,10 +28,10 @@ val iter_packages_gen:
   (OpamPackage.t ->
    prefix:string option ->
    opam:OPAM.t ->
-   descr:Descr.t option ->
-   url:URL.t option ->
+   descr:Descr_legacy.t option ->
+   url:URL_legacy.t option ->
    dot_install:Dot_install.t option ->
-   OPAM.t * Descr.t action * URL.t action * Dot_install.t action)
+   OPAM.t * Descr_legacy.t action * URL_legacy.t action * Dot_install.t action)
   -> unit
 
 (** Turn a list of glob patterns into a proper filtering function on
@@ -44,7 +44,7 @@ val iter_packages:
   ?filter:(OpamPackage.t -> bool) ->
   ?f:(OpamPackage.t -> string option -> OPAM.t -> unit) ->
   ?opam:(OpamPackage.t -> OPAM.t -> OPAM.t) ->
-  ?descr:(OpamPackage.t -> Descr.t -> Descr.t) ->
-  ?url:(OpamPackage.t -> URL.t -> URL.t) ->
+  ?descr:(OpamPackage.t -> Descr_legacy.t -> Descr_legacy.t) ->
+  ?url:(OpamPackage.t -> URL_legacy.t -> URL_legacy.t) ->
   ?dot_install:(OpamPackage.t -> Dot_install.t -> Dot_install.t) ->
   unit -> unit

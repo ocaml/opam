@@ -67,6 +67,7 @@ users)
 ## Env
 
 ## Opamfile
+  * The `url` file now only supports the legacy opam 1.2 fields [#6827 @kit-ty-kate]
 
 ## External dependencies
 
@@ -164,6 +165,10 @@ users)
 ## opam-solver
 
 ## opam-format
+  * `OpamFile.Descr` was moved to `OpamFile.Descr_legacy` and a simpler `OpamFile.Descr` module was created only containing non-IO functions removing the outdated `descr` file support [#6827 @kit-ty-kate]
+  * `OpamFile.URL` was moved to `OpamFile.URL_legacy` and a simpler `OpamFile.URL` module was created only containing non-IO functions removing the outdated `url` file support [#6827 @kit-ty-kate]
+  * `OpamFile.Descr.of_legacy`: was added [#6827 @kit-ty-kate]
+  * `OpamFile.URL.of_legacy`: was added [#6827 @kit-ty-kate]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
