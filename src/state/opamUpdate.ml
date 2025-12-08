@@ -283,7 +283,24 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
                   Filename.dir_sep ^ OpamFilename.SubPath.to_string sp) subpath))
     @@+ fun () ->
     (* Do the update *)
+    let srcdir0 = srcdir in
+    let srcdir, srcdir_find =
+      if OpamStateConfig.(!r.dryrun) then
+        let tmpdir = OpamFilename.mk_tmp_dir () in
+        tmpdir, OpamFilename.SubPath.(tmpdir /? subpath)
+      else
+        srcdir, srcdir_find
+    in
     fetch_dev_package urlf srcdir ~working_dir ?subpath nv @@+ fun result ->
+    let result =
+      match OpamStateConfig.(!r.dryrun), result with
+      | true, Result () ->
+        let base f = OpamFilename.Base.of_string (OpamFilename.Dir.to_string f) in
+        (match OpamRepositoryBackend.get_diff (OpamFilename.Dir.of_string "/") (base srcdir) (base srcdir0) with
+         | Some _ -> Result ()
+         | None -> Up_to_date ())
+      | _, (Result () | Up_to_date () | Not_available _) -> result
+    in
     let new_source_opam =
       OpamPinned.find_opam_file_in_source ?locked name srcdir_find
       >>= fun (f, lock) ->
@@ -332,16 +349,6 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
       | Some a, Some b -> not (equal_opam a b)
     in
     let save_overlay opam =
-      OpamFilename.mkdir overlay_dir;
-      let opam_file = OpamPath.Switch.Overlay.opam root st.switch name in
-      List.iter OpamFilename.remove
-        OpamPath.Switch.Overlay.([
-            OpamFile.filename opam_file;
-            OpamFile.filename (url root st.switch name);
-            OpamFile.filename (descr root st.switch name);
-          ]);
-      let files_dir = OpamPath.Switch.Overlay.files root st.switch name in
-      OpamFilename.rmdir files_dir;
       let opam =
         OpamFile.OPAM.with_url urlf @@
         OpamFile.OPAM.with_name name opam
@@ -351,19 +358,30 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
         then OpamFile.OPAM.with_version version opam
         else opam
       in
-      List.iter (fun (rel_file, content, hash) ->
-          match content with
-          | Some (lazy content) when OpamHash.check_string content hash ->
-            OpamFilename.write (OpamFilename.create files_dir rel_file) content
-          | None | Some _ ->
-            OpamConsole.warning "Ignoring file %s with invalid hash"
-              (OpamFilename.Base.to_string rel_file))
-        (OpamFile.OPAM.get_extra_files
-           ~get_repo_files:(OpamRepositoryState.get_repo_files st.switch_repos)
-           opam);
-      OpamFile.OPAM.write opam_file
-        (OpamFile.OPAM.with_extra_files_opt None opam);
-      opam
+      if OpamStateConfig.(!r.dryrun) then opam else
+        (OpamFilename.mkdir overlay_dir;
+         let opam_file = OpamPath.Switch.Overlay.opam root st.switch name in
+         List.iter OpamFilename.remove
+           OpamPath.Switch.Overlay.([
+               OpamFile.filename opam_file;
+               OpamFile.filename (url root st.switch name);
+               OpamFile.filename (descr root st.switch name);
+             ]);
+         let files_dir = OpamPath.Switch.Overlay.files root st.switch name in
+         OpamFilename.rmdir files_dir;
+         List.iter (fun (rel_file, content, hash) ->
+             match content with
+             | Some (lazy content) when OpamHash.check_string content hash ->
+               OpamFilename.write (OpamFilename.create files_dir rel_file) content
+             | None | Some _ ->
+               OpamConsole.warning "Ignoring file %s with invalid hash"
+                 (OpamFilename.Base.to_string rel_file))
+           (OpamFile.OPAM.get_extra_files
+              ~get_repo_files:(OpamRepositoryState.get_repo_files st.switch_repos)
+              opam);
+         OpamFile.OPAM.write opam_file
+           (OpamFile.OPAM.with_extra_files_opt None opam);
+         opam)
     in
     match result, new_source_opam with
     | Result _, Some new_opam
