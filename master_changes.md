@@ -32,6 +32,7 @@ users)
 ## Remove
 
 ## UI
+  * Read full lines when asking for user input when `TERM=dumb` [#6829 @arvidj - fix #6828]
 
 ## Switch
 
