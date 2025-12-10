@@ -43,7 +43,7 @@ val update:
 val pull_shared_tree:
   ?cache_dir:dirname ->
   ?cache_urls:OpamUrl.t list ->
-  (string * OpamFilename.Dir.t * subpath option) list -> OpamHash.t list ->
+  (string * OpamFilename.Dir.t * subpath option) list -> OpamHash.t list -> OpamSignature.t list ->
   url list -> string download OpamProcess.job
 
 (* Same as {!pull_shared_tree}, but for a unique label/dirname.
@@ -52,13 +52,13 @@ val pull_shared_tree:
 val pull_tree:
   string -> ?full_fetch:bool -> ?cache_dir:dirname -> ?cache_urls:url list ->
   ?working_dir:bool -> ?subpath:subpath ->
-  dirname -> OpamHash.t list -> url list ->
+  dirname -> OpamHash.t list -> OpamSignature.t list -> url list ->
   string download OpamProcess.job
 
 (** Same as [pull_tree], but for fetching a single file. *)
 val pull_file:
   string -> ?cache_dir:dirname -> ?cache_urls:url list -> ?silent_hits:bool ->
-  filename -> OpamHash.t list -> url list ->
+  filename -> OpamHash.t list -> OpamSignature.t list -> url list ->
   unit download OpamProcess.job
 
 (** Same as [pull_file], but without a destination file: just ensures the file
@@ -66,7 +66,7 @@ val pull_file:
     to the archive, otherwise it adds the missing links. *)
 val pull_file_to_cache:
   string -> cache_dir:dirname -> ?cache_urls:url list ->
-  OpamHash.t list -> url list -> string download OpamProcess.job
+  OpamHash.t list -> OpamSignature.t list -> url list -> string download OpamProcess.job
 
 (** The file where the file with the given hash is stored under cache at given
     dirname. *)
