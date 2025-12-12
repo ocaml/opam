@@ -219,7 +219,7 @@ let do_upgrade repo_root =
       let descr_file =
         OpamFilename.(opt_file (add_extension (chop_extension comp_file) "descr"))
       in
-      let descr = descr_file >>| fun f -> OpamFile.Descr.read (OpamFile.make f) in
+      let descr = descr_file >>| fun f -> OpamFile.Descr_legacy.read (OpamFile.make f) in
       let nv, ocaml_version, variant =
         match OpamStd.String.cut_at c '+' with
         | None ->

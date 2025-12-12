@@ -1211,10 +1211,11 @@ files.
   defines a long description (one or more paragraphs) for the package. This can
   also be defined as the body of an external [`descr`](#descr) file.
 
-- <a id="opamsection-url">`url "{" <url-file> "}"`</a>:
-  defines the URL where the package source can be obtained. This section has
-  contents in the same format as the [`url`](#url) file, and has the same effect
-  as using a separate `url` file.
+- <a id="opamsection-url">`url "{" <url-section> "}"`</a>:
+  defines the URL where the package source can be obtained. Before opam 2.6,
+  this section' content was the same format as the [`url`](#url) file,
+  and had the same effect as using a separate `url` file.
+  As of opam 2.6, the `url` file now only supports the legacy opam 1.2 fields.
 
 - <a id="opamfield-setenv">`setenv: [ <environment-update> ... ]`</a>: defines
   environment variables updates that will be applied upon installing the
@@ -1249,7 +1250,7 @@ files.
   See [`x-env-path-rewrite:`](#opamfield-x-env-path-rewrite)
   for path portability of environment variables on Windows.
 
-- <a id="opamsection-extra-sources">`extra-source <string> "{" <url-file> "}"`</a>:
+- <a id="opamsection-extra-sources">`extra-source <string> "{" <url-section> "}"`</a>:
   allows the definition of extra files that need downloading into the source
   tree before the package can be patched (if necessary) and built. The format is
   similar to that of the `url` section, but here it is expected to point to a
