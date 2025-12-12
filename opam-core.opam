@@ -1,6 +1,6 @@
 opam-version: "2.0"
 version: "2.6.0~alpha1~dev"
-synopsis: "Core library for opam 2.4"
+synopsis: "Core library for opam 2.6"
 description:
   "Small standard library extensions, and generic system interaction modules used by opam."
 maintainer: "opam-devel@lists.ocaml.org"
