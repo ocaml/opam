@@ -58,7 +58,10 @@ init-bootstrap () {
     if [ "${OPAM_REPO%.git}" != "${OPAM_REPO_MAIN%.git}" ]; then
       opam init --no-setup git+$OPAM_REPO_MAIN#$REPO_SHA
     else
-      opam init --no-setup git+$OPAM_REPO_CACHE#$REPO_SHA
+      case "${OPAM_REPO_CACHE}" in
+      file://*) git -C "${OPAM_REPO_CACHE#file://}" fetch origin;;
+      esac
+      opam init --no-setup "git+$OPAM_REPO_CACHE#$REPO_SHA"
     fi
 
     cat >> $OPAMROOT/config <<EOF
