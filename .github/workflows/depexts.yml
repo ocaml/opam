@@ -27,7 +27,7 @@ jobs:
     steps:
     - name: opam binary cache
       id: binary
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -46,7 +46,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -64,7 +64,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -82,7 +82,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -100,7 +100,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -118,7 +118,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -136,7 +136,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -154,7 +154,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -172,7 +172,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -190,7 +190,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -208,7 +208,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
@@ -226,7 +226,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
     - name: opam binary cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: binary/opam
         key: binary-${{ env.OPAMVERSION }}
