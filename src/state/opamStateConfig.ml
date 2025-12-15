@@ -19,7 +19,6 @@ module E = struct
     | DOWNLOADJOBS of int option
     | DRYRUN of bool option
     | IGNORECONSTRAINTS of string option
-    | IGNOREAVAILABLE of string option
     | JOBS of int option
     | LOCKED of string option
     | MAKECMD of string option
@@ -38,7 +37,6 @@ module E = struct
   let downloadjobs = value (function DOWNLOADJOBS i -> i | _ -> None)
   let dryrun = value (function DRYRUN b -> b | _ -> None)
   let ignoreconstraints = value (function IGNORECONSTRAINTS s -> s | _ -> None)
-  let ignoreavailable = value (function IGNOREAVAILABLE s -> s | _ -> None)
   let jobs = value (function JOBS i -> i | _ -> None)
   let locked = value (function LOCKED s -> s | _ -> None)
   let makecmd = value (function MAKECMD s -> s | _ -> None)
@@ -223,11 +221,7 @@ let initk k =
        OpamStd.String.split s ',' |>
        List.map OpamPackage.Name.of_string |>
        OpamPackage.Name.Set.of_list)
-    ?ignore_available_on:
-      (E.ignoreavailable () >>| fun s ->
-       OpamStd.String.split s ',' |>
-       List.map OpamPackage.Name.of_string |>
-       OpamPackage.Name.Set.of_list)
+    ?ignore_available_on:None
     ?unlock_base:(E.unlockbase ())
     ?no_env_notice:(E.noenvnotice ())
     ?locked:(E.locked () >>| function "" -> None | s -> Some s)

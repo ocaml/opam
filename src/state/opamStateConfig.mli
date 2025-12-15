@@ -21,7 +21,6 @@ module E : sig
     | DOWNLOADJOBS of int option
     | DRYRUN of bool option
     | IGNORECONSTRAINTS of string option
-    | IGNOREAVAILABLE of string option
     | JOBS of int option
     | LOCKED of string option
     | MAKECMD of string option
