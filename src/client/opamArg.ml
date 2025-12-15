@@ -251,7 +251,7 @@ let environment_variables =
       "IGNORECONSTRAINTS", cli_original,
       (fun v -> IGNORECONSTRAINTS (env_string v)),
       "see install option `--ignore-constraints-on'.";
-      "FORCEAVAILABLE", cli_from cli2_5,
+      "FORCEAVAILABLE", cli_from cli2_6,
       (fun v -> FORCEAVAILABLE (env_string v)),
       "see install option `--force-available'.";
       "JOBS", cli_original, (fun v -> JOBS (env_int v)),
@@ -1537,7 +1537,7 @@ let build_options cli =
       Arg.(some (list package_name)) None ~vopt:(Some [])
   in
   let force_avaiable =
-    mk_opt ~cli (cli_from cli2_5) ~section ["force-available"] "PACKAGES"
+    mk_opt ~cli (cli_from cli2_6) ~section ["force-available"] "PACKAGES"
       "Forces opam to mark the listed packages as available. \
        This can be used to test compatibility, but expect \
        builds to break when using this. Note that version constraints of the packages' dependencies \
