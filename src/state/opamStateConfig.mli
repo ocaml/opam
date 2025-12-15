@@ -21,7 +21,7 @@ module E : sig
     | DOWNLOADJOBS of int option
     | DRYRUN of bool option
     | IGNORECONSTRAINTS of string option
-    | FORCEAVAILABLE of string option
+    | IGNOREAVAILABLE of string option
     | JOBS of int option
     | LOCKED of string option
     | MAKECMD of string option
@@ -51,7 +51,7 @@ type t = private {
   dryrun: bool;
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
-  force_available: name_set;
+  ignore_available_on: name_set;
   unlock_base: bool;
   no_env_notice: bool;
   locked: string option;
@@ -72,7 +72,7 @@ type 'a options_fun =
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
-  ?force_available:name_set ->
+  ?ignore_available_on:name_set ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->

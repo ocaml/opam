@@ -924,27 +924,6 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:filter-variable-resolution.test} %{read-lines:testing-env}))))
 
 (rule
- (alias reftest-force-available)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
- (action
-  (diff force-available.test force-available.out)))
-
-(alias
- (name reftest)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
- (deps (alias reftest-force-available)))
-
-(rule
- (targets force-available.out)
- (deps root-N0REP0)
- (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
- (package opam)
- (action
-  (with-stdout-to
-   %{targets}
-   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:force-available.test} %{read-lines:testing-env}))))
-
-(rule
  (alias reftest-git)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
@@ -1027,6 +1006,27 @@
   (with-stdout-to
    %{targets}
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:hooks-variables.win32.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-ignore-available-on)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff ignore-available-on.test ignore-available-on.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-ignore-available-on)))
+
+(rule
+ (targets ignore-available-on.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:ignore-available-on.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-init-ocaml-eval-variables.unix)
