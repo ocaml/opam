@@ -1902,9 +1902,10 @@ let install cli =
                (OpamPackage.Name.Set.elements missing));
           OpamStd.Sys.exit_because `False)
     else
+    let st = OpamSwitchState.force_available st OpamStateConfig.(!r.force_available) in
     let st =
       OpamClient.install st atoms ~formula
-        ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~force_available:(OpamStateConfig.(!r.force_available)) ~ignore_conflicts
+        ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
         ~assume_built ~depext_only ~download_only
     in
     match destdir with
@@ -2044,16 +2045,19 @@ let reinstall cli =
     match cmd, atoms_locs with
     | `Default, (_::_ as atom_locs) ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let st = OpamSwitchState.force_available st OpamStateConfig.(!r.force_available) in
       OpamSwitchState.drop @@ OpamClient.reinstall st ~assume_built
         (OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs);
       `Ok ()
     | `Pending, [] | `Default, [] ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let st = OpamSwitchState.force_available st OpamStateConfig.(!r.force_available) in
       let atoms = OpamSolution.eq_atoms_of_packages (Lazy.force st.reinstall) in
       OpamSwitchState.drop @@ OpamClient.reinstall st atoms;
       `Ok ()
     | `List_pending, [] ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      let st = OpamSwitchState.force_available st OpamStateConfig.(!r.force_available) in
       OpamListCommand.display st
         { OpamListCommand.default_package_listing_format
           with OpamListCommand.
@@ -2066,6 +2070,7 @@ let reinstall cli =
       `Ok ()
     | `Forget_pending, atom_locs ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let st = OpamSwitchState.force_available st OpamStateConfig.(!r.force_available) in
       let atoms = OpamAuxCommands.resolve_locals_pinned ~recurse ?subpath st atom_locs in
       let reinstall = Lazy.force st.reinstall in
       let to_forget = match atoms with
@@ -2217,6 +2222,7 @@ let upgrade cli =
         `Error (true, Printf.sprintf "--fixup doesn't allow extra arguments")
       else
         OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+        let st = OpamSwitchState.force_available st OpamStateConfig.(!r.force_available) in
         OpamSwitchState.drop @@ OpamClient.fixup ~formula st;
         `Ok ()
     else
@@ -2224,6 +2230,7 @@ let upgrade cli =
       let atoms =
         OpamAuxCommands.resolve_locals_pinned st ~recurse ?subpath atom_locs
       in
+      let st = OpamSwitchState.force_available st OpamStateConfig.(!r.force_available) in
       OpamSwitchState.drop @@
       OpamClient.upgrade st ~check ~only_installed ~all ~formula atoms;
       `Ok ()

@@ -1351,6 +1351,14 @@ let update_repositories gt update_fun switch =
     (OpamPath.Switch.switch_config gt.root switch)
     conf
 
+let force_available t force_available =
+  let available_packages = lazy (
+    OpamPackage.Set.union
+      (OpamPackage.packages_of_names t.packages force_available)
+      (Lazy.force t.available_packages)
+    )
+  in
+  {t with available_packages}
 
 (* dependencies computation *)
 

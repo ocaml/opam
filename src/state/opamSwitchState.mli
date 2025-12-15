@@ -246,6 +246,9 @@ val update_repositories:
   'a global_state -> (repository_name list -> repository_name list) ->
   switch -> unit
 
+(** Updates the available packages to forcably include the requested names *)
+val force_available: 'a switch_state -> OpamPackage.Name.Set.t -> 'a switch_state
+
 (** {2 Invariant computation} *)
 
 (* Returns installed root packages of switch invariant *)
