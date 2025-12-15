@@ -141,7 +141,7 @@ let get_cache_cont : type s . s cache_name -> s = function
   | OpamBS ->
       fun f version key_prefix -> f
         {name = "opam bootstrap";
-         key = Printf.sprintf "opam%s-${{ runner.os }}-${{ env.OPAMBSVERSION }}-%s-${{ env.OPAM_REPO_SHA }}-${{ %s.outputs.opam-bs-cache }}" key_prefix version;
+         key = Printf.sprintf "opam%s-${{ runner.os }}-${{ env.OPAMBSVERSION }}-%s-${{ env.OPAM_REPO_SHA }}-${{ env.OPAM_TEST_REPO_SHA }}-${{ %s.outputs.opam-bs-cache }}" key_prefix version;
          id = "opam-bootstrap";
          force_gzip = false;
          paths = ["${{ env.OPAMBSROOT }}/**"; "~/.cache/opam-local/bin/**"];
