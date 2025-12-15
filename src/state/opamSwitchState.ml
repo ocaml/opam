@@ -540,6 +540,12 @@ let load lock_kind gt rt switch =
         (Lazy.force available_packages)
     )
   in
+  let available_packages = lazy (
+    OpamPackage.Set.union
+      (OpamPackage.packages_of_names packages OpamStateConfig.(!r.force_available))
+      (Lazy.force available_packages)
+    )
+  in
   let sys_packages_changed = lazy (
     let sys_packages =
       OpamPackage.Map.filter (fun pkg spkg ->
@@ -1344,14 +1350,6 @@ let update_repositories gt update_fun switch =
     (OpamPath.Switch.switch_config gt.root switch)
     conf
 
-let force_available t force_available =
-  let available_packages = lazy (
-    OpamPackage.Set.union
-      (OpamPackage.packages_of_names t.packages force_available)
-      (Lazy.force t.available_packages)
-    )
-  in
-  {t with available_packages}
 
 (* dependencies computation *)
 
