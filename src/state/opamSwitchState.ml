@@ -1012,14 +1012,7 @@ let universe st
        would be much more involved, but some solvers might struggle without any
        cleanup at this point *)
     (* remove_conflicts st base *)
-    let forced = OpamStateConfig.(!r.force_available) in
-    if OpamPackage.Name.Set.is_empty forced then
-     st.available_packages
-    else
-      lazy (
-        OpamPackage.Set.union (OpamPackage.packages_of_names st.packages forced)
-                              (Lazy.force st.available_packages)
-      )
+    st.available_packages
   in
   let u_reinstall =
     (* Ignore reinstalls outside of the dependency cone of

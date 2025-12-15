@@ -1968,6 +1968,7 @@ let remove cli =
     match destdir with
     | Some d ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
+      let st = OpamSwitchState.force_available st OpamStateConfig.(!r.force_available) in
       let atoms = OpamAuxCommands.resolve_locals_pinned st atom_locs in
       let packages = OpamFormula.packages_of_atoms st.installed atoms in
       let uninst =
@@ -1982,6 +1983,7 @@ let remove cli =
       OpamAuxCommands.remove_files_from_destdir st d packages
     | None ->
       OpamSwitchState.with_ `Lock_write gt @@ fun st ->
+      let st = OpamSwitchState.force_available st OpamStateConfig.(!r.force_available) in
       let pure_atoms, pin_atoms =
         List.partition (function `Atom _ -> true | _ -> false) atom_locs
       in
