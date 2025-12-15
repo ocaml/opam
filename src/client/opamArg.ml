@@ -251,9 +251,6 @@ let environment_variables =
       "IGNORECONSTRAINTS", cli_original,
       (fun v -> IGNORECONSTRAINTS (env_string v)),
       "see install option `--ignore-constraints-on'.";
-      "FORCEAVAILABLE", cli_from cli2_6,
-      (fun v -> FORCEAVAILABLE (env_string v)),
-      "see install option `--force-available'.";
       "JOBS", cli_original, (fun v -> JOBS (env_int v)),
       "sets the maximum number of parallel workers to run.";
       "LOCKED", cli_original, (fun v -> LOCKED (env_string v)),
