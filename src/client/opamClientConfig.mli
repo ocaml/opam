@@ -131,6 +131,7 @@ val opam_init:
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:OpamPackage.Name.Set.t ->
+  ?force_available:OpamPackage.Name.Set.t ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->

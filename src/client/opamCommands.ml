@@ -1904,7 +1904,7 @@ let install cli =
     else
     let st =
       OpamClient.install st atoms ~formula
-        ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
+        ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~force_available:(OpamStateConfig.(!r.force_available)) ~ignore_conflicts
         ~assume_built ~depext_only ~download_only
     in
     match destdir with

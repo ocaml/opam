@@ -19,6 +19,7 @@ module E = struct
     | DOWNLOADJOBS of int option
     | DRYRUN of bool option
     | IGNORECONSTRAINTS of string option
+    | FORCEAVAILABLE of string option
     | JOBS of int option
     | LOCKED of string option
     | MAKECMD of string option
@@ -37,6 +38,8 @@ module E = struct
   let downloadjobs = value (function DOWNLOADJOBS i -> i | _ -> None)
   let dryrun = value (function DRYRUN b -> b | _ -> None)
   let ignoreconstraints = value (function IGNORECONSTRAINTS s -> s | _ -> None)
+
+  let forceavailable = value (function FORCEAVAILABLE s -> s | _ -> None)
   let jobs = value (function JOBS i -> i | _ -> None)
   let locked = value (function LOCKED s -> s | _ -> None)
   let makecmd = value (function MAKECMD s -> s | _ -> None)
@@ -65,6 +68,7 @@ type t = {
   dryrun: bool;
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
+  force_available: name_set;
   unlock_base: bool;
   no_env_notice: bool;
   locked: string option;
@@ -111,6 +115,7 @@ let default = {
       | _ -> "make"
     );
   ignore_constraints_on = OpamPackage.Name.Set.empty;
+  force_available = OpamPackage.Name.Set.empty;
   unlock_base = false;
   no_env_notice = false;
   locked = None;
@@ -131,6 +136,7 @@ type 'a options_fun =
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
+  ?force_available:name_set ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
@@ -151,6 +157,7 @@ let setk k t
     ?dryrun
     ?makecmd
     ?ignore_constraints_on
+    ?force_available
     ?unlock_base
     ?no_env_notice
     ?locked
@@ -172,6 +179,7 @@ let setk k t
     dryrun = t.dryrun + dryrun;
     makecmd = t.makecmd + makecmd;
     ignore_constraints_on = t.ignore_constraints_on + ignore_constraints_on;
+    force_available = t.force_available + force_available;
     unlock_base = t.unlock_base + unlock_base;
     no_env_notice = t.no_env_notice + no_env_notice;
     locked = t.locked + locked;
@@ -213,6 +221,11 @@ let initk k =
     ?makecmd:(E.makecmd () >>| fun s -> lazy s)
     ?ignore_constraints_on:
       (E.ignoreconstraints () >>| fun s ->
+       OpamStd.String.split s ',' |>
+       List.map OpamPackage.Name.of_string |>
+       OpamPackage.Name.Set.of_list)
+    ?force_available:
+      (E.forceavailable () >>| fun s ->
        OpamStd.String.split s ',' |>
        List.map OpamPackage.Name.of_string |>
        OpamPackage.Name.Set.of_list)

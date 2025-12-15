@@ -2123,11 +2123,16 @@ let filter_unpinned_locally t atoms f =
          None))
     atoms
 
-let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
+let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false) ?(force_available=OpamPackage.Name.Set.empty)
     ?(download_only=false) atoms ?(formula=OpamFormula.Empty)
     add_to_roots ~deps_only ~assume_built =
   log "INSTALL %a" (slog OpamFormula.string_of_atoms) atoms;
-  let available_packages = Lazy.force t.available_packages in
+  let available_packages = (
+    OpamPackage.Set.union
+       ( OpamPackage.packages_of_names t.packages
+          force_available ) @@
+
+  Lazy.force t.available_packages) in
 
   let atoms =
     let compl = function
@@ -2398,7 +2403,9 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
   t
 
 let install t ?formula ?autoupdate ?add_to_roots
-    ?(deps_only=false) ?(ignore_conflicts=false) ?(assume_built=false)
+    ?(deps_only=false)
+    ?(force_available=OpamPackage.Name.Set.empty)
+    ?(ignore_conflicts=false) ?(assume_built=false)
     ?(download_only=false) ?(depext_only=false) names =
   let atoms = OpamSolution.sanitize_atom_list ~permissive:true t names in
   let autoupdate_atoms = match autoupdate with
@@ -2407,7 +2414,7 @@ let install t ?formula ?autoupdate ?add_to_roots
   in
   let t = update_dev_packages_t autoupdate_atoms t in
   install_t t atoms ?formula add_to_roots
-    ~ignore_conflicts ~depext_only ~deps_only ~download_only ~assume_built
+    ~ignore_conflicts ~depext_only  ~force_available ~deps_only ~download_only ~assume_built
 
 let remove_t ?ask ~autoremove ~force ?(formula=OpamFormula.Empty) atoms t =
   log "REMOVE autoremove:%b %a" autoremove

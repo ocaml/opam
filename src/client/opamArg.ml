@@ -251,6 +251,9 @@ let environment_variables =
       "IGNORECONSTRAINTS", cli_original,
       (fun v -> IGNORECONSTRAINTS (env_string v)),
       "see install option `--ignore-constraints-on'.";
+      "FORCEAVAILABLE", cli_from cli2_5,
+      (fun v -> FORCEAVAILABLE (env_string v)),
+      "see install option `--force-available'.";
       "JOBS", cli_original, (fun v -> JOBS (env_int v)),
       "sets the maximum number of parallel workers to run.";
       "LOCKED", cli_original, (fun v -> LOCKED (env_string v)),
@@ -656,6 +659,7 @@ type build_options = {
   skip_update   : bool;
   jobs          : int option;
   ignore_constraints_on: name list option;
+  force_available: name list option;
   unlock_base   : bool;
   locked        : bool;
   lock_suffix   : string;
@@ -667,13 +671,13 @@ type build_options = {
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc dev_setup show dryrun skip_update
-    fake jobs ignore_constraints_on unlock_base locked lock_suffix
+    fake jobs ignore_constraints_on force_available unlock_base locked lock_suffix
     assume_depexts no_depexts verbose_on
     =
   {
     keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
     req_checksums; build_test; build_doc; dev_setup; show; dryrun; skip_update;
-    fake; jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
+    fake; jobs; ignore_constraints_on; force_available; unlock_base; locked; lock_suffix;
     assume_depexts; no_depexts; verbose_on;
   }
 
@@ -700,6 +704,9 @@ let apply_build_options cli b =
     ?ignore_constraints_on:
       (b.ignore_constraints_on >>|
        OpamPackage.Name.Set.of_list)
+    ?force_available:
+      (b.force_available >>|
+        OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
     ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
     ?no_depexts:(flag (b.no_depexts || OpamCLIVersion.Op.(cli @= cli2_0)))
@@ -1529,6 +1536,14 @@ let build_options cli =
        are unaffected. This is equivalent to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some [])
   in
+  let force_avaiable =
+    mk_opt ~cli (cli_from cli2_5) ~section ["force-available"] "PACKAGES"
+      "Forces opam to mark the listed packages as available. \
+       This can be used to test compatibility, but expect \
+       builds to break when using this. Note that version constraints of the packages' dependencies \
+       are unaffected. This is equivalent to setting $(b,\\$OPAMFORCEAVAILABLE)."
+      Arg.(some (list package_name)) None ~vopt:(Some [])
+  in
   let unlock_base =
     mk_flag_replaced ~cli ~section [
       cli_between cli2_0 cli2_1 ~replaced:"--update-invariant", ["unlock-base"];
@@ -1563,7 +1578,7 @@ let build_options cli =
         $keep_build_dir $reuse_build_dir $inplace_build $make
         $no_checksums $req_checksums $build_test $build_doc $dev_setup $show
         $dryrun $skip_update $fake $jobs_flag ~section cli cli_original
-        $ignore_constraints_on $unlock_base $locked $lock_suffix
+        $ignore_constraints_on $force_avaiable $unlock_base $locked $lock_suffix
         $assume_depexts $no_depexts $verbose_on)
 
 (* Option common to install commands *)
