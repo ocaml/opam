@@ -1,0 +1,73 @@
+N0REP0
+### <pkg:unavail.1>
+opam-version: "2.0"
+available: false
+### :I: Unavailable package
+### :I:1: Install
+### :I:1:1: - without force-available
+### opam switch create direct --empty
+### opam install unavail
+[ERROR] unavail: unmet availability conditions: 'false'
+# Return code 5 #
+### :I:1:2: - with force-available
+### opam install unavail --force-available unavail
+The following actions will be performed:
+=== install 1 package
+  - install unavail 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed unavail.1
+Done.
+### :I:2: Remove (flag is unnecessary)
+### opam remove unavail
+The following actions will be performed:
+=== remove 1 package
+  - remove unavail 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   unavail.1
+Done.
+### <pkg:avail.1>
+opam-version: "2.0"
+depends: "unavail"
+### :II: Available package with unavailable dependency
+### :II:1: Install
+### :II:1:1: - without force-available
+### opam install -y avail
+[ERROR] Package conflict!
+  * Missing dependency:
+    - avail -> unavail
+    unmet availability conditions: 'false'
+
+No solution found, exiting
+# Return code 20 #
+### :II:1:2: - with force-available
+### opam install -y avail --force-available unavail
+The following actions will be performed:
+=== install 2 packages
+  - install avail   1
+  - install unavail 1 [required by avail]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed unavail.1
+-> installed avail.1
+Done.
+### :II:2: Remove
+### :II:2:1: - without force-available (also removes dependency)
+### opam remove avail
+The following actions will be performed:
+=== remove 2 packages
+  - remove avail   1
+  - remove unavail 1 [no longer available]
+
+Proceed with 2 removals? [Y/n] n
+# Return code 10 #
+### :II:2:2: - with force-available (leaves unavail installed)
+### opam remove  avail --force-available unavail
+The following actions will be performed:
+=== remove 1 package
+  - remove avail 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   avail.1
+Done.
