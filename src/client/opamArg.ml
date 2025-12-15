@@ -1538,7 +1538,7 @@ let build_options cli =
       "Forces opam to mark the listed packages as available. \
        This can be used to test compatibility, but expect \
        builds to break when using this. Note that version constraints of the packages' dependencies \
-       are unaffected. This is equivalent to setting $(b,\\$OPAMFORCEAVAILABLE)."
+       are unaffected."
       Arg.(some (list package_name)) None ~vopt:(Some [])
   in
   let unlock_base =
