@@ -553,7 +553,7 @@ let main oc : unit =
     ("OPAM12CACHE", "~/.cache/opam1.2/cache");
     (* These should be identical to the values in appveyor.yml *)
     ("OPAM_REPO", "https://github.com/ocaml/opam-repository.git");
-    ("OPAM_TEST_REPO_SHA", "38a1469dbbc69c770e534e26f79c97256a442b71");
+    ("OPAM_TEST_REPO_SHA", "eb45f7ec868b0ffc828b9d59cccc72cfec100333");
     ("OPAM_REPO_SHA", "38a1469dbbc69c770e534e26f79c97256a442b71");
     ("SOLVER", "");
     (* Cygwin configuration *)
@@ -563,7 +563,7 @@ let main oc : unit =
     ("CYGWIN_EPOCH", "4");
   ] in
   let keys = [
-    ("archives", "archives-1-${{ hashFiles('src_ext/Makefile.dune', 'src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}");
+    ("archives", "archives-1-${{ hashFiles('src_ext/Makefile.dune', 'src_ext/Makefile.sources', 'src_ext/Makefile', '.github/scripts/common/preamble.sh', '.github/scripts/main/preamble.sh', '.github/scripts/main/archives-cache.sh') }}-${{ env.OPAM_REPO_SHA }}-${{ env.OPAM_TEST_REPO_SHA }}");
     ("ocaml-cache", "${{ hashFiles('src_ext/Makefile.dune', '.github/scripts/main/ocaml-cache.sh', '.github/scripts/main/preamble.sh') }}");
     ("cygwin", "${{ hashFiles('.github/scripts/cygwin.cmd') }}-${{ env.CYGWIN_EPOCH }}");
     ("opam-bs-cache", "${{ hashFiles('.github/scripts/main/opam-bs-cache.sh', '*.opam', '.github/scripts/main/preamble.sh') }}");

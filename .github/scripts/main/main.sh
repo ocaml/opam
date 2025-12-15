@@ -203,7 +203,7 @@ if [ "$OPAM_DEPENDS" = "1" ]; then
   OCAMLVER=$(ocamlc -version)
 
   (set +x; echo -en "::group::depends\r") 2>/dev/null
-  VERSION="2.4.1"
+  VERSION="2.5.0"
   opam_libs=$(opam show . -f name 2>/dev/null)
   depends_on=$(echo "$opam_libs" | sed "s/\$/.${VERSION}/" | paste -sd, -)
   packages=$(echo "$opam_libs" | while read lib; do

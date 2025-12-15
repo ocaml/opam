@@ -147,10 +147,11 @@ users)
   * Remove the unconditional Windows binary uploads on PRs [#6771 @kit-ty-kate]
   * Bump the `actions/checkout` to version 6 [#6811 @kit-ty-kate]
   * Bump `actions/cache` to version 5 [#6835 @kit-ty-kate]
-  * Regenerate the cache when `OPAM_TEST_REPO_SHA` is changed [#6832 @kit-ty-kate]
+  * Regenerate the cache when `OPAM_TEST_REPO_SHA` is changed [#6832 #6821 @kit-ty-kate]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
+  * Update the Install page with the new opam 2.5.0 release [#6821 @kit-ty-kate]
 
 ## Security fixes
 
