@@ -248,6 +248,9 @@ let environment_variables =
       "sets the maximum number of simultaneous downloads.";
       "DRYRUN", cli_original, (fun v -> DRYRUN (env_bool v)),
       "see option `--dry-run'.";
+      "IGNOREAVAILABLE", cli_from cli2_6,
+      (fun v -> IGNOREAVAILABLE (env_string v)),
+      "see install option `--ignore-available-on'.";
       "IGNORECONSTRAINTS", cli_original,
       (fun v -> IGNORECONSTRAINTS (env_string v)),
       "see install option `--ignore-constraints-on'.";
@@ -656,6 +659,7 @@ type build_options = {
   skip_update   : bool;
   jobs          : int option;
   ignore_constraints_on: name list option;
+  ignore_available_on: name list option;
   unlock_base   : bool;
   locked        : bool;
   lock_suffix   : string;
@@ -667,14 +671,14 @@ type build_options = {
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc dev_setup show dryrun skip_update
-    fake jobs ignore_constraints_on unlock_base locked lock_suffix
+    fake jobs ignore_constraints_on ignore_available_on unlock_base locked lock_suffix
     assume_depexts no_depexts verbose_on
     =
   {
     keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
     req_checksums; build_test; build_doc; dev_setup; show; dryrun; skip_update;
-    fake; jobs; ignore_constraints_on; unlock_base; locked; lock_suffix;
-    assume_depexts; no_depexts; verbose_on;
+    fake; jobs; ignore_constraints_on; ignore_available_on; unlock_base;
+    locked; lock_suffix; assume_depexts; no_depexts; verbose_on;
   }
 
 let apply_build_options cli b =
@@ -700,6 +704,9 @@ let apply_build_options cli b =
     ?ignore_constraints_on:
       (b.ignore_constraints_on >>|
        OpamPackage.Name.Set.of_list)
+    ?ignore_available_on:
+      (b.ignore_available_on >>|
+        OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
     ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
     ?depexts:
@@ -1539,6 +1546,14 @@ let build_options cli =
        are unaffected. This is equivalent to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some [])
   in
+  let ignore_available_on =
+    mk_opt ~cli (cli_from cli2_6) ~section ["ignore-available-on"] "PACKAGES"
+      "Forces opam to mark the listed packages as available. This can be \
+       used to test compatibility, but expect builds to break when using \
+       this. Note that version constraints of the packages' dependencies \
+       are unaffected."
+      Arg.(some (list package_name)) None ~vopt:(Some [])
+  in
   let unlock_base =
     mk_flag_replaced ~cli ~section [
       cli_between cli2_0 cli2_1 ~replaced:"--update-invariant", ["unlock-base"];
@@ -1573,8 +1588,8 @@ let build_options cli =
         $keep_build_dir $reuse_build_dir $inplace_build $make
         $no_checksums $req_checksums $build_test $build_doc $dev_setup $show
         $dryrun $skip_update $fake $jobs_flag ~section cli cli_original
-        $ignore_constraints_on $unlock_base $locked $lock_suffix
-        $assume_depexts $no_depexts $verbose_on)
+        $ignore_constraints_on $ignore_available_on $unlock_base $locked
+        $lock_suffix $assume_depexts $no_depexts $verbose_on)
 
 (* Option common to install commands *)
 let assume_built ?section cli =

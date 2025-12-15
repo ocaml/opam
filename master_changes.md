@@ -16,6 +16,7 @@ users)
 ## Global CLI
   * Update Kate's email address [#6808 @kit-ty-kate]
   * Remove unnecessary uses of `chdir` [#6910 @NathanReb]
+  * Added `--ignore-available-on` option to allow ignoring the `available:` section of certain packages. [#6836 @WardBrian - fix #5283]
 
 ## Plugins
 
