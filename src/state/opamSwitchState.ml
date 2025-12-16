@@ -542,7 +542,8 @@ let load lock_kind gt rt switch =
   in
   let available_packages = lazy (
     OpamPackage.Set.union
-      (OpamPackage.packages_of_names packages OpamStateConfig.(!r.ignore_available_on))
+      (OpamPackage.packages_of_names
+        packages OpamStateConfig.(!r.ignore_available_on))
       (Lazy.force available_packages)
     )
   in

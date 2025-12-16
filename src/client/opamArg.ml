@@ -674,8 +674,8 @@ let create_build_options
   {
     keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
     req_checksums; build_test; build_doc; dev_setup; show; dryrun; skip_update;
-    fake; jobs; ignore_constraints_on; ignore_available_on; unlock_base; locked; lock_suffix;
-    assume_depexts; no_depexts; verbose_on;
+    fake; jobs; ignore_constraints_on; ignore_available_on; unlock_base;
+    locked; lock_suffix; assume_depexts; no_depexts; verbose_on;
   }
 
 let apply_build_options cli b =
@@ -1533,11 +1533,11 @@ let build_options cli =
        are unaffected. This is equivalent to setting $(b,\\$OPAMIGNORECONSTRAINTS)."
       Arg.(some (list package_name)) None ~vopt:(Some [])
   in
-  let force_avaiable =
+  let ignore_available_on =
     mk_opt ~cli (cli_from cli2_6) ~section ["ignore-available-on"] "PACKAGES"
-      "Forces opam to mark the listed packages as available. \
-       This can be used to test compatibility, but expect \
-       builds to break when using this. Note that version constraints of the packages' dependencies \
+      "Forces opam to mark the listed packages as available. This can be \
+       used to test compatibility, but expect builds to break when using \
+       this. Note that version constraints of the packages' dependencies \
        are unaffected."
       Arg.(some (list package_name)) None ~vopt:(Some [])
   in
@@ -1575,8 +1575,8 @@ let build_options cli =
         $keep_build_dir $reuse_build_dir $inplace_build $make
         $no_checksums $req_checksums $build_test $build_doc $dev_setup $show
         $dryrun $skip_update $fake $jobs_flag ~section cli cli_original
-        $ignore_constraints_on $force_avaiable $unlock_base $locked $lock_suffix
-        $assume_depexts $no_depexts $verbose_on)
+        $ignore_constraints_on $ignore_available_on $unlock_base $locked
+        $lock_suffix $assume_depexts $no_depexts $verbose_on)
 
 (* Option common to install commands *)
 let assume_built ?section cli =
