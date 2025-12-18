@@ -1204,12 +1204,8 @@ let flock_root =
     ) in
     fun () -> Lazy.force t
   in
-  fun ?global_lock kind root ->
+  fun ~global_lock kind ->
     try
-      let global_lock = match global_lock with
-        | Some g -> g
-        | None -> OpamFilename.flock `Lock_read (OpamPath.lock root)
-      in
       OpamFilename.with_flock_upgrade kind ?dontblock:(dontblock ()) global_lock
     with OpamSystem.Locked ->
       OpamConsole.error_and_exit `Locked
@@ -1345,7 +1341,7 @@ let as_necessary ?reinit requested_lock global_lock root config =
       (OpamFilename.Dir.to_string root)
       (OpamVersion.to_string root_version)
       (OpamVersion.to_string latest_version);
-  flock_root global_lock_kind ~global_lock root @@ fun _ ->
+  flock_root ~global_lock global_lock_kind @@ fun _ ->
   if not on_the_fly then
     if need_hard_upg then
       if is_dev &&
@@ -1416,7 +1412,7 @@ let as_necessary_repo_switch_t updates read_f lock_kind gt =
         (OpamVersion.to_string written_root_version)
         (OpamVersion.to_string (OpamFile.Config.opam_root_version config));
       if OpamConsole.confirm "Continue?" then
-        flock_root `Lock_write root @@ fun _ ->
+        flock_root `Lock_write ~global_lock:gt.lock @@ fun _ ->
         (* we keep only light upgrades as hard upgrade is already handled by
            global state loading, so we must not have to handle hard upgrades
            as this point. *)

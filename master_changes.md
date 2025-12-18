@@ -72,6 +72,7 @@ users)
 ## External dependencies
 
 ## Format upgrade
+  * Fix switch and repo format upgrade on Windows. A block occurred because the global lock fd was reopened instead of using the one already opened.  [#6839 @rjbou]
 
 ## Sandbox
   * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
