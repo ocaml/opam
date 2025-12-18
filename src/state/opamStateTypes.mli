@@ -51,6 +51,10 @@ type gt_changes = { gtc_repo: bool; gtc_switch: bool }
 (** Global state corresponding to an opam root and its configuration *)
 type +'lock global_state = {
   global_lock: OpamSystem.lock;
+  (** Global config lock file *)
+
+  lock: OpamSystem.lock;
+  (** Global lock file *)
 
   root: OpamPath.t;
   (** The global opam root path (caution: this is stored here but some code may

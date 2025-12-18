@@ -139,12 +139,14 @@ let load lock_kind =
           acc)
       global_variables eval_variables
   in
-  { global_lock = config_lock;
+  {
+    lock = global_lock;
+    global_lock = config_lock;
     root;
     config;
     global_variables;
     global_state_to_upgrade;
-    }
+  }
 
 let switches gt =
   OpamFile.Config.installed_switches gt.config

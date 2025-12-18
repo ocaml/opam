@@ -164,6 +164,7 @@ users)
   * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
   * `OpamGlobalState.all_installed_versions`: was added [#6818 @dra27]
   * `OpamGlobalState.installed_versions`: was removed [#6818 @dra27]
+  * `OpamStateTypes.global_state`: add field `lock` that contains the global lock (not config one) [#6839 @rjbou]
 
 ## opam-solver
 
