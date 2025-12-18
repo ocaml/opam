@@ -54,6 +54,8 @@ val rec_dirs: Dir.t -> Dir.t list
     Returns [None] if the directory could not be found. *)
 val dir_is_empty: Dir.t -> bool option
 
+val rec_dir_is_empty: Dir.t -> bool option
+
 (** List the sub-directory (do not recurse) *)
 val dirs: Dir.t -> Dir.t list
 

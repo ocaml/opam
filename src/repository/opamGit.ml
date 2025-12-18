@@ -89,12 +89,19 @@ module VCS : OpamVCS.VCS = struct
     let opam_ref = remote_ref repo_url in
     let refspec = Printf.sprintf "+%s:%s" branch opam_ref in
     git repo_root [ "remote" ; "set-url"; "origin"; origin ] @@> fun _ ->
-    Option.iter (fun cache ->
+    begin match global_cache with
+    | None ->
+      if OpamUrl.local_dir repo_url <> None then
+        let objects_dir = repo_root / ".git" / "objects" in
+        if OpamFilename.rec_dir_is_empty objects_dir <> Some false then
+          let src = OpamFilename.Dir.of_string repo_url.path / ".git" / "objects" in
+          OpamFilename.copy_dir ~src ~dst:objects_dir;
+    | Some cache ->
         let alternates = repo_root / ".git" / "objects" / "info" // "alternates" in
         if not (OpamFilename.exists alternates) then
           OpamFilename.write alternates
-            (OpamFilename.Dir.to_string (cache / "objects")))
-      global_cache;
+            (OpamFilename.Dir.to_string (cache / "objects"))
+    end;
     (if full_fetch then
        git repo_root [ "fetch" ; "-q"; origin; "--update-shallow"; refspec ]
      else
