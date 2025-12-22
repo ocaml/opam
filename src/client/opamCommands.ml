@@ -2565,6 +2565,7 @@ let repository cli =
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       let repos =
         OpamStateConfig.Repos.safe_read ~lock_kind:`Lock_read gt
+        |> OpamFile.Repos_config.repos
       in
       let not_found =
         List.filter (fun r -> not (OpamRepositoryName.Map.mem r repos)) names
@@ -4330,6 +4331,7 @@ let clean cli =
        @@ fun _lock ->
        let repos_config =
          OpamStateConfig.Repos.safe_read ~lock_kind:`Lock_write gt
+         |> OpamFile.Repos_config.repos
        in
        let all_repos =
          OpamRepositoryName.Map.keys repos_config |>
@@ -4368,7 +4370,8 @@ let clean cli =
        OpamConsole.msg "Updating %s\n"
          (OpamFile.to_string (OpamPath.repos_config root));
        if not dry_run then
-         OpamFile.Repos_config.write (OpamPath.repos_config root) repos_config);
+         OpamFile.Repos_config.write (OpamPath.repos_config root)
+           (OpamFile.Repos_config.create repos_config));
     if repo_cache then
       (OpamConsole.msg "Clearing repository cache\n";
        if not dry_run then OpamRepositoryState.Cache.remove ());
