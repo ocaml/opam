@@ -35,6 +35,7 @@ users)
   * Read full lines when asking for user input when `TERM=dumb` [#6829 @arvidj - fix #6828]
 
 ## Switch
+  * The internal `sources` directory is now always created on switch creation [#6440 @kit-ty-kate]
 
 ## Config
 
