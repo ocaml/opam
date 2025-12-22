@@ -72,6 +72,7 @@ users)
 ## External dependencies
 
 ## Format upgrade
+  * Fix switch and repo format upgrade on Windows. A block occurred because the global lock fd was reopened instead of using the one already opened.  [#6839 @rjbou]
 
 ## Sandbox
   * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
@@ -164,6 +165,7 @@ users)
   * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
   * `OpamGlobalState.all_installed_versions`: was added [#6818 @dra27]
   * `OpamGlobalState.installed_versions`: was removed [#6818 @dra27]
+  * `OpamStateTypes.global_state`: add field `lock` that contains the global lock (not config one) [#6839 @rjbou]
 
 ## opam-solver
 
