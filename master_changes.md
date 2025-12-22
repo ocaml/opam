@@ -24,6 +24,7 @@ users)
 ## Config report
 
 ## Actions
+  * The internal `sources` directory now only serves to cache dev packages instead of every packages, saving disk space [#6440 @kit-ty-kate - fix #4056 #5448]
 
 ## Install
 
@@ -35,6 +36,7 @@ users)
   * Read full lines when asking for user input when `TERM=dumb` [#6829 @arvidj - fix #6828]
 
 ## Switch
+  * The internal `sources` directory is now always created on switch creation [#6440 @kit-ty-kate]
 
 ## Config
 
