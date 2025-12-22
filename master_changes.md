@@ -24,6 +24,7 @@ users)
 ## Config report
 
 ## Actions
+  * The internal `sources` directory now only serves to cache dev packages instead of every packages, saving disk space [#6440 @kit-ty-kate - fix #4056 #5448]
 
 ## Install
 

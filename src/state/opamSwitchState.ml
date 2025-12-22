@@ -765,9 +765,12 @@ let is_version_pinned st name =
     | None -> false
 
 let source_dir st nv =
-  if OpamPackage.Set.mem nv st.pinned
-  then OpamPath.Switch.pinned_package st.switch_global.root st.switch nv.name
-  else OpamPath.Switch.sources st.switch_global.root st.switch nv
+  if OpamPackage.Set.mem nv st.pinned then
+    OpamPath.Switch.pinned_package st.switch_global.root st.switch nv.name
+  else if is_dev_package st nv then
+    OpamPath.Switch.sources st.switch_global.root st.switch nv
+  else
+    OpamPath.Switch.build st.switch_global.root st.switch nv
 
 let overlay_opam_file st name =
   if is_pinned st name then
