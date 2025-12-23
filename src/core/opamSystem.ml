@@ -406,6 +406,24 @@ let dir_is_empty dir =
     Some (loop ())
   with Unix.Unix_error(Unix.ENOENT, _, _) -> None
 
+let rec rec_dir_is_empty dirname=
+  try
+    let dir = Unix.opendir dirname in
+    Fun.protect ~finally:(fun () -> Unix.closedir dir) @@ fun () ->
+    let rec loop () =
+      match Unix.readdir dir with
+      | "." | ".." -> loop ()
+      | d ->
+        let dirname = dirname / d in
+        if Sys.is_directory dirname then
+          rec_dir_is_empty dirname
+        else
+          Some false
+      | exception End_of_file -> Some true
+    in
+    loop ()
+  with Unix.Unix_error(Unix.ENOENT, _, _) -> None
+
 let rec rmdir_cleanup dirname =
   if dir_is_empty dirname = Some true then (
     remove_dir dirname;

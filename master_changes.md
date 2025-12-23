@@ -39,6 +39,7 @@ users)
 ## Config
 
 ## Pin
+  * Speedup pinning local git packages by avoiding the git transport protocol [#6838 @kit-ty-kate - fix #6837]
 
 ## List
 

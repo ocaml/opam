@@ -102,6 +102,9 @@ let dirs d =
 let dir_is_empty d =
   OpamSystem.dir_is_empty (Dir.to_string d)
 
+let rec_dir_is_empty d =
+  OpamSystem.rec_dir_is_empty (Dir.to_string d)
+
 let in_dir dirname fn = OpamSystem.in_dir dirname fn
 
 let env_of_list l = Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) l)
