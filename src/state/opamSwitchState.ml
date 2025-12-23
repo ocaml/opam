@@ -1024,13 +1024,15 @@ let universe st
                             OpamPackage.Map.find nv u_depopts ])
       |> OpamFormula.packages st.packages
     in
-    let requested_deps =
-      OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
-    in
-    requested_deps %% Lazy.force st.reinstall ++
-    match reinstall with
-    | Some set -> set
-    | None -> OpamPackage.Set.empty
+    let reinstall = Option.value ~default:OpamPackage.Set.empty reinstall in
+    let lazy switch_reinstall = st.reinstall in
+    if OpamPackage.Set.is_empty switch_reinstall then
+      reinstall
+    else
+      let requested_deps =
+        OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
+      in
+      requested_deps %% Lazy.force st.reinstall ++ reinstall
   in
   let missing_depexts =
     lazy (
