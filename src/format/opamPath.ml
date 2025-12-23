@@ -290,3 +290,57 @@ module Builddir = struct
     builddir /- (OpamPackage.Name.to_string nv.name ^ ".config")
 
 end
+
+
+let internal_paths (t : dirname) (sw : switch) : dirname list =
+  let open Switch in
+  let meta = meta t sw in
+  let prefix = root t sw in
+  [
+    t / "config";
+    t / "lock";
+    t / "config.lock";
+    t / "redirected-opamroot";
+    t / "repo" / "lock";
+    t / "repo" / "repos-config";
+    t / "opam-init";
+    t / "opam-init" / "hooks";
+    t / "log";
+    t / "backup";
+    t / ".last-env";
+
+    t / "plugins";
+    t / "plugins" / "bin";
+
+    state_cache_dir t;
+
+    meta;
+    meta / "lock";
+    meta / "switch-config";
+    meta / "switch-state";
+    meta / "packages";
+    meta / "install";
+    meta / "config";
+    meta / "sources";
+    meta / "extra-files-cache";
+    meta / "overlay";
+    meta / "environment";
+    meta / "nix.env";
+    meta / "reinstall";
+    meta / "backup";
+
+    installed_opams t sw;
+
+    Overlay.dir t sw;
+
+    build_dir t sw;
+    remove_dir t sw;
+
+    prefix / "lib";
+    prefix / "bin";
+    prefix / "doc";
+    prefix / "etc";
+    prefix / "share";
+    prefix / "man";
+    prefix / "sbin";
+  ]
