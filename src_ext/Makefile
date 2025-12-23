@@ -54,7 +54,7 @@ MD5CHECK = { \
   sum=`md5sum $(1) 2>/dev/null | sed -e 's/^[^a-f0-9]*\([a-f0-9]*\).*/\1/'`; \
   test -n "$$sum" || sum=`md5 $(1) | sed -e 's/^.* = //'`; \
   { test "$$sum" = "$(2)" $(if $(SILENT),,&& echo '$(1) has the expected MD5.'); } || \
-  { rm -f $(1); \
+  { rm -f "$(1)"; \
     echo 'MD5 for $(1) differs:'; \
     echo '  expected: $(2)'; \
     echo "    actual: $$sum"; \
@@ -128,25 +128,26 @@ GET_ARCHIVE=\
     cp archives/$(notdir $(URL_$*)) $(call ARCHIVE_FILE,$*) 2>/dev/null || $(call GET_ARCHIVE,$*)
 
 %.stamp: %.download
+	$(SILENT)rm -rf "tmp-$*"
 	$(SILENT)mkdir -p tmp-$*
 	$(SILENT)cd tmp-$* && $(if $(patsubst %.tar.gz,,$(URL_$*)),bunzip2,gunzip) -c ../$(call ARCHIVE_FILE,$*) | tar xf -
-	$(SILENT)rm -rf $*
+	$(SILENT)rm -rf "$*"
 	@for ii in tmp-$*/*; do if [ -d $${ii} ]; then mv $${ii} $*; fi; done; \
-   rm -rf tmp-$*
+	 rm -rf "tmp-$*"
 	@if [ -d patches/$* ]; then \
           cd $* && \
-     for p in ../patches/$*/*.patch; do \
-       $(PATCH) -p1 < $$p $(if $(SILENT),> /dev/null); \
-     done; \
-   fi
+          for p in ../patches/$*/*.patch; do \
+            $(PATCH) -p1 < $$p $(if $(SILENT),> /dev/null); \
+          done; \
+         fi
 	@if [ "$*" != "dune-local" ] ; then \
-     for j in $(wildcard dune-$* dune-$*-*); do \
-       cp $$j $*$$(echo "$$j" | sed -e "s/dune-$*//" -e "s|-|/|g")/dune; \
-       echo "(lang dune 1.2)" > $*/dune-project; \
-       echo "(name $*)" >> $*/dune-project; \
-       touch $*/$*.opam; \
-     done; \
-   fi
+          for j in $(wildcard dune-$* dune-$*-*); do \
+            cp $$j $*$$(echo "$$j" | sed -e "s/dune-$*//" -e "s|-|/|g")/dune; \
+            echo "(lang dune 1.2)" > $*/dune-project; \
+            echo "(name $*)" >> $*/dune-project; \
+            touch $*/$*.opam; \
+          done; \
+         fi
 	@touch $@
 
 clean:
@@ -154,6 +155,5 @@ clean:
 
 distclean: clean
 	rm -rf dune-local secondary $(SRC_EXTS)
-	rm -f *.tar.gz *.tbz *.*stamp *.*download dune \
-        Makefile.config
+	rm -f *.tar.gz *.tbz *.*stamp *.*download dune Makefile.config
 	[ -d archives ] && ([ "$$(find archives -maxdepth 0 -type d -empty)" != "" ] && rmdir archives || echo "WARNING! $$(pwd)/archives/ not empty so left") || true
