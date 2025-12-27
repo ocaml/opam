@@ -2217,6 +2217,29 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
     if assume_built then OpamPackage.Set.of_list pkg_skip
     else Lazy.force t.reinstall %% OpamPackage.Set.of_list pkg_skip
   in
+  let pkg_skip, pkg_reinstall =
+    if OpamStateConfig.(!r.build_test || !r.build_doc) then
+      let to_reinstall =
+        List.fold_left (fun reinstall nv ->
+            let deps_installed =
+              OpamSwitchState.opam t nv
+              |> OpamFile.OPAM.depends
+              |> OpamPackageVar.filter_depends_formula ~build:false ~post:false
+                ~test:OpamStateConfig.(!r.build_test)
+                ~doc:OpamStateConfig.(!r.build_doc)
+                ~dev:false
+                ~env:(OpamPackageVar.resolve_switch ~package:nv t)
+              |> OpamFormula.satisfies_depends t.installed
+            in
+            if deps_installed then reinstall else
+              OpamPackage.Set.add nv reinstall)
+          OpamPackage.Set.empty pkg_skip
+      in
+      List.filter (fun p -> OpamPackage.Set.mem p to_reinstall) pkg_skip,
+      pkg_reinstall ++ to_reinstall
+    else
+      pkg_skip, pkg_reinstall
+  in
   (* Add the packages to the list of package roots and display a
      warning for already installed package roots. *)
   let current_roots = t.installed_roots in
