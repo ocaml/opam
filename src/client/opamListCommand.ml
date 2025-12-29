@@ -628,9 +628,13 @@ let detail_printer ?prettify ?normalise ?(sort=false) installed st nv =
            s % [`magenta]
      with Not_found -> "--" % [`cyan])
   | License ->
-    (try mini_field_printer
-      (OpamStd.List.assoc String.equal "license"
-        (OpamFile.OPAM.to_list (get_opam st nv)))
+    (try
+      get_opam st nv |>
+      OpamFile.OPAM.to_list |>
+      OpamStd.List.assoc_opt String.equal "license" |>
+      function
+      | None -> "--" % [`cyan]
+      | Some f -> mini_field_printer f
      with _ -> "--" % [`cyan])
   | Pinning_target ->
     if OpamPackage.Set.mem nv st.pinned then
