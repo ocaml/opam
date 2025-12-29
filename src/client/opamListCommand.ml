@@ -431,6 +431,7 @@ type output_format =
   | Field of string
   | Raw_field of string
   | Installed_version
+  | License
   | Pinning_target
   | Source_hash
   | Raw
@@ -452,6 +453,7 @@ let disp_header = function
   | Description -> "Description"
   | Field s | Raw_field s -> String.capitalize_ascii s
   | Installed_version -> "Installed"
+  | License -> "License"
   | Pinning_target -> "Pin"
   | Source_hash -> "Source hash"
   | Raw -> "Metadata"
@@ -473,6 +475,7 @@ let field_names = [
   Field "<field>", "<field>";
   Raw_field "<field>:", "<field>:";
   Installed_version, "installed-version";
+  License, "license";
   Pinning_target, "pin";
   Source_hash, "source-hash";
   Raw, "opam-file";
@@ -624,6 +627,11 @@ let detail_printer ?prettify ?normalise ?(sort=false) installed st nv =
          then s % [`bold;`yellow] else
            s % [`magenta]
      with Not_found -> "--" % [`cyan])
+  | License ->
+    (try mini_field_printer
+      (OpamStd.List.assoc String.equal "license"
+        (OpamFile.OPAM.to_list (get_opam st nv)))
+     with _ -> "--" % [`cyan])
   | Pinning_target ->
     if OpamPackage.Set.mem nv st.pinned then
       let opam = get_opam st nv in

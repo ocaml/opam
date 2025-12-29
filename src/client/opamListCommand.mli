@@ -94,6 +94,7 @@ type output_format =
   | Field of string    (** The value of the given opam-file field *)
   | Raw_field of string   (** The raw value of the given opam-file field *)
   | Installed_version  (** Installed version or "--" if none *)
+  | License            (** License or "--" if not found *)
   | Pinning_target     (** Empty string if not pinned *)
   | Source_hash        (** The VC-reported ident of current version, for dev
                            packages. Empty if not available *)
