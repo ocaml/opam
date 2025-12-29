@@ -5,12 +5,14 @@ opam-version: "2.0"
 license: "MIT"
 depends: [
   "unrelated"
-  ( "choice" | "other-choice" { >= "2" & <= "4" } )
+  ( "choice" | "other-choice" { >= "2" & <= "4" } | "other-choice" )
 ]
 ### <pkg:unrelated.1>
 opam-version: "2.0"
+license: "ISC"
 ### <pkg:choice.1>
 opam-version: "2.0"
+license: "ISC"
 ### <pkg:other-choice.1>
 opam-version: "2.0"
 depends: "shouldnt"
@@ -18,28 +20,34 @@ depends: "shouldnt"
 opam-version: "2.0"
 ### <pkg:other-choice.2>
 opam-version: "2.0"
+license: "ISC"
 ### <pkg:other-choice.3>
 opam-version: "2.0"
+license: "ISC"
 ### <pkg:other-choice.4>
 opam-version: "2.0"
-### opam switch create deps --empty
-### opam list --required-by top --recursive --all-versions --short
-choice.1
-other-choice.2
-other-choice.3
-other-choice.4
-top.1
-unrelated.1
-### <pkg:top.1>
-opam-version: "2.0"
-depends: [
-  "unrelated"
-  ( "choice" | "other-choice" { >= "2" & <= "4" } | "other-choice" )
-]
+license: "ISC"
 ### <pkg:other-choice.1>
 opam-version: "2.0"
 depends: "should"
 ### <pkg:should.1>
 opam-version: "2.0"
-### opam list
-### opam list --format=name,license
+license: "AGPL"
+### opam list --all
+# Packages matching: any
+# Name       # Installed # Synopsis
+choice       --
+other-choice --
+should       --
+shouldnt     --
+top          --
+unrelated    --
+### opam list --all --columns=name,installed-version,synopsis,license
+# Packages matching: any
+# Name       # Installed # Synopsis # License
+choice       --                     "ISC"
+other-choice --                     "ISC"
+should       --                     "AGPL"
+shouldnt     --                     --
+top          --                     "MIT"
+unrelated    --                     "ISC"
