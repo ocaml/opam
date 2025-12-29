@@ -41,6 +41,7 @@ users)
 ## Pin
 
 ## List
+  * Add `license` as a possible field name in the columns argument [#6841 @raphael-proust]
 
 ## Show
   * Improve performance of `opam show` by reading switch selection only once instead of once per package-version [#6818 @dra27]
