@@ -51,3 +51,12 @@ should       --                     "AGPL"
 shouldnt     --                     --
 top          --                     "MIT"
 unrelated    --                     "ISC"
+### opam list --all --columns=name,synopsis:,license:
+# Packages matching: any
+# Name       # Installed # Synopsis # License
+choice       --                     "ISC"
+other-choice --                     "ISC"
+should       --                     "AGPL"
+shouldnt     --                     --
+top          --                     "MIT"
+unrelated    --                     "ISC"
