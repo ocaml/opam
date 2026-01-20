@@ -27,6 +27,26 @@ endif
 all: html pages
 
 MANDIR = ../_build/default/doc/man
+HTML_MANDIR = man-html
+
+.PHONY: man-markdown
+man-markdown: man-html
+	rm -rf man-markdown
+	mkdir -p $@
+	for f in ${HTML_MANDIR}/*.html; do\
+	  echo "$$f";\
+	  pandoc -t html -w gfm $$f -o $@/$$(basename $$f .html).tmp.md;\
+	  echo "---" >>$@/$$(basename $$f .html).tmp2.md;\
+	  echo "slug: $$(basename $$f .html).html" >>$@/$$(basename $$f .html).tmp2.md;\
+	  echo "title: Manpage $$(basename $$f .html)" >>$@/$$(basename $$f .html).tmp2.md;\
+	  echo "description: |" >>$@/$$(basename $$f .html).tmp2.md;\
+	  echo "  man page on $$(basename $$f .html)." >>$@/$$(basename $$f .html).tmp2.md;\
+	  echo "---" >>$@/$$(basename $$f .html).tmp2.md;\
+	  cat $@/$$(basename $$f .html).tmp2.md $@/$$(basename $$f .html).tmp.md >>$@/$$(basename $$f .html).md;\
+	  sed -i "s/..\/index.html/index.html/g" $@/$$(basename $$f .html).md;\
+	  rm $@/$$(basename $$f .html).tmp.md;\
+	  rm $@/$$(basename $$f .html).tmp2.md;\
+	done
 
 .PHONY: man-html
 man-html:
@@ -38,7 +58,7 @@ man-html:
 	echo '</head><body>' >>$@/index.html
 	echo '<h1>Opam $(version) man-pages index</h1>' >>$@/index.html
 	echo '<ul>' >>$@/index.html
-	for f in ${MANDIR}/*; do\
+	for f in ${MANDIR}/*.1; do\
 	  man2html -r $$f | sed 1,2d > $@/$$(basename $$f .1).html;\
 	  echo "  <li><a href=\"$$(basename $$f .1).html\">$$(basename $$f .1)</a></li>" >>$@/index.html;\
 	done
@@ -65,4 +85,4 @@ PAGES=$(wildcard pages/*.md)
 pages: $(PAGES:.md=.html)
 
 clean:
-	rm -rf dependencies.dot html/ocamldoc man-html pages/*.html html/index.html
+	rm -rf dependencies.dot html/ocamldoc man-html man-markdown pages/*.html html/index.html
