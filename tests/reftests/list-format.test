@@ -1,0 +1,62 @@
+N0REP0
+### : Dependencies on disjunction :
+### <pkg:top.1>
+opam-version: "2.0"
+license: "MIT"
+depends: [
+  "unrelated"
+  ( "choice" | "other-choice" { >= "2" & <= "4" } | "other-choice" )
+]
+### <pkg:unrelated.1>
+opam-version: "2.0"
+license: "ISC"
+### <pkg:choice.1>
+opam-version: "2.0"
+license: "ISC"
+### <pkg:other-choice.1>
+opam-version: "2.0"
+depends: "shouldnt"
+### <pkg:shouldnt.1>
+opam-version: "2.0"
+### <pkg:other-choice.2>
+opam-version: "2.0"
+license: "ISC"
+### <pkg:other-choice.3>
+opam-version: "2.0"
+license: "ISC"
+### <pkg:other-choice.4>
+opam-version: "2.0"
+license: "ISC"
+### <pkg:other-choice.1>
+opam-version: "2.0"
+depends: "should"
+### <pkg:should.1>
+opam-version: "2.0"
+license: "AGPL"
+### opam list --all
+# Packages matching: any
+# Name       # Installed # Synopsis
+choice       --
+other-choice --
+should       --
+shouldnt     --
+top          --
+unrelated    --
+### opam list --all --columns=name,license:
+# Packages matching: any
+# Name       # License
+choice       "ISC"
+other-choice "ISC"
+should       "AGPL"
+shouldnt
+top          "MIT"
+unrelated    "ISC"
+### opam list --all --columns=name,name:,license:,installed-version,license:
+# Packages matching: any
+# Name       # Name         # License # Installed # License
+choice       "choice"       "ISC"     --          "ISC"
+other-choice "other-choice" "ISC"     --          "ISC"
+should       "should"       "AGPL"    --          "AGPL"
+shouldnt     "shouldnt"               --
+top          "top"          "MIT"     --          "MIT"
+unrelated    "unrelated"    "ISC"     --          "ISC"
