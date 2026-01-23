@@ -1761,6 +1761,8 @@ let package_listing cli =
   let columns =
     mk_opt ~cli cli_original ["columns"] "COLUMNS" ~section
       (Printf.sprintf "Select the columns to display among: %s.\n\
+                       The special form $(b,<field>:) (field name followed by \
+                       colon, e.g., $(b,license:)) selects an arbitrary field. \
                        The default is $(b,name) when $(i,--short) is present \
                        and %s otherwise."
          (OpamStd.List.concat_map ", " (fun (_,f) -> Printf.sprintf "$(b,%s)" f)
