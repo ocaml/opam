@@ -446,7 +446,7 @@ Switch invariant: ["fail-compiler"]
 - No changes have been performed
 Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
 [NOTE] Opam has been initialised, but the initial switch creation failed.
-       Use 'opam switch create <compiler>' to get started.
+       Use opam switch create default fail-compiler to get started.
 # Return code 31 #
 ### :IV:2: simple compiler name with version constraint
 ### rm -rf $OPAMROOT
@@ -474,7 +474,7 @@ Switch invariant: ["fail-compiler" {= "1"}]
 - No changes have been performed
 Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
 [NOTE] Opam has been initialised, but the initial switch creation failed.
-       Use 'opam switch create <compiler>' to get started.
+       Use opam switch create default 'fail-compiler=1' to get started.
 # Return code 31 #
 ### :IV:3: complex formula
 ### rm -rf $OPAMROOT
@@ -506,5 +506,5 @@ Switch invariant: ["fail-compiler" {= "1"} | "ocaml" {>= "4.10"}]
 - No changes have been performed
 Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
 [NOTE] Opam has been initialised, but the initial switch creation failed.
-       Use 'opam switch create <compiler>' to get started.
+       Use opam switch create default --formula '["fail-compiler" {= "1"} | "ocaml" {>= "4.10"}]' to get started.
 # Return code 31 #
