@@ -163,6 +163,7 @@ users)
   * Fix a rare potential GC corruption in `OpamStubs.uname` [#6880 @avsm @kit-ty-kate @andrew]
   * Fix a rare potential GC corruption in `OpamStubs.enumRegistry` on Windows [#6882 @kit-ty-kate]
   * Remove uses of `Stdlib.ignore` [#6481 @rjbou @kit-ty-kate]
+  * Source compatibility with newer `cmdliner` versions [#6854 @WardBrian]
 
 ## Internal: Unix
 
