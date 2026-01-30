@@ -709,13 +709,14 @@ type 'a default = [> `default of string] as 'a
 
 let mk_subcommands_with_default ~cli commands =
   let enum_with_default_valrem sl =
-    let parse, print = Arg.enum sl in
+    let base = Arg.enum sl in
+    let parse = Arg.conv_parser base in
     let parse s =
       match parse s with
-      | `Ok x -> `Ok (x)
-      | _ -> `Ok (Valid (`default s)) in
-    parse, print
-  in
+      | Ok x -> Ok (x)
+      | _ -> Ok (Valid (`default s)) in
+      Arg.conv (parse, Arg.conv_printer base)
+    in
   mk_subcommands_aux ~cli enum_with_default_valrem commands
 
 let bad_subcommand ~cli subcommands (command, usersubcommand, userparams) =

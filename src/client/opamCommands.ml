@@ -1739,7 +1739,7 @@ let env cli =
       "Exits with 0 if the environment is already up-to-date, 1 otherwise, \
        after printing the list of not up-to-date variables."
   in
-  let env
+  let run_env
       global_options shell sexp inplace_path set_opamroot set_opamswitch
       revert check () =
     apply_global_options cli global_options;
@@ -1773,7 +1773,7 @@ let env cli =
   in
   let open Common_config_flags in
   mk_command  ~cli cli_original "env" ~doc ~man
-  Term.(const env
+  Term.(const run_env
         $global_options cli $shell_opt cli cli_original $sexp cli
         $inplace_path cli $set_opamroot cli $set_opamswitch cli
         $revert $check)
@@ -3598,16 +3598,16 @@ let pin ?(unpin_only=false) cli =
             match as_url with
             | Some ((_::_) as url) -> err, url @ acc
             | _->
-              match (fst package) arg with
-              | `Ok (name, None) -> err, name::acc
-              | `Ok (name, Some version) ->
+              match (Arg.conv_parser package) arg with
+              | Ok (name, None) -> err, name::acc
+              | Ok (name, Some version) ->
                 (match OpamPinned.version_opt st name with
                  | Some v when not (OpamPackage.Version.equal v version) ->
                    OpamConsole.error "%s is pinned but not to version %s. Skipping."
                      (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string version);
                    true, acc
                  | Some _ | None -> err, name::acc)
-              | `Error _ ->
+              | Error _ ->
                 OpamConsole.error
                   "No package pinned to this target found, or invalid package \
                    name/url: %s" arg;
@@ -3627,15 +3627,15 @@ let pin ?(unpin_only=false) cli =
       OpamSwitchState.drop @@ OpamClient.PIN.unpin st ~action to_unpin;
       `Ok ()
     | `edit nv  ->
-      (match (fst package) nv with
-       | `Ok (name, version) ->
+      (match (Arg.conv_parser package) nv with
+       | Ok (name, version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let version = OpamStd.Option.Op.(with_version ++ version) in
          OpamSwitchState.drop @@
          OpamClient.PIN.edit st ?locked ~action ?version name;
          `Ok ()
-       | `Error e -> `Error (false, e))
+       | Error (`Msg e) -> `Error (false, e))
     | `add_normalised pins ->
       let pins = OpamPinCommand.parse_pins pins in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -3649,8 +3649,8 @@ let pin ?(unpin_only=false) cli =
             pins);
       `Ok ()
     | `add_dev nv ->
-      (match (fst package) nv with
-       | `Ok (name,version) ->
+      (match (Arg.conv_parser package) nv with
+       | Ok (name,version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let name = OpamSolution.fuzzy_name st name in
@@ -3659,7 +3659,7 @@ let pin ?(unpin_only=false) cli =
          OpamClient.PIN.pin st name ?locked ~edit ?version ~action
            `Dev_upstream;
          `Ok ()
-       | `Error e ->
+       | Error (`Msg e) ->
          if command = Some `add then `Error (false, e)
          else bad_subcommand ~cli commands ("pin", command, params))
     | `add_url arg ->
@@ -3681,9 +3681,9 @@ let pin ?(unpin_only=false) cli =
                names);
          `Ok ())
     | `add_current n ->
-      (match (fst package) n with
-       | `Error e -> `Error (false, e)
-       | `Ok (name,version) ->
+      (match (Arg.conv_parser package) n with
+       | Error (`Msg e) -> `Error (false, e)
+       | Ok (name,version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          match OpamPackage.package_of_name_opt st.installed name, version with
@@ -3702,8 +3702,8 @@ let pin ?(unpin_only=false) cli =
            OpamPinCommand.pin_current st nv;
            `Ok ())
     | `add_wtarget (n, target) ->
-      (match (fst package) n with
-       | `Ok (name,version) ->
+      (match (Arg.conv_parser package) n with
+       | Ok (name,version) ->
          let pin =
            match pin_target kind target, with_version with
            | `Version v, Some v' -> `Source_version (v, v')
@@ -3715,7 +3715,7 @@ let pin ?(unpin_only=false) cli =
          OpamSwitchState.drop @@
          OpamClient.PIN.pin st name ?locked ?version ~edit ~action ?subpath pin;
          `Ok ()
-       | `Error e -> `Error (false, e))
+       | Error (`Msg e) -> `Error (false, e))
     | `incorrect -> bad_subcommand ~cli commands ("pin", command, params)
   in
   mk_command_ret  ~cli cli_original "pin" ~doc ~man
@@ -4494,12 +4494,12 @@ let help =
     | None       -> `Help (`Pager, None)
     | Some topic ->
       let topics = "topics" :: cmds in
-      let conv, _ = OpamCmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+      let conv = OpamCmdliner.Arg.conv_parser @@ OpamCmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
       match conv topic with
-      | `Error e -> `Error (false, e)
-      | `Ok t when t = "topics" ->
+      | Error (`Msg e) -> `Error (false, e)
+      | Ok t when t = "topics" ->
           List.iter (OpamConsole.msg "%s\n") cmds; `Ok ()
-      | `Ok t -> `Help (man_format, Some t) in
+      | Ok t -> `Help (man_format, Some t) in
 
   Term.(ret (const help $Arg.man_format $Term.choice_names $topic)),
   Cmd.info "help" ~doc ~man
