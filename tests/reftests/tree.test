@@ -392,9 +392,9 @@ e.1
 ### : --no-switch :
 ### ::::::::::::::::
 ### opam tree --no-switch | '…' -> '...' | '`' -> "'"
+Usage: opam tree [--help] [--recursive] [--subpath=PATH] [OPTION]...
+       [PACKAGES]...
 opam: --no-switch can't be used without specifying a package or a path
-Usage: opam tree [--recursive] [--subpath=PATH] [OPTION]... [PACKAGES]...
-Try 'opam tree --help' or 'opam --help' for more information.
 # Return code 2 #
 ### opam tree f h --no-switch
 The following actions are simulated:
