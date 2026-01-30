@@ -804,13 +804,14 @@ let package_version =
 
 let positive_integer : int Arg.conv =
   let parser = Arg.conv_parser Arg.int in
+  let printer = Arg.conv_printer Arg.int in
   let parser s =
     match parser s with
     | Error _ -> Error "expected a strictly positive integer"
     | Ok n as r -> if n <= 0
       then Error "expected a positive integer"
       else r in
-  Arg.conv' (parser, Arg.conv_printer Arg.int)
+  Arg.conv' (parser, printer)
 
 (* name * version option *)
 let package =
@@ -869,8 +870,8 @@ let atom_or_local =
         Ok (`Dirname (OpamFilename.Dir.of_string str))
       else
         Error (Printf.sprintf
-                  "Not a valid package specification or existing file or \
-                   directory: %s" str)
+                 "Not a valid package specification or existing file or \
+                  directory: %s" str)
     else match Arg.conv_parser atom str with
       | Ok at -> Ok (`Atom at)
       | Error (`Msg e) -> Error e
@@ -886,14 +887,15 @@ let atom_or_dir =
   let parse str = match Arg.conv_parser atom_or_local str with
     | Ok (`Filename _) ->
       Error (Printf.sprintf
-                "Not a valid package specification or existing directory: %s"
-                str)
+               "Not a valid package specification or existing directory: %s"
+               str)
     | Ok (`Atom _ | `Dirname _ as atom_or_dir) -> Ok (atom_or_dir)
     | Error (`Msg e) -> Error e
   in
-  let print ppf = function
-    | `Dirname d -> pr_str ppf (OpamFilename.Dir.to_string d)
-    | `Atom a -> Arg.conv_printer atom ppf a in
+  let print ppf
+    :> [ `Atom of OpamTypes.atom | `Dirname of OpamTypes.dirname ] -> unit
+    = Arg.conv_printer atom_or_local ppf
+  in
   Arg.conv' (parse, print)
 
 let dep_formula =
@@ -999,6 +1001,16 @@ let _selector =
   in
   Arg.conv' (parse, print)
 
+(* unused
+let enum_with_default sl: 'a Arg.converter =
+  let parse, print = Arg.enum sl in
+  let parse s =
+    match parse s with
+    | `Ok _ as x -> x
+    | _ -> `Ok (`default s) in
+  parse, print
+*)
+
 let opamlist_column =
   let parse str =
     if OpamCompat.String.ends_with ~suffix:":" str then
@@ -1012,9 +1024,9 @@ let opamlist_column =
       |> fun (f, _) -> Ok f
     with Not_found ->
       Error (Printf.sprintf
-                "No known printer for column %s. If you meant an opam file \
-                 field, use '%s:' instead (with a trailing colon)."
-                str str)
+               "No known printer for column %s. If you meant an opam file \
+                field, use '%s:' instead (with a trailing colon)."
+               str str)
   in
   let print ppf field =
     Format.pp_print_string ppf (OpamListCommand.string_of_field field)
@@ -1054,7 +1066,9 @@ let opamlist_columns =
   let print ppf cols =
     let rec aux = function
       | x::(_::_) as r ->
-        Arg.conv_printer opamlist_column ppf x; Format.pp_print_char ppf ','; aux r
+        Arg.conv_printer opamlist_column ppf x;
+        Format.pp_print_char ppf ',';
+        aux r
       | [x] -> Arg.conv_printer opamlist_column ppf x
       | [] -> ()
     in
@@ -1664,26 +1678,21 @@ let package_selection cli =
       Arg.(pair ~sep:':' string string)
   in
   let has_flag =
-    let flag_arg =
-      let parser s =
-        match pkg_flag_of_string s with
-          | Pkgflag_Unknown s ->
-            Error ("Invalid package flag "^s^", must be one of "^
-                    OpamStd.List.concat_map " " string_of_pkg_flag
-                      all_package_flags)
-          | f -> Ok f in
-      let printer fmt flag =
-        Format.pp_print_string fmt (string_of_pkg_flag flag)
-      in
-      Arg.conv' (parser, printer)
-    in
     mk_opt_all ~cli cli_original ["has-flag"] "FLAG" ~section
       ("Only include packages which have the given flag set. \
         Package flags are one of: "^
        (OpamStd.List.concat_map " "
           (Printf.sprintf "$(b,%s)" @* string_of_pkg_flag)
           all_package_flags))
-      flag_arg
+      (Arg.conv'
+         ((fun s -> match pkg_flag_of_string s with
+             | Pkgflag_Unknown s ->
+               Error ("Invalid package flag "^s^", must be one of "^
+                      OpamStd.List.concat_map " " string_of_pkg_flag
+                        all_package_flags)
+             | f -> Ok f),
+          (fun fmt flag ->
+             Format.pp_print_string fmt (string_of_pkg_flag flag))))
   in
   let has_tag =
     mk_opt_all ~cli cli_original ["has-tag"] "TAG" ~section

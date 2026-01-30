@@ -1408,7 +1408,10 @@ let help =
     | None       -> `Help (`Pager, None)
     | Some topic ->
       let topics = "topics" :: cmds in
-      let conv = OpamCmdliner.Arg.conv_parser @@ OpamCmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+      let conv =
+        OpamCmdliner.Arg.conv_parser
+          (OpamCmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics))
+      in
       match conv topic with
       | Error (`Msg e) -> `Error (false, e)
       | Ok t when t = "topics" ->
