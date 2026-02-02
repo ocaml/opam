@@ -77,13 +77,23 @@ type 'a subcommand = validity * string * 'a * string list * string
 type 'a subcommands = 'a subcommand list
 
 val mk_subcommands:
-  cli:OpamCLIVersion.Sourced.t -> 'a subcommands ->
+  cli:OpamCLIVersion.Sourced.t ->
+  ?params_completions:('a option, string) Arg.Completion.func ->
+  'a subcommands ->
   'a option Term.t * string list Term.t
 
 type 'a default = [> `default of string] as 'a
 
+(* slightly unfortunate: typed completions require some higher-rank polymorphism
+  for the completion function here *)
+type 'a default_command_completer = {
+  f:'b. ('a default option, 'b) Arg.Completion.func
+}
+
 val mk_subcommands_with_default:
-  cli:OpamCLIVersion.Sourced.t -> 'a default subcommands ->
+  cli:OpamCLIVersion.Sourced.t ->
+  ?params_completions:'a default_command_completer ->
+  'a default subcommands ->
   'a option Term.t * string list Term.t
 
 val bad_subcommand:

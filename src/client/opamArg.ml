@@ -641,10 +641,7 @@ let apply_global_options cli o =
   with
   | Sys_error _ | Not_found -> ()
 
-(** part of the global_options term, but by separating it out we can have other
-    completions depend on it for contextual information *)
-let switch_flag =
-  let complete _ ~token =
+let complete_switch _ ~token =
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     let gt = OpamGlobalState.fix_switch_list gt in
     let switches = OpamFile.Config.installed_switches gt.config |> List.sort OpamSwitch.compare in
@@ -658,14 +655,20 @@ let switch_flag =
       switches
     in
     Ok directives
-  in
-  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete)
+
+
+(** part of the global_options term, but by separating it out we can have other
+    completions depend on it for contextual information *)
+let switch_flag =
+  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete_switch)
       Arg.string
   in
   mk_opt ~cli:(cli2_0, `Default) cli_original ~section:global_option_section ["switch"]
     "SWITCH" "Use $(docv) as the current compiler switch. \
               This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
     (Arg.some switch) None
+
+(** Helpers for completions *)
 
 let complete_with_switch f =
   let global_options_for_completion opt_switch =
@@ -689,6 +692,26 @@ let complete_with_switch f =
       f st ~token
     in
     Arg.Completion.make ~context:switch_flag complete
+
+let complete_packages ?(which=`Installed ) ?(extras=[]) () =
+  complete_with_switch @@ fun st ~token ->
+    let packages =
+      match which with
+      | `Installed -> st.installed
+      | `All -> OpamPackage.Set.union st.packages st.installed
+    in
+    let packages = OpamPackage.names_of_packages packages in
+    let directives = List.filter_map
+      (fun pkg ->
+          let name = OpamPackage.Name.to_string pkg in
+          if OpamCompat.String.starts_with ~prefix:token name then
+            Some (Arg.Completion.string name)
+          else
+            None
+      )
+      (OpamPackage.Name.Set.to_list packages)
+    in
+    Ok (extras @ directives)
 
 (** Build options *)
 
@@ -817,9 +840,10 @@ let existing_filename_or_dash =
   Arg.conv' (parse, print)
 
 let dirname =
-  let parse str = Ok (OpamFilename.Dir.of_string str) in
-  let print ppf dir = pr_str ppf (escape_path (OpamFilename.prettify_dir dir)) in
-  Arg.conv' (parse, print)
+  let completion = Arg.Completion.complete_dirs in
+  let parser str = Ok (OpamFilename.Dir.of_string str) in
+  let pp ppf dir = pr_str ppf (escape_path (OpamFilename.prettify_dir dir)) in
+  Arg.Conv.make ~docv:"DIR" ~completion ~parser ~pp ()
 
 let existing_filename_dirname_or_dash =
   let parse str =
@@ -847,12 +871,13 @@ let subpath_conv =
   Arg.conv' (parse, print)
 
 let package_name =
-  let parse str =
+  let parser str =
     try Ok (OpamPackage.Name.of_string str)
     with Failure msg -> Error msg
   in
-  let print ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
-  Arg.conv' (parse, print)
+  let pp ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
+  let completion = complete_packages ~which:`All () in
+  Arg.Conv.make ~docv:"PACKAGE" ~completion ~pp ~parser ()
 
 let package_version =
   let parse str =
@@ -920,7 +945,7 @@ let atom =
   Arg.conv' (parse, print)
 
 let atom_or_local =
-  let parse str =
+  let parser str =
     if OpamFilename.is_rel_seg str ||
        OpamCompat.String.exists OpamFilename.is_dir_sep str
     then
@@ -936,12 +961,13 @@ let atom_or_local =
       | Ok at -> Ok (`Atom at)
       | Error (`Msg e) -> Error e
   in
-  let print ppf = function
+  let pp ppf = function
     | `Filename f -> pr_str ppf (OpamFilename.to_string f)
     | `Dirname d -> pr_str ppf (OpamFilename.Dir.to_string d)
     | `Atom a -> Arg.conv_printer atom ppf a
   in
-  Arg.conv' (parse, print)
+  let completion = complete_packages ~which:`All ~extras:[Arg.Completion.dirs; Arg.Completion.files] () in
+  Arg.Conv.make ~completion ~docv:"PACKAGE" ~parser ~pp ()
 
 let atom_or_dir =
   let parser str = match Arg.conv_parser atom_or_local str with
@@ -956,23 +982,7 @@ let atom_or_dir =
     :> [ `Atom of OpamTypes.atom | `Dirname of OpamTypes.dirname ] -> unit
     = Arg.conv_printer atom_or_local ppf
   in
-  let completion = complete_with_switch (fun st ~token ->
-     let matching = OpamPackage.Set.filter
-        (fun pkg ->
-            OpamCompat.String.starts_with
-              ~prefix:token
-              (OpamPackage.to_string pkg))
-        st.installed
-      in
-      let directives = OpamPackage.Set.to_list_map
-        (fun pkg ->
-          Arg.Completion.value
-            ~doc:"package"
-            (`Atom (OpamPackage.name pkg, None)))
-        matching
-      in
-      Ok (Arg.Completion.dirs :: directives))
-  in
+  let completion = complete_packages ~extras:[Arg.Completion.dirs] () in
   Arg.Conv.make ~docv:"ATOM" ~parser ~completion ~pp ()
 
 let dep_formula =
@@ -1275,11 +1285,15 @@ let repo_kind_flag ?section cli validity =
        (string_of_enum main_kinds))
 
 let jobs_flag ?section cli validity =
+  let jobs_conv = Arg.Conv.of_conv
+    ~completion:(Arg.Completion.make (fun _ ~token:_ -> Ok (List.map Arg.Completion.value [1;2;3;4;5;6;7;8])))
+    positive_integer
+  in
   mk_opt ~cli validity ?section ["j";"jobs"] "JOBS"
     "Set the maximal number of concurrent jobs to use. The default value is \
     calculated from the number of cores. You can also set it using the \
     $(b,\\$OPAMJOBS) environment variable."
-    Arg.(some positive_integer) None
+    Arg.(some jobs_conv) None
 
 let formula_flag ?section cli =
   mk_opt ~cli (cli_from ~experimental:true cli2_2) ?section ["formula"] "FORMULA"

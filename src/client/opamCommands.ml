@@ -2814,8 +2814,13 @@ let switch cli =
     @ [`S Manpage.s_options]
     @ OpamArg.man_build_option_section
   in
-
-  let command, params = mk_subcommands_with_default ~cli commands in
+  let params_completions = {OpamArgTools.f=
+    fun command_opt ~token ->
+      match Option.default None command_opt with
+      | Some (`set | `remove | `reinstall | `link | `install | `default _) | None  ->
+        OpamArg.complete_switch None ~token
+      | _ -> Ok []} in
+  let command, params = mk_subcommands_with_default ~params_completions ~cli commands in
   let no_switch =
     mk_flag ~cli cli_original ["no-switch"]
       "Don't automatically select newly installed switches." in

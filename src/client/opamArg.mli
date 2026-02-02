@@ -316,10 +316,16 @@ type 'a subcommands = 'a subcommand list
 
 val mk_subcommands:
   cli:OpamCLIVersion.Sourced.t ->
-  'a subcommands -> 'a option Term.t * string list Term.t
+  ?params_completions:('a option, string) Arg.Completion.func ->
+  'a subcommands ->
+  'a option Term.t * string list Term.t
 (** [subcommands cmds] are the terms [cmd] and [params]. [cmd] parses
     which sub-commands in [cmds] is selected and [params] parses the
-    remaining of the command-line parameters as a list of strings. *)
+    remaining of the command-line parameters as a list of strings.
+
+    [params_completions] is used to complete parameters for the selected sub-command,
+    with the selected command as the context argument
+*)
 
 type 'a default = [> `default of string] as 'a
 
@@ -330,9 +336,16 @@ val enum_with_default: (string * 'a default) list -> 'a Arg.converter
 
 val mk_subcommands_with_default:
   cli:OpamCLIVersion.Sourced.t ->
-  'a default subcommands -> 'a option Term.t * string list Term.t
+  ?params_completions:'a OpamArgTools.default_command_completer ->
+  'a default subcommands ->
+  'a option Term.t * string list Term.t
 (** Same as {!mk_subcommands} but use the default value if no
-    sub-command is selected. *)
+    sub-command is selected.
+
+    The [params_completions] argument is called with [`default ""] for
+    the top-level completion, and with the command context when used for
+    parameters of sub-commands.
+*)
 
 val bad_subcommand:
   cli:OpamCLIVersion.Sourced.t ->
@@ -386,3 +399,7 @@ val help_sections: OpamCLIVersion.Sourced.t -> Manpage.block list
 val preinit_opam_env_variables: unit -> unit
 val init_opam_env_variabes: OpamCLIVersion.Sourced.t -> unit
 val scrubbed_environment_variables: string list
+
+
+(** {2 Completion helpers} *)
+val complete_switch: ('a, 'b) Arg.Completion.func
