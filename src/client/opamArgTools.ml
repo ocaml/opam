@@ -677,7 +677,7 @@ let mk_subdoc ~cli ?(defaults=[]) ?(extra_defaults=[]) commands =
       `I (cmds, d)
     ) commands
 
-let mk_subcommands_aux ~cli my_enum commands =
+let mk_subcommands_aux ~cli ~params_completions my_enum commands =
   let commands =
     List.map (fun (v,n,c,a,d) -> contented_validity v c, n, a, d) commands
   in
@@ -698,27 +698,47 @@ let mk_subcommands_aux ~cli my_enum commands =
     term_cli_check ~check Arg.(pos 0 (some & my_enum scommand) None & doc)
   in
   let params =
+    let completion = Arg.Completion.make ~context:command params_completions in
+    let params_conv = Arg.Conv.of_conv ~completion Arg.string in
     let doc = Arg.info ~doc:"Optional parameters." [] in
-    Arg.(value & pos_right 0 string [] & doc)
+    Arg.(value & pos_right 0 params_conv [] & doc)
   in
   command, params
 
-let mk_subcommands ~cli commands =
-  mk_subcommands_aux ~cli Arg.enum commands
+let mk_subcommands ~cli ?(params_completions= fun _ ~token:_ -> Ok []) commands =
+  mk_subcommands_aux ~cli ~params_completions Arg.enum commands
 
 type 'a default = [> `default of string] as 'a
 
-let mk_subcommands_with_default ~cli commands =
+type 'a default_command_completer = {
+  f:'b. ('a default option, 'b) Arg.Completion.func
+}
+
+let mk_subcommands_with_default ~cli ?(params_completions= {f=fun _ ~token:_ -> Ok []}) commands =
   let enum_with_default_valrem sl =
     let base = Arg.enum sl in
     let parser = Arg.Conv.parser base in
+    let completion =
+      let Complete (_, enum_completer) = Arg.Completion.complete
+        (Arg.Conv.completion base)
+      in
+      let complete _ ~token =
+        let enum_values =
+          enum_completer None ~token |> Result.to_option |> Option.default []
+        in
+        match params_completions.f (Some (Some (`default ""))) ~token  with
+        | Error _ -> Ok enum_values
+        | Ok l -> Ok (enum_values @ l)
+      in
+      Arg.Completion.make complete
+    in
     let parser s =
       match parser s with
       | Ok x -> Ok (x)
       | _ -> Ok (Valid (`default s)) in
-    Arg.Conv.of_conv ~parser base
+    Arg.Conv.of_conv ~completion ~parser base
   in
-  mk_subcommands_aux ~cli enum_with_default_valrem commands
+  mk_subcommands_aux ~cli ~params_completions:params_completions.f enum_with_default_valrem commands
 
 let bad_subcommand ~cli subcommands (command, usersubcommand, userparams) =
   match usersubcommand with
