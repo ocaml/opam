@@ -316,7 +316,7 @@ type 'a subcommands = 'a subcommand list
 
 val mk_subcommands:
   cli:OpamCLIVersion.Sourced.t ->
-  ?params_completions:('a option, string) Arg.Completion.func ->
+  ?params_completions:(string option * 'a option, string) Arg.Completion.func ->
   'a subcommands ->
   'a option Term.t * string list Term.t
 (** [subcommands cmds] are the terms [cmd] and [params]. [cmd] parses
@@ -324,7 +324,7 @@ val mk_subcommands:
     remaining of the command-line parameters as a list of strings.
 
     [params_completions] is used to complete parameters for the selected sub-command,
-    with the selected command as the context argument
+    with the [--switch] argument and selected command as the context
 *)
 
 type 'a default = [> `default of string] as 'a
@@ -402,4 +402,11 @@ val scrubbed_environment_variables: string list
 
 
 (** {2 Completion helpers} *)
+
 val complete_switch: ('a, 'b) Arg.Completion.func
+val complete_repos: ('a, 'b) Arg.Completion.func
+val complete_packages:
+  ?which:[ `All | `Installed | `Pinned ] ->
+  ?extras:'a Arg.Completion.directive conjunction ->
+  unit ->
+  (string option, 'a) Arg.Completion.func
