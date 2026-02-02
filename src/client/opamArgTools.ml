@@ -677,6 +677,33 @@ let mk_subdoc ~cli ?(defaults=[]) ?(extra_defaults=[]) commands =
       `I (cmds, d)
     ) commands
 
+let complete_switch _ ~token =
+  OpamGlobalState.with_ `Lock_none @@ fun gt ->
+  let gt = OpamGlobalState.fix_switch_list gt in
+  let switches = OpamFile.Config.installed_switches gt.config |> List.sort OpamSwitch.compare in
+  let directives = List.filter_map
+    (fun sw ->
+      let sw_name = OpamSwitch.to_string sw in
+      if OpamCompat.String.starts_with sw_name ~prefix:token then
+          Some (Arg.Completion.string sw_name)
+      else
+        None)
+    switches
+  in
+  Ok directives
+
+
+(** part of the global_options term, but by separating it out we can have other
+    completions depend on it for contextual information *)
+let switch_flag =
+  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete_switch)
+      Arg.string
+  in
+  mk_opt ~cli:(cli2_0, `Default) cli_original ~section:Manpage.s_common_options ["switch"]
+    "SWITCH" "Use $(docv) as the current compiler switch. \
+              This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
+    (Arg.some switch) None
+
 let mk_subcommands_aux ~cli ~params_completions my_enum commands =
   let commands =
     List.map (fun (v,n,c,a,d) -> contented_validity v c, n, a, d) commands
@@ -698,7 +725,7 @@ let mk_subcommands_aux ~cli ~params_completions my_enum commands =
     term_cli_check ~check Arg.(pos 0 (some & my_enum scommand) None & doc)
   in
   let params =
-    let completion = Arg.Completion.make ~context:command params_completions in
+    let completion = Arg.Completion.make ~context:(Term.product switch_flag command) params_completions in
     let params_conv = Arg.Conv.of_conv ~completion Arg.string in
     let doc = Arg.info ~doc:"Optional parameters." [] in
     Arg.(value & pos_right 0 params_conv [] & doc)
@@ -711,7 +738,7 @@ let mk_subcommands ~cli ?(params_completions= fun _ ~token:_ -> Ok []) commands 
 type 'a default = [> `default of string] as 'a
 
 type 'a default_command_completer = {
-  f:'b. ('a default option, 'b) Arg.Completion.func
+  f:'b. (string option * 'a default option, 'b) Arg.Completion.func
 }
 
 let mk_subcommands_with_default ~cli ?(params_completions= {f=fun _ ~token:_ -> Ok []}) commands =
@@ -722,15 +749,16 @@ let mk_subcommands_with_default ~cli ?(params_completions= {f=fun _ ~token:_ -> 
       let Complete (_, enum_completer) = Arg.Completion.complete
         (Arg.Conv.completion base)
       in
-      let complete _ ~token =
+      let complete ctx ~token =
+        let opt_switch = Option.default None ctx in
         let enum_values =
-          enum_completer None ~token |> Result.to_option |> Option.default []
+          enum_completer None ~token |> Result.value ~default:[]
         in
-        match params_completions.f (Some (Some (`default ""))) ~token  with
+        match params_completions.f (Some (opt_switch, Some (`default ""))) ~token  with
         | Error _ -> Ok enum_values
         | Ok l -> Ok (enum_values @ l)
       in
-      Arg.Completion.make complete
+      Arg.Completion.make ~context:switch_flag complete
     in
     let parser s =
       match parser s with

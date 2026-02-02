@@ -641,63 +641,34 @@ let apply_global_options cli o =
   with
   | Sys_error _ | Not_found -> ()
 
-let complete_switch _ ~token =
-    OpamGlobalState.with_ `Lock_none @@ fun gt ->
-    let gt = OpamGlobalState.fix_switch_list gt in
-    let switches = OpamFile.Config.installed_switches gt.config |> List.sort OpamSwitch.compare in
-    let directives = List.filter_map
-      (fun sw ->
-        let sw_name = OpamSwitch.to_string sw in
-        if OpamCompat.String.starts_with sw_name ~prefix:token then
-            Some (Arg.Completion.string sw_name)
-        else
-          None)
-      switches
-    in
-    Ok directives
-
-
-(** part of the global_options term, but by separating it out we can have other
-    completions depend on it for contextual information *)
-let switch_flag =
-  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete_switch)
-      Arg.string
-  in
-  mk_opt ~cli:(cli2_0, `Default) cli_original ~section:global_option_section ["switch"]
-    "SWITCH" "Use $(docv) as the current compiler switch. \
-              This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
-    (Arg.some switch) None
-
 (** Helpers for completions *)
 
-let complete_with_switch f =
-  let global_options_for_completion opt_switch =
-    create_global_options false false None [] true None opt_switch
-    [] []
-    false
-    None None false
-    None None true true None true
-    false false
-    false None
+let global_options_for_completion opt_switch =
+  create_global_options false false None [] true None opt_switch
+  [] []
+  false
+  None None false
+  None None true true None true
+  false false
+  false None
+
+let complete_with_switch f ctx ~token =
+  let opt_switch = Option.default None ctx in
+  let options = global_options_for_completion opt_switch in
+  apply_global_options (OpamCLIVersion.default, `Default) options;
+  OpamGlobalState.with_ `Lock_none @@ fun gt ->
+  OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+  let st =
+      OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
   in
-  let complete ctx ~token =
-    let opt_switch = Option.default None ctx in
-    let options = global_options_for_completion opt_switch in
-    apply_global_options (OpamCLIVersion.default, `Default) options;
-      OpamGlobalState.with_ `Lock_none @@ fun gt ->
-      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-      let st =
-          OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
-      in
-      f st ~token
-    in
-    Arg.Completion.make ~context:switch_flag complete
+  f st ~token
 
 let complete_packages ?(which=`Installed ) ?(extras=[]) () =
   complete_with_switch @@ fun st ~token ->
     let packages =
       match which with
       | `Installed -> st.installed
+      | `Pinned -> st.pinned
       | `All -> OpamPackage.Set.union st.packages st.installed
     in
     let packages = OpamPackage.names_of_packages packages in
@@ -712,6 +683,27 @@ let complete_packages ?(which=`Installed ) ?(extras=[]) () =
       (OpamPackage.Name.Set.to_list packages)
     in
     Ok (extras @ directives)
+
+let package_completion ?(which=`Installed ) ?(extras=[]) () =
+  Arg.Completion.make
+    ~context:switch_flag
+    (complete_packages ~which ~extras ())
+
+let complete_repos _ ~token =
+  OpamGlobalState.with_ `Lock_none @@ fun gt ->
+  OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+  let repos =  rt.repositories in
+  let directives = List.filter_map
+    (fun repo ->
+        let name = OpamRepositoryName.to_string repo in
+        if OpamCompat.String.starts_with ~prefix:token name then
+          Some (Arg.Completion.string name)
+        else
+          None
+    )
+    (OpamRepositoryName.Map.keys repos)
+  in
+  Ok directives
 
 (** Build options *)
 
@@ -876,7 +868,7 @@ let package_name =
     with Failure msg -> Error msg
   in
   let pp ppf pkg = pr_str ppf (OpamPackage.Name.to_string pkg) in
-  let completion = complete_packages ~which:`All () in
+  let completion = package_completion ~which:`All () in
   Arg.Conv.make ~docv:"PACKAGE" ~completion ~pp ~parser ()
 
 let package_version =
@@ -966,7 +958,7 @@ let atom_or_local =
     | `Dirname d -> pr_str ppf (OpamFilename.Dir.to_string d)
     | `Atom a -> Arg.conv_printer atom ppf a
   in
-  let completion = complete_packages ~which:`All ~extras:[Arg.Completion.dirs; Arg.Completion.files] () in
+  let completion = package_completion ~which:`All ~extras:[Arg.Completion.dirs; Arg.Completion.files] () in
   Arg.Conv.make ~completion ~docv:"PACKAGE" ~parser ~pp ()
 
 let atom_or_dir =
@@ -982,7 +974,7 @@ let atom_or_dir =
     :> [ `Atom of OpamTypes.atom | `Dirname of OpamTypes.dirname ] -> unit
     = Arg.conv_printer atom_or_local ppf
   in
-  let completion = complete_packages ~extras:[Arg.Completion.dirs] () in
+  let completion = package_completion ~extras:[Arg.Completion.dirs] () in
   Arg.Conv.make ~docv:"ATOM" ~parser ~completion ~pp ()
 
 let dep_formula =
