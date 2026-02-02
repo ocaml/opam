@@ -641,6 +641,55 @@ let apply_global_options cli o =
   with
   | Sys_error _ | Not_found -> ()
 
+(** part of the global_options term, but by separating it out we can have other
+    completions depend on it for contextual information *)
+let switch_flag =
+  let complete _ ~token =
+    OpamGlobalState.with_ `Lock_none @@ fun gt ->
+    let gt = OpamGlobalState.fix_switch_list gt in
+    let switches = OpamFile.Config.installed_switches gt.config |> List.sort OpamSwitch.compare in
+    let directives = List.filter_map
+      (fun sw ->
+        let sw_name = OpamSwitch.to_string sw in
+        if OpamCompat.String.starts_with sw_name ~prefix:token then
+            Some (Arg.Completion.string sw_name)
+        else
+          None)
+      switches
+    in
+    Ok directives
+  in
+  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete)
+      Arg.string
+  in
+  mk_opt ~cli:(cli2_0, `Default) cli_original ~section:global_option_section ["switch"]
+    "SWITCH" "Use $(docv) as the current compiler switch. \
+              This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
+    (Arg.some switch) None
+
+let complete_with_switch f =
+  let global_options_for_completion opt_switch =
+    create_global_options false false None [] true None opt_switch
+    [] []
+    false
+    None None false
+    None None true true None true
+    false false
+    false None
+  in
+  let complete ctx ~token =
+    let opt_switch = Option.default None ctx in
+    let options = global_options_for_completion opt_switch in
+    apply_global_options (OpamCLIVersion.default, `Default) options;
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      let st =
+          OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
+      in
+      f st ~token
+    in
+    Arg.Completion.make ~context:switch_flag complete
+
 (** Build options *)
 
 type build_options = {
@@ -895,7 +944,7 @@ let atom_or_local =
   Arg.conv' (parse, print)
 
 let atom_or_dir =
-  let parse str = match Arg.conv_parser atom_or_local str with
+  let parser str = match Arg.conv_parser atom_or_local str with
     | Ok (`Filename _) ->
       Error (Printf.sprintf
                "Not a valid package specification or existing directory: %s"
@@ -903,11 +952,28 @@ let atom_or_dir =
     | Ok (`Atom _ | `Dirname _ as atom_or_dir) -> Ok (atom_or_dir)
     | Error (`Msg e) -> Error e
   in
-  let print ppf
+  let pp ppf
     :> [ `Atom of OpamTypes.atom | `Dirname of OpamTypes.dirname ] -> unit
     = Arg.conv_printer atom_or_local ppf
   in
-  Arg.conv' (parse, print)
+  let completion = complete_with_switch (fun st ~token ->
+     let matching = OpamPackage.Set.filter
+        (fun pkg ->
+            OpamCompat.String.starts_with
+              ~prefix:token
+              (OpamPackage.to_string pkg))
+        st.installed
+      in
+      let directives = OpamPackage.Set.to_list_map
+        (fun pkg ->
+          Arg.Completion.value
+            ~doc:"package"
+            (`Atom (OpamPackage.name pkg, None)))
+        matching
+      in
+      Ok (Arg.Completion.dirs :: directives))
+  in
+  Arg.Conv.make ~docv:"ATOM" ~parser ~completion ~pp ()
 
 let dep_formula =
   let module OpamParser = OpamParser.FullPos in
@@ -1297,11 +1363,6 @@ let global_options cli =
        select the 2.0 CLI, set the $(b,OPAMCLI) environment variable to \
        $(i,2.0) instead of using this parameter."
       Arg.string (OpamCLIVersion.to_string OpamCLIVersion.current) in
-  let switch =
-    mk_opt ~cli cli_original ~section ["switch"]
-      "SWITCH" "Use $(docv) as the current compiler switch. \
-                This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
-      Arg.(some string) None in
   let yes =
     mk_vflag_all ~cli ~section [
       cli_original, true, ["y";"yes"],
@@ -1420,7 +1481,7 @@ let global_options cli =
        equivalent to setting $(b,IGNOREPINDEPENDS=true)."
   in
   Term.(const create_global_options
-        $git_version $debug $debug_level $verbose $quiet $color $switch
+        $git_version $debug $debug_level $verbose $quiet $color $switch_flag
         $yes $confirm_level
         $strict $root $external_solver
         $use_internal_solver $cudf_file $solver_preferences $best_effort
