@@ -268,6 +268,9 @@ val dirname: dirname Arg.conv
 val existing_filename_dirname_or_dash:
   OpamFilename.generic_file option Arg.conv
 
+(** Like Arg.int but the completion suggests 1..8 *)
+val level_int: int Arg.conv
+
 val positive_integer: int Arg.conv
 
 (** Package name converter *)
@@ -403,8 +406,9 @@ val scrubbed_environment_variables: string list
 
 (** {2 Completion helpers} *)
 
-val complete_switch: ('a, 'b) Arg.Completion.func
-val complete_repos: ('a, 'b) Arg.Completion.func
+val complete_opam_fields: ('ctx, 'a) Arg.Completion.func
+val complete_switches: ('ctx, 'a) Arg.Completion.func
+val complete_repos: ('cta, 'a) Arg.Completion.func
 val complete_packages:
   ?which:[ `All | `Installed | `Pinned ] ->
   ?extras:'a Arg.Completion.directive conjunction ->

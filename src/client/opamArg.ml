@@ -651,7 +651,7 @@ let global_options_for_completion opt_switch =
   false None
 
 let complete_with_switch f ctx ~token =
-  let opt_switch = Option.default None ctx in
+  let opt_switch = OpamStd.Option.default None ctx in
   let options = global_options_for_completion opt_switch in
   apply_global_options (OpamCLIVersion.default, `Default) options;
   OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -798,9 +798,10 @@ let build_options_no_depexts b = b.no_depexts
 let pr_str = Format.pp_print_string
 
 let repository_name =
-  let parse str = Ok (OpamRepositoryName.of_string str) in
-  let print ppf name = pr_str ppf (OpamRepositoryName.to_string name) in
-  Arg.conv' (parse, print)
+  let parser str = Ok (OpamRepositoryName.of_string str) in
+  let completion = Arg.Completion.make ~context:OpamArgTools.switch_flag complete_repos in
+  let pp ppf name = pr_str ppf (OpamRepositoryName.to_string name) in
+  Arg.Conv.make ~docv:"REPO" ~completion ~parser ~pp ()
 
 let url =
   let parse str =
@@ -812,12 +813,12 @@ let url =
   Arg.conv' (parse, print)
 
 let filename =
-  let parse str = Ok (OpamFilename.of_string str) in
-  let print ppf filename = pr_str ppf (OpamFilename.to_string filename) in
-  Arg.conv' (parse, print)
+  let parser str = Ok (OpamFilename.of_string str) in
+  let pp ppf filename = pr_str ppf (OpamFilename.to_string filename) in
+  Arg.Conv.make ~completion:Arg.Completion.complete_files ~docv:"A file" ~parser ~pp ()
 
 let existing_filename_or_dash =
-  let parse str =
+  let parser str =
     if str = "-" then Ok None
     else
       let f = OpamFilename.of_string str in
@@ -825,9 +826,12 @@ let existing_filename_or_dash =
       else
         Error (Printf.sprintf "File %s not found" (OpamFilename.to_string f))
   in
-  let print ppf filename =
+  let completion =
+    Arg.Completion.make (fun _ ~token:_ -> Ok Arg.Completion.[string "-" ; files])
+  in
+  let pp ppf filename =
     pr_str ppf OpamStd.Option.Op.((filename >>| OpamFilename.to_string) +! "-") in
-  Arg.conv' (parse, print)
+  Arg.Conv.make ~completion ~docv:"FILE" ~parser ~pp ()
 
 let dirname =
   let completion = Arg.Completion.complete_dirs in
@@ -836,7 +840,7 @@ let dirname =
   Arg.Conv.make ~docv:"DIR" ~completion ~parser ~pp ()
 
 let existing_filename_dirname_or_dash =
-  let parse str =
+  let parser str =
     if str = "-" then Ok None else
     match OpamFilename.opt_file (OpamFilename.of_string str) with
     | Some f -> Ok (Some (OpamFilename.F f))
@@ -845,13 +849,16 @@ let existing_filename_dirname_or_dash =
       | None ->
         Error (Printf.sprintf "File or directory %s not found" str)
   in
-  let print ppf gf =
+  let completion =
+    Arg.Completion.make (fun _ ~token:_ -> Ok Arg.Completion.[string "-" ; files; dirs])
+  in
+  let pp ppf gf =
     pr_str ppf @@ match gf with
     | None -> "-"
     | Some (OpamFilename.D d) -> OpamFilename.Dir.to_string d
     | Some (OpamFilename.F f) -> OpamFilename.to_string f
   in
-  Arg.conv' (parse, print)
+  Arg.Conv.make ~docv:Manpage.s_files ~completion ~parser ~pp ()
 
 let subpath_conv =
   let parse str =
@@ -876,6 +883,14 @@ let package_version =
   in
   let print ppf ver = pr_str ppf (OpamPackage.Version.to_string ver) in
   Arg.conv' (parse, print)
+
+let level_int =
+  Arg.(Conv.of_conv
+        ~completion:(Completion.make
+          (fun _ ~token:_ ->
+            Ok (List.map Completion.value
+                [1;2;3;4;5;6;7;8])))
+        int)
 
 let positive_integer : int Arg.conv =
   let parser = Arg.conv_parser Arg.int in
@@ -1110,6 +1125,18 @@ let opamlist_column =
   in
   Arg.conv' (parse, print)
 
+let complete_opam_fields _ ~token =
+  let directives =
+    List.filter_map
+      (fun (_, name) ->
+         if OpamCompat.String.starts_with ~prefix:token name && not (String.contains name '<') then
+           Some (Arg.Completion.string name)
+         else
+           None)
+      OpamListCommand.field_names
+  in
+  Ok directives
+
 let opamlist_columns =
   let field_re =
     (* max paren nesting 1, obviously *)
@@ -1122,7 +1149,7 @@ let opamlist_columns =
         alt [char ','; stop];
       ])
   in
-  let parse str =
+  let parser str =
     try
       let rec aux pos =
         if pos = String.length str then [] else
@@ -1140,7 +1167,7 @@ let opamlist_columns =
     with Not_found ->
       Error (Printf.sprintf "Invalid columns specification: '%s'." str)
   in
-  let print ppf cols =
+  let pp ppf cols =
     let rec aux = function
       | x::(_::_) as r ->
         Arg.conv_printer opamlist_column ppf x;
@@ -1151,7 +1178,8 @@ let opamlist_columns =
     in
     aux cols
   in
-  Arg.conv' (parse, print)
+  let completion = Arg.Completion.make complete_opam_fields in
+  Arg.Conv.make ~docv:"COLUMN" ~completion ~parser ~pp ()
 
 let hash_kinds =
   Arg.enum
@@ -1276,7 +1304,7 @@ let repo_kind_flag ?section cli validity =
 
 let jobs_flag ?section cli validity =
   let jobs_conv = Arg.Conv.of_conv
-    ~completion:(Arg.Completion.make (fun _ ~token:_ -> Ok (List.map Arg.Completion.value [1;2;3;4;5;6;7;8])))
+    ~completion:(Arg.Conv.completion level_int)
     positive_integer
   in
   mk_opt ~cli validity ?section ["j";"jobs"] "JOBS"
@@ -1343,7 +1371,7 @@ let global_options cli =
       "Like $(b,--debug), but allows specifying the debug level ($(b,--debug) \
        sets it to 1). Equivalent to setting $(b,\\$OPAMDEBUG) to a positive \
        integer."
-      Arg.(some int) None in
+      Arg.(some level_int) None in
   let verbose =
     Arg.(value & flag_all & info ~docs:section ["v";"verbose"] ~doc:
            "Be more verbose. One $(b,-v) shows all package commands, repeat to \
@@ -1762,21 +1790,40 @@ let package_selection cli =
       Arg.(pair ~sep:':' string string)
   in
   let has_flag =
+    let flag_conv =
+      let parser s =
+        match pkg_flag_of_string s with
+        | Pkgflag_Unknown s ->
+          Error ("Invalid package flag "^s^", must be one of "^
+                OpamStd.List.concat_map " " string_of_pkg_flag
+                  all_package_flags)
+        | f -> Ok f
+      in
+      let pp fmt flag =
+        Format.pp_print_string fmt (string_of_pkg_flag flag)
+      in
+      let completion =
+        let completer _ ~token =
+          Ok (List.filter_map
+            (fun flag ->
+               let s = string_of_pkg_flag flag in
+               if OpamCompat.String.starts_with ~prefix:token s  then
+                 Some (Arg.Completion.string s)
+               else
+                 None)
+            all_package_flags)
+        in
+        Arg.Completion.make completer
+      in
+      Arg.Conv.make ~docv:"FLAG" ~completion ~parser ~pp ()
+    in
     mk_opt_all ~cli cli_original ["has-flag"] "FLAG" ~section
       ("Only include packages which have the given flag set. \
         Package flags are one of: "^
        (OpamStd.List.concat_map " "
           (Printf.sprintf "$(b,%s)" @* string_of_pkg_flag)
           all_package_flags))
-      (Arg.conv'
-         ((fun s -> match pkg_flag_of_string s with
-             | Pkgflag_Unknown s ->
-               Error ("Invalid package flag "^s^", must be one of "^
-                      OpamStd.List.concat_map " " string_of_pkg_flag
-                        all_package_flags)
-             | f -> Ok f),
-          (fun fmt flag ->
-             Format.pp_print_string fmt (string_of_pkg_flag flag))))
+      flag_conv
   in
   let has_tag =
     mk_opt_all ~cli cli_original ["has-tag"] "TAG" ~section

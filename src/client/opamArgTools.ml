@@ -677,7 +677,7 @@ let mk_subdoc ~cli ?(defaults=[]) ?(extra_defaults=[]) commands =
       `I (cmds, d)
     ) commands
 
-let complete_switch _ ~token =
+let complete_switches _ ~token =
   OpamGlobalState.with_ `Lock_none @@ fun gt ->
   let gt = OpamGlobalState.fix_switch_list gt in
   let switches = OpamFile.Config.installed_switches gt.config |> List.sort OpamSwitch.compare in
@@ -696,7 +696,7 @@ let complete_switch _ ~token =
 (** part of the global_options term, but by separating it out we can have other
     completions depend on it for contextual information *)
 let switch_flag =
-  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete_switch)
+  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete_switches)
       Arg.string
   in
   mk_opt ~cli:(cli2_0, `Default) cli_original ~section:Manpage.s_common_options ["switch"]
@@ -728,10 +728,9 @@ let mk_subcommands_aux ~cli ~complete_parameters my_enum commands =
     term_cli_check ~check Arg.(pos 0 (some & my_enum scommand) None & doc)
   in
   let params =
-
     let completion =
       let completer ctx ~token =
-        let (opt_switch, cmd) = Option.default (None, None) ctx in
+        let (opt_switch, cmd) = OpamStd.Option.default (None, None) ctx in
         complete_parameters ~opt_switch cmd ~token in
       Arg.Completion.make ~context:(Term.product switch_flag command) completer in
     let params_conv = Arg.Conv.of_conv ~completion Arg.string in
@@ -758,7 +757,7 @@ let mk_subcommands_with_default ~cli ?(complete_parameters= {f=fun ~opt_switch:_
         (Arg.Conv.completion base)
       in
       let complete ctx ~token =
-        let opt_switch = Option.default None ctx in
+        let opt_switch = OpamStd.Option.default None ctx in
         let enum_values =
           enum_completer None ~token |> Result.value ~default:[]
         in
