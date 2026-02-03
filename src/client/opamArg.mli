@@ -316,14 +316,14 @@ type 'a subcommands = 'a subcommand list
 
 val mk_subcommands:
   cli:OpamCLIVersion.Sourced.t ->
-  ?params_completions:(string option * 'a option, string) Arg.Completion.func ->
+  ?complete_parameters: ('a, string) OpamArgTools.parameter_completer ->
   'a subcommands ->
   'a option Term.t * string list Term.t
 (** [subcommands cmds] are the terms [cmd] and [params]. [cmd] parses
     which sub-commands in [cmds] is selected and [params] parses the
     remaining of the command-line parameters as a list of strings.
 
-    [params_completions] is used to complete parameters for the selected sub-command,
+    [complete_parameters] is used to complete parameters for the selected sub-command,
     with the [--switch] argument and selected command as the context
 *)
 
@@ -336,13 +336,13 @@ val enum_with_default: (string * 'a default) list -> 'a Arg.converter
 
 val mk_subcommands_with_default:
   cli:OpamCLIVersion.Sourced.t ->
-  ?params_completions:'a OpamArgTools.default_command_completer ->
+  ?complete_parameters:'a OpamArgTools.parameter_completer_default ->
   'a default subcommands ->
   'a option Term.t * string list Term.t
 (** Same as {!mk_subcommands} but use the default value if no
     sub-command is selected.
 
-    The [params_completions] argument is called with [`default ""] for
+    The [complete_parameters] argument is called with [`default ""] for
     the top-level completion, and with the command context when used for
     parameters of sub-commands.
 *)

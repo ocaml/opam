@@ -1445,8 +1445,15 @@ let config cli =
   ] @ mk_subdoc ~cli commands
     @ [`S Manpage.s_options]
   in
-
-  let command, params = mk_subcommands ~cli commands in
+  let complete_parameters ~opt_switch cmd ~token =
+    match cmd with
+    | Some (`list) ->
+      OpamArg.complete_packages () (Some opt_switch) ~token
+    | Some (`subst | `pef | `cudf) ->
+      Ok [Arg.Completion.files]
+    | _ -> Ok []
+  in
+  let command, params = mk_subcommands ~complete_parameters ~cli commands in
   let open Common_config_flags in
 
   let config global_options
@@ -2350,9 +2357,8 @@ let repository cli =
       `S Manpage.s_options;
     ]
   in
-  let params_completions ctx ~token  =
-    let _switch, command = Option.default (None, None) ctx in
-    match command with
+  let complete_parameters ~opt_switch:_ cmd ~token  =
+    match cmd with
       | Some (`add | `set_url) ->
         OpamArg.complete_repos None ~token |> Result.map
           (List.cons Arg.Completion.dirs)
@@ -2360,7 +2366,7 @@ let repository cli =
         OpamArg.complete_repos None ~token
       | _ -> Ok []
   in
-  let command, params = mk_subcommands ~params_completions ~cli commands in
+  let command, params = mk_subcommands ~complete_parameters ~cli commands in
   let scope =
     let scope_info ?docv flags doc =
       Arg.info ~docs:scope_section ~doc ?docv flags
@@ -2836,9 +2842,8 @@ let switch cli =
     @ [`S Manpage.s_options]
     @ OpamArg.man_build_option_section
   in
-  let params_completions = {OpamArgTools.f=
-    fun ctx ~token ->
-      let opt_switch, command = Option.default (None, None) ctx in
+  let complete_parameters = {OpamArgTools.f=
+    fun ~opt_switch command ~token ->
       match command with
       | Some (`set | `remove | `reinstall | `install | `default _) | None  ->
         OpamArg.complete_switch None ~token
@@ -2850,7 +2855,7 @@ let switch cli =
       | Some (`set_invariant) ->
         OpamArg.complete_packages () (Some opt_switch) ~token
       | _ -> Ok []} in
-  let command, params = mk_subcommands_with_default ~params_completions ~cli commands in
+  let command, params = mk_subcommands_with_default ~complete_parameters ~cli commands in
   let no_switch =
     mk_flag ~cli cli_original ["no-switch"]
       "Don't automatically select newly installed switches." in
@@ -3368,10 +3373,9 @@ let pin ?(unpin_only=false) cli =
       Term.const (Some `remove),
       Arg.(value & pos_all string [] & Arg.info [])
     else
-      let params_completions = {OpamArgTools.f=
-        fun ctx ~token ->
-          let opt_switch, command = Option.default (None, None) ctx in
-          match command with
+      let complete_parameters = {OpamArgTools.f=
+        fun ~opt_switch cmd ~token ->
+          match cmd with
           | Some (`scan) ->
             Ok [Arg.Completion.dirs]
           | Some (`remove) ->
@@ -3381,7 +3385,7 @@ let pin ?(unpin_only=false) cli =
             OpamArg.complete_packages ~which:(`All) ~extras:[Arg.Completion.dirs] ()
               (Some opt_switch) ~token
           | _ -> Ok []} in
-      mk_subcommands_with_default ~cli ~params_completions commands in
+      mk_subcommands_with_default ~cli ~complete_parameters commands in
   let edit =
     mk_flag ~cli cli_original ["e";"edit"]
       "With $(i,opam pin add), edit the opam file as with `opam pin edit' \
