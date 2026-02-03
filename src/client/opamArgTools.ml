@@ -704,7 +704,10 @@ let switch_flag =
               This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
     (Arg.some switch) None
 
-let mk_subcommands_aux ~cli ~params_completions my_enum commands =
+type ('cmd, 'd) parameter_completer =
+  opt_switch:string option -> ('cmd, 'd) Arg.Completion.func
+
+let mk_subcommands_aux ~cli ~complete_parameters my_enum commands =
   let commands =
     List.map (fun (v,n,c,a,d) -> contented_validity v c, n, a, d) commands
   in
@@ -725,23 +728,28 @@ let mk_subcommands_aux ~cli ~params_completions my_enum commands =
     term_cli_check ~check Arg.(pos 0 (some & my_enum scommand) None & doc)
   in
   let params =
-    let completion = Arg.Completion.make ~context:(Term.product switch_flag command) params_completions in
+
+    let completion =
+      let completer ctx ~token =
+        let (opt_switch, cmd) = Option.default (None, None) ctx in
+        complete_parameters ~opt_switch cmd ~token in
+      Arg.Completion.make ~context:(Term.product switch_flag command) completer in
     let params_conv = Arg.Conv.of_conv ~completion Arg.string in
     let doc = Arg.info ~doc:"Optional parameters." [] in
     Arg.(value & pos_right 0 params_conv [] & doc)
   in
   command, params
 
-let mk_subcommands ~cli ?(params_completions= fun _ ~token:_ -> Ok []) commands =
-  mk_subcommands_aux ~cli ~params_completions Arg.enum commands
+let mk_subcommands ~cli ?(complete_parameters= fun ~opt_switch:_ _ ~token:_ -> Ok []) commands =
+  mk_subcommands_aux ~cli ~complete_parameters Arg.enum commands
 
 type 'a default = [> `default of string] as 'a
 
-type 'a default_command_completer = {
-  f:'b. (string option * 'a default option, 'b) Arg.Completion.func
+type 'cmd parameter_completer_default = {
+  f:'d. ('cmd default, 'd) parameter_completer
 }
 
-let mk_subcommands_with_default ~cli ?(params_completions= {f=fun _ ~token:_ -> Ok []}) commands =
+let mk_subcommands_with_default ~cli ?(complete_parameters= {f=fun ~opt_switch:_ _ ~token:_ -> Ok []}) commands =
   let enum_with_default_valrem sl =
     let base = Arg.enum sl in
     let parser = Arg.Conv.parser base in
@@ -754,7 +762,7 @@ let mk_subcommands_with_default ~cli ?(params_completions= {f=fun _ ~token:_ -> 
         let enum_values =
           enum_completer None ~token |> Result.value ~default:[]
         in
-        match params_completions.f (Some (opt_switch, Some (`default ""))) ~token  with
+        match complete_parameters.f ~opt_switch (Some (`default "")) ~token  with
         | Error _ -> Ok enum_values
         | Ok l -> Ok (enum_values @ l)
       in
@@ -766,7 +774,7 @@ let mk_subcommands_with_default ~cli ?(params_completions= {f=fun _ ~token:_ -> 
       | _ -> Ok (Valid (`default s)) in
     Arg.Conv.of_conv ~completion ~parser base
   in
-  mk_subcommands_aux ~cli ~params_completions:params_completions.f enum_with_default_valrem commands
+  mk_subcommands_aux ~cli ~complete_parameters:complete_parameters.f enum_with_default_valrem commands
 
 let bad_subcommand ~cli subcommands (command, usersubcommand, userparams) =
   match usersubcommand with

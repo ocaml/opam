@@ -76,9 +76,14 @@ val string_of_enum: (validity * string * 'a) list -> string
 type 'a subcommand = validity * string * 'a * string list * string
 type 'a subcommands = 'a subcommand list
 
+
+type ('cmd, 'd) parameter_completer =
+      opt_switch:string option ->
+      ('cmd, 'd) Arg.Completion.func
+
 val mk_subcommands:
   cli:OpamCLIVersion.Sourced.t ->
-  ?params_completions:(string option * 'a option, string) Arg.Completion.func ->
+  ?complete_parameters: ('a, string) parameter_completer ->
   'a subcommands ->
   'a option Term.t * string list Term.t
 
@@ -86,13 +91,13 @@ type 'a default = [> `default of string] as 'a
 
 (* slightly unfortunate: typed completions require some higher-rank polymorphism
   for the completion function here *)
-type 'a default_command_completer = {
-  f:'b. (string option * 'a default option, 'b) Arg.Completion.func
+type 'cmd parameter_completer_default = {
+  f:'d. ('cmd default, 'd) parameter_completer
 }
 
 val mk_subcommands_with_default:
   cli:OpamCLIVersion.Sourced.t ->
-  ?params_completions:'a default_command_completer ->
+  ?complete_parameters:'a parameter_completer_default ->
   'a default subcommands ->
   'a option Term.t * string list Term.t
 
