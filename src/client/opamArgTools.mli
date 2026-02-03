@@ -89,11 +89,17 @@ val mk_subcommands:
 
 type 'a default = [> `default of string] as 'a
 
-(* slightly unfortunate: typed completions require some higher-rank polymorphism
-  for the completion function here *)
+(** In [mk_subcommands_with_default], we use this completer twice:
+    - once, alongside the built-in enum completer, to provide suggestions for the first parameter,
+      which is either a subcommand name or the argument to the default subcommand.
+    - once to provide suggestions for the parameters of subcommands, as in [mk_subcommands].
+
+    Unfortunately, the type of the returned ['a directive]s differs between the two, so we need
+    higher-rank polymorphism to express this, which we smuggle in via this wrapper record.
+*)
 type 'cmd parameter_completer_default = {
-  f:'d. ('cmd default, 'd) parameter_completer
-}
+  complete_parameters:'d. ('cmd default, 'd) parameter_completer
+} [@@unboxed]
 
 val mk_subcommands_with_default:
   cli:OpamCLIVersion.Sourced.t ->

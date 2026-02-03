@@ -2846,8 +2846,7 @@ let switch cli =
     @ [`S Manpage.s_options]
     @ OpamArg.man_build_option_section
   in
-  let complete_parameters = {OpamArgTools.f=
-    fun ~opt_switch command ~token ->
+  let complete_parameters ~opt_switch command ~token =
       match command with
       | Some (`set | `remove | `reinstall | `install | `default _) | None  ->
         OpamArg.complete_switches None ~token
@@ -2858,8 +2857,8 @@ let switch cli =
          Ok [Arg.Completion.files]
       | Some (`set_invariant) ->
         OpamArg.complete_packages () (Some opt_switch) ~token
-      | _ -> Ok []} in
-  let command, params = mk_subcommands_with_default ~complete_parameters ~cli commands in
+      | _ -> Ok [] in
+  let command, params = mk_subcommands_with_default ~complete_parameters:{complete_parameters} ~cli commands in
   let no_switch =
     mk_flag ~cli cli_original ["no-switch"]
       "Don't automatically select newly installed switches." in
@@ -3377,19 +3376,18 @@ let pin ?(unpin_only=false) cli =
       Term.const (Some `remove),
       Arg.(value & pos_all string [] & Arg.info [])
     else
-      let complete_parameters = {OpamArgTools.f=
-        fun ~opt_switch cmd ~token ->
+      let complete_parameters ~opt_switch cmd ~token =
           match cmd with
           | Some (`scan) ->
             Ok [Arg.Completion.dirs]
           | Some (`remove) ->
             OpamArg.complete_packages ~which:(`Pinned) ~extras:[Arg.Completion.dirs] ()
               (Some opt_switch) ~token
-          | Some (`add | `default "") ->
+          | Some (`add | `default _) ->
             OpamArg.complete_packages ~which:(`All) ~extras:[Arg.Completion.dirs] ()
               (Some opt_switch) ~token
-          | _ -> Ok []} in
-      mk_subcommands_with_default ~cli ~complete_parameters commands in
+          | _ -> Ok [] in
+      mk_subcommands_with_default ~cli ~complete_parameters:{complete_parameters} commands in
   let edit =
     mk_flag ~cli cli_original ["e";"edit"]
       "With $(i,opam pin add), edit the opam file as with `opam pin edit' \
