@@ -879,6 +879,14 @@ let package_version =
   let print ppf ver = pr_str ppf (OpamPackage.Version.to_string ver) in
   Arg.conv' (parse, print)
 
+let level_int =
+  Arg.(Conv.of_conv
+        ~completion:(Completion.make
+          (fun _ ~token:_ ->
+            Ok (List.map Completion.value
+                [1;2;3;4;5;6;7;8])))
+        int)
+
 let positive_integer : int Arg.conv =
   let parser = Arg.conv_parser Arg.int in
   let printer = Arg.conv_printer Arg.int in
@@ -1112,6 +1120,18 @@ let opamlist_column =
   in
   Arg.conv' (parse, print)
 
+let complete_opam_fields _ ~token =
+  let directives =
+    List.filter_map
+      (fun (_, name) ->
+         if OpamCompat.String.starts_with ~prefix:token name && not (String.contains name '<') then
+           Some (Arg.Completion.string name)
+         else
+           None)
+      OpamListCommand.field_names
+  in
+  Ok directives
+
 let opamlist_columns =
   let field_re =
     (* max paren nesting 1, obviously *)
@@ -1124,7 +1144,7 @@ let opamlist_columns =
         alt [char ','; stop];
       ])
   in
-  let parse str =
+  let parser str =
     try
       let rec aux pos =
         if pos = String.length str then [] else
@@ -1142,7 +1162,7 @@ let opamlist_columns =
     with Not_found ->
       Error (Printf.sprintf "Invalid columns specification: '%s'." str)
   in
-  let print ppf cols =
+  let pp ppf cols =
     let rec aux = function
       | x::(_::_) as r ->
         Arg.conv_printer opamlist_column ppf x;
@@ -1153,7 +1173,8 @@ let opamlist_columns =
     in
     aux cols
   in
-  Arg.conv' (parse, print)
+  let completion = Arg.Completion.make complete_opam_fields in
+  Arg.Conv.make ~docv:"COLUMN" ~completion ~parser ~pp ()
 
 let hash_kinds =
   Arg.enum
@@ -1278,7 +1299,7 @@ let repo_kind_flag ?section cli validity =
 
 let jobs_flag ?section cli validity =
   let jobs_conv = Arg.Conv.of_conv
-    ~completion:(Arg.Completion.make (fun _ ~token:_ -> Ok (List.map Arg.Completion.value [1;2;3;4;5;6;7;8])))
+    ~completion:(Arg.Conv.completion level_int)
     positive_integer
   in
   mk_opt ~cli validity ?section ["j";"jobs"] "JOBS"
@@ -1345,7 +1366,7 @@ let global_options cli =
       "Like $(b,--debug), but allows specifying the debug level ($(b,--debug) \
        sets it to 1). Equivalent to setting $(b,\\$OPAMDEBUG) to a positive \
        integer."
-      Arg.(some int) None in
+      Arg.(some level_int) None in
   let verbose =
     Arg.(value & flag_all & info ~docs:section ["v";"verbose"] ~doc:
            "Be more verbose. One $(b,-v) shows all package commands, repeat to \
@@ -1764,21 +1785,40 @@ let package_selection cli =
       Arg.(pair ~sep:':' string string)
   in
   let has_flag =
+    let flag_conv =
+      let parser s =
+        match pkg_flag_of_string s with
+        | Pkgflag_Unknown s ->
+          Error ("Invalid package flag "^s^", must be one of "^
+                OpamStd.List.concat_map " " string_of_pkg_flag
+                  all_package_flags)
+        | f -> Ok f
+      in
+      let pp fmt flag =
+        Format.pp_print_string fmt (string_of_pkg_flag flag)
+      in
+      let completion =
+        let completer _ ~token =
+          Ok (List.filter_map
+            (fun flag ->
+               let s = string_of_pkg_flag flag in
+               if OpamCompat.String.starts_with ~prefix:token s  then
+                 Some (Arg.Completion.string s)
+               else
+                 None)
+            all_package_flags)
+        in
+        Arg.Completion.make completer
+      in
+      Arg.Conv.make ~docv:"FLAG" ~completion ~parser ~pp ()
+    in
     mk_opt_all ~cli cli_original ["has-flag"] "FLAG" ~section
       ("Only include packages which have the given flag set. \
         Package flags are one of: "^
        (OpamStd.List.concat_map " "
           (Printf.sprintf "$(b,%s)" @* string_of_pkg_flag)
           all_package_flags))
-      (Arg.conv'
-         ((fun s -> match pkg_flag_of_string s with
-             | Pkgflag_Unknown s ->
-               Error ("Invalid package flag "^s^", must be one of "^
-                      OpamStd.List.concat_map " " string_of_pkg_flag
-                        all_package_flags)
-             | f -> Ok f),
-          (fun fmt flag ->
-             Format.pp_print_string fmt (string_of_pkg_flag flag))))
+      flag_conv
   in
   let has_tag =
     mk_opt_all ~cli cli_original ["has-tag"] "TAG" ~section

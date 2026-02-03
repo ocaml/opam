@@ -677,7 +677,7 @@ let mk_subdoc ~cli ?(defaults=[]) ?(extra_defaults=[]) commands =
       `I (cmds, d)
     ) commands
 
-let complete_switch _ ~token =
+let complete_switches _ ~token =
   OpamGlobalState.with_ `Lock_none @@ fun gt ->
   let gt = OpamGlobalState.fix_switch_list gt in
   let switches = OpamFile.Config.installed_switches gt.config |> List.sort OpamSwitch.compare in
@@ -696,7 +696,7 @@ let complete_switch _ ~token =
 (** part of the global_options term, but by separating it out we can have other
     completions depend on it for contextual information *)
 let switch_flag =
-  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete_switch)
+  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete_switches)
       Arg.string
   in
   mk_opt ~cli:(cli2_0, `Default) cli_original ~section:Manpage.s_common_options ["switch"]

@@ -972,6 +972,10 @@ let show cli =
               $(i,deprecated) flag");
   ] in
   let fields =
+    let fields_conv =
+      let completion = Arg.Completion.make complete_opam_fields in
+      Arg.(Conv.of_conv ~completion (list string))
+    in
     mk_opt ~cli cli_original ["f";"field"] "FIELDS"
       (Printf.sprintf
          "Only display the values of these fields. Fields can be selected \
@@ -980,7 +984,7 @@ let show cli =
           field can be queried by combinig with $(b,--raw)"
          (OpamStd.List.concat_map ", " (Printf.sprintf "$(i,%s)" @* snd)
             OpamListCommand.field_names))
-      Arg.(list string) []
+      fields_conv []
   in
   let show_empty =
     mk_flag ~cli cli_original ["empty-fields"]
@@ -2385,7 +2389,7 @@ let repository cli =
       ]
     in
     let switches =
-      let switch_conv = Arg.(Conv.of_conv ~completion:(Completion.make OpamArg.complete_switch) (list string))
+      let switch_conv = Arg.(Conv.of_conv ~completion:(Completion.make OpamArg.complete_switches) (list string))
       in
       Arg.opt switch_conv []
         (scope_info ["on-switches"] ~docv:"SWITCHES"
@@ -2405,7 +2409,7 @@ let repository cli =
       order, therefore 1 is the highest priority.  Negative ints can be used to \
       select from the lowest priority, -1 being last. $(b,set-repos) can \
       otherwise be used to explicitly set the repository list at once."
-      Arg.(int) 1
+      level_int 1
   in
   let repository global_options command kind short scope rank params () =
     apply_global_options cli global_options;
@@ -2846,9 +2850,9 @@ let switch cli =
     fun ~opt_switch command ~token ->
       match command with
       | Some (`set | `remove | `reinstall | `install | `default _) | None  ->
-        OpamArg.complete_switch None ~token
+        OpamArg.complete_switches None ~token
       | Some (`link) ->
-        OpamArg.complete_switch None ~token |>
+        OpamArg.complete_switches None ~token |>
           Result.map (List.cons Arg.Completion.dirs)
       | Some (`export | `import) ->
          Ok [Arg.Completion.files]

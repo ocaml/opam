@@ -101,7 +101,7 @@ val mk_subcommands_with_default:
   'a default subcommands ->
   'a option Term.t * string list Term.t
 
-val complete_switch: ('a, 'b) Arg.Completion.func
+val complete_switches: ('a, 'b) Arg.Completion.func
 val switch_flag: string option Term.t
 
 val bad_subcommand:
