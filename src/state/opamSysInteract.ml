@@ -495,6 +495,11 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
   let open OpamSysPkg.Set.Op in
+  log "Computing depexts status for %a system package%a"
+    (fun fmt x -> Format.pp_print_int fmt (OpamSysPkg.Set.cardinal x)) packages
+    (fun fmt x ->
+       Format.pp_print_string fmt
+         (if OpamSysPkg.Set.is_singleton x then "" else "s")) packages;
   let compute_sets ?sys_available sys_installed =
     let installed = packages %% sys_installed in
     match sys_available with

@@ -648,6 +648,8 @@ depexts: ["poll-sys-dep"]
 Added '[os-family "dummy-success::poll-sys-dep" "Set through 'opam var'"]' to field global-variables in global configuration
 ### OPAMDEBUGSECTIONS=XSYS OPAMDEBUG=-3 OPAMDRYRUN=1
 ### opam install test-poll-pkg
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+XSYS                            Computing depexts status for 6 system packages
 The following actions will be simulated:
 === install 1 package
   - install test-poll-pkg 1
@@ -674,12 +676,16 @@ Done.
 opam-version: "2.0"
 depexts: ["poll-sys-dep"]
 ### opam pin ./test-poll-pkg-pin
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+XSYS                            Computing depexts status for 6 system packages
 [NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
 test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
 
+XSYS                            Computing depexts status for 1 system package
 The following actions will be simulated:
 === install 1 package
   - install test-poll-pkg-pin dev (pinned)
+XSYS                            Computing depexts status for 1 system package
 
 The following system packages will first need to be installed:
     poll-sys-dep
