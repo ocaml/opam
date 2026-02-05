@@ -58,12 +58,12 @@ module Cache = struct
   let file rt =
     OpamPath.state_cache rt.repos_global.root
 
-  let save rt =
-    remove ();
-    C.save (file rt) (marshall rt)
-
   let save_new rt =
     C.save (file rt) (marshall rt)
+
+  let save rt =
+    remove ();
+    save_new rt
 
   let load root =
     let file = OpamPath.state_cache root in
