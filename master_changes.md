@@ -167,6 +167,7 @@ users)
   * `OpamGlobalState.all_installed_versions`: was added [#6818 @dra27]
   * `OpamGlobalState.installed_versions`: was removed [#6818 @dra27]
   * `OpamStateTypes.global_state`: add field `lock` that contains the global lock (not config one) [#6839 @rjbou]
+  * `OpamStateConfig`: add `no_depexts` and `no_depexts_raw` to retrieve depexts mechanism status (enabled/disabled), looking at global config and environment/flags [#6489 @rjbou]
 
 ## opam-solver
 

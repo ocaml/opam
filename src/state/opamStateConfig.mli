@@ -159,3 +159,8 @@ end
    versions, and at switch loading for that specific case. *)
 val downgrade_2_1_switch:
   OpamFile.Switch_config.t OpamFile.t -> OpamFile.Switch_config.t option
+
+(* Returns true if depexts mechanism is disabled via global config or via
+   environment variable or flag.*)
+val no_depexts_raw: OpamFile.Config.t -> bool
+val no_depexts: 'a global_state -> bool

@@ -201,7 +201,7 @@ let depexts_status_of_packages_raw
     match OpamSysInteract.packages_status ?env global_config syspkg_set with
     | status ->
       let status =
-        if OpamStateConfig.(!r.no_depexts) then
+        if OpamStateConfig.no_depexts_raw global_config then
           (* Mark all as available. This is necessary to store the exceptions
              afterwards *)
           { OpamSysPkg.status_empty with
@@ -517,8 +517,7 @@ let load lock_kind gt rt switch =
   (* depext check *)
   let available_packages = OpamCompat.Lazy.map fst available_packages in
   let sys_packages =
-    if not (OpamFile.Config.depext gt.config)
-    || OpamStateConfig.(!r.no_depexts) then
+    if OpamStateConfig.no_depexts gt then
       lazy OpamPackage.Map.empty
     else lazy (
       depexts_status_of_packages_raw gt.config switch_config
@@ -532,7 +531,7 @@ let load lock_kind gt rt switch =
     )
   in
   let available_packages =
-    if not (OpamFile.Config.depext gt.config) then available_packages
+    if OpamStateConfig.no_depexts gt then available_packages
     else lazy (
       let sys_packages = Lazy.force sys_packages in
       OpamPackage.Set.filter (fun nv ->
@@ -1270,7 +1269,7 @@ let update_pin nv opam st =
   let st =
     update_package_metadata nv opam { st with pinned; available_packages }
   in
-  if not (OpamFile.Config.depext st.switch_global.config)
+  if OpamStateConfig.no_depexts st.switch_global
   || OpamSysPkg.Set.is_empty (depexts st nv)
   then st else
   let sys_packages = lazy (
