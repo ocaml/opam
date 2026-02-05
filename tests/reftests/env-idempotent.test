@@ -34,3 +34,4 @@ User configuration:
 ### rm -rf root/fake2
 ### bash bash-lc.sh "'$OPAMBIN' exec --root root --switch=fake -- env" | grep -v MANPATH | grep /root/fake2/ | '=.*' -> ''
 PATH
+XDG_DATA_DIRS

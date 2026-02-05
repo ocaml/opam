@@ -65,6 +65,7 @@ users)
 ## Clean
 
 ## Env
+  * Env now sets `XDG_DATA_DIRS` to include the opam share directory and `FPATH` to include share/zsh/site-functions. Tools which install shell autocomplete scripts in these directories will now be picked up automatically. [#6427 @WardBrian - fix #6812]
 
 ## Opamfile
   * The `url` file now only supports the legacy opam 1.2 fields [#6827 @kit-ty-kate]
