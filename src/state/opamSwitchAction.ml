@@ -66,6 +66,7 @@ let create_empty_switch gt ?synopsis ?repos ?invariant switch =
     OpamFilename.mkdir (OpamPath.Switch.lib_dir root switch config);
     OpamFilename.mkdir (OpamPath.Switch.stublibs root switch config);
     OpamFilename.mkdir (OpamPath.Switch.toplevel root switch config);
+    OpamFilename.mkdir (OpamPath.Switch.sources_dir root switch);
     OpamFilename.mkdir (OpamPath.Switch.build_dir root switch);
     OpamFilename.mkdir (OpamPath.Switch.bin root switch config);
     OpamFilename.mkdir (OpamPath.Switch.sbin root switch config);
