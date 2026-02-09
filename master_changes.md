@@ -177,6 +177,7 @@ users)
   * `OpamGlobalState.installed_versions`: was removed [#6818 @dra27]
   * `OpamStateTypes.global_state`: add field `lock` that contains the global lock (not config one) [#6839 @rjbou]
   * `OpamStateTypes`: add `os_family` type that was defined and used internally in `OpamSysInteract` [#6489 @rjbou]
+  * `OpamSysInteract`: add `disable_depexts_note` to be used to display a note to disable depexts [#6489 @rjbou]
 
 ## opam-solver
 

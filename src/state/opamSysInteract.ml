@@ -189,6 +189,12 @@ let family ~env () =
         "External dependency handling not supported for OS family '%s'."
         family
 
+let disable_depexts_note msg =
+  OpamConsole.note
+    "%s\nYou can disable this check using 'opam \
+     option --global depext=false'"
+    msg
+
 module Cygwin = struct
   open OpamFilename.Op
 

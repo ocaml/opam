@@ -10,6 +10,10 @@
 
 open OpamStateTypes
 
+(* [disable_depexts_note errmsg] display as a note [errmsg] and a note on how
+    to disable depexts mechanism. *)
+val disable_depexts_note: string -> unit
+
 (* Given a list of system packages, retrieve their installation status from the
    system and returns a {!OpamSysInteract.packages_status} record with,
      * available set: package that exist on the default

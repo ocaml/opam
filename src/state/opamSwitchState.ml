@@ -218,9 +218,7 @@ let depexts_status_of_packages_raw
             s_not_found = set %% status.s_not_found })
         syspkg_map
     | exception (Failure msg) ->
-      OpamConsole.note "%s\nYou can disable this check using 'opam \
-                        option --global depext=false'"
-        msg;
+      OpamSysInteract.disable_depexts_note msg;
       OpamPackage.Map.empty
   in
   log "depexts loaded in %.3fs" (chronos());
