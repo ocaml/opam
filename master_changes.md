@@ -180,6 +180,7 @@ users)
   * `OpamSysInteract`: add `disable_depexts_note` to be used to display a note to disable depexts [#6489 @rjbou]
   * `OpamSysInteract`: add some os families helpers `string_of_os_family`, `equal_os_family`, `same_os_family` [#6489 @rjbou]
   * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly. These funct-ions are now no-op if the given system packages set is empty.  [#6489 @arozovyk]
+  * `OpamGlobalState`: add `is_root_read_only` to check if we are in sandboxed environment [#6489 @rjbou]
 
 ## opam-solver
 
@@ -199,3 +200,5 @@ users)
   * `OpamStd.String.compare_case`: is now allocation free [#6515 @dra27]
   * `OpamVersionCompare.{compare,equal}`: are now allocation free [#6515 @dra27]
   * `OpamCompat.Map.add_to_list`: was added [#6818 @dra27]
+  * `OpamSystem`: add `is_dir_read_only` [#6489 @rjbou]
+  * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]

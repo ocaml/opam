@@ -75,3 +75,7 @@ val fix_switch_list: 'a global_state -> 'a global_state
 
 (** Description used for system inferred variables *)
 val inferred_from_system: string
+
+(** Returns true is opam root is read-only. It is used to detect if opam is
+    launched in a sandbox, from an opam command (like build, install, etc.). *)
+val is_root_read_only: 'a global_state -> bool

@@ -104,6 +104,9 @@ let dir_is_empty d =
 
 let in_dir dirname fn = OpamSystem.in_dir dirname fn
 
+let is_dir_read_only dirname =
+  OpamSystem.is_dir_read_only (Dir.to_string dirname)
+
 let env_of_list l = Array.of_list (List.rev_map (fun (k,v) -> k^"="^v) l)
 
 let exec dirname ?env ?name ?metadata ?keep_going cmds =
