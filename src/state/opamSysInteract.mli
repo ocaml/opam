@@ -10,6 +10,18 @@
 
 open OpamStateTypes
 
+(*{2} OS family *)
+
+val string_of_os_family: os_family -> string
+val equal_os_family: os_family -> os_family -> bool
+
+(* [same_of_family ?env family] returns true is the currently polled family is
+    equal to [family]. [?env] is given because families can be defined in
+    variables. *)
+val same_os_family: ?env:gt_variables -> os_family -> bool
+
+(*{2} System status *)
+
 (* [disable_depexts_note errmsg] display as a note [errmsg] and a note on how
     to disable depexts mechanism. *)
 val disable_depexts_note: string -> unit

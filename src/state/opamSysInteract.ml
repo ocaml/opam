@@ -107,7 +107,9 @@ module Commands = struct
     OpamStd.Option.map_default OpamFilename.to_string "cygcheck.exe" override
 end
 
-(* System status *)
+
+(* OS family *)
+
 let family ~env () =
   match OpamSysPoll.os_family env with
   | None ->
@@ -189,11 +191,92 @@ let family ~env () =
         "External dependency handling not supported for OS family '%s'."
         family
 
+let string_of_os_family =
+  let string_of_test_setup { osd_install; osd_installed; osd_available } =
+    let str_in = function
+      | `all -> "all"
+      | `none -> "none"
+      | `set s -> Printf.sprintf "set %s" (OpamSysPkg.Set.to_string s)
+    in
+    Printf.sprintf "\n[ install: %B; installed: %s; available: %s ]"
+      osd_install (str_in osd_installed) (str_in osd_available)
+  in
+  function
+  | Alpine     -> "Alpine"
+  | Altlinux   -> "Altlinux"
+  | Arch       -> "Arch"
+  | Centos     -> "Centos"
+  | Cygwin     -> "Cygwin"
+  | Debian     -> "Debian"
+  | Dummy ts   -> "Dummy "^(string_of_test_setup ts)
+  | Freebsd    -> "Freebsd"
+  | Gentoo     -> "Gentoo"
+  | Homebrew   -> "Homebrew"
+  | Macports   -> "Macports"
+  | Msys2      -> "Msys2"
+  | Netbsd     -> "Netbsd"
+  | Nix        -> "Nix"
+  | Openbsd    -> "Openbsd"
+  | Suse       -> "Suse"
+
+let equal_os_family =
+  let equal_test_setup t t' =
+    let equal_elem q q' =
+      match q, q' with
+      | `all, `all
+      | `none, `none
+        -> true
+      | `set s, `set s' ->
+        OpamSysPkg.Set.equal s s'
+      | (`all | `none | `set _), _ -> false
+    in
+    t.osd_install && t'.osd_install
+    && equal_elem t.osd_installed t'.osd_installed
+    && equal_elem t.osd_available t'.osd_available
+  in
+  fun f f' ->
+    match f, f' with
+    | Alpine  , Alpine
+    | Altlinux, Altlinux
+    | Arch    , Arch
+    | Centos  , Centos
+    | Cygwin  , Cygwin
+    | Debian  , Debian
+    | Freebsd , Freebsd
+    | Gentoo  , Gentoo
+    | Homebrew, Homebrew
+    | Macports, Macports
+    | Msys2   , Msys2
+    | Netbsd  , Netbsd
+    | Nix     , Nix
+    | Openbsd , Openbsd
+    | Suse    , Suse
+      -> true
+    | Dummy t , Dummy t'
+      -> equal_test_setup t t'
+    | (Alpine | Altlinux | Arch
+      | Centos | Cygwin
+      | Debian | Dummy _
+      | Freebsd | Gentoo
+      | Homebrew | Macports
+      | Msys2 | Netbsd
+      | Nix | Openbsd | Suse), _ -> false
+
+let same_os_family ?(env=OpamVariable.Map.empty) fam =
+  let cur_family =
+    try
+      Some (family ~env ())
+    with Failure _ -> None
+  in
+  Option.equal equal_os_family (Some fam) cur_family
+
 let disable_depexts_note msg =
   OpamConsole.note
     "%s\nYou can disable this check using 'opam \
      option --global depext=false'"
     msg
+
+(* System status *)
 
 module Cygwin = struct
   open OpamFilename.Op
