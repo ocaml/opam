@@ -78,6 +78,34 @@ type +'lock global_state = {
 
 } constraint 'lock = 'lock lock
 
+
+(** OSes family for external dependencies system polling *)
+
+type os_dummy_test_setup = {
+  osd_install: bool;
+  osd_installed: [ `all | `none | `set of OpamSysPkg.Set.t];
+  osd_available: [ `all | `none | `set of OpamSysPkg.Set.t];
+}
+
+(* Please keep this alphabetically ordered, in the type definition, and in
+   its pattern matching *)
+type os_family =
+  | Alpine
+  | Altlinux
+  | Arch
+  | Centos
+  | Cygwin
+  | Debian
+  | Dummy of os_dummy_test_setup
+  | Freebsd
+  | Gentoo
+  | Homebrew
+  | Macports
+  | Msys2
+  | Netbsd
+  | Nix
+  | Openbsd
+  | Suse
 (** State corresponding to the repo/ subdir: all available packages and
     metadata, for each repository. *)
 type +'lock repos_state = {

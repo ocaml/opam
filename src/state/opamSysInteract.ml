@@ -8,6 +8,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
+open OpamStateTypes
+
 let log fmt = OpamConsole.log "XSYS" fmt
 
 (* Run commands *)
@@ -86,12 +88,6 @@ let run_command_exit_code ?vars ?allow_stdin ?verbose cmd args =
   in
   code
 
-type test_setup = {
-  install: bool;
-  installed: [ `all | `none | `set of OpamSysPkg.Set.t];
-  available: [ `all | `none | `set of OpamSysPkg.Set.t];
-}
-
 (* Internal module to get package manager commands defined in global config file *)
 module Commands = struct
 
@@ -110,26 +106,6 @@ module Commands = struct
     let override = get_cmd_opt config cygwin_t in
     OpamStd.Option.map_default OpamFilename.to_string "cygcheck.exe" override
 end
-
-(* Please keep this alphabetically ordered, in the type definition, and in
-   below pattern matching *)
-type families =
-  | Alpine
-  | Altlinux
-  | Arch
-  | Centos
-  | Cygwin
-  | Debian
-  | Dummy of test_setup
-  | Freebsd
-  | Gentoo
-  | Homebrew
-  | Macports
-  | Msys2
-  | Netbsd
-  | Nix
-  | Openbsd
-  | Suse
 
 (* System status *)
 let family ~env () =
@@ -155,7 +131,7 @@ let family ~env () =
         install, installed, available
       | None -> family, None, None
     in
-    let install =
+    let osd_install =
       match install with
       | "dummy-success" -> true
       | "dummy-failure" -> false
@@ -170,9 +146,9 @@ let family ~env () =
               |> List.map OpamSysPkg.of_string
               |> OpamSysPkg.Set.of_list)
     in
-    let installed = parse_packages ~default:`none installed in
-    let available = parse_packages ~default:`all available in
-    Dummy { install; installed; available; }
+    let osd_installed = parse_packages ~default:`none installed in
+    let osd_available = parse_packages ~default:`all available in
+    Dummy { osd_install; osd_installed; osd_available; }
   | Some family ->
     match family with
     | "alpine" | "wolfi" -> Alpine
@@ -824,13 +800,13 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     compute_sets_with_virtual get_avail_w_virtuals get_installed
   | Dummy test ->
     let sys_installed =
-      match test.installed with
+      match test.osd_installed with
       | `all -> packages
       | `none -> OpamSysPkg.Set.empty
       | `set pkgs -> pkgs %% packages
     in
     let sys_available =
-      match test.available with
+      match test.osd_available with
       | `all -> packages
       | `none -> OpamSysPkg.Set.empty
       | `set pkgs -> pkgs %% packages
@@ -1026,7 +1002,7 @@ let package_manager_name_t ?(env=OpamVariable.Map.empty) config =
   | Cygwin -> `AsUser (OpamFilename.to_string (Cygwin.cygsetup ()))
   | Debian -> `AsAdmin "apt-get"
   | Dummy test ->
-    if test.install then
+    if test.osd_install then
       `AsUser "echo"
     else
       `AsUser "false"
@@ -1112,7 +1088,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show st
     [pm, "install"::yes ["-qq"; "-yy"] packages],
     (if unsafe_yes then Some ["DEBIAN_FRONTEND", "noninteractive"] else None)
   | Dummy test ->
-    if test.install then
+    if test.osd_install then
       [pm, packages], None
     else
       [pm, []], None
@@ -1264,7 +1240,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Cygwin -> None
     | Debian | Altlinux -> Some (`AsAdmin "apt-get", ["update"])
     | Dummy test ->
-      if test.install then None else Some (`AsUser "false", [])
+      if test.osd_install then None else Some (`AsUser "false", [])
     | Freebsd -> None
     | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
     | Homebrew -> Some (`AsUser "brew", ["update"])
