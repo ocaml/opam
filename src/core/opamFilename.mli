@@ -54,6 +54,9 @@ val rec_dirs: Dir.t -> Dir.t list
     Returns [None] if the directory could not be found. *)
 val dir_is_empty: Dir.t -> bool option
 
+(** Returns true if the directory is read-only. *)
+val is_dir_read_only: Dir.t -> bool
+
 (** List the sub-directory (do not recurse) *)
 val dirs: Dir.t -> Dir.t list
 

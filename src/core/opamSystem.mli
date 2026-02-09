@@ -56,6 +56,12 @@ val verbose_for_base_commands: unit -> bool
 
 (** {2 Filesystem management} *)
 
+(** Check if directory [dir] is read only.
+    Check access and catch the read-only error ({Unix.EROFS}) and operation not
+    permitted ({Unix.EPERM}).
+    @raise Invalid_argument if the [dir] is not a directory or doesn't exist. *)
+val is_dir_read_only: string -> bool
+
 (** Returns a directory name, in the temporary directory, composed by {i opam}
     (if [prefix] is not set), pid, and random number. *)
 val mk_temp_dir: ?prefix:string -> unit -> string

@@ -229,3 +229,6 @@ let fix_switch_list gt =
       write gt, gt
     with OpamSystem.Locked -> gt
   else gt
+
+let is_root_read_only gt =
+  OpamFilename.is_dir_read_only gt.root
