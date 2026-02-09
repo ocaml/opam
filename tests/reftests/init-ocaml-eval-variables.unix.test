@@ -7,6 +7,10 @@ let opamroot = Sys.getenv "OPAMROOT"
 let opam_version = Printf.sprintf "opam-version: %S"
 let opam_version_2_0 = opam_version "2.0"
 let opam_version_2_1 = opam_version "2.1"
+let basedir = String.escaped (Sys.getenv "BASEDIR")
+let repos_config = Printf.sprintf {|opam-version: "2.0"
+repositories: "default" {"file://%s/REPO"}
+|} basedir
 let repo = {|repositories: "default"|}
 let depext = {|
 depext: true
@@ -33,6 +37,10 @@ let _ =
   let content = get_files Sys.argv.(1) in
   let fd = open_out name in
   List.iter (fun l -> output_string fd (l^"\n")) content;
+  close_out fd;
+  let rcname = Filename.concat (Filename.concat opamroot "repo") "repos-config" in
+  let fd = open_out rcname in
+  output_string fd repos_config;
   close_out fd
 ### rm -rf "$OPAMROOT"
 ### ::::::::::::::::::::::::::
