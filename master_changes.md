@@ -154,6 +154,7 @@ users)
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
   * Update the Install page with the new opam 2.5.0 release [#6821 @kit-ty-kate]
   * Mention more explicitely that raw fields are an option [@raphael-proust]
+  * Correct configure instruction in README [#6858 @gridbugs @kit-ty-kate]
 
 ## Security fixes
 
