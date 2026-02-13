@@ -28,6 +28,16 @@ val status_empty: status
 
 val string_of_status: status -> string
 
+(** System package availability *)
+type availability_mode =
+  | Available of Set.t (** Set of available system packages *)
+  | Suppose_available (** In this system, all packages are considered
+                          available *)
+
+(** Returns [true] if both values are [Suppose_available] or both are
+    [Available] with equal sets, [false] otherwise. *)
+val equal_availability_mode : availability_mode -> availability_mode -> bool
+
 (** System packages to install. We need to split per purpose as some
     distribution need to keep up-to-date already installed system packages. See
     {!OpamSysInteract.install_packages_commands_t}. *)

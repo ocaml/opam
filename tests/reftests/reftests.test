@@ -4,7 +4,10 @@ N0REP0
 ### ###################
 ### :I:1: opam root
 ### test -d OPAM
-### ls OPAM
+### : log/ may exist on Linux where depexts availability is queried during repo load,
+### : but not on macOS/Windows where we return Suppose_available without system calls
+### : so the log/ directory is not created.
+### ls OPAM | grep -v '^log$'
 config
 config.lock
 lock

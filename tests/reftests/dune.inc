@@ -1407,6 +1407,48 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:lock.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-no-depexts-sandboxed.unix)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff no-depexts-sandboxed.unix.test no-depexts-sandboxed.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-no-depexts-sandboxed.unix)))
+
+(rule
+ (targets no-depexts-sandboxed.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:no-depexts-sandboxed.unix.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-no-depexts)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff no-depexts.test no-depexts.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-no-depexts)))
+
+(rule
+ (targets no-depexts.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:no-depexts.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-opam-pkgvar-with-plus)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
