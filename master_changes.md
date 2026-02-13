@@ -165,10 +165,13 @@ users)
 # API updates
 ## opam-client
   * `OpamArg`: add `build_options_no_depexts` getter to retrieve the value of the given flag  [#6489 @rjbou]
+  * `OpamClientConfig.opam_init`: replace `no_depexts` argument by `depexts` [#6489 @rjbou]
 
 ## opam-repository
 
 ## opam-state
+  * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
+  * `OpamStateConfig.options_fun`: replace `no_depexts` argument by `depexts` [#6489 @rjbou]
   * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
   * `OpamGlobalState.all_installed_versions`: was added [#6818 @dra27]
   * `OpamGlobalState.installed_versions`: was removed [#6818 @dra27]

@@ -746,7 +746,7 @@ let list ?(force_search=false) cli =
     in
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
-    if no_depexts then OpamStateConfig.update ~no_depexts:true ();
+    if no_depexts then OpamStateConfig.update ~depexts:false ();
     let st =
       if no_switch then OpamSwitchState.load_virtual ?repos_list:repos gt rt
       else OpamSwitchState.load `Lock_none gt rt (OpamStateConfig.get_switch ())
@@ -1866,13 +1866,12 @@ let install cli =
       `Error (true, "option --assume-built is not compatible with --deps-only, \
                      --formula or --depext-only")
     else
-    if depext_only
-    && (OpamClientConfig.(!r.assume_depexts)
-        || OpamStateConfig.(!r.no_depexts)) then
+    if depext_only && OpamArg.build_options_no_depexts build_options then
       `Error (true,
-              Printf.sprintf "--depext-only and --%s can't be used together"
-                (if OpamClientConfig.(!r.assume_depexts) then "assume-depexts"
-                 else "no-depexts"))
+              "--depext-only and --no-depexts can't be used together")
+    else if depext_only && OpamClientConfig.(!r.assume_depexts) then
+      `Error (true,
+              "--depext-only can't be used with assume depexts")
     else
     OpamGlobalState.with_ `Lock_none @@ fun gt ->
     OpamSwitchState.with_ `Lock_write gt @@ fun st ->

@@ -68,7 +68,7 @@ let post_message ?(failed=false) st action =
     )
 
 let print_depexts_helper st actions =
-  if OpamFile.Config.depext st.switch_global.config then () else
+  if OpamStateConfig.(!r.depexts) then () else
   let depexts =
     List.fold_left (fun depexts -> function
         | `Build nv ->
@@ -1159,7 +1159,7 @@ let print_depext_msg (status : OpamSysPkg.status) =
    true. *)
 let get_depexts ?(force=false) ?(recover=false) t
     ~pkg_to_install ~pkg_installed =
-  if not force && OpamStateConfig.(!r.no_depexts) then
+  if not force && not OpamStateConfig.(!r.depexts) then
     OpamSysPkg.to_install_empty
   else
     let sys_packages =

@@ -702,7 +702,10 @@ let apply_build_options cli b =
        OpamPackage.Name.Set.of_list)
     ?unlock_base:(flag b.unlock_base)
     ?locked:(if b.locked then Some (Some b.lock_suffix) else None)
-    ?no_depexts:(flag (b.no_depexts || OpamCLIVersion.Op.(cli @= cli2_0)))
+    ?depexts:
+      (if not b.no_depexts || OpamCLIVersion.Op.(cli @= cli2_0) then
+         None (* no-op *)
+       else Some false)
     ();
   OpamClientConfig.update
     ?keep_build_dir:(flag b.keep_build_dir)

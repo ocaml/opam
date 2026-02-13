@@ -591,8 +591,6 @@ other is now pinned to file://${BASEDIR}/other (version dev)
 The following actions will be performed:
 === install 1 package
   - install other dev (pinned)
-[NOTE] External dependency handling not supported for OS family 'unknown'.
-       You can disable this check using 'opam option --global depext=false'
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved other.dev  (file://${BASEDIR}/other)
@@ -610,8 +608,6 @@ Done.
 The following actions will be performed:
 === install 1 package
   - install other dev (pinned) [required by foo]
-[NOTE] External dependency handling not supported for OS family 'unknown'.
-       You can disable this check using 'opam option --global depext=false'
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved other.dev  (file://${BASEDIR}/other)
@@ -634,8 +630,6 @@ The following actions will be performed:
 === install 2 packages
   - install foo   2.0 (pinned)
   - install other dev (pinned)
-[NOTE] External dependency handling not supported for OS family 'unknown'.
-       You can disable this check using 'opam option --global depext=false'
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved foo.2.0  (file://${BASEDIR}/foo)

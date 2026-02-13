@@ -88,13 +88,17 @@ The following system packages will first need to be installed:
 - sys-foo
 ### :I:5: No depext
 ### opam switch create no-depext --empty
-### OPAMNODEPEXTS=1 opam install foo --depext-only
-opam: --depext-only and --no-depexts can't be used together
-Usage: opam install [OPTION]… [PACKAGES]…
-Try 'opam install --help' or 'opam --help' for more information.
-# Return code 2 #
+### OPAMNODEPEXTS=1 opam install foo --depext-only | sed-cmd echo
+
+The following system packages will first need to be installed:
+    sys-foo
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
++ echo "sys-foo"
+- sys-foo
 ### opam install foo --depext-only --no-depexts
-opam: --depext-only and --assume-depexts can't be used together
+opam: --depext-only and --no-depexts can't be used together
 Usage: opam install [OPTION]… [PACKAGES]…
 Try 'opam install --help' or 'opam --help' for more information.
 # Return code 2 #

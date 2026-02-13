@@ -1520,7 +1520,7 @@ let determine_windows_configuration ?cygwin_setup ?git_location
         `Internal, pkgs
       | (`Root _ | `Path _) as mechanism ->
         let cygwin_packages =
-          if cygwin_is_tweakable && not OpamStateConfig.(!r.no_depexts) then
+          if cygwin_is_tweakable && OpamStateConfig.(!r.depexts) then
             OpamInitDefaults.required_packages_for_cygwin
           else
             []
