@@ -385,7 +385,7 @@ The following system packages will first need to be installed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
-[NOTE] Requirement for system package depext-avail overridden in this switch. Use `opam option 'depext-bypass-="depext-avail"'' to revert.
+[NOTE] Requirement for system package depext-avail overridden in this switch. Use `opam option 'depext-bypass-="depext-avail"'` to revert.
 Done.
 ### opam option depext-bypass
 "depext-avail"
@@ -597,7 +597,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved other.dev  (file://${BASEDIR}/other)
 -> installed other.dev
-[NOTE] Requirement for system package other-depext overridden in this switch. Use `opam option 'depext-bypass-="other-depext"'' to revert.
+[NOTE] Requirement for system package other-depext overridden in this switch. Use `opam option 'depext-bypass-="other-depext"'` to revert.
 Done.
 ### opam remove other
 The following actions will be performed:
@@ -639,7 +639,7 @@ The following actions will be performed:
 -> retrieved other.dev  (file://${BASEDIR}/other)
 -> installed other.dev
 -> installed foo.2.0
-[NOTE] Requirement for system package some-depext overridden in this switch. Use `opam option 'depext-bypass-="some-depext"'' to revert.
+[NOTE] Requirement for system package some-depext overridden in this switch. Use `opam option 'depext-bypass-="some-depext"'` to revert.
 Done.
 ### opam option depext=true
 Set to 'true' the field depext in global configuration

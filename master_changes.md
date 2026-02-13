@@ -33,6 +33,7 @@ users)
 
 ## UI
   * Read full lines when asking for user input when `TERM=dumb` [#6829 @arvidj - fix #6828]
+  * Fix a typo in the note telling users about new a depexts bypass [#6489 @rjbou @kit-ty-kate]
 
 ## Switch
 
