@@ -164,6 +164,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamArg`: add `build_options_no_depexts` getter to retrieve the value of the given flag  [#6489 @rjbou]
 
 ## opam-repository
 

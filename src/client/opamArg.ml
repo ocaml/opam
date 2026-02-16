@@ -719,6 +719,7 @@ let apply_build_options cli b =
     ~scrubbed_environment_variables
     ()
 
+let build_options_no_depexts b = b.no_depexts
 
 (** Converters *)
 
