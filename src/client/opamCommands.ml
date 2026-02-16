@@ -541,10 +541,24 @@ let init cli =
              ~additional_installs:default_compiler)
       with e ->
         OpamStd.Exn.finalise e @@ fun () ->
+        let invariant_str = match invariant with
+          | OpamFormula.Atom (name, Empty) ->
+            OpamPackage.Name.to_string name
+          | OpamFormula.Atom (name, Atom (op, v)) ->
+            "'" ^
+            OpamPackage.Name.to_string name ^
+            OpamFormula.string_of_relop op ^
+            OpamPackage.Version.to_string v ^
+            "'"
+          | formula ->
+            "--formula '" ^ OpamFormula.to_string formula ^ "'"
+        in
         OpamConsole.note
           "Opam has been initialised, but the initial switch creation \
            failed.\n\
-           Use 'opam switch create <compiler>' to get started."
+           Use %s to get started."
+          (OpamConsole.colorise `bold
+             ("opam switch create default "^invariant_str))
     in
     OpamSwitchState.drop st
   in
