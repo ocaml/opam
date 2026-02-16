@@ -381,17 +381,17 @@ let command =
 let info =
   let doc = "Handles (un)installation of package files following instructions from \
              opam *.install files." in
-  (Term.info [@ocaml.warning "-3"]) "opam-installer" ~version:OpamVersion.(to_string current) ~doc
+  Cmd.info "opam-installer" ~version:OpamVersion.(to_string current) ~doc ~exits:[]
 
 let () =
   OpamSystem.init ();
   OpamCoreConfig.init ();
   try
     match
-      (Term.eval [@ocaml.warning "-3"]) ~catch:false (command,info)
+      Cmd.eval ~catch:false (Cmd.v info command)
     with
-    | `Error _ -> exit 2
-    | _ -> exit 0
+    | 0 -> exit 0
+    | _ -> exit 2
   with
   | Invalid_argument s ->
     OpamConsole.error "%s" s; exit 2
