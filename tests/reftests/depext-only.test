@@ -1,5 +1,5 @@
 N0REP0
-### opam var --global os-family=dummy-success
+### opam-set-os dummy-success
 Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
 ### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
 ### OPAMYES=1
