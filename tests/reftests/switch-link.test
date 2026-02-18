@@ -18,3 +18,16 @@ Just remove ${BASEDIR}/_opam to unlink.
 #   switch  compiler  description
     empty             empty
 ->  empty2            empty2
+### : make sure that opam switch link doesn't remove already existing local switch
+### opam switch create empty3 --empty
+### opam switch create . --empty
+### opam switch link empty3 .
+[ERROR] There already is a local switch in ${BASEDIR}. Remove it and try again.
+# Return code 2 #
+### opam switch show
+${BASEDIR}
+### opam switch -s
+${BASEDIR}
+empty
+empty2
+empty3
