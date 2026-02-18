@@ -123,6 +123,7 @@ type families =
   | Dummy of test_setup
   | Freebsd
   | Gentoo
+  | Haiku
   | Homebrew
   | Macports
   | Msys2
@@ -191,6 +192,7 @@ let family ~env () =
       end
     | "debian" | "ubuntu" -> Debian
     | "gentoo" -> Gentoo
+    | "haiku" -> Haiku
     | "homebrew" -> Homebrew
     | "macports" -> Macports
     | "nixos" -> Nix
@@ -864,6 +866,13 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
       |> package_set_of_pkgpath
     in
     compute_sets sys_installed
+  | Haiku ->
+    let sys_installed =
+      run_query_command "pkgman" ["search"; "%n\n%o"]
+      |> List.map OpamSysPkg.of_string
+      |> OpamSysPkg.Set.of_list
+    in
+    compute_sets sys_installed
   | Homebrew ->
     (* accept 'pkgname' and 'pkgname@version'
        exampe output
@@ -1007,7 +1016,7 @@ let stateless_install ?(env=OpamVariable.Map.empty) () =
   | exception Failure _ -> true (* no depexts *)
   | Nix -> true
   | Alpine | Altlinux | Arch | Centos | Cygwin | Debian | Dummy _
-  | Freebsd | Gentoo | Homebrew | Macports | Msys2 | Netbsd
+  | Freebsd | Gentoo | Haiku | Homebrew | Macports | Msys2 | Netbsd
   | Openbsd | Suse -> false
 
 (* Install *)
@@ -1027,6 +1036,7 @@ let package_manager_name_t ?(env=OpamVariable.Map.empty) config =
       `AsUser "false"
   | Freebsd -> `AsAdmin "pkg"
   | Gentoo -> `AsAdmin "emerge"
+  | Haiku -> `AsAdmin "pkgman"
   | Homebrew -> `AsUser "brew"
   | Macports -> `AsAdmin "port"
   | Msys2 -> `AsUser (Commands.msys2 config)
@@ -1113,6 +1123,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show st
       [pm, []], None
   | Freebsd -> [pm, "install"::yes ["-y"] packages], None
   | Gentoo -> [pm, yes ~no:["-a"] [] packages], None
+  | Haiku -> [pm, "install"::yes ["-y"] packages], None
   | Homebrew ->
     [pm, "install"::packages], (* NOTE: Does not have any interactive mode *)
     Some (["HOMEBREW_NO_AUTO_UPDATE","yes"])
@@ -1262,6 +1273,7 @@ let update ?(env=OpamVariable.Map.empty) config =
       if test.install then None else Some (`AsUser "false", [])
     | Freebsd -> None
     | Gentoo -> Some (`AsAdmin "emerge", ["--sync"])
+    | Haiku -> Some (`AsAdmin "pkgman", ["update"]) 
     | Homebrew -> Some (`AsUser "brew", ["update"])
     | Macports -> Some (`AsAdmin "port", ["sync"])
     | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])

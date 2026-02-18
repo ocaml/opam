@@ -70,6 +70,7 @@ users)
   * The `url` file now only supports the legacy opam 1.2 fields [#6827 @kit-ty-kate]
 
 ## External dependencies
+    * Add missing references to Haiku package manager
 
 ## Format upgrade
   * Fix switch and repo format upgrade on Windows. A block occurred because the global lock fd was reopened instead of using the one already opened.  [#6839 @rjbou]
