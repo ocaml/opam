@@ -200,7 +200,7 @@ let install_compiler
         not OpamStateConfig.(!r.dryrun) then
        OpamFile.Environment.write
          (OpamPath.Switch.environment t.switch_global.root t.switch)
-         (OpamEnv.compute_updates t);
+         (OpamEnv.compute_updates ~build_env:[] t);
      OpamEnv.check_and_print_env_warning t);
     t
   end else
