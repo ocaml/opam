@@ -644,13 +644,15 @@ let parallel_apply t
               "" (OpamPackage.Map.find_opt nv inplace));
          Done (`Successful (installed, removed)))
       else
+      let source_dir = source_dir nv in
       let is_inplace, build_dir =
         try true, OpamPackage.Map.find nv inplace
         with Not_found ->
           let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
-          if not OpamClientConfig.(!r.reuse_build_dir) then
+          let source_dir_is_build_dir = OpamFilename.Dir.equal dir source_dir in
+          if not (OpamClientConfig.(!r.reuse_build_dir) || source_dir_is_build_dir) then
             OpamFilename.rmdir dir;
-          false, dir
+          source_dir_is_build_dir, dir
       in
       let test, doc, dev_setup =
         let found = OpamPackage.Set.mem nv requested in
@@ -658,7 +660,6 @@ let parallel_apply t
         OpamStateConfig.(!r.build_doc) && found,
         OpamStateConfig.(!r.dev_setup) && found
       in
-      let source_dir = source_dir nv in
       (if OpamFilename.exists_dir source_dir
        then (if not is_inplace then
                OpamFilename.copy_dir ~src:source_dir ~dst:build_dir)
