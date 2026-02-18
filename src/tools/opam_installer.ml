@@ -21,6 +21,10 @@ type options = {
   stubsdir: OpamFilename.Dir.t option;
   topdir: OpamFilename.Dir.t option;
   docdir: OpamFilename.Dir.t option;
+  bindir: OpamFilename.Dir.t option;
+  sbindir: OpamFilename.Dir.t option;
+  sharedir: OpamFilename.Dir.t option;
+  etcdir: OpamFilename.Dir.t option;
 }
 
 (* A wrapper on top of commands to either proceed, or output a script *)
@@ -182,8 +186,8 @@ let iter_install f instfile o =
     dest ?fix (instdir_f o.prefix () o.pkgname)
   in
   List.iter f
-    [ dest_global                 D.bin,      S.bin instfile,        true;
-      dest_global                 D.sbin,     S.sbin instfile,       true;
+    [ dest_global ?fix:o.bindir   D.bin,      S.bin instfile,        true;
+      dest_global ?fix:o.sbindir  D.sbin,     S.sbin instfile,       true;
       dest_pkg    ?fix:o.libdir   D.lib,      S.lib instfile,        false;
       dest_pkg    ?fix:o.libdir   D.lib,      S.libexec instfile,    true;
       dest_global ?fix:o.libdir   D.lib_dir,  S.lib_root instfile,   false;
@@ -191,9 +195,9 @@ let iter_install f instfile o =
       dest_global ?fix:o.topdir   D.toplevel, S.toplevel instfile,   false;
       dest_global ?fix:o.stubsdir D.stublibs, S.stublibs instfile,   true;
       dest_global ?fix:o.mandir   D.man_dir,  S.man instfile,        false;
-      dest_pkg                    D.share,    S.share instfile,      false;
-      dest_global                 D.share_dir,S.share_root instfile, false;
-      dest_pkg                    D.etc,      S.etc instfile,        false;
+      dest_pkg    ?fix:o.sharedir D.share,    S.share instfile,      false;
+      dest_global ?fix:o.sharedir D.share_dir,S.share_root instfile, false;
+      dest_pkg    ?fix:o.etcdir   D.etc,      S.etc instfile,        false;
       dest_pkg    ?fix:o.docdir   D.doc,      S.doc instfile,        false; ]
 
 let install options =
@@ -299,7 +303,28 @@ let options =
                By default $(i,\\$prefix/doc)." in
     Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["docdir"])
   in
+  let bindir =
+    let doc = "Binaries dir. Relative to $(b,prefix) or absolute. \
+               By default $(i,\\$prefix/bin)." in
+    Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["bindir"])
+  in
+  let sbindir =
+    let doc = "System binaries dir. Relative to $(b,prefix) or absolute. \
+               By default $(i,\\$prefix/sbin)." in
+    Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["sbindir"])
+  in
+  let sharedir =
+    let doc = "Share dir. Relative to $(b,prefix) or absolute. \
+               By default $(i,\\$prefix/share)." in
+    Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["sharedir"])
+  in
+  let etcdir =
+    let doc = "Configuration dir. Relative to $(b,prefix) or absolute. \
+               By default $(i,\\$prefix/etc)." in
+    Arg.(value & opt (some string) None & info ~docv:"PATH" ~doc ["etcdir"])
+  in
   let make_options file prefix script name mandir libdir stubsdir topdir docdir
+      bindir sbindir sharedir etcdir
     =
     let file =
       match file with
@@ -361,10 +386,16 @@ let options =
       | d, None | (Some _ as d), _ -> d
     in
     let docdir = mk_dir docdir in
-    { file; prefix; script; pkgname; mandir; libdir; stubsdir; topdir; docdir }
+    let bindir = mk_dir bindir in
+    let sbindir = mk_dir sbindir in
+    let sharedir = mk_dir sharedir in
+    let etcdir = mk_dir etcdir in
+    { file; prefix; script; pkgname; mandir; libdir; stubsdir; topdir; docdir;
+      bindir; sbindir; sharedir; etcdir; }
   in
   Term.(const make_options $ file $ prefix $ script $ pkgname
-        $ mandir $ libdir $ stubsdir $ topdir $ docdir)
+        $ mandir $ libdir $ stubsdir $ topdir $ docdir
+        $ bindir $ sbindir $ sharedir $ etcdir)
 
 let command =
   let remove =
