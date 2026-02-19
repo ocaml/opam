@@ -60,8 +60,11 @@ end
 
 let raw_dir s = s
 
-let mk_tmp_dir () =
+let tmp_dir () =
   Dir.of_string @@ OpamSystem.mk_temp_dir ()
+
+[@@deprecated "use tmp_dir instead"]
+let mk_tmp_dir = tmp_dir
 
 let with_tmp_dir fn =
   OpamSystem.with_tmp_dir (fun dir -> fn (Dir.of_string dir))
