@@ -104,6 +104,14 @@ type filt_sort =
   | Grep
   | GrepV
 
+let compare_inv_sort s s' =
+  match s, s' with
+  | Grep, Grep | GrepV, GrepV | Sed _, Sed _ -> 0
+  | GrepV, (Grep | Sed _) -> -1
+  | (Grep | Sed _), GrepV -> 1
+  | Grep, Sed _ -> -1
+  | Sed _, Grep -> 1
+
 let escape_regexps s =
   let buf = Buffer.create (String.length s * 2) in
   String.iter (function
@@ -130,16 +138,18 @@ let str_replace_path ?escape whichway filters s =
     | Some `Backslashes -> escape_backslashes
     | Some `Unescape | None -> fun s -> s
   in
+  let blankline = "\\c" in
   List.fold_left (fun s (re, by) ->
-      let re_path = Re.(
-          seq [re; group (rep (diff any (alt [set ":;$\"'"; space])))]
-        ) in
-      match by with
-      | Sed by ->
-        Re.replace (Re.compile re_path) s ~f:(fun g ->
-            escape_regexps by ^ escape_backslashes (whichway (Re.Group.(get g (nb_groups g - 1)))))
-      | Grep | GrepV ->
-        if (by = Grep) = Re.execp (Re.compile re) s then s else "\\c")
+      if String.equal s blankline then s else
+        let re_path = Re.(
+            seq [re; group (rep (diff any (alt [set ":;$\"'"; space])))]
+          ) in
+        match by with
+        | Sed by ->
+          Re.replace (Re.compile re_path) s ~f:(fun g ->
+              escape_regexps by ^ escape_backslashes (whichway (Re.Group.(get g (nb_groups g - 1)))))
+        | Grep | GrepV ->
+          if (by = Grep) = Re.execp (Re.compile re) s then s else blankline)
     s filters
 
 let filters_of_var =
@@ -182,6 +192,7 @@ let command
       Unix.stdin stdout stdout
   in
   Unix.close stdout;
+  let filter = List.sort (fun (_, s) (_, s') -> compare_inv_sort s s') filter in
   let rec filter_output out_buf ic =
     match input_line ic with
     | s ->
