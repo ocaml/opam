@@ -111,6 +111,24 @@ jobs:
       uses: ./.github/actions/centos
       id: depexts-centos
 
+  depexts-chimera:
+    needs: opam-cache
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: opam binary cache
+      uses: actions/cache@v4
+      with:
+        path: binary/opam
+        key: binary-${{ env.OPAMVERSION }}
+    - name: generate action
+      run: |
+        bash .github/scripts/depexts/generate-actions.sh chimera
+    - name: depexts actions chimera
+      uses: ./.github/actions/chimera
+      id: depexts-chimera
+
   depexts-debian:
     needs: opam-cache
     runs-on: ubuntu-latest

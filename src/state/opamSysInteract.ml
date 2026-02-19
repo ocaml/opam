@@ -175,7 +175,7 @@ let family ~env () =
     Dummy { install; installed; available; }
   | Some family ->
     match family with
-    | "alpine" | "wolfi" -> Alpine
+    | "alpine" | "wolfi" | "chimera" -> Alpine
     | "altlinux" -> Altlinux
     | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol"
     | "rhel" -> Centos
