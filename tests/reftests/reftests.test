@@ -867,7 +867,7 @@ Done.
     "all": [
       "foo"
     ],
-    "criteria": "-removed,-count[avoid-version,changed],-count[version-lag,request],-count[version-lag,changed],-count[missing-depexts,changed],-changed"
+    "criteria": "-changed,-count[avoid-version,solution]"
   },
   "solution": [
     {

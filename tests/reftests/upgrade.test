@@ -107,24 +107,15 @@ The following actions will be performed:
 -> installed foo.1
 Done.
 ### opam upgrade "foo<3"
-The following actions will be performed:
-=== upgrade 1 package
-  - upgrade foo 1 to 2
+Everything as up-to-date as possible
 
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   foo.1
--> installed foo.2
-Done.
+The following packages are not being upgraded because the new versions conflict with other installed packages:
+  - foo.3
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade foo.3"), which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
 ### # pinned packages
 ### opam install foo.1
-The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo 2 to 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   foo.2
--> installed foo.1
-Done.
+[NOTE] Package foo is already installed (current version is 1).
 ### <pin:quux/quux.opam>
 opam-version: "2.0"
 ### opam install ./quux
