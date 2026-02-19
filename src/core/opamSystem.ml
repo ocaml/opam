@@ -50,7 +50,7 @@ module Sys2 = struct
 end
 
 let file_or_symlink_exists f =
-  try ignore (Unix.lstat f); true
+  try let _ : Unix.stats = (Unix.lstat f) in true
   with Unix.Unix_error (Unix.ENOENT, _, _) -> false
 
 let (/) = Filename.concat
@@ -224,9 +224,7 @@ let rec temp_file ?(auto_clean=true) ?dir prefix =
   )
 
 let remove_file file =
-  if
-    try ignore (Unix.lstat file); true with Unix.Unix_error _ -> false
-  then (
+  if file_or_symlink_exists file then (
     log "rm %s" file;
     try
       try Unix.unlink file
@@ -740,8 +738,10 @@ let classify_executable file =
         let is_pe =
           try
             (* Offset to PE header at 0x3c (but we've already read two bytes) *)
-            ignore (really_input_string c 0x3a);
-            ignore (really_input_string c (input_int_little c - 0x40));
+            let _ : string = really_input_string c 0x3a in
+            let _ : string =
+              really_input_string c (input_int_little c - 0x40)
+            in
             let magic = really_input_string c 4 in
             magic = "PE\000\000"
           with End_of_file ->
@@ -759,7 +759,7 @@ let classify_executable file =
               | _ ->
                   raise End_of_file
             in
-            ignore (really_input_string c 14);
+            let _ : string = really_input_string c 14 in
             let size_of_opt_header = input_short_little c in
             let characteristics = input_short_little c in
             (* Executable images must have a PE "optional" header and be marked executable *)

@@ -157,10 +157,11 @@ let env_array l =
       OpamStd.Env.Name.Map.empty l
   in
   let a = Array.make (OpamStd.Env.Name.Map.cardinal bindings) "" in
-  OpamStd.Env.Name.Map.fold
-    (fun k v i -> a.(i) <- (k :> string) ^ "=" ^ v; succ i)
-    bindings 0
-  |> ignore;
+  let _ : int =
+    OpamStd.Env.Name.Map.fold
+      (fun k v i -> a.(i) <- (k :> string) ^ "=" ^ v; succ i)
+      bindings 0
+  in
   a
 
 
