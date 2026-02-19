@@ -2094,7 +2094,7 @@ let reinstall cli =
           try
             let installed = OpamPackage.Map.find nv st.installed_opams in
             let upstream = OpamPackage.Map.find nv st.opams in
-            if not (OpamFile.OPAM.effectively_equal installed upstream) &&
+            if not (OpamFile.OPAM.effectively_equal (Some nv) installed upstream) &&
                OpamConsole.confirm
                  "Metadata of %s were updated. Force-update, without performing \
                   the reinstallation?" (OpamPackage.to_string nv)
