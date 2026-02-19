@@ -62,23 +62,51 @@ let restricts (pkgs, constraints) (pkg, c) =
   in
   (pkgs, constraints)
 
+(* From OpamCudf *)
+let s_installed_root = "installed-root"
+
 let create_spec ~drop_installed_packages universe request =
+  let open (struct
+    type installed_pkgs =
+      | Keep of Cudf_types.vpkg
+      | Installed_priority of Cudf_types.vpkg
+      | Installed of Cudf_types.vpkg
+  end) in
+  let installed_pkgs =
+    Cudf.fold_packages_by_name (fun acc pkgname pkgs ->
+      match List.find_opt (fun pkg -> pkg.Cudf.installed) pkgs with
+      | Some {Cudf.keep = `Keep_version; version; _} -> Keep (pkgname, Some (`Eq, version)) :: acc
+      | Some {Cudf.keep = `Keep_package; _} -> Keep (pkgname, None) :: acc
+      | Some {Cudf.keep = `Keep_feature; _} -> assert false (* NOTE: Opam has no support for features *)
+      | Some {Cudf.keep = `Keep_none; pkg_extra; _} ->
+        if keep_installed ~drop_installed_packages request pkgname then
+          if List.mem (s_installed_root, `Bool true) pkg_extra then
+            Installed_priority (pkgname, None) :: acc
+          else
+            Installed (pkgname, None) :: acc
+        else
+          acc
+      | None -> acc
+    ) [] universe
+  in
   let spec = ([], []) in
+  let spec =
+    List.fold_left (fun spec -> function
+        | Keep _ | Installed_priority _ -> spec
+        | Installed vpkg -> recommended spec vpkg
+      ) spec installed_pkgs
+  in
+  let spec =
+    List.fold_left (fun spec -> function
+        | Installed _ -> spec
+        | Keep vpkg -> essential spec vpkg
+        | Installed_priority vpkg -> recommended spec vpkg
+      ) spec installed_pkgs
+  in
   let spec = List.fold_left essential spec request.Cudf.install in
   let spec = List.fold_left essential spec request.Cudf.upgrade in
   let spec = List.fold_left restricts spec request.Cudf.remove in
-  Cudf.fold_packages_by_name (fun spec pkgname pkgs ->
-      match List.find_opt (fun pkg -> pkg.Cudf.installed) pkgs with
-      | Some {Cudf.keep = `Keep_version; version; _} -> essential spec (pkgname, Some (`Eq, version))
-      | Some {Cudf.keep = `Keep_package; _} -> essential spec (pkgname, None)
-      | Some {Cudf.keep = `Keep_feature; _} -> assert false (* NOTE: Opam has no support for features *)
-      | Some {Cudf.keep = `Keep_none; _} ->
-          if keep_installed ~drop_installed_packages request pkgname then
-            recommended spec (pkgname, None)
-          else
-            spec
-      | None -> spec
-    ) spec universe
+  spec
 
 let reconstruct_universe universe selections =
   Opam_0install_cudf.packages_of_result selections |>
