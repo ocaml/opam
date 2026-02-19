@@ -3102,21 +3102,22 @@ let switch cli =
       end;
       `Ok ()
     | Some `remove, switches ->
-      OpamGlobalState.with_ `Lock_write @@ fun gt ->
-      let _gt =
-        List.fold_left
-          (fun gt switch ->
-             let opam_dir = OpamFilename.Op.(
-                 OpamFilename.Dir.of_string switch / OpamSwitch.external_dirname
-               ) in
-             if OpamFilename.is_symlink_dir opam_dir then
-               (OpamFilename.rmdir opam_dir;
-                gt)
-             else OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
-          gt
-          switches
-      in
-      `Ok ()
+      if OpamStateConfig.(!r.dryrun) then `Ok () else
+        OpamGlobalState.with_ `Lock_write @@ fun gt ->
+        let _gt =
+          List.fold_left
+            (fun gt switch ->
+               let opam_dir = OpamFilename.Op.(
+                   OpamFilename.Dir.of_string switch / OpamSwitch.external_dirname
+                 ) in
+               if OpamFilename.is_symlink_dir opam_dir then
+                 (OpamFilename.rmdir opam_dir;
+                  gt)
+               else OpamSwitchCommand.remove gt (OpamSwitch.of_string switch))
+            gt
+            switches
+        in
+        `Ok ()
     | Some `reinstall, switch ->
       let switch = match switch with
         | [sw] -> OpamSwitch.of_string sw

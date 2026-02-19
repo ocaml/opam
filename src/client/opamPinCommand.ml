@@ -66,7 +66,12 @@ exception Fetch_Fail of string
 
 let get_source_definition ?version ?subpath ?locked st nv url =
   let root = st.switch_global.root in
-  let srcdir = OpamPath.Switch.pinned_package root st.switch nv.name in
+  let srcdir =
+    if OpamStateConfig.(!r.dryrun) then
+      OpamFilename.mk_tmp_dir ()
+    else
+      OpamPath.Switch.pinned_package root st.switch nv.name
+  in
   let fix opam =
     OpamFile.OPAM.with_url url @@
     (match version with
@@ -374,7 +379,12 @@ let fetch_all_pins st ?working_dir pins =
     let command pinned =
       let { pinned_name = name; pinned_url = url;
             pinned_subpath = subpath; _ } = pinned in
-      let srcdir = OpamPath.Switch.pinned_package root st.switch name in
+      let srcdir =
+        if OpamStateConfig.(!r.dryrun) then
+          OpamFilename.mk_tmp_dir ()
+        else
+          OpamPath.Switch.pinned_package root st.switch name
+      in
       let name = OpamPackage.Name.to_string name in
       OpamProcess.Job.Op.(
         OpamRepository.pull_tree ~cache_dir ?subpath ?working_dir
@@ -620,6 +630,7 @@ and source_pin
 
     let opam = copy_files st opam in
 
+    if not OpamStateConfig.(!r.dryrun) then
     OpamFile.OPAM.write_with_preserved_format
       ?format_from:(OpamPinned.orig_opam_file st name opam)
       (OpamPath.Switch.Overlay.opam st.switch_global.root st.switch nv.name)
@@ -699,11 +710,12 @@ let unpin st names =
   log "unpin %a"
     (slog @@ OpamStd.List.concat_map " " OpamPackage.Name.to_string) names;
   List.fold_left (fun st name ->
-      OpamFilename.rmdir
-        (OpamPath.Switch.pinned_package st.switch_global.root st.switch name);
-      OpamFilename.rmdir
-        (OpamPath.Switch.Overlay.package
-           st.switch_global.root st.switch name);
+      if not OpamStateConfig.(!r.dryrun) then
+        (OpamFilename.rmdir
+           (OpamPath.Switch.pinned_package st.switch_global.root st.switch name);
+         OpamFilename.rmdir
+           (OpamPath.Switch.Overlay.package
+              st.switch_global.root st.switch name));
       match OpamPinned.package_opt st name with
       | Some nv ->
         let pin_str =
