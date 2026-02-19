@@ -156,6 +156,8 @@ users)
   * Mention more explicitely that raw fields are an option [@raphael-proust]
   * Correct configure instruction in README [#6858 @gridbugs @kit-ty-kate]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
