@@ -219,6 +219,53 @@ let list_all rt ~short =
   OpamStd.Format.align_table |>
   OpamConsole.print_table stdout ~sep:" "
 
+let show_repo rt ~switches repo_name =
+  let repos_to_table repos =
+    List.fold_left (fun acc (rank, repo) ->
+      let r = OpamRepositoryName.Map.find repo rt.repositories in
+      [ OpamConsole.colorise `blue "rank"; string_of_int rank ]
+      :: [ OpamConsole.colorise `blue "url"; OpamUrl.to_string r.repo_url ]
+      :: [ OpamConsole.colorise `blue "name"; OpamRepositoryName.to_string repo ]
+      :: [ "\n" ]
+      :: acc)
+      [] repos
+    |> List.rev
+  in
+  let repos_per_switch =
+    List.filter_map (fun sw ->
+      let repos = switch_repos rt sw |> List.mapi (fun i repo -> (i+1, repo)) in
+      match repos with
+      | [] -> None
+      | repos -> Some (sw, repos)
+    ) switches
+  in
+  let repos =
+    match repo_name with
+    | None -> List.map (fun (sw, repos) -> sw, repos_to_table repos) repos_per_switch
+    | Some repo_name ->
+      List.filter_map (fun (sw, repos) ->
+          match List.filter (fun (_, repo) ->
+              OpamRepositoryName.equal repo repo_name) repos with
+          | [] -> None
+          | repos -> Some (sw, repos_to_table repos)
+        ) repos_per_switch
+  in
+  match repos with
+  | [] -> begin
+      match repo_name with
+      | None ->
+        OpamConsole.error_and_exit `Bad_arguments "No repository found";
+      | Some repo_name ->
+        OpamConsole.error_and_exit `Bad_arguments
+          "No repository called %s was found" (OpamRepositoryName.to_string repo_name);
+    end
+  | repos ->
+    List.iter (fun (sw, tbl)  ->
+        OpamConsole.header_msg "switch: %s" (OpamSwitch.to_string sw);
+        OpamStd.Format.align_table tbl |>
+        OpamConsole.print_table ~cut:`Truncate stdout ~sep:" ")
+      repos
+
 let update_with_auto_upgrade rt repo_names =
   let repos = List.map (OpamRepositoryState.get_repo rt) repo_names in
   let failed, rt = OpamUpdate.repositories rt repos in
