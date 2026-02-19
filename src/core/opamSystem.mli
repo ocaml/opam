@@ -195,6 +195,8 @@ val dirs: string -> string list
     Returns [None] if the directory could not be found. *)
 val dir_is_empty: string -> bool option
 
+val rec_dir_is_empty: string -> bool option
+
 (** [directories_with_links dir] returns the directories in the directory [dir].
     Links pointing to directory are also returned. *)
 val directories_with_links: string -> string list
