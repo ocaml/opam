@@ -188,6 +188,14 @@ let remove_dir dir =
       remove_file_t ~with_log:true dir
   end
 
+let is_dir_read_only dir =
+  if not (is_reg_dir dir) then invalid_arg "OpamSystem.is_dir_read_only";
+  try
+    Unix.access dir [W_OK];
+    false
+  (* EROFS for linux and EPERM for osx *)
+  with Unix.Unix_error ((EROFS|EPERM), _, _) -> true
+
 let temp_files = Hashtbl.create 1024
 let logs_cleaner =
   let to_clean = ref OpamStd.String.Set.empty in

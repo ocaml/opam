@@ -68,7 +68,7 @@ let post_message ?(failed=false) st action =
     )
 
 let print_depexts_helper st actions =
-  if OpamFile.Config.depext st.switch_global.config then () else
+  if OpamStateConfig.(!r.depexts) then () else
   let depexts =
     List.fold_left (fun depexts -> function
         | `Build nv ->
@@ -422,7 +422,7 @@ let parallel_apply t
          (let spkgs = OpamSysPkg.Set.Op.(bypass -- !bypass_ref) in
           OpamConsole.note
             "Requirement for system package%s %s overridden in this switch. Use \
-             `opam option 'depext-bypass-=%S'' to revert."
+             `opam option 'depext-bypass-=%S'` to revert."
             (if OpamSysPkg.Set.cardinal spkgs > 1 then "s" else "")
             (OpamStd.Format.pretty_list
                (List.map OpamSysPkg.to_string
@@ -1155,30 +1155,17 @@ let print_depext_msg (status : OpamSysPkg.status) =
      OpamConsole.formatted_msg ~indent:4 "    %s\n"
        (syspkgs_to_string status.s_available))
 
-(* Gets depexts from the state, without checking again, unless [recover] is
-   true. *)
-let get_depexts ?(force=false) ?(recover=false) t
-    ~pkg_to_install ~pkg_installed =
-  if not force && OpamStateConfig.(!r.no_depexts) then
+(* Gets depexts from the state unless [force] is given, then it bypasses depexts
+   disabling and poll depexts from system. *)
+let get_depexts ?(force=false) t ~pkg_to_install ~pkg_installed =
+  if not force && not OpamStateConfig.(!r.depexts) then
     OpamSysPkg.to_install_empty
   else
     let sys_packages =
-      if recover then
+      if force then
         OpamSwitchState.depexts_status_of_packages t pkg_to_install
       else
-        let base = Lazy.force t.sys_packages in
-        (* workaround: st.sys_packages is not always updated with added
-           packages *)
-        let more_pkgs =
-          OpamPackage.Set.filter (fun nv ->
-              (* dirty heuristic: recompute for all non-canonical packages *)
-              OpamPackage.Map.find_opt nv t.repos_package_index
-              <> OpamSwitchState.opam_opt t nv)
-            pkg_to_install
-        in
-        if OpamPackage.Set.is_empty more_pkgs then base else
-          OpamPackage.Map.union (fun _ x -> x) base
-            (OpamSwitchState.depexts_status_of_packages t more_pkgs)
+        Lazy.force t.sys_packages
     in
     let already_installed = OpamPackage.Set.diff pkg_installed pkg_to_install in
     let open OpamSysPkg.Set.Op in
@@ -1203,7 +1190,8 @@ let get_depexts ?(force=false) ?(recover=false) t
     { ti_new = status.s_available; ti_required }
 
 (* propagate_st is used to determine if we need to handle stateless depext
-   systems *)
+   systems which also indicated if we have to poll the system for
+   depexts status or can use the one from repository state *)
 let install_sys_packages_t ~propagate_st ~map_sysmap ~confirm env config
     sys_packages t =
   let rec entry_point t sys_packages =
@@ -1289,8 +1277,21 @@ let install_sys_packages_t ~propagate_st ~map_sysmap ~confirm env config
       check_again t sys_packages
   and check_again t sys_packages =
     let open OpamSysPkg.Set.Op in
+    let sys_available =
+      match propagate_st t with
+      | Some st ->
+        (match OpamRepositoryState.syspkgs_available ~env
+                 st.switch_repos.repos_syspkgs_available with
+        | Some availability -> availability
+        | None ->
+          OpamSysInteract.available_packages ~env config sys_packages.ti_new)
+      | None ->
+        OpamSysInteract.available_packages ~env config sys_packages.ti_new
+    in
     let status =
-      OpamSysInteract.packages_status ~env config sys_packages.ti_new
+      OpamSysInteract.packages_status
+        ~sys_available
+        ~env config sys_packages.ti_new
     in
     let still_missing = status.s_available ++ status.s_not_found in
     let installed = sys_packages.ti_new -- still_missing in
@@ -1359,8 +1360,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t
     confirm && not (OpamSysInteract.Cygwin.is_internal t.switch_global.config)
   in
   let sys_packages =
-    get_depexts ~force:force_depext ~recover:force_depext t
-      ~pkg_to_install ~pkg_installed
+    get_depexts ~force:force_depext t ~pkg_to_install ~pkg_installed
   in
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in

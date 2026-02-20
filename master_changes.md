@@ -33,6 +33,7 @@ users)
 
 ## UI
   * Read full lines when asking for user input when `TERM=dumb` [#6829 @arvidj - fix #6828]
+  * Fix a typo in the note telling users about new a depexts bypass [#6489 @rjbou @kit-ty-kate]
 
 ## Switch
 
@@ -49,6 +50,9 @@ users)
 
 ## Update / Upgrade
   * Fixed the bug occuring on version-equivalent package rename (i.e `pkg.00 -> pkg.0`) leading to the package being completely removed. [#6774 @arozovyk fix #6754]
+  * Compute the list of available depexts on `opam update` [#6489 @arozovyk - fix #6461]
+  * Update depexts availability repository state cache when running `opam update --depexts` [#6489 @arozovyk - fix #6461]
+  * Display status message while loading system package availability during `opam update` [#6489 @arozovyk - fix #6461]
 
 ## Tree
 
@@ -116,6 +120,7 @@ users)
 ## Solver
 
 ## Client
+  * Improved depexts handling by caching system package availability during update, avoiding redundant system checks at install time. [#6489 @arozovyk - fix #6461]
 
 ## Shell
 
@@ -138,6 +143,9 @@ users)
   * Fix a failure when two hashes start with the same two characters [#6793 @kit-ty-kate]
   * Add a test showing the behaviour of `opam init --config` when the file given does not exist [#5979 @kit-ty-kate @rjbou]
   * Add a test for switch link when a local switch is already present [#6860 @rjbou]
+  * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
+  * Add disabled depexts tests [#6489 @rjbou]
+  * Add depexts tests with debug section that demostrate system availability polling [#6489 @arozovyk]
 
 ### Engine
 
@@ -161,14 +169,36 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamArg`: add `build_options_no_depexts` getter to retrieve the value of the given flag  [#6489 @rjbou]
+  * `OpamClientConfig.opam_init`: replace `no_depexts` argument by `depexts` [#6489 @rjbou]
+  * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
+  * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
+  * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
 
 ## opam-repository
 
 ## opam-state
+  * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
+  * `OpamStateConfig.options_fun`: replace `no_depexts` argument by `depexts` [#6489 @rjbou]
   * `OpamRepositoryState.load_opams_from_diff` track added packages to avoid removing version-equivalent packages [#6774 @arozovyk fix #6754]
   * `OpamGlobalState.all_installed_versions`: was added [#6818 @dra27]
   * `OpamGlobalState.installed_versions`: was removed [#6818 @dra27]
   * `OpamStateTypes.global_state`: add field `lock` that contains the global lock (not config one) [#6839 @rjbou]
+  * `OpamStateTypes`: add `os_family` type that was defined and used internally in `OpamSysInteract` [#6489 @rjbou]
+  * `OpamSysInteract`: add `disable_depexts_note` to be used to display a note to disable depexts [#6489 @rjbou]
+  * `OpamSysInteract`: add some os families helpers `string_of_os_family`, `equal_os_family`, `same_os_family` [#6489 @rjbou]
+  * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly. These funct-ions are now no-op if the given system packages set is empty.  [#6489 @arozovyk]
+  * `OpamGlobalState`: add `is_root_read_only` to check if we are in sandboxed environment [#6489 @rjbou]
+  * `OpamSwitchState`: add `update_sys_packages` to update depexts status of a set of packages. [#6489 @arozovyk]
+  * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly [#6489 @arozovyk]
+  * `OpamStateTypes`: add available system package status field `repos_syspkgs_available` (and its type `repo_syspkgs_available`) in `repos_state` for all the depexts declared in repo's packages. The new field is also added to the cache. [#6489 @arozovyk @rjbou]
+  * `OpamRepositoryState.load`: load repo's available system packages [#6489 @arozovyk]
+  * `OpamFileTools`: add `opams_depexts` to consolidate depexts extraction logic from individual opam files and package maps [#6489 @arozovyk]
+  * `OpamUpdate`: add `update_sys_available_cache` to update the system package availability cache in repository state [#6489 @arozovyk]
+  * `OpamUpdate.get_sys_available`: factorize depexts availability computation logic from `OpamUpdate.repositories` [#6489 @arozovyk]
+  * `OpamRepositoryState`: add `syspkgs_available` that returns the stored depext availability status in repository state [#6489 @rjbou]
+  * `OpamSysInteract`: add `available_packages_and_family` that returns availability status and the os family [#6489 @rjbou]
+
 
 ## opam-solver
 
@@ -177,6 +207,8 @@ users)
   * `OpamFile.URL` was moved to `OpamFile.URL_legacy` and a simpler `OpamFile.URL` module was created only containing non-IO functions removing the outdated `url` file support [#6827 @kit-ty-kate]
   * `OpamFile.Descr.of_legacy`: was added [#6827 @kit-ty-kate]
   * `OpamFile.URL.of_legacy`: was added [#6827 @kit-ty-kate]
+  * `OpamSysPkg`: add `availability_mode` type to indicate the availability of system packages on a given system [#6489 @arozovyk]
+  * `OpamSysPkg`: add `equal_availability_mode` function [#6489 @arozovyk]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
@@ -186,3 +218,5 @@ users)
   * `OpamStd.String.compare_case`: is now allocation free [#6515 @dra27]
   * `OpamVersionCompare.{compare,equal}`: are now allocation free [#6515 @dra27]
   * `OpamCompat.Map.add_to_list`: was added [#6818 @dra27]
+  * `OpamSystem`: add `is_dir_read_only` [#6489 @rjbou]
+  * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]

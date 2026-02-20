@@ -385,7 +385,7 @@ The following system packages will first need to be installed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
-[NOTE] Requirement for system package depext-avail overridden in this switch. Use `opam option 'depext-bypass-="depext-avail"'' to revert.
+[NOTE] Requirement for system package depext-avail overridden in this switch. Use `opam option 'depext-bypass-="depext-avail"'` to revert.
 Done.
 ### opam option depext-bypass
 "depext-avail"
@@ -513,6 +513,8 @@ No configuration file found, using built-in defaults.
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
 
 <><> Creating initial switch 'comp' (invariant ["comp"]) ><><><><><><><><><><><>
 
@@ -523,4 +525,188 @@ Switch invariant: ["comp"]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed comp.1
+Done.
+### opam switch create depext-unknown --empty
+### opam-set-os unknown
+Added '[os-family "unknown" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pkg:unkn.1>
+opam-version: "2.0"
+### opam install unkn.1
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+The following actions will be performed:
+=== install 1 package
+  - install unkn 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed unkn.1
+Done.
+### <pkg:unkn.2>
+opam-version: "2.0"
+depexts: [ "depext" ]
+### opam install unkn.2
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade unkn 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   unkn.1
+-> installed unkn.2
+Done.
+### :VII: disabled depexts
+### opam option depext=false
+Set to 'false' the field depext in global configuration
+### opam switch create depext-disabled --empty
+### opam-set-os unknown
+Added '[os-family "unknown" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pin:other/other.opam>
+opam-version: "2.0"
+depexts: ["other-depext"]
+### <pin:foo/foo.opam>
+version: "2.0"
+depends: [
+  "other"
+]
+depexts: ["some-depext"]
+### opam install unkn.1
+The following actions will be performed:
+=== install 1 package
+  - install unkn 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed unkn.1
+Done.
+### opam install unkn.2
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade unkn 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   unkn.1
+-> installed unkn.2
+Done.
+### opam install ./other
+[NOTE] Package other does not exist in opam repositories registered in the current switch.
+other is now pinned to file://${BASEDIR}/other (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install other dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved other.dev  (file://${BASEDIR}/other)
+-> installed other.dev
+[NOTE] Requirement for system package other-depext overridden in this switch. Use `opam option 'depext-bypass-="other-depext"'` to revert.
+Done.
+### opam remove other
+The following actions will be performed:
+=== remove 1 package
+  - remove other dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   other.dev
+Done.
+### opam install ./foo --deps-only
+The following actions will be performed:
+=== install 1 package
+  - install other dev (pinned) [required by foo]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved other.dev  (file://${BASEDIR}/other)
+-> installed other.dev
+Done.
+### opam remove other foo
+[NOTE] foo is not installed.
+
+The following actions will be performed:
+=== remove 1 package
+  - remove other dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   other.dev
+Done.
+### opam install ./other ./foo
+foo is now pinned to file://${BASEDIR}/foo (version 2.0)
+[other.dev] synchronised (no changes)
+The following actions will be performed:
+=== install 2 packages
+  - install foo   2.0 (pinned)
+  - install other dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo.2.0  (file://${BASEDIR}/foo)
+-> retrieved other.dev  (file://${BASEDIR}/other)
+-> installed other.dev
+-> installed foo.2.0
+[NOTE] Requirement for system package some-depext overridden in this switch. Use `opam option 'depext-bypass-="some-depext"'` to revert.
+Done.
+### opam option depext=true
+Set to 'true' the field depext in global configuration
+### :VIII: Debug output for depexts loading
+### opam switch create state-debug --empty
+### <pkg:test-poll-pkg.1>
+opam-version: "2.0"
+depexts: ["poll-sys-dep"]
+### opam-set-os dummy-success::poll-sys-dep
+Added '[os-family "dummy-success::poll-sys-dep" "Set through 'opam var'"]' to field global-variables in global configuration
+### OPAMDEBUGSECTIONS=XSYS OPAMDEBUG=-3 OPAMDRYRUN=1
+### opam install test-poll-pkg
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+XSYS                            Computing depexts availability for 6 system packages
+XSYS                            Computing depexts installed for 6 system packages
+The following actions will be simulated:
+=== install 1 package
+  - install test-poll-pkg 1
+
+The following system packages will first need to be installed:
+    poll-sys-dep
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing test-poll-pkg.1.
+-> installed test-poll-pkg.1
+Done.
+### <pin:test-poll-pkg-pin/test-poll-pkg-pin.opam>
+opam-version: "2.0"
+depexts: ["poll-sys-dep"]
+### opam pin ./test-poll-pkg-pin
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+XSYS                            Computing depexts installed for 6 system packages
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+
+XSYS                            Computing depexts installed for 1 system package
+XSYS                            Computing depexts availability for 1 system package
+The following actions will be simulated:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+
+The following system packages will first need to be installed:
+    poll-sys-dep
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing test-poll-pkg-pin.dev.
+-> installed test-poll-pkg-pin.dev
 Done.

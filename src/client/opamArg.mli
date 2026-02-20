@@ -192,6 +192,8 @@ val apply_global_options: OpamCLIVersion.Sourced.t -> global_options -> unit
 (** Abstract type for build options *)
 type build_options
 
+val build_options_no_depexts: build_options -> bool
+
 val man_build_option_section: Manpage.block list
 
 (** Build options *)

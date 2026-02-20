@@ -1520,7 +1520,7 @@ let determine_windows_configuration ?cygwin_setup ?git_location
         `Internal, pkgs
       | (`Root _ | `Path _) as mechanism ->
         let cygwin_packages =
-          if cygwin_is_tweakable && not OpamStateConfig.(!r.no_depexts) then
+          if cygwin_is_tweakable && OpamStateConfig.(!r.depexts) then
             OpamInitDefaults.required_packages_for_cygwin
           else
             []
@@ -2203,6 +2203,9 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
             OpamPackage.Set.add dnv deps_of_packages)
           nvs (t, deps_of_packages))
       dname_map (t, OpamPackage.Set.empty)
+  in
+  let t =
+    OpamSwitchState.update_sys_packages deps_of_packages t
   in
   let pkg_skip, pkg_new =
     get_installed_atoms t atoms in
