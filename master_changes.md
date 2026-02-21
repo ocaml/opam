@@ -69,6 +69,7 @@ users)
 ## Clean
 
 ## Env
+  * [NEW] Add support for nushell in the opam env command
 
 ## Opamfile
   * The `url` file now only supports the legacy opam 1.2 fields [#6827 @kit-ty-kate]

@@ -1137,7 +1137,7 @@ let rec cygwin_menu ~bypass_checks ~interactive header =
             options, internal_option, Some warning
           | None ->
             match OpamStd.Sys.guess_shell_compat () with
-            | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish ->
+            | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_nu ->
               let default, warning =
                 if kind = `Msys2 && OpamSystem.resolve_command pacman = None then
                   internal_option, Printf.sprintf
