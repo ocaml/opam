@@ -1,6 +1,9 @@
 datarootdir = @datarootdir@
 prefix = @prefix@
 mandir = @mandir@
+bindir = @bindir@
+sbindir = @sbindir@
+etcdir = @sysconfdir@
 version = @PACKAGE_VERSION@
 FETCH = @fetch@
 
