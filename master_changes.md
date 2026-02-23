@@ -24,6 +24,7 @@ users)
 ## Config report
 
 ## Actions
+  * The internal `sources` directory now only serves to cache dev packages instead of every packages, saving disk space [#6440 @kit-ty-kate - fix #4056 #5448]
 
 ## Install
 
@@ -36,6 +37,7 @@ users)
   * Fix a typo in the note telling users about new a depexts bypass [#6489 @rjbou @kit-ty-kate]
 
 ## Switch
+  * The internal `sources` directory is now always created on switch creation [#6440 @kit-ty-kate]
 
 ## Config
 
