@@ -2298,6 +2298,8 @@ let repository cli =
      where they are active.";
     cli_original, "priority", `priority, ["NAME"; "RANK"],
     "Synonym to $(b,add NAME --rank RANK)";
+    cli_from cli2_5, "show", `show_repo, [],
+    "Show the URL and priority of a repository";
   ] in
   let man = [
     `S Manpage.s_description;
@@ -2601,6 +2603,15 @@ let repository cli =
           "These are the repositories in use by the current switch. Use \
            '--all' to see all configured repositories.";
       OpamRepositoryCommand.list rt ~global ~switches ~short;
+      `Ok ()
+    | Some `show_repo, [] ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      OpamRepositoryCommand.show_repo rt ~switches None;
+      `Ok ()
+    | Some `show_repo, [ repo_name ] ->
+      OpamRepositoryState.with_ `Lock_none gt @@ fun rt ->
+      let repo_name = if scope = [ `All ] then None else Some (OpamRepositoryName.of_string repo_name) in
+      OpamRepositoryCommand.show_repo rt ~switches repo_name;
       `Ok ()
     | command, params -> bad_subcommand ~cli commands ("repository", command, params)
   in
