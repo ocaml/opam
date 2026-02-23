@@ -117,7 +117,8 @@ let add_to_reinstall st ~unpinned_only packages =
   let reinstall =
     current_reinstall ++ add_reinst_packages
   in
-  if OpamPackage.Set.equal current_reinstall reinstall then ()
+  if OpamStateConfig.(!r.dryrun)
+  || OpamPackage.Set.equal current_reinstall reinstall then ()
   else if OpamPackage.Set.is_empty reinstall then
     OpamFilename.remove (OpamFile.filename reinstall_file)
   else
