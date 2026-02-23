@@ -123,6 +123,7 @@ users)
   * Improved depexts handling by caching system package availability during update, avoiding redundant system checks at install time. [#6489 @arozovyk - fix #6461]
 
 ## Shell
+  * Update PATH in place in env hook [#6859 @gridbugs fix #6815]
 
 ## Internal
   * Improve cache-loading performance when using OCaml >= 5.4 by using `Gc.ramp_up` [#6515 @dra27]

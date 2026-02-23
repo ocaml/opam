@@ -95,7 +95,7 @@ $env:PATH='${BASEDIR}/root/fake/bin;' + "$env:PATH"
 OPAMNOENVNOTICE=true; export OPAMNOENVNOTICE;
 _opam_env_hook() {
  local previous_exit_status=$?;
- eval $(opam env --shell=bash --readonly 2> /dev/null <&- );
+ eval $(opam env --shell=bash --readonly --inplace-path 2> /dev/null <&- );
  return $previous_exit_status;
 };
 if ! [[ "$PROMPT_COMMAND" =~ _opam_env_hook ]]; then
@@ -104,7 +104,7 @@ fi
 ### cat root/opam-init/env_hook.zsh
 OPAMNOENVNOTICE=true; export OPAMNOENVNOTICE;
 _opam_env_hook() {
-    eval $(opam env --shell=zsh --readonly 2> /dev/null <&-);
+    eval $(opam env --shell=zsh --readonly --inplace-path 2> /dev/null <&-);
 }
 typeset -ag precmd_functions;
 if [[ -z ${precmd_functions[(r)_opam_env_hook]} ]]; then
@@ -113,11 +113,11 @@ fi
 ### cat root/opam-init/env_hook.fish
 set -gx OPAMNOENVNOTICE true;
 function __opam_env_export_eval --on-event fish_prompt
-    eval (opam env --shell=fish --readonly 2> /dev/null)
+    eval (opam env --shell=fish --readonly --inplace-path 2> /dev/null)
 end
 ### cat root/opam-init/env_hook.csh
 setenv OPAMNOENVNOTICE true
-alias precmd 'eval `opam env --shell=csh --readonly`'
+alias precmd 'eval `opam env --shell=csh --readonly --inplace-path`'
 ### test -f root/opam-init/env_hook.cmd
 # Return code 1 #
 ### test -f root/opam-init/env_hook.ps1
