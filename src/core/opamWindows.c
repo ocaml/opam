@@ -23,6 +23,8 @@
 #include <caml/signals.h>
 #include <caml/unixsupport.h>
 
+// Set min windows version to 8.1, for GetCurrentProcessToken
+#define _WIN32_WINNT 0x0602 
 #include <Windows.h>
 #include <Shlobj.h>
 #include <TlHelp32.h>
