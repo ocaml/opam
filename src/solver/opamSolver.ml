@@ -702,7 +702,7 @@ let solution_is_empty t =
   OpamCudf.ActionGraph.is_empty t
 
 let print_solution ~messages ~append ~requested ~reinstall ~available
-    ?(skip=OpamPackage.Map.empty) t =
+    ?(skip=OpamPackage.Map.empty) user_action t =
   let dump_cudf sfx t = match OpamSolverConfig.(!r.cudf_file) with
     | None -> ()
     | Some f ->
@@ -770,11 +770,27 @@ let print_solution ~messages ~append ~requested ~reinstall ~available
         (match acts with [_] -> "package" | _ -> "packages");
       OpamConsole.print_table ~sep:" " stdout (List.map snd acts)
   in
-  print_actions (function `Remove _ -> true | _ -> false);
-  print_actions (function `Change (`Down,_,_) -> true | _ -> false);
+  (* NOTE: We always print reinstall, and after it we select the order of
+     actions given the actions. We want to highlight the important changes
+     by putting them at the end of the list. *)
   print_actions (function `Reinstall _ -> true | _ -> false);
-  print_actions (function `Change (`Up,_,_) -> true | _ -> false);
-  print_actions (function `Install _ -> true | _ -> false)
+  begin match user_action with
+  | Install | Query | Reinstall | Switch | Import ->
+    print_actions (function `Install _ -> true | _ -> false);
+    print_actions (function `Change (`Up,_,_) -> true | _ -> false);
+    print_actions (function `Change (`Down,_,_) -> true | _ -> false);
+    print_actions (function `Remove _ -> true | _ -> false);
+  | Upgrade ->
+    print_actions (function `Change (`Up,_,_) -> true | _ -> false);
+    print_actions (function `Install _ -> true | _ -> false);
+    print_actions (function `Change (`Down,_,_) -> true | _ -> false);
+    print_actions (function `Remove _ -> true | _ -> false);
+  | Remove ->
+    print_actions (function `Remove _ -> true | _ -> false);
+    print_actions (function `Change (`Up,_,_) -> true | _ -> false);
+    print_actions (function `Change (`Down,_,_) -> true | _ -> false);
+    print_actions (function `Install _ -> true | _ -> false);
+  end
 
 let dump_universe universe oc =
   let version_map = cudf_versions_map universe in

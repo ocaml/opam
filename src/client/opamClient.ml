@@ -172,7 +172,7 @@ let upgrade_t
          current state.\n"
     end;
     OpamStd.Sys.exit_because `No_solution
-  | requested, Success solution ->
+  | requested, Success ((_, solution) as action_solution) ->
     if check then
       OpamStd.Sys.exit_because
         (if OpamSolver.solution_is_empty solution
@@ -183,7 +183,7 @@ let upgrade_t
     let t, result =
       OpamSolution.apply ?ask t ~requested:packages
         ~print_requested:(print_requested requested formula)
-        solution
+        action_solution
     in
     if result = Nothing_to_do then (
       let to_check =
@@ -2351,7 +2351,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
            (OpamSwitchState.unavailable_reason t) explanations)
         extra_message;
       t, Conflicts cs
-    | Success solution ->
+    | Success ((_, solution) as action_solution) ->
       let skip =
         let inst = OpamSolver.new_packages solution in
         OpamPackage.Name.Map.fold (fun n dn map ->
@@ -2394,7 +2394,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
             ~requested:packages
             ~print_requested:(print_requested requested formula)
             ?add_roots ~skip
-            ~download_only ~assume_built solution in
+            ~download_only ~assume_built action_solution in
         t, Success res
   in
   OpamSolution.check_solution t solution;

@@ -219,7 +219,7 @@ let install_compiler
       ~requested:(OpamPackage.packages_of_names t.packages roots)
       (OpamSolver.request ~install:additional_installs ())
   in
-  let solution = match solution with
+  let (_, solution) as action_solution = match solution with
     | Success s -> s
     | Conflicts cs ->
       OpamConsole.error
@@ -282,7 +282,7 @@ let install_compiler
       ~ask:(OpamClientConfig.(!r.show) || ask)
       ~requested:(OpamPackage.packages_of_names t.packages roots)
       ~add_roots:roots ~skip
-      solution in
+      action_solution in
   OpamSolution.check_solution ~quiet:OpamClientConfig.(not !r.show) t
     (Success result);
   OpamSwitchAction.write_selections t;

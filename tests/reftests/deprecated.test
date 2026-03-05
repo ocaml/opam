@@ -84,10 +84,10 @@ However, you may "opam upgrade" these packages explicitly at these versions (e.g
 Nothing to do.
 ### opam upgrade b
 The following actions will be faked:
-=== downgrade 1 package
-  - downgrade a 3 to 2 (deprecated) [required by b]
 === upgrade 1 package
   - upgrade   b 1 to 2
+=== downgrade 1 package
+  - downgrade a 3 to 2 (deprecated) [required by b]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of a.2
@@ -98,10 +98,10 @@ Done.
 => Note: This package is deprecated.
 ### opam upgrade
 The following actions will be faked:
-=== downgrade 1 package
-  - downgrade b 2 to 1              [uses a]
 === upgrade 1 package
   - upgrade   a 2 (deprecated) to 3
+=== downgrade 1 package
+  - downgrade b 2 to 1              [uses a]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of a.3

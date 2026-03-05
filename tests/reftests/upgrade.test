@@ -546,10 +546,10 @@ depends: "dep" {= "1"}
 [downgrade] Installing new package description from upstream file://${BASEDIR}/downgrade
 
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade dep       2 to 1       [required by downgrade]
 === recompile 1 package
   - recompile downgrade dev (pinned)
+=== downgrade 1 package
+  - downgrade dep       2 to 1       [required by downgrade]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   dep.2
@@ -587,10 +587,10 @@ depends: "dep" {= "1"}
 [downgrade] Installing new package description from upstream file://${BASEDIR}/downgrade
 
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade dep       2 to 1       [required by downgrade]
 === recompile 1 package
   - recompile downgrade dev (pinned)
+=== downgrade 1 package
+  - downgrade dep       2 to 1       [required by downgrade]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   dep.2
@@ -628,10 +628,10 @@ depends: "dep" {= "1"}
 [downgrade] Installing new package description from upstream file://${BASEDIR}/downgrade
 
 The following actions would be performed:
-=== downgrade 1 package
-  - downgrade dep       2 to 1       [required by downgrade]
 === recompile 1 package
   - recompile downgrade dev (pinned)
+=== downgrade 1 package
+  - downgrade dep       2 to 1       [required by downgrade]
 ### :d: upgrade --show local package
 ### opam switch create downgrade-show-local --empty
 ### <pin:downgrade/opam>
@@ -661,10 +661,10 @@ depends: "dep" {= "1"}
 [downgrade] Installing new package description from upstream file://${BASEDIR}/downgrade
 
 The following actions would be performed:
-=== downgrade 1 package
-  - downgrade dep       2 to 1       [required by downgrade]
 === recompile 1 package
   - recompile downgrade dev (pinned)
+=== downgrade 1 package
+  - downgrade dep       2 to 1       [required by downgrade]
 ### :e: upgrade [-a|--show] repo-pkg
 ### opam switch create downgrade-repo-pkg --empty
 ### <pkg:pkg.1>
@@ -685,34 +685,34 @@ opam-version: "2.0"
 depends: "dep" {= "1"}
 ### opam upgrade --show pkg
 The following actions would be performed:
-=== downgrade 1 package
-  - downgrade dep 2 to 1 [required by pkg]
 === recompile 1 package
   - recompile pkg 1
+=== downgrade 1 package
+  - downgrade dep 2 to 1 [required by pkg]
 ### opam upgrade --all --no pkg
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade dep 2 to 1 [required by pkg]
 === recompile 1 package
   - recompile pkg 1
+=== downgrade 1 package
+  - downgrade dep 2 to 1 [required by pkg]
 
 Proceed with 1 downgrade and 1 recompilation? [Y/n] n
 # Return code 10 #
 ### opam upgrade --no pkg
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade dep 2 to 1 [required by pkg]
 === recompile 1 package
   - recompile pkg 1
+=== downgrade 1 package
+  - downgrade dep 2 to 1 [required by pkg]
 
 Proceed with 1 downgrade and 1 recompilation? [Y/n] n
 # Return code 10 #
 ### opam upgrade
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade dep 2 to 1
 === recompile 1 package
   - recompile pkg 1      [uses dep]
+=== downgrade 1 package
+  - downgrade dep 2 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   dep.2

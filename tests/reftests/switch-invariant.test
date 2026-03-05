@@ -82,10 +82,10 @@ Switch invariant: ["baz" {= "1"}]
 Done.
 ### opam install bar.1
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade bar 2 to 1
 === recompile 1 package
   - recompile baz 1      [uses bar]
+=== downgrade 1 package
+  - downgrade bar 2 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   baz.1

@@ -373,7 +373,7 @@ let print_solution st new_st missing solution =
     ~requested:missing ~reinstall:(Lazy.force st.reinstall)
     ~available:(Lazy.force st.available_packages)
     ~skip (* hide recompiled packages because they don't make sense here *)
-    solution;
+    Install solution;
   OpamConsole.msg "\n"
 
 

@@ -25,6 +25,7 @@ users)
 ## Config report
 
 ## Actions
+  * Reorder the list of actions by increased priority [#6864 @kit-ty-kate - fix #6863]
 
 ## Install
   * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
@@ -277,6 +278,8 @@ users)
   * `OpamClientConfig.opam_init`: replace `no_depexts` argument by `depexts` [#6489 @rjbou]
   * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
   * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
+  * `OpamSolution.apply`: now also take the `user_action` as parameter [#6864 @kit-ty-kate]
+  * `OpamSolution.resolve`: the return type now also return the `user_action` [#6864 @kit-ty-kate]
   * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
   * `OpamConfigCommand.subst` now takes a `filename` instead of a `basename` [#6936 @NathanReb]
 

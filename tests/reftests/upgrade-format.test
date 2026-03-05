@@ -125,11 +125,11 @@ opam-state is now pinned to git+https://github.com/ocaml/opam.git#59a71e3cf1 (ve
 [opam-format.2.1.0~beta3] synchronised (no changes)
 
 The following actions would be performed:
-=== upgrade 1 package
-  - upgrade opam-core        2.0.7 to 2.1.0~beta3 (pinned) [required by opam-format]
 === install 2 packages
   - install opam-file-format 2.0.0                         [required by opam-format]
   - install opam-format      2.1.0~beta3 (pinned)
+=== upgrade 1 package
+  - upgrade opam-core        2.0.7 to 2.1.0~beta3 (pinned) [required by opam-format]
 ### : Testing preserved format with upgrade :
 ### <packages/foo/foo.1/opam>
 opam-version: "2.0"
