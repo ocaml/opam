@@ -1286,10 +1286,10 @@ conflicts: [
 ]
 ### opam reinstall conflicts --show
 The following actions would be performed:
-=== remove 1 package
-  - remove    undefined-smtg 1 [conflicts with conflicts]
 === recompile 1 package
   - recompile conflicts      1
+=== remove 1 package
+  - remove    undefined-smtg 1 [conflicts with conflicts]
 ### opam remove conflicts
 The following actions will be performed:
 === remove 1 package

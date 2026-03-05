@@ -24,6 +24,7 @@ users)
 ## Config report
 
 ## Actions
+  * Reorder the list of actions by increased priority [#6864 @kit-ty-kate - fix #6863]
 
 ## Install
 
