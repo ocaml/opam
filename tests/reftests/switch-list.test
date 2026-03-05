@@ -51,10 +51,10 @@ The switch invariant was set to ["b"]
 b      1
 ### opam install c
 The following actions will be performed:
-=== remove 1 package
-  - remove    a 1 [conflicts with c]
 === recompile 1 package
   - recompile b 1 [uses c]
+=== remove 1 package
+  - remove    a 1 [conflicts with c]
 === install 1 package
   - install   c 1
 

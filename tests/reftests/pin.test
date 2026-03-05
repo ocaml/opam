@@ -998,10 +998,10 @@ dep3
 ### opam unpin dep2
 Ok, dep2 is no longer pinned to file://${BASEDIR}/dep2 (version 2)
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade dep2 2 to 1
 === recompile 1 package
   - recompile dep1 dev (pinned) [uses dep2]
+=== downgrade 1 package
+  - downgrade dep2 2 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved dep1.dev  (no changes)
@@ -1130,10 +1130,10 @@ opam-version: "2.0"
 depends: "dependency" {= "2"}
 ### opam install --deps-only ./pin-change
 The following actions will be performed:
-=== remove 1 package
-  - remove  pin-change dev (pinned) [conflicts with dependency]
 === upgrade 1 package
   - upgrade dependency 1 to 2       [required by pin-change]
+=== remove 1 package
+  - remove  pin-change dev (pinned) [conflicts with dependency]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   pin-change.dev

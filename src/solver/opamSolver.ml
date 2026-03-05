@@ -770,10 +770,10 @@ let print_solution ~messages ~append ~requested ~reinstall ~available
         (match acts with [_] -> "package" | _ -> "packages");
       OpamConsole.print_table ~sep:" " stdout (List.map snd acts)
   in
-  print_actions (function `Remove _ -> true | _ -> false);
-  print_actions (function `Change (`Down,_,_) -> true | _ -> false);
   print_actions (function `Reinstall _ -> true | _ -> false);
+  print_actions (function `Change (`Down,_,_) -> true | _ -> false);
   print_actions (function `Change (`Up,_,_) -> true | _ -> false);
+  print_actions (function `Remove _ -> true | _ -> false);
   print_actions (function `Install _ -> true | _ -> false)
 
 let dump_universe universe oc =

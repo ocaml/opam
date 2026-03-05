@@ -257,10 +257,10 @@ opam-version: "2.0"
 depends: ["qux" {= "1"}]
 ### opam install ./ongoing --working-dir --show-action
 The following actions would be performed:
-=== downgrade 1 package
-  - downgrade qux     4 to 1       [required by ongoing]
 === recompile 1 package
   - recompile ongoing dev (pinned)
+=== downgrade 1 package
+  - downgrade qux     4 to 1       [required by ongoing]
 ### opam reinstall ./ongoing --working-dir --show-action
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
@@ -268,10 +268,10 @@ The following actions would be performed:
 [ongoing] Installing new package description from upstream git+file://${BASEDIR}/ongoing#master
 
 The following actions would be performed:
-=== downgrade 1 package
-  - downgrade qux     4 to 1       [required by ongoing]
 === recompile 1 package
   - recompile ongoing dev (pinned)
+=== downgrade 1 package
+  - downgrade qux     4 to 1       [required by ongoing]
 ### : working dir an already pinned package, but pinned to a different url
 ### : see https://github.com/ocaml/opam/issues/4484 & https://github.com/ocaml/opam/pull/4542
 ### <pin:old-url/change-url.opam>
