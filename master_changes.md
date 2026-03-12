@@ -82,6 +82,7 @@ users)
   * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
 
 ## VCS
+  * Darcs no longer fall back to “Num Patches” as “Weak Hash” has been supported since 2016 [#6866 @toastal]
 
 ## Build
   * opam no longer depends on `cmdliner` [#6755 @kit-ty-kate - fix #6425]

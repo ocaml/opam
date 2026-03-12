@@ -98,7 +98,6 @@ module VCS = struct
   let patch_applied _ _ = Done ()
 
   let revision repo_root =
-    (* 'Weak hash' is only supported from 2.10.3, so provide a fallback *)
     darcs repo_root [ "show"; "repo" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;
     try
@@ -108,16 +107,6 @@ module VCS = struct
            | Some (label, value)
              when OpamStd.String.contains ~sub:"Weak Hash" label ->
              Some (Done (Some value))
-           | _ -> None)
-        r.OpamProcess.r_stdout
-    with Not_found ->
-    try
-      OpamStd.List.find_map
-        (fun s ->
-           match OpamStd.String.rcut_at s ' ' with
-           | Some (label, value)
-             when OpamStd.String.contains ~sub:"Num Patches" label ->
-             Some (Done (Some (Printf.sprintf "darcs-%s" value)))
            | _ -> None)
         r.OpamProcess.r_stdout
     with Not_found ->
