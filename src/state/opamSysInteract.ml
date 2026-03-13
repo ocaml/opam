@@ -153,7 +153,7 @@ let family ~env () =
     Dummy { osd_install; osd_installed; osd_available; }
   | Some family ->
     match family with
-    | "alpine" | "wolfi" -> Alpine
+    | "alpine" | "wolfi" | "chimera" -> Alpine
     | "altlinux" -> Altlinux
     | "amzn" | "centos" | "fedora" | "mageia" | "oraclelinux" | "ol"
     | "rhel" -> Centos
