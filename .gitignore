@@ -89,6 +89,7 @@ doc/dev-manual/*toc
 doc/html
 doc/man/.merlin
 doc/man-html
+doc/man-markdown
 doc/tutorials/opam.wiki
 doc/dev-manual/*.out
 doc/pages/*.html
