@@ -1,0 +1,15 @@
+(rule
+ (targets complete.sh)
+ (deps %{project_root}/src/core/cmdliner/tool/opamCmdliner_tool.exe)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run %{deps} tool-completion --standalone-completion bash opam))))
+
+(rule
+ (targets complete.zsh)
+ (deps %{project_root}/src/core/cmdliner/tool/opamCmdliner_tool.exe)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run %{deps} tool-completion --standalone-completion zsh opam))))
