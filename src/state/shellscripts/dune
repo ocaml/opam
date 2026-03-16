@@ -13,3 +13,11 @@
   (with-stdout-to
    %{targets}
    (run %{deps} tool-completion --standalone-completion zsh opam))))
+
+(rule
+ (targets complete.ps1)
+ (deps %{project_root}/src/core/cmdliner/tool/opamCmdliner_tool.exe)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run %{deps} tool-completion --standalone-completion pwsh opam))))
