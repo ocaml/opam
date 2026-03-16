@@ -5,19 +5,21 @@ set -euo pipefail
 cd src/core/cmdliner
 rm -rf *.ml *.mli dune
 
+echo "State of src/core/cmdliner before applying the new release:"
+ls -alR
+
+echo ----
+
+trap "rm -rf tmp-vendor" EXIT
 git clone https://github.com/dbuenzli/cmdliner tmp-vendor
-git -C tmp-vendor switch --detach v1.3.0
+git -C tmp-vendor switch --detach v2.1.1
 
 mv tmp-vendor/src/*.{ml,mli} .
 rm -rf tmp-vendor
 
-mv cmdliner.ml opamCmdliner.ml
-mv cmdliner.mli opamCmdliner.mli
-rm cmdliner_exit.ml{,i}
+# order glob result (important when applying patches)
+LC_COLLATE=C
 
-cat > dune << EOF
-(library
- (name opamCmdliner)
- (public_name opam-core.cmdliner)
- (flags :standard -w -27-32-35-50))
-EOF
+for f in patches/*.patch; do
+  git apply "$f"
+done

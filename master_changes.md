@@ -120,6 +120,9 @@ users)
   * Deduplicate some depexts related code in `OpamSwitchState` [#7157 @kit-ty-kate]
   * Avoid redundant comparison during `opam switch list-available` [#7200 @kit-ty-kate]
   * Remove dead code in `OpamSwitchState.unavailable_reason_raw` [#7206 @NathanReb]
+  * The vendor script for `opam-core.cmdliner` was upgraded to vendor cmdliner 2.1.1 [#6867 @BrianWard @kit-ty-kate]
+  * The vendor cmdliner was patched to always allow legacy prefixes (1.x behaviour) [#6867 @BrianWard]
+  * The vendor cmdliner was patched to allow newlines in `Error` (1.x behaviour) [#6867 @kit-ty-kate]
 
 ## Internal: Unix
   * Add explicit support for Haiku [#7138 @kit-ty-kate]

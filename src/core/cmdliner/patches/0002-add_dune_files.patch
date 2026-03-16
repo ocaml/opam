@@ -1,0 +1,15 @@
+Port cmdliner to dune as a wrapped library to avoid clashes
+for users of the opam libraries.
+
+This integrates it in opam-core as the opam-core.cmdliner sublibrary
+
+diff --git c/src/core/cmdliner/dune i/src/core/cmdliner/dune
+new file mode 100644
+index 000000000..1b684cc42
+--- /dev/null
++++ i/src/core/cmdliner/dune
+@@ -0,0 +1,4 @@
++(library
++ (name opamCmdliner)
++ (public_name opam-core.cmdliner)
++ (flags :standard -w -27-32-35-50))
