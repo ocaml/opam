@@ -8,6 +8,7 @@ No configuration file found, using built-in defaults.
 ### # we need the switch for variables file
 ### opam switch create fake --empty --root root
 ### ls root/opam-init | unordered
+complete.ps1
 complete.sh
 complete.zsh
 env_hook.csh
@@ -57,6 +58,10 @@ if ( -f '${BASEDIR}/root/opam-init/variables.csh' ) source '${BASEDIR}/root/opam
 ### cat root/opam-init/init.cmd
 if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-init/variables.cmd" >NUL 2>NUL
 ### cat root/opam-init/init.ps1
+if ([Environment]::UserInteractive) {
+  if Test-Path "${BASEDIR}/root/opam-init/complete.ps1" { . "${BASEDIR}/root/opam-init/complete.ps1" *> $null }
+}
+
 if Test-Path "${BASEDIR}/root/opam-init/variables.ps1" { . "${BASEDIR}/root/opam-init/variables.ps1" *> $null }
 ### : Variables scripts :
 ### cat root/opam-init/variables.sh | grep -v man | grep -v MANPATH
