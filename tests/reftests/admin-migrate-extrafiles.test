@@ -65,14 +65,14 @@ extra-files: [["foo"] ["bar"]]
 opam-version: "2.0"
 ### : required arguments
 ### opam admin migrate-extrafiles
+Usage: opam admin migrate-extrafiles [--help] [--hash=HASH_ALGO]
+       [--packages=PACKAGES] [OPTION]… DIR URL
 opam admin: required arguments DIR, URL are missing
-Usage: opam admin migrate-extrafiles [--hash=HASH_ALGO] [--packages=PACKAGES] [OPTION]… DIR URL
-Try 'opam admin migrate-extrafiles --help' or 'opam admin --help' for more information.
 # Return code 2 #
 ### opam admin migrate-extrafiles ./migrated
+Usage: opam admin migrate-extrafiles [--help] [--hash=HASH_ALGO]
+       [--packages=PACKAGES] [OPTION]… DIR URL
 opam admin: required argument URL is missing
-Usage: opam admin migrate-extrafiles [--hash=HASH_ALGO] [--packages=PACKAGES] [OPTION]… DIR URL
-Try 'opam admin migrate-extrafiles --help' or 'opam admin --help' for more information.
 # Return code 2 #
 ### #opam admin migrate-extrafiles https://an.url/prefix ./migrated
 ### : migrate all
