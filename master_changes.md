@@ -53,6 +53,7 @@ users)
   * Compute the list of available depexts on `opam update` [#6489 @arozovyk - fix #6461]
   * Update depexts availability repository state cache when running `opam update --depexts` [#6489 @arozovyk - fix #6461]
   * Display status message while loading system package availability during `opam update` [#6489 @arozovyk - fix #6461]
+  * When loading a repository from a diff, no longer apply updates of unrelated files [#6871 @rjbou - fix 6872]
 
 ## Tree
 
