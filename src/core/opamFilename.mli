@@ -27,7 +27,11 @@ module Base: sig
 end
 
 (** Directory names *)
-module Dir: OpamStd.ABSTRACT
+module Dir: sig
+  include OpamStd.ABSTRACT
+
+  val of_list: string list -> t
+end
 
 (** Return the current working directory *)
 val cwd: unit -> Dir.t
@@ -426,4 +430,8 @@ module Unix : sig
   val of_filename : filename -> t
 
   val to_filename : t -> filename
+
+  (** Deconstruct a filename into a list of path elements *)
+  val to_list: t -> string list
+
 end

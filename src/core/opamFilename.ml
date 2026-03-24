@@ -59,6 +59,8 @@ module Dir = struct
     OpamSystem.real_path (OpamSystem.forward_to_back dirname)
 
   let to_string dirname = dirname
+  let of_list dirs =
+    String.concat Filename.dir_sep dirs
 
 end
 
@@ -813,4 +815,13 @@ module Unix = struct
 
   let of_filename x = OpamSystem.back_to_forward (concat x.dirname x.basename)
   let to_filename x = {dirname = dirname x; basename = basename x}
+
+  let to_list (t:t) =
+    let base d = Base.to_string (basename_dir d) in
+    let rec aux acc dir =
+      let d = dirname_dir dir in
+      if d <> dir then aux (base dir :: acc) d
+      else base dir :: acc in
+    (aux [] t.dirname) @ [t.basename]
+
 end
