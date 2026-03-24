@@ -196,6 +196,7 @@ users)
   * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
 
 ## opam-repository
+  * `OpamRepositoryPath`: add `extrafile_nv_dir` to retrieve information from a path if it is an extra files path [#6871 @rjbou]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]

@@ -53,6 +53,35 @@ let url repo_root prefix nv =
 let files repo_root prefix nv =
   packages repo_root prefix nv / "files"
 
+let extrafile_nv_dir filename =
+  let rec find_files prefix_files tail =
+    match tail with
+    | "files"::_ -> Some prefix_files
+    | h::t -> find_files (h::prefix_files) t
+    | [] -> None
+  in
+  let rec aux (pre, rest) =
+    match rest with
+    | "packages"::packages ->
+      (* We don't check packages/name/name.version layer because repo loading
+         is more permissive *)
+      (match find_files [] packages with
+       | Some (nv::prefix_files) ->
+         (match OpamPackage.of_string_opt nv with
+          | Some pkg ->
+            let dir =
+              List.rev (nv :: prefix_files @ ["packages"])
+              |> OpamFilename.Dir.of_list
+              |> OpamFilename.Raw.Dir.of_dir
+            in
+            Some (pkg, dir)
+          | None -> None)
+       | None | Some [] -> None)
+    | p::r -> aux (p::pre, r)
+    | [] -> None
+  in
+  aux ([], OpamFilename.Raw.to_list filename)
+
 module Remote = struct
   (** URL, not FS paths *)
   open OpamUrl.Op
