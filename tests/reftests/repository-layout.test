@@ -179,6 +179,7 @@ RSTATE                          Cache found
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -189,6 +190,7 @@ RSTATE                          Cache found
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/good/good.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### :I:2:b list available package
 ### opam list -A --repo default-strict
@@ -248,7 +250,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -257,7 +259,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/good/good.1/files/un/der/opam, ignored
 ### :I:3:b: list available package
 ### opam switch create good-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -344,7 +346,7 @@ RSTATE                          Cache found
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -355,7 +357,7 @@ RSTATE                          Cache found
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### :II:2:b list available package
 ### opam list -A --repo default-strict
@@ -391,7 +393,6 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1: missing from 'files' directory (1)
 Now run 'opam upgrade' to apply any package updates.
@@ -405,7 +406,6 @@ RSTATE                          Cache found
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### :II:3:b: Add the last extrafile and update
 ### sh xfile.sh packages/not/no-n-nv.1
@@ -417,8 +417,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -427,8 +426,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/files/un/der/opam, ignored
 ### :II:3:b: list available package
 ### opam switch create no-n-nv-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -519,8 +517,7 @@ RSTATE                          Cache found
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -531,8 +528,7 @@ RSTATE                          Cache found
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### :III:2:b list available package
 ### opam list -A --repo default-strict
@@ -568,8 +564,6 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1: missing from 'files' directory (1)
 Now run 'opam upgrade' to apply any package updates.
@@ -583,8 +577,6 @@ RSTATE                          Cache found
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### :III:3:b: Add the last extrafile and update
 ### sh xfile.sh packages/v/e/r/y/very-inner-nv.1
@@ -596,9 +588,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -607,9 +597,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/files/un/der/opam, ignored
 ### :III:3:b: list available package
 ### opam switch create very-inner-nv-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -704,9 +692,7 @@ RSTATE                          Cache found
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -717,9 +703,7 @@ RSTATE                          Cache found
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### :IV:2:b list available package
 ### opam list -A --repo default-strict
@@ -755,9 +739,6 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1: missing from 'files' directory (1)
 Now run 'opam upgrade' to apply any package updates.
@@ -771,9 +752,6 @@ RSTATE                          Cache found
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### :IV:3:b: Add the last extrafile and update
 ### sh xfile.sh packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1
@@ -785,10 +763,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -797,10 +772,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/files/un/der/opam, ignored
 ### :IV:3:b: list available package
 ### opam switch create very-inner-n-nv-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -899,10 +871,7 @@ RSTATE                          Cache found
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -913,10 +882,7 @@ RSTATE                          Cache found
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### :V:2:b list available package
 ### opam list -A --repo default-strict
@@ -952,10 +918,6 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1: missing from 'files' directory (1)
 Now run 'opam upgrade' to apply any package updates.
@@ -969,10 +931,6 @@ RSTATE                          Cache found
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/direct-root.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### :V:3:b: Add the last extrafile and update
 ### sh xfile.sh packages/direct-root.1
@@ -984,11 +942,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -997,11 +951,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/files/un/der/opam, ignored
 ### :V:3:b: list available package
 ### opam switch create direct-root-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -1102,11 +1052,7 @@ RSTATE                          Cache found
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam in 0.000s
 RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1117,11 +1063,7 @@ RSTATE                          Cache found
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
 RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/no-nv/files/un/der/opam, ignored
 ### :VI:2:b list available package
 ### opam list -A --repo default-strict
 # Packages matching: from-repository(default-strict) & any
@@ -1152,11 +1094,6 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv: missing from 'files' directory (1)
 RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam
@@ -1171,11 +1108,6 @@ UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/no-nv: missing from 'files' directory (1)
 RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
 ### :VI:3:b: Add the last extrafile and update
 ### sh xfile.sh packages/no-nv
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default-strict --strict | unordered
@@ -1186,13 +1118,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1201,13 +1127,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/no-nv/files/un/der/opam, ignored
 ### :VI:3:b: list available package
 ### opam switch create no-nv-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -1301,13 +1221,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/root-no-nv/opam in 0.000s
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/root-no-nv/opam
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/root-no-nv/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1316,13 +1232,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/root-no-nv/opam in 0.000s
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/root-no-nv/opam
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/root-no-nv/files/un/der/opam, ignored
 ### :VII:2:b list available package
 ### opam list -A --repo default-strict
 # Packages matching: from-repository(default-strict) & any
@@ -1353,13 +1265,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/root-no-nv/opam in 0.000s
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/root-no-nv: missing from 'files' directory (1)
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/root-no-nv/opam
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1368,13 +1276,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/root-no-nv/opam in 0.000s
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/root-no-nv: missing from 'files' directory (1)
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/root-no-nv/opam
 ### :VII:3:b: Add the last extrafile and update
 ### sh xfile.sh root-no-nv
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default-strict --strict | unordered
@@ -1385,13 +1289,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/root-no-nv/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1400,13 +1298,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/root-no-nv/files/un/der/opam, ignored
 ### :VII:3:b: list available package
 ### opam switch create root-no-nv-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -1520,13 +1412,7 @@ RSTATE                          Cache found
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/files/un/der/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### :VIII:2:b list available package
 ### opam list -A --repo default-strict
@@ -1578,13 +1464,6 @@ RSTATE                          Cache found
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### :VIII:3:b: Add the last extrafile and update
 ### sh xfile.sh packages/not-same-nv-in/not-same-nv-in.2
@@ -1596,11 +1475,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] In ${BASEDIR}/OPAM/repo/default-strict/packages/not-same-nv-in/not-same-nv-in.2/opam:
-        This file is for package 'not-same-nv-in.2' but has mismatching fields 'name:different 'version:1.
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not-same-nv-in/not-same-nv-in.2/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1609,14 +1484,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/files/un/der/opam, ignored
 ### :VIII:3:b: list available package
 ### opam switch create not-same-nv-in-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -1719,11 +1587,8 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] In ${BASEDIR}/OPAM/repo/default-strict/packages/not-same-nv-in/not-same-nv-in.2/opam:
-        This file is for package 'not-same-nv-in.2' but has mismatching fields 'name:different 'version:1.
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not-opam-filename/not-opam-filename.1/opam, ignored
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not-opam-filename/not-opam-filename.1/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1732,14 +1597,8 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not-opam-filename/not-opam-filename.1/opam, ignored
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not-opam-filename/not-opam-filename.1/files/un/der/opam, ignored
 ### :IX:2:b list available package
 ### opam list -A --repo default-strict
 # Packages matching: from-repository(default-strict) & any
@@ -1770,11 +1629,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] In ${BASEDIR}/OPAM/repo/default-strict/packages/not-same-nv-in/not-same-nv-in.2/opam:
-        This file is for package 'not-same-nv-in.2' but has mismatching fields 'name:different 'version:1.
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not-opam-filename/not-opam-filename.1/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1783,14 +1638,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not-opam-filename/not-opam-filename.1/opam, ignored
 ### :IX:3:b: Add the last extrafile and update
 ### sh xfile.sh packages/not-opam-filename/not-opam-filename.1
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default-strict --strict | unordered
@@ -1801,11 +1649,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] In ${BASEDIR}/OPAM/repo/default-strict/packages/not-same-nv-in/not-same-nv-in.2/opam:
-        This file is for package 'not-same-nv-in.2' but has mismatching fields 'name:different 'version:1.
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not-opam-filename/not-opam-filename.1/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1814,14 +1658,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not-opam-filename/not-opam-filename.1/files/un/der/opam, ignored
 ### :IX:3:b: list available package
 ### opam switch create not-opam-filename-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -1921,11 +1758,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam/opam in 0.000s
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam/opam
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1934,18 +1769,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam/opam in 0.000s
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam/opam
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam/files/un/der/opam, ignored
 ### :X:2:b list available package
 ### opam list -A --repo default-strict
 # Packages matching: from-repository(default-strict) & any
@@ -1975,11 +1801,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam/opam in 0.000s
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam: missing from 'files' directory (1)
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam/opam
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -1988,18 +1812,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam/opam in 0.000s
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam: missing from 'files' directory (1)
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam/opam
 ### :X:3:b: Add the last extrafile and update
 ### sh xfile.sh packages/opam-dir-nv/opam-dir-nv.1/opam
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default-strict --strict | unordered
@@ -2010,11 +1825,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-nv/opam-dir-nv.1/opam/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2023,18 +1834,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam/files/un/der/opam, ignored
 ### :X:3:b: list available package
 ### opam switch create opam-dir-nv-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -2138,11 +1938,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam/opam in 0.000s
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam/opam
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2151,22 +1949,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam, ignored
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam/opam in 0.000s
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam/opam
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam/files/un/der/opam, ignored
 ### :XI:2:b list available package
 ### opam list -A --repo default-strict
 # Packages matching: from-repository(default-strict) & any
@@ -2196,11 +1981,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam/opam in 0.000s
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam: missing from 'files' directory (1)
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam/opam
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2209,22 +1992,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam, ignored
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam/opam in 0.000s
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam: missing from 'files' directory (1)
+RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam/opam
 ### :XI:3:b: Add the last extrafile and update
 ### sh xfile.sh packages/opam-dir-n/opam
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default-strict --strict | unordered
@@ -2235,11 +2005,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2248,22 +2014,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam, ignored
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam/files/un/der/opam, ignored
 ### :XI:3:b: list available package
 ### opam switch create opam-dir-n-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -2367,11 +2118,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/pkg/z-good/z-good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/pkg/z-good/z-good.1/files/un/der/opam, ignored
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2380,22 +2129,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam, ignored
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1/files/un/der/opam, ignored
+Now run 'opam upgrade' to apply any package updates.
 ### :XII:2:b list available package
 ### opam list -A --repo default-strict
 # Packages matching: from-repository(default-strict) & any
@@ -2411,8 +2147,13 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/
  1 default        file://${BASEDIR}/REPO
  2 default-strict file://${BASEDIR}/REPO
 ### opam install z-good.1
-[ERROR] No package named z-good found.
-# Return code 5 #
+The following actions will be performed:
+=== install 1 package
+  - install z-good 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed z-good.1
+Done.
 ### :XII:3: Extra-files handling
 ### # Add extra-files in the opam files
 ### sh xfile-opam.sh pkg/z-good/z-good.1
@@ -2425,11 +2166,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/pkg/z-good/z-good.1/opam in 0.000s
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/pkg/z-good/z-good.1: missing from 'files' directory (1)
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2438,22 +2177,9 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam, ignored
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1/opam in 0.000s
+opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1: missing from 'files' directory (1)
+Now run 'opam upgrade' to apply any package updates.
 ### :XII:3:b: Add the last extrafile and update
 ### sh xfile.sh pkg/z-good/z-good.1
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default-strict --strict | unordered
@@ -2464,11 +2190,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/pkg/z-good/z-good.1/files/un/der/opam, ignored
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2477,22 +2199,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam, ignored
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1/files/un/der/opam, ignored
 ### :XII:3:b: list available package
 ### opam switch create z-good-sw-xfiles --empty --repo=default,default-strict
 ### opam repository --this-switch
@@ -2512,10 +2219,16 @@ no-n-nv         --
 not-same-nv-in  --
 very-inner-n-nv --
 very-inner-nv   --
+z-good          --
 ### :XII:3:c: install available package
 ### opam install z-good.1
-[ERROR] No package named z-good found.
-# Return code 5 #
+The following actions will be performed:
+=== install 1 package
+  - install z-good 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed z-good.1
+Done.
 ### :XII:4: Cleaning
 ### opam repository remove --all new-default-strict new-default
 [WARNING] No configured repositories by these names found: new-default-strict
@@ -2540,21 +2253,11 @@ Switch z-good-sw-xfiles and all its packages will be wiped. Are you sure? [Y/n] 
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
-# Return code 40 #
+Now run 'opam upgrade' to apply any package updates.
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam:1:0-1:0::
-          Parse error
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
 Now run 'opam upgrade' to apply any package updates.
 ### # unrelated new package, it is just here to highlight the unrelated update of wrong-opamf-updated
 ### <REPO/packages/another-good/another-good.1/opam>
@@ -2571,13 +2274,9 @@ RSTATE                          Cache found
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/another-good/another-good.1/opam in 0.000s
-[ERROR] At ${BASEDIR}/OPAM/repo/default-strict/packages/opam-dir-n/opam:1:0-1:0::
-        Parse error
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/wrong-opamf-updated/wrong-opamf-updated.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/wrong-opamf-updated/wrong-opamf-updated.1: missing from 'files' directory (1)
-# Return code 40 #
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -2587,22 +2286,6 @@ RSTATE                          Cache found
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/another-good/another-good.1/opam in 0.000s
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-n/opam, ignored
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam:1:0-1:0::
-          Parse error
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/opam-dir-nv/opam-dir-nv.1/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inner-n-nv/very-inner-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/wrong-opamf-updated/wrong-opamf-updated.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/wrong-opamf-updated/wrong-opamf-updated.1: missing from 'files' directory (1)
 Now run 'opam upgrade' to apply any package updates.
