@@ -1081,7 +1081,11 @@ module OpamSys = struct
     | SH_fish ->
       Some (List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"])
     | SH_nu ->
-      Some (List.fold_left Filename.concat (home ".config") ["nushell"; "env.nu"])
+      let config_home =
+        try Env.get "XDG_CONFIG_HOME"
+        with Not_found -> home ".config"
+      in
+      Some (List.fold_left Filename.concat config_home ["nushell"; "autoload"; "opam.nu"])
     | SH_zsh  ->
       let zsh_home f =
         try Filename.concat (Env.get "ZDOTDIR") f

@@ -830,6 +830,8 @@ let shell_eval_invocation shell cmd =
     Printf.sprintf "(& %s) -split '\\r?\\n' | ForEach-Object { Invoke-Expression $_ }" cmd
   | SH_fish ->
     Printf.sprintf "eval (%s)" cmd
+  | SH_nu ->
+    Printf.sprintf "load-env (%s | from-json)" cmd
   | SH_csh ->
     Printf.sprintf "eval `%s`" cmd
   | SH_cmd ->
@@ -1013,7 +1015,7 @@ let export_in_shell ~unconditional shell =
         (make_comment comment) k v
   in
   let nu (k,v,comment) =
-      Printf.sprintf "load-env (opam env %s  %s %s)\n" (make_comment comment) k v
+      Printf.sprintf "$env.%s = %s %s\n" k v (make_comment comment)
   in
   let pwsh (k,v,comment) =
     Printf.sprintf "%s$env:%s=%s\n"
@@ -1040,7 +1042,7 @@ let env_hook_script shell =
 
 let abort_if_set var shell =
   (* Each of these incantations aborts the currently running script if [var] is
-     unset or empty ("null") *)
+     set to something non-empty *)
   match shell with
   | SH_zsh | SH_bash | SH_sh ->
     Printf.sprintf "test -z \"${%s:+x}\" || return\n" var
@@ -1052,6 +1054,8 @@ let abort_if_set var shell =
       var var
   | SH_fish ->
     Printf.sprintf "test -z \"$%s\"; or return\n" var
+  | SH_nu ->
+    Printf.sprintf "if ($env.%s? | default \"\") != \"\" { return }\n" var
   | SH_cmd ->
     Printf.sprintf "if defined %s if \"%%%s%%\" neq \"\" goto :EOF\n" var var
 
@@ -1071,7 +1075,7 @@ let source root shell f =
     let fname = unix_transform ~using_backslashes:true () in
     Printf.sprintf "test -r '%s' && source '%s' > /dev/null 2> /dev/null; or true\n" fname fname
   | SH_nu ->
-    Printf.sprintf "%s:TODO" fname 
+    Printf.sprintf "const source_path = if ('%s' | path exists) { '%s' } else { null }\nsource $source_path\n" fname fname
   | SH_sh | SH_bash ->
     let fname = unix_transform () in
     Printf.sprintf "test -r '%s' && . '%s' > /dev/null 2> /dev/null || true\n"
@@ -1108,7 +1112,7 @@ let if_interactive_script shell t e =
   | SH_fish ->
     Printf.sprintf "if status is-interactive\n  %s%send\n" t @@ ielse e
   | SH_nu ->
-    Printf.sprintf "%sTODO%s" t @@ ielse e
+    Printf.sprintf "if $nu.is_interactive {\n  %s%s}\n" t @@ ielse_pwsh e
   | SH_cmd ->
     Printf.sprintf "echo %%cmdcmdline%% | find /i \"%%~0\" >nul\nif errorlevel 1 (\n%s%s)\n" t @@ ielse_cmd e
   | SH_pwsh _ ->
@@ -1155,11 +1159,13 @@ let string_of_update st shell updates =
            Printf.sprintf "'%s%c' + \"$env:%s\""
              (OpamStd.Env.escape_powershell string) sep envu_var
          | SH_cmd -> Printf.sprintf "%s%c%%%s%%" string sep envu_var
+         | SH_nu -> Printf.sprintf "$env.%s? | default [] | prepend '%s'" envu_var string
          | _ -> Printf.sprintf "'%s':\"$%s\"" string envu_var)
       | EqColon | EqPlus ->
         (match shell with
          | SH_pwsh _ -> Printf.sprintf "\"$env:%s\" + '%c%s'" envu_var sep string
          | SH_cmd -> Printf.sprintf "%%%s%%%c%s" envu_var sep string
+         | SH_nu -> Printf.sprintf "$env.%s? | default [] | append '%s'" envu_var string
          | _ -> Printf.sprintf "\"$%s\":'%s'" envu_var string)
     in
     export_in_shell shell ~unconditional:(envu_op = Eq) (key, value, envu_comment) in
@@ -1255,7 +1261,7 @@ let write_dynamic_init_scripts st =
            (variables_file shell,
             abort_if_set "OPAM_SWITCH_PREFIX" shell
             ^ string_of_update st shell updates))
-      [SH_sh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
+      [SH_sh; SH_csh; SH_fish; SH_nu; SH_pwsh Powershell; SH_cmd]
   with OpamSystem.Locked ->
     OpamConsole.warning
       "Global shell init scripts not installed (could not acquire lock)"
