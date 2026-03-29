@@ -273,7 +273,24 @@ ERROR: Change from a directory to a regular file is unsupported
   > foo
 
 *** DIFF ***
-ERROR: Symlinks are unsupported
+--- first/linked-file-fst
++++ second/linked-file-fst
+@@ -1,1 +1,1 @@
+-bar
++foo
+
+*** PATCHED ***
++ first/
++ first/linked-file-fst
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/linked-file-fst
+  > foo
++ second/same-file
+  > foo
+
 
 ----------------------
  Test 5: symlink snd
@@ -292,10 +309,94 @@ ERROR: Symlinks are unsupported
   > foo
 
 *** DIFF ***
-ERROR: Symlinks are unsupported
+--- first/linked-file-snd
++++ second/linked-file-snd
+@@ -1,1 +1,1 @@
+-foo
++bar
+
+*** PATCHED ***
++ first/
++ first/linked-file-snd
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/linked-file-snd
+  > bar
++ second/same-file
+  > foo
+
 
 ----------------------
- Test 6: hardlink fst
+ Test 6: dangling symlink fst
+----------------------
+
+*** SETUP ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/dangling-fst
+  > foo
++ second/same-file
+  > foo
+
+*** DIFF ***
+--- /dev/null
++++ second/dangling-fst
+@@ -0,0 +1,1 @@
++foo
+
+*** PATCH ERROR ***
+ERROR: OpamSystem.File_not_found("$TMPDIR/first/dangling-fst")
+
+----------------------
+ Test 7: dangling symlink snd
+----------------------
+
+*** SETUP ***
++ first/
++ first/dangling-snd
+  > foo
++ first/same-file
+  > foo
++ second/
++ second/same-file
+  > foo
+
+*** DIFF ***
+--- first/dangling-snd
++++ /dev/null
+@@ -1,1 +0,0 @@
+-foo
+
+*** PATCHED ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/same-file
+  > foo
+
+
+----------------------
+ Test 8: dangling symlink both
+----------------------
+
+*** SETUP ***
++ first/
++ first/same-file
+  > foo
++ second/
++ second/same-file
+  > foo
+
+*** DIFF ***
+No diff
+
+----------------------
+ Test 9: hardlink fst
 ----------------------
 
 *** SETUP ***
@@ -331,7 +432,7 @@ ERROR: Symlinks are unsupported
 
 
 ----------------------
- Test 7: hardlink snd
+ Test 10: hardlink snd
 ----------------------
 
 *** SETUP ***
@@ -342,15 +443,32 @@ ERROR: Symlinks are unsupported
   > foo
 + second/
 + second/hardlinked-file-snd
-  > foo
+  > bar
 + second/same-file
   > foo
 
 *** DIFF ***
-No diff
+--- first/hardlinked-file-snd
++++ second/hardlinked-file-snd
+@@ -1,1 +1,1 @@
+-foo
++bar
+
+*** PATCHED ***
++ first/
++ first/hardlinked-file-snd
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/hardlinked-file-snd
+  > bar
++ second/same-file
+  > foo
+
 
 ----------------------
- Test 8: patch error garbage
+ Test 11: patch error garbage
 ----------------------
 
 *** SETUP ***
@@ -385,7 +503,7 @@ patch format
 
 
 ----------------------
- Test 9: patch truncated
+ Test 12: patch truncated
 ----------------------
 
 *** SETUP ***
@@ -432,7 +550,7 @@ patch format
 
 
 ----------------------
- Test 10: add empty file
+ Test 13: add empty file
 ----------------------
 
 *** SETUP ***
@@ -475,7 +593,7 @@ index c0ffee..c0ffee
 
 
 ----------------------
- Test 11: remove empty file
+ Test 14: remove empty file
 ----------------------
 
 *** SETUP ***
@@ -514,7 +632,7 @@ index c0ffee..c0ffee
 
 
 ----------------------
- Test 12: move file into a new directory
+ Test 15: move file into a new directory
 ----------------------
 
 *** SETUP ***
@@ -576,7 +694,7 @@ rename to inner/move-me
 
 
 ----------------------
- Test 13: delete file that deletes the directory
+ Test 16: delete file that deletes the directory
 ----------------------
 
 *** SETUP ***
