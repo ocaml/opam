@@ -131,13 +131,9 @@ let print_sexp_env output env =
   aux env;
   output ")\n"
 
-let rec print_nu_env output env =
-  match env with
-    | [] -> ()
-    | (k,v,_)::r -> begin
-      Printf.ksprintf output "\t\"%s\" : \"%s\",\n" k v;
-      print_nu_env output r
-    end
+let print_nu_env output env =
+  let json = `O (List.map (fun (k,v,_) -> (k, `String v)) env) in
+  output @@ OpamJson.to_string json
 
 let rec print_fish_env output env =
   let set_arr_cmd ?(modf=fun x -> x) k v =
@@ -211,9 +207,7 @@ let print_eval_env ~csh ~sexp ~fish ~pwsh ~cmd ~nu env =
   else if cmd then
     print_cmd_env output_normally env
   else if nu then begin
-    Printf.ksprintf never_with_cr "{\n";
     print_nu_env never_with_cr env;
-    Printf.ksprintf never_with_cr "}"
   end
   else
     print_env never_with_cr env

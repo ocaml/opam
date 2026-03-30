@@ -1081,9 +1081,13 @@ module OpamSys = struct
     | SH_fish ->
       Some (List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"])
     | SH_nu ->
-      let config_home =
-        try Env.get "XDG_CONFIG_HOME"
-        with Not_found -> home ".config"
+      (* nu checks XDG_CONFIG_HOME on all operating systems,
+         and then falls back to the system-dependent "dirs" crate *)
+      let config_home = try Env.get "XDG_CONFIG_HOME"
+        with Not_found -> match os () with
+        | Darwin -> home "Library/Application Support"
+        | Win32 -> (try Env.get "APPDATA" with Not_found -> home ".config")
+        | _ -> home ".config"
       in
       Some (List.fold_left Filename.concat config_home ["nushell"; "autoload"; "opam.nu"])
     | SH_zsh  ->

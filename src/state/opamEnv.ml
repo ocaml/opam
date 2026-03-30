@@ -879,9 +879,7 @@ let opam_env_invocation ?root ?switch ?(set_opamswitch=false) shell =
     let quoted = match shell with
     | SH_cmd | SH_pwsh _ ->
       Printf.sprintf " \"--%s=%s\"" argname
-    | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish ->
-      Printf.sprintf " '--%s=%s'" argname
-    | SH_nu ->
+    | SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_nu ->
       Printf.sprintf " '--%s=%s'" argname
     in
     if filepath_needs_quote pathval then
