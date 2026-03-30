@@ -1100,6 +1100,7 @@ let if_interactive_script shell t e =
     |  None -> ""
     | Some e -> Printf.sprintf "} else {\n  %s" e
   in
+  let ielse_nu = ielse_pwsh in
   match shell with
   | SH_sh| SH_bash ->
     Printf.sprintf "if [ -t 0 ]; then\n  %s%sfi\n" t @@ ielse e
@@ -1110,7 +1111,7 @@ let if_interactive_script shell t e =
   | SH_fish ->
     Printf.sprintf "if status is-interactive\n  %s%send\n" t @@ ielse e
   | SH_nu ->
-    Printf.sprintf "if $nu.is_interactive {\n  %s%s}\n" t @@ ielse_pwsh e
+    Printf.sprintf "if $nu.is-interactive {\n  %s%s}\n" t @@ ielse_nu e
   | SH_cmd ->
     Printf.sprintf "echo %%cmdcmdline%% | find /i \"%%~0\" >nul\nif errorlevel 1 (\n%s%s)\n" t @@ ielse_cmd e
   | SH_pwsh _ ->
