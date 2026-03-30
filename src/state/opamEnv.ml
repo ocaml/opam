@@ -1073,7 +1073,7 @@ let source root shell f =
     let fname = unix_transform ~using_backslashes:true () in
     Printf.sprintf "test -r '%s' && source '%s' > /dev/null 2> /dev/null; or true\n" fname fname
   | SH_nu ->
-    Printf.sprintf "const source_path = if ('%s' | path exists) { '%s' } else { null }\nsource $source_path\n" fname fname
+    Printf.sprintf "const source_path = if ('%s' | path exists) { '%s' } \nsource $source_path\n" fname fname
   | SH_sh | SH_bash ->
     let fname = unix_transform () in
     Printf.sprintf "test -r '%s' && . '%s' > /dev/null 2> /dev/null || true\n"
