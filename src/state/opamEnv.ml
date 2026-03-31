@@ -942,7 +942,8 @@ let env_hook_file = function
   | SH_zsh -> Some "env_hook.zsh"
   | SH_csh -> Some "env_hook.csh"
   | SH_fish -> Some "env_hook.fish"
-  | SH_pwsh _ | SH_cmd | SH_nu -> None
+  | SH_nu -> Some "env_hook.nu"
+  | SH_pwsh _ | SH_cmd -> None
 
 let variables_file = function
   | SH_sh | SH_bash | SH_zsh -> "variables.sh"
@@ -972,7 +973,8 @@ let env_hook_script_base = function
   | SH_zsh -> Some OpamScript.env_hook_zsh
   | SH_csh -> Some OpamScript.env_hook_csh
   | SH_fish -> Some OpamScript.env_hook_fish
-  | SH_pwsh _ | SH_cmd | SH_nu -> None
+  | SH_nu -> Some OpamScript.env_hook_nu
+  | SH_pwsh _ | SH_cmd -> None
 
 let export_in_shell ~unconditional shell =
   let make_comment comment_opt =
@@ -1034,7 +1036,11 @@ let export_in_shell ~unconditional shell =
 
 let env_hook_script shell =
   Option.map (fun script ->
-      export_in_shell shell ~unconditional:true ("OPAMNOENVNOTICE", "true", None)
+      let var = match shell with
+      | SH_nu -> "'true'"
+      | _ -> "true"
+      in
+      export_in_shell shell ~unconditional:true ("OPAMNOENVNOTICE", var, None)
       ^ script)
     (env_hook_script_base shell)
 
