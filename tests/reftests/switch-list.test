@@ -53,10 +53,10 @@ b      1
 The following actions will be performed:
 === recompile 1 package
   - recompile b 1 [uses c]
-=== remove 1 package
-  - remove    a 1 [conflicts with c]
 === install 1 package
   - install   c 1
+=== remove 1 package
+  - remove    a 1 [conflicts with c]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   b.1

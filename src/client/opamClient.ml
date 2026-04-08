@@ -175,7 +175,7 @@ let upgrade_t
   | requested, Success solution ->
     if check then
       OpamStd.Sys.exit_because
-        (if OpamSolver.solution_is_empty solution
+        (if OpamSolver.solution_is_empty (snd solution)
          then `False
          else `Success)
     else
@@ -2350,7 +2350,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       t, Conflicts cs
     | Success solution ->
       let skip =
-        let inst = OpamSolver.new_packages solution in
+        let inst = OpamSolver.new_packages (snd solution) in
         OpamPackage.Name.Map.fold (fun n dn map ->
             match OpamPackage.package_of_name_opt inst dn with
             | Some dpkg ->
@@ -2362,13 +2362,13 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       in
       if depext_only then
         (OpamSolution.install_depexts ~force_depext:true ~confirm:false t
-           ~pkg_to_install:(OpamSolver.all_packages solution)
+           ~pkg_to_install:(OpamSolver.all_packages (snd solution))
            ~pkg_installed:t.installed), Success (OK [])
       else
         let add_roots =
           match add_to_roots, deps_only with
           | (Some true | None), true ->
-            let pkgs_solution = OpamSolver.all_packages solution in
+            let pkgs_solution = OpamSolver.all_packages (snd solution) in
             let requested_deps =
               OpamPackage.Set.fold (fun nv acc ->
                   OpamFormula.Or

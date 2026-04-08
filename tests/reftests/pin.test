@@ -1241,10 +1241,10 @@ Done.
 [over-locked] Installing new package description from upstream file://${BASEDIR}/over-locked
 
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade dep-over-locked 2 to 1       [required by over-locked]
 === install 1 package
   - install   over-locked     dev (pinned)
+=== downgrade 1 package
+  - downgrade dep-over-locked 2 to 1       [required by over-locked]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   dep-over-locked.2
