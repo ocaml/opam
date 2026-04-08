@@ -309,12 +309,12 @@ The following actions would be performed:
 Ok, b is no longer pinned locally (version 1)
 ### opam upgrade
 The following actions will be performed:
+=== upgrade 1 package
+  - upgrade a 1 to 2
 === remove 3 packages
   - remove  b 1      [no longer available]
   - remove  c 2      [uses b]
   - remove  d 1      [uses c]
-=== upgrade 1 package
-  - upgrade a 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1

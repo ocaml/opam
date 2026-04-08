@@ -229,7 +229,7 @@ let install_compiler
            (OpamSwitchState.unavailable_reason t) cs);
       OpamStd.Sys.exit_because `No_solution
   in
-  let () = match OpamSolver.stats solution with
+  let () = match OpamSolver.stats (snd solution) with
     | { s_install = _; s_reinstall = 0; s_upgrade = 0;
         s_downgrade=0; s_remove = 0 } -> ()
     | stats ->
@@ -262,15 +262,15 @@ let install_compiler
     let base_comp =
       OpamSwitchState.compute_invariant_packages
         { t with installed = t.installed
-                             -- (OpamSolver.removed_packages solution)
-                             ++ (OpamSolver.new_packages solution) }
+                             -- (OpamSolver.removed_packages (snd solution))
+                             ++ (OpamSolver.new_packages (snd solution)) }
     in
     { t with compiler_packages = base_comp }
   in
   let skip =
     if deps_only then
       let pkgs =
-        OpamPackage.packages_of_names (OpamSolver.new_packages solution)
+        OpamPackage.packages_of_names (OpamSolver.new_packages (snd solution))
           add_names
       in
       OpamPackage.Set.fold (fun nv map -> OpamPackage.Map.add nv nv map)

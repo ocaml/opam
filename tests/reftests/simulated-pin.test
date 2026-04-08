@@ -33,10 +33,10 @@ opam-version: "2.0"
 depends: "dep-reinst" { = "2" }
 ### opam install ./reinst --deps-only
 The following actions will be performed:
-=== remove 1 package
-  - remove  reinst     1 (pinned) [conflicts with dep-reinst]
 === upgrade 1 package
   - upgrade dep-reinst 1 to 2     [required by reinst]
+=== remove 1 package
+  - remove  reinst     1 (pinned) [conflicts with dep-reinst]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   reinst.1
@@ -77,10 +77,10 @@ opam-version: "2.0"
 depends: "dep-reinst" { = "2" }
 ### opam install ./reinst --deps-only
 The following actions will be performed:
-=== remove 1 package
-  - remove  reinst     1      [conflicts with dep-reinst]
 === upgrade 1 package
   - upgrade dep-reinst 1 to 2 [required by reinst]
+=== remove 1 package
+  - remove  reinst     1      [conflicts with dep-reinst]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   reinst.1

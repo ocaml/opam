@@ -19,6 +19,7 @@ open OpamProcess.Job.Op
 module PackageAction = OpamSolver.Action
 module PackageActionGraph = OpamSolver.ActionGraph
 
+type solution = user_action * OpamSolver.solution
 
 exception Fetch_fail of string
 
@@ -1375,7 +1376,7 @@ let install_sys_packages ~confirm =
 let apply ?ask t ~requested ?print_requested ?add_roots
     ?(skip=OpamPackage.Map.empty)
     ?(assume_built=false)
-    ?(download_only=false) ?force_remove solution0 =
+    ?(download_only=false) ?force_remove (action, solution0) =
   let names = OpamPackage.names_of_packages requested in
   let print_requested = OpamStd.Option.default names print_requested in
   log "apply";
@@ -1449,7 +1450,7 @@ let apply ?ask t ~requested ?print_requested ?add_roots
         ~requested:print_requested ~reinstall:(Lazy.force t.reinstall)
         ~available:(Lazy.force t.available_packages)
         ~skip
-        solution0;
+        action solution0;
     );
     if OpamClientConfig.(!r.show) then
       let _ : OpamSysPkg.to_install =
@@ -1547,7 +1548,9 @@ let resolve t action ?reinstall ~requested request =
   Json.output_request request action;
   let r = OpamSolver.resolve universe request in
   Json.output_solution t r;
-  r
+  match r with
+  | Success s -> Success (action, s)
+  | Conflicts _ as x -> x
 
 let resolve_and_apply ?ask t action ?reinstall ~requested ?print_requested
     ?add_roots ?(assume_built=false) ?download_only ?force_remove request =

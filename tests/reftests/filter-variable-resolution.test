@@ -201,10 +201,10 @@ The following actions will be performed:
 Done.
 ### opam install baz --show
 The following actions would be performed:
-=== remove 1 package
-  - remove  conflicts 1 [conflicts with baz]
 === install 1 package
   - install baz       1
+=== remove 1 package
+  - remove  conflicts 1 [conflicts with baz]
 ### opam install undefined-smtg --show
 The following actions would be performed:
 === install 1 package
@@ -448,10 +448,10 @@ The following actions will be performed:
 Done.
 ### opam install baz --show
 The following actions would be performed:
-=== remove 1 package
-  - remove  conflicts 1 [conflicts with baz]
 === install 1 package
   - install baz       1
+=== remove 1 package
+  - remove  conflicts 1 [conflicts with baz]
 ### opam install undefined-smtg --show
 The following actions would be performed:
 === install 1 package
@@ -708,10 +708,10 @@ The following actions would be performed:
   - install baz 1
 ### opam install undefined-smtg --show
 The following actions would be performed:
-=== remove 1 package
-  - remove  conflicts      1 [conflicts with undefined-smtg]
 === install 1 package
   - install undefined-smtg 1
+=== remove 1 package
+  - remove  conflicts      1 [conflicts with undefined-smtg]
 ### :III:9: msg :::
 ### <pkg:msg.1>
 opam-version: "2.0"
@@ -1236,10 +1236,10 @@ The following actions would be performed:
   - install baz 1
 ### opam install undefined-smtg --show
 The following actions would be performed:
-=== remove 1 package
-  - remove  conflicts      1 [conflicts with undefined-smtg]
 === install 1 package
   - install undefined-smtg 1
+=== remove 1 package
+  - remove  conflicts      1 [conflicts with undefined-smtg]
 ### ::: conflicted before conflicts
 ### opam remove conflicts
 The following actions will be performed:
@@ -1261,10 +1261,10 @@ The following actions will be performed:
 Done.
 ### opam install conflicts --show
 The following actions would be performed:
-=== remove 1 package
-  - remove  undefined-smtg 1 [conflicts with conflicts]
 === install 1 package
   - install conflicts      1
+=== remove 1 package
+  - remove  undefined-smtg 1 [conflicts with conflicts]
 ### :IV:8:b: reinstall ::::
 ### <pkg:conflicts.1>
 opam-version: "2.0"
@@ -1286,10 +1286,10 @@ conflicts: [
 ]
 ### opam reinstall conflicts --show
 The following actions would be performed:
-=== remove 1 package
-  - remove    undefined-smtg 1 [conflicts with conflicts]
 === recompile 1 package
   - recompile conflicts      1
+=== remove 1 package
+  - remove    undefined-smtg 1 [conflicts with conflicts]
 ### opam remove conflicts
 The following actions will be performed:
 === remove 1 package

@@ -234,20 +234,20 @@ Done.
 [oldlock] Installing new package description from upstream file://${BASEDIR}/old1
 
 The following actions would be performed:
-=== downgrade 1 package
-  - downgrade foo     2 to 1       [required by oldlock]
 === install 1 package
   - install   oldlock dev (pinned)
+=== downgrade 1 package
+  - downgrade foo     2 to 1       [required by oldlock]
 ### opam install --locked oldlock
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [oldlock.dev] synchronised (no changes)
 
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo     2 to 1       [required by oldlock]
 === install 1 package
   - install   oldlock dev (pinned)
+=== downgrade 1 package
+  - downgrade foo     2 to 1       [required by oldlock]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.2
@@ -294,20 +294,20 @@ Done.
 [granpa] Installing new package description from upstream file://${BASEDIR}/old2
 
 The following actions would be performed:
-=== downgrade 1 package
-  - downgrade foo    2 to 1        [required by granpa]
 === install 1 package
   - install   granpa opam (pinned)
+=== downgrade 1 package
+  - downgrade foo    2 to 1        [required by granpa]
 ### opam install --locked granpa
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [granpa.opam] synchronised (no changes)
 
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo    2 to 1        [required by granpa]
 === install 1 package
   - install   granpa opam (pinned)
+=== downgrade 1 package
+  - downgrade foo    2 to 1        [required by granpa]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.2
@@ -354,20 +354,20 @@ Done.
 [ancestor] Installing new package description from upstream file://${BASEDIR}/old3
 
 The following actions would be performed:
-=== downgrade 1 package
-  - downgrade foo      2 to 1        [required by ancestor]
 === install 1 package
   - install   ancestor opam (pinned)
+=== downgrade 1 package
+  - downgrade foo      2 to 1        [required by ancestor]
 ### opam install --locked ancestor
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [ancestor.opam] synchronised (no changes)
 
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo      2 to 1        [required by ancestor]
 === install 1 package
   - install   ancestor opam (pinned)
+=== downgrade 1 package
+  - downgrade foo      2 to 1        [required by ancestor]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.2
@@ -415,20 +415,20 @@ Done.
 [silver] Installing new package description from upstream file://${BASEDIR}/old
 
 The following actions would be performed:
-=== downgrade 1 package
-  - downgrade foo    2 to 1       [required by silver]
 === install 1 package
   - install   silver dev (pinned)
+=== downgrade 1 package
+  - downgrade foo    2 to 1       [required by silver]
 ### opam install --locked silver
 
 <><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
 [silver.dev] synchronised (no changes)
 
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo    2 to 1       [required by silver]
 === install 1 package
   - install   silver dev (pinned)
+=== downgrade 1 package
+  - downgrade foo    2 to 1       [required by silver]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.2

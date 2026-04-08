@@ -22,18 +22,18 @@ The following actions will be performed:
 Done.
 ### opam remove a --show
 The following actions would be performed:
-=== remove 1 package
-  - remove    a 1
 === recompile 1 package
   - recompile c 1 [uses a]
+=== remove 1 package
+  - remove    a 1
 ### opam remove --auto --show
 Nothing to do.
 ### opam remove a --auto --show
 The following actions would be performed:
-=== remove 1 package
-  - remove    a 1
 === recompile 1 package
   - recompile c 1 [uses a]
+=== remove 1 package
+  - remove    a 1
 ### :::::: message on removal of an unavailable package (#4890)
 ### <pkg:z.1>
 opam-version: "2.0"
