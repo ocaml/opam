@@ -431,11 +431,6 @@ CAMLprim value OPAMW_RegEnumValue(value hKey, value sub_key, value value_type)
 
   LPWSTR lpEnvironment;
 
-  result = caml_alloc_small(2, 0);
-  Field(result, 0) = Val_int(0);    /* Unused */
-  Field(result, 1) = Val_emptylist; /* The actual result */
-  tail = result;
-
   HKEY key;
   DWORD type;
   LSTATUS ret;
@@ -452,6 +447,11 @@ CAMLprim value OPAMW_RegEnumValue(value hKey, value sub_key, value value_type)
   if (!(lpSubKey = caml_stat_strdup_to_utf16(String_val(sub_key)))) {
     caml_raise_out_of_memory();
   }
+
+  result = caml_alloc_small(2, 0);
+  Field(result, 0) = Val_int(0);    /* Unused */
+  Field(result, 1) = Val_emptylist; /* The actual result */
+  tail = result;
 
   ret = RegOpenKey(roots[Int_val(hKey)], lpSubKey, &key);
   if (ret == ERROR_SUCCESS)
