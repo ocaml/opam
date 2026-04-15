@@ -11,10 +11,14 @@
 
 let might_escape ~sep path =
   let sep =
+    let real_sep = function
+      | `Unix -> Re.char '/'
+      | `Windows -> Re.alt Re.[ char '\\'; char '/' ]
+    in
     match sep with
-    | `Unix -> Re.char '/'
-    | `Windows -> Re.alt Re.[  char '\\'; char '/' ]
-    | `Unspecified -> Re.str Filename.dir_sep
+    | `Unspecified when Sys.win32 -> real_sep `Windows
+    | `Unspecified -> real_sep `Unix
+    | `Unix | `Windows as sep -> real_sep sep
   in
   List.exists (String.equal Filename.parent_dir_name)
     Re.(split (compile sep) path)
