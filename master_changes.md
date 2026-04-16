@@ -27,6 +27,7 @@ users)
 ## Actions
 
 ## Install
+  * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
 
 ## Build (package)
 
