@@ -36,9 +36,6 @@ val internal_error: ('a, unit, string, 'b) format4 -> 'a
     passes its name to [fn]. The directory is always removed on completion. *)
 val with_tmp_dir: (string -> 'a) -> 'a
 
-(** [in_tmp_dir fn] executes [fn] in a temporary directory. *)
-val in_tmp_dir: (unit -> 'a) -> 'a
-
 (** Runs a job with a temp dir that is cleaned up afterwards *)
 val with_tmp_dir_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
 
@@ -164,12 +161,6 @@ val rmdir_cleanup : string -> unit
     exists and is not a symlink. Returns [false] otherwise. *)
 val is_reg_dir: string -> bool
 
-(** Change the current working directory *)
-val chdir: string -> unit
-
-(** [in_dir dir fn] evaluates [fn] in the directory [dir] *)
-val in_dir: string -> (unit -> 'a) -> 'a
-
 (** Returns the list of files and directories in the given directory (full
     names) *)
 val ls: string -> string list
@@ -251,14 +242,15 @@ val apply_cygpath: string -> string
 (** [command cmd] executes the command [cmd] in the correct OPAM
     environment. *)
 val command: ?verbose:bool -> ?env:string array -> ?name:string ->
-  ?metadata:(string * string) list -> ?allow_stdin:bool ->
+  ?metadata:(string * string) list -> ?dir: string -> ?allow_stdin:bool ->
   command -> unit
 
 (** [commands cmds] executes the commands [cmds] in the correct OPAM
     environment. It stops whenever one command fails unless [keep_going] is set
     to [true]. In this case, the first error is re-raised at the end. *)
 val commands: ?verbose:bool -> ?env:string array -> ?name:string ->
-  ?metadata:(string * string) list -> ?keep_going:bool -> command list -> unit
+  ?metadata:(string * string) list -> ?dir: string -> ?keep_going:bool ->
+  command list -> unit
 
 (** [read_command_output cmd] executes the command [cmd] in the
     correct OPAM environment and return the lines from output if the command
@@ -267,7 +259,7 @@ val commands: ?verbose:bool -> ?env:string array -> ?name:string ->
     It returns stdout and stder combiend, unless [ignore_stderr] is st to true.
     *)
 val read_command_output: ?verbose:bool -> ?env:string array ->
-  ?metadata:(string * string) list ->  ?allow_stdin:bool ->
+  ?metadata:(string * string) list -> ?dir: string -> ?allow_stdin:bool ->
   ?ignore_stderr:bool -> command -> string list
 
 (** END *)

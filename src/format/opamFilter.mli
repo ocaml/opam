@@ -143,12 +143,12 @@ val expand_interpolations_in_file_full: env -> src:filename -> dst:filename -> u
 (** Same as {!expand_interpolations_in_file} but allows to set the source [src] and
     destination [dst] files independently instead of implying [src] = [dst].in *)
 
-(** Rewrites [basename.in] to [basename], expanding interpolations.
+(** Rewrites [filename.in] to [filename], expanding interpolations.
     If the first line begins ["opam-version:"], assumes that expansion of
     variables within strings should be properly escaped. In particular, this
     means that Windows paths should expand correctly when generating .config
     files. *)
-val expand_interpolations_in_file: env -> basename -> unit
+val expand_interpolations_in_file: env -> filename -> unit
 
 
 (** Processes filters evaluation in a command list: parameter expansion and

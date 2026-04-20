@@ -337,36 +337,17 @@ let copy_file_aux ?chmod ~src ~dst () =
     (try Unix.unlink dst with Unix.Unix_error _ -> ());
     internal_error "Cannot copy %s to %s (%s)." src dst (Printexc.to_string e)
 
-let chdir dir =
-  try Unix.chdir dir
-  with Unix.Unix_error _ -> raise (File_not_found dir)
-
-let in_dir dir fn =
-  let reset_cwd =
-    let cwd =
-      try Some (Sys.getcwd ())
-      with Sys_error _ -> None in
-    fun () ->
-      match cwd with
-      | None     -> ()
-      | Some cwd -> try chdir cwd with File_not_found _ -> () in
-  chdir dir;
-  try
-    let r = fn () in
-    reset_cwd ();
-    r
-  with e ->
-    OpamStd.Exn.finalise e reset_cwd
-
 let list kind dir =
-  try
-    in_dir dir (fun () ->
-      let d = Sys.readdir (Sys.getcwd ()) in
-      let d = Array.to_list d in
-      let l = List.filter kind d in
-      List.map (Filename.concat dir) (List.sort compare l)
-    )
-  with File_not_found _ -> []
+  let d = try Sys.readdir dir with Sys_error _ -> [||] in
+  let filtered =
+    Array.fold_left
+      (fun acc base ->
+         let path = Filename.concat dir base in
+         if kind path then path::acc else acc)
+      []
+      d
+  in
+  List.sort String.compare filtered
 
 let ls dir = list (fun _ -> true) dir
 
@@ -432,10 +413,6 @@ let with_tmp_dir fn =
   with e ->
     OpamStd.Exn.finalise e @@ fun () ->
     remove_dir dir
-
-let in_tmp_dir fn =
-  with_tmp_dir @@ fun dir ->
-    in_dir dir fn
 
 let with_tmp_dir_job fjob =
   let dir = mk_temp_dir () in
@@ -573,7 +550,7 @@ let make_command
   | `Denied -> permission_denied cmd
 
 let run_process
-    ?verbose ?env ~name ?metadata ?stdout ?allow_stdin command =
+    ?verbose ?env ~name ?metadata ?dir ?stdout ?allow_stdin command =
   let env = match env with None -> OpamProcess.default_env () | Some e -> e in
   let chrono = OpamConsole.timer () in
   match command with
@@ -588,7 +565,7 @@ let run_process
       let r =
         OpamProcess.run
           (OpamProcess.command
-             ~env ~name ~verbose ?metadata ?allow_stdin ?stdout
+             ~env ~name ~verbose ?metadata ?dir ?allow_stdin ?stdout
              full_cmd args)
       in
       let str = String.concat " " (cmd :: args) in
@@ -599,15 +576,15 @@ let run_process
     | `Not_found -> command_not_found cmd
     | `Denied -> permission_denied cmd
 
-let command ?verbose ?env ?name ?metadata ?allow_stdin cmd =
+let command ?verbose ?env ?name ?metadata ?dir ?allow_stdin cmd =
   let name = log_file name in
-  let r = run_process ?verbose ?env ~name ?metadata ?allow_stdin cmd in
+  let r = run_process ?verbose ?env ~name ?metadata ?dir ?allow_stdin cmd in
   OpamProcess.cleanup r;
   raise_on_process_error r
 
-let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
+let commands ?verbose ?env ?name ?metadata ?dir ?(keep_going=false) commands =
   let name = log_file name in
-  let run = run_process ?verbose ?env ~name ?metadata in
+  let run = run_process ?verbose ?env ~name ?metadata ?dir in
   let command r0 c =
     match r0, keep_going with
     | (`Error _ | `Exception _), false -> r0
@@ -625,12 +602,12 @@ let commands ?verbose ?env ?name ?metadata ?(keep_going=false) commands =
   | `Error e -> process_error e
   | `Exception e -> raise e
 
-let read_command_output ?verbose ?env ?metadata ?allow_stdin
+let read_command_output ?verbose ?env ?metadata ?dir ?allow_stdin
     ?(ignore_stderr=false) cmd =
   let name = log_file None in
   let stdout = name ^ (if ignore_stderr then ".stdout" else ".out") in
   let r =
-    run_process ?verbose ?env ~name ?metadata ?allow_stdin
+    run_process ?verbose ?env ~name ?metadata ?dir ?allow_stdin
       ~stdout
       cmd
   in

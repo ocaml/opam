@@ -94,13 +94,24 @@ end
 (* Helper functions used by opam-admin *)
 
 let make_index_tar_gz repo_root =
-  OpamFilename.in_dir repo_root (fun () ->
-    let to_include = [
-      "version";
-      OpamRepositoryPathName.packages_d;
-      OpamRepositoryPathName.repo_f;
+  let open OpamFilename.Op in
+  let files_to_include = [
+    "version";
+    OpamRepositoryPathName.repo_f;
+  ] in
+  let dirs_to_include = [
+    OpamRepositoryPathName.packages_d;
     ] in
-    match List.filter Sys.file_exists to_include with
-    | [] -> ()
-    | d  -> OpamSystem.command ("tar" :: "czhf" :: "index.tar.gz" :: "--exclude=.git*" :: d)
-  )
+  let filtered =
+    List.filter (fun i -> OpamFilename.exists (repo_root // i))
+      files_to_include
+    @ List.filter (fun i -> OpamFilename.exists_dir (repo_root / i))
+      dirs_to_include
+  in
+  match filtered with
+  | [] -> ()
+  | d  ->
+    OpamSystem.command
+      ("tar" :: "czhf" :: "index.tar.gz" ::
+       "-C" :: OpamFilename.Dir.to_string repo_root :: "--exclude=.git*" ::
+       d)
