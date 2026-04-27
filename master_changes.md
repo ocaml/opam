@@ -216,6 +216,7 @@ users)
 ## opam-repository
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
+  * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
