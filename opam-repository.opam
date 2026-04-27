@@ -32,4 +32,7 @@ depends: [
   "dune" {>= "2.8.0"}
   "opam-format" {= version}
   "patch" {>= "3.0.0"}
+  "tar" {>= "3.3.0"}
+  "checkseum" {>= "0.5.2"}
+  "decompress" {>= "1.5.1"}
 ]
