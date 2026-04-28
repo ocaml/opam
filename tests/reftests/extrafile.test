@@ -381,7 +381,7 @@ Clearing cache of downloaded files
 # Return code 1 #
 ### # extra files is added with its checksum at repo loading
 ### opam install no-checksum
-[ERROR] In the opam file for no-checksum.1:
+[ERROR] In the opam file for no-checksum.1 from repository default:
           - At ${BASEDIR}/OPAM/repo/default/packages/no-checksum/no-checksum.1/opam:11:2-11:13::
             expected [file checksum]
         'extra-files' has been ignored.
@@ -406,7 +406,7 @@ The following actions will be performed:
 
 Nothing to do.
 ### opam install no-checksum --require-checksums
-[ERROR] In the opam file for no-checksum.1:
+[ERROR] In the opam file for no-checksum.1 from repository default:
           - At ${BASEDIR}/OPAM/repo/default/packages/no-checksum/no-checksum.1/opam:11:2-11:13::
             expected [file checksum]
         'extra-files' has been ignored.

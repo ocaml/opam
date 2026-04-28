@@ -1093,7 +1093,7 @@ Successfully extracted to ${BASEDIR}/not-mentioned.1
              error  3: File format error in 'extra-source': Duplicate section extra-source
 # Return code 1 #
 ### opam install multiple
-[ERROR] In the opam file for multiple.1:
+[ERROR] In the opam file for multiple.1 from repository default:
           - In ${BASEDIR}/OPAM/repo/default/packages/multiple/multiple.1/opam:
             Duplicate section extra-source
         'extra-source' has been ignored.
@@ -1106,7 +1106,7 @@ The following actions will be performed:
 -> installed multiple.1
 Done.
 ### opam remove multiple
-[ERROR] In the opam file for multiple.1:
+[ERROR] In the opam file for multiple.1 from repository default:
           - In ${BASEDIR}/OPAM/repo/default/packages/multiple/multiple.1/opam:
             Duplicate section extra-source
         'extra-source' has been ignored.
@@ -1118,7 +1118,7 @@ The following actions will be performed:
 -> removed   multiple.1
 Done.
 ### opam install multiple --require-checksums
-[ERROR] In the opam file for multiple.1:
+[ERROR] In the opam file for multiple.1 from repository default:
           - In ${BASEDIR}/OPAM/repo/default/packages/multiple/multiple.1/opam:
             Duplicate section extra-source
         'extra-source' has been ignored.
