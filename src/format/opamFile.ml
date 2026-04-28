@@ -3692,9 +3692,17 @@ module OPAM = struct
       OpamConsole.error "In the opam file%s:\n%s\
                          %s %s been %s."
         (match o.name, o.version, file, o.metadata_dir with
+         | Some n, Some v, _, (Some (Some repo, _)) ->
+           Printf.sprintf " for %s from repository %s"
+             (OpamPackage.to_string (OpamPackage.create n v))
+             (OpamRepositoryName.to_string repo)
          | Some n, Some v, _, _ ->
            Printf.sprintf " for %s"
              (OpamPackage.to_string (OpamPackage.create n v))
+         | _, _, Some f, (Some (Some repo, _)) ->
+           Printf.sprintf " at %s from repository %s"
+             (to_string f)
+             (OpamRepositoryName.to_string repo)
          | _, _, Some f, _ ->
            Printf.sprintf " at %s" (to_string f)
          | _, _, _, Some (None, dir) ->

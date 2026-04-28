@@ -35,6 +35,7 @@ users)
 ## UI
   * Read full lines when asking for user input when `TERM=dumb` [#6829 @arvidj - fix #6828]
   * Fix a typo in the note telling users about new a depexts bypass [#6489 @rjbou @kit-ty-kate]
+  * Opam files parsing error now prints the origin repository of the failing opam file if relevant [#6971 @rjbou]
 
 ## Switch
 
@@ -256,6 +257,7 @@ users)
   * `OpamRepositoryPath` was moved from `opam-repository` [#6917 @rjbou]
   * `OpamRepositoryPath.{root,repo,packages_dir,packages,opam,files,descr,url}: have been moved to a new `OpamRepositoryPath.Make` functor [#6680 @rjbou @kit-ty-kate]
   * `OpamFilter.expand_interpolations_in_file`: changed argument type from `basename` to `filename` [#6910 @NathanReb]
+  * `OpamFile.OPAM.print_errors`: now prints the repository if the informations is available [#6971 @rjbou]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
