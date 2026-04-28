@@ -97,6 +97,35 @@ let content_file_dir = [
   };
 ]
 
+let content_file_dir_with_content = [
+  same_file;
+  { name = "dir-fst-file-snd";
+    first = Dir [ "fst", foo; "remove-me", bar ];
+    second = File foo;
+  };
+]
+
+let content_file_dir_with_content_error = [
+  same_file;
+  { name = "dir-fst-file-snd";
+    first = Dir [ "fst", foo; "remove-me", bar; "i-wont-be-removed", "baz"];
+    second = File foo;
+  };
+]
+
+let gitdiff_patch_failure_dir_non_empty =
+  "diff --git b/dir-fst-file-snd/fst a/dir-fst-file-snd\n" ^
+  "similarity index 100%\n" ^
+  "rename from dir-fst-file-snd/fst\n" ^
+  "rename to dir-fst-file-snd\n" ^
+  "diff --git b/dir-fst-file-snd/remove-me a/dir-fst-file-snd/remove-me\n" ^
+  "deleted file mode c0ffee\n" ^
+  "index c0ffee..c0ffee\n" ^
+  "--- b/dir-fst-file-snd/remove-me\n" ^
+  "+++ /dev/null\n" ^
+  "@@ -1 +0,0 @@\n" ^
+  "-bar\n"
+
 let content_symlink_fst = [
   same_file;
   { name = "linked-file-fst";
@@ -469,6 +498,16 @@ let tests = [
     content = content_single_file_in_dir_snd;
     kind = DiffPatch;
     git = true;
+  };
+  { label = "diff dir/file error, with content in the dir that is removed";
+    content = content_file_dir_with_content;
+    kind = DiffPatch;
+    git = true;
+  };
+  { label = "diff dir/file error, with content in the dir that is not removed";
+    content = content_file_dir_with_content_error;
+    kind = Patch gitdiff_patch_failure_dir_non_empty;
+    git = false;
   };
 ]
 
