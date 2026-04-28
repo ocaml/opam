@@ -70,6 +70,7 @@ module type IO_FILE = sig
   val safe_read: 'a typed_file -> t
   val read_from_channel: ?filename:'a typed_file -> in_channel -> t
   val read_from_string: ?loc:string -> ?filename:'a typed_file -> string -> t
+  val safe_read_from_string: ?loc:string -> ?filename:'a typed_file -> string -> t
   val write_to_channel: ?filename:'a typed_file -> out_channel -> t -> unit
   val write_to_string: ?filename:'a typed_file -> t -> string
 end
@@ -129,17 +130,19 @@ module MakeIO (F : IO_Arg) = struct
       OpamSystem.internal_error "File %s does not exist or can't be read"
         (OpamFilename.to_string f)
 
-  let safe_read f =
-    try
-      match read_opt f with
-      | Some f -> f
-      | None ->
-        log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
-        F.empty
-    with
+  let safe_wrapper ~file rd =
+    try rd () with
     | (Pp.Bad_version _ | Pp.Bad_format _) as e->
       OpamConsole.error "%s [skipped]\n"
-        (Pp.string_of_bad_format ~file:(OpamFilename.to_string f) e);
+        (Pp.string_of_bad_format ~file:(OpamFilename.to_string file) e);
+      F.empty
+
+  let safe_read f =
+    safe_wrapper ~file:f @@ fun () ->
+    match read_opt f with
+    | Some f -> f
+    | None ->
+      log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
       F.empty
 
   let read_from_f f input =
@@ -164,6 +167,10 @@ module MakeIO (F : IO_Arg) = struct
       r
     in
     read_from_f of_string str
+
+  let safe_read_from_string ?loc ?(filename=dummy_file) str =
+    safe_wrapper ~file:filename @@ fun () ->
+    read_from_string ?loc ~filename str
 
   let write_to_channel ?(filename=dummy_file) oc t =
     F.to_channel filename oc t
@@ -722,6 +729,8 @@ module Environment = struct include LineFile(struct
     open_env_updates (read_from_channel ?filename ch)
   let read_from_string ?loc ?filename s =
     open_env_updates (read_from_string ?loc ?filename s)
+  let safe_read_from_string ?loc ?filename s =
+    open_env_updates (safe_read_from_string ?loc ?filename s)
 end
 
 (** (2) Part of the public repository format *)
@@ -1254,6 +1263,8 @@ module type BestEffortRead = sig
   val safe_read: t typed_file -> t
   val read_from_channel: ?filename:t typed_file -> in_channel -> t
   val read_from_string: ?loc:string -> ?filename:t typed_file -> string -> t
+  val safe_read_from_string:
+    ?loc:string -> ?filename:t typed_file -> string -> t
 end
 
 module MakeBestEffort (S: BestEffortArg) : BestEffortRead
