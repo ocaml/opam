@@ -108,13 +108,13 @@ val check_digest: filename -> OpamHash.t option -> bool
 val job_text:
   repository_name -> string -> 'a OpamProcess.job -> 'a OpamProcess.job
 
-(** [get_diff parent_dir subdir1 subdir2] computes the diff between the two
-    subdirs of [parent_dir], returns None if they are equal, and the
-    corresponding patch and the list of file-changes otherwise.
+(** [get_diff dir1 dir2] computes the diff between the two directories,
+    returns None if they are equal, and the corresponding patch and the list of
+    file-changes otherwise.
 
     @raise Stdlib.Failure if an unsupported file type or comparison is
     detected in any of [subdir1] or [subdir2].
     Unsupported file types: symlinks, character devices, block devices,
     named pipes, sockets.
     Unsupported comparison: comparison between regular files and directories. *)
-val get_diff: dirname -> basename -> basename -> (filename * Patch.t list) option
+val get_diff: dirname -> dirname -> (filename * Patch.t list) option

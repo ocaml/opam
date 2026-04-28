@@ -971,16 +971,16 @@ Am I a file ?
 ### opam update diff-repo
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[ERROR] Could not update repository "diff-repo": Change from a regular file to a directory is unsupported
-# Return code 40 #
+[diff-repo] synchronised from file://${BASEDIR}/DREPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install due -vv | sed-cmd test
 The following actions will be performed:
 === install 1 package
   - install due 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [due: test archivio]
-+ test "-f" "archivio" (CWD=${BASEDIR}/OPAM/update-file-dir/.opam-switch/build/due.1)
+Processing  2/3: [due: test]
++ test "-f" "archivio/interno" (CWD=${BASEDIR}/OPAM/update-file-dir/.opam-switch/build/due.1)
 -> compiled  due.1
 -> installed due.1
 Done.
@@ -1000,16 +1000,16 @@ Am I a file ?
 ### opam update diff-repo
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[ERROR] Could not update repository "diff-repo": Change from a directory to a regular file is unsupported
-# Return code 40 #
+[diff-repo] synchronised from file://${BASEDIR}/DREPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install due -vv | sed-cmd test
 The following actions will be performed:
 === install 1 package
   - install due 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [due: test]
-+ test "-f" "archivio/interno" (CWD=${BASEDIR}/OPAM/update-dir-file/.opam-switch/build/due.1)
+Processing  2/3: [due: test archivio]
++ test "-f" "archivio" (CWD=${BASEDIR}/OPAM/update-dir-file/.opam-switch/build/due.1)
 -> compiled  due.1
 -> installed due.1
 Done.
