@@ -254,6 +254,7 @@ users)
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
   * `OpamRepositoryCommand.update_with_auto_upgrade`, `OpamUpdate.repository`: no longer call an external process to create an archive [#6945 @kit-ty-kate]
   * `OpamTar`: add `patch` function to patch files in an tar gz archive [#6625 @rjbou]
+  * `OpamTar.create`: add `?flat` argument to do not integrate the target root directory in the archive [#6625 @rjbou]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -277,7 +278,6 @@ users)
   * `OpamRepositoryState`: add `syspkgs_available` that returns the stored depext availability status in repository state [#6489 @rjbou]
   * `OpamSysInteract`: add `available_packages_and_family` that returns availability status and the os family [#6489 @rjbou]
   * `OpamRepositoryState.load_opams_from_dir`: now sorts files and directories read from disk before processing them [#6941 @rjbou]
-
 
 ## opam-solver
 
