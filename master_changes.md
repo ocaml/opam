@@ -250,6 +250,8 @@ users)
   * `OpamCompat.MAP.filter_map`: was removed [#6879 @kit-ty-kate]
   * `OpamCompat.Map.add_to_list`: was added [#6818 @dra27]
   * `OpamSystem`: add `is_dir_read_only` [#6489 @rjbou]
+  * `OpamSystem.*patch` were moved to `OpamPatch` [#6915 @rjbou]
   * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
+  * `OpamPatch` was added [#6915 @rjbou]
