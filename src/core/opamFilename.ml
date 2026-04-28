@@ -453,14 +453,14 @@ let link ?(relative=false) ~target ~link =
 [@@ocaml.warning "-16"]
 
 let parse_patch ~dir patch_file =
-  OpamSystem.parse_patch ~dir:(Dir.to_string dir) ~file:(to_string patch_file)
+  OpamPatch.parse_patch ~dir:(Dir.to_string dir) ~file:(to_string patch_file)
 
 let patch ~allow_unclean patch_source dir =
   let operations_result diffs =
     Ok (List.map (fun d -> d.Patch.operation) diffs)
   in
   let patch ?patch_filename diffs =
-    OpamSystem.patch ~allow_unclean ?patch_filename ~dir:(Dir.to_string dir)
+    OpamPatch.patch ~allow_unclean ?patch_filename ~dir:(Dir.to_string dir)
       diffs
   in
   try
