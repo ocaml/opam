@@ -248,6 +248,7 @@ users)
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
   * `OpamRepositoryCommand.update_with_auto_upgrade`, `OpamUpdate.repository`: no longer call an external process to create an archive [#6945 @kit-ty-kate]
+  * `OpamTar`: add `patch` function to patch files in an tar gz archive [#6625 @rjbou]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -329,3 +330,5 @@ users)
   * `OpamFilename.Unix`: add `basename`, `dirname`, `remove_prefix`, `add_extension`, `check_canonical`, `root_dir` [#6625 @rjbou]
   * `OpamFilename.Unix.Dir`: add `basename` and `dirname` [#6625 @rjbou]
   * `OpamFilename.Unix.{to_dir,to_filename}`: now translate `/` into filesystem directory separator [#6625 @rjbou]
+  * `OpamPatch.patch`: no longer patch a file on disk, but take as argument a filesystem abstraction `FS_ABSTR` that delivers the needed functions [#6625 @rjbou]
+  * `OpamPatch.parse_patch`: no longer take `~dir` the directory to translate the patch in as argument, it now takes `~translate` argument that is a string option (directory option), if we want to perform a translation in that directory [#6625 @rjbou]
