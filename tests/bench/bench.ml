@@ -136,6 +136,37 @@ let () =
     in
     List.fold_left (+.) 0.0 l /. float_of_int n
   in
+  let time_install_core =
+    Gc.compact ();
+    launch (fmt "%s switch create -y eight ocaml-base-compiler.4.14.0" bin);
+    launch (fmt "%s install --download-only -y core.v0.15.1" bin);
+    launch "test -d ~/.opam/eight/.opam-switch/sources && rm -rf ~/.opam/eight/.opam-switch/sources";
+    launch "test -d ~/.opam/eight/.opam-switch/build && rm -rf ~/.opam/eight/.opam-switch/build";
+    time_cmd ~exit:0 (fmt "%s install -y core.v0.15.1" bin)
+  in
+  let time_install_big =
+    Gc.compact ();
+    launch (fmt "%s switch create nine --empty" bin);
+    OpamSystem.write "/tmp/opam-bench-bigpkg/repo" {|opam-version: "2.0"
+|};
+    OpamSystem.write "/tmp/opam-bench-bigpkg/packages/a.1/opam" {|opam-version: "2.0"
+url {
+  src: "https://github.com/ocaml/opam-repository/archive/refs/tags/2025-01-before-archiving-phase1.tar.gz"
+  checksum: "md5=215a5261ad8358e34eb3222b83c4c8be"
+}
+|};
+    OpamSystem.write "/tmp/opam-bench-bigpkg/packages/b.1/opam" {|opam-version: "2.0"
+build: ["rm" "-r" "packages"]
+url {
+  src: "https://github.com/ocaml/opam-repository/archive/refs/tags/2025-01-before-archiving-phase1.tar.gz"
+  checksum: "md5=215a5261ad8358e34eb3222b83c4c8be"
+}
+|};
+    launch (fmt "%s repo add tmp /tmp/opam-bench-bigpkg" bin);
+    let res = time_cmd ~exit:0 (fmt "%s install a.1 b.1" bin) in
+    launch (fmt "%s repo remove tmp -a" bin);
+    res
+  in
   let init_root tmp_root_dir repo =
     launch (fmt "rm -rf %s" tmp_root_dir);
     launch (fmt "mkdir -p %s" tmp_root_dir);
@@ -279,6 +310,16 @@ let () =
           "name": "OpamStd.String.split amortised over 10 runs",
           "value": %f,
           "units": "secs"
+        },
+        {
+          "name": "opam install large-number-of-deps",
+          "value": %f,
+          "units": "secs"
+        },
+        {
+          "name": "opam install lot-io-source lot-io-source2",
+          "value": %f,
+          "units": "secs"
         }
       ]
     },
@@ -363,6 +404,8 @@ let () =
       time_show_raw
       time_show_precise
       time_OpamStd_String_split_10
+      time_install_core
+      time_install_big
       time_update_no_diff_local
       time_update_no_diff_git
       time_update_small_diff_local
