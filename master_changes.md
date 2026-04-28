@@ -321,7 +321,7 @@ users)
   * `OpamSystem.{command,commands,read_command_output}`: add a `?dir: dirname` optional arg to launch the command in a specific directory [#6910 @NathanReb]
   * `OpamFilename.Unix`: add `starts_with` [#6945 @rjbou]
   * `OpamCompat.Seq`: add `to_dispenser` [#6945 @kit-ty-kate]
-  * `OpamSystem.directories_with_links`, `OpamSystem.rec_files`, `OpamFilename.rec_files`: add optional `?except_vcs` that default to false to exclude VCS directories [#6945 @kit-ty-kate @rjbou]
+  * `OpamSystem.directories_with_links`, `OpamSystem.rec_files`, `OpamFilename.rec_files`: add optional `?except_vcs` that default to false to exclude VCS directories [#6625 @kit-ty-kate @rjbou]
   * `OpamFilename.make_tar_gz{_job}`: rename `make_tar_gz_job` into `make_tar_gz` as it no longer need an external process call [#6945 @kit-ty-kate]
   * `OpamFilename.{,dir_}starts_with`: Fix a bug where `foo/bar` would be considered a prefix of `foo/bar-baz` [#6953 @NathanReb - fix #6948]
   * `OpamFilename.{,dir_}starts_with`: `/` and `\` are now equivalent on Windows [#6953 @NathanReb]
