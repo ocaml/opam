@@ -36,6 +36,12 @@ val fold_reg_files :
    otherwise, the root directory in the archive is [dir]. *)
 val create : ?flat:bool -> archive -> dirname -> unit
 
+(* Apply a patch on an archive *)
+val patch:
+  allow_unclean:bool ->
+  [`Patch_file of string | `Patch_diffs of Patch.t list ] -> archive ->
+  (Patch.operation list, exn) result
+
 (* This module contains helpers to act on the archive once openned *)
 module Inplace : sig
   type t

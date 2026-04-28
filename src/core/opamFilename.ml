@@ -450,25 +450,48 @@ let link ?(relative=false) ~target ~link =
 [@@ocaml.warning "-16"]
 
 let parse_patch ~dir patch_file =
-  OpamPatch.parse_patch ~dir:(Dir.to_string dir) ~file:(to_string patch_file)
+  OpamPatch.parse_patch ~translate:(Some (Dir.to_string dir)) (to_string patch_file)
+
+module PatchFS = struct
+  type root = string
+  type file = string
+  type target = unit
+  let root_label = "directory"
+  let translate_patch = true
+  let root_to_string root = root
+  let file_to_string file = file
+  let end_slash dir = Filename.concat (OpamSystem.real_path dir) ""
+  let get_path ~fail dir file =
+    let file = OpamSystem.real_path (Filename.concat dir file) in
+    if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
+      fail ();
+    file
+  let ext file ext = file ^ ext
+  let write file content _target = OpamSystem.write file content
+  let on_rejection file content diff =
+    Option.iter (fun c -> write (file^".orig") c ()) content;
+    write (file^".rej") (Format.asprintf "%a" Patch.pp diff) ()
+  let exists file _target = Sys.file_exists file
+  let exists_dir file _target =
+    let dir = Filename.dirname file in
+    Sys.file_exists dir && Sys.is_directory dir
+  let read file _target = OpamSystem.read file
+  let remove file _target = OpamSystem.remove_file file
+  let remove_dir file _target = OpamSystem.rmdir_cleanup (Filename.dirname file)
+  let same_dirname ~src ~dst =
+    Filename.dirname src <> (Filename.dirname dst : string)
+  let mv ~src ~dst _target = OpamSystem.mv src dst
+  let open_ _target f = f ()
+  let save _target = ()
+end
 
 let patch ~allow_unclean patch_source dir =
-  let operations_result diffs =
-    Ok (List.map (fun d -> d.Patch.operation) diffs)
-  in
-  let patch ?patch_filename diffs =
-    OpamPatch.patch ~allow_unclean ?patch_filename ~dir:(Dir.to_string dir)
-      diffs
-  in
-  try
+  let patch_source =
     match patch_source with
-    | `Patch_diffs diffs -> patch diffs;
-      operations_result diffs
-    | `Patch_file p ->
-      let diffs = parse_patch ~dir:(Dir.to_string dir) p in
-      patch ~patch_filename:(to_string p) diffs;
-      operations_result diffs
-  with exn -> Error exn
+    | `Patch_file f -> `Patch_file (to_string f)
+    | `Patch_diffs _ as d -> d
+  in
+  OpamPatch.patch (module PatchFS) ~allow_unclean patch_source dir
 
 let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
 

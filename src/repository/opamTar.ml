@@ -207,3 +207,36 @@ let create ?(flat=false) tar dir =
       Inplace.Map.empty files
   in
   Inplace.write { archive = tar; fd; content }
+
+module PatchFS = struct
+  type root = OpamFilename.t
+  module Tar = Inplace
+  type file = OpamFilename.Unix.t
+  type target = Tar.t
+  let root_label = "archive"
+  let translate_patch = false
+  let root_to_string = OpamFilename.to_string
+  let file_to_string = OpamFilename.Unix.to_string
+  let end_slash = Fun.id
+  let get_path ~fail:_ _target =
+    (* TAR TODO check escapability ? *)
+    OpamFilename.Unix.of_string
+  let on_rejection _ _ _ = ()
+  let ext file ext = OpamFilename.Unix.add_extension file ext
+  let write file content target = Tar.add file content target
+  let exists file = Tar.exists file
+  let exists_dir _file _target = false
+  let read file = Tar.read file
+  let remove file = Tar.remove file
+  let remove_dir file target =
+    Tar.remove_dir (OpamFilename.Unix.dirname file) target
+  let same_dirname ~src ~dst =
+    OpamFilename.Unix.dirname src
+    <> (OpamFilename.Unix.dirname dst : OpamFilename.Unix.Dir.t)
+  let mv = Tar.mv
+  let open_ = Tar.with_open_out
+  let save = Tar.write
+end
+
+let patch ~allow_unclean patch_source tar =
+  OpamPatch.patch (module PatchFS) ~allow_unclean patch_source tar
