@@ -288,8 +288,8 @@ let add_extension filename suffix =
 let chop_extension filename =
   of_string (Filename.chop_extension (to_string filename))
 
-let rec_files d =
-  let fs = OpamSystem.rec_files (Dir.to_string d) in
+let rec_files ?except_vcs d =
+  let fs = OpamSystem.rec_files ?except_vcs (Dir.to_string d) in
   List.rev_map of_string fs
 
 let files d =

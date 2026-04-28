@@ -192,8 +192,10 @@ val add_extension: t -> string -> t
 (** Remove the file extension *)
 val chop_extension: t -> t
 
-(** List all the filenames, recursively *)
-val rec_files: Dir.t -> t list
+(** List all the filenames, recursively.
+    Exclude VCS directories from selection if [except_vcs] is set to true. Keep
+    them otherwise. *)
+val rec_files: ?except_vcs:bool -> Dir.t -> t list
 
 (** List all the filename. Do not recurse. *)
 val files: Dir.t -> t list
