@@ -549,3 +549,62 @@ index c0ffee..c0ffee
 + first/same-file
   > foo
 
+
+----------------------
+ Test 14: diff dir/file error, with content in the dir that is removed
+----------------------
+
+*** SETUP ***
++ first/
++ first/dir-fst-file-snd
++ first/dir-fst-file-snd/fst
+  > foo
++ first/dir-fst-file-snd/remove-me
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/dir-fst-file-snd
+  > foo
++ second/same-file
+  > foo
+
+*** DIFF ***
+ERROR: Change from a directory to a regular file is unsupported
+
+----------------------
+ Test 15: diff dir/file error, with content in the dir that is not removed
+----------------------
+
+*** SETUP ***
++ first/
++ first/dir-fst-file-snd
++ first/dir-fst-file-snd/fst
+  > foo
++ first/dir-fst-file-snd/i-wont-be-removed
+  > baz
++ first/dir-fst-file-snd/remove-me
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/dir-fst-file-snd
+  > foo
++ second/same-file
+  > foo
+
+*** GIVEN DIFF ***
+diff --git b/dir-fst-file-snd/fst a/dir-fst-file-snd
+similarity index 100%
+rename from dir-fst-file-snd/fst
+rename to dir-fst-file-snd
+diff --git b/dir-fst-file-snd/remove-me a/dir-fst-file-snd/remove-me
+deleted file mode c0ffee
+index c0ffee..c0ffee
+--- b/dir-fst-file-snd/remove-me
++++ /dev/null
+@@ -1 +0,0 @@
+-bar
+
+*** PATCH ERROR ***
+ERROR: OpamSystem.Internal_error("Cannot remove ${BASEDIR}/first/dir-fst-file-snd (Unix.Unix_error(Unix.EISDIR, \"unlink\", \"${BASEDIR}/first/dir-fst-file-snd\")).")
