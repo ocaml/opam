@@ -280,3 +280,4 @@ users)
   * `OpamSystem.chdir`: removed [#6910 @NathanReb]
   * `OpamSystem.{command,commands,read_command_output}`: add a `?dir: dirname` optional arg to launch the command in a specific directory [#6910 @NathanReb]
   * `OpamFilename.Unix`: add `starts_with` [#6945 @rjbou]
+  * `OpamCompat.Seq`: add `to_dispenser` [#6945 @kit-ty-kate]
