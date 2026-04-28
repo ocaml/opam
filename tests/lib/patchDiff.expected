@@ -104,26 +104,6 @@
 + first/same-dir
 + first/same-file
   > foo
-+ second/
-+ second/diff-dir-plus-fst
-+ second/diff-dir-plus-fst/fst
-  > foo
-  > bar
-+ second/diff-dir-plus-snd
-+ second/diff-dir-plus-snd/fst
-  > foo
-+ second/diff-file
-  > bar
-+ second/diff-file-plus-fst
-  > foo
-+ second/diff-file-plus-snd
-  > foo
-  > bar
-+ second/file-only-snd
-  > foo
-+ second/same-dir
-+ second/same-file
-  > foo
 
 *** GIT DIFF ***
 diff --git b/diff-dir-plus-fst/fst a/diff-dir-plus-fst/fst
@@ -193,26 +173,6 @@ rename to file-only-snd
   > foo
 + first/same-dir
 + first/same-file
-  > foo
-+ second/
-+ second/diff-dir-plus-fst
-+ second/diff-dir-plus-fst/fst
-  > foo
-  > bar
-+ second/diff-dir-plus-snd
-+ second/diff-dir-plus-snd/fst
-  > foo
-+ second/diff-file
-  > bar
-+ second/diff-file-plus-fst
-  > foo
-+ second/diff-file-plus-snd
-  > foo
-  > bar
-+ second/file-only-snd
-  > foo
-+ second/same-dir
-+ second/same-file
   > foo
 
 
@@ -323,11 +283,6 @@ ERROR: Symlinks are unsupported
   > foo
 + first/same-file
   > foo
-+ second/
-+ second/hardlinked-file-fst
-  > foo
-+ second/same-file
-  > foo
 
 
 ----------------------
@@ -377,11 +332,6 @@ patch format
   > foo
 + first/same-file
   > foo
-+ second/
-+ second/diff-file
-  > bar
-+ second/same-file
-  > foo
 
 
 ----------------------
@@ -422,13 +372,6 @@ patch format
   > bar
 + first/same-file
   > foo
-+ second/
-+ second/diff-file
-  > bar
-+ second/diff-file-plus-fst
-  > foo
-+ second/same-file
-  > foo
 
 
 ----------------------
@@ -453,10 +396,6 @@ new file mode 100644
 + first/im-empty
 + first/same-file
   > foo
-+ second/
-+ second/im-empty
-+ second/same-file
-  > foo
 
 *** GIT DIFF ***
 diff --git b/im-empty a/im-empty
@@ -467,10 +406,6 @@ index c0ffee..c0ffee
 + first/
 + first/im-empty
 + first/same-file
-  > foo
-+ second/
-+ second/im-empty
-+ second/same-file
   > foo
 
 
@@ -495,9 +430,6 @@ deleted file mode 100644
 + first/
 + first/same-file
   > foo
-+ second/
-+ second/same-file
-  > foo
 
 *** GIT DIFF ***
 diff --git b/im-empty a/im-empty
@@ -507,9 +439,6 @@ index c0ffee..c0ffee
 *** GIT PATCHED ***
 + first/
 + first/same-file
-  > foo
-+ second/
-+ second/same-file
   > foo
 
 
@@ -547,12 +476,6 @@ index c0ffee..c0ffee
   > bar
 + first/same-file
   > foo
-+ second/
-+ second/inner
-+ second/inner/move-me
-  > bar
-+ second/same-file
-  > foo
 
 *** GIT DIFF ***
 diff --git b/move-me a/inner/move-me
@@ -566,12 +489,6 @@ rename to inner/move-me
 + first/inner/move-me
   > bar
 + first/same-file
-  > foo
-+ second/
-+ second/inner
-+ second/inner/move-me
-  > bar
-+ second/same-file
   > foo
 
 
@@ -609,10 +526,6 @@ rename to inner/move-me
 + first/
 + first/same-file
   > foo
-+ second/
-+ second/im-here
-+ second/same-file
-  > foo
 
 *** GIT DIFF ***
 diff --git b/im-here/delete-me a/im-here/delete-me
@@ -634,9 +547,5 @@ index c0ffee..c0ffee
 *** GIT PATCHED ***
 + first/
 + first/same-file
-  > foo
-+ second/
-+ second/im-here
-+ second/same-file
   > foo
 

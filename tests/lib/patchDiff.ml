@@ -345,14 +345,14 @@ type setup = {
   git: bool; (* add a test where the first directory is a git directory or not *)
 }
 
-let print_dirs dir =
-  print "%s\n" (read_dir dir [ first; second ])
+let print_dirs dir dirs =
+  print "%s\n" (read_dir dir dirs)
 
 let diff_patch dir setup =
   let { content; kind; git; _ } = setup in
   write_setup dir content;
   print "*** SETUP ***\n";
-  print_dirs dir;
+  print_dirs dir [first; second];
   let diff =
     match kind with
     | Patch patch ->
@@ -388,7 +388,7 @@ let diff_patch dir setup =
       match result with
       | Ok _ ->
         print "*** %sPATCHED ***\n" git;
-        print_dirs dir;
+        print_dirs dir [first];
         true
       | Error exn ->
         print "*** %sPATCH ERROR ***\n" git;

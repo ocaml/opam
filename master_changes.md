@@ -145,6 +145,7 @@ users)
 ## Internal: Windows
 
 ## Test
+  * lib/patchDiff: no longer print unecessary information after patch [#6915 @rjbou]
 
 ## Benchmarks
   * Add an even larger real-world diff to benchmark `opam update` [#6567 @kit-ty-kate]
