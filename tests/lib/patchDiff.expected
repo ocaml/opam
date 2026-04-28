@@ -217,8 +217,14 @@ similarity index 100%
 rename from file-fst-dir-snd
 rename to file-fst-dir-snd/fst
 
-*** GIT PATCH ERROR ***
-ERROR: Unix.Unix_error(Unix.ENOTDIR, "lstat", "${BASEDIR}/first/file-fst-dir-snd/fst")
+*** GIT PATCHED ***
++ first/
++ first/file-fst-dir-snd
++ first/file-fst-dir-snd/fst
+  > foo
++ first/same-file
+  > foo
+
 
 ----------------------
  Test 3: diff dir/file error
@@ -260,8 +266,13 @@ similarity index 100%
 rename from dir-fst-file-snd/fst
 rename to dir-fst-file-snd
 
-*** GIT PATCH ERROR ***
-ERROR: OpamSystem.Internal_error("Cannot remove ${BASEDIR}/first/dir-fst-file-snd (Unix.Unix_error(Unix.EISDIR, \"unlink\", \"${BASEDIR}/first/dir-fst-file-snd\")).")
+*** GIT PATCHED ***
++ first/
++ first/dir-fst-file-snd
+  > foo
++ first/same-file
+  > foo
+
 
 ----------------------
  Test 4: symlink fst
@@ -651,7 +662,7 @@ index c0ffee..c0ffee
 -bar
 
 *** GIT PATCH ERROR ***
-ERROR: OpamSystem.Internal_error("Cannot remove ${BASEDIR}/first/dir-fst-file-snd (Unix.Unix_error(Unix.EISDIR, \"unlink\", \"${BASEDIR}/first/dir-fst-file-snd\")).")
+ERROR: Failure("Directory of ${BASEDIR}/first/dir-fst-file-snd/fst is not empty, failed to remove to write ${BASEDIR}/first/dir-fst-file-snd")
 
 ----------------------
  Test 15: diff dir/file error, with content in the dir that is not removed
@@ -688,4 +699,4 @@ index c0ffee..c0ffee
 -bar
 
 *** PATCH ERROR ***
-ERROR: OpamSystem.Internal_error("Cannot remove ${BASEDIR}/first/dir-fst-file-snd (Unix.Unix_error(Unix.EISDIR, \"unlink\", \"${BASEDIR}/first/dir-fst-file-snd\")).")
+ERROR: Failure("Directory of ${BASEDIR}/first/dir-fst-file-snd/fst is not empty, failed to remove to write ${BASEDIR}/first/dir-fst-file-snd")

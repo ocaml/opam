@@ -325,73 +325,104 @@ let translate_patch ~dir orig corrected =
 exception Internal_patch_error of string
 
 let patch ~allow_unclean ?patch_filename ~dir diffs =
-  let internal_patch_error fmt =
-    Printf.ksprintf (fun str -> raise (Internal_patch_error str)) fmt
-  in
-  let patch_info_path =
-    OpamStd.Option.default ("in directory "^dir) patch_filename
-  in
-  (* NOTE: It is important to keep this `concat dir ""` to ensure the
-     is_prefix_of below doesn't match another similarly named directory *)
-  let dir = Filename.concat (OpamSystem.real_path dir) "" in
-  let get_path file =
-    let file = OpamSystem.real_path (Filename.concat dir file) in
-    if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
-      internal_patch_error "Patch %S tried to escape its scope."
-        patch_info_path;
-    file
-  in
-  let patch ~file content diff =
-    (* NOTE: The None case returned by [Patch.patch] is only returned
-       if [diff = Patch.Delete _]. This sub-function is not called in
-       this case so we [assert false] instead. *)
-    match Patch.patch ~cleanly:true content diff with
-    | Some x -> x
-    | None -> assert false (* See NOTE above *)
-    | exception _ when not allow_unclean ->
-      internal_patch_error "Patch %S does not apply cleanly."
-        patch_info_path
-    | exception _ ->
-      match Patch.patch ~cleanly:false content diff with
-      | Some x ->
-        Option.iter (OpamSystem.write (file^".orig")) content;
-        x
+  if diffs = [] then () else
+    let internal_patch_error fmt =
+      Printf.ksprintf (fun str -> raise (Internal_patch_error str)) fmt
+    in
+    let patch_info_path =
+      OpamStd.Option.default ("in directory "^dir) patch_filename
+    in
+    (* NOTE: It is important to keep this `concat dir ""` to ensure the
+       is_prefix_of below doesn't match another similarly named directory *)
+    let dir = Filename.concat (OpamSystem.real_path dir) "" in
+    let get_path file =
+      let file = OpamSystem.real_path (Filename.concat dir file) in
+      if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
+        internal_patch_error "Patch %S tried to escape its scope."
+          patch_info_path;
+      file
+    in
+    let patch ~file content diff =
+      (* NOTE: The None case returned by [Patch.patch] is only returned
+         if [diff = Patch.Delete _]. This sub-function is not called in
+         this case so we [assert false] instead. *)
+      match Patch.patch ~cleanly:true content diff with
+      | Some x -> x
       | None -> assert false (* See NOTE above *)
-      | exception _ ->
-        Option.iter (OpamSystem.write (file^".orig")) content;
-        OpamSystem.write (file^".rej") (Format.asprintf "%a" Patch.pp diff);
+      | exception _ when not allow_unclean ->
         internal_patch_error "Patch %S does not apply cleanly."
           patch_info_path
-  in
-  let apply diff = match diff.Patch.operation with
-    | Patch.Edit (file1, file2) ->
-      let file1 = get_path file1 in
-      let file2 = get_path file2 in
-      let file1_exists = Sys.file_exists file1 in
-      (* That seems to be the GNU patch behaviour *)
-      let file = if file1_exists then file1 else file2 in
-      let content = OpamSystem.read file in
-      let content = patch ~file:file (Some content) diff in
-      OpamSystem.write file content;
-      if file1_exists && file1 <> (file2 : string) then
-        OpamSystem.rmdir_cleanup (Filename.dirname file1)
-    | Patch.Delete file | Patch.Git_ext (file, _, Patch.Delete_only) ->
-      let file = get_path file in
-      OpamSystem.remove_file file;
-      OpamSystem.rmdir_cleanup (Filename.dirname file)
-    | Patch.Create file | Patch.Git_ext (_, file, Patch.Create_only) ->
-      let file = get_path file in
-      let content = patch ~file None diff in
-      OpamSystem.write file content
-    | Patch.Git_ext (_, _, Patch.Rename_only (src, dst)) ->
-      let src = get_path src in
-      let dst = get_path dst in
-      OpamSystem.mv src dst;
-      let dirname_src = Filename.dirname src in
-      if dirname_src <> (Filename.dirname dst : string) then
-        OpamSystem.rmdir_cleanup dirname_src
-  in
-  List.iter apply diffs
+      | exception _ ->
+        match Patch.patch ~cleanly:false content diff with
+        | Some x ->
+          Option.iter (OpamSystem.write (file^".orig")) content;
+          x
+        | None -> assert false (* See NOTE above *)
+        | exception _ ->
+          Option.iter (OpamSystem.write (file^".orig")) content;
+          OpamSystem.write (file^".rej") (Format.asprintf "%a" Patch.pp diff);
+          internal_patch_error "Patch %S does not apply cleanly."
+            patch_info_path
+    in
+    let apply diff =
+      match diff.Patch.operation with
+      | Patch.Edit (file1, file2) ->
+        let file1 = get_path file1 in
+        let file2 = get_path file2 in
+        let file1_exists = Sys.file_exists file1 in
+        (* That seems to be the GNU patch behaviour *)
+        let file = if file1_exists then file1 else file2 in
+        let content = OpamSystem.read file in
+        let content = patch ~file (Some content) diff in
+        OpamSystem.write file content;
+        if file1_exists && file1 <> (file2 : string) then
+          OpamSystem.rmdir_cleanup (Filename.dirname file1)
+      | Patch.Delete file | Patch.Git_ext (file, _, Patch.Delete_only) ->
+        let file = get_path file in
+        OpamSystem.remove_file file;
+        OpamSystem.rmdir_cleanup (Filename.dirname file)
+      | Patch.Create file | Patch.Git_ext (_, file, Patch.Create_only) ->
+        let file = get_path file in
+        let content = patch ~file None diff in
+        OpamSystem.write file content
+      | Patch.Git_ext (_, _, Patch.Rename_only (src, dst)) ->
+        let src = get_path src in
+        let dst = get_path dst in
+        let check_and_write_dst longest_path content =
+          let dir = Filename.dirname longest_path in
+          if Sys.file_exists dir && Sys.is_directory dir then
+            (OpamSystem.write src content;
+             failwith
+               (Printf.sprintf "Directory of %s is not empty, \
+                                failed to remove to write %s"
+                  src dst))
+          else
+            OpamSystem.write dst content
+        in
+        let contained_in ~prefix ~inn =
+          (* NOTE: It is important to keep this `concat prefix ""` to ensure
+             starts_with doesn't match another similarly named directory *)
+          let prefix = Filename.concat prefix "" in
+          OpamCompat.String.starts_with ~prefix:prefix inn
+        in
+        (* case a/b/FILE -> a/b/FILE/anotherfile *)
+        if contained_in ~prefix:src ~inn:dst then
+          let content = OpamSystem.read src in
+          OpamSystem.remove_file src;
+          check_and_write_dst dst content
+          (* case a/b/FILE/anotherfile -> a/b/FILE *)
+        else if contained_in ~prefix:dst ~inn:src then
+          let content = OpamSystem.read src in
+          OpamSystem.remove_file src;
+          OpamSystem.rmdir_cleanup (Filename.dirname src);
+          check_and_write_dst src content
+        else
+          (OpamSystem.mv src dst;
+           let dirname_src = Filename.dirname src in
+           if dirname_src <> (Filename.dirname dst : string) then
+             OpamSystem.rmdir_cleanup dirname_src)
+    in
+    List.iter apply diffs
 
 let parse_patch ~dir ~file =
   if not (Sys.file_exists file) then
@@ -405,4 +436,3 @@ let parse_patch ~dir ~file =
   let content = OpamSystem.read file' in
   Fun.protect (fun () -> Patch.parse ~p:1 content)
     ~finally:(fun () -> if not (OpamConsole.debug ()) then Sys.remove file')
-
