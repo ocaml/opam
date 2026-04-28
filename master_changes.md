@@ -296,6 +296,7 @@ users)
   * `OpamFilter.expand_interpolations_in_file`: changed argument type from `basename` to `filename` [#6910 @NathanReb]
   * `OpamFile.OPAM.print_errors`: now prints the repository if the informations is available [#6971 @rjbou]
   * `OpamFile.*.read_from_string`: add optional `?loc` string argument to propagate location information when available (path on disk, archive, etc.), and add logging with level 3 that displays it [#6625 @rjbou]
+  * `OpamFile.*`: add `safe_read_from_string` [#6625 @rjbou]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
