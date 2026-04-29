@@ -35,8 +35,8 @@ build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.2/files/baz>
 some content
 ### sh hash.sh REPO foo.2
-### opam update default -vv | grep '^\+' | sed-cmd tar
-+ tar "cfz" "${BASEDIR}/OPAM/repo/default.tar.gz.tmp" "-C" "${BASEDIR}/OPAM/repo" "default"
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update default | grep TAR
+TAR                             creating archive ${BASEDIR}/OPAM/repo/default.tar.gz from ${BASEDIR}/OPAM/repo/default
 ### ls $OPAMROOT/repo | grep -v "cache"
 default.tar.gz
 lock
@@ -72,9 +72,9 @@ build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.4/files/baz>
 some content
 ### sh hash.sh REPO foo.4
-### opam update -vv | grep '^\+' | sed-cmd tar
+### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update -vv | grep '^(\+|TAR)' | sed-cmd tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
-+ tar "cfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz.tmp" "-C" "${OPAMTMP}" "tarred"
+TAR                             creating archive ${BASEDIR}/OPAM/repo/tarred.tar.gz from ${OPAMTMP}/tarred
 ### opam install foo.4 -vv | grep '^\+' | sed-cmd test tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.4)

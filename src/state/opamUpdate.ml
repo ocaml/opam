@@ -125,8 +125,8 @@ let repository rt repo =
     let tarred_repo = OpamRepositoryPath.tar gt.root repo.repo_name in
     (if OpamRepositoryConfig.(!r.repo_tarring) then
        match repo_root with
-       | Dir dir -> OpamRepositoryRoot.make_tar_gz_job tarred_repo dir
-     else Done None)
+       | Dir dir -> OpamRepositoryRoot.make_tar_gz tarred_repo dir);
+    Done None
     @@+ function
     | Some e ->
       OpamStd.Exn.fatal e;

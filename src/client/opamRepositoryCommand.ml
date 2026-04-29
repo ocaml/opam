@@ -259,23 +259,15 @@ let update_with_auto_upgrade rt repo_names =
                 OpamRepositoryState.Cache.remove ());
              OpamConsole.msg "Upgrading repository \"%s\"...\n"
                (OpamRepositoryName.to_string r.repo_name);
-             let open OpamProcess.Job.Op in
              let repo_root =
                match OpamRepositoryState.get_repo_root rt r with
                | OpamRepositoryRoot.Dir x -> x
              in
              OpamAdminRepoUpgrade.do_upgrade repo_root;
              if OpamRepositoryConfig.(!r.repo_tarring) then
-               OpamProcess.Job.run
-                 (OpamRepositoryRoot.make_tar_gz_job
-                    (OpamRepositoryPath.tar rt.repos_global.root r.repo_name)
-                    repo_root
-                  @@| function
-                  | Some e ->
-                    Printf.ksprintf failwith
-                      "Failed to regenerate local repository archive: %s"
-                      (Printexc.to_string e)
-                  | None -> ());
+               OpamRepositoryRoot.make_tar_gz
+                 (OpamRepositoryPath.tar rt.repos_global.root r.repo_name)
+                 repo_root;
              let def =
                OpamRepositoryRoot.Dir.Path.repo repo_root
                |> OpamFile.Repo.safe_read
