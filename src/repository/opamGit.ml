@@ -30,7 +30,7 @@ module VCS : OpamVCS.VCS = struct
        of git will need to change, as altering PATH could select a different
        Git *)
     fun ?verbose ?stdout args ->
-      OpamSystem.make_command ~dir ?verbose ?stdout "git" args
+      OpamSystem.make_command ?verbose ?stdout "git" ("-C"::dir::args)
 
   let init repo_root repo_url =
     OpamFilename.mkdir repo_root;

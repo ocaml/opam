@@ -459,6 +459,4 @@ The following actions will be performed:
 Proceed with 2 installations? [Y/n] n
 # Return code 10 #
 ### opam pin list
-Fatal error:
-${OPAM}: "chdir" failed on ${BASEDIR}/OPAM/abort-install-local/.opam-switch/sources/abort-install: No such file or directory
-# Return code 99 #
+abort-install.dev  (uninstalled)  git  git+file://${BASEDIR}/abort-install#master  (at error while fetching current revision)
