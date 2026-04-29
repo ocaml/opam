@@ -65,6 +65,7 @@ users)
 ## Lint
 
 ## Repository
+  * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
 
 ## Lock
 
@@ -217,6 +218,7 @@ users)
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
+  * `OpamRepositoryCommand.update_with_auto_upgrade`, `OpamUpdate.repository`: no longer call an external process to create an archive [#6945 @kit-ty-kate]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -282,3 +284,5 @@ users)
   * `OpamSystem.{command,commands,read_command_output}`: add a `?dir: dirname` optional arg to launch the command in a specific directory [#6910 @NathanReb]
   * `OpamFilename.Unix`: add `starts_with` [#6945 @rjbou]
   * `OpamCompat.Seq`: add `to_dispenser` [#6945 @kit-ty-kate]
+  * `OpamSystem.directories_with_links`, `OpamSystem.rec_files`, `OpamFilename.rec_files`: add optional `?except_vcs` that default to false to exclude VCS directories [#6945 @kit-ty-kate @rjbou]
+  * `OpamFilename.make_tar_gz{_job}`: rename `make_tar_gz_job` into `make_tar_gz` as it no longer need an external process call [#6945 @kit-ty-kate]
