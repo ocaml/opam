@@ -431,6 +431,15 @@ module Unix : sig
 
   val to_filename : t -> filename
 
+  (** Check whether a filename starts by a given Dir.t *)
+  val starts_with: Dir.t -> t -> bool
+
+  (** Return the base name *)
+  val basename: t -> Base.t
+
+  (** Return the directory name *)
+  val dirname: t -> Dir.t
+
   (** Deconstruct a filename into a list of path elements *)
   val to_list: t -> string list
 

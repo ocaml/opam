@@ -249,3 +249,4 @@ users)
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
   * `OpamFilename`: add `to_list` that deconstructs a `filename` path [#6871 @rjbou]
   * `OpamFilename.Dir`: add `of_list` that constructs a `dirname` from a string path elements [#6871 @rjbou]
+  * `OpamFilename.Raw`: add `starts_with`, `basename`, `dirname` [#6871 @rjbou]
