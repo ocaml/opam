@@ -151,18 +151,19 @@ let cache_file : string list list OpamFile.t =
   OpamFilename.of_string "~/.cache/opam-compilers-to-packages/url-hashes"
 
 let do_upgrade repo_root =
+  let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
   let write_opam ?(add_files=[]) opam =
     let nv = O.package opam in
     let pfx = Some (OpamPackage.name_to_string nv) in
-    let files_dir = OpamRepositoryPath.files repo_root pfx nv in
-    O.write (OpamRepositoryPath.opam repo_root pfx nv) opam;
+    let files_dir = OpamRepositoryPath.files repo_root_dir pfx nv in
+    O.write (OpamRepositoryPath.opam repo_root_dir pfx nv) opam;
     List.iter (fun (base,contents) ->
         OpamFilename.(write Op.(files_dir // base) contents))
       add_files
   in
 
   let compilers =
-    let compilers_dir = OpamFilename.Op.(repo_root / "compilers") in
+    let compilers_dir = OpamRepositoryRoot.Dir.Op.(repo_root / "compilers") in
     if OpamFilename.exists_dir compilers_dir then (
       List.fold_left (fun map f ->
           if OpamFilename.check_suffix f ".comp" then
@@ -418,7 +419,7 @@ let do_upgrade repo_root =
     (OpamPackage.Name.Set.to_string all_base_packages);
 
   OpamPackage.Map.iter (fun package prefix ->
-      let opam_file = OpamRepositoryPath.opam repo_root prefix package in
+      let opam_file = OpamRepositoryPath.opam repo_root_dir prefix package in
       let opam0 = OpamFile.OPAM.read opam_file in
       OpamFile.OPAM.print_errors ~file:opam_file opam0;
       let nv = OpamFile.OPAM.package opam0 in
@@ -433,16 +434,16 @@ let do_upgrade repo_root =
           (OpamFile.OPAM.write_with_preserved_format opam_file opam;
            List.iter OpamFilename.remove [
              OpamFile.filename
-               (OpamRepositoryPath.descr repo_root prefix package);
+               (OpamRepositoryPath.descr repo_root_dir prefix package);
              OpamFile.filename
-               (OpamRepositoryPath.url repo_root prefix package);
+               (OpamRepositoryPath.url repo_root_dir prefix package);
            ];
            OpamConsole.status_line "Updated %s" (OpamFile.to_string opam_file))
     )
     packages;
   OpamConsole.clear_status ();
 
-  let repo_file = OpamRepositoryPath.repo repo_root in
+  let repo_file = OpamRepositoryPath.repo repo_root_dir in
   OpamFile.Repo.write repo_file
     (OpamFile.Repo.with_opam_version upgradeto_version
        (OpamFile.Repo.safe_read repo_file))
@@ -451,8 +452,8 @@ let clear_cache () =
   OpamFilename.remove (OpamFile.filename cache_file)
 
 let do_upgrade_mirror repo_root base_url =
-  OpamFilename.with_tmp_dir @@ fun tmp_mirror_dir ->
-  let open OpamFilename.Op in
+  OpamRepositoryRoot.Dir.with_tmp @@ fun tmp_mirror_dir ->
+  let open OpamRepositoryRoot.Dir.Op in
   let copy_dir d =
     let src = repo_root / d in
     if OpamFilename.exists_dir src then
@@ -502,11 +503,14 @@ let do_upgrade_mirror repo_root base_url =
   in
   OpamFile.Repo.write repo_file repo_12;
   OpamFile.Repo.write
-    (OpamFile.make OpamFilename.Op.(tmp_mirror_dir // "repo"))
-    repo_20;
-  let dir20 = OpamFilename.Dir.of_string upgradeto_version_string in
-  OpamFilename.rmdir dir20;
-  OpamFilename.move_dir ~src:tmp_mirror_dir ~dst:dir20;
+    (OpamRepositoryPath.repo
+       (OpamRepositoryRoot.Dir.to_dir tmp_mirror_dir)) repo_20;
+  let dir20 =
+    OpamRepositoryRoot.Dir.of_dir
+      (OpamFilename.Dir.of_string upgradeto_version_string)
+  in
+  OpamRepositoryRoot.Dir.remove dir20;
+  OpamRepositoryRoot.Dir.move ~src:tmp_mirror_dir ~dst:dir20;
   OpamConsole.note
     "Indexes need updating: you should now run\n\
      \n%s\
@@ -516,4 +520,6 @@ let do_upgrade_mirror repo_root base_url =
      then
        "  opam admin index --full-urls-txt\n"
      else "")
-    (OpamFilename.remove_prefix_dir repo_root dir20)
+    (OpamFilename.remove_prefix_dir
+       (OpamRepositoryRoot.Dir.to_dir repo_root)
+       (OpamRepositoryRoot.Dir.to_dir dir20))

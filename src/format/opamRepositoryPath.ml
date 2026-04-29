@@ -35,9 +35,12 @@ let pin_cache u =
      OpamUrl.to_string u)
     0 16
 
-let repo repo_root = repo_root // OpamRepositoryPathName.repo_f |> OpamFile.make
+let repo repo_root =
+  repo_root // OpamRepositoryPathName.repo_f
+  |> OpamFile.make
 
-let packages_dir repo_root = repo_root / OpamRepositoryPathName.packages_d
+let packages_dir repo_root =
+  repo_root / OpamRepositoryPathName.packages_d
 
 let packages repo_root prefix nv =
   match prefix with

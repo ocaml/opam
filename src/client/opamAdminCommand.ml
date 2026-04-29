@@ -20,15 +20,17 @@ let repo_version_lt repo_root v =
   let v' =
     let open OpamStd.Option.Op in
     (OpamFile.Repo.read_opt
-       (OpamRepositoryPath.repo repo_root)
+       (OpamRepositoryPath.repo (OpamRepositoryRoot.Dir.to_dir repo_root))
      >>= OpamFile.Repo.opam_version)
     +! OpamAdminRepoUpgrade.upgradefrom_version
   in
   if OpamVersion.compare v v' > 0 then Some v' else None
 
 let checked_repo_root ?(check=true) () =
-  let repo_root = OpamFilename.cwd () in
-  if not (OpamFilename.exists_dir (OpamRepositoryPath.packages_dir repo_root))
+  let repo_root = OpamRepositoryRoot.Dir.cwd () in
+  if not (OpamFilename.exists_dir
+            (OpamRepositoryPath.packages_dir
+               (OpamRepositoryRoot.Dir.to_dir repo_root)))
   then
     OpamConsole.error_and_exit `Bad_arguments
       "No repository found in current directory.\n\
@@ -97,7 +99,8 @@ let index_command cli =
   let cmd global_options urls_txt () =
     OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
-    let repo_file = OpamRepositoryPath.repo repo_root in
+    let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
+    let repo_file = OpamRepositoryPath.repo repo_root_dir in
     let repo_def =
       match OpamFile.Repo.read_opt repo_file with
       | None ->
@@ -112,12 +115,14 @@ let index_command cli =
           (t.Unix.tm_year + 1900) (t.Unix.tm_mon +1) t.Unix.tm_mday
           t.Unix.tm_hour t.Unix.tm_min
       in
-      match OpamUrl.guess_version_control (OpamFilename.Dir.to_string repo_root)
+      match
+        OpamUrl.guess_version_control
+          (OpamRepositoryRoot.Dir.to_string repo_root)
       with
       | None -> date ()
       | Some vcs ->
         let module VCS = (val OpamRepository.find_backend_by_kind vcs) in
-        match OpamProcess.Job.run (VCS.revision repo_root) with
+        match OpamProcess.Job.run (VCS.revision repo_root_dir) with
         | None -> date ()
         | Some hash -> hash
     in
@@ -127,13 +132,13 @@ let index_command cli =
       (OpamConsole.msg "Generating urls.txt...\n";
        OpamFilename.of_string OpamRepositoryPathName.repo_f ::
        (if urls_txt = `full_urls_txt then
-          OpamFilename.rec_files OpamFilename.Op.(repo_root / "compilers") @
-          OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo_root)
+          OpamFilename.rec_files OpamFilename.Op.(repo_root_dir / "compilers") @
+          OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo_root_dir)
         else []) |>
        List.fold_left (fun set f ->
            if not (OpamFilename.exists f) then set else
-           let attr = OpamFilename.to_attribute repo_root f in
-           OpamFilename.Attribute.Set.add attr set
+             let attr = OpamFilename.to_attribute repo_root_dir f in
+             OpamFilename.Attribute.Set.add attr set
          ) OpamFilename.Attribute.Set.empty |>
        OpamFile.File_attributes.write
          (OpamFile.make (OpamFilename.of_string "urls.txt")));
@@ -154,8 +159,10 @@ let cache_urls repo_root repo_def =
     List.filter_map (fun rel ->
         if OpamStd.String.contains ~sub:"://" rel
         then OpamUrl.parse_opt ~handle_suffix:false rel
-        else Some OpamUrl.Op.(OpamUrl.of_string
-                                (OpamFilename.Dir.to_string repo_root) / rel))
+        else
+          Some
+            OpamUrl.Op.(OpamUrl.of_string
+                          (OpamRepositoryRoot.Dir.to_string repo_root) / rel))
       (OpamFile.Repo.dl_cache repo_def)
   in
   repo_dl_cache @ global_dl_cache
@@ -165,7 +172,8 @@ let package_files_to_cache repo_root cache_dir cache_urls
     ~recheck ?link (nv, prefix) =
   match
     OpamFileTools.read_opam
-      (OpamRepositoryPath.packages repo_root prefix nv)
+      (OpamRepositoryPath.packages
+         (OpamRepositoryRoot.Dir.to_dir repo_root) prefix nv)
   with
   | None -> Done (OpamPackage.Map.empty)
   | Some opam ->
@@ -268,7 +276,9 @@ let cache_command cli =
     (* this option was the default until 2.1 *)
     let recheck = recheck || OpamCLIVersion.Op.(cli @< OpamArg.cli2_2) in
     let repo_root = checked_repo_root () in
-    let repo_file = OpamRepositoryPath.repo repo_root in
+    let repo_file =
+      OpamRepositoryPath.repo (OpamRepositoryRoot.Dir.to_dir repo_root)
+    in
     let repo_def = OpamFile.Repo.safe_read repo_file in
 
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
@@ -289,7 +299,10 @@ let cache_command cli =
             (OpamPackage.Map.bindings pkg_prefixes))
     in
 
-    let cache_dir_url = OpamFilename.remove_prefix_dir repo_root cache_dir in
+    let cache_dir_url =
+      OpamFilename.remove_prefix_dir
+        (OpamRepositoryRoot.Dir.to_dir repo_root) cache_dir
+    in
     if not no_repo_update then
       if not (OpamStd.List.mem String.equal
                 cache_dir_url (OpamFile.Repo.dl_cache repo_def)) then
@@ -382,18 +395,21 @@ let update_extrafiles_command cli =
       OpamHash.compute ?kind (OpamFilename.to_string file)
     in
     let has_error =
+      let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
       OpamPackage.Map.fold (fun nv prefix has_error ->
-          let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+          let opam_file = OpamRepositoryPath.opam repo_root_dir prefix nv in
           let opam = OpamFile.OPAM.read opam_file in
           let has_error =
-            if OpamFile.exists (OpamRepositoryPath.url repo_root prefix nv) then
+            if OpamFile.exists
+                (OpamRepositoryPath.url repo_root_dir prefix nv)
+            then
               (OpamConsole.warning "Not updating external URL file at %s"
                  (OpamFile.to_string
-                    (OpamRepositoryPath.url repo_root prefix nv));
+                    (OpamRepositoryPath.url repo_root_dir prefix nv));
                true)
             else has_error
           in
-          let files_dir = OpamRepositoryPath.files repo_root prefix nv in
+          let files_dir = OpamRepositoryPath.files repo_root_dir prefix nv in
           if OpamFilename.exists_dir files_dir then
             (let files =
                OpamFilename.rec_files files_dir
@@ -486,11 +502,12 @@ let migrate_extrafiles_command cli =
       OpamHash.compute ?kind (OpamFilename.to_string file)
     in
     let has_error =
+      let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
       OpamPackage.Map.fold (fun nv prefix has_error ->
-          let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+          let opam_file = OpamRepositoryPath.opam repo_root_dir prefix nv in
           let opam = OpamFile.OPAM.read opam_file in
           let has_error =
-            let urlfile = OpamRepositoryPath.url repo_root prefix nv in
+            let urlfile = OpamRepositoryPath.url repo_root_dir prefix nv in
             if OpamFile.exists urlfile then
               (OpamConsole.warning
                  "Not updating external URL file at %s, \
@@ -499,7 +516,7 @@ let migrate_extrafiles_command cli =
                true)
             else has_error
           in
-          let files_dir = OpamRepositoryPath.files repo_root prefix nv in
+          let files_dir = OpamRepositoryPath.files repo_root_dir prefix nv in
           if OpamFilename.exists_dir files_dir then
             (let files =
                OpamFilename.rec_files files_dir
@@ -672,19 +689,23 @@ let add_hashes_command cli =
     let hash_cache_dir = OpamFilename.Op.(cache_dir / "hash-cache") in
     let hash_tables = create_hash_tables hash_cache_dir in
     let repo_root = checked_repo_root () in
+    let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
     let cache_urls =
       cache_urls repo_root
-        (OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root))
+        (OpamFile.Repo.safe_read (OpamRepositoryPath.repo repo_root_dir))
     in
     let pkg_prefixes = packages_with_prefixes repo_root packages in
     let has_error =
       OpamPackage.Map.fold (fun nv prefix has_error ->
-          let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+          let opam_file = OpamRepositoryPath.opam repo_root_dir prefix nv in
           let opam = OpamFile.OPAM.read opam_file in
           let has_error =
-            if OpamFile.exists (OpamRepositoryPath.url repo_root prefix nv) then
+            if OpamFile.exists
+                (OpamRepositoryPath.url repo_root_dir prefix nv)
+            then
               (OpamConsole.warning "Not updating external URL file at %s"
-                 (OpamFile.to_string (OpamRepositoryPath.url repo_root prefix nv));
+                 (OpamFile.to_string
+                    (OpamRepositoryPath.url repo_root_dir prefix nv));
                true)
             else has_error
           in
@@ -838,15 +859,17 @@ let lint_command cli =
     OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
     if not (OpamFilename.exists_dir
-              OpamFilename.Op.(repo_root / OpamRepositoryPathName.packages_d))
+              OpamFilename.Op.(OpamRepositoryRoot.Dir.to_dir repo_root
+                               / OpamRepositoryPathName.packages_d))
     then
         OpamConsole.error_and_exit `Bad_arguments
           "No repository found in current directory.\n\
            Please make sure there is a \"packages\" directory";
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
     let ret =
+      let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
       OpamPackage.Map.fold (fun nv prefix ret ->
-          let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+          let opam_file = OpamRepositoryPath.opam repo_root_dir prefix nv in
           let w, _ = OpamFileTools.lint_file ~handle_dirname:true opam_file in
           if List.exists (fun (n,_,_) -> OpamStd.List.mem Int.equal n ign) w then
             ret
@@ -1081,7 +1104,8 @@ let get_virtual_switch_state repo_root env =
     repo_url = OpamUrl.empty;
     repo_trust = None;
   } in
-  let repo_file = OpamRepositoryPath.repo repo_root in
+  let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
+  let repo_file = OpamRepositoryPath.repo repo_root_dir in
   let repo_def = OpamFile.Repo.safe_read repo_file in
   let opams =
     OpamRepositoryState.load_opams_from_dir repo.repo_name repo_root
@@ -1267,9 +1291,10 @@ let filter_command cli =
       OpamStd.Sys.exit_because `Aborted
     else
     let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
+    let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
     OpamPackage.Map.iter (fun nv prefix ->
         if OpamPackage.Set.mem nv packages then
-          let d = OpamRepositoryPath.packages repo_root prefix nv in
+          let d = OpamRepositoryPath.packages repo_root_dir prefix nv in
           if dryrun then
             OpamConsole.msg "rm -rf %s\n" (OpamFilename.Dir.to_string d)
           else
@@ -1348,8 +1373,9 @@ let add_constraint_command cli =
                    (Atom (n, f))));
            c)
     in
+    let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
     OpamPackage.Map.iter (fun nv prefix ->
-        let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+        let opam_file = OpamRepositoryPath.opam repo_root_dir prefix nv in
         let opam = OpamFile.OPAM.read opam_file in
         let deps0 = OpamFile.OPAM.depends opam in
         let deps =

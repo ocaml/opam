@@ -400,8 +400,8 @@ let diff_patch dir setup =
       print "*** DIFF ***\n";
       match
         OpamRepositoryBackend.get_diff
-          (dir / first)
-          (dir / second)
+          (OpamRepositoryRoot.Dir (OpamRepositoryRoot.Dir.of_dir (dir / first)))
+          (OpamRepositoryRoot.Dir (OpamRepositoryRoot.Dir.of_dir (dir / second)))
       with
       | exception Failure s -> print "ERROR: %s\n" (rewrite ~dir s); None
       | exception e ->
