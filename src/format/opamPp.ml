@@ -49,9 +49,13 @@ let rec string_of_bad_format ?file e =
   | Bad_format (None, msg), Some filename
   | Bad_version ((Some {filename; start = -1, -1 ; stop = -1,-1 }, msg), _), _
   | Bad_format (Some {filename; start = -1, -1 ; stop = -1,-1 }, msg), _ ->
+    (* TODO: this should probably be done earlier but where *)
+    let filename = OpamSystem.back_to_forward filename in
     Printf.sprintf "In %s:\n%s" filename msg
   | Bad_version ((Some pos, msg), _), _
   | Bad_format (Some pos, msg), _ ->
+    (* TODO: this should probably be done earlier but where *)
+    let pos = {pos with filename = OpamSystem.back_to_forward pos.filename} in
     Printf.sprintf "At %s:\n%s" (string_of_pos pos) msg
   | Bad_version ((None, msg), _), None
   | Bad_format (None, msg), None ->
