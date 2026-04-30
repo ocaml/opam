@@ -86,6 +86,10 @@ val move : src:t -> dst:t -> unit
 val exists : t -> bool
 val is_symlink : t -> bool
 
+val read_file:
+  (module OpamFile.IO_FILE with type t = 'a) ->
+  ?safe:bool -> t -> ?filename:'a OpamFile.t -> string -> 'a
+
 val patch :
   allow_unclean:bool ->
   [`Patch_file of filename | `Patch_diffs of Patch.t list ] -> t ->
