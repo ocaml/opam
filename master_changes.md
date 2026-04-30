@@ -330,3 +330,4 @@ users)
   * `OpamFilename.{open_in,open_in_bin}`: now errors when the filename is a directory, in all platforms [#6941 @rjbou]
   * `OpamFilename.Unix`: add `basename` and `dirname` [#6625 @rjbou]
   * `OpamFilename.Unix.Dir`: add `basename` and `dirname` [#6625 @rjbou]
+  * `OpamFilename.Unix`: add `remove_prefix` [#6625 @rjbou]

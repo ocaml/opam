@@ -430,6 +430,9 @@ module Unix : sig
   (** Check whether a filename starts by a given Dir.t *)
   val starts_with: Dir.t -> t -> bool
 
+  (** Remove a prefix from a file name *)
+  val remove_prefix: Dir.t -> t -> string
+
   (** Return the base name *)
   val basename: t -> Base.t
 
