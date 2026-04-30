@@ -326,3 +326,6 @@ users)
   * `OpamFilename.{,dir_}starts_with`: Fix a bug where `foo/bar` would be considered a prefix of `foo/bar-baz` [#6953 @NathanReb - fix #6948]
   * `OpamFilename.{,dir_}starts_with`: `/` and `\` are now equivalent on Windows [#6953 @NathanReb]
   * `OpamFilename.starts_with`: `starts_with "a/b" "a/b"` no longer returns `true` [#6953 @NathanReb]
+  * `OpamSystem`: add `open_in` and `open_in_bin` that checks is the file is a directory and raise `Sys_error` in that case [#6941 @rjbou]
+  * `OpamFilename.{open_in,open_in_bin}`: now errors when the filename is a directory, in all platforms [#6941 @rjbou]
+  * `OpamFilename.Unix`: add `basename` and `dirname` [#6625 @rjbou]
