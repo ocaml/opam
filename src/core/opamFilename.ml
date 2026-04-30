@@ -817,4 +817,9 @@ module Unix = struct
       let prefix = concat prefix "" in
       OpamCompat.String.starts_with ~prefix filename
 
+  let remove_prefix prefix filename =
+    if prefix = "" then filename
+    else
+      OpamStd.String.remove_prefix ~prefix:(concat prefix "") filename
+
 end
