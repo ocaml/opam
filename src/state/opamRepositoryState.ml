@@ -100,7 +100,7 @@ let get_repo_files rt name dir =
       files
 
 let read_package_opam ~repo_name ~repo_root package_dir =
-  match OpamFileTools.read_repo_opam ~repo_name ~repo_root package_dir with
+  match OpamFileTools.read_repo_opam_dir ~repo_name ~repo_root package_dir with
   | Some opam ->
     (try
        let nv =
