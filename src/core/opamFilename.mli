@@ -439,4 +439,7 @@ module Unix : sig
   (** Return the directory name *)
   val dirname: t -> Dir.t
 
+  (** Adds a dot and the given file extension *)
+  val add_extension: t -> string -> t
+
 end

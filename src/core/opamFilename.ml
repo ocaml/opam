@@ -822,4 +822,7 @@ module Unix = struct
     else
       OpamStd.String.remove_prefix ~prefix:(concat prefix "") filename
 
+  let add_extension filename suffix =
+    filename ^ "." ^ suffix
+
 end
