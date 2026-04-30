@@ -423,4 +423,8 @@ module Unix : sig
   val of_filename : filename -> t
 
   val to_filename : t -> filename
+
+  (** Check whether a filename starts by a given Dir.t *)
+  val starts_with: Dir.t -> t -> bool
+
 end
