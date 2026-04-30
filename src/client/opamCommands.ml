@@ -2527,21 +2527,15 @@ let repository cli =
       OpamFilename.with_tmp_dir @@ fun tmp_dir ->
       let rt0 = rt in
       let backup =
-        let tar = OpamRepositoryPath.tar gt.root name in
-        if OpamFilename.exists tar then
-          (let target = OpamFilename.create tmp_dir (OpamFilename.basename tar) in
-           OpamFilename.copy ~src:tar ~dst:target;
-           fun () -> OpamFilename.copy ~src:target ~dst:tar)
-        else
-          (let dir = OpamRepositoryRoot.Dir.Path.root gt.root name in
-           if not (OpamRepositoryRoot.Dir.exists dir) then
-             OpamConsole.error_and_exit `Internal_error
-               "Repository not found, consider running 'opam update %s' \
-                to retrieve a consistent state."
-               (OpamRepositoryName.to_string name);
-           let target = OpamRepositoryRoot.Dir.backup ~inn:tmp_dir dir in
-           OpamRepositoryRoot.Dir.copy ~src:dir ~dst:target;
-           fun () -> OpamRepositoryRoot.Dir.copy ~src:target ~dst:dir)
+        let dir = OpamRepositoryRoot.Dir.Path.root gt.root name in
+        if not (OpamRepositoryRoot.Dir.exists dir) then
+          OpamConsole.error_and_exit `Internal_error
+            "Repository not found, consider running 'opam update %s' \
+             to retrieve a consistent state."
+            (OpamRepositoryName.to_string name);
+        let target = OpamRepositoryRoot.Dir.backup ~inn:tmp_dir dir in
+        OpamRepositoryRoot.Dir.copy ~src:dir ~dst:target;
+        fun () -> OpamRepositoryRoot.Dir.copy ~src:target ~dst:dir
       in
       let rt = OpamRepositoryCommand.set_url rt name url trust_anchors in
       let failed, rt =
@@ -2740,7 +2734,7 @@ let switch cli =
         lists installed switches, with one switch argument, defaults to \
         $(b,set).";
     `P (Printf.sprintf
-         "Switch handles $(i,SWITCH) can be either a plain name, for switches \
+        "Switch handles $(i,SWITCH) can be either a plain name, for switches \
          that will be held inside $(i,~%s.opam), or a directory name, which in \
          that case is the directory where the switch prefix will be installed, as \
          %s. Opam will automatically select a switch by that name found in the \
@@ -4129,9 +4123,9 @@ let clean cli =
   let download_cache =
     mk_flag ~cli cli_original ["c"; "download-cache"]
       (Printf.sprintf
-        "Clear the cache of downloaded files (\\$OPAMROOT%sdownload-cache), as \
-         well as the obsolete \\$OPAMROOT%sarchives, if that exists."
-        OpamArg.dir_sep OpamArg.dir_sep)
+       "Clear the cache of downloaded files (\\$OPAMROOT%sdownload-cache), as \
+        well as the obsolete \\$OPAMROOT%sarchives, if that exists."
+       OpamArg.dir_sep OpamArg.dir_sep)
   in
   let repos =
     mk_flag ~cli cli_original ["unused-repositories"]
@@ -4281,7 +4275,7 @@ let clean cli =
       try OpamFilename.rmdir d
       with OpamSystem.Internal_error msg -> OpamConsole.warning "Error ignored: %s" msg
     in
-    let rm f =
+    let _rm f =
       if dry_run then
         OpamConsole.msg "rm -f \"%s\"\n"
           (OpamFilename.to_string f)
@@ -4363,8 +4357,7 @@ let clean cli =
              (OpamRepositoryName.to_string r);
            rmdir
              (OpamRepositoryRoot.Dir.to_dir
-                (OpamRepositoryRoot.Dir.Path.root root r));
-           rm (OpamRepositoryPath.tar root r))
+                (OpamRepositoryRoot.Dir.Path.root root r)))
          unused_repos;
        let repos_config =
          OpamRepositoryName.Map.filter

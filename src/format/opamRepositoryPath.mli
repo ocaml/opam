@@ -104,7 +104,8 @@ module Make (I : PATH_REPR) : PATH
 
 (* {2} Other paths *)
 
-val tar: dirname -> repository_name -> filename
+(** obsolete, no longer use *)
+val repo_tarring: dirname -> repository_name -> filename
 
 (** Prefix where to store the downloaded files cache: {i $opam/download-cache}.
     Warning, this is relative to the opam root, not a repository root. *)

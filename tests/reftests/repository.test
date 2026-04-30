@@ -36,14 +36,12 @@ build: ["test" "-f" "baz"]
 some content
 ### sh hash.sh REPO foo.2
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update default | grep TAR
-TAR                             creating archive ${BASEDIR}/OPAM/repo/default.tar.gz from ${BASEDIR}/OPAM/repo/default
 ### ls $OPAMROOT/repo | grep -v "cache"
-default.tar.gz
+default
 lock
 plain
 repos-config
 ### opam install foo.2 -vv | grep '^\+' | sed-cmd test tar
-+ tar "xfz" "${BASEDIR}/OPAM/repo/default.tar.gz" "-C" "${OPAMTMP}"
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.2)
 ### opam repository remove default --all
 ### : Add tarred repo (tarred)
@@ -60,9 +58,8 @@ some content
 lock
 plain
 repos-config
-tarred.tar.gz
+tarred
 ### opam install foo.3 -vv | grep '^\+' | sed-cmd test tar
-+ tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.3)
 ### opam repository remove plain --all
 ### : Update tarred repo (tarred)
@@ -73,18 +70,20 @@ build: ["test" "-f" "baz"]
 some content
 ### sh hash.sh REPO foo.4
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update -vv | grep '^(\+|TAR)' | sed-cmd tar
-+ tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
-TAR                             creating archive ${BASEDIR}/OPAM/repo/tarred.tar.gz from ${OPAMTMP}/tarred
 ### opam install foo.4 -vv | grep '^\+' | sed-cmd test tar
-+ tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.4)
 ### mkdir tarred-ext
 ### tar xf OPAM/repo/tarred.tar.gz
+tar: OPAM/repo/tarred.tar.gz: Cannot open: No such file or directory
+tar: Error is not recoverable: exiting now
+# Return code 2 #
 ### diff -ru ./tarred REPO
+diff: ./tarred: No such file or directory
+# Return code 2 #
 ### ls $OPAMROOT/repo | grep -v "cache"
 lock
 repos-config
-tarred.tar.gz
+tarred
 ### : From tarred repo to plain repo (tarred)
 ### OPAMREPOSITORYTARRING=0
 ### <REPO/packages/foo/foo.5/opam>
@@ -94,7 +93,6 @@ build: ["test" "-f" "quux"]
 some content
 ### sh hash.sh REPO foo.5
 ### opam update -vv | grep '^\+' | sed-cmd tar
-+ tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${OPAMTMP}"
 ### opam install foo.5 -vv | grep '^\+' | sed-cmd test
 + test "-f" "quux" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.5)
 ### ls $OPAMROOT/repo | grep -v "cache"

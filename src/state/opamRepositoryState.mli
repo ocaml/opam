@@ -107,8 +107,8 @@ val get_repo_files:
  *   'a global_state -> repository ->
  *   (OpamFilename.Dir.t -> 'b OpamProcess.job) -> 'b OpamProcess.job *)
 
-(** Releases any locks on the given repos_state, and cleans the tmp extracted
-    tree if any unless [cleanup=false] *)
+(** Releases any locks on the given repos_state.
+    [cleanup] is a no-op *)
 val unlock: ?cleanup:bool -> 'a repos_state -> unlocked repos_state
 
 (** Releases any locks on the given repos_state and then ignores it.
@@ -120,11 +120,7 @@ val unlock: ?cleanup:bool -> 'a repos_state -> unlocked repos_state
 *)
 val drop: ?cleanup:bool -> 'a repos_state -> unit
 
-(** Cleanup before removing the repository from temporary table *)
-val remove_from_repos_tmp: 'a repos_state -> repository_name -> unit
-
-(** Clears tmp files corresponding to a repo state (uncompressed repository
-    contents) *)
+(** Clears tmp files corresponding to a repo state *)
 val cleanup: 'a repos_state -> unit
 
 (** Calls the provided function, ensuring a temporary write lock on the given

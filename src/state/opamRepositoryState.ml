@@ -79,17 +79,14 @@ module Cache = struct
 
 end
 
-let get_root_raw root repos_tmp name =
-  match Hashtbl.find repos_tmp name with
-  | lazy repo_root -> OpamRepositoryRoot.Dir repo_root
-  | exception Not_found ->
-    OpamRepositoryRoot.Dir (OpamRepositoryRoot.Dir.Path.root root name)
+let get_root_raw root name =
+  OpamRepositoryRoot.Dir (OpamRepositoryRoot.Dir.Path.root root name)
 
 let get_root rt name =
-  get_root_raw rt.repos_global.root rt.repos_tmp name
+  get_root_raw rt.repos_global.root name
 
 let get_repo_root rt repo =
-  get_root_raw rt.repos_global.root rt.repos_tmp repo.repo_name
+  get_root_raw rt.repos_global.root repo.repo_name
 
 let get_repo_files rt name dir =
   match get_root rt name with
@@ -249,25 +246,7 @@ let load_repo repo repo_root =
     (t ());
   loaded_repo
 
-(* Cleaning directories follows the repo path pattern:
-   TMPDIR/opam-tmp-dir/repo-dir, defined in [load]. *)
-let clean_repo_tmp tmp_dir =
-  if Lazy.is_val tmp_dir then
-    (let dir = Lazy.force tmp_dir in
-     OpamRepositoryRoot.Dir.remove dir;
-     let parent = OpamRepositoryRoot.Dir.dirname dir in
-     if OpamFilename.dir_is_empty parent = Some true then
-       OpamFilename.rmdir parent)
-
-let remove_from_repos_tmp rt name =
-  try
-    clean_repo_tmp (Hashtbl.find rt.repos_tmp name);
-    Hashtbl.remove rt.repos_tmp name
-  with Not_found -> ()
-
-let cleanup rt =
-  Hashtbl.iter (fun _ tmp_dir -> clean_repo_tmp tmp_dir) rt.repos_tmp;
-  Hashtbl.clear rt.repos_tmp
+let cleanup _rt = ()
 
 let syspkgs_available ?env = function
   | None -> None
@@ -295,37 +274,10 @@ let load lock_kind gt =
     repo_trust = ta;
   } in
   let repositories = OpamRepositoryName.Map.mapi mk_repo repos_map in
-  let repos_tmp_root = lazy (OpamFilename.mk_tmp_dir ()) in
-  let repos_tmp = Hashtbl.create 23 in
-  OpamRepositoryName.Map.iter (fun name repo ->
-      let uncompressed_root =
-        OpamRepositoryRoot.Dir.Path.root gt.root repo.repo_name
-      in
-      let tar = OpamRepositoryPath.tar gt.root repo.repo_name in
-      if not (OpamRepositoryRoot.Dir.exists uncompressed_root) &&
-         OpamFilename.exists tar
-      then
-        let tmp = lazy (
-          let tmp_root = Lazy.force repos_tmp_root in
-          try
-            (* We rely on this path pattern to clean the repo.
-               cf. [clean_repo_tmp] *)
-            OpamFilename.extract_in tar tmp_root;
-            OpamRepositoryRoot.Dir.of_dir
-              (OpamFilename.Op.(tmp_root / OpamRepositoryName.to_string name))
-          with Failure s ->
-            OpamFilename.remove tar;
-            OpamConsole.error_and_exit `Aborted
-              "%s.\nRun `opam update --repositories %s` to fix the issue"
-              s (OpamRepositoryName.to_string name);
-        ) in
-        Hashtbl.add repos_tmp name tmp
-    ) repositories;
   let make_rt repos_definitions opams repos_syspkgs_available =
     let rt = {
       repos_global = (gt :> unlocked global_state);
       repos_lock = lock;
-      repos_tmp;
       repositories;
       repos_definitions;
       repo_opams = opams;
@@ -367,6 +319,17 @@ let load lock_kind gt =
               need to be computed with depexts (other polling attempt) *)
            None)
   in
+  (* remove repo_tarring archives *)
+  OpamRepositoryName.Map.iter (fun name _ ->
+      let dir = OpamRepositoryRoot.Dir.to_dir (OpamRepositoryRoot.Dir.Path.root gt.root name) in
+      let tar = OpamRepositoryPath.repo_tarring gt.root name in
+      let dir_exists = OpamFilename.exists_dir dir in
+      let tar_exists = OpamFilename.exists tar in
+      if not dir_exists && tar_exists then
+        OpamFilename.extract_in tar dir
+      else if dir_exists && tar_exists then
+        OpamFilename.remove tar)
+    repositories;
   match Cache.load gt.root with
   | Some (repofiles, opams, sys_available_pkgs) ->
     log "Cache found";
@@ -388,7 +351,7 @@ let load lock_kind gt =
       OpamRepositoryName.Map.fold (fun name url (defs, opams) ->
           let repo = mk_repo name url in
           let repo_def, repo_opams =
-            load_repo repo (get_root_raw gt.root repos_tmp name)
+            load_repo repo (get_root_raw gt.root name)
           in
           OpamRepositoryName.Map.add name repo_def defs,
           OpamRepositoryName.Map.add name repo_opams opams)
