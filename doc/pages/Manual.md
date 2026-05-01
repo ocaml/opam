@@ -1083,7 +1083,7 @@ files.
     [`depends:`](#opamfield-depends), with the same specific variables
     available (except for `post`, which wouldn't make sense).
 
-    Note that `depopts: [ "foo" { = "3" } ]` means that the optional dependency
+    **Note:** `depopts: [ "foo" { = "3" } ]` means that the optional dependency
     only applies for `foo` version `3`, not that your package can't be installed
     with other versions of `foo`: for that, use the
     [`conflicts:`](#opamfield-conflicts) field.
