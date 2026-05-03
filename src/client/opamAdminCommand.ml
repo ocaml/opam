@@ -248,7 +248,7 @@ let cache_command cli =
   let link_arg =
     OpamArg.mk_opt ~cli OpamArg.cli_original ["link"] "DIR"
       (Printf.sprintf
-         "Create reverse symbolic links to the archives within $(i,DIR), in \
+         "Create reverse symbolic links to the archives within $(b,DIR), in \
           the form $(b,DIR%sPKG.VERSION%sFILENAME)."
          OpamArg.dir_sep OpamArg.dir_sep)
       Arg.(some OpamArg.dirname) None
