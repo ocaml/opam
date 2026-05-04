@@ -824,4 +824,7 @@ module Unix = struct
       else base dir :: acc in
     aux [] t
 
+ let starts_with prefix filename =
+    OpamCompat.String.starts_with ~prefix filename
+
 end
