@@ -149,25 +149,25 @@ let load_opams_from_diff repo diffs rt =
     let add, remove =
       let packages_dir =
         "packages"
-        |> OpamFilename.Raw.Dir.of_string
+        |> OpamFilename.Unix.Dir.of_string
       in
       let is_opam_file filename =
-        if OpamFilename.Raw.starts_with packages_dir filename then
-          if OpamFilename.Raw.Base.equal (OpamFilename.Raw.basename filename)
-              (OpamFilename.Raw.Base.of_string "opam") then
-            match OpamPackage.of_filename (OpamFilename.Raw.to_filename filename) with
+        if OpamFilename.Unix.starts_with packages_dir filename then
+          if OpamFilename.Unix.Base.equal (OpamFilename.Unix.basename filename)
+              (OpamFilename.Unix.Base.of_string "opam") then
+            match OpamPackage.of_filename (OpamFilename.Unix.to_filename filename) with
             | Some nv -> Some nv
             | None ->
               log "ERR: directory name not a valid package: ignored %s"
                 (OpamFilename.to_string
-                   (repo_root // (OpamFilename.Raw.to_string filename)));
+                   (repo_root // (OpamFilename.Unix.to_string filename)));
               None
           else None
         else None
       in
       let xfile_info = OpamRepositoryPath.extrafile_nv_dir in
       let aux file ~rm (adds, rms, xfs) =
-        let file = OpamFilename.Raw.of_string file in
+        let file = OpamFilename.Unix.of_string file in
         match is_opam_file file with
         | Some nv ->
           if rm then
@@ -209,7 +209,7 @@ let load_opams_from_diff repo diffs rt =
   in
   let read_and_add =
     let read_package_opam dir =
-      let dir = OpamFilename.Raw.Dir.to_dir dir in
+      let dir = OpamFilename.Unix.Dir.to_dir dir in
       let dir = repo_root / OpamFilename.Dir.to_string dir in
       read_package_opam ~repo_name:repo.repo_name ~repo_root dir
     in
@@ -218,7 +218,7 @@ let load_opams_from_diff repo diffs rt =
       | Some (nv, opam) -> OpamPackage.Map.add nv opam opams
       | None ->
         log "ERR: Could not load %s, ignored"
-          (OpamFilename.Raw.to_string OpamFilename.Raw.Op.(dir//"opam"));
+          (OpamFilename.Unix.to_string OpamFilename.Unix.Op.(dir//"opam"));
         opams
   in
   let process_operations opams =
@@ -229,7 +229,7 @@ let load_opams_from_diff repo diffs rt =
     (* add new packages *)
     let opams =
       OpamPackage.Map.fold (fun _nv file ->
-          read_and_add (OpamFilename.Raw.dirname file))
+          read_and_add (OpamFilename.Unix.dirname file))
         additions opams
     in
     (* update extra files *)
