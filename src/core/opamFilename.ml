@@ -822,6 +822,6 @@ module Unix = struct
       let d = dirname_dir dir in
       if d <> dir then aux (base dir :: acc) d
       else base dir :: acc in
-    (aux [] t.dirname) @ [t.basename]
+    aux [] t
 
 end
