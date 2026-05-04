@@ -54,7 +54,7 @@ val files: dirname -> string option -> package -> dirname
 (** Returns package and main directory if the path is an extrafile one from
     a repository root: {i packages/[/...]/$NAME.$VERSION/files/...}
 *)
-val extrafile_nv_dir: raw_filename -> (package * raw_dirname) option
+val extrafile_nv_dir: unix_filename -> (package * unix_dirname) option
 
 (** Url constructor for parts of remote repositories, when applicable (http and
     rsync). Function take the repo's root url. *)
