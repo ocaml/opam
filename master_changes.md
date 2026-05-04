@@ -53,6 +53,7 @@ users)
   * Compute the list of available depexts on `opam update` [#6489 @arozovyk - fix #6461]
   * Update depexts availability repository state cache when running `opam update --depexts` [#6489 @arozovyk - fix #6461]
   * Display status message while loading system package availability during `opam update` [#6489 @arozovyk - fix #6461]
+  * When loading a repository from a diff, no longer apply updates of unrelated files [#6871 @rjbou - fix 6872]
 
 ## Tree
 
@@ -196,6 +197,7 @@ users)
   * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
 
 ## opam-repository
+  * `OpamRepositoryPath`: add `extrafile_nv_dir` to retrieve information from a path if it is an extra files path [#6871 @rjbou]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -247,3 +249,6 @@ users)
   * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
+  * `OpamFilename`: add `to_list` that deconstructs a `filename` path [#6871 @rjbou]
+  * `OpamFilename.Dir`: add `of_list` that constructs a `dirname` from a string path elements [#6871 @rjbou]
+  * `OpamFilename.Unix`: add `starts_with`, `basename`, `dirname` [#6871 @rjbou]
