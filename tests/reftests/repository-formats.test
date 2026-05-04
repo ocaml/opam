@@ -741,7 +741,8 @@ Done.
 [ERROR] No package named z-no-nv found.
 # Return code 5 #
 ### :X: opam admin
-### sh -c "mv REPO/* ."
+### mv REPO REPO.bak
+### sh -c "mv REPO.bak/* ."
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE" OPAMDEBUG=-3 opam admin list | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
