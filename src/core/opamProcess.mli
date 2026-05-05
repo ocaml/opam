@@ -51,7 +51,6 @@ val command:
 
 val string_of_command: command -> string
 val text_of_command: command -> string option
-val is_verbose_command: command -> bool
 
 (** Returns a label suitable for printing the summary of running commands. First
     string is the topic (e.g. package), second the action (e.g. command name).
@@ -212,9 +211,6 @@ module Job: sig
 
   (** Returns the job made of the given homogeneous jobs run sequentially *)
   val seq: ('a -> 'a Op.job) list -> 'a -> 'a Op.job
-
-  (** Sequentially maps jobs on a list *)
-  val seq_map: ('a -> 'b Op.job) -> 'a list -> 'b list Op.job
 
   (** Sets and overrides text of the underlying commands *)
   val with_text: string -> 'a Op.job -> 'a Op.job

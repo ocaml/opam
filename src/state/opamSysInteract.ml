@@ -371,7 +371,7 @@ module Cygwin = struct
             str "setup-x86_64.exe"
           ])
       in
-      try Some (OpamHash.sha512 Re.(Group.get (exec re content) 1))
+      try Some (OpamHash.compute ~kind:`SHA512 Re.(Group.get (exec re content) 1))
       with Not_found -> None
     in
     if Option.equal OpamHash.equal current_checksum checksum &&

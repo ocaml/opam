@@ -16,9 +16,7 @@
 
 val debug: unit -> bool
 val verbose: unit -> bool
-val color: unit -> bool
 val utf8: unit -> bool
-val utf8_extended: unit -> bool
 val disp_status_line: unit -> bool
 
 (** General text formatting *)
@@ -42,8 +40,6 @@ type text_style =
     disabled *)
 val colorise : text_style -> string -> string
 val colorise' : text_style list -> string -> string
-val acolor : text_style -> unit -> string -> string
-val acolor_w : int -> text_style -> Format.formatter -> string -> unit
 
 module Symbols : sig
   val rightwards_arrow : Uchar.t
@@ -58,7 +54,6 @@ module Symbols : sig
   val south_east_arrow : Uchar.t
   val clockwise_open_circle_arrow : Uchar.t
   val greek_small_letter_lambda : Uchar.t
-  val latin_capital_letter_o_with_stroke : Uchar.t
   val six_pointed_black_star : Uchar.t
   val upwards_arrow : Uchar.t
   val downwards_arrow : Uchar.t
@@ -167,9 +162,6 @@ module Tree : sig
     tee:  string; (** |- *)
     hook: string; (** '- *)
   }
-
-  (** Returns UTF8 or ASCII tree symbols depending on [utf8 ()]. *)
-  val get_default_symbols: unit -> symbols
 
   (** Prints the given tree as a Unicode/ASCII art.
       @param printer may return a multi-line string, but should not return an

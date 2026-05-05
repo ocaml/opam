@@ -60,9 +60,6 @@ val is_dir_read_only: Dir.t -> bool
 (** List the sub-directory (do not recurse) *)
 val dirs: Dir.t -> Dir.t list
 
-(** Turns an assoc list into an array suitable to be provided as environment *)
-val env_of_list: (string * string) list -> string array
-
 (** Execute a list of commands in a given directory *)
 val exec: Dir.t -> ?env:(string * string) list -> ?name:string ->
   ?metadata:(string * string) list -> ?keep_going:bool -> string list list -> unit
@@ -92,9 +89,6 @@ val dirname_dir: Dir.t -> Dir.t
 
 (** Return the deeper directory name *)
 val basename_dir: Dir.t -> Base.t
-
-(** Turn a full path into a list of directory names *)
-val to_list_dir: Dir.t -> Dir.t list
 
 (** Creation from a raw string, without resolving symlinks etc. *)
 val raw_dir: string -> Dir.t
@@ -152,12 +146,6 @@ val open_in_bin: t -> in_channel
 val open_out: t -> out_channel
 val open_out_bin: t -> out_channel
 
-(** [with_open_out_bin filename f] opens [f] and passes the out_channel to [f].
-    If [f] raises an exception, then [filename] is deleted and then exception is
-    propagated. The out_channel does not have to be closed by [f]. *)
-val with_open_out_bin: t -> (out_channel -> unit) -> unit
-[@@deprecated "use with_open_out_bin_atomic instead"]
-
 (** [with_open_out_bin_atomic filename f] opens [f] and passes the out_channel to [f].
     If [f] raises an exception, then [filename] will be unaltered and then exception is
     propagated. The out_channel does not have to be closed by [f]. *)
@@ -175,13 +163,6 @@ val exists: t -> bool
 (** Returns the argument as option if it exists and is either a regular file or
     a symlink to one *)
 val opt_file: t -> t option
-
-(** Execute a function with a file in a temp directory.
-    It is always cleaned up afterwards. *)
-val with_tmp_file: (t -> 'a) -> 'a
-
-(** Provide an automatically cleaned up file in temp directory to a job *)
-val with_tmp_file_job: (t -> 'a OpamProcess.job) -> 'a OpamProcess.job
 
 (** Check whether a file has a given suffix *)
 val check_suffix: t -> string -> bool
@@ -201,14 +182,6 @@ val files: Dir.t -> t list
 (** Returns alll the files, including dangling symlinks (which means that
     not all entries will satisfy {!exists}). *)
 val files_and_links: Dir.t -> t list
-
-(** Apply a function on the contents of a file *)
-val with_contents: (string -> 'a) -> t -> 'a
-
-(** Copy a file in a directory. If [root] is set, copy also the
-    sub-directories. For instance, [copy_in ~root:"/foo" "/foo/bar/gni"
-    "/toto"] creates ["/toto/bar/gni"]. *)
-val copy_in: ?root:Dir.t -> t -> Dir.t -> unit
 
 (** Move a file *)
 val move: src:t -> dst:t -> unit
@@ -252,9 +225,6 @@ val extract_in: t -> Dir.t -> unit
 val extract_in_job: t -> Dir.t -> exn option OpamProcess.job
 
 val make_tar_gz_job: t -> Dir.t -> exn option OpamProcess.job
-
-(** Extract a generic file *)
-val extract_generic_file: generic_file -> Dir.t -> unit
 
 (** Check whether a filename starts by a given Dir.t *)
 val starts_with: Dir.t -> t -> bool
@@ -326,11 +296,6 @@ val with_flock: [< OpamSystem.lock_flag ] -> ?dontblock:bool -> t ->
 val with_flock_upgrade:
   [< OpamSystem.actual_lock_flag ] -> ?dontblock:bool -> OpamSystem.lock -> (Unix.file_descr -> 'a) -> 'a
 
-(** Runs first function with a write lock on the given file, then releases it to
-    a read lock and runs the second function. *)
-val with_flock_write_then_read:
-  ?dontblock:bool -> t -> (Unix.file_descr -> 'a) -> ('a -> 'b) -> 'b
-
 module Op: sig
 
   (** Create a new directory *)
@@ -345,10 +310,6 @@ end
 module Attribute: sig
 
   include OpamStd.ABSTRACT
-
-  val to_string_list: t -> string list
-
-  val of_string_list: string list -> t
 
   (** Get remote filename *)
   val base: t -> Base.t

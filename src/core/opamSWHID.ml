@@ -68,7 +68,7 @@ let to_url swh =
 (** Identifier computing *)
 
 module SHA1 = struct
-  let digest_string_to_hex = OpamSHA.sha1_string
+  let digest_string_to_hex = OpamSHA.hash_string `SHA1
 end
 module OS = struct
 

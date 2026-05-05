@@ -163,8 +163,6 @@ let setk k t
     in_opam = t.in_opam;
   }
 
-let set t = setk (fun x () -> x) t
-
 (* Global configuration reference *)
 
 let r = ref default

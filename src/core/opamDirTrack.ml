@@ -42,12 +42,6 @@ let string_of_change ?(full=false) =
   | Perm_changed d -> str "permission change" d
   | Kind_changed d -> str "kind change" d
 
-let to_string t =
-  OpamStd.Format.itemize (fun (f, change) ->
-      Printf.sprintf "%s of %s"
-        (String.capitalize_ascii (string_of_change change)) f)
-    (SM.bindings t)
-
 let to_summary_string t =
   let freq_table =
     SM.fold (fun _ change ->
