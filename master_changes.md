@@ -63,6 +63,7 @@ users)
 ## Lint
 
 ## Repository
+  * Fix `opam update` failure with `file://` repositories containing symlinks by following symlinks transparently in the internal diff computation [#6874 @smorimoto - fix #6410]
 
 ## Lock
 
@@ -145,6 +146,8 @@ users)
 ## Internal: Windows
 
 ## Test
+  * Add dangling symlink test cases for the internal diff computation [#6874 @smorimoto]
+  * Fix test isolation issue where symlink target file was shared across patchDiff tests [#6874 @smorimoto]
 
 ## Benchmarks
   * Add an even larger real-world diff to benchmark `opam update` [#6567 @kit-ty-kate]

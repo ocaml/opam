@@ -138,11 +138,12 @@ let get_diff parent_dir dir1 dir2 =
     in
     (file, OpamSystem.read real_file)
   in
-  let lstat_opt parent_dir = function
+  let stat_opt parent_dir = function
     | None -> None
     | Some file ->
       let file = Filename.concat (OpamFilename.Dir.to_string parent_dir) file in
-      Some (Unix.lstat file)
+      try Some (Unix.stat file)
+      with Unix.Unix_error ((Unix.ENOENT | Unix.ELOOP), _, _) -> None
   in
   let rec aux diffs dir1 dir2 =
     let files = get_files_for_diff parent_dir dir1 dir2 in
@@ -153,7 +154,13 @@ let get_diff parent_dir dir1 dir2 =
             | None -> diffs
             | Some diff -> diff :: diffs
           in
-          match lstat_opt parent_dir file1, lstat_opt parent_dir file2 with
+          let stat1 = stat_opt parent_dir file1 in
+          let stat2 = stat_opt parent_dir file2 in
+          (* When stat fails (e.g. dangling symlink), treat the file
+             as absent for reading and recursion too. *)
+          let file1 = if Option.is_none stat1 then None else file1 in
+          let file2 = if Option.is_none stat2 then None else file2 in
+          match stat1, stat2 with
           | Some {st_kind = S_REG; _}, None
           | None, Some {st_kind = S_REG; _}
           | Some {st_kind = S_REG; _}, Some {st_kind = S_REG; _} ->
@@ -168,7 +175,8 @@ let get_diff parent_dir dir1 dir2 =
           | Some {st_kind = S_REG; _}, Some {st_kind = S_DIR; _} ->
             failwith "Change from a regular file to a directory is unsupported"
           | Some {st_kind = S_LNK; _}, _ | _, Some {st_kind = S_LNK; _} ->
-            failwith "Symlinks are unsupported"
+            (* Unreachable: Unix.stat resolves symlinks *)
+            assert false
           | Some {st_kind = S_CHR; _}, _ | _, Some {st_kind = S_CHR; _} ->
             failwith "Character devices are unsupported"
           | Some {st_kind = S_BLK; _}, _ | _, Some {st_kind = S_BLK; _} ->
@@ -177,7 +185,7 @@ let get_diff parent_dir dir1 dir2 =
             failwith "Named pipes are unsupported"
           | Some {st_kind = S_SOCK; _}, _ | _, Some {st_kind = S_SOCK; _} ->
             failwith "Sockets are unsupported"
-          | None, None -> assert false)
+          | None, None -> diffs)
         diffs files
     in
     diffs

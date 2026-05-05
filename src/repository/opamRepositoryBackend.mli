@@ -112,9 +112,13 @@ val job_text:
     subdirs of [parent_dir], returns None if they are equal, and the
     corresponding patch and the list of file-changes otherwise.
 
+    Symlinks are resolved transparently: they are followed to their targets.
+    Dangling symlinks (whose targets do not exist) and circular symlinks
+    are silently skipped.
+
     @raise Stdlib.Failure if an unsupported file type or comparison is
     detected in any of [subdir1] or [subdir2].
-    Unsupported file types: symlinks, character devices, block devices,
-    named pipes, sockets.
+    Unsupported file types: character devices, block devices, named pipes,
+    sockets.
     Unsupported comparison: comparison between regular files and directories. *)
 val get_diff: dirname -> basename -> basename -> (filename * Patch.t list) option

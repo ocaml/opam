@@ -3,6 +3,7 @@ type content =
   | Dir of (string * string) list (* directory with list filename * content *)
   | NamedDir of string * (string * string) list (* directory with list filename * content *)
   | Symlink (* Soft Link *)
+  | DanglingSymlink (* Symlink to nonexistent target *)
   | Hardlink (* Hard link *)
   | V (* void *)
 
@@ -110,6 +111,30 @@ let content_symlink_snd = [
   { name = "linked-file-snd";
     first = File foo;
     second = Symlink;
+  };
+]
+
+let content_dangling_symlink_fst = [
+  same_file;
+  { name = "dangling-fst";
+    first = DanglingSymlink;
+    second = File foo;
+  };
+]
+
+let content_dangling_symlink_snd = [
+  same_file;
+  { name = "dangling-snd";
+    first = File foo;
+    second = DanglingSymlink;
+  };
+]
+
+let content_dangling_symlink_both = [
+  same_file;
+  { name = "dangling-both";
+    first = DanglingSymlink;
+    second = DanglingSymlink;
   };
 ]
 
@@ -257,8 +282,7 @@ let write_setup ?(only_fst=false) dir content =
   let link_f =
     let link = lazy (
       let f = dir // "linked_file" in
-      if not (OpamFilename.exists f) then
-        OpamFilename.write f bar;
+      OpamFilename.write f bar;
       f
     ) in
     fun () -> Lazy.force link
@@ -279,6 +303,9 @@ let write_setup ?(only_fst=false) dir content =
     | Symlink ->
       OpamFilename.link ~relative:false ~target:(link_f ())
         ~link:(inner_dir // name)
+    | DanglingSymlink ->
+      let link = OpamFilename.to_string (inner_dir // name) in
+      Unix.symlink "/nonexistent/target" link
     | Hardlink ->
       let target = OpamFilename.to_string (link_f ()) in
       let link = OpamFilename.to_string (inner_dir // name) in
@@ -349,6 +376,10 @@ let print_dirs dir =
   print "%s\n" (read_dir dir [ first; second ])
 
 let diff_patch dir setup =
+  let rm_tmpdir =
+    let re = Str.regexp_string (OpamFilename.Dir.to_string dir) in
+    fun s -> Str.global_replace re "$TMPDIR" s
+  in
   let { content; kind; git; _ } = setup in
   write_setup dir content;
   print "*** SETUP ***\n";
@@ -367,9 +398,9 @@ let diff_patch dir setup =
           (OpamFilename.Base.of_string first)
           (OpamFilename.Base.of_string second)
       with
-      | exception Failure s -> print "ERROR: %s\n" (rm_hex s); None
+      | exception Failure s -> print "ERROR: %s\n" (rm_hex @@ rm_tmpdir s); None
       | exception e ->
-        print "ERROR: %s\n" (rm_hex @@ Printexc.to_string e);
+        print "ERROR: %s\n" (rm_hex @@ rm_tmpdir @@ Printexc.to_string e);
         None
       | None -> print "No diff\n"; None
       | Some (f,_) -> Some f
@@ -392,7 +423,7 @@ let diff_patch dir setup =
         true
       | Error exn ->
         print "*** %sPATCH ERROR ***\n" git;
-        print "ERROR: %s\n" (rm_hex @@ Printexc.to_string exn);
+        print "ERROR: %s\n" (rm_hex @@ rm_tmpdir @@ Printexc.to_string exn);
         false
     in
     let patched = apply ~git:false diff in
@@ -426,6 +457,21 @@ let tests = [
   };
   { label = "symlink snd";
     content = content_symlink_snd;
+    kind = DiffPatch;
+    git = false;
+  };
+  { label = "dangling symlink fst";
+    content = content_dangling_symlink_fst;
+    kind = DiffPatch;
+    git = false;
+  };
+  { label = "dangling symlink snd";
+    content = content_dangling_symlink_snd;
+    kind = DiffPatch;
+    git = false;
+  };
+  { label = "dangling symlink both";
+    content = content_dangling_symlink_both;
     kind = DiffPatch;
     git = false;
   };
