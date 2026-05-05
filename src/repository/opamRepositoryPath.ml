@@ -53,6 +53,29 @@ let url repo_root prefix nv =
 let files repo_root prefix nv =
   packages repo_root prefix nv / "files"
 
+let get_pkg_dir file =
+  let rec find_pkg_rev prefix_files = function
+    | x::xs ->
+      begin match OpamPackage.of_string_opt x with
+      | Some nv -> Some (nv, x::prefix_files)
+      | None -> find_pkg_rev (x::prefix_files) xs
+      end
+    | [] -> None
+  in
+  match OpamFilename.Unix.to_relative_canonical_list file with
+  | "packages"::xs ->
+    begin match find_pkg_rev [] xs with
+    | Some (nv, full_rev_prefix) ->
+      let dir =
+        List.rev full_rev_prefix
+        |> List.fold_left OpamFilename.Unix.Op.(/)
+          (OpamFilename.Unix.Dir.of_string "packages")
+      in
+      Some (nv, dir)
+    | None -> None
+    end
+  | _ -> None
+
 module Remote = struct
   (** URL, not FS paths *)
   open OpamUrl.Op

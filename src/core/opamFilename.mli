@@ -426,4 +426,6 @@ module Unix : sig
   val of_filename : filename -> t
 
   val to_filename : t -> filename
+
+  val to_relative_canonical_list : t -> string list
 end

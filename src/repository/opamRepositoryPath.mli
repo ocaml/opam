@@ -51,6 +51,17 @@ val url: dirname -> string option -> package -> OpamFile.URL_legacy.t OpamFile.t
 (** files {i $repo/packages/XXX/$NAME.$VERSION/files} *)
 val files: dirname -> string option -> package -> dirname
 
+(** [get_pkg_dir f] returns the pair of package and directory [(p, d)],
+    where [d] is a prefix of [f], that matches a repository package folder.
+    [p] is the pair [nv] associated with that folder.
+    It returns [None] if no folder was detected.
+
+    Note: [f] must always be a relative filename starting at a repository root.
+
+    For example, [get_pkg_dir packages/a/a.1/files/extrafile] will return
+    [(a.1, packages/a/a.1)]. *)
+val get_pkg_dir : unix_filename -> (package * unix_dirname) option
+
 (** Url constructor for parts of remote repositories, when applicable (http and
     rsync). Function take the repo's root url. *)
 module Remote: sig

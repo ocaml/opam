@@ -69,18 +69,13 @@ RSTATE                          Cache found
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/ba/baz/n-nv-not-root.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/ba/baz/n-nv-not-root.1/files/un/der/opam, ignored
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/files/un/der/opam, ignored
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/files/un/der/opam, ignored
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/files/un/der/opam, ignored
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/opam
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/files/fst
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/files/un/der/snd
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/files/un/der/opam, ignored
 [ERROR] In ${BASEDIR}/OPAM/repo/default-strict/packages/not-same-nv-in/not-same-nv-in.2/opam:
         This file is for package 'not-same-nv-in.2' but has mismatching fields 'name:different 'version:1.
 [ERROR] Strict mode: aborting
@@ -95,58 +90,51 @@ RSTATE                          Cache found
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/ba/baz/n-nv-not-root.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/ba/baz/n-nv-not-root.1/files/un/der/opam, ignored
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/files/un/der/opam, ignored
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/good/good.1/files/un/der/opam, ignored
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/no-nv/files/un/der/opam, ignored
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/opam
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/files/fst
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/files/un/der/snd
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/files/un/der/opam, ignored
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/files/un/der/opam, ignored
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner.1/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/pkg/z-no-nv/opam
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-no-nv/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-direct-root.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-direct-root.1/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-v/z-e/z-r/z-y/z-very-inner.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-v/z-e/z-r/z-y/z-very-inner.1/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-ba/z-baz/z-n-nv-not-root.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-ba/z-baz/z-n-nv-not-root.1/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-not/z-no-n-nv.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-not/z-no-n-nv.1/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1/opam in 0.000s
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1/files/un/der/opam, ignored
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/root-no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/root-no-nv/opam
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/root-no-nv/files/un/der/opam, ignored
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-no-nv/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-no-nv/files/fst
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-no-nv/files/un/der/snd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-direct-root.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-direct-root.1/files/fst
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-direct-root.1/files/un/der/snd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/files/fst
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/files/un/der/snd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-v/z-e/z-r/z-y/z-very-inner.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-v/z-e/z-r/z-y/z-very-inner.1/files/fst
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-v/z-e/z-r/z-y/z-very-inner.1/files/un/der/snd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-ba/z-baz/z-n-nv-not-root.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-ba/z-baz/z-n-nv-not-root.1/files/fst
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-ba/z-baz/z-n-nv-not-root.1/files/un/der/snd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-not/z-no-n-nv.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-not/z-no-n-nv.1/files/fst
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-not/z-no-n-nv.1/files/un/der/snd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-good/z-good.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-good/z-good.1/files/fst
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-good/z-good.1/files/un/der/snd
+RSTATE                          ERR: file name not a valid package: ignored root-no-nv/opam
+RSTATE                          ERR: file name not a valid package: ignored root-no-nv/files/fst
+RSTATE                          ERR: file name not a valid package: ignored root-no-nv/files/un/der/snd
 Now run 'opam upgrade' to apply any package updates.
 ### : list all
 ### opam list -A
 # Packages matching: any
-# Name            # Installed # Synopsis
-direct-root       --
-good              --
-n-nv-not-root     --
-no-n-nv           --
-not-same-nv-in    --
-very-inner        --
-very-inner-n-nv   --
-z-direct-root     --
-z-good            --
-z-n-nv-not-root   --
-z-no-n-nv         --
-z-very-inner      --
-z-very-inner-n-nv --
+# Name          # Installed # Synopsis
+direct-root     --
+good            --
+n-nv-not-root   --
+no-n-nv         --
+not-same-nv-in  --
+very-inner      --
+very-inner-n-nv --
 ### : install all
 ### opam install good.1
 The following actions will be performed:
@@ -211,53 +199,23 @@ The following actions will be performed:
 -> installed not-same-nv-in.2
 Done.
 ### opam install z-good.1
-The following actions will be performed:
-=== install 1 package
-  - install z-good 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-good.1
-Done.
+[ERROR] No package named z-good found.
+# Return code 5 #
 ### opam install z-no-n-nv.1
-The following actions will be performed:
-=== install 1 package
-  - install z-no-n-nv 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-no-n-nv.1
-Done.
+[ERROR] No package named z-no-n-nv found.
+# Return code 5 #
 ### opam install z-n-nv-not-root.1
-The following actions will be performed:
-=== install 1 package
-  - install z-n-nv-not-root 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-n-nv-not-root.1
-Done.
+[ERROR] No package named z-n-nv-not-root found.
+# Return code 5 #
 ### opam install z-very-inner.1
-The following actions will be performed:
-=== install 1 package
-  - install z-very-inner 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-very-inner.1
-Done.
+[ERROR] No package named z-very-inner found.
+# Return code 5 #
 ### opam install z-very-inner-n-nv.1
-The following actions will be performed:
-=== install 1 package
-  - install z-very-inner-n-nv 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-very-inner-n-nv.1
-Done.
+[ERROR] No package named z-very-inner-n-nv found.
+# Return code 5 #
 ### opam install z-direct-root.1
-The following actions will be performed:
-=== install 1 package
-  - install z-direct-root 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-direct-root.1
-Done.
+[ERROR] No package named z-direct-root found.
+# Return code 5 #
 ### opam install z-no-nv
 [ERROR] No package named z-no-nv found.
 # Return code 5 #
@@ -282,8 +240,6 @@ RSTATE                          Cache found
 [new-default] Initialised
 UPDATE                          Repository has new changes
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/new-default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/new-default/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/new-default/packages/no-nv/opam
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/new-default/packages/direct-root.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/new-default/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/new-default/packages/v/e/r/y/very-inner.1/opam in 0.000s
@@ -293,20 +249,14 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/new-default/packages/g
 ### : list all
 ### opam list -A
 # Packages matching: any
-# Name            # Installed # Synopsis
-direct-root       --
-good              --
-n-nv-not-root     --
-no-n-nv           --
-not-same-nv-in    --
-very-inner        --
-very-inner-n-nv   --
-z-direct-root     --
-z-good            --
-z-n-nv-not-root   --
-z-no-n-nv         --
-z-very-inner      --
-z-very-inner-n-nv --
+# Name          # Installed # Synopsis
+direct-root     --
+good            --
+n-nv-not-root   --
+no-n-nv         --
+not-same-nv-in  --
+very-inner      --
+very-inner-n-nv --
 ### : install all
 ### opam install good.1
 The following actions will be performed:
@@ -373,53 +323,23 @@ Done.
 ### opam install not-same-nv-in.2
 [NOTE] Package not-same-nv-in is already installed (current version is 2).
 ### opam install z-good.1
-The following actions will be performed:
-=== install 1 package
-  - install z-good 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-good.1
-Done.
+[ERROR] No package named z-good found.
+# Return code 5 #
 ### opam install z-no-n-nv.1
-The following actions will be performed:
-=== install 1 package
-  - install z-no-n-nv 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-no-n-nv.1
-Done.
+[ERROR] No package named z-no-n-nv found.
+# Return code 5 #
 ### opam install z-n-nv-not-root.1
-The following actions will be performed:
-=== install 1 package
-  - install z-n-nv-not-root 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-n-nv-not-root.1
-Done.
+[ERROR] No package named z-n-nv-not-root found.
+# Return code 5 #
 ### opam install z-very-inner.1
-The following actions will be performed:
-=== install 1 package
-  - install z-very-inner 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-very-inner.1
-Done.
+[ERROR] No package named z-very-inner found.
+# Return code 5 #
 ### opam install z-very-inner-n-nv.1
-The following actions will be performed:
-=== install 1 package
-  - install z-very-inner-n-nv 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-very-inner-n-nv.1
-Done.
+[ERROR] No package named z-very-inner-n-nv found.
+# Return code 5 #
 ### opam install z-direct-root.1
-The following actions will be performed:
-=== install 1 package
-  - install z-direct-root 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-direct-root.1
-Done.
+[ERROR] No package named z-direct-root found.
+# Return code 5 #
 ### opam install z-no-nv
 [ERROR] No package named z-no-nv found.
 # Return code 5 #
@@ -482,9 +402,7 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/package
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1: missing from 'files' directory (1)
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv: missing from 'files' directory (1)
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/opam
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/opam
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1: missing from 'files' directory (1)
 [ERROR] In ${BASEDIR}/OPAM/repo/default-strict/packages/not-same-nv-in/not-same-nv-in.2/opam:
@@ -508,33 +426,21 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/good/good.1: missing from 'files' directory (1)
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/no-nv: missing from 'files' directory (1)
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/packages/no-nv/opam
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/opam
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1: missing from 'files' directory (1)
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2: missing from 'files' directory (1)
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-ba/z-baz/z-n-nv-not-root.1/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/pkg/z-ba/z-baz/z-n-nv-not-root.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-direct-root.1/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/pkg/z-direct-root.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-no-nv/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/pkg/z-no-nv: missing from 'files' directory (1)
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/pkg/z-no-nv/opam
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-not/z-no-n-nv.1/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/pkg/z-not/z-no-n-nv.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/pkg/z-v/z-e/z-r/z-y/z-very-inner.1/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/pkg/z-v/z-e/z-r/z-y/z-very-inner.1: missing from 'files' directory (1)
-FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/root-no-nv/opam in 0.000s
-opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/default/root-no-nv: missing from 'files' directory (1)
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/OPAM/repo/default/root-no-nv/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-ba/z-baz/z-n-nv-not-root.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-direct-root.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-good/z-good.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-no-nv/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-not/z-no-n-nv.1/opam
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-v/z-e/z-r/z-y/z-very-inner.1/opam
+RSTATE                          ERR: file name not a valid package: ignored root-no-nv/opam
 Now run 'opam upgrade' to apply any package updates.
 ### :III::2: then add the extrafiles
 ### <xfile.sh>
@@ -568,22 +474,17 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default-strict] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/ba/baz/n-nv-not-root.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/no-nv/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/not-same-nv-in/not-same-nv-in.2/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/packages/v/e/r/y/very-inner.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/pkg/z-ba/z-baz/z-n-nv-not-root.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/pkg/z-direct-root.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/pkg/z-good/z-good.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/pkg/z-no-nv/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/pkg/z-not/z-no-n-nv.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/pkg/z-v/z-e/z-r/z-y/z-very-inner.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default-strict/root-no-nv/files/un/der/opam, ignored
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/ba/baz/n-nv-not-root.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/direct-root.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/opam in 0.000s
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/files/un/der/thrd
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default-strict/packages/not/no-n-nv.1/opam in 0.000s
+[ERROR] In ${BASEDIR}/OPAM/repo/default-strict/packages/not-same-nv-in/not-same-nv-in.2/opam:
+        This file is for package 'not-same-nv-in.2' but has mismatching fields 'name:different 'version:1.
+[ERROR] Strict mode: aborting
+[ERROR] Could not update repository "default-strict": OpamStd.OpamSys.Exit(30)
+# Return code 40 #
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE UPDATE" OPAMDEBUG=-3 opam update default | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -592,40 +493,34 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 UPDATE                          Repository has new changes
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/ba/baz/n-nv-not-root.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/good/good.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/no-nv/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-ba/z-baz/z-n-nv-not-root.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-direct-root.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-good/z-good.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-no-nv/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-not/z-no-n-nv.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/pkg/z-v/z-e/z-r/z-y/z-very-inner.1/files/un/der/opam, ignored
-RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/default/root-no-nv/files/un/der/opam, ignored
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/ba/baz/n-nv-not-root.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/direct-root.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/good/good.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/opam in 0.000s
+RSTATE                          ERR: file name not a valid package: ignored packages/no-nv/files/un/der/thrd
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not/no-n-nv.1/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
+FILE(opam)                      Read ${BASEDIR}/OPAM/repo/default/packages/v/e/r/y/very-inner.1/opam in 0.000s
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-ba/z-baz/z-n-nv-not-root.1/files/un/der/thrd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-direct-root.1/files/un/der/thrd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-good/z-good.1/files/un/der/thrd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-i/z-n/z-e/z-r/z-very-inned-n-nv/z-very-inner-n-nv.1/files/un/der/thrd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-no-nv/files/un/der/thrd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-not/z-no-n-nv.1/files/un/der/thrd
+RSTATE                          ERR: file name not a valid package: ignored pkg/z-v/z-e/z-r/z-y/z-very-inner.1/files/un/der/thrd
+RSTATE                          ERR: file name not a valid package: ignored root-no-nv/files/un/der/thrd
 ### :III:3: list all
 ### opam switch create xfiles --empty
 ### opam list -A
 # Packages matching: any
-# Name            # Installed # Synopsis
-direct-root       --
-good              --
-n-nv-not-root     --
-no-n-nv           --
-not-same-nv-in    --
-very-inner        --
-very-inner-n-nv   --
-z-direct-root     --
-z-good            --
-z-n-nv-not-root   --
-z-no-n-nv         --
-z-very-inner      --
-z-very-inner-n-nv --
+# Name          # Installed # Synopsis
+direct-root     --
+good            --
+n-nv-not-root   --
+no-n-nv         --
+not-same-nv-in  --
+very-inner      --
+very-inner-n-nv --
 ### :III:4: install all
 ### opam install good.1
 The following actions will be performed:
@@ -690,53 +585,23 @@ The following actions will be performed:
 -> installed not-same-nv-in.2
 Done.
 ### opam install z-good.1
-The following actions will be performed:
-=== install 1 package
-  - install z-good 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-good.1
-Done.
+[ERROR] No package named z-good found.
+# Return code 5 #
 ### opam install z-no-n-nv.1
-The following actions will be performed:
-=== install 1 package
-  - install z-no-n-nv 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-no-n-nv.1
-Done.
+[ERROR] No package named z-no-n-nv found.
+# Return code 5 #
 ### opam install z-n-nv-not-root.1
-The following actions will be performed:
-=== install 1 package
-  - install z-n-nv-not-root 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-n-nv-not-root.1
-Done.
+[ERROR] No package named z-n-nv-not-root found.
+# Return code 5 #
 ### opam install z-very-inner.1
-The following actions will be performed:
-=== install 1 package
-  - install z-very-inner 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-very-inner.1
-Done.
+[ERROR] No package named z-very-inner found.
+# Return code 5 #
 ### opam install z-very-inner-n-nv.1
-The following actions will be performed:
-=== install 1 package
-  - install z-very-inner-n-nv 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-very-inner-n-nv.1
-Done.
+[ERROR] No package named z-very-inner-n-nv found.
+# Return code 5 #
 ### opam install z-direct-root.1
-The following actions will be performed:
-=== install 1 package
-  - install z-direct-root 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed z-direct-root.1
-Done.
+[ERROR] No package named z-direct-root found.
+# Return code 5 #
 ### opam install z-no-nv
 [ERROR] No package named z-no-nv found.
 # Return code 5 #
@@ -746,8 +611,6 @@ Done.
 ### OPAMDEBUGSECTIONS="FILE(opam) opam-file RSTATE" OPAMDEBUG=-3 opam admin list | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/packages/not-same-nv-in/not-same-nv-in.2/opam in 0.000s
-FILE(opam)                      Read ${BASEDIR}/packages/no-nv/opam in 0.000s
-RSTATE                          ERR: directory name not a valid package: ignored ${BASEDIR}/packages/no-nv/opam
 FILE(opam)                      Read ${BASEDIR}/packages/direct-root.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/packages/i/n/e/r/very-inned-n-nv/very-inner-n-nv.1/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/packages/v/e/r/y/very-inner.1/opam in 0.000s
