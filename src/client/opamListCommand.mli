@@ -129,8 +129,6 @@ val field_names: (output_format * string) list
 
 val string_of_field: ?raw:bool -> output_format -> string
 
-val field_of_string: raw:bool -> string -> output_format
-
 type package_listing_format = {
   short: bool;
   header: bool;

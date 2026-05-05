@@ -70,6 +70,8 @@ users)
 
 ## Clean
 
+  * Use the [dead_code_analyzer](https://github.com/LexiFi/dead_code_analyzer) to remove unused exported values [#6954 @fantazio]
+
 ## Env
 
 ## Opamfile
@@ -210,6 +212,17 @@ users)
   * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
   * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
   * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
+  * `OpamAdminCheck`: remove `installability_check`, `cycle_check`, and `get_obsolete` [#6954 @fantazio]
+  * `OpamArg`: remove `cli2_5`, `escape_path`, `name_list`, `param_list`, `atom_list`, `nonempty_atom_list`, `locked`, `package_with_version`, `atom_or_local`, `atom_or_dir`, `opamlist_columns`, and `scrubbed_environment_variables` [#6954 @fantazio]
+  * `OpamAuxCommands`: remove `name_and_dir_of_opam_file`, and `resolve_locals` [#6954 @fantazio]
+  * `OpamCliMain`: remove `check_and_run_external_commands`, `main_catch_all`, `json_out`, and `run` [#6954 @fantazio]
+  * `OpamClient`: remove `reinstall_t`, `upgrade_t`, and `PIN.post_pin_action` [#6954 @fantazio]
+  * `OpamClientConfig`: remove `search_files` [#6954 @fantazio]
+  * `OpamConfigCommand`: remove `parse_whole` [#6954 @fantazio]
+  * `OpamInitDefaults`: remove `default_compiler`, and `eval_variables` [#6954 @fantazio]
+  * `OpamListCommand`: remove `field_of_string` [#6954 @fantazio]
+  * `OpamCommand`: remove `update_global_selection` [#6954 @fantazio]
+  * `OpamSolution`: remove `eq_atom`, and `sum` [#6954 @fantazio]
 
 ## opam-repository
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]

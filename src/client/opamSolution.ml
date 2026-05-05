@@ -114,9 +114,6 @@ let check_solution ?(quiet=false) st = function
     if not OpamClientConfig.(!r.show) then
       OpamStd.Sys.exit_because `Aborted
 
-let sum stats =
-  stats.s_install + stats.s_reinstall + stats.s_remove + stats.s_upgrade + stats.s_downgrade
-
 let eq_atom name version =
   name, Some (`Eq, version)
 

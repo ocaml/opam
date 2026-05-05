@@ -1209,15 +1209,6 @@ let formula_flag ?section cli =
      dependencies in package definition files, e.g. '\"foo\" {>= \"1.1\"}'"
     dep_formula OpamFormula.Empty
 
-let name_list =
-  arg_list "PACKAGES" "List of package names." package_name
-
-let atom_list =
-  arg_list "PACKAGES"
-    "List of package names, with an optional version or constraint, \
-     e.g `pkg', `pkg.1.0' or `pkg>=0.5'."
-    atom
-
 let atom_or_local_list =
   arg_list "PACKAGES"
     (Printf.sprintf
@@ -1233,15 +1224,6 @@ let atom_or_dir_list =
        `pkg.1.0' or `pkg>=0.5' ; or directory names containing package \
        description, with explicit directory (e.g. `.%ssrcdir' or `.')" dir_sep)
     atom_or_dir
-
-let nonempty_atom_list =
-  nonempty_arg_list "PACKAGES"
-    "List of package names, with an optional version or constraint, \
-     e.g `pkg', `pkg.1.0' or `pkg>=0.5'."
-    atom
-
-let param_list =
-  arg_list "PARAMS" "List of parameters." Arg.string
 
 (* Options common to all commands *)
 let global_options cli =

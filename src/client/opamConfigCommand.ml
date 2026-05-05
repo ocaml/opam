@@ -526,11 +526,6 @@ let whole_of_update_op = function
   | #whole_op as w -> w
   | _ -> raise Not_found
 
-let parse_whole fv =
-  let v, upd = parse_update fv in
-  try v, (whole_of_update_op upd)
-  with Not_found -> raise (Invalid_argument "parse_whole: append operator")
-
 let global_doc = "global configuration"
 let switch_doc switch =
   Printf.sprintf "switch %s"

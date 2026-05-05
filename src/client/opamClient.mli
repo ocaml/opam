@@ -90,12 +90,6 @@ val check_installed:
 val reinstall:
   rw switch_state -> ?assume_built:bool -> atom list -> rw switch_state
 
-(** Low-level version of {!reinstall}, bypassing the package name sanitization
-    and dev package update, and offering more control *)
-val reinstall_t:
-  rw switch_state -> ?ask:bool -> ?force:bool -> assume_built:bool -> atom list
-  -> rw switch_state
-
 (** Update the local mirrors for the repositories and/or development packages.
     Returns [(success, changes, rt)], where [success] is [true] only if all
     updates were successful, [changes] is true if any upstream had updates, and
@@ -113,16 +107,6 @@ val upgrade:
   rw switch_state ->
   ?formula:formula -> ?check:bool -> ?only_installed:bool ->
   all:bool -> atom list -> rw switch_state
-
-(** Low-level version of {!upgrade}, bypassing the package name sanitization and
-   dev package update, and offering more control. [terse] avoids the verbose
-   message when we are at a local maximum, but there are possible upgrades *)
-val upgrade_t:
-  ?strict_upgrade:bool -> ?auto_install:bool -> ?ask:bool -> ?check:bool ->
-  ?terse:bool ->
-  ?only_installed:bool ->
-  all:bool -> atom list -> ?formula:formula ->
-  rw switch_state -> rw switch_state
 
 (** Recovers from an inconsistent universe *)
 val fixup: ?formula:formula -> rw switch_state -> rw switch_state
@@ -165,10 +149,5 @@ module PIN: sig
 
   (** List the current pinned packages. *)
   val list: 'a switch_state -> short:bool -> unit
-
-  (** Runs an install/upgrade on the listed packages if necessary.
-      [post_pin_action st was_pinned names] takes the set of packages pinned
-      beforehand, and a list of newly pinned packages *)
-  val post_pin_action: rw switch_state -> package_set -> name list -> rw switch_state
 
 end

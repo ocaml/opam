@@ -70,11 +70,6 @@ type update_op = [ append_op  | whole_op ]
     Raise [Invalid_argument] if the string is malformed *)
 val parse_update: string -> string * update_op
 
-(** As {!parse_update} but parse only overwrites and reverts. String is of the
-    form [var=[value]]`.
-    Raise [Invalid_argument] if the string is malformed *)
-val parse_whole: string -> string * whole_op
-
 val whole_of_update_op: update_op -> whole_op
 
 (** [set_opt_global gt field value] updates global config field with update

@@ -89,9 +89,6 @@ include OpamStd.Config.Sig
   with type t := t
    and type 'a options_fun := 'a options_fun
 
-(** Extra files included in [opam search] *)
-val search_files: string list
-
 (** Load the global configuration file (opamroot/config) and initialise all opam
     sub-libraries, overriding the given arguments *)
 val opam_init:
