@@ -905,3 +905,111 @@ The following actions would be performed:
   - upgrade pkg-foo 1.0.0~alpha1 to 1.0.0~alpha2~pre0
 === install 1 package
   - install lib-foo 1.0.0~alpha1                      [required by pkg-foo]
+### :V: Changes that move a file into a directory and vice versa
+### <DREPO/repo>
+opam-version: "2.0"
+### <DREPO/packages/uno/uno.1>
+opam-version: "2.0"
+### <DREPO/packages/due/due.1/opam>
+opam-version: "2.0"
+### <DREPO/packages/due/due.1/files/archivio>
+Am I a file ?
+### <add-xf.sh>
+set -eu
+nv=$1
+file=$2
+n=${nv%.*}
+path="DREPO/packages/$n/$nv"
+md5=$(openssl md5 "$path/files/$file" | cut -d' ' -f2)
+cat >> "$path/opam" << EOF
+build: [ "test" "-f" "$file" ]
+extra-files: [
+  [ "$file" "md5=$md5" ]
+]
+EOF
+### sh add-xf.sh due.1 archivio
+### opam repo remove git-ver git-test incremental --all
+### opam repo -a
+# Repository # Url # Switches(rank)
+### opam show pkg-foo.1.0.0~alpha1
+
+<><> pkg-foo: information on all versions <><><><><><><><><><><><><><><><><><><>
+name                   pkg-foo
+all-installed-versions 1.0.0~alpha1 [git-version-switch]
+all-versions           1.0.0~alpha1
+
+<><> Version-specific details <><><><><><><><><><><><><><><><><><><><><><><><><>
+version 1.0.0~alpha1
+### opam repo add diff-repo ./DREPO --set-default
+[diff-repo] Initialised
+### opam switch create update-init --empty
+### opam list -A
+# Packages matching: any
+# Name # Installed # Synopsis
+due    --
+### opam install due -vv | sed-cmd test
+The following actions will be performed:
+=== install 1 package
+  - install due 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [due: test archivio]
++ test "-f" "archivio" (CWD=${BASEDIR}/OPAM/update-init/.opam-switch/build/due.1)
+-> compiled  due.1
+-> installed due.1
+Done.
+### :V:1: Update repository with changes File -> Dir
+### rm DREPO/packages/uno/uno.1 DREPO/packages/due/due.1/files/archivio
+### <DREPO/packages/uno/uno.1/opam>
+opam-version: "2.0"
+### <DREPO/packages/due/due.1/opam>
+opam-version: "2.0"
+### <DREPO/packages/due/due.1/files/archivio/interno>
+Am I a file ?
+### sh add-xf.sh due.1 archivio/interno
+### opam switch create update-file-dir --empty
+### opam update diff-repo
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Could not update repository "diff-repo": Change from a regular file to a directory is unsupported
+# Return code 40 #
+### opam install due -vv | sed-cmd test
+The following actions will be performed:
+=== install 1 package
+  - install due 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [due: test archivio]
++ test "-f" "archivio" (CWD=${BASEDIR}/OPAM/update-file-dir/.opam-switch/build/due.1)
+-> compiled  due.1
+-> installed due.1
+Done.
+### :V:2: Update repository with changes Dir -> File
+### opam repo remove diff-repo --all
+### opam repo add diff-repo ./DREPO --set-default
+[diff-repo] Initialised
+### rm -r DREPO/packages/uno/uno.1 DREPO/packages/due/due.1/files/archivio
+### <DREPO/packages/uno/uno.1>
+opam-version: "2.0"
+### <DREPO/packages/due/due.1/opam>
+opam-version: "2.0"
+### <DREPO/packages/due/due.1/files/archivio>
+Am I a file ?
+### sh add-xf.sh due.1 archivio
+### opam switch create update-dir-file --empty
+### opam update diff-repo
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] Could not update repository "diff-repo": Change from a directory to a regular file is unsupported
+# Return code 40 #
+### opam install due -vv | sed-cmd test
+The following actions will be performed:
+=== install 1 package
+  - install due 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [due: test]
++ test "-f" "archivio/interno" (CWD=${BASEDIR}/OPAM/update-dir-file/.opam-switch/build/due.1)
+-> compiled  due.1
+-> installed due.1
+Done.
