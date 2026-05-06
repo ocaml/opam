@@ -185,6 +185,7 @@ users)
   * Update the Install page with the new opam 2.5.0 release [#6821 @kit-ty-kate]
   * Mention more explicitely that raw fields are an option [@raphael-proust]
   * Correct configure instruction in README [#6858 @gridbugs @kit-ty-kate]
+  * Improve visibility of `depopts` filter note [#6920 @ccoulombel - fix #5367]
 
 ## Security fixes
   * Invalidate .install fields containing destination filepath trying to escape their scope [#6897 @kit-ty-kate]
