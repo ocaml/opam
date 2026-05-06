@@ -1894,10 +1894,28 @@ let install cli =
       else atoms_or_locals
     in
     if formula = OpamFormula.Empty && atoms_or_locals = [] then `Ok () else
+    let already_pinned = st.pinned in
     let st, atoms =
       OpamAuxCommands.autopin
         st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check||depext_only)
         ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
+    in
+    let newly_pinned = OpamPackage.Set.diff st.pinned already_pinned in
+    let clean_up_pins_on_failure st () =
+      let newly_pinned_l =
+        OpamPackage.Set.elements newly_pinned
+        |> List.map OpamPackage.name
+      in
+      match newly_pinned_l with
+      | [] -> ()
+      | _ ->
+        OpamConsole.msg
+          "Unpinning packages pinned during install:\n%s"
+          (OpamStd.Format.itemize
+             (fun name ->
+                OpamConsole.colorise `bold (OpamPackage.Name.to_string name))
+             newly_pinned_l);
+        ignore (OpamPinCommand.unpin st newly_pinned_l)
     in
     if formula = OpamFormula.Empty && atoms = [] then
       (OpamConsole.msg "Nothing to do\n";
@@ -1920,9 +1938,12 @@ let install cli =
           OpamStd.Sys.exit_because `False)
     else
     let st =
-      OpamClient.install st atoms ~formula
-        ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
-        ~assume_built ~depext_only ~download_only
+      try
+        OpamClient.install st atoms ~formula
+          ~autoupdate:pure_atoms ?add_to_roots ~deps_only ~ignore_conflicts
+          ~assume_built ~depext_only ~download_only
+      with OpamStd.Sys.Exit 10 as exn -> (* [exit_because `Aborted] *)
+        OpamStd.Exn.finalise exn (clean_up_pins_on_failure st)
     in
     match destdir with
     | None -> `Ok ()
