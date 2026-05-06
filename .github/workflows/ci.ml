@@ -53,6 +53,7 @@ on:
       - 'tests/**'
       - '!tests/bench/**'
       - 'shell/**'
+      - 'doc/**'
   push:
     branches:
       - 'master'
