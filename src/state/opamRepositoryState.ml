@@ -92,6 +92,7 @@ let get_root rt name =
 let get_repo_root rt repo =
   get_root_raw rt.repos_global.root repo.repo_name
 
+(* it is simpler to keep it as is and not factorise dir & tar *)
 let get_repo_files rt name dir =
   match get_root rt name with
   | OpamRepositoryRoot.Dir repo_root ->
@@ -102,6 +103,31 @@ let get_repo_files rt name dir =
           (OpamSystem.back_to_forward (OpamFilename.remove_prefix dir file)),
         lazy (OpamFilename.read file))
       files
+  | OpamRepositoryRoot.Tar tar ->
+    let open OpamFilename.Unix.Op in
+    let xfiles_dir = OpamFilename.Unix.Dir.of_string dir in
+    OpamRepositoryRoot.Tar.fold (fun acc filename content ->
+        if OpamFilename.Unix.starts_with xfiles_dir filename then
+          let content = lazy (
+            (* TAR TODO : to remove before merge
+               It is only kept to avoid a big diff in tests during wip *)
+            OpamConsole.log "SYSTEM" ~level:5
+              "read %s from %s"
+              (OpamFilename.Unix.to_string
+                 (OpamFilename.Unix.Dir.of_string
+                    (OpamRepositoryName.to_string name)
+                  // OpamFilename.Unix.to_string filename))
+              (OpamRepositoryRoot.Tar.to_string tar);
+            content)
+          in
+          let basename =
+            filename
+            |> OpamFilename.Unix.remove_prefix xfiles_dir
+            |> OpamFilename.Base.of_string
+          in
+          (basename, content)::acc
+        else acc)
+      [] tar
 
 let read_package_opam ~repo_name ~repo_root package_dir =
   match OpamFileTools.read_repo_opam_dir ~repo_name ~repo_root package_dir with

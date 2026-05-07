@@ -82,7 +82,7 @@ val syspkgs_available:
   ?env:gt_variables -> repo_syspkgs_available
   -> OpamSysPkg.availability_mode option
 
-(** Get the (lazily extracted) repository root for the given repository *)
+(** Get the repository root for the given repository *)
 val get_root: 'a repos_state -> repository_name -> OpamRepositoryRoot.t
 
 (** Same as {!get_root}, but with a repository rather than just a name as argument *)
