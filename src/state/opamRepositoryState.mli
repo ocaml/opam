@@ -69,6 +69,7 @@ val load_opams_from_diff:
   repository -> Patch.operation list -> 'a repos_state
   -> OpamFile.OPAM.t package_map
 
+val load_opams_from_tar_gz: repository_name -> OpamRepositoryRoot.Tar.t -> OpamFile.OPAM.t OpamPackage.Map.t
 (** Load all the metadata within the local mirror of the given repository,
     without cache *)
 val load_repo:

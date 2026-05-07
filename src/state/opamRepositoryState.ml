@@ -221,6 +221,32 @@ let load_raw_opams_and_aux_from_tar _repo_name tar =
   in
   repo_def, opams_map
 
+let load_repo_from_tar_gz repo_name tar =
+  if OpamConsole.disp_status_line () || OpamConsole.verbose () then
+    OpamConsole.status_line "Processing: [%s: loading data]"
+      (OpamConsole.colorise `blue (OpamRepositoryName.to_string repo_name));
+  let repo_root = tar in
+  let aux () =
+    let repo_def, opams_map =
+      load_raw_opams_and_aux_from_tar repo_name tar
+    in
+    (* repo_url is added in load_repo to avoid having it as argument *)
+    let opams =
+      OpamFilename.Unix.Dir.Map.fold
+        (fun pkgdir (filename, content, otherfiles) opams ->
+           match read_package_opam_tar ~repo_name ~repo_root
+                   pkgdir filename content otherfiles with
+           | Some (nv, opam) -> OpamPackage.Map.add nv opam opams
+           | None -> opams)
+        opams_map OpamPackage.Map.empty
+    in
+    repo_def, opams
+  in
+  Fun.protect (fun () -> aux ()) ~finally:OpamConsole.clear_status
+
+let load_opams_from_tar_gz repo_name tar =
+  snd (load_repo_from_tar_gz repo_name tar)
+
 let load_opams_from_dir repo_name repo_root =
   if OpamConsole.disp_status_line () || OpamConsole.verbose () then
     OpamConsole.status_line "Processing: [%s: loading data]"
