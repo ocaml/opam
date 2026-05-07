@@ -205,12 +205,13 @@ let content_single_file_in_dir_snd = [
 (** Utils *)
 
 let print = Printf.printf
-let rm_hex =
-  let re =
-    Str.regexp {|[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]?|}
-  in
-  let by = "c0ffee" in
-  fun s -> Str.global_replace re by s
+let rewrite ~dir s =
+  let l = [
+    Str.regexp_string {|\\|}, "/";
+    Str.regexp_string (OpamSystem.back_to_forward (OpamFilename.Dir.to_string OpamFilename.Op.(dir / ""))), "${BASEDIR}/";
+    Str.regexp {|[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]?|}, "c0ffee";
+  ] in
+  List.fold_left (fun s (re, by) -> Str.global_replace re by s) s l
 
 open OpamFilename.Op
 let read_dir root names =
@@ -291,7 +292,7 @@ let write_setup ?(only_fst=false) dir content =
     content
 
 (* --Git-- *)
-let git_cmds repo_root commands error_msg =
+let git_cmds ~dir repo_root commands error_msg =
   let commands =
     List.map (fun args ->
         OpamSystem.make_command "git"
@@ -305,7 +306,7 @@ let git_cmds repo_root commands error_msg =
         | _ -> failwith (OpamProcess.string_of_command command))
       commands
   with Failure e ->
-    print "ERROR:%s: %s\n" error_msg (rm_hex e)
+    print "ERROR:%s: %s\n" error_msg (rewrite ~dir e)
 
 let make_git_repo dir =
   let first_root = dir / first in
@@ -314,7 +315,7 @@ let make_git_repo dir =
     [ "add"; "--all" ];
     [ "commit"; "-qm"; "first" ];
   ] in
-  git_cmds first_root commands "Git init"
+  git_cmds ~dir first_root commands "Git init"
 
 let generate_git_diff dir =
   let first_root = dir / first in
@@ -328,9 +329,9 @@ let generate_git_diff dir =
     [ "-c"; "diff.noprefix=false"; "diff"; "--text"; "--no-ext-diff"; "-R"; "-p";
       "HEAD..HEAD^"; "--output="^(OpamFilename.to_string name) ]
   ] in
-  git_cmds first_root commands "Git generate diff";
+  git_cmds ~dir first_root commands "Git generate diff";
   print "*** GIT DIFF ***\n";
-  print "%s\n" (rm_hex @@ OpamFilename.read name);
+  print "%s\n" (rewrite ~dir (OpamFilename.read name));
   name
 (* --Git-- *)
 
@@ -367,9 +368,9 @@ let diff_patch dir setup =
           (OpamFilename.Base.of_string first)
           (OpamFilename.Base.of_string second)
       with
-      | exception Failure s -> print "ERROR: %s\n" (rm_hex s); None
+      | exception Failure s -> print "ERROR: %s\n" (rewrite ~dir s); None
       | exception e ->
-        print "ERROR: %s\n" (rm_hex @@ Printexc.to_string e);
+        print "ERROR: %s\n" (rewrite ~dir (Printexc.to_string e));
         None
       | None -> print "No diff\n"; None
       | Some (f,_) -> Some f
@@ -392,7 +393,7 @@ let diff_patch dir setup =
         true
       | Error exn ->
         print "*** %sPATCH ERROR ***\n" git;
-        print "ERROR: %s\n" (rm_hex @@ Printexc.to_string exn);
+        print "ERROR: %s\n" (rewrite ~dir (Printexc.to_string exn));
         false
     in
     let patched = apply ~git:false diff in
