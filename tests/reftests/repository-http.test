@@ -183,4 +183,32 @@ enam   --          A tautological synopsis.
 lima   --
 satu   --
 tiga   --
+### :V: Update url of an already set repository with set-url
+### mkdir SETREPO
+### cp -R packages SETREPO/
+### cp repo SETREPO/
+### opam repository add set-repo ./SETREPO --set-default
+[set-repo] Initialised
+### opam list --all --repo set-repo
+# Packages matching: any
+# Name # Installed # Synopsis
+dua    --
+empat  --
+enam   --          A tautological synopsis.
+lima   --
+satu   --
+tiga   --
+### opam repo set-url set-repo http://localhost:$HTTPSERVERPORT --set-default | sed-cmd curl tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
+[set-repo] Initialised
+### opam list --all --repo set-repo
+# Packages matching: any
+# Name # Installed # Synopsis
+dua    --
+empat  --
+enam   --          A tautological synopsis.
+lima   --
+satu   --
+tiga   --
+### opam repository remove set-repo --all
+### rm -r SETREPO
 [[[Killing micro_httpd]]]
