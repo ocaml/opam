@@ -1608,6 +1608,13 @@ let read_repo_opam_t ~repo_name ~repo_root dir file content xfs =
   >>| OpamFile.OPAM.with_metadata_dir
     (Some (Some repo_name, rel))
 
+let read_repo_opam_tar ~repo_name ~repo_root dir file content xfs =
+  let file = OpamFilename.Unix.to_filename file in
+  let dir = OpamFilename.Unix.Dir.to_dir dir in
+  let repo_root = OpamRepositoryRoot.Tar repo_root in
+  let xfs = OpamFilename.Unix.Map.map Lazy.from_val xfs in
+  read_repo_opam_t ~repo_name ~repo_root dir file (lazy content) xfs
+
 let read_repo_opam_dir ~repo_name ~repo_root dir =
   let repo_root = OpamRepositoryRoot.Dir repo_root in
   let file, content, xfs = get_contents ~repo_root:(Some repo_root) dir in

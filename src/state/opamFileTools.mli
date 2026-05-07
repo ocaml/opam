@@ -114,6 +114,15 @@ val read_repo_opam_dir:
   repo_name:repository_name -> repo_root:OpamRepositoryRoot.Dir.t ->
   dirname -> OpamFile.OPAM.t option
 
+(** Like {!read_opam}, but additionally fills in the [metadata_dir] info
+    correctly for the given repository. *)
+val read_repo_opam_tar:
+  repo_name:repository_name -> repo_root:OpamRepositoryRoot.Tar.t ->
+  OpamFilename.Unix.Dir.t -> OpamFilename.Unix.t
+  -> OpamTar.archived_file_content
+  -> OpamTar.archived_file_content OpamFilename.Unix.Map.t
+  -> OpamFile.OPAM.t option
+
 (** Adds data from 'url' and 'descr' files found in the specified dir or the
     opam file's metadata dir, if not already present in the opam file. if
     [files_subdir_hashes] is [true], also adds the names and hashes of files
