@@ -55,10 +55,7 @@ module B = struct
       Done (OpamRepositoryBackend.Update_full quarantine)
     else
       OpamStd.Exn.finally finalise @@ fun () ->
-      OpamRepositoryBackend.get_diff
-        (OpamFilename.dirname_dir repo_root)
-        (OpamFilename.basename_dir repo_root)
-        (OpamFilename.basename_dir quarantine)
+      OpamRepositoryBackend.get_diff repo_root quarantine
       |> function
       | None -> Done OpamRepositoryBackend.Update_empty
       | Some patch -> Done (OpamRepositoryBackend.Update_patch patch)

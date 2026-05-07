@@ -1,0 +1,438 @@
+(**************************************************************************)
+(*                                                                        *)
+(*    Copyright 2018 David Allsopp Ltd.                                   *)
+(*    Copyright 2025 Kate Deplaix                                         *)
+(*    Copyright 2026 OCamlPro                                             *)
+(*                                                                        *)
+(*  All rights reserved. This file is distributed under the terms of the  *)
+(*  GNU Lesser General Public License version 2.1, with the special       *)
+(*  exception on linking described in the file LICENSE.                   *)
+(*                                                                        *)
+(**************************************************************************)
+
+let log ?level fmt = OpamConsole.log "PATCH" ?level fmt
+
+let translate_patch ~dir orig corrected =
+  (* It's unnecessarily complicated to infer whether the entire file is CRLF
+     encoded and also the status of individual files, so accept scanning the
+     file three times instead of two. *)
+  let strip_cr = OpamSystem.get_eol_encoding orig = Some true in
+  let ch =
+    try open_in_bin orig
+    with Sys_error _ -> raise (OpamSystem.File_not_found orig)
+  in
+  (* CRLF detection with patching can be more complicated than that used here,
+     especially in the presence of files with mixed LF/CRLF endings. The
+     processing done here aims to allow patching to succeed on files which are
+     wholly encoded CRLF or LF against patches which may have been translated to
+     be the opposite.
+
+     The resulting patch will *always* have LF line endings for the patch
+     metadata (headers, chunk locations, etc.) but uses either CRLF or LF
+     depending on the target file. Endings in the patch are always preserved for
+     new files. The benefit of always using LF endings for the metadata is that
+     patch's "Stripping trailing CRs from patch" behaviour won't be triggered.
+
+     There are various patch formats, though only the Unified and Context
+     formats allow multiple files to be patched. I tired of trying to get
+     sufficient documented detail of Context diffs to be able to parse them
+     without resorting to reverse-engineering code. It is unusual to see them
+     these days, so for now opam just emits a warning if a Context diff file is
+     encountered and does no processing to it.
+
+     There are various semantic aspects of Unified diffs which are not handled
+     (at least at present) by this function which are documented in the code
+     with the marker "Weakness". *)
+  let process_chunk_header result line =
+    match OpamStd.String.split line ' ' with
+    | "@@"::a::b::"@@"::_ ->
+      (* Weakness: for a new file [a] should always be -0,0 (not checked) *)
+      let l_a = String.length a in
+      let l_b = String.length b in
+      if l_a > 1 && l_b > 1 && a.[0] = '-' && b.[0] = '+' then
+        try
+          let f (_, v) = int_of_string v in
+          let neg =
+            OpamStd.String.cut_at (String.sub a 1 (l_a - 1)) ','
+            |> OpamStd.Option.map_default f 1
+          in
+          let pos =
+            OpamStd.String.cut_at (String.sub b 1 (l_b - 1)) ','
+            |> OpamStd.Option.map_default f 1
+          in
+          result neg pos
+        with e ->
+          OpamStd.Exn.fatal e;
+          (* TODO Should display some kind of re-sync warning *)
+          `Header
+      else
+        (* TODO Should display some kind of re-sync warning *)
+        `Header
+    | _ ->
+      (* TODO Should display some kind of warning that there were no chunks *)
+      `Header
+  in
+  let process_state_transition next_state state transforms =
+    match (state, next_state) with
+    | (`Processing _, `Processing _) ->
+      transforms
+    | (`Processing (_, target, crlf, patch_crlf, chunks, _), _) ->
+      let compute_transform patch_crlf =
+        (* Emit the patch *)
+        let transform =
+          match (crlf, patch_crlf) with
+          | (None, _)
+          | (_, None) ->
+            log ~level:3 "CRLF adaptation skipped for %s" target;
+            None
+          | (Some crlf, Some patch_crlf) ->
+            if crlf = patch_crlf then begin
+              log ~level:3 "No CRLF adaptation necessary for %s" target;
+              None
+            end else if crlf then begin
+              log ~level:3 "Adding \\r to patch chunks for %s" target;
+              Some true
+            end else begin
+              log ~level:3 "Stripping \\r to patch chunks for %s" target;
+              Some false
+            end
+        in
+        let record_transform transform =
+          let augment_record (first_line, last_line) =
+            (first_line, last_line, transform)
+          in
+          List.rev_append (List.rev_map augment_record chunks) transforms
+        in
+        OpamStd.Option.map_default record_transform transforms transform
+      in
+      OpamStd.Option.map_default compute_transform transforms patch_crlf
+    | _ ->
+      transforms
+  in
+  let rec fold_lines state n transforms =
+    match input_line ch with
+    | line ->
+      let line =
+        if strip_cr then
+          String.sub line 0 (String.length line - 1)
+        else
+          line
+      in
+      let length = String.length line in
+      let next_state =
+        match state with
+        | `Header ->
+          begin
+            match (if length > 4 then String.sub line 0 4 else "") with
+            | "--- " ->
+              (* Start of a unified diff header. *)
+              let file =
+                let file = String.sub line 4 (length - 4) in
+                let open OpamStd in
+                Option.map_default fst file (String.cut_at file '\t')
+              in
+              (* Weakness: new files are also marked with a time-stamp at
+                           the start of the epoch, however it's localised,
+                           making it a bit tricky to identify! New files are
+                           also identified by their absence on disk, so this
+                           weakness isn't particularly critical. *)
+              if file = "/dev/null" then
+                `NewHeader
+              else
+                let target =
+                  OpamStd.String.cut_at (OpamSystem.back_to_forward file) '/'
+                  |> OpamStd.Option.map_default snd file
+                  |> Filename.concat dir
+                in
+                if Sys.file_exists target then
+                  let crlf = OpamSystem.get_eol_encoding target in
+                  `Patching (file, crlf)
+                else
+                  `NewHeader
+            | "*** " ->
+              OpamConsole.warning "File %s uses context diffs which are \
+                                   less portable; consider using unified \
+                                   diffs" orig;
+              `SkipFile
+            | _ ->
+              (* Headers will contain other lines, which are ignored (e.g.
+                 the diff command which generated the diff, or Git commit
+                 messages) *)
+              `Header
+          end
+        | `NewHeader ->
+          if (if length > 4 then String.sub line 0 4 else "") = "+++ " then
+            `New
+          else
+            (* TODO Should display some kind of re-sync warning *)
+            `Header
+        | `New ->
+          process_chunk_header (fun neg pos -> `NewChunk (neg, pos))
+            line
+        | `NewChunk (neg, pos) ->
+          (* Weakness: new files should only have + lines *)
+          let neg =
+            if line = "" || line.[0] = ' ' || line.[0] = '-' then
+              neg - 1
+            else
+              neg
+          in
+          let pos =
+            if line = "" || line.[0] = ' ' || line.[0] = '+' then
+              pos - 1
+            else
+              pos
+          in
+          if neg = 0 && pos = 0 then
+            `New
+          else
+            (* Weakness: there should only be one chunk for a new file *)
+            `NewChunk (neg, pos)
+        | `Patching (orig, crlf) ->
+          if (if length > 4 then String.sub line 0 4 else "") = "+++ " then
+            let file =
+              let file = String.sub line 4 (length - 4) in
+              let open OpamStd in
+              Option.map_default fst file (String.cut_at file '\t')
+            in
+            `Processing (orig, file, crlf, None, [], `Head)
+          else
+            `Header
+        | `Processing (orig, target, crlf, patch_crlf, chunks, `Head) ->
+          if line = "\\ No newline at end of file" then
+            (* If the no eol-at-eof indicator is found, never add \r to
+               final chunk line *)
+            let chunks =
+              match chunks with
+              | (a, b)::chunks ->
+                (a, b - 1)::chunks
+              | _ ->
+                chunks
+            in
+            `Processing (orig, target, crlf, patch_crlf, chunks, `Head)
+          else
+            process_chunk_header
+              (fun neg pos ->
+                 `Processing (orig, target, crlf, patch_crlf, chunks,
+                              `Chunk (succ n, neg, pos)))
+              line
+        | `Processing (orig, target, crlf, patch_crlf, chunks,
+                       `Chunk (first_line, neg, pos)) ->
+          let neg =
+            if line = "" || line.[0] = ' ' || line.[0] = '-' then
+              neg - 1
+            else
+              neg
+          in
+          let pos =
+            if line = "" || line.[0] = ' ' || line.[0] = '+' then
+              pos - 1
+            else
+              pos
+          in
+          let patch_crlf =
+            let has_cr = (length > 0 && line.[length - 1] = '\r') in
+            match patch_crlf with
+            | None ->
+              Some (Some has_cr)
+            | Some (Some think_cr) when think_cr <> has_cr ->
+              log ~level:2 "Patch adaptation disabled for %s: \
+                            mixed endings or binary file" target;
+              Some None
+            | _ ->
+              patch_crlf
+          in
+          if neg = 0 && pos = 0 then
+            let chunks = (first_line, n)::chunks in
+            `Processing (orig, target, crlf, patch_crlf, chunks, `Head)
+          else
+            `Processing (orig, target, crlf, patch_crlf, chunks,
+                         `Chunk (first_line, neg, pos))
+        | `SkipFile ->
+          `SkipFile
+      in
+      if next_state = `SkipFile then
+        []
+      else
+        process_state_transition next_state state transforms
+        |> fold_lines next_state (succ n)
+    | exception End_of_file ->
+      process_state_transition `Header state transforms |> List.rev
+  in
+  let transforms = fold_lines `Header 1 [] in
+  if transforms = [] then begin
+    log ~level:1 "No patch translation needed for %s -> %s" orig corrected;
+    OpamSystem.copy_file orig corrected
+  end else begin
+    seek_in ch 0;
+    log ~level:1 "Transforming patch %s to %s" orig corrected;
+    let ch_out =
+      try open_out_bin corrected
+      with Sys_error _ ->
+        close_in ch;
+        raise (OpamSystem.File_not_found corrected)
+    in
+    let (normal, add_cr, strip_cr) =
+      let strip n s = String.sub s 0 (String.length s - n) in
+      let id x = x in
+      if strip_cr then
+        (strip 1, id, strip 2)
+      else
+        (id, (fun s -> s ^ "\r"), strip 1)
+    in
+    if OpamConsole.debug () then begin
+      let log_transform (first_line, last_line, add_cr) =
+        let indicator = if add_cr then '+' else '-' in
+        log ~level:3 "Transform %d-%d %c\\r" first_line last_line indicator
+      in
+      List.iter log_transform transforms
+    end;
+    let rec fold_lines n transforms =
+      match input_line ch with
+      | line ->
+        let (f, transforms) =
+          match transforms with
+          | (first_line, last_line, add_cr_to_chunks)::next_transforms ->
+            let transforms =
+              if n = last_line then
+                next_transforms
+              else
+                transforms
+            in
+            let f =
+              if n >= first_line then
+                if add_cr_to_chunks then
+                  add_cr
+                else
+                  strip_cr
+              else
+                normal
+            in
+            (f, transforms)
+          | [] ->
+            (normal, [])
+        in
+        output_string ch_out (f line);
+        output_char ch_out '\n';
+        fold_lines (succ n) transforms
+      | exception End_of_file ->
+        close_out ch_out
+    in
+    fold_lines 1 transforms
+  end;
+  close_in ch
+
+exception Internal_patch_error of string
+
+let patch ~allow_unclean ?patch_filename ~dir diffs =
+  if diffs = [] then () else
+    let internal_patch_error fmt =
+      Printf.ksprintf (fun str -> raise (Internal_patch_error str)) fmt
+    in
+    let patch_info_path =
+      OpamStd.Option.default ("in directory "^dir) patch_filename
+    in
+    (* NOTE: It is important to keep this `concat dir ""` to ensure the
+       is_prefix_of below doesn't match another similarly named directory *)
+    let dir = Filename.concat (OpamSystem.real_path dir) "" in
+    let get_path file =
+      let file = OpamSystem.real_path (Filename.concat dir file) in
+      if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
+        internal_patch_error "Patch %S tried to escape its scope."
+          patch_info_path;
+      file
+    in
+    let patch ~file content diff =
+      (* NOTE: The None case returned by [Patch.patch] is only returned
+         if [diff = Patch.Delete _]. This sub-function is not called in
+         this case so we [assert false] instead. *)
+      match Patch.patch ~cleanly:true content diff with
+      | Some x -> x
+      | None -> assert false (* See NOTE above *)
+      | exception _ when not allow_unclean ->
+        internal_patch_error "Patch %S does not apply cleanly."
+          patch_info_path
+      | exception _ ->
+        match Patch.patch ~cleanly:false content diff with
+        | Some x ->
+          Option.iter (OpamSystem.write (file^".orig")) content;
+          x
+        | None -> assert false (* See NOTE above *)
+        | exception _ ->
+          Option.iter (OpamSystem.write (file^".orig")) content;
+          OpamSystem.write (file^".rej") (Format.asprintf "%a" Patch.pp diff);
+          internal_patch_error "Patch %S does not apply cleanly."
+            patch_info_path
+    in
+    let apply diff =
+      match diff.Patch.operation with
+      | Patch.Edit (file1, file2) ->
+        let file1 = get_path file1 in
+        let file2 = get_path file2 in
+        let file1_exists = Sys.file_exists file1 in
+        (* That seems to be the GNU patch behaviour *)
+        let file = if file1_exists then file1 else file2 in
+        let content = OpamSystem.read file in
+        let content = patch ~file (Some content) diff in
+        OpamSystem.write file content;
+        if file1_exists && file1 <> (file2 : string) then
+          OpamSystem.rmdir_cleanup (Filename.dirname file1)
+      | Patch.Delete file | Patch.Git_ext (file, _, Patch.Delete_only) ->
+        let file = get_path file in
+        OpamSystem.remove_file file;
+        OpamSystem.rmdir_cleanup (Filename.dirname file)
+      | Patch.Create file | Patch.Git_ext (_, file, Patch.Create_only) ->
+        let file = get_path file in
+        let content = patch ~file None diff in
+        OpamSystem.write file content
+      | Patch.Git_ext (_, _, Patch.Rename_only (src, dst)) ->
+        let src = get_path src in
+        let dst = get_path dst in
+        let check_and_write_dst longest_path content =
+          let dir = Filename.dirname longest_path in
+          if Sys.file_exists dir && Sys.is_directory dir then
+            (OpamSystem.write src content;
+             failwith
+               (Printf.sprintf "Directory of %s is not empty, \
+                                failed to remove to write %s"
+                  src dst))
+          else
+            OpamSystem.write dst content
+        in
+        let contained_in ~prefix ~inn =
+          (* NOTE: It is important to keep this `concat prefix ""` to ensure
+             starts_with doesn't match another similarly named directory *)
+          let prefix = Filename.concat prefix "" in
+          OpamCompat.String.starts_with ~prefix:prefix inn
+        in
+        (* case a/b/FILE -> a/b/FILE/anotherfile *)
+        if contained_in ~prefix:src ~inn:dst then
+          let content = OpamSystem.read src in
+          OpamSystem.remove_file src;
+          check_and_write_dst dst content
+          (* case a/b/FILE/anotherfile -> a/b/FILE *)
+        else if contained_in ~prefix:dst ~inn:src then
+          let content = OpamSystem.read src in
+          OpamSystem.remove_file src;
+          OpamSystem.rmdir_cleanup (Filename.dirname src);
+          check_and_write_dst src content
+        else
+          (OpamSystem.mv src dst;
+           let dirname_src = Filename.dirname src in
+           if dirname_src <> (Filename.dirname dst : string) then
+             OpamSystem.rmdir_cleanup dirname_src)
+    in
+    List.iter apply diffs
+
+let parse_patch ~dir ~file =
+  if not (Sys.file_exists file) then
+    (OpamConsole.error "Patch file %S not found." file;
+     raise Not_found);
+  let file' =
+    let file' = OpamSystem.temp_file ~auto_clean:false "processed-patch" in
+    translate_patch ~dir file file';
+    file'
+  in
+  let content = OpamSystem.read file' in
+  Fun.protect (fun () -> Patch.parse ~p:1 content)
+    ~finally:(fun () -> if not (OpamConsole.debug ()) then Sys.remove file')

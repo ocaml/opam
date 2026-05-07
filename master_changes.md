@@ -53,6 +53,7 @@ users)
   * Compute the list of available depexts on `opam update` [#6489 @arozovyk - fix #6461]
   * Update depexts availability repository state cache when running `opam update --depexts` [#6489 @arozovyk - fix #6461]
   * Display status message while loading system package availability during `opam update` [#6489 @arozovyk - fix #6461]
+  * `opam update` now supports updating a repository that changed a file to a directory of the same name and vice versa [#6915 @rjbou @arozovyk - fix #3830]
 
 ## Tree
 
@@ -145,6 +146,9 @@ users)
 ## Internal: Windows
 
 ## Test
+  * lib/patchDiff: no longer print unecessary information after patch [#6915 @rjbou]
+  * lib/patchDiff: Ensure a more consistent output accross Unix and Windows platforms [#6915 @kit-ty-kate]
+  * lib/patchdiff: add dir-file transformations tests [#6915 @rjbou]
 
 ## Benchmarks
   * Add an even larger real-world diff to benchmark `opam update` [#6567 @kit-ty-kate]
@@ -161,6 +165,7 @@ users)
   * Add a test showing the behaviour of .install files containing destination filepath trying to escape their scope [#6897 @rjbou @kit-ty-kate]
   * Add a test showing that `opam install ./` will leave packages pinned if
     aborted or failed [#6922 @NathanReb]
+  * Add test for update in repository that changes directories to files and vice versa [#6915 @rjbou]
 
 ### Engine
 
@@ -247,6 +252,8 @@ users)
   * `OpamCompat.MAP.filter_map`: was removed [#6879 @kit-ty-kate]
   * `OpamCompat.Map.add_to_list`: was added [#6818 @dra27]
   * `OpamSystem`: add `is_dir_read_only` [#6489 @rjbou]
+  * `OpamSystem.*patch` were moved to `OpamPatch` [#6915 @rjbou]
   * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
+  * `OpamPatch` was added [#6915 @rjbou]
