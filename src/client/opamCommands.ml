@@ -4290,7 +4290,7 @@ let clean cli =
       try OpamFilename.rmdir d
       with OpamSystem.Internal_error msg -> OpamConsole.warning "Error ignored: %s" msg
     in
-    let _rm f =
+    let rm f =
       if dry_run then
         OpamConsole.msg "rm -f \"%s\"\n"
           (OpamFilename.to_string f)
@@ -4370,9 +4370,12 @@ let clean cli =
        OpamRepositoryName.Set.iter (fun r ->
            OpamConsole.msg "Removing repository %s\n"
              (OpamRepositoryName.to_string r);
+           (* TAR TOQUESTION: do we introduce remove with dry run just for this call ? i'd say no *)
            rmdir
              (OpamRepositoryRoot.Dir.to_dir
-                (OpamRepositoryRoot.Dir.Path.root root r)))
+                (OpamRepositoryRoot.Dir.Path.root root r));
+           rm (OpamRepositoryRoot.Tar.to_file
+                 (OpamRepositoryRoot.Tar.Path.root root r)))
          unused_repos;
        let repos_config =
          OpamRepositoryName.Map.filter
