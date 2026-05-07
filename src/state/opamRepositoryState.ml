@@ -172,6 +172,55 @@ let read_package_opam_tar ~repo_name ~repo_root package_dir
          OpamFilename.Unix.Op.(package_dir // OpamRepositoryPathName.opam_f));
     None
 
+let load_raw_opams_and_aux_from_tar _repo_name tar =
+  let raw_repository =
+    OpamRepositoryRoot.Tar.fold (fun acc filename content ->
+        (filename, content) :: acc)
+      [] tar
+  in
+  let repo_def =
+    let filename = OpamFilename.Unix.of_string OpamRepositoryPathName.repo_f in
+    match List.assoc_opt filename raw_repository with
+    | Some content ->
+      let filename = OpamFile.make (OpamFilename.Unix.to_filename filename) in
+      log ~level:5 "read %s"
+        (OpamFilename.to_string (OpamFile.filename filename));
+      OpamRepositoryRoot.read_file ~safe:true (module OpamFile.Repo)
+        (OpamRepositoryRoot.Tar tar) ~filename content
+    | None -> OpamFile.Repo.empty
+  in
+  let opams_map =
+    List.fold_left (fun acc (filename, content) ->
+        if OpamFilename.Unix.starts_with
+            (OpamFilename.Unix.Dir.of_string OpamRepositoryPathName.packages_d)
+            filename
+        && String.equal OpamPathName.opam_f
+             OpamFilename.Unix.(Base.to_string (basename filename)) then
+          let key = OpamFilename.Unix.dirname filename in
+          let value = filename, content, OpamFilename.Unix.Map.empty in
+          OpamFilename.Unix.Dir.Map.add key value acc
+        else acc)
+      OpamFilename.Unix.Dir.Map.empty raw_repository
+  in
+  let opams_map =
+    let exception Found of
+        OpamFilename.Unix.Dir.t
+        * (OpamFilename.Unix.t * string * string OpamFilename.Unix.Map.t)
+    in
+    List.fold_left (fun acc (filename, content) ->
+        try
+          OpamFilename.Unix.Dir.Map.iter (fun dir value ->
+              if OpamFilename.Unix.starts_with dir filename then
+                raise (Found (dir, value))) acc;
+          acc
+        with Found (key, value) ->
+          let fo, co, map = value in
+          let map = OpamFilename.Unix.Map.add filename content map in
+          OpamFilename.Unix.Dir.Map.add key (fo, co, map) acc)
+      opams_map raw_repository
+  in
+  repo_def, opams_map
+
 let load_opams_from_dir repo_name repo_root =
   if OpamConsole.disp_status_line () || OpamConsole.verbose () then
     OpamConsole.status_line "Processing: [%s: loading data]"
