@@ -449,4 +449,7 @@ module Unix : sig
      '.', it error with [Error err] *)
   val to_relative_canonical: t -> (t, string) result
 
+  (** Return the first element of the path, if not empty *)
+  val root_dir: t -> string option
+
 end
