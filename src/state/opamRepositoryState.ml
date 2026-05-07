@@ -100,6 +100,7 @@ let get_repo_files rt name dir =
     if tdebug then
       OpamConsole.error "RS:GRF: GET REPO FIULES DIR";
     (* TODO: this should be part of the OpamFilename invariants! *)
+    let dir = OpamSystem.forward_to_back dir in
     let dir = OpamRepositoryRoot.Dir.Op.(repo_root / dir) in
     let files = OpamFilename.rec_files dir in
     if tdebug then
