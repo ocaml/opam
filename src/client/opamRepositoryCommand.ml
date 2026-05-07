@@ -81,11 +81,10 @@ let add rt name url trust_anchors =
     let repo = { repo_name = name; repo_url = url;
                  repo_trust = trust_anchors; }
     in
-    let repo_root = OpamRepositoryRoot.Dir.Path.root root name in
-    if OpamRepositoryRoot.Dir.exists repo_root then
+    if OpamRepositoryRoot.root_exists root name then
       OpamConsole.error_and_exit `Bad_arguments
         "Invalid repository name, %s exists"
-        (OpamRepositoryRoot.Dir.to_string repo_root);
+        (OpamRepositoryName.to_string name);
     if url.OpamUrl.backend = `rsync &&
        OpamUrl.local_dir url <> None &&
        OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url url)

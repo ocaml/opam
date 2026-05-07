@@ -153,3 +153,5 @@ val remove_both : dirname -> repository_name -> unit
     is an archive, it uncompress it, applies the function and update archive
     with the changed directory. *)
 val on_dir: (dirname -> 'a) -> t -> 'a
+
+val root_exists : dirname -> repository_name -> bool
