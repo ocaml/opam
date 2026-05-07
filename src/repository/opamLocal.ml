@@ -150,8 +150,21 @@ module B = struct
     let finalise () = OpamRepositoryRoot.remove quarantine in
     let populate_quarantine () =
       match repo_root, quarantine with
+      | OpamRepositoryRoot.Tar _, OpamRepositoryRoot.Tar quarantine ->
+        (let to_archive dir =
+           OpamRepositoryRoot.make_tar_gz quarantine
+             (OpamRepositoryRoot.Dir.of_dir dir);
+           Done (Result ())
+         in
+         match OpamUrl.local_dir url with
+         | Some dir -> to_archive dir
+         | None ->
+           OpamFilename.with_tmp_dir_job @@ fun dir ->
+           pull_dir_quiet dir url @@+ function
+           | Result () -> to_archive dir
+           | exn -> Done exn)
       | OpamRepositoryRoot.Dir dir, OpamRepositoryRoot.Dir quarantine ->
-         (match OpamUrl.local_dir url with
+        (match OpamUrl.local_dir url with
          | Some dir ->
            let dir = OpamRepositoryRoot.Dir.of_dir dir in
            OpamRepositoryRoot.Dir.copy_except_vcs ~src:dir ~dst:quarantine;
@@ -165,6 +178,8 @@ module B = struct
            else
              OpamRepositoryRoot.Dir.make_empty quarantine;
            pull_dir_quiet (OpamRepositoryRoot.Dir.to_dir quarantine) url)
+      (* we have the gaurantee that repo root and quarantine have the same kind *)
+      | _, _ -> assert false
     in
     OpamProcess.Job.catch (fun e ->
         finalise ();
