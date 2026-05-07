@@ -323,17 +323,6 @@ let load lock_kind gt =
               need to be computed with depexts (other polling attempt) *)
            None)
   in
-  (* remove repo_tarring archives *)
-  OpamRepositoryName.Map.iter (fun name _ ->
-      let dir = OpamRepositoryRoot.Dir.to_dir (OpamRepositoryRoot.Dir.Path.root gt.root name) in
-      let tar = OpamRepositoryPath.repo_tarring gt.root name in
-      let dir_exists = OpamFilename.exists_dir dir in
-      let tar_exists = OpamFilename.exists tar in
-      if not dir_exists && tar_exists then
-        OpamFilename.extract_in tar dir
-      else if dir_exists && tar_exists then
-        OpamFilename.remove tar)
-    repositories;
   match Cache.load gt.root with
   | Some (repofiles, opams, sys_available_pkgs) ->
     log "Cache found";
