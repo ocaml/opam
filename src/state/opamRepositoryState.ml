@@ -387,7 +387,8 @@ let unlock ?cleanup:(cln=true) rt =
   (rt :> unlocked repos_state)
 
 let drop ?cleanup rt =
-  let _ = unlock ?cleanup rt in ()
+  let _ = unlock ?cleanup rt in
+  ()
 
 let with_write_lock ?dontblock rt f =
   if OpamStateConfig.is_newer_than_self ~lock_kind:`Lock_write rt.repos_global
