@@ -250,18 +250,15 @@ let update_with_auto_upgrade rt repo_names =
                 OpamRepositoryState.Cache.remove ());
              OpamConsole.msg "Upgrading repository \"%s\"...\n"
                (OpamRepositoryName.to_string r.repo_name);
-             let repo_root =
-               match OpamRepositoryState.get_repo_root rt r with
-               | OpamRepositoryRoot.Dir x -> x
+             let repo_root = OpamRepositoryState.get_repo_root rt r in
+             OpamRepositoryRoot.on_dir (fun dir ->
+                 OpamAdminRepoUpgrade.do_upgrade (OpamRepositoryRoot.Dir.of_dir dir))
+               repo_root;
+             let def, opams =
+               OpamRepositoryState.load_repo r repo_root
              in
-             OpamAdminRepoUpgrade.do_upgrade repo_root;
              let def =
-               OpamRepositoryRoot.Dir.Path.repo repo_root
-               |> OpamFile.Repo.safe_read
-               |> OpamFile.Repo.with_root_url r.repo_url
-             in
-             let opams =
-               OpamRepositoryState.load_opams_from_dir r.repo_name repo_root
+               OpamFile.Repo.with_root_url r.repo_url def
              in
              let rt = {
                rt with
