@@ -71,122 +71,112 @@ let job_text name label =
        (OpamConsole.colorise `green (OpamRepositoryName.to_string name))
        label)
 
-let get_files_for_diff parent_dir dir1 dir2 =
-  let getfiles parent_dir dir =
-    let dir = Filename.concat (OpamFilename.Dir.to_string parent_dir) dir in
-    OpamSystem.get_files_except_vcs dir
+(**  DIFF *)
+
+(* We put back the prefix for patch -p1 harmonisation *)
+let add_prefix repo1 repo2 =
+  let prefix repo =
+    OpamFilename.basename_dir repo
+    |> OpamFilename.Base.to_string
   in
-  match dir1, dir2 with
-  | None, None -> assert false
-  | Some dir, None ->
-    List.map (fun file -> (Some (dir^"/"^file), None))
-      (getfiles parent_dir dir)
-  | None, Some dir ->
-    List.map (fun file -> (None, Some (dir^"/"^file)))
-      (getfiles parent_dir dir)
-  | Some dir1, Some dir2 ->
-    let files1 = List.fast_sort String.compare (getfiles parent_dir dir1) in
-    let files2 = List.fast_sort String.compare (getfiles parent_dir dir2) in
-    let rec aux acc files1 files2 = match files1, files2 with
-      | (file1::files1 as orig1), (file2::files2 as orig2) ->
-        let cmp = String.compare file1 file2 in
-        if cmp = 0 then
-          aux ((Some (dir1^"/"^file1), Some (dir2^"/"^file2)) :: acc)
-            files1 files2
-        else if cmp < 0 then
-          aux ((Some (dir1^"/"^file1), None) :: acc) files1 orig2
-        else
-          aux ((None, Some (dir2^"/"^file2)) :: acc) orig1 files2
-      | file1::files1, [] ->
-        aux ((Some (dir1^"/"^file1), None) :: acc) files1 []
-      | [], file2::files2 ->
-        aux ((None, Some (dir2^"/"^file2)) :: acc) [] files2
-      | [], [] ->
-        acc
+  let p1 x = prefix repo1 ^ "/" ^ x in
+  let p2 x = prefix repo2 ^ "/" ^ x in
+  fun patch ->
+    let operation =
+      match patch.Patch.operation with
+      | Patch.Create f -> Patch.Create (p2 f)
+      | Patch.Delete f -> Patch.Delete (p1 f)
+      | Patch.Edit (f1, f2) -> Patch.Edit (p1 f1, p2 f2)
+      | Patch.Git_ext (f1, f2, ext) -> Patch.Git_ext (p1 f1, p2 f2, ext)
     in
-    aux [] files1 files2
+    {patch with operation}
 
-(* Serves to remove the repository suffix since the quarantine mechanism in
-   local and http patches causes incoherencies with vcs patches *)
-let strip_repo_suffix patch =
-  let rm_prefix f =
-    match OpamStd.String.cut_at f '/' with
-    | None ->
-      log "Internal diff: failed to remove prefix of %s" f;
-      f
-    | Some (_, r) -> r
-  in
-  let operation =
-    match patch.Patch.operation with
-    | Patch.Create f -> Patch.Create (rm_prefix f)
-    | Patch.Delete f -> Patch.Delete (rm_prefix f)
-    | Patch.Edit (f1, f2) -> Patch.Edit (rm_prefix f1, rm_prefix f2)
-    | Patch.Git_ext (f1, f2, ext) ->
-      Patch.Git_ext (rm_prefix f1, rm_prefix f2, ext)
-  in
-  {patch with operation}
-
-let get_diff parent_dir dir1 dir2 =
+let get_diff repo1 repo2 =
   let chrono = OpamConsole.timer () in
-  log "diff: %a/{%a,%a}"
-    (slog OpamFilename.Dir.to_string) parent_dir
-    (slog OpamFilename.Base.to_string) dir1
-    (slog OpamFilename.Base.to_string) dir2;
-  let readfile parent_dir file =
-    let real_file =
-      Filename.concat (OpamFilename.Dir.to_string parent_dir) file
+  log "diff: %a"
+    (fun fmt () ->
+       if OpamFilename.Dir.equal
+           (OpamFilename.dirname_dir repo1)
+           (OpamFilename.dirname_dir repo2) then
+         Format.fprintf fmt "%s/{%s,%s}"
+           (OpamFilename.Dir.to_string (OpamFilename.dirname_dir repo1))
+           (OpamFilename.Base.to_string (OpamFilename.basename_dir repo1))
+           (OpamFilename.Base.to_string (OpamFilename.basename_dir repo2))
+       else
+         Format.fprintf fmt "%s vs %s"
+           (OpamFilename.Dir.to_string repo1)
+           (OpamFilename.Dir.to_string repo2))
+    ();
+  let get_contents =
+    let read_dir_contents dir =
+      let fail s = failwith (s ^ " are unsupported") in
+      (* Recursively read directory contents into a string map.
+         Returns a map from relative file paths to their contents. *)
+      let rec aux acc prefix current_dir =
+        let entries = OpamSystem.get_files_except_vcs current_dir in
+        List.fold_left (fun acc entry ->
+            let full_path = Filename.concat current_dir entry in
+            let relative_path =
+              match prefix with
+              | None -> entry
+              | Some prefix -> prefix ^ "/" ^ entry
+            in
+            let stat = Unix.lstat full_path in
+            match stat.Unix.st_kind with
+            | Unix.S_REG ->
+              let content = OpamSystem.read full_path in
+              OpamStd.String.Map.add relative_path content acc
+            | Unix.S_DIR ->
+              aux acc (Some relative_path) full_path
+            | Unix.S_LNK -> fail "Symlinks"
+            | Unix.S_CHR -> fail "Character devices"
+            | Unix.S_BLK -> fail "Block devices"
+            | Unix.S_FIFO -> fail "Named pipes"
+            | Unix.S_SOCK -> fail "Sockets")
+          acc entries
+      in
+      aux OpamStd.String.Map.empty None dir
     in
-    (file, OpamSystem.read real_file)
+    fun dir ->
+      read_dir_contents (OpamFilename.Dir.to_string dir)
   in
-  let lstat_opt parent_dir = function
-    | None -> None
-    | Some file ->
-      let file = Filename.concat (OpamFilename.Dir.to_string parent_dir) file in
-      Some (Unix.lstat file)
+  let contents1 = get_contents repo1 in
+  let contents2 = get_contents repo2 in
+  let get_content_diffs filename contents1 content2 diffs seen =
+    (* Compute content diffs for a single file.
+       Compares [content2] (new) against [contents1] (old state map).
+       Adds [filename] to [seen] set and generates a diff if contents differ.
+       Returns updated (diffs, seen) accumulator pair *)
+    let seen = OpamStd.String.Set.add filename seen in
+    match OpamStd.String.Map.find_opt filename contents1 with
+    | Some content1 when String.equal content1 content2 ->
+      (diffs, seen)
+    | content1_opt ->
+      let content1 = Option.map (fun c -> (filename, c)) content1_opt in
+      let content2 = Some (filename, content2) in
+      match Patch.diff content1 content2 with
+      | None -> (diffs, seen)
+      | Some diff -> (diff :: diffs, seen)
   in
-  let rec aux diffs dir1 dir2 =
-    let files = get_files_for_diff parent_dir dir1 dir2 in
-    let diffs =
-      List.fold_left (fun diffs (file1, file2) ->
-          let add_to_diffs content1 content2 diffs =
-            match Patch.diff content1 content2 with
-            | None -> diffs
-            | Some diff -> diff :: diffs
-          in
-          match lstat_opt parent_dir file1, lstat_opt parent_dir file2 with
-          | Some {st_kind = S_REG; _}, None
-          | None, Some {st_kind = S_REG; _}
-          | Some {st_kind = S_REG; _}, Some {st_kind = S_REG; _} ->
-            let content1 = Option.map (readfile parent_dir) file1 in
-            let content2 = Option.map (readfile parent_dir) file2 in
-            add_to_diffs content1 content2 diffs
-          | Some {st_kind = S_DIR; _}, None | None, Some {st_kind = S_DIR; _}
-          | Some {st_kind = S_DIR; _}, Some {st_kind = S_DIR; _} ->
-            aux diffs file1 file2
-          | Some {st_kind = S_DIR; _}, Some {st_kind = S_REG; _} ->
-            failwith "Change from a directory to a regular file is unsupported"
-          | Some {st_kind = S_REG; _}, Some {st_kind = S_DIR; _} ->
-            failwith "Change from a regular file to a directory is unsupported"
-          | Some {st_kind = S_LNK; _}, _ | _, Some {st_kind = S_LNK; _} ->
-            failwith "Symlinks are unsupported"
-          | Some {st_kind = S_CHR; _}, _ | _, Some {st_kind = S_CHR; _} ->
-            failwith "Character devices are unsupported"
-          | Some {st_kind = S_BLK; _}, _ | _, Some {st_kind = S_BLK; _} ->
-            failwith "Block devices are unsupported"
-          | Some {st_kind = S_FIFO; _}, _ | _, Some {st_kind = S_FIFO; _} ->
-            failwith "Named pipes are unsupported"
-          | Some {st_kind = S_SOCK; _}, _ | _, Some {st_kind = S_SOCK; _} ->
-            failwith "Sockets are unsupported"
-          | None, None -> assert false)
-        diffs files
-    in
-    diffs
+  let diffs, seen =
+    OpamStd.String.Map.fold
+      (fun filename content2 (diffs, seen) ->
+         get_content_diffs filename contents1 content2 diffs seen)
+      contents2 ([], OpamStd.String.Set.empty)
   in
-  match
-    aux []
-      (Some (OpamFilename.Base.to_string dir1))
-      (Some (OpamFilename.Base.to_string dir2))
-  with
+  let diffs =
+    (* NOTE: putting the deletions first in the list allows us to have
+       a simpler implementation of OpamPatch. This might not be needed
+       in the future if OpamPatch supports git apply style reordering. *)
+    OpamStd.String.Map.fold (fun filename content diffs ->
+        if OpamStd.String.Set.mem filename seen then diffs
+        else
+          match Patch.diff (Some (filename, content)) None with
+          | None -> diffs
+          | Some diff -> diff :: diffs)
+      contents1 diffs
+  in
+  match diffs with
   | [] ->
     log "Internal diff (empty) done in %.2fs." (chrono ());
     None
@@ -195,5 +185,6 @@ let get_diff parent_dir dir1 dir2 =
       (slog (fun l -> string_of_int (List.length l))) diffs (chrono ());
     let patch = OpamSystem.temp_file ~auto_clean:false "patch" in
     let patch_file = OpamFilename.of_string patch in
-    OpamFilename.write patch_file (Format.asprintf "%a" Patch.pp_list diffs);
-    Some (patch_file, List.map strip_repo_suffix diffs)
+    let file_diffs = List.map (add_prefix repo1 repo2) diffs in
+    OpamFilename.write patch_file (Format.asprintf "%a" Patch.pp_list file_diffs);
+    Some (patch_file, diffs)

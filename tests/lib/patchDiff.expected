@@ -49,32 +49,11 @@
   > foo
 
 *** DIFF ***
---- first/diff-dir-plus-fst/fst
-+++ second/diff-dir-plus-fst/fst
-@@ -2,0 +2,1 @@
-+bar
---- first/diff-dir-plus-snd/fst
-+++ second/diff-dir-plus-snd/fst
-@@ -2,1 +2,0 @@
--bar
---- first/diff-file
-+++ second/diff-file
-@@ -1,1 +1,1 @@
--foo
-+bar
---- first/diff-file-plus-fst
-+++ second/diff-file-plus-fst
-@@ -2,1 +2,0 @@
--bar
---- first/diff-file-plus-snd
-+++ second/diff-file-plus-snd
-@@ -2,0 +2,1 @@
-+bar
---- first/dir-only-fst/fst
+--- first/file-only-fst
 +++ /dev/null
 @@ -1,1 +0,0 @@
 -foo
---- first/file-only-fst
+--- first/dir-only-fst/fst
 +++ /dev/null
 @@ -1,1 +0,0 @@
 -foo
@@ -82,6 +61,27 @@
 +++ second/file-only-snd
 @@ -0,0 +1,1 @@
 +foo
+--- first/diff-file-plus-snd
++++ second/diff-file-plus-snd
+@@ -2,0 +2,1 @@
++bar
+--- first/diff-file-plus-fst
++++ second/diff-file-plus-fst
+@@ -2,1 +2,0 @@
+-bar
+--- first/diff-file
++++ second/diff-file
+@@ -1,1 +1,1 @@
+-foo
++bar
+--- first/diff-dir-plus-snd/fst
++++ second/diff-dir-plus-snd/fst
+@@ -2,1 +2,0 @@
+-bar
+--- first/diff-dir-plus-fst/fst
++++ second/diff-dir-plus-fst/fst
+@@ -2,0 +2,1 @@
++bar
 
 *** PATCHED ***
 + first/
@@ -103,26 +103,6 @@
   > foo
 + first/same-dir
 + first/same-file
-  > foo
-+ second/
-+ second/diff-dir-plus-fst
-+ second/diff-dir-plus-fst/fst
-  > foo
-  > bar
-+ second/diff-dir-plus-snd
-+ second/diff-dir-plus-snd/fst
-  > foo
-+ second/diff-file
-  > bar
-+ second/diff-file-plus-fst
-  > foo
-+ second/diff-file-plus-snd
-  > foo
-  > bar
-+ second/file-only-snd
-  > foo
-+ second/same-dir
-+ second/same-file
   > foo
 
 *** GIT DIFF ***
@@ -194,26 +174,6 @@ rename to file-only-snd
 + first/same-dir
 + first/same-file
   > foo
-+ second/
-+ second/diff-dir-plus-fst
-+ second/diff-dir-plus-fst/fst
-  > foo
-  > bar
-+ second/diff-dir-plus-snd
-+ second/diff-dir-plus-snd/fst
-  > foo
-+ second/diff-file
-  > bar
-+ second/diff-file-plus-fst
-  > foo
-+ second/diff-file-plus-snd
-  > foo
-  > bar
-+ second/file-only-snd
-  > foo
-+ second/same-dir
-+ second/same-file
-  > foo
 
 
 ----------------------
@@ -234,7 +194,31 @@ rename to file-only-snd
   > foo
 
 *** DIFF ***
-ERROR: Change from a regular file to a directory is unsupported
+--- first/file-fst-dir-snd
++++ /dev/null
+@@ -1,1 +0,0 @@
+-foo
+--- /dev/null
++++ second/file-fst-dir-snd/fst
+@@ -0,0 +1,1 @@
++foo
+
+*** PATCHED ***
++ first/
++ first/file-fst-dir-snd
++ first/file-fst-dir-snd/fst
+  > foo
++ first/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/file-fst-dir-snd a/file-fst-dir-snd/fst
+similarity index 100%
+rename from file-fst-dir-snd
+rename to file-fst-dir-snd/fst
+
+*** GIT PATCH ERROR ***
+ERROR: Unix.Unix_error(Unix.ENOTDIR, "lstat", "${BASEDIR}/first/file-fst-dir-snd/fst")
 
 ----------------------
  Test 3: diff dir/file error
@@ -254,7 +238,30 @@ ERROR: Change from a regular file to a directory is unsupported
   > foo
 
 *** DIFF ***
-ERROR: Change from a directory to a regular file is unsupported
+--- first/dir-fst-file-snd/fst
++++ /dev/null
+@@ -1,1 +0,0 @@
+-foo
+--- /dev/null
++++ second/dir-fst-file-snd
+@@ -0,0 +1,1 @@
++foo
+
+*** PATCHED ***
++ first/
++ first/dir-fst-file-snd
+  > foo
++ first/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/dir-fst-file-snd/fst a/dir-fst-file-snd
+similarity index 100%
+rename from dir-fst-file-snd/fst
+rename to dir-fst-file-snd
+
+*** GIT PATCH ERROR ***
+ERROR: OpamSystem.Internal_error("Cannot remove ${BASEDIR}/first/dir-fst-file-snd (Unix.Unix_error(Unix.EISDIR, \"unlink\", \"${BASEDIR}/first/dir-fst-file-snd\")).")
 
 ----------------------
  Test 4: symlink fst
@@ -323,11 +330,6 @@ ERROR: Symlinks are unsupported
   > foo
 + first/same-file
   > foo
-+ second/
-+ second/hardlinked-file-fst
-  > foo
-+ second/same-file
-  > foo
 
 
 ----------------------
@@ -377,11 +379,6 @@ patch format
   > foo
 + first/same-file
   > foo
-+ second/
-+ second/diff-file
-  > bar
-+ second/same-file
-  > foo
 
 
 ----------------------
@@ -422,13 +419,6 @@ patch format
   > bar
 + first/same-file
   > foo
-+ second/
-+ second/diff-file
-  > bar
-+ second/diff-file-plus-fst
-  > foo
-+ second/same-file
-  > foo
 
 
 ----------------------
@@ -445,17 +435,13 @@ patch format
   > foo
 
 *** DIFF ***
-diff --git second/im-empty second/im-empty
+diff --git first/im-empty second/im-empty
 new file mode 100644
 
 *** PATCHED ***
 + first/
 + first/im-empty
 + first/same-file
-  > foo
-+ second/
-+ second/im-empty
-+ second/same-file
   > foo
 
 *** GIT DIFF ***
@@ -467,10 +453,6 @@ index c0ffee..c0ffee
 + first/
 + first/im-empty
 + first/same-file
-  > foo
-+ second/
-+ second/im-empty
-+ second/same-file
   > foo
 
 
@@ -488,15 +470,12 @@ index c0ffee..c0ffee
   > foo
 
 *** DIFF ***
-diff --git first/im-empty first/im-empty
+diff --git first/im-empty second/im-empty
 deleted file mode 100644
 
 *** PATCHED ***
 + first/
 + first/same-file
-  > foo
-+ second/
-+ second/same-file
   > foo
 
 *** GIT DIFF ***
@@ -507,9 +486,6 @@ index c0ffee..c0ffee
 *** GIT PATCHED ***
 + first/
 + first/same-file
-  > foo
-+ second/
-+ second/same-file
   > foo
 
 
@@ -531,14 +507,14 @@ index c0ffee..c0ffee
   > foo
 
 *** DIFF ***
---- /dev/null
-+++ second/inner/move-me
-@@ -0,0 +1,1 @@
-+bar
 --- first/move-me
 +++ /dev/null
 @@ -1,1 +0,0 @@
 -bar
+--- /dev/null
++++ second/inner/move-me
+@@ -0,0 +1,1 @@
++bar
 
 *** PATCHED ***
 + first/
@@ -546,12 +522,6 @@ index c0ffee..c0ffee
 + first/inner/move-me
   > bar
 + first/same-file
-  > foo
-+ second/
-+ second/inner
-+ second/inner/move-me
-  > bar
-+ second/same-file
   > foo
 
 *** GIT DIFF ***
@@ -566,12 +536,6 @@ rename to inner/move-me
 + first/inner/move-me
   > bar
 + first/same-file
-  > foo
-+ second/
-+ second/inner
-+ second/inner/move-me
-  > bar
-+ second/same-file
   > foo
 
 
@@ -595,23 +559,19 @@ rename to inner/move-me
   > foo
 
 *** DIFF ***
---- first/im-here/delete-me
-+++ /dev/null
-@@ -1,1 +0,0 @@
--bar
 --- first/im-not-here/delete-me
 +++ /dev/null
 @@ -1,1 +0,0 @@
 -baz
 \ No newline at end of file
+--- first/im-here/delete-me
++++ /dev/null
+@@ -1,1 +0,0 @@
+-bar
 
 *** PATCHED ***
 + first/
 + first/same-file
-  > foo
-+ second/
-+ second/im-here
-+ second/same-file
   > foo
 
 *** GIT DIFF ***
@@ -635,8 +595,97 @@ index c0ffee..c0ffee
 + first/
 + first/same-file
   > foo
+
+
+----------------------
+ Test 14: diff dir/file error, with content in the dir that is removed
+----------------------
+
+*** SETUP ***
++ first/
++ first/dir-fst-file-snd
++ first/dir-fst-file-snd/fst
+  > foo
++ first/dir-fst-file-snd/remove-me
+  > bar
++ first/same-file
+  > foo
 + second/
-+ second/im-here
++ second/dir-fst-file-snd
+  > foo
 + second/same-file
   > foo
 
+*** DIFF ***
+--- first/dir-fst-file-snd/remove-me
++++ /dev/null
+@@ -1,1 +0,0 @@
+-bar
+--- first/dir-fst-file-snd/fst
++++ /dev/null
+@@ -1,1 +0,0 @@
+-foo
+--- /dev/null
++++ second/dir-fst-file-snd
+@@ -0,0 +1,1 @@
++foo
+
+*** PATCHED ***
++ first/
++ first/dir-fst-file-snd
+  > foo
++ first/same-file
+  > foo
+
+*** GIT DIFF ***
+diff --git b/dir-fst-file-snd/fst a/dir-fst-file-snd
+similarity index 100%
+rename from dir-fst-file-snd/fst
+rename to dir-fst-file-snd
+diff --git b/dir-fst-file-snd/remove-me a/dir-fst-file-snd/remove-me
+deleted file mode c0ffee
+index c0ffee..c0ffee
+--- b/dir-fst-file-snd/remove-me
++++ /dev/null
+@@ -1 +0,0 @@
+-bar
+
+*** GIT PATCH ERROR ***
+ERROR: OpamSystem.Internal_error("Cannot remove ${BASEDIR}/first/dir-fst-file-snd (Unix.Unix_error(Unix.EISDIR, \"unlink\", \"${BASEDIR}/first/dir-fst-file-snd\")).")
+
+----------------------
+ Test 15: diff dir/file error, with content in the dir that is not removed
+----------------------
+
+*** SETUP ***
++ first/
++ first/dir-fst-file-snd
++ first/dir-fst-file-snd/fst
+  > foo
++ first/dir-fst-file-snd/i-wont-be-removed
+  > baz
++ first/dir-fst-file-snd/remove-me
+  > bar
++ first/same-file
+  > foo
++ second/
++ second/dir-fst-file-snd
+  > foo
++ second/same-file
+  > foo
+
+*** GIVEN DIFF ***
+diff --git b/dir-fst-file-snd/fst a/dir-fst-file-snd
+similarity index 100%
+rename from dir-fst-file-snd/fst
+rename to dir-fst-file-snd
+diff --git b/dir-fst-file-snd/remove-me a/dir-fst-file-snd/remove-me
+deleted file mode c0ffee
+index c0ffee..c0ffee
+--- b/dir-fst-file-snd/remove-me
++++ /dev/null
+@@ -1 +0,0 @@
+-bar
+
+*** PATCH ERROR ***
+ERROR: OpamSystem.Internal_error("Cannot remove ${BASEDIR}/first/dir-fst-file-snd (Unix.Unix_error(Unix.EISDIR, \"unlink\", \"${BASEDIR}/first/dir-fst-file-snd\")).")
