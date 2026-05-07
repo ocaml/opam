@@ -884,4 +884,15 @@ module Unix = struct
     | [_] -> Ok filename
     | elements -> check_parent_dir_and_remove_trailing_slashes elements
 
+  let rec root_dir filename =
+    if Char.equal filename.[0] dir_sep.[0] then
+      let filename =
+        String.sub filename 1 (String.length filename - 2)
+      in
+      Option.map ((^) dir_sep) (root_dir filename)
+    else
+      match OpamStd.String.cut_at filename dir_sep.[0] with
+      | Some (root, _rest) -> Some root
+      | None -> None
+
 end

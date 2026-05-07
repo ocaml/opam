@@ -445,4 +445,7 @@ module Unix : sig
  (** Return [Error err] if path is absolute or contains '..'
      Return [Ok filename] where trailing '/' are removed and './' at the beginning *)
   val check_canonical: t -> (t, string) result
+
+  val root_dir: t -> string option
+
 end
