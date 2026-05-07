@@ -353,6 +353,10 @@ exception Internal_patch_error of string
 let patch_t (type a) (module FS : FS_ABSTR with type root = a)
     ~allow_unclean ?patch_filename (to_patch:a) diffs =
  if diffs = [] then () else
+  let tdebug = false in
+  if tdebug then
+    OpamConsole.error "patch_t: patch %s"
+      (Format.asprintf "%a" Patch.pp_list diffs);
   let internal_patch_error fmt =
     Printf.ksprintf (fun str -> raise (Internal_patch_error str)) fmt
   in

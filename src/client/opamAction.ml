@@ -468,26 +468,44 @@ let prepare_package_source st nv dir =
       (Done None) (OpamFile.OPAM.extra_sources opam)
   in
   let check_extra_files =
+    let tdebug = false in
     let extra_files =
       let extra_files =
         OpamFile.OPAM.get_extra_files
           ~get_repo_files:(OpamRepositoryState.get_repo_files st.switch_repos)
           opam
       in
+      if tdebug then
+        OpamConsole.error "OPAM %s" (OpamFile.OPAM.write_to_string opam);
+      if tdebug then
+        OpamConsole.error "--------------XF: %s"
+          (OpamStd.List.to_string (fun (b,c,_) ->
+               OpamFilename.Base.to_string b ^ "_"
+               ^ (match c with | None -> "X" | Some c -> Lazy.force c )) extra_files);
       if extra_files <> [] then extra_files else
         match OpamFile.OPAM.extra_files opam with
-        | None -> []
+        | None ->
+          if tdebug then
+            OpamConsole.error "NOOOOOO XF";
+          []
         | Some xs ->
           (* lookup in switch-local hashmap overlay *)
           let extra_files_dir =
             OpamPath.Switch.extra_files_dir st.switch_global.root st.switch
           in
+          if tdebug then
+            OpamConsole.error "---------------extra files dirs %s"
+              (OpamFilename.Dir.to_string extra_files_dir);
           List.map (fun (base, hash) ->
               let content =
                 let src =
                   OpamFilename.create extra_files_dir
                     (OpamFilename.Base.of_string (OpamHash.contents hash))
                 in
+                if tdebug then
+                  OpamConsole.error "src ? %s %B"
+                    (OpamFilename.to_string src)
+                    (OpamFilename.exists src);
                 if OpamFilename.exists src then
                   Some (lazy (OpamFilename.read src))
                 else
@@ -496,6 +514,11 @@ let prepare_package_source st nv dir =
               (base, content, hash))
             xs
     in
+    if tdebug then
+      OpamConsole.error "--------------XF: %s"
+        (OpamStd.List.to_string (fun (b,c,_) ->
+             OpamFilename.Base.to_string b ^ "_"
+             ^ (match c with | None -> "X" | Some c -> Lazy.force c )) extra_files);
     let bad_hash, missing =
       List.fold_left (fun (bad_hash, missing) (base, content, hash) ->
           match content with

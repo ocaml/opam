@@ -145,9 +145,14 @@ module B = struct
     rsync_dirs url local_dirname
 
   let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
+    let tdebug = false in
     log "pull-repo-update";
     let quarantine = OpamRepositoryRoot.quarantine repo_root in
     let finalise () = OpamRepositoryRoot.remove quarantine in
+    if tdebug then
+      (OpamConsole.error "LOCAL:fetch: RR %s" (OpamRepositoryRoot.to_string repo_root);
+       OpamConsole.error "LOCAL:fetch: QUAR %s" (OpamRepositoryRoot.to_string quarantine);
+       OpamConsole.error "LOCAL:fetch: URL %s" (OpamUrl.to_string url));
     let populate_quarantine () =
       match repo_root, quarantine with
       | OpamRepositoryRoot.Tar _, OpamRepositoryRoot.Tar quarantine ->
@@ -192,6 +197,15 @@ module B = struct
     | Up_to_date () ->
       finalise ();  OpamRepositoryBackend.Update_empty
     | Result () ->
+      if tdebug then
+        (OpamConsole.error "LOCAL:fetch: QUR CONTENT %s\n%s"
+           (OpamRepositoryRoot.to_string quarantine)
+           (OpamRepositoryRoot.ls quarantine);
+         OpamConsole.error "LOCAL:fetch: TAR CONTENT %s\n%s"
+           (OpamRepositoryRoot.to_string repo_root)
+           (if (OpamRepositoryRoot.is_empty repo_root <> None) then
+              OpamRepositoryRoot.ls repo_root
+            else "ABSENT"));
       if OpamRepositoryRoot.is_empty repo_root <> Some false then
         OpamRepositoryBackend.Update_full quarantine
       else

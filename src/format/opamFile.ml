@@ -898,6 +898,7 @@ module Syntax = struct
       in
       raise (OpamPp.Bad_format (Some pos, msg))
     in
+(*   OpamConsole.error "PARSER_MAIN FILENAME %s" (OpamFilename.to_string filename); *)
     let filename = OpamFilename.to_string filename in
     lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
                                   Lexing.pos_fname = filename };
@@ -1223,6 +1224,7 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
 
     let of_string (filename:filename) str =
       let opamfile = Syntax.of_string filename str |> catch_future_syntax_error in
+(*   OpamConsole.error "OF_STRING FILENAME %s" (OpamFilename.to_string filename); *)
       Pp.parse X.pp ~pos:(pos_file filename) opamfile
       |> snd
 
@@ -2895,6 +2897,7 @@ module OPAMSyntax = struct
   let with_version version (t:t) = { t with version = Some version }
   let with_version_opt version (t:t) = { t with version }
   let with_nv nv (t:t) =
+(*   OpamConsole.error "WITH NV"; *)
     { t with name = Some (nv.OpamPackage.name);
              version = Some (nv.OpamPackage.version) }
 
@@ -3682,13 +3685,21 @@ module OPAM = struct
   let get_extra_files ~get_repo_files o =
     let open OpamFilename.Op in
     let open OpamStd.Option.Op in
+    let tdebug = false in
     (match metadata_dir o with
-     | None -> None
+     | None ->
+       if tdebug then
+         OpamConsole.error "gt extra files NONE";
+       None
      | Some (None, abs) ->
-       let files_dir = OpamFilename.Dir.of_string abs / OpamPathName.files_d in
+       if tdebug then
+         OpamConsole.error "gt extra files abs %s" abs;
+       let files_dir = OpamFilename.Dir.of_string abs / "files" in
        extra_files o >>| List.map @@ fun (basename, hash) ->
        let content =
          let f = OpamFilename.create files_dir basename in
+         if tdebug then
+           OpamConsole.error "exists ? %s %B" (OpamFilename.to_string f) (OpamFilename.exists f);
          if OpamFilename.exists f then
            Some (lazy (OpamFilename.read f))
          else
@@ -3696,6 +3707,9 @@ module OPAM = struct
        in
        (basename, content, hash)
      | Some (Some r, rel) ->
+       if tdebug then
+         OpamConsole.error "gt extra files r %s rel %s"
+           (OpamRepositoryName.to_string r) rel;
        let files =
          get_repo_files r
            (rel ^ Filename.dir_sep ^ OpamRepositoryPathName.files_d)

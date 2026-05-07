@@ -94,19 +94,36 @@ let get_repo_root rt repo =
 
 (* it is simpler to keep it as is and not factorise dir & tar *)
 let get_repo_files rt name dir =
+  let tdebug = false in
   match get_root rt name with
   | OpamRepositoryRoot.Dir repo_root ->
+    if tdebug then
+      OpamConsole.error "RS:GRF: GET REPO FIULES DIR";
+    (* TODO: this should be part of the OpamFilename invariants! *)
     let dir = OpamRepositoryRoot.Dir.Op.(repo_root / dir) in
     let files = OpamFilename.rec_files dir in
+    if tdebug then
+      OpamConsole.error "RS:GRF: dir %s\nfiles %s"
+        (OpamFilename.Dir.to_string dir)
+        (OpamStd.List.to_string OpamFilename.to_string files);
     List.map (fun file ->
         OpamFilename.Base.of_string
           (OpamSystem.back_to_forward (OpamFilename.remove_prefix dir file)),
         lazy (OpamFilename.read file))
       files
   | OpamRepositoryRoot.Tar tar ->
+    if tdebug then
+      OpamConsole.error "RS: GET REPO FIULES Tar";
     let open OpamFilename.Unix.Op in
     let xfiles_dir = OpamFilename.Unix.Dir.of_string dir in
+    if tdebug then
+      OpamConsole.error "RS:GRF: xfiles dir %s"
+        (OpamFilename.Unix.Dir.to_string xfiles_dir);
     OpamRepositoryRoot.Tar.fold (fun acc filename content ->
+        if tdebug then
+          OpamConsole.error "RS:GRF: starts with lookup %B %s"
+            (OpamFilename.Unix.starts_with xfiles_dir filename)
+            (OpamFilename.Unix.to_string filename);
         if OpamFilename.Unix.starts_with xfiles_dir filename then
           let content = lazy (
             (* TAR TODO : to remove before merge
@@ -173,6 +190,7 @@ let read_package_opam_tar ~repo_name ~repo_root package_dir
     None
 
 let load_raw_opams_and_aux_from_tar _repo_name tar =
+  let tdebug = false in
   let raw_repository =
     OpamRepositoryRoot.Tar.fold (fun acc filename content ->
         (filename, content) :: acc)
@@ -189,6 +207,9 @@ let load_raw_opams_and_aux_from_tar _repo_name tar =
         (OpamRepositoryRoot.Tar tar) ~filename content
     | None -> OpamFile.Repo.empty
   in
+  if tdebug then
+    OpamConsole.error "raw repo\n%s"
+      (OpamStd.Format.itemize (fun (f,_) -> OpamFilename.Unix.to_string f) raw_repository);
   let opams_map =
     List.fold_left (fun acc (filename, content) ->
         if OpamFilename.Unix.starts_with
@@ -202,6 +223,10 @@ let load_raw_opams_and_aux_from_tar _repo_name tar =
         else acc)
       OpamFilename.Unix.Dir.Map.empty raw_repository
   in
+  if tdebug then
+    OpamConsole.error "RS:LOXA: fst opams_map\n%s"
+      (OpamStd.Format.itemize OpamFilename.Unix.Dir.to_string
+         (OpamFilename.Unix.Dir.Map.keys opams_map));
   let opams_map =
     let exception Found of
         OpamFilename.Unix.Dir.t
@@ -210,6 +235,10 @@ let load_raw_opams_and_aux_from_tar _repo_name tar =
     List.fold_left (fun acc (filename, content) ->
         try
           OpamFilename.Unix.Dir.Map.iter (fun dir value ->
+              if tdebug then
+                OpamConsole.error "RS:LOXA: dir %s is prefix ? %B"
+                  (OpamFilename.Unix.Dir.to_string dir)
+                  (OpamFilename.Unix.starts_with dir filename);
               if OpamFilename.Unix.starts_with dir filename then
                 raise (Found (dir, value))) acc;
           acc
@@ -219,6 +248,17 @@ let load_raw_opams_and_aux_from_tar _repo_name tar =
           OpamFilename.Unix.Dir.Map.add key (fo, co, map) acc)
       opams_map raw_repository
   in
+  if tdebug then
+    OpamConsole.error "RS:LOXA: snd opams_map\n%s"
+      (OpamStd.Format.itemize (fun (d,(f,_,map)) ->
+           let map_s =
+             if OpamFilename.Unix.Map.is_empty map then "\n" else
+               "\n" ^
+               (OpamStd.Format.itemize ~bullet:"  - " OpamFilename.Unix.to_string
+                  (OpamFilename.Unix.Map.keys map))
+           in
+           OpamFilename.Unix.Dir.to_string d ^ "  __  " ^ OpamFilename.Unix.to_string f ^ map_s)
+          (OpamFilename.Unix.Dir.Map.bindings opams_map));
   repo_def, opams_map
 
 let load_repo_from_tar_gz repo_name tar =
@@ -278,6 +318,7 @@ let load_opams repo_name repo_root =
     load_opams_from_tar_gz repo_name tar
 
 let load_opams_from_diff repo diffs rt =
+  let tdebug = false in
   if OpamConsole.disp_status_line () || OpamConsole.verbose () then
     OpamConsole.status_line "Processing: [%s: loading data]"
       (OpamConsole.colorise `blue (OpamRepositoryName.to_string repo.repo_name));
@@ -297,6 +338,8 @@ let load_opams_from_diff repo diffs rt =
         in
         read_package_opam_dir ~repo_name:repo.repo_name ~repo_root dir
     | OpamRepositoryRoot.Tar tar ->
+      if tdebug then
+        OpamConsole.error "RS:load opams from diff: tar mode";
       let repo_root = tar in
       let _, opams_map =
         load_raw_opams_and_aux_from_tar repo.repo_name tar

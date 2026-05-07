@@ -10,6 +10,13 @@
 (**************************************************************************)
 
 open OpamTypes
+let[@warning "-32"] tdebug go =
+  if go then
+    fun fmt ->
+      Printf.ksprintf (fun str ->  OpamConsole.error "REPROOT:%s" str) fmt
+  else
+    fun fmt ->
+      Printf.ksprintf (fun _ -> ()) fmt
 
 module Dir = struct
   type t = dirname
@@ -278,9 +285,18 @@ let remove_both root name =
 let on_dir f = function
   | Dir dir -> f dir
   | Tar tar ->
+    let tdebug = false in
     OpamFilename.with_tmp_dir (fun dir ->
         Tar.extract_in tar dir;
         let repo_dir = Dir.of_dir dir in
+        if tdebug then
+          (OpamConsole.error "dirs %s"
+             (OpamStd.List.to_string OpamFilename.Dir.to_string
+                (OpamFilename.dirs dir));
+           OpamConsole.error "XXXXXXXX dir is %s"
+             (OpamStd.String.split
+                ( OpamFilename.Dir.to_string dir) '/'
+              |> OpamStd.List.to_string Fun.id));
         let res = f repo_dir in
         make_tar_gz tar repo_dir;
         res)

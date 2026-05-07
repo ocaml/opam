@@ -655,6 +655,7 @@ module I = struct
   let file =
     pp ~name:"opam-file"
       (fun ~pos:_ file ->
+         (* TAR TODO : should it be raw ? *)
          OpamFilename.of_string file.file_name,
          file.file_contents)
       (fun (file_name, file_contents) ->
