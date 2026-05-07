@@ -270,6 +270,13 @@ let load_opams_from_dir repo_name repo_root =
          (OpamRepositoryRoot.Dir.Path.packages_dir repo_root))
     ~finally:OpamConsole.clear_status
 
+let load_opams repo_name repo_root =
+  match repo_root with
+  | OpamRepositoryRoot.Dir dir ->
+    load_opams_from_dir repo_name dir
+  | OpamRepositoryRoot.Tar tar ->
+    load_opams_from_tar_gz repo_name tar
+
 let load_opams_from_diff repo diffs rt =
   if OpamConsole.disp_status_line () || OpamConsole.verbose () then
     OpamConsole.status_line "Processing: [%s: loading data]"
