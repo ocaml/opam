@@ -12,7 +12,7 @@
 open OpamTypes
 open OpamStateTypes
 
-let log fmt = OpamConsole.log "RSTATE" fmt
+let log ?level fmt = OpamConsole.log ?level "RSTATE" fmt
 let slog = OpamConsole.slog
 
 module Cache = struct
