@@ -17,8 +17,10 @@ build: ["test" "-f" "bar"]
 some content
 ### sh hash.sh REPO foo.1
 ### : Internal repository storage as archive or plain directory :
+### OPAMREPOSITORYTARRING=0
 ### opam switch create tarring --empty
-### opam update -vv | grep '^\+'
+### opam update -vv | grep '^\+' | sed-cmd tar
++ tar "xfz" "${BASEDIR}/OPAM/repo/default.tar.gz" "-C" "${BASEDIR}/OPAM/repo/default"
 ### ls $OPAMROOT/repo | grep -v "cache"
 default
 lock

@@ -155,14 +155,14 @@ Now run 'opam upgrade' to apply any package updates.
 ### :::::::::::::::::
 ### sh -c "rm OPAM/repo/state-*.cache"
 ### OPAMDEBUGSECTIONS="opam-file" OPAMDEBUG=-2 opam list good-md5 -s | unordered
-opam-file                       Missing expected extra files ../../../no-checksum/no-checksum.1/files/p.patch at packages/escape-good-md5/escape-good-md5.1/files (out of ${BASEDIR}/OPAM/repo/default)
-opam-file                       Missing expected extra files /etc/passwdd at packages/escape-absolute/escape-absolute.1/files (out of ${BASEDIR}/OPAM/repo/default)
-opam-file                       Missing expected extra files p.patch at packages/not-present/not-present.1/files (out of ${BASEDIR}/OPAM/repo/default)
+opam-file                       Mismatching extra-files at packages/bad-md5/bad-md5.1 (out of ${BASEDIR}/OPAM/repo/default.tar.gz): wrong checksum (1)
+opam-file                       Missing expected extra files /etc/passwdd at packages/escape-absolute/escape-absolute.1/files (out of ${BASEDIR}/OPAM/repo/default.tar.gz)
+opam-file                       Missing expected extra files ../../../no-checksum/no-checksum.1/files/p.patch at packages/escape-good-md5/escape-good-md5.1/files (out of ${BASEDIR}/OPAM/repo/default.tar.gz)
+opam-file                       Mismatching extra-files at packages/good-md5-bad-sha256/good-md5-bad-sha256.1 (out of ${BASEDIR}/OPAM/repo/default.tar.gz): missing from 'files' directory (1)
+opam-file                       Mismatching extra-files at packages/good-md5-good-sha256/good-md5-good-sha256.1 (out of ${BASEDIR}/OPAM/repo/default.tar.gz): missing from 'files' directory (1)
 opam-file                       Missing extra-files field for p.patch for no-checksum.1, ignoring them.
 opam-file                       Missing extra-files field for p.patch for not-mentioned.1, ignoring them.
-opam-file                       Mismatching extra-files at packages/good-md5-bad-sha256/good-md5-bad-sha256.1 (out of ${BASEDIR}/OPAM/repo/default): missing from 'files' directory (1)
-opam-file                       Mismatching extra-files at packages/bad-md5/bad-md5.1 (out of ${BASEDIR}/OPAM/repo/default): wrong checksum (1)
-opam-file                       Mismatching extra-files at packages/good-md5-good-sha256/good-md5-good-sha256.1 (out of ${BASEDIR}/OPAM/repo/default): missing from 'files' directory (1)
+opam-file                       Missing expected extra files p.patch at packages/not-present/not-present.1/files (out of ${BASEDIR}/OPAM/repo/default.tar.gz)
 good-md5.1
 ### :I:1: good md5
 ### opam lint --package good-md5
@@ -690,7 +690,7 @@ cp p.patch $pkgpath/files/dir/
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
-opam-file                       Mismatching extra-files at packages/good-md5-good-sha256/good-md5-good-sha256.1 (out of ${BASEDIR}/OPAM/repo/default): missing from 'files' directory (1)
+opam-file                       Mismatching extra-files at packages/good-md5-good-sha256/good-md5-good-sha256.1 (out of ${BASEDIR}/OPAM/repo/default.tar.gz): missing from 'files' directory (1)
 Now run 'opam upgrade' to apply any package updates.
 ### opam install good-nested-md5.1
 The following actions will be performed:

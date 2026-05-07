@@ -65,57 +65,22 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => write)
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          copydir ${BASEDIR}/REPO -> ${BASEDIR}/OPAM/repo/default.new
-SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new
-SYSTEM                          copydir ${BASEDIR}/REPO/packages -> ${BASEDIR}/OPAM/repo/default.new/packages
-SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages
-SYSTEM                          copydir ${BASEDIR}/REPO/packages/main-repo -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo
-SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages/main-repo
-SYSTEM                          copydir ${BASEDIR}/REPO/packages/main-repo/main-repo.1 -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1
-SYSTEM                          copy ${BASEDIR}/REPO/packages/main-repo/main-repo.1/opam -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/opam
-SYSTEM                          copydir ${BASEDIR}/REPO/packages/main-repo/main-repo.1/files -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/files
-SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/files
-SYSTEM                          copy ${BASEDIR}/REPO/packages/main-repo/main-repo.1/files/x-file.main-repo.1 -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          copydir ${BASEDIR}/REPO/packages/main-repo/main-repo.2 -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2
-SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2
-SYSTEM                          copy ${BASEDIR}/REPO/packages/main-repo/main-repo.2/opam -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/opam
-SYSTEM                          copydir ${BASEDIR}/REPO/packages/main-repo/main-repo.2/files -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/files
-SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/files
-SYSTEM                          copy ${BASEDIR}/REPO/packages/main-repo/main-repo.2/files/x-file.main-repo.2 -> ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/files/x-file.main-repo.2
-SYSTEM                          copy ${BASEDIR}/REPO/repo -> ${BASEDIR}/OPAM/repo/default.new/repo
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/repo
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/repo
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/opam
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/files/x-file.main-repo.2
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/opam
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/files/x-file.main-repo.1
+TAR                             creating archive ${BASEDIR}/OPAM/repo/default.tar.gz.new from ${BASEDIR}/REPO
+SYSTEM                          read ${BASEDIR}/REPO/repo
+SYSTEM                          read ${BASEDIR}/REPO/packages/main-repo/main-repo.1/opam
+SYSTEM                          read ${BASEDIR}/REPO/packages/main-repo/main-repo.1/files/x-file.main-repo.1
+SYSTEM                          read ${BASEDIR}/REPO/packages/main-repo/main-repo.2/opam
+SYSTEM                          read ${BASEDIR}/REPO/packages/main-repo/main-repo.2/files/x-file.main-repo.2
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/default.tar.gz.new
+SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.tar.gz.new
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/default.tar.gz
+FILE(repo)                      Read ./<none> in 0.000s
+FILE(repo)                      Read ./repo (out of ${BASEDIR}/OPAM/repo/default.tar.gz) in 0.000s
+FILE(opam)                      Read packages/main-repo/main-repo.1/opam (out of ${BASEDIR}/OPAM/repo/default.tar.gz) in 0.000s
+FILE(opam)                      Read packages/main-repo/main-repo.2/opam (out of ${BASEDIR}/OPAM/repo/default.tar.gz) in 0.000s
 SYSTEM                          write ${BASEDIR}/OPAM/log/patch-xxx
-SYSTEM                          rmdir ${BASEDIR}/OPAM/repo/default.new
-SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/opam
-SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/opam
-SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/files/x-file.main-repo.2
-SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.new/repo
 [default] synchronised from file://${BASEDIR}/REPO
-SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
-SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
-SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
-SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files
-SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files
-FILE(repo)                      Read ${BASEDIR}/OPAM/repo/default/repo in 0.000s
 Processing: [default: loading data]
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
-FILE(opam)                      Read packages/main-repo/main-repo.1/opam (out of ${BASEDIR}/OPAM/repo/default) in 0.000s
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
-FILE(opam)                      Read packages/main-repo/main-repo.2/opam (out of ${BASEDIR}/OPAM/repo/default) in 0.000s
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
 SYSTEM                          rm ${BASEDIR}/OPAM/repo/state-magicv.cache
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => write)
@@ -238,7 +203,7 @@ SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/content
 SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-source.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
 SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-file.main-repo.1
 Processing  2/3: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1)
@@ -257,7 +222,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.1
 FILE(opam)                      Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.1/opam atomically in 0.000s
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.1/files
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
 SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.1/files/x-file.main-repo.1
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (none => write)
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache ...
@@ -279,45 +244,13 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (re
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-state in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (none => read)
-CACHE(installed)                Loaded ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (read => none)
-FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config atomically in 0.000s
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export atomically in 0.000s
-FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-repo/.opam-switch/reinstall
-The following actions will be performed:
 === recompile 1 package
   - recompile main-repo 1
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content
-SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
-SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/4: [main-repo.1: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
-SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
-SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content
-SYSTEM                          rmdir ${OPAMTMP}
-SYSTEM                          rm ${OPAMTMP}/content
--> retrieved main-repo.1  (cached)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/content
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-source.main-repo.1
-SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-source.main-repo.1
-SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-file.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-file.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-file.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/build-file
-SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
-SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/content
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-file.main-repo.1
 Processing  2/4: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1)
 -> compiled  main-repo.1
@@ -326,6 +259,9 @@ SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-file.main-repo.1
 Processing  3/4: [main-repo: touch removal-file]
 + touch "removal-file" (CWD=${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1)
 FILE(.install)                  Cannot find ${BASEDIR}/OPAM/install-from-repo/.opam-switch/install/main-repo.install
@@ -351,17 +287,46 @@ FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-sw
 FILE(.config)                   Cannot find ${BASEDIR}/OPAM/install-from-repo/.opam-switch/config/main-repo.config
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache
 FILE(opam)                      Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.1/opam atomically in 0.000s
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.1/files/x-file.main-repo.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/content
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-file.main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/removal-file
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => none)
+
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (none => read)
+CACHE(installed)                Loaded ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (read => none)
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config atomically in 0.000s
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export atomically in 0.000s
+FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-repo/.opam-switch/reinstall
+The following actions will be performed:
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
+SYSTEM                          mkdir ${OPAMTMP}
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
+SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
+SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content
+SYSTEM                          rmdir ${OPAMTMP}
+SYSTEM                          rm ${OPAMTMP}/content
+-> retrieved main-repo.1  (cached)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/content
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-source.main-repo.1
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/x-source.main-repo.1
+SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1
+SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.1/content
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (none => write)
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/content
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-file.main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/removal-file
-Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (write => none)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => none)
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
@@ -376,50 +341,22 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (re
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-state in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (none => read)
-CACHE(installed)                Loaded ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (read => none)
-FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config atomically in 0.000s
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export atomically in 0.000s
-FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-repo/.opam-switch/reinstall
-The following actions will be performed:
 === upgrade 1 package
   - upgrade main-repo 1 to 2
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
-SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/4: [main-repo.1, main-repo.2: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
 SYSTEM                          copydir ${OPAMTMP} -> ${OPAMTMP}
 SYSTEM                          copy ${OPAMTMP}/content -> ${OPAMTMP}/content
-SYSTEM                          rmdir ${OPAMTMP}
-SYSTEM                          rm ${OPAMTMP}/content
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
 SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
 SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content
-SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
-SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
-SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content
 SYSTEM                          rmdir ${OPAMTMP}
 SYSTEM                          rm ${OPAMTMP}/content
 -> retrieved main-repo.1, main-repo.2  (cached)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2
-SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2
-SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2
-SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2/content
-SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2/x-source.main-repo.2
-SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
+SYSTEM                          read default/packages/main-repo/main-repo.2/files/x-file.main-repo.2 from ${BASEDIR}/OPAM/repo/default.tar.gz
 SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2/x-file.main-repo.2
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-file.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
-SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.2/files/x-file.main-repo.2
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 Processing  2/4: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2)
 -> compiled  main-repo.2
@@ -427,6 +364,9 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-sw
 SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-file.main-repo.1
 Processing  3/4: [main-repo: touch removal-file]
 + touch "removal-file" (CWD=${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1)
 FILE(.install)                  Cannot find ${BASEDIR}/OPAM/install-from-repo/.opam-switch/install/main-repo.install
@@ -454,12 +394,11 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.2
 FILE(opam)                      Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.2/opam atomically in 0.000s
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.2/files
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (none => write)
-CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache ...
-CACHE(installed)                ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache written in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (write => none)
+SYSTEM                          read default/packages/main-repo/main-repo.2/files/x-file.main-repo.2 from ${BASEDIR}/OPAM/repo/default.tar.gz
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/main-repo.2/files/x-file.main-repo.2
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/content
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/x-file.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.1/removal-file
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache
@@ -469,8 +408,34 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switc
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.1/content
 Done.
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => none)
+
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (none => read)
+CACHE(installed)                Loaded ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (read => none)
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config atomically in 0.000s
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export atomically in 0.000s
+FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-repo/.opam-switch/reinstall
+The following actions will be performed:
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
+SYSTEM                          mkdir ${OPAMTMP}
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
+SYSTEM                          rmdir ${OPAMTMP}
+SYSTEM                          rm ${OPAMTMP}/content
+SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
+SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content
+SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2
+SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2 -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2
+SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/build/main-repo.2/x-source.main-repo.2
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (none => write)
+CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache ...
+CACHE(installed)                ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache written in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (write => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (write => none)
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
@@ -490,13 +455,10 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-swi
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (write => none)
-FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config atomically in 0.000s
-FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export atomically in 0.000s
 FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-repo/.opam-switch/reinstall
 The following actions will be performed:
 === remove 1 package
   - remove main-repo 2
-
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content
@@ -514,9 +476,8 @@ SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-repo/.opam-
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/content
 SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/x-source.main-repo.2
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
+SYSTEM                          read default/packages/main-repo/main-repo.2/files/x-file.main-repo.2 from ${BASEDIR}/OPAM/repo/default.tar.gz
 SYSTEM                          write ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/x-file.main-repo.2
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/x-source.main-repo.2
 Processing  2/2: [main-repo: touch removal-file]
 + touch "removal-file" (CWD=${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2)
 FILE(.install)                  Cannot find ${BASEDIR}/OPAM/install-from-repo/.opam-switch/install/main-repo.install
@@ -536,6 +497,7 @@ CACHE(installed)                ${BASEDIR}/OPAM/install-from-repo/.opam-switch/p
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (write => none)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/content
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/x-source.main-repo.2
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/x-file.main-repo.2
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/remove/main-repo.2/removal-file
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache
@@ -545,6 +507,9 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switc
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/sources/main-repo.2/content
 Done.
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config atomically in 0.000s
+FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export atomically in 0.000s
+
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => none)
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-repo/.opam-switch/backup/state-today.export
@@ -2035,7 +2000,7 @@ SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-version-pin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/content
 SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-source.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
 SYSTEM                          write ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-file.main-repo.1
 Processing  2/3: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1)
@@ -2054,7 +2019,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opa
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1
 FILE(opam)                      Wrote ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1/opam atomically in 0.000s
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1/files
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
 SYSTEM                          write ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1/files/x-file.main-repo.1
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (none => write)
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache ...
@@ -2082,40 +2047,13 @@ CACHE(installed)                Loaded ${BASEDIR}/OPAM/install-from-version-pin/
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (read => none)
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-config atomically in 0.000s
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export atomically in 0.000s
-FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/reinstall
-The following actions will be performed:
 === recompile 1 package
   - recompile main-repo 1 (pinned)
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content
-SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
-SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/4: [main-repo.1: extract]
-+ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
-SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
-SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content
-SYSTEM                          rmdir ${OPAMTMP}
-SYSTEM                          rm ${OPAMTMP}/content
--> retrieved main-repo.1  (cached)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/content
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-source.main-repo.1
-SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-source.main-repo.1
-SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          write ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-file.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          write ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-file.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          write ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1/files/x-file.main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-file.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/build-file
-SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
-SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
-SYSTEM                          copy ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/content
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-file.main-repo.1
 Processing  2/4: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1)
 -> compiled  main-repo.1
@@ -2124,6 +2062,9 @@ SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-version-pin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/content
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-file.main-repo.1
 Processing  3/4: [main-repo: touch removal-file]
 + touch "removal-file" (CWD=${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1)
 FILE(.install)                  Cannot find ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/install/main-repo.install
@@ -2149,17 +2090,41 @@ FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-version-pin/.
 FILE(.config)                   Cannot find ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/config/main-repo.config
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache
 FILE(opam)                      Wrote ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1/opam atomically in 0.000s
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
+SYSTEM                          write ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1/files/x-file.main-repo.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/content
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-file.main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/removal-file
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => none)
+FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/reinstall
+The following actions will be performed:
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
+SYSTEM                          mkdir ${OPAMTMP}
++ tar "xfz" "${BASEDIR}/OPAM/download-cache/md5/pre/+md5+" "-C" "${OPAMTMP}"
+SYSTEM                          copydir ${OPAMTMP} -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
+SYSTEM                          copy ${OPAMTMP}/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content
+SYSTEM                          rmdir ${OPAMTMP}
+SYSTEM                          rm ${OPAMTMP}/content
+-> retrieved main-repo.1  (cached)
+SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/content
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-source.main-repo.1
+SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/x-source.main-repo.1
+SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1
+SYSTEM                          copy ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/build/main-repo.1/content
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (none => write)
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache ...
 CACHE(installed)                ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache written in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (write => none)
-SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/content
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-file.main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/removal-file
-Done.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (write => none)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => none)
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
@@ -2184,7 +2149,6 @@ FILE(package-version-list)      Cannot find ${BASEDIR}/OPAM/install-from-version
 The following actions will be performed:
 === remove 1 package
   - remove main-repo 1 (pinned)
-
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content
@@ -2202,9 +2166,8 @@ SYSTEM                          copydir ${BASEDIR}/OPAM/install-from-version-pin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
 SYSTEM                          copy ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/sources/main-repo/content -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/content
 SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
+SYSTEM                          read default/packages/main-repo/main-repo.1/files/x-file.main-repo.1 from ${BASEDIR}/OPAM/repo/default.tar.gz
 SYSTEM                          write ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-file.main-repo.1
-SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 Processing  2/2: [main-repo: touch removal-file]
 + touch "removal-file" (CWD=${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1)
 FILE(.install)                  Cannot find ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/install/main-repo.install
@@ -2224,6 +2187,7 @@ CACHE(installed)                ${BASEDIR}/OPAM/install-from-version-pin/.opam-s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (write => none)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/content
+SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-source.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/x-file.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/remove/main-repo.1/removal-file
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache
@@ -2231,6 +2195,7 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-version-pin/.
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1/files/x-file.main-repo.1
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/main-repo.1/opam
 Done.
+
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => none)
 SYSTEM                          rm ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/backup/state-today.export
@@ -2335,7 +2300,7 @@ SYSTEM                          copydir ${BASEDIR}/OPAM/package-switch/.opam-swi
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2
 SYSTEM                          copy ${BASEDIR}/OPAM/package-switch/.opam-switch/sources/main-repo.2/content -> ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/content
 SYSTEM                          copy ${BASEDIR}/OPAM/download-cache/md5/pre/+xs-hash+ -> ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/x-source.main-repo.2
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
+SYSTEM                          read default/packages/main-repo/main-repo.2/files/x-file.main-repo.2 from ${BASEDIR}/OPAM/repo/default.tar.gz
 SYSTEM                          write ${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2/x-file.main-repo.2
 Processing  2/3: [main-repo: touch build-file]
 + touch "build-file" (CWD=${BASEDIR}/OPAM/package-switch/.opam-switch/build/main-repo.2)
@@ -2354,7 +2319,7 @@ SYSTEM                          rm ${BASEDIR}/OPAM/package-switch/.opam-switch/p
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/.opam-switch/packages/main-repo.2
 FILE(opam)                      Wrote ${BASEDIR}/OPAM/package-switch/.opam-switch/packages/main-repo.2/opam atomically in 0.000s
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/.opam-switch/packages/main-repo.2/files
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
+SYSTEM                          read default/packages/main-repo/main-repo.2/files/x-file.main-repo.2 from ${BASEDIR}/OPAM/repo/default.tar.gz
 SYSTEM                          write ${BASEDIR}/OPAM/package-switch/.opam-switch/packages/main-repo.2/files/x-file.main-repo.2
 SYSTEM                          LOCK ${BASEDIR}/OPAM/package-switch/.opam-switch/packages/cache (none => write)
 CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/package-switch/.opam-switch/packages/cache ...

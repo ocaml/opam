@@ -86,6 +86,7 @@ let base_env =
     "OPAMNOENVNOTICE", "1";
     "OPAMNODEPEXTS", "1";
     "OPAMDOWNLOADJOBS", "1";
+    "OPAMREPOSITORYTARRING", "1";
   ]
 
 (* See [opamprocess.safe_wait] *)
