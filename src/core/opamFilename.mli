@@ -450,4 +450,8 @@ module Unix : sig
       Return [Ok filename] where trailing '/' are removed and './' at the
       beginning *)
   val check_canonical: t -> (t, string) result
+
+  (** Return the first element of the path, if not empty *)
+  val root_dir: t -> string option
+
 end
