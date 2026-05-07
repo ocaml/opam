@@ -2524,26 +2524,31 @@ let repository cli =
       in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
-      OpamFilename.with_tmp_dir @@ fun tmp_dir ->
+      OpamFilename.with_tmp_dir @@ fun inn ->
+      let repo_root =
+        OpamRepositoryState.get_repo_root rt
+          (OpamRepositoryState.get_repo rt name)
+      in
+      if not (OpamRepositoryRoot.exists repo_root) then
+        OpamConsole.error_and_exit `Internal_error
+          "Repository not found, consider running 'opam update %s' \
+           to retrieve a consistent state."
+          (OpamRepositoryName.to_string name);
       let rt0 = rt in
-      let backup =
-        let dir = OpamRepositoryRoot.Dir.Path.root gt.root name in
-        if not (OpamRepositoryRoot.Dir.exists dir) then
-          OpamConsole.error_and_exit `Internal_error
-            "Repository not found, consider running 'opam update %s' \
-             to retrieve a consistent state."
-            (OpamRepositoryName.to_string name);
-        let target = OpamRepositoryRoot.Dir.backup ~inn:tmp_dir dir in
-        OpamRepositoryRoot.Dir.copy ~src:dir ~dst:target;
-        fun () -> OpamRepositoryRoot.Dir.copy ~src:target ~dst:dir
+      let backup = OpamRepositoryRoot.backup ~inn repo_root in
+      OpamRepositoryRoot.copy ~src:repo_root ~dst:backup;
+      let restore_backup () =
+        OpamRepositoryRoot.copy ~src:backup ~dst:repo_root
       in
       let rt = OpamRepositoryCommand.set_url rt name url trust_anchors in
       let failed, rt =
         OpamRepositoryCommand.update_with_auto_upgrade rt [name]
       in
       OpamRepositoryState.drop rt;
-      if failed <> [] then
-        (let repo = OpamRepositoryState.get_repo rt0 name in
+      (match failed with
+       | [] -> `Ok ()
+       | _ ->
+         let repo = OpamRepositoryState.get_repo rt0 name in
          OpamConsole.error
            "Fetching repository %s with %s fails, reverting to %s"
            (OpamRepositoryName.to_string name)
@@ -2552,10 +2557,9 @@ let repository cli =
          let rt =
            OpamRepositoryCommand.set_url rt0 name repo.repo_url repo.repo_trust
          in
-         backup ();
+         restore_backup ();
          OpamRepositoryState.drop rt;
-         OpamStd.Sys.exit_because `Sync_error);
-      `Ok ()
+         OpamStd.Sys.exit_because `Sync_error)
     | Some `set_repos, names ->
       let names = List.map OpamRepositoryName.of_string names in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
