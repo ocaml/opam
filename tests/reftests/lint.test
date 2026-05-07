@@ -704,7 +704,9 @@ and there is content!
              error 53: Mismatching 'extra-files:' field: "more-file-bad-md5"
 # Return code 1 #
 ### opam lint --package lint.2
-<default>/lint.2: Passed.
+<default>/lint.2: Errors.
+             error 53: Mismatching 'extra-files:' field: "more-file-good-md5"
+# Return code 1 #
 ### OPAMREPOSITORYTARRING=0
 ### : W54: External dependencies should not contain spaces nor empty string
 ### <lint.opam>

@@ -36,8 +36,10 @@ build: ["test" "-f" "baz"]
 some content
 ### sh hash.sh REPO foo.2
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update default | grep TAR
+TAR                             creating archive ${BASEDIR}/OPAM/repo/default.tar.gz from ${BASEDIR}/OPAM/repo/default
+TAR                             creating archive ${BASEDIR}/OPAM/repo/default.tar.gz.new from ${BASEDIR}/REPO
 ### ls $OPAMROOT/repo | grep -v "cache"
-default
+default.tar.gz
 lock
 plain
 repos-config
@@ -58,7 +60,7 @@ some content
 lock
 plain
 repos-config
-tarred
+tarred.tar.gz
 ### opam install foo.3 -vv | grep '^\+' | sed-cmd test tar
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.3)
 ### opam repository remove plain --all
@@ -70,21 +72,16 @@ build: ["test" "-f" "baz"]
 some content
 ### sh hash.sh REPO foo.4
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update -vv | grep '^(\+|TAR)' | sed-cmd tar
+TAR                             creating archive ${BASEDIR}/OPAM/repo/tarred.tar.gz.new from ${BASEDIR}/REPO
 ### opam install foo.4 -vv | grep '^\+' | sed-cmd test tar
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.4)
 ### mkdir tarred-ext
 ### tar xf OPAM/repo/tarred.tar.gz -C tarred-ext
-tar: OPAM/repo/tarred.tar.gz: Cannot open: No such file or directory
-tar: Error is not recoverable: exiting now
-# Return code 2 #
 ### diff -ru ./tarred-ext REPO
-Only in REPO: packages
-Only in REPO: repo
-# Return code 1 #
 ### ls $OPAMROOT/repo | grep -v "cache"
 lock
 repos-config
-tarred
+tarred.tar.gz
 ### : From tarred repo to plain repo (tarred)
 ### OPAMREPOSITORYTARRING=0
 ### <REPO/packages/foo/foo.5/opam>
@@ -94,6 +91,7 @@ build: ["test" "-f" "quux"]
 some content
 ### sh hash.sh REPO foo.5
 ### opam update -vv | grep '^\+' | sed-cmd tar
++ tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${BASEDIR}/OPAM/repo/tarred"
 ### opam install foo.5 -vv | grep '^\+' | sed-cmd test
 + test "-f" "quux" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.5)
 ### ls $OPAMROOT/repo | grep -v "cache"
@@ -452,26 +450,23 @@ first  --
 ### <OPER/packages/fantom/fantom.0/opam>
 opam-version: "2.0"
 ### opam repository set-url oper ./OPER4
-[ERROR] Could not update repository "oper": rsync error: Directory ${BASEDIR}/OPER4/ does not exist
-[ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
-# Return code 40 #
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
 ### :::: rsync - git ::::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
-[ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
-# Return code 40 #
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
-[ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
-# Return code 40 #
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
@@ -483,7 +478,8 @@ first  --
 ### git -C ./OPER add packages/first
 ### git -C ./OPER commit -qm "third"
 ### opam repository set-url oper git+file://$BASEDIR/OPER
-[oper] Initialised
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### git -C ./OPER add packages/fantom
 ### git -C ./OPER commit -qm "fantom"
 ### opam list --available --repo=oper
@@ -491,26 +487,23 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper ./OPER4
-[ERROR] Could not update repository "oper": rsync error: Directory ${BASEDIR}/OPER4/ does not exist
-[ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
-# Return code 40 #
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
 ### :::: git - git ::::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
-[ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
-# Return code 40 #
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
-[ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
-# Return code 40 #
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
@@ -519,7 +512,7 @@ first  --
 ### opam update oper
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[oper] synchronised from git+file://${BASEDIR}/OPER
+[oper] synchronised from file://${BASEDIR}/OPER
 Now run 'opam upgrade' to apply any package updates.
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
@@ -528,7 +521,8 @@ fantom --
 first  --
 ### rm -rf OPER/.git OPER/packages/fantom
 ### opam repository set-url oper ./OPER
-[oper] Initialised
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### ::: Simply failing urls :::
 ### opam repository --this-switch add oper4 ./OPER4
 [ERROR] Could not update repository "oper4": rsync error: Directory ${BASEDIR}/OPER4/ does not exist
@@ -539,9 +533,8 @@ first  --
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
  1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER4
-[ERROR] Could not update repository "oper": rsync error: Directory ${BASEDIR}/OPER4/ does not exist
-[ERROR] Fetching repository oper with file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
-# Return code 40 #
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
@@ -559,13 +552,8 @@ first  --
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
  1 oper file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER2 --strict
-[oper] Initialised
-[ERROR] In packages/second/second.2/opam:
-        This file is for package 'second.2' but has mismatching fields 'version:2.2.
-[ERROR] Strict mode: aborting
-[ERROR] Could not update repository "oper": OpamStd.OpamSys.Exit(30)
-[ERROR] Fetching repository oper with file://${BASEDIR}/OPER2 fails, reverting to file://${BASEDIR}/OPER
-# Return code 40 #
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
@@ -578,12 +566,13 @@ first  --
  1 oper3 file://${BASEDIR}/OPER3
  2 oper  file://${BASEDIR}/OPER
 ### opam repository --this-switch set-url oper ./OPER3 --strict
-[oper] Initialised
+[ERROR] Repository not found, consider running 'opam update oper' to retrieve a consistent state.
+# Return code 99 #
 ### opam repository --this-switch
 
 <><> Repository configuration for switch repos ><><><><><><><><><><><><><><><><>
  1 oper3 file://${BASEDIR}/OPER3
- 2 oper  file://${BASEDIR}/OPER3
+ 2 oper  file://${BASEDIR}/OPER
 ### : Ensure that git repository is retrieved not with full history
 ### OPAMREPOSITORYTARRING=0
 ### <TMCS/repo>
