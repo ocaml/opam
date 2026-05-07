@@ -170,6 +170,7 @@ users)
   * Add test for update in repository that changes directories to files and vice versa [#6915 @rjbou]
 
 ### Engine
+  * Add `http-server` to launch a minimal http server [#6939 @rjbou]
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
