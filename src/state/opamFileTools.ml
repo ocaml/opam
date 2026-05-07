@@ -1269,6 +1269,7 @@ let lint_repo_package repo_root ?check_extra_files ?check_upstream ?handle_dirna
       let extra_files =
         match repo_root with
         | OpamRepositoryRoot.Dir _ -> extra_files_default_dir
+        | OpamRepositoryRoot.Tar tar -> extra_files_default_tar tar
       in
       extra_files filename
   in

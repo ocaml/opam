@@ -39,7 +39,8 @@ val lint_file:
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
 (** Same as {!lint}, but operates on an registered repository opam file.
-    It allows to retrieve extra files accordingly to the repository nature
+    It allows to retrieve extra files accordingly to the repository nature :
+    archive or directory.
 *)
 val lint_repo_package:
   OpamRepositoryRoot.t ->
