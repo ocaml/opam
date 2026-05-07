@@ -145,3 +145,6 @@ val patch :
 (** Returns a pair [(exists, f)] where [exists] tells whether the
     [repo] file exists in the repository and [f] reads it *)
 val delayed_read_repo : t -> bool * (unit -> OpamFile.Repo.t)
+
+(** TAR TODOC remove directory and archive, if present *)
+val remove_both : dirname -> repository_name -> unit

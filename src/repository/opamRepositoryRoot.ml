@@ -270,3 +270,7 @@ let delayed_read_repo = function
         with _ -> OpamFile.Repo.empty
     in
     (Option.is_some repo_content, read)
+
+let remove_both root name =
+  remove (Tar (Tar.Path.root root name));
+  remove (Dir (Dir.Path.root root name))
