@@ -308,3 +308,18 @@ let orig_opam_file st name opam =
       if OpamFilename.exists opam_file then
         Some (OpamFile.make opam_file)
       else None
+    | OpamRepositoryRoot.Tar tar ->
+      let dir = OpamFilename.Unix.Dir.of_string rel in
+      let opam_file = OpamFilename.Unix.Op.(dir // OpamPathName.opam_f) in
+      match List.rev (OpamRepositoryRoot.Tar.filter_files
+                        (OpamFilename.Unix.equal opam_file) tar) with
+      | [] -> None
+      | (opam_file, content)::_ ->
+        (* we take the last one, there is a non zero possibility that 2 files
+           have the same name, see -r option of tar *)
+        let file = OpamFilename.Unix.to_string opam_file in
+        let tmp = OpamFilename.mk_tmp_dir () in
+        let filename = tmp // file in
+        OpamFilename.write filename content;
+        OpamStd.Sys.at_exit (fun () -> OpamFilename.rmdir tmp);
+        Some (OpamFile.make filename)
