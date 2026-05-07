@@ -388,6 +388,15 @@ let load_repo repo repo_root =
   let t = OpamConsole.timer () in
   let loaded_repo =
     match repo_root with
+    | OpamRepositoryRoot.Tar tar ->
+      let repo_def, opams =
+        load_repo_from_tar_gz repo.repo_name tar
+      in
+      let repo_def =
+        repo_def
+        |> OpamFile.Repo.with_root_url repo.repo_url
+      in
+      repo_def, opams
     | OpamRepositoryRoot.Dir dir ->
       load_repo_from_dir repo dir
   in
