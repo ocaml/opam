@@ -1127,7 +1127,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
 
 let lint = t_lint ~all:false
 
-let extra_files_default filename =
+let extra_files_default_dir filename =
   let dir =
     OpamFilename.Op.(OpamFilename.dirname
                        (OpamFile.filename filename) / OpamPathName.files_d)
@@ -1138,16 +1138,34 @@ let extra_files_default filename =
        OpamHash.check_file (OpamFilename.to_string f))
     (OpamFilename.rec_files dir)
 
-let extra_files_default_dir filename =
+let extra_files_default_tar tar filename =
+  (* TAR TODO : very hackish and hardcoded, move somewwhere else ?
+     we need to do that because we retrieve the file from
+     OpamPinned.orig_opam_file that writes it in /tmp*)
+  let filename =
+    let rec aux filename =
+      match OpamFilename.Unix.root_dir filename with
+      | Some p when String.equal p OpamRepositoryPathName.packages_d -> filename
+      | None -> filename
+      | Some dir ->
+        let filename =
+          (OpamFilename.Unix.of_string
+             (OpamFilename.Unix.remove_prefix (OpamFilename.Unix.Dir.of_string dir) filename))
+        in
+        aux filename
+    in
+    aux (OpamFilename.Unix.of_filename (OpamFile.filename filename))
+  in
   let dir =
-    OpamFilename.Op.(OpamFilename.dirname
-                       (OpamFile.filename filename) / "files")
+    OpamFilename.Unix.Op.(OpamFilename.Unix.dirname filename
+                          / OpamRepositoryPathName.files_d)
   in
   List.map
-    (fun f ->
-       OpamFilename.Base.of_string (OpamFilename.remove_prefix dir f),
-       OpamHash.check_file (OpamFilename.to_string f))
-    (OpamFilename.rec_files dir)
+    (fun (f,c) ->
+       OpamFilename.Base.of_string (OpamFilename.Unix.remove_prefix dir f),
+       OpamHash.check_string c)
+    (OpamRepositoryRoot.Tar.filter_files
+       (OpamFilename.Unix.starts_with dir) tar)
 
 let lint_gen ?check_extra_files ?check_upstream ?(handle_dirname=false)
     reader filename =
@@ -1219,7 +1237,10 @@ let lint_gen ?check_extra_files ?check_upstream ?(handle_dirname=false)
     | OpamPp.Bad_format_list bfl -> List.map warn_of_bad_format bfl, None
   in
   let check_extra_files = match check_extra_files with
-    | None -> extra_files_default filename
+    | None -> extra_files_default_dir filename
+    (* TAR QUESTION : keep it as is with directory ? i think yes, it is in the
+       case where is not called via lint_repo_package, so it doesn't need to
+       handle another layout  *)
     | Some f -> f
   in
   warnings @ (match t with Some t -> lint ~check_extra_files ?check_upstream t | None -> []),
