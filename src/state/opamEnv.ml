@@ -1035,7 +1035,7 @@ let abort_if_set var shell =
      unset or empty ("null") *)
   match shell with
   | SH_zsh | SH_bash | SH_sh ->
-    Printf.sprintf "test -z \"${%s:+x}\" || return\n" var
+    Printf.sprintf "test -z \"${%s:+x}\" || return 0\n" var
   | SH_csh ->
     Printf.sprintf "if ( ${?%s} ) then\n  if ( \"$%s\" != \"\") exit\nendif\n"
       var var
