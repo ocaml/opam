@@ -138,6 +138,7 @@ users)
   * Improved depexts handling by caching system package availability during update, avoiding redundant system checks at install time. [#6489 @arozovyk - fix #6461]
 
 ## Shell
+  * added return 0 for zsh/bash/sh/fish to prevent leaking error codes [#6930 @ta2005]
 
 ## Internal
   * Improve cache-loading performance when using OCaml >= 5.4 by using `Gc.ramp_up` [#6515 @dra27]
