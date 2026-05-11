@@ -142,15 +142,12 @@ module Config: sig
   val with_opam_root_version: OpamVersion.t -> t -> t
 
   val with_criteria: (solver_criteria * string) list -> t -> t
-  val with_best_effort_prefix: string -> t -> t
   val with_best_effort_prefix_opt: string option-> t -> t
 
-  val with_solver: arg list -> t -> t
   val with_solver_opt: arg list option -> t -> t
 
   val with_jobs: int -> t -> t
   val with_jobs_opt: int option -> t -> t
-  val with_dl_tool: arg list -> t -> t
   val with_dl_tool_opt: arg list option -> t -> t
   val with_dl_jobs: int -> t -> t
   val with_dl_cache: url list -> t -> t
@@ -254,7 +251,6 @@ end
 module InitConfig: sig
   include IO_FILE
 
-  val opam_version: t -> opam_version
   val repositories: t -> (repository_name * (url * trust_anchors option)) list
   val default_compiler: t -> formula
   val default_invariant: t -> formula
@@ -273,19 +269,12 @@ module InitConfig: sig
   val sys_pkg_manager_cmd: t -> filename OpamStd.String.Map.t
   val git_location: t -> dirname option
 
-  val with_opam_version: opam_version -> t -> t
   val with_repositories:
     (repository_name * (url * trust_anchors option)) list -> t -> t
   val with_default_compiler: formula -> t -> t
   val with_default_invariant: formula -> t -> t
-  val with_jobs: int option -> t -> t
   val with_dl_tool: arg list option -> t -> t
-  val with_dl_jobs: int option -> t -> t
-  val with_dl_cache: url list -> t -> t
-  val with_solver_criteria: (solver_criteria * string) list -> t -> t
-  val with_solver: arg list option -> t -> t
   val with_wrappers: Wrappers.t -> t -> t
-  val with_global_variables: (variable * variable_contents * string) list -> t -> t
   val with_eval_variables: (variable * string list * string) list -> t -> t
   val with_recommended_tools: (string list * string option * filter option) list -> t -> t
   val with_required_tools: (string list * string option * filter option) list -> t -> t
@@ -303,17 +292,11 @@ module Descr_legacy: sig
 
   val create: string -> t
 
-  (** Create an abstract description file from a string *)
-  val of_string: t typed_file -> string -> t
-
   (** Return the first line *)
   val synopsis: t -> string
 
   (** Return the body *)
   val body: t -> string
-
-  (** Return the full description *)
-  val full: t -> string
 
 end
 
@@ -381,11 +364,7 @@ module URL: sig
   (** Constructor *)
   val with_url: url -> t -> t
   val with_checksum: OpamHash.t list -> t -> t
-  val with_mirrors: OpamUrl.t list -> t -> t
-  val with_swhid: OpamSWHID.t -> t -> t
   val with_swhid_opt: OpamSWHID.t option -> t -> t
-  val with_subpath: subpath -> t -> t
-  val with_subpath_opt: subpath option -> t -> t
 
   val subpath: t -> subpath option
 
@@ -844,11 +823,8 @@ module PkgList: IO_FILE with type t = package_set
 module Environment : sig
   include IO_FILE with type t = (spf_resolved, euok_writeable) env_update list
 
-  val read: t typed_file -> (spf_resolved, [> euok_writeable ]) env_update list
   val read_opt: t typed_file -> (spf_resolved, [> euok_writeable ]) env_update list option
   val safe_read: t typed_file -> (spf_resolved, [> euok_writeable ]) env_update list
-  val read_from_channel: ?filename:t typed_file -> in_channel -> (spf_resolved, [> euok_writeable ]) env_update list
-  val read_from_string: ?filename:t typed_file -> string -> (spf_resolved, [> euok_writeable ]) env_update list
 end
 
 (** Compiler version [$opam/compilers/]. Deprecated, only used to upgrade old
@@ -860,53 +836,17 @@ module Comp: sig
   type compiler = string
   type compiler_version = string
 
-  (** Create a pre-installed compiler description file *)
-  val create_preinstalled:
-    compiler -> compiler_version -> name list -> (spf_unresolved, euok_writeable) env_update list -> t
-
   (** Is it a pre-installed compiler description file *)
   val preinstalled: t -> bool
-
-  (** Get OPAM version *)
-  val opam_version: t -> opam_version
-
-  (** Return the compiler name *)
-  val name: t -> compiler
 
   (** Return the compiler version *)
   val version: t -> compiler_version
 
-  (** Return the url of the compiler *)
-  val src: t -> url option
-
   (** Return the list of patches to apply *)
   val patches: t -> url list
 
-  (** Options to give to the "./configure" command *)
-  val configure: t -> string list
-
-  (** Options to give to the "make" command *)
-  val make: t -> string list
-
-  (** Options to give to build the package. If this one is provided,
-      nothing should be specified for [configure] and [make]. *)
-  val build: t -> command list
-
   (** Packages to install immediately after the creation of OCaml *)
   val packages: t -> formula
-
-  (** Environment variable to set-up before running commands in the
-      subtree *)
-  val env: t -> (spf_unresolved, euok_writeable) env_update list
-
-  val tags: t -> string list
-
-  val with_src: url option -> t -> t
-  val with_patches: url list -> t -> t
-  val with_configure: string list -> t -> t
-  val with_make: string list -> t -> t
-  val with_build: command list -> t -> t
-  val with_packages: formula -> t -> t
 
   (** Converts a compiler definition to package metadata. For compat. If
       [package] is unspecified, a package named "ocaml" is created for
@@ -968,48 +908,6 @@ module Dot_install: sig
   (** List of other files to install *)
   val misc: t -> (basename optional * filename) list
 
-  (** List of files to install in $bin/ *)
-  val with_bin : (basename optional * basename option) list -> t -> t
-
-  (** List of files to install in $sbin/ *)
-  val with_sbin : (basename optional * basename option) list -> t -> t
-
-  (** List of files to install in $lib/ *)
-  val with_lib : (basename optional * basename option) list -> t -> t
-
-  (** List of toplevel files *)
-  val with_toplevel : (basename optional * basename option) list -> t -> t
-
-  (** C bindings *)
-  val with_stublibs : (basename optional * basename option) list -> t -> t
-
-  (** List of architecture-independent files *)
-  val with_share : (basename optional * basename option) list -> t -> t
-
-  (** List of files under the more general share prefix *)
-  val with_share_root : (basename optional * basename option) list -> t -> t
-
-  (** List of etc files *)
-  val with_etc : (basename optional * basename option) list -> t -> t
-
-  (** List of doc files *)
-  val with_doc : (basename optional * basename option) list -> t -> t
-
-  (** Man pages *)
-  val with_man : (basename optional * basename option) list -> t -> t
-
-  (** Executable files under lib/ *)
-  val with_libexec : (basename optional * basename option) list -> t -> t
-
-  (** Not relative to the package's lib dir *)
-  val with_lib_root : (basename optional * basename option) list -> t -> t
-
-  (** Not relative to the package's lib dir, and with +x set *)
-  val with_libexec_root : (basename optional * basename option) list -> t -> t
-
-  (** List of other files to install *)
-  val with_misc : (basename optional * filename) list -> t -> t
-
 end
 
 (** .changes files, bound to the OpamDirTrack module *)
@@ -1036,9 +934,6 @@ module Dot_config: sig
 
   (** Top-level variables *)
   val variable: t -> variable  -> variable_contents option
-
-  (** The list of top-level variables *)
-  val variables: t -> variable list
 
   (** Lists all the variable bindings in the file *)
   val bindings: t -> (variable * variable_contents) list
@@ -1126,9 +1021,6 @@ module Repo: sig
   (** The minimum OPAM version required for this repository, if defined *)
   val opam_version : t -> OpamVersion.t option
 
-  (** Base URL for browsing packages on the WWW *)
-  val browse: t -> string option
-
   (** Base URL for browsing OPAM repository source on the WWW *)
   val upstream: t -> string option
 
@@ -1148,21 +1040,13 @@ module Repo: sig
 
   val with_opam_version : OpamVersion.t -> t -> t
 
-  val with_browse: string -> t -> t
-
-  val with_upstream: string -> t -> t
-
   val with_redirect: (string * filter option) list -> t -> t
 
   val with_root_url: url -> t -> t
 
   val with_dl_cache: string list -> t -> t
 
-  val with_announce: (string * filter option) list -> t -> t
-
   val with_stamp: string -> t -> t
-
-  val with_stamp_opt: string option -> t -> t
 end
 
 (** {2 urls.txt file *} *)
@@ -1172,22 +1056,8 @@ module File_attributes: IO_FILE with type t = file_attribute_set
     (the specific file handling modules are derived from this one) *)
 module Syntax : sig
 
-  val pp_channel:
-    'a typed_file -> in_channel -> out_channel ->
-    (unit, opamfile) OpamPp.t
-
   val of_channel: 'a typed_file -> in_channel  -> opamfile
-  val to_channel: 'a typed_file -> out_channel -> opamfile -> unit
   val of_string: 'a typed_file -> string -> opamfile
-  val to_string: 'a typed_file -> opamfile -> string
-  val to_string_with_preserved_format:
-    'a typed_file -> ?format_from:'a typed_file -> ?format_from_string:string ->
-    empty:'a ->
-    ?sections:('a, (string option * opamfile_item list) list)
-      OpamFormat.I.fields_def ->
-    fields:('a, value) OpamFormat.I.fields_def ->
-    (opamfile, filename * 'a) OpamPp.t ->
-    'a -> string
 
 end
 

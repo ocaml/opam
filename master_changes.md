@@ -267,6 +267,16 @@ users)
   * `OpamRepositoryPath` was moved from `opam-repository` [#6917 @rjbou]
   * `OpamRepositoryPath.{root,repo,packages_dir,packages,opam,files,descr,url}: have been moved to a new `OpamRepositoryPath.Make` functor [#6680 @rjbou @kit-ty-kate]
   * `OpamFilter.expand_interpolations_in_file`: changed argument type from `basename` to `filename` [#6910 @NathanReb]
+  * `OpamFile.Config`: remove `with_best_effort_prefix`, `with_solver`, and `with_dl_tool` [#6954 @fantazio]
+  * `OpaFile.InitConfig`: remove `opam_version`, `with_jobs`, `with_dl_jobs`, `with_dl_cache`, `with_solver_criteria`, `with_solver`, and `with_global_variables` [#6954 @fantazio]
+  * `OpamFile.Descr_legacy`: remove `of_string`, and `full` [#6954 @fantazio]
+  * `OpamFile.URL`: remove `with_mirrors`, `with_swhid`, `with_subpath`, and `with_subpath_opt` [#6954 @fantazio]
+  * `OpamFile.Environment`: remove `read`, `read_from_channel`, and `read_from_string` [#6954 @fantazio]
+  * `OpamFile.Comp`: remove `create_preinstalled`, `opam_version`, `name`, `src`, `configure`, `make`, `make`, `env`, `tags`, `with_src`, `with_patches`, `with_configure`, `with_make`, `with_build`, and `with_packages` [#6954 @fantazio]
+  * `OpamFile.Dot_installed`: remove `with_bin`, `with_sbin`, `with_lib`, `with_toplevel`, `with_stublibs`, `with_share`, `with_share_root`, `with_etc`, `with_doc`, `with_man`, `with_libexec`, `with_lib_root`, `with_libexec_root`, and `with_misc` [#6954 @fantazio]
+  * `OpamFile.Dot_config: remove `variables` [#6954 @fantazio]
+  * `OpamFile.Report`: remove `browse`, `with_browse`, `with_upstream`, `with_announce`, and `with_stamp_opt` [#6954 @fantazio]
+  * `OpamFile.Syntax`: remove `pp_channel`, `to_channel`, `to_string`, and `to_string_with_preserved_format` [#6954 @fantazio]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]

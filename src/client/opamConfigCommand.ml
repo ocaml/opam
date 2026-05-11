@@ -660,7 +660,7 @@ let allwd_wrappers wdef wrappers with_wrappers  =
       "wrap-install-commands",
       Wrappers.with_wrap_install, Wrappers.wrap_install;
       "wrap-remove-commands",
-      Wrappers.with_pre_remove, Wrappers.pre_remove;
+      Wrappers.with_wrap_remove, Wrappers.wrap_remove;
       "post-build-commands",
       Wrappers.with_post_build, Wrappers.post_build;
       "post-install-commands",
