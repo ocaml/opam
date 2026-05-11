@@ -194,6 +194,7 @@ users)
   * Correct configure instruction in README [#6858 @gridbugs @kit-ty-kate]
   * Improve visibility of `depopts` filter note [#6920 @ccoulombel - fix #5367]
   * Call man2html only on actual man pages [#6807 @kit-ty-kate]
+  * Replace the API example by a link to the API [#6809 @kit-ty-kate - fix #6637]
 
 ## Security fixes
   * Invalidate .install fields containing destination filepath trying to escape their scope [#6897 @kit-ty-kate]
