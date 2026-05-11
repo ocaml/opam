@@ -1328,7 +1328,7 @@ let add_aux_files ?dir ?(files_subdir_hashes=false) opam =
       OpamFile.make (dir // "descr")
     in
     let files_dir =
-      OpamFilename.Op.(dir / "files")
+      OpamFilename.Op.(dir / OpamRepositoryPathName.files_d)
     in
     let opam =
       match OpamFile.OPAM.url opam, try_read OpamFile.URL_legacy.read_opt url_file with

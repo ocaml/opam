@@ -940,7 +940,8 @@ let run_test ?(vars=[]) ~opam t =
                try
                  (* update with extra files if found *)
                  let files =
-                   Filename.concat (Filename.dirname opam_path) "files"
+                   Filename.concat (Filename.dirname opam_path)
+                     OpamRepositoryPathName.files_d
                    |> Sys.readdir
                    |> Array.to_list
                    |> List.filter (fun f ->

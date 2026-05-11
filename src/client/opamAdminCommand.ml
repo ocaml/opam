@@ -125,7 +125,7 @@ let index_command cli =
     OpamFile.Repo.write repo_file repo_def;
     if urls_txt <> `no_urls_txt then
       (OpamConsole.msg "Generating urls.txt...\n";
-       OpamFilename.of_string "repo" ::
+       OpamFilename.of_string OpamRepositoryPathName.repo_f ::
        (if urls_txt = `full_urls_txt then
           OpamFilename.rec_files OpamFilename.Op.(repo_root / "compilers") @
           OpamFilename.rec_files (OpamRepositoryPath.packages_dir repo_root)
@@ -837,7 +837,8 @@ let lint_command cli =
   let cmd global_options short list incl excl ign warn_error () =
     OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
-    if not (OpamFilename.exists_dir OpamFilename.Op.(repo_root / "packages"))
+    if not (OpamFilename.exists_dir
+              OpamFilename.Op.(repo_root / OpamRepositoryPathName.packages_d))
     then
         OpamConsole.error_and_exit `Bad_arguments
           "No repository found in current directory.\n\
