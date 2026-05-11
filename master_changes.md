@@ -204,6 +204,7 @@ users)
   * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
 
 ## opam-repository
+  * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -241,6 +242,7 @@ users)
   * `OpamTypes`: change `result` type name to `solver_result` to avoid conflicts with Stdlib [#6885 @rjbou]
   * `OpamPathName` was added [#6917 @rjbou]
   * `OpamRepositoryPathName` was added [#6917 @rjbou]
+  * `OpamRepositoryPath` was moved from `opam-repository` [#6917 @rjbou]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
