@@ -184,6 +184,7 @@ users)
   * Upgrade to use opam 2.5.1 [#6904 @kit-ty-kate]
   * depexts: Always use the latest 'stable' version of each distribution [#6905 @kit-ty-kate]
   * depexts: Always use the already installed ocaml package via ocaml-system [#6905 @kit-ty-kate]
+  * Trigger CI upon changes in `doc/` [#6927 @kit-ty-kate - fix #6810]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
