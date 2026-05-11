@@ -113,15 +113,6 @@ let rec nullify_pos_value {pelem; pos = _} =
          env_update_op,
        nullify_pos_value v2)
 
-(* XXX update *)
-let pos_best pos1 pos2 =
-  match pos1, pos2 with
-  | { filename = ""; _ }, _ -> pos2
-  | _, { filename = ""; _ } -> pos1
-  | { start = (-1,_) ; _ }, _ -> pos2
-  | _, { start = (-1,_) ; _ } -> pos1
-  | _, _ -> pos1
-
 (*
   if f1 = file_null then pos2
   else if f2 = file_null then pos1
@@ -325,15 +316,6 @@ let string_of_cause to_string =
 let map_success f = function
   | Success x -> Success (f x)
   | Conflicts c -> Conflicts c
-
-let iter_success f = function
-  | Success x -> f x
-  | Conflicts _ -> ()
-
-(** Environment update helpers *)
-let env_update ?comment:envu_comment ~rewrite:envu_rewrite
-    envu_var envu_op envu_value =
-  { envu_var; envu_op; envu_value; envu_comment; envu_rewrite }
 
 let env_update_resolved ?comment:envu_comment ?rewrite
     envu_var envu_op envu_value =

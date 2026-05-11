@@ -136,14 +136,6 @@ module V = struct
          | _ -> [v])
       (fun l -> nullify_pos (List (nullify_pos l)))
 
-  let group =
-    pp ~name:"group" ~name_constr:(Printf.sprintf "(%s)")
-      (fun ~pos:_ v ->
-         match v.pelem with
-         | Group l -> l.pelem
-         | _ -> [v])
-      (fun l -> nullify_pos (Group (nullify_pos l)))
-
   let option =
     pp ~name:"option"
       (fun ~pos:_ v ->
@@ -161,8 +153,6 @@ module V = struct
          | Option (k,l) -> k, l.pelem
          | _ -> bad_format ~pos "Expected an option")
       (function (v, l) -> nullify_pos (Option (v, nullify_pos l)))
-
-  let map_group pp1 = group -| map_list ~posf:value_pos pp1
 
   let list_depth expected_depth =
     let rec depth v =
@@ -476,9 +466,6 @@ module V = struct
 
   let pkgname =
     string -| of_module "pkg-name" (module OpamPackage.Name)
-
-  let package_atom constraints =
-    map_option pkgname constraints
 
   (* These two functions are duplicated from [OpamFormula] but we need to have a
      it here because of a change on [Block] handling: to have a coherent

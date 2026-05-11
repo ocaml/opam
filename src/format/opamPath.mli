@@ -61,14 +61,8 @@ val log: t -> dirname
 (** The directory where global backups are stored *)
 val backup_dir: t -> dirname
 
-(** Backup file for state export *)
-val backup: t -> switch_selections OpamFile.t
-
 (** The prefix for plugin commands (["opam-"]) *)
 val plugin_prefix : string
-
-(** The directory for plugins data {i $opam/plugins} *)
-val plugins: t -> dirname
 
 (** The directory for shared plugin binaries {i $opam/plugins/bin} *)
 val plugins_bin: t -> dirname
@@ -76,10 +70,6 @@ val plugins_bin: t -> dirname
 (** The globally installed binary of the given plugin {i
     $opam/plugins/bin/opam-foo} *)
 val plugin_bin: t -> name -> filename
-
-(** The directory for a given plugin's data {i $opam/plugins/$name}. ["bin"] is
-    forbidden. *)
-val plugin: t -> name -> dirname
 
 (** The last environment used regardless the switch *)
 val last_env: t -> dirname
@@ -97,10 +87,6 @@ module Switch: sig
 
   (** The switch prefix: {i $opam/$switch} *)
   val root: t -> switch -> dirname
-
-  (** The name of the subdir of the switch prefix where opam data is stored
-      (".opam-switch") *)
-  val meta_dirname: string
 
   (** The subdirectory of the prefix where opam data lives:
       {i $opam/$switch/.opam-switch}*)
@@ -169,10 +155,6 @@ module Switch: sig
       This is used for switch-imports: {i $meta/extra-files-cache} *)
   val extra_files_dir: t -> switch -> dirname
 
-  (** Extra file with the given hash from the temporary switch-import cache:
-      {i $meta/extra-files-cache/HASH} *)
-  val extra_file: t -> switch -> OpamHash.t -> filename
-
   (** Mirror of the sources for a given pinned package: {i
       $meta/sources/$name/} (without version) *)
   val pinned_package: t -> switch -> name -> dirname
@@ -215,48 +197,20 @@ module Switch: sig
         {i $prefix/lib/$name} *)
     val lib: t -> switch -> name -> dirname
 
-    (** Library path: {i $prefix/lib} *)
-    val lib_dir: t -> switch -> dirname
-
-    (** DLL paths *)
-    val stublibs: t -> switch -> dirname
-
-    (** toplevel path: {i $prefix/lib/toplevel} *)
-    val toplevel: t -> switch -> dirname
-
     (** Documentation path for a given package:
         {i $prefix/doc/$name} *)
     val doc: t -> switch -> name -> dirname
-
-    (** Documentation path: {i $prefix/doc/} *)
-    val doc_dir: t -> switch -> dirname
-
-    (** Shared directory: {i $prefix/share} *)
-    val share_dir: t -> switch -> dirname
 
     (** Share directory for a given package: {i
         $prefix/share/$package} *)
     val share: t -> switch -> name -> dirname
 
-    (** Etc directory: {i $prefix/etc} *)
-    val etc_dir: t -> switch -> dirname
-
     (** Etc directory for a given package: {i
         $prefix/etc/$package} *)
     val etc: t -> switch -> name -> dirname
 
-    (** Man pages path: {i $prefix/man/}. The optional
-        [num] argument will add a {i manN } suffix if specified *)
-    val man_dir: ?num:string -> t -> switch -> dirname
-
-    (** Man pages pathes: {i $prefix/man/manN/} *)
-    val man_dirs: t -> switch -> dirname list
-
     (** Installed binaries: {i $prefix/bin} *)
     val bin: t -> switch -> dirname
-
-    (** Installed system binaries: {i $prefix/sbin} *)
-    val sbin: t -> switch -> dirname
   end
 
   (** Fuctorised version of Default, for replicating
@@ -272,19 +226,13 @@ module Switch: sig
 
     val doc: t -> L.ctx -> name -> dirname
 
-    val doc_dir: t -> L.ctx -> dirname
-
     val share_dir: t -> L.ctx -> dirname
 
     val share: t -> L.ctx -> name -> dirname
 
-    val etc_dir: t -> L.ctx -> dirname
-
     val etc: t -> L.ctx -> name -> dirname
 
     val man_dir: ?num:string -> t -> L.ctx -> dirname
-
-    val man_dirs: t -> L.ctx -> dirname list
 
     val bin: t -> L.ctx -> dirname
 

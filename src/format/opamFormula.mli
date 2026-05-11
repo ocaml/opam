@@ -15,7 +15,6 @@
 (** binary operations (compatible with the Dose type for Cudf operators!) *)
 type relop = OpamParserTypes.FullPos.relop_kind (* = [ `Eq | `Neq | `Geq | `Gt | `Leq | `Lt ] *)
 
-val compare_relop : relop -> relop -> int
 val equal_relop : relop -> relop -> bool
 
 (** A list containing each available operator once. *)
@@ -27,8 +26,6 @@ val string_of_relop : relop -> string
 
 (** Version constraints for OPAM *)
 type version_constraint = relop * OpamPackage.Version.t
-
-val compare_version_constraint : version_constraint -> version_constraint -> int
 
 (** Formula atoms for OPAM *)
 type atom = OpamPackage.Name.t * version_constraint option
@@ -69,20 +66,11 @@ val string_of_conjunction: ('a -> string) -> 'a conjunction -> string
 (** OR formulas *)
 type 'a disjunction = 'a list
 
-(** Pretty print OR formulas *)
-val string_of_disjunction: ('a -> string) -> 'a disjunction -> string
-
 (** CNF formulas (Conjunctive Normal Form) *)
 type 'a cnf = 'a disjunction conjunction
 
 (** DNF formulas (Disjunctive Normal Form) *)
 type 'a dnf = 'a conjunction disjunction
-
-(** Pretty print CNF formulas *)
-val string_of_cnf: ('a -> string) -> 'a cnf -> string
-
-(** Pretty print DNF formulas *)
-val string_of_dnf: ('a -> string) -> 'a dnf -> string
 
 (** General formulas *)
 type 'a formula =
@@ -169,7 +157,6 @@ val check_version_formula: version_formula -> OpamPackage.Version.t -> bool
     - "foo" \{= "1" | > "4"\} | ("bar" "bouh") *)
 type t = (OpamPackage.Name.t * version_formula) formula
 
-val compare: t -> t -> int
 val equal: t -> t -> bool
 
 (** Returns [true] if [package] verifies [formula] (i.e. it is within at least
@@ -187,19 +174,8 @@ val all_names: (OpamPackage.Name.t * 'a) formula -> OpamPackage.Name.Set.t
     all disjunction cases) *)
 val packages: OpamPackage.Set.t -> t -> OpamPackage.Set.t
 
-val compare_nc:
-  (OpamPackage.Name.t * version_formula) ->
-  (OpamPackage.Name.t * version_formula) ->
-  int
-
 (** Convert a formula to CNF *)
 val cnf_of_formula: 'a formula -> 'a formula
-
-(** Convert a formula to CNF, but as a nested list *)
-val formula_to_cnf: 'a formula -> 'a cnf
-
-(** Convert a formula to DNF *)
-val dnf_of_formula: 'a formula -> 'a formula
 
 (** Convert a formula to DNF, but as a nested list *)
 val formula_to_dnf: 'a formula -> 'a dnf
@@ -210,13 +186,6 @@ val to_atom_formula: t -> atom formula
 
 (** Convert an atom-formula to a t-formula *)
 val of_atom_formula: atom formula -> t
-
-(** [simplify_ineq_formula comp f] returns a canonical version of inequality
-    formula [f], based on comparison function [comp], where each version appears
-    at most once, and in increasing order. Returns [Some Empty] if the formula
-    is always [true], [None] if it is always false *)
-val simplify_ineq_formula:
-  ('a -> 'a -> int) -> (relop * 'a) formula -> (relop * 'a) formula option
 
 (** Like [simplify_ineq_formula], but specialised on version formulas *)
 val simplify_version_formula: version_formula -> version_formula option
@@ -240,24 +209,10 @@ val atoms: t -> atom list
 (** Pretty print the formula *)
 val to_string: t -> string
 
-(** Return a conjunction. If the initial formula is not a
-    conjunction, then fail. *)
-val to_conjunction: t -> atom conjunction
-
-(** Return a formula from a conjunction of atoms *)
-val of_conjunction: atom conjunction -> t
-
-(** Return a disjunction of atoms from a package formula. It the initial formula
-    is not a disjunction, then fail. *)
-val to_disjunction: t -> atom disjunction
-
 (** Like {!to_disjunction}, but accepts conjunctions within constraint formulas,
     resolving them using the provided package set. Conjunctions between packages
     still raise [Failure]. *)
 val set_to_disjunction: OpamPackage.Set.t -> t -> atom disjunction
-
-(** Return a formula from a disjunction of atoms *)
-val of_disjunction: atom disjunction -> t
 
 (** Return an equivalent CNF formula *)
 val to_cnf: t -> atom cnf

@@ -26,8 +26,6 @@ type status =
 
 val status_empty: status
 
-val string_of_status: status -> string
-
 (** System package availability *)
 type availability_mode =
   | Available of Set.t (** Set of available system packages *)
@@ -51,5 +49,3 @@ type to_install =
   }
 
 val to_install_empty: to_install
-
-val string_of_to_install: to_install -> string

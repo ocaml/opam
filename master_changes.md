@@ -277,6 +277,13 @@ users)
   * `OpamFile.Dot_config: remove `variables` [#6954 @fantazio]
   * `OpamFile.Report`: remove `browse`, `with_browse`, `with_upstream`, `with_announce`, and `with_stamp_opt` [#6954 @fantazio]
   * `OpamFile.Syntax`: remove `pp_channel`, `to_channel`, `to_string`, and `to_string_with_preserved_format` [#6954 @fantazio]
+  * `OpamFilter`: remove `string_interp_regex`, `eval_to_string`, `ident_value`, `ident_bool`, `expand_interpolations_in_file_full`, and `gen_filter_formula` [#6954 @fantazio]
+  * `OpamFormat`: remove `value_pos`, `V.simple_arg`, `V.group`, `V.map_group`, `V.filter_ident`, `V.package_atom`, `I.file`, `I.item`, and `I.extract_field` [#6954 @fantazio]
+  * `OpamFormula`: remove `compare_relop`, `compare_version_constraint`, `string_of_disjunction`, `string_of_cnf`, `string_of_dnf`, `compare`, `compare_nc`, `formula_to_cnf`, `dnf_of_formula`, `simplify_ineq_formula`, `to_conjunction`, `of_conjunction`, `to_disjunction`, and `of_disjunction` [#6954 @fantazio]
+  * `OpamPath`: remove `backup`, `plugins`, `plugin`, `Switch.meta_dirname`, `Switch.extra_file`, `Switch.Default.lib_dir`, `Switch.Default.stublibs`, `Switch.Default.toplevel`, `Switch.Default.doc_dir`, `Switch.Default.share_dir`, `Switch.Default.etc_dir`, `Switch.Default.man_dir`, `Switch.Default.man_dirs`, `Switch.Default.sbin`, `Switch.DefaultF.doc_dir`, `Switch.DefaultF.etc_dir`, and `Switch.DefaultF.man_dirs` [#6954 @fantazio]
+  * `OpamPp`: remove `ignore` [#6954 @fantazio]
+  * `OpamSysPkg`: remove `string_of_status`, and `string_of_to_install` [#6954 @fantazio]
+  * `OpamTypesBase`: remove `map_atomic_action`, `map_highlevel_action`, `map_concrete_action`, `nullify_pos_map`, `pos_best`, `iter_success`, `env_update`, `switch_selections_compare`, `simple_arg_equal`, and `arg_equal` [#6954 @fantazio]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]

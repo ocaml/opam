@@ -50,10 +50,6 @@ val fold_down_left: ('a -> filter -> 'a) -> 'a -> filter -> 'a
 (** Maps on all nodes of a filter, bottom-up *)
 val map_up: (filter -> filter) -> filter -> filter
 
-(** Regex matching string interpolation syntax (["%%"], ["%{xxx}%"], or
-    ["%{xxx"] if unclosed) *)
-val string_interp_regex : Re.re
-
 (* Extract string of variables appearing in interpolation in a string *)
 val extract_variables_from_string : string -> string list
 
@@ -117,9 +113,6 @@ val eval_to_bool: ?default:bool -> env -> filter -> bool
     most common behaviour for using "filters" for filtering *)
 val opt_eval_to_bool: env -> filter option -> bool
 
-(** Like {!eval} but casts the result to a string *)
-val eval_to_string: ?default:string -> env -> filter -> string
-
 (** Reduces what can be, keeps the rest unchanged *)
 val partial_eval: env -> filter -> filter
 
@@ -129,19 +122,8 @@ val ident_of_var: full_variable -> fident
 (** A fident accessor directly referring a variable with the given name *)
 val ident_of_string: string -> fident
 
-(** Resolves a filter ident.
-    @raise Failure if no default is provided, like {!eval} *)
-val ident_value: ?default:variable_contents -> env -> fident -> variable_contents
-
 (** Like {!ident_value}, but casts the result to a string *)
 val ident_string: ?default:string -> env -> fident -> string
-
-(** Like {!ident_value}, but casts the result to a bool *)
-val ident_bool: ?default:bool -> env -> fident -> bool
-
-val expand_interpolations_in_file_full: env -> src:filename -> dst:filename -> unit
-(** Same as {!expand_interpolations_in_file} but allows to set the source [src] and
-    destination [dst] files independently instead of implying [src] = [dst].in *)
 
 (** Rewrites [filename.in] to [filename], expanding interpolations.
     If the first line begins ["opam-version:"], assumes that expansion of
@@ -182,13 +164,6 @@ val filter_formula:
 (** Reduces according to what is defined in [env], and returns the simplified
     formula *)
 val partial_filter_formula: env -> filtered_formula -> filtered_formula
-
-(** A more generic formula reduction function, that takes a "partial resolver"
-    as argument *)
-val gen_filter_formula:
-  ('a -> [< `True | `False | `Formula of 'b OpamTypes.generic_formula ]) ->
-  ('c * 'a) OpamFormula.formula ->
-  ('c * 'b OpamTypes.generic_formula) OpamFormula.formula
 
 
 val string_of_filtered_formula: filtered_formula -> string

@@ -130,13 +130,6 @@ let identity = {
   name_constr = (fun x -> x);
 }
 
-let ignore = {
-  parse = (fun ~pos:_ -> OpamStd.Option.none);
-  print = (fun _ -> assert false);
-  ppname = "ignored";
-  name_constr = (fun _ -> "<ignored>");
-}
-
 let check ?name ?(raise=fun _ ?pos fmt -> bad_format ?pos fmt) ?errmsg f =
   pp
     ?name
