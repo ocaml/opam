@@ -11,11 +11,14 @@
 
 open OpamFilename.Op
 
-let root root name = root / "repo" / OpamRepositoryName.to_string name
+let root root name =
+  root / OpamRepositoryPathName.repo_d / OpamRepositoryName.to_string name
 
-let tar root name = root / "repo" // (OpamRepositoryName.to_string name ^ ".tar.gz")
+let tar root name =
+  root / OpamRepositoryPathName.repo_d //
+  (OpamRepositoryName.to_string name ^ ".tar.gz")
 
-let download_cache root = root / "download-cache"
+let download_cache root = root / OpamRepositoryPathName.download_cache_d
 
 let pin_cache_dir =
   let dir =
@@ -32,9 +35,9 @@ let pin_cache u =
      OpamUrl.to_string u)
     0 16
 
-let repo repo_root = repo_root // "repo" |> OpamFile.make
+let repo repo_root = repo_root // OpamRepositoryPathName.repo_f |> OpamFile.make
 
-let packages_dir repo_root = repo_root / "packages"
+let packages_dir repo_root = repo_root / OpamRepositoryPathName.packages_d
 
 let packages repo_root prefix nv =
   match prefix with
@@ -42,7 +45,7 @@ let packages repo_root prefix nv =
   | Some p -> packages_dir repo_root / p / OpamPackage.to_string nv
 
 let opam repo_root prefix nv =
-  packages repo_root prefix nv // "opam" |> OpamFile.make
+  packages repo_root prefix nv // OpamRepositoryPathName.opam_f |> OpamFile.make
 
 let descr repo_root prefix nv =
   packages repo_root prefix nv // "descr" |> OpamFile.make
@@ -51,17 +54,17 @@ let url repo_root prefix nv =
   packages repo_root prefix nv // "url" |> OpamFile.make
 
 let files repo_root prefix nv =
-  packages repo_root prefix nv / "files"
+  packages repo_root prefix nv / OpamRepositoryPathName.files_d
 
 module Remote = struct
   (** URL, not FS paths *)
   open OpamUrl.Op
 
   let repo root_url =
-    root_url / "repo"
+    root_url / OpamRepositoryPathName.repo_f
 
   let packages_url root_url =
-    root_url / "packages"
+    root_url / OpamRepositoryPathName.packages_d
 
   let archive root_url nv =
     root_url / "archives" / (OpamPackage.to_string nv ^ "+opam.tar.gz")

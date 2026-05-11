@@ -304,7 +304,7 @@ let options =
     let file =
       match file with
       | Some file ->
-        let f = OpamFilename.of_string (file ^ ".install") in
+        let f = OpamFilename.of_string (file ^ OpamPathName.install_suffix) in
         if OpamFilename.exists f then f else
         let f = OpamFilename.of_string file in
         if OpamFilename.exists f then f else
@@ -312,7 +312,8 @@ let options =
       | None ->
         let candidates = OpamFilename.files (OpamFilename.cwd ()) in
         match
-          List.filter (fun f -> OpamFilename.check_suffix f ".install")
+          List.filter
+            (fun f -> OpamFilename.check_suffix f OpamPathName.install_suffix)
             candidates
         with
         | [f] -> f
@@ -333,8 +334,9 @@ let options =
     let prefix = OpamFilename.Dir.of_string prefix in
     let pkgname = match name with
       | Some n -> OpamPackage.Name.of_string n
-      | None
-        when OpamFilename.check_suffix (OpamFile.filename file) ".install" ->
+      | None when
+          OpamFilename.check_suffix (OpamFile.filename file)
+            OpamPathName.install_suffix ->
         OpamPackage.Name.of_string
           (OpamFilename.Base.to_string
              (OpamFilename.basename

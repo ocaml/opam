@@ -354,7 +354,7 @@ let prepare_package_build env opam nv dir =
   in
   let print_subst basename =
     let file = OpamFilename.Base.to_string basename in
-    let file_in = file ^ ".in" in
+    let file_in = file ^ OpamPathName.subst_suffix in
     log "%s: expanding opam variables in %s, generating %s.\n"
       (OpamPackage.name_to_string nv)
       file_in file;

@@ -58,7 +58,8 @@ let iter_packages_gen ?(quiet=false) f =
       let dot_install_file : OpamFile.Dot_install.t OpamFile.t =
         OpamFile.make
           (OpamRepositoryPath.files repo prefix package
-           // (OpamPackage.Name.to_string (OpamPackage.name package) ^ ".install"))
+           // (OpamPackage.Name.to_string (OpamPackage.name package)
+               ^ OpamPathName.install_suffix))
       in
       let dot_install = OpamFile.Dot_install.read_opt dot_install_file in
       let opam2, descr2, url2, dot_install2 =

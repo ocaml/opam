@@ -463,7 +463,7 @@ let expand_interpolations_in_file_full env ~src ~dst =
 (* Substitute the file contents *)
 let expand_interpolations_in_file env file =
   let file = OpamFilename.of_basename file in
-  let src = OpamFilename.add_extension file "in" in
+  let src = OpamFilename.add_extension file OpamPathName.subst_ext in
   expand_interpolations_in_file_full env ~src ~dst:file
 
 (* Apply filters and interpolations to package commands *)

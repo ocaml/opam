@@ -206,9 +206,11 @@ let of_dirname f =
 
 (* $DIR/$NAME.$VERSION/opam *)
 let of_filename f =
-  if OpamFilename.basename f = OpamFilename.Base.of_string "opam" then
+  if OpamFilename.Base.equal
+      (OpamFilename.basename f)
+      (OpamFilename.Base.of_string OpamPathName.opam_f) then
     of_dirname (OpamFilename.dirname f)
-  else if OpamFilename.check_suffix f ".opam" then
+  else if OpamFilename.check_suffix f OpamPathName.opam_suffix then
     of_string_opt OpamFilename.(Base.to_string (basename (chop_extension f)))
   else
     None
@@ -230,7 +232,7 @@ let list dir =
         | Some p ->
           if not (Set.mem p set) then Set.add p set
           else
-            let suffix = Filename.concat (to_string p) "opam" in
+            let suffix = Filename.concat (to_string p) OpamPathName.opam_f in
             let files = List.filter (OpamFilename.ends_with suffix) files in
             OpamConsole.error_and_exit `File_error
               "Multiple definition of package %s in %s:\n%s"

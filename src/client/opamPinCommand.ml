@@ -292,7 +292,7 @@ let edit st ?version name =
           OpamFile.OPAM.get_url opam >>= OpamUrl.local_dir >>| fun dir ->
           let src_opam =
               (OpamPinned.find_opam_file_in_source name dir >>| fst)
-              +! (OpamFile.make OpamFilename.Op.(dir // "opam"))
+              +! (OpamFile.make OpamFilename.Op.(dir // OpamPathName.opam_f))
           in
           let clean_opam =
             OpamFile.OPAM.with_url_opt None @*

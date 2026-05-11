@@ -128,7 +128,7 @@ let opams_of_dir_w_target ?locked ?recurse ?subpath
 let name_and_dir_of_opam_file ?locked f =
   let srcdir = OpamFilename.dirname f in
   let srcdir =
-    if OpamFilename.dir_ends_with ".opam" srcdir &&
+    if OpamFilename.dir_ends_with OpamPathName.opam_suffix srcdir &&
        OpamUrl.guess_version_control (OpamFilename.Dir.to_string srcdir)
        = None
     then OpamFilename.dirname_dir srcdir

@@ -377,7 +377,7 @@ let apply_selector ~base st = function
        in
        let matching_change_files =
          List.filter (fun change_f ->
-             OpamFilename.check_suffix change_f ".changes" &&
+             OpamFilename.check_suffix change_f OpamPathName.changes_suffix &&
              let changes =
                OpamFile.Changes.safe_read (OpamFile.make change_f)
              in
@@ -870,7 +870,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     if where then
       OpamConsole.msg "%s\n"
         (match OpamFile.OPAM.metadata_dir opam with
-         | Some (None, dir) -> Filename.concat dir "opam"
+         | Some (None, dir) -> Filename.concat dir OpamPathName.opam_f
          | Some (Some repo, rdir) ->
            let repo_dir = OpamRepositoryPath.root st.switch_global.root repo in
            let tar = OpamRepositoryPath.tar st.switch_global.root repo in

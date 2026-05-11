@@ -85,7 +85,7 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
         Printf.sprintf "<%s>/%s/opam" (OpamRepositoryName.to_string r) rel_d
       | Some (None, abs_d) ->
         let d = OpamFilename.Dir.of_string abs_d in
-        OpamFilename.to_string (d // "opam")
+        OpamFilename.to_string (d // OpamPathName.opam_f)
       | None -> "opam file"
   in
   let available =

@@ -110,11 +110,13 @@ let read_package_opam ~repo_name ~repo_root package_dir =
        Some (nv, opam)
      with Failure _ ->
        log "ERR: directory name not a valid package: ignored %s"
-         (OpamFilename.to_string OpamFilename.Op.(package_dir // "opam"));
+         (OpamFilename.to_string
+            OpamFilename.Op.(package_dir // OpamRepositoryPathName.opam_f));
        None)
   | None ->
     log "ERR: Could not load %s, ignored"
-      (OpamFilename.to_string OpamFilename.Op.(package_dir // "opam"));
+      (OpamFilename.to_string
+         OpamFilename.Op.(package_dir // OpamRepositoryPathName.opam_f));
     None
 
 let load_opams_from_dir repo_name repo_root =
@@ -125,7 +127,7 @@ let load_opams_from_dir repo_name repo_root =
   let rec aux r dir =
     if OpamFilename.exists_dir dir then
       let fnames = Sys.readdir (OpamFilename.Dir.to_string dir) in
-      if Array.exists (fun f -> f = "opam") fnames then
+      if Array.exists (fun f -> String.equal f OpamPathName.opam_f) fnames then
         match read_package_opam ~repo_name ~repo_root dir with
         | Some (nv, opam) -> OpamPackage.Map.add nv opam r
         | None -> r
@@ -158,7 +160,8 @@ let load_opams_from_diff repo diffs rt =
           (OpamFilename.Dir.to_string repo_root)
           (OpamFilename.Dir.to_string dirname)
       in
-      if OpamFilename.Base.to_string basename = "files" then
+      if String.equal OpamRepositoryPathName.files_d
+          (OpamFilename.Base.to_string basename) then
         OpamFilename.Dir.of_string (Filename.dirname full_path)
       else
         OpamFilename.Dir.of_string full_path
