@@ -813,4 +813,19 @@ module Unix = struct
 
   let of_filename x = OpamSystem.back_to_forward (concat x.dirname x.basename)
   let to_filename x = {dirname = dirname x; basename = basename x}
+
+  let to_relative_canonical_list x =
+    if Filename.is_relative x then
+      match String.split_on_char '/' x with
+      | [] | ""::_::_ -> assert false
+      | [""] -> [current_dir_name]
+      | x ->
+        List.filter (fun seg ->
+            if seg = ".." then
+              invalid_arg "'..' is forbidden"
+            else
+              seg <> "" && not (String.equal current_dir_name seg))
+          x
+    else
+      invalid_arg "not relative"
 end
