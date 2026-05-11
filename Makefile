@@ -262,6 +262,9 @@ reftests-meld:
 	    echo --diff $$t $$out; \
 	  fi; done`
 
+lib-tests: $(DUNE_DEP) src/client/no-git-version
+	$(DUNE) test $(DUNE_ARGS) $(DUNE_PROFILE_ARG) --root . --force tests/lib/
+
 .PHONY: doc
 doc: all
 	$(MAKE) -C doc
