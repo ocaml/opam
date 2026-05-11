@@ -1130,7 +1130,7 @@ let lint = t_lint ~all:false
 let extra_files_default filename =
   let dir =
     OpamFilename.Op.(OpamFilename.dirname
-                       (OpamFile.filename filename) / "files")
+                       (OpamFile.filename filename) / OpamPathName.files_d)
   in
   List.map
     (fun f ->
@@ -1438,7 +1438,7 @@ let add_aux_files ?dir ?(files_subdir_hashes=false) opam =
 
 let read_opam dir =
   let (opam_file: OpamFile.OPAM.t OpamFile.t) =
-    OpamFile.make (dir // "opam")
+    OpamFile.make (dir // OpamPathName.opam_f)
   in
   match try_read OpamFile.OPAM.read_opt opam_file with
   | Some opam, None -> Some (add_aux_files ~dir ~files_subdir_hashes:false opam)

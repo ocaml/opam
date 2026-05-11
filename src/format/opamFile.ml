@@ -2775,7 +2775,8 @@ module OPAMSyntax = struct
             filename =
               Printf.sprintf "<%s>/%s/opam" (OpamRepositoryName.to_string r) rel }
         | None, d ->
-          pos_file OpamFilename.Op.(OpamFilename.Dir.of_string d // "opam")
+          let open OpamFilename.Op in
+          pos_file (OpamFilename.Dir.of_string d // OpamPathName.opam_f)
       in
       Pp.bad_format ?pos "Field '%s:' is required" name
     | Some n -> n
@@ -3661,7 +3662,7 @@ module OPAM = struct
     (match metadata_dir o with
      | None -> None
      | Some (None, abs) ->
-       let files_dir = OpamFilename.Dir.of_string abs / "files" in
+       let files_dir = OpamFilename.Dir.of_string abs / OpamPathName.files_d in
        extra_files o >>| List.map @@ fun (basename, hash) ->
        let content =
          let f = OpamFilename.create files_dir basename in

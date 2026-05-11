@@ -478,7 +478,7 @@ let load lock_kind gt rt switch =
       OpamFilename.files (OpamPath.Switch.config_dir gt.root switch)
     in
     List.fold_left (fun acc f ->
-        if OpamFilename.check_suffix f ".config" then
+        if OpamFilename.check_suffix f OpamPathName.config_suffix then
           match
             OpamPackage.Name.of_string
               OpamFilename.(Base.to_string (basename (chop_extension f)))

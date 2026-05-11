@@ -318,7 +318,9 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       else if OpamPackage.Set.mem nv st.packages then
         let opam = OpamPackage.Map.find nv st.opams in
         let temp_dir = OpamFilename.mk_tmp_dir () in
-        let dest = OpamFile.make OpamFilename.Op.(temp_dir // "opam") in
+        let dest =
+          OpamFile.make OpamFilename.Op.(temp_dir // OpamPathName.opam_f)
+        in
         OpamFile.OPAM.write dest opam;
         ret dest
       else
