@@ -1043,7 +1043,7 @@ let abort_if_set var shell =
     Printf.sprintf "if ($env:%s -ne $null -and $env:%s -ne '') { return }\n"
       var var
   | SH_fish ->
-    Printf.sprintf "test -z \"$%s\"; or return\n" var
+    Printf.sprintf "test -z \"$%s\"; or return 0\n" var
   | SH_cmd ->
     Printf.sprintf "if defined %s if \"%%%s%%\" neq \"\" goto :EOF\n" var var
 
@@ -1068,7 +1068,7 @@ let source root shell f =
       fname fname
   | SH_zsh ->
     let fname = unix_transform () in
-    Printf.sprintf "[[ ! -r '%s' ]] || source '%s' > /dev/null 2> /dev/null\n"
+    Printf.sprintf "[[ ! -r '%s' ]] || source '%s' > /dev/null 2> /dev/null; true\n"
       fname fname
   | SH_cmd ->
     Printf.sprintf "if exist \"%s\" call \"%s\" >NUL 2>NUL\n" fname fname
