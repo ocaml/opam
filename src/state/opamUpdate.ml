@@ -142,7 +142,7 @@ let repository rt repo =
             OpamRepositoryState.load_opams_from_dir repo.repo_name dir
           | diffs -> OpamRepositoryState.load_opams_from_diff repo diffs rt
       in
-      let local_dir = OpamRepositoryRoot.Dir.root gt.root repo.repo_name in
+      let local_dir = OpamRepositoryRoot.Dir.Path.root gt.root repo.repo_name in
       if OpamRepositoryConfig.(!r.repo_tarring) then
         (if OpamRepositoryRoot.Dir.exists local_dir then
            (* Mark the obsolete local directory for deletion once we complete: it's

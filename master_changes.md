@@ -249,6 +249,7 @@ users)
   * `OpamPathName` was added [#6917 @rjbou]
   * `OpamRepositoryPathName` was added [#6917 @rjbou]
   * `OpamRepositoryPath` was moved from `opam-repository` [#6917 @rjbou]
+  * `OpamRepositoryPath.{root,repo,packages_dir,packages,opam,files,descr,url}: have been moved to a new `OpamRepositoryPath.Make` functor [#6680 @rjbou @kit-ty-kate]
   * `OpamFilter.expand_interpolations_in_file`: changed argument type from `basename` to `filename` [#6910 @NathanReb]
 
 ## opam-core

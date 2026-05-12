@@ -872,7 +872,9 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
         (match OpamFile.OPAM.metadata_dir opam with
          | Some (None, dir) -> Filename.concat dir OpamPathName.opam_f
          | Some (Some repo, rdir) ->
-           let repo_dir = OpamRepositoryRoot.Dir.root st.switch_global.root repo in
+           let repo_dir =
+             OpamRepositoryRoot.Dir.Path.root st.switch_global.root repo
+           in
            let tar = OpamRepositoryPath.tar st.switch_global.root repo in
            if OpamFilename.exists tar &&
               not (OpamRepositoryRoot.Dir.exists repo_dir) then

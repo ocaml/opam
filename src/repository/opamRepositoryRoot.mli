@@ -1,6 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2025 Kate Deplaix                                         *)
+(*    Copyright 2025-2026 Kate Deplaix                                    *)
 (*    Copyright 2026 OCamlPro                                             *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
@@ -9,10 +9,10 @@
 (*                                                                        *)
 (**************************************************************************)
 
-open OpamTypes
+(** This module abstract the notion of repository root over its concrete
+    implementation (could be a database, a file, a directory, etc.) *)
 
-(** Abstraction of a internal representation of repositories
-    in <opamroot>/repo *)
+open OpamTypes
 
 (** Repository root implemented as a directory *)
 module Dir : sig
@@ -47,7 +47,11 @@ module Dir : sig
     val ( // ) : t -> string -> filename
   end
 
-  val root : dirname -> repository_name -> t
+  (* Repository paths *)
+  module Path : OpamRepositoryPath.PATH
+    with type repo_root = t
+     and type repo_dirname = dirname
+     and type 'a typed_file = 'a OpamFile.t
 end
 
 val make_tar_gz_job : filename -> Dir.t -> exn option OpamProcess.job
