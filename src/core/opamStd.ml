@@ -857,7 +857,7 @@ module OpamSys = struct
   let terminal_columns =
     let v = ref (lazy (get_terminal_columns ())) in
     let () =
-      try Sys.set_signal 28 (* SIGWINCH *)
+      try Sys.set_signal OpamCompat.Sys.sigwinch
             (Sys.Signal_handle
                (fun _ -> v := lazy (get_terminal_columns ())))
       with Invalid_argument _ -> ()

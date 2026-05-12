@@ -167,3 +167,12 @@ module Int = struct
 
   include Stdlib.Int
 end
+
+module Sys = struct
+  [@@@warning "-32"]
+
+  (* NOTE: OCaml >= 5.4 *)
+  let sigwinch = 28
+
+  include Stdlib.Sys
+end
