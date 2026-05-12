@@ -85,3 +85,8 @@ module Int : sig
   (** NOTE: OCaml >= 4.13 *)
   val min : int -> int -> int
 end
+
+module Sys : sig
+  (* NOTE: OCaml >= 5.4 *)
+  val sigwinch : int
+end
