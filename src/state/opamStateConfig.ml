@@ -65,6 +65,7 @@ type t = {
   dryrun: bool;
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
+  ignore_available_on: name_set;
   unlock_base: bool;
   no_env_notice: bool;
   locked: string option;
@@ -111,6 +112,7 @@ let default = {
       | _ -> "make"
     );
   ignore_constraints_on = OpamPackage.Name.Set.empty;
+  ignore_available_on = OpamPackage.Name.Set.empty;
   unlock_base = false;
   no_env_notice = false;
   locked = None;
@@ -131,6 +133,7 @@ type 'a options_fun =
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
+  ?ignore_available_on:name_set ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
@@ -151,6 +154,7 @@ let setk k t
     ?dryrun
     ?makecmd
     ?ignore_constraints_on
+    ?ignore_available_on
     ?unlock_base
     ?no_env_notice
     ?locked
@@ -172,6 +176,7 @@ let setk k t
     dryrun = t.dryrun + dryrun;
     makecmd = t.makecmd + makecmd;
     ignore_constraints_on = t.ignore_constraints_on + ignore_constraints_on;
+    ignore_available_on = t.ignore_available_on + ignore_available_on;
     unlock_base = t.unlock_base + unlock_base;
     no_env_notice = t.no_env_notice + no_env_notice;
     locked = t.locked + locked;
@@ -216,6 +221,7 @@ let initk k =
        OpamStd.String.split s ',' |>
        List.map OpamPackage.Name.of_string |>
        OpamPackage.Name.Set.of_list)
+    ?ignore_available_on:None
     ?unlock_base:(E.unlockbase ())
     ?no_env_notice:(E.noenvnotice ())
     ?locked:(E.locked () >>| function "" -> None | s -> Some s)
