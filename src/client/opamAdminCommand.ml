@@ -248,7 +248,7 @@ let cache_command cli =
   let link_arg =
     OpamArg.mk_opt ~cli OpamArg.cli_original ["link"] "DIR"
       (Printf.sprintf
-         "Create reverse symbolic links to the archives within $(b,DIR), in \
+         "Create reverse symbolic links to the archives within $(i,DIR), in \
           the form $(b,DIR%sPKG.VERSION%sFILENAME)."
          OpamArg.dir_sep OpamArg.dir_sep)
       Arg.(some OpamArg.dirname) None
@@ -1029,8 +1029,8 @@ let compare_versions_command cli =
 
 let pattern_list_arg =
   OpamArg.arg_list "PATTERNS"
-    "Package patterns with globs. matching against $(b,NAME) or \
-     $(b,NAME.VERSION)"
+    "Package patterns with globs. matching against $(i,NAME) or \
+     $(i,NAME.VERSION)"
     Arg.string
 
 let env_arg cli =

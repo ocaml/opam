@@ -1287,7 +1287,7 @@ let global_options cli =
   let switch =
     mk_opt ~cli cli_original ~section ["switch"]
       "SWITCH" "Use $(docv) as the current compiler switch. \
-                This is equivalent to setting $(b,\\$OPAMSWITCH) to $(b,SWITCH)."
+                This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
       Arg.(some string) None in
   let yes =
     mk_vflag_all ~cli ~section [
@@ -1319,7 +1319,7 @@ let global_options cli =
   let root =
     mk_opt ~cli cli_original ~section ["root"]
       "ROOT" "Use $(docv) as the current root path. \
-              This is equivalent to setting $(b,\\$OPAMROOT) to $(b,ROOT)."
+              This is equivalent to setting $(b,\\$OPAMROOT) to $(i,ROOT)."
       Arg.(some dirname) None in
   let d_no_aspcud =
     mk_flag ~cli (cli_between cli2_0 cli2_1) ~section ["no-aspcud"] "Deprecated"
@@ -1622,12 +1622,12 @@ let package_selection cli =
   let section = package_selection_section in
   let depends_on =
     mk_opt_all ~cli cli_original ["depends-on"] "PACKAGES" ~section
-      "List only packages that depend on one of (comma-separated) $(b,PACKAGES)."
+      "List only packages that depend on one of (comma-separated) $(i,PACKAGES)."
       Arg.(list atom)
   in
   let required_by =
     mk_opt_all ~cli cli_original ["required-by"] "PACKAGES" ~section
-      "List only the dependencies of (comma-separated) $(b,PACKAGES)."
+      "List only the dependencies of (comma-separated) $(i,PACKAGES)."
       Arg.(list atom)
   in
   let conflicts_with =
@@ -1640,7 +1640,7 @@ let package_selection cli =
   in
   let coinstallable_with =
     mk_opt_all ~cli cli_original ["coinstallable-with"] "PACKAGES" ~section
-      "Only list packages that are compatible with all of $(b,PACKAGES)."
+      "Only list packages that are compatible with all of $(i,PACKAGES)."
       Arg.(list package_with_version)
   in
   let resolve =
@@ -1672,7 +1672,7 @@ let package_selection cli =
   in
   let field_match =
     mk_opt_all ~cli cli_original ["field-match"] "FIELD:PATTERN" ~section
-      "Filter packages with a match for $(b,PATTERN) on the given $(b,FIELD)"
+      "Filter packages with a match for $(i,PATTERN) on the given $(i,FIELD)"
       Arg.(pair ~sep:':' string string)
   in
   let has_flag =
@@ -1765,7 +1765,7 @@ let package_listing cli =
   let columns =
     mk_opt ~cli cli_original ["columns"] "COLUMNS" ~section
       (Printf.sprintf "Select the columns to display among: %s.\n\
-                       The special form $(b,<field>:) (field name followed by \
+                       The special form $(i,<field>:) (field name followed by \
                        colon, e.g., $(b,license:)) selects an arbitrary field. \
                        The default is $(b,name) when $(b,--short) is present \
                        and %s otherwise."
