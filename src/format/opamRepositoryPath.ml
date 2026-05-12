@@ -1,7 +1,8 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2019 OCamlPro                                        *)
+(*    Copyright 2012-2026 OCamlPro                                        *)
 (*    Copyright 2012 INRIA                                                *)
+(*    Copyright 2026 Kate Deplaix                                         *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -10,9 +11,81 @@
 (**************************************************************************)
 
 open OpamFilename.Op
+open OpamTypes
 
-let root root name =
-  root / OpamRepositoryPathName.repo_d / OpamRepositoryName.to_string name
+(* Repository Paths *)
+
+module type PATH = sig
+  type repo_root
+  type repo_dirname
+  type 'a typed_file
+
+  val root: dirname -> repository_name -> repo_root
+  val repo: repo_root -> OpamFile.Repo.t typed_file
+  val packages_dir: repo_root -> repo_dirname
+  val packages: repo_root -> string option -> package -> repo_dirname
+  val opam:
+    repo_root -> string option -> package -> OpamFile.OPAM.t typed_file
+  val files: repo_root -> string option -> package -> repo_dirname
+  val descr:
+    repo_root -> string option -> package -> OpamFile.Descr_legacy.t typed_file
+  val url:
+    repo_root -> string option -> package -> OpamFile.URL_legacy.t typed_file
+end
+
+module type PATH_REPR = sig
+  type root
+  type file
+  type dir
+  type 'a typed_file
+  val root : dirname -> repository_name -> root
+  val absolute : root -> string -> file
+  val absolute_dir : root -> dir -> dir
+  val dir_of_string : string -> dir
+  val to_typed_file : file -> 'a typed_file
+  module Op : sig
+    val (/): dir -> string -> dir
+    val (//): dir -> string -> file
+  end
+end
+
+module Make (I : PATH_REPR) : PATH
+  with type repo_root = I.root
+   and type repo_dirname = I.dir
+   and type 'a typed_file = 'a I.typed_file
+= struct
+  open I.Op
+  type repo_root = I.root
+  type repo_dirname = I.dir
+  type 'a typed_file = 'a I.typed_file
+
+  let root = I.root
+  let repo root =
+    I.to_typed_file (I.absolute root OpamRepositoryPathName.repo_f)
+  let packages_dir root =
+    I.absolute_dir root (I.dir_of_string OpamRepositoryPathName.packages_d)
+
+  let packages root prefix nv =
+    let pkg_dir = I.dir_of_string OpamRepositoryPathName.packages_d in
+    let d =
+      match prefix with
+      | None -> pkg_dir / OpamPackage.to_string nv
+      | Some p -> pkg_dir / p / OpamPackage.to_string nv
+    in
+    I.absolute_dir root d
+
+  let opam root prefix nv =
+    I.to_typed_file
+      (packages root prefix nv // OpamRepositoryPathName.opam_f)
+  let files root prefix nv =
+    packages root prefix nv / OpamRepositoryPathName.files_d
+  let descr root prefix nv =
+    I.to_typed_file (packages root prefix nv // "descr")
+  let url root prefix nv =
+    I.to_typed_file (packages root prefix nv // "url")
+end
+
+(* Other paths *)
 
 let tar root name =
   root / OpamRepositoryPathName.repo_d //
@@ -35,29 +108,7 @@ let pin_cache u =
      OpamUrl.to_string u)
     0 16
 
-let repo repo_root =
-  repo_root // OpamRepositoryPathName.repo_f
-  |> OpamFile.make
-
-let packages_dir repo_root =
-  repo_root / OpamRepositoryPathName.packages_d
-
-let packages repo_root prefix nv =
-  match prefix with
-  | None   -> packages_dir repo_root / OpamPackage.to_string nv
-  | Some p -> packages_dir repo_root / p / OpamPackage.to_string nv
-
-let opam repo_root prefix nv =
-  packages repo_root prefix nv // OpamRepositoryPathName.opam_f |> OpamFile.make
-
-let descr repo_root prefix nv =
-  packages repo_root prefix nv // "descr" |> OpamFile.make
-
-let url repo_root prefix nv =
-  packages repo_root prefix nv // "url" |> OpamFile.make
-
-let files repo_root prefix nv =
-  packages repo_root prefix nv / OpamRepositoryPathName.files_d
+(* URL paths *)
 
 module Remote = struct
   (** URL, not FS paths *)

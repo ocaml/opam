@@ -81,7 +81,7 @@ let add rt name url trust_anchors =
     let repo = { repo_name = name; repo_url = url;
                  repo_trust = trust_anchors; }
     in
-    let repo_root = OpamRepositoryRoot.Dir.root root name in
+    let repo_root = OpamRepositoryRoot.Dir.Path.root root name in
     if OpamRepositoryRoot.Dir.exists repo_root ||
        OpamFilename.exists (OpamRepositoryPath.tar root name)
     then
@@ -107,7 +107,7 @@ let remove rt name =
   in
   OpamRepositoryState.Cache.save rt;
   OpamRepositoryRoot.Dir.remove
-    (OpamRepositoryRoot.Dir.root rt.repos_global.root name);
+    (OpamRepositoryRoot.Dir.Path.root rt.repos_global.root name);
   OpamFilename.remove
     (OpamRepositoryPath.tar rt.repos_global.root name);
   rt
@@ -121,7 +121,7 @@ let set_url rt name url trust_anchors =
         (OpamRepositoryName.to_string name);
   in
   OpamRepositoryRoot.Dir.remove
-    (OpamRepositoryRoot.Dir.root rt.repos_global.root name);
+    (OpamRepositoryRoot.Dir.Path.root rt.repos_global.root name);
   OpamFilename.remove
     (OpamRepositoryPath.tar rt.repos_global.root name);
   let repo = { repo with repo_url = url; repo_trust = trust_anchors; } in
@@ -277,8 +277,7 @@ let update_with_auto_upgrade rt repo_names =
                       (Printexc.to_string e)
                   | None -> ());
              let def =
-               OpamRepositoryRoot.Dir.to_dir repo_root
-               |> OpamRepositoryPath.repo
+               OpamRepositoryRoot.Dir.Path.repo repo_root
                |> OpamFile.Repo.safe_read
                |> OpamFile.Repo.with_root_url r.repo_url
              in

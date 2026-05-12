@@ -1,6 +1,7 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2025 Kate Deplaix                                         *)
+(*    Copyright 2025-2026 Kate Deplaix                                    *)
+(*    Copyright 2026 OCamlPro                                             *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -38,7 +39,20 @@ module Dir = struct
 
   module Op = OpamFilename.Op
 
-  let root = OpamRepositoryPath.root
+  module Path = OpamRepositoryPath.Make (struct
+      type root = t
+      type file = filename
+      type dir = dirname
+      type 'a typed_file = 'a OpamFile.t
+      let root root name =
+        let open Op in
+        root / OpamRepositoryPathName.repo_d / OpamRepositoryName.to_string name
+      let absolute root f = Op.(root // f)
+      let absolute_dir root d = Op.(root / OpamFilename.Dir.to_string d)
+      let dir_of_string = OpamFilename.raw_dir
+      let to_typed_file = OpamFile.make
+      module Op = Op
+    end)
 end
 
 let make_tar_gz_job = OpamFilename.make_tar_gz_job
