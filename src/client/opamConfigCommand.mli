@@ -38,7 +38,7 @@ val print_eval_env: csh:bool -> sexp:bool -> fish:bool -> pwsh:bool -> cmd:bool 
 val list: 'a switch_state -> name list -> unit
 
 (** Substitute files *)
-val subst: 'a global_state -> basename list -> unit
+val subst: 'a global_state -> filename list -> unit
 
 (** Prints expansion of variables in string *)
 val expand: 'a global_state -> string -> unit

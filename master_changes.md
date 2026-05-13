@@ -40,6 +40,7 @@ users)
 ## Switch
 
 ## Config
+  * Fix `opam config subst` so it works with absolute paths [#6936 @NathanReb - fix #6925]
 
 ## Pin
 
@@ -223,6 +224,7 @@ users)
   * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
   * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
   * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
+  * `OpamConfigCommand.subst` now takes a `filename` instead of a `basename` [#6936 @NathanReb]
 
 ## opam-repository
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]

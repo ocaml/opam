@@ -227,10 +227,6 @@ Done.
 ### opam config subst some-dir/relative
 ### cat some-dir/relative
 ${BASEDIR}/OPAM
-### opam config subst $BASEDIR/some-dir/absolute | 'OpamSystem.File_not_found.*' -> 'OpamSystem.File_not_found...'
-Fatal error:
-OpamSystem.File_not_found...
-# Return code 99 #
+### opam config subst $BASEDIR/some-dir/absolute
 ### cat some-dir/absolute
-cat: some-dir/absolute: No such file or directory
-# Return code 1 #
+${BASEDIR}/OPAM
