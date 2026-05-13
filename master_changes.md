@@ -15,6 +15,7 @@ users)
 
 ## Global CLI
   * Update Kate's email address [#6808 @kit-ty-kate]
+  * Remove unnecessary uses of `chdir` [#6910 @NathanReb]
 
 ## Plugins
 
@@ -247,6 +248,7 @@ users)
   * `OpamPathName` was added [#6917 @rjbou]
   * `OpamRepositoryPathName` was added [#6917 @rjbou]
   * `OpamRepositoryPath` was moved from `opam-repository` [#6917 @rjbou]
+  * `OpamFilter.expand_interpolations_in_file`: changed argument type from `basename` to `filename` [#6910 @NathanReb]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
@@ -263,3 +265,8 @@ users)
   * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
+  * `OpamFilename.in_dir`: removed [#6910 @NathanReb]
+  * `OpamSystem.in_tmp_dir`: removed [#6910 @NathanReb]
+  * `OpamSystem.in_dir`: removed [#6910 @NathanReb]
+  * `OpamSystem.chdir`: removed [#6910 @NathanReb]
+  * `OpamSystem.{command,commands,read_command_output}`: add a `?dir: dirname` optional arg to launch the command in a specific directory [#6910 @NathanReb]

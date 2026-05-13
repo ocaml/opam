@@ -26,7 +26,7 @@ let touch ~dir name =
 let setup_directory ~dir =
   OpamSystem.remove dir;
   OpamSystem.mkdir dir;
-  OpamSystem.chdir dir;
+  Unix.chdir dir;
   List.iter OpamSystem.mkdir ["a"; "b"; "c"]
 
 let pattern1 ?(test1 = false) ?(test2 = false) ?(test3 = false) ?(test4 = false) ?(eoleof_cr = false) dir =
@@ -78,7 +78,7 @@ let generate_patch () =
   set_debug_level (-3) ["PATCH"];
   OpamSystem.translate_patch ~dir:"c" "input.patch" "output.patch";
   set_debug_level 0 [];
-  OpamSystem.chdir "c";
+  Unix.chdir "c";
   Printf.eprintf "Before patch state of c:\n";
   print_directory ".";
   flush stdout;
@@ -91,7 +91,7 @@ let generate_patch () =
   if Sys.command (gpatch^" -p1 -i ../output.patch") <> 0 then (Printf.eprintf "patch application failed\n%!"; exit 2);
   Printf.eprintf "After patch state of c:\n";
   print_directory ".";
-  OpamSystem.chdir Filename.parent_dir_name
+  Unix.chdir Filename.parent_dir_name
 
 let tests () =
   set_debug_level 0 [];
@@ -103,7 +103,7 @@ let tests () =
   generate_patch ();
   pattern1 ~test2:true ~test4:true ~eoleof_cr:true "c";
   generate_patch ();
-  OpamSystem.chdir cwd;
+  Unix.chdir cwd;
   OpamSystem.remove test_dir
 
 let () =
