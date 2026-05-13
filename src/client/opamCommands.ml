@@ -1479,7 +1479,7 @@ let config cli =
     | Some `subst, (_::_ as files) ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       `Ok (OpamConfigCommand.subst gt
-             (List.map OpamFilename.Base.of_string files))
+             (List.map OpamFilename.of_string files))
     | Some `pef, params ->
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamSwitchState.with_ `Lock_none gt @@ fun st ->
