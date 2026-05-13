@@ -507,7 +507,7 @@ let do_upgrade_mirror repo_root base_url =
     (OpamRepositoryRoot.Dir.Path.repo tmp_mirror_dir) repo_20;
   let dir20 =
     OpamRepositoryRoot.Dir.of_dir
-      (OpamFilename.Dir.of_string upgradeto_version_string)
+      OpamRepositoryRoot.Dir.Op.(repo_root / upgradeto_version_string)
   in
   OpamRepositoryRoot.Dir.remove dir20;
   OpamRepositoryRoot.Dir.move ~src:tmp_mirror_dir ~dst:dir20;
