@@ -30,6 +30,7 @@ users)
 
 ## Install
   * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
+  * Add `root` and `rootexec` sections to `.install` files to install files from prefix root [#6938 @WardBrian @rjbou - fix #6919]
 
 ## Build (package)
   * When fetching a git repository, the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
@@ -350,6 +351,8 @@ users)
   * `OpamFile.*`: add `safe_read_from_string` [#6625 @rjbou]
   * `OpamRepositoryPath.tar`: renamed to `repo_tarring`, deprecated, no longer used [#6625 @rjbou]
   * `OpamPathName`: add `opam_switch_d` for `.opam-switch` [#6938 @WardBrian]
+  * `OpamFile.Dot_install`: add fields `root` and `rootexec` to type record `t` [#6938 @WardBrian]
+  * `OpamFile.Dot_install`: add `root`, `rootexec`, `with_root`, and `with_rootexec` functions [#6938 @WardBrian]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
