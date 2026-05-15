@@ -3723,8 +3723,8 @@ module Dot_installSyntax = struct
   let format_version = OpamVersion.of_string "2.0"
 
   type t =  {
-    (* would a better name be 'sysroot'? *)
-    prefix  : string option;
+    prefix  : (basename optional * basename option) list;
+    prefixexec  : (basename optional * basename option) list;
     bin     : (basename optional * basename option) list;
     sbin    : (basename optional * basename option) list;
     lib     : (basename optional * basename option) list;
@@ -3742,7 +3742,8 @@ module Dot_installSyntax = struct
   }
 
   let empty = {
-    prefix   = None;
+    prefix   = [];
+    prefixexec = [];
     lib      = [];
     bin      = [];
     sbin     = [];
@@ -3760,6 +3761,7 @@ module Dot_installSyntax = struct
   }
 
   let prefix t = t.prefix
+  let prefixexec t = t.prefixexec
   let bin t = t.bin
   let sbin t = t.sbin
   let lib t = t.lib
@@ -3775,7 +3777,8 @@ module Dot_installSyntax = struct
   let lib_root t = t.lib_root
   let libexec_root t = t.libexec_root
 
-  let with_prefix prefix t = { t with prefix = Some prefix }
+  let with_prefix prefix t = { t with prefix }
+  let with_prefixexec prefixexec t = { t with prefixexec }
   let with_bin bin t = { t with bin }
   let with_sbin sbin t = { t with sbin }
   let with_lib lib t = { t with lib }
@@ -3835,7 +3838,6 @@ module Dot_installSyntax = struct
          else OpamFilename.Base.to_string op.c)
 
   let fields =
-
     let pp_check_relative name =
       Pp.pp ~name
            (fun ~pos s ->
@@ -3854,6 +3856,14 @@ module Dot_installSyntax = struct
          Pp.singleton -| Pp.V.string -| pp_check_relative "rel-filename"
           -| Pp.of_module "filename" (module OpamFilename.Base))
     in
+    let pp_prefix =
+      Pp.V.map_list ~depth:1 @@ Pp.V.map_option
+        (Pp.V.string -| pp_optional)
+        (Pp.opt @@
+         Pp.singleton -| Pp.V.string -| pp_check_relative "rel-filename"
+           (* TODO verify that no paths start with .opam-switch/ *)
+          -| Pp.of_module "filename" (module OpamFilename.Base))
+    in
     let pp_misc =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
@@ -3865,8 +3875,8 @@ module Dot_installSyntax = struct
            OpamFilename.to_string)
     in
     [
-      "prefix", Pp.ppacc_opt with_prefix prefix
-        (Pp.V.string -| pp_check_relative "rel-dirname" (* -| Pp.of_module "prefix" (module OpamFilename.Dir) *));
+      "prefix", Pp.ppacc with_prefix prefix pp_prefix;
+      "prefixexec", Pp.ppacc with_prefixexec prefixexec pp_prefix;
       "lib", Pp.ppacc with_lib lib pp_field;
       "bin", Pp.ppacc with_bin bin pp_field;
       "sbin", Pp.ppacc with_sbin sbin pp_field;
