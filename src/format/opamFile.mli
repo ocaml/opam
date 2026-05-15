@@ -926,6 +926,8 @@ module Dot_install: sig
 
   include IO_FILE
 
+  val prefix: t -> string option
+
   (** List of files to install in $bin/ *)
   val bin:  t -> (basename optional * basename option) list
 
@@ -967,6 +969,8 @@ module Dot_install: sig
 
   (** List of other files to install *)
   val misc: t -> (basename optional * filename) list
+
+  val with_prefix: string -> t -> t
 
   (** List of files to install in $bin/ *)
   val with_bin : (basename optional * basename option) list -> t -> t

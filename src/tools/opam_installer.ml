@@ -166,20 +166,23 @@ let iter_install f instfile o =
   end
   in
   let module S = OpamFile.Dot_install in
+  let prefix = match S.prefix instfile with
+    | None -> o.prefix
+    | Some subdir -> o.prefix / subdir in
   let dest ?fix dir =
     let dir = OpamStd.Option.default dir fix in
     fun src dst ->
       OpamFilename.create dir
         (OpamStd.Option.default (OpamFilename.basename src) dst)
   in
-  let dest_global ?fix instdir_f = dest ?fix (instdir_f o.prefix ()) in
+  let dest_global ?fix instdir_f = dest ?fix (instdir_f prefix ()) in
   let dest_pkg ?fix instdir_f =
     let fix =
       Option.map (fun d ->
           d / OpamPackage.Name.to_string o.pkgname)
         fix
     in
-    dest ?fix (instdir_f o.prefix () o.pkgname)
+    dest ?fix (instdir_f prefix () o.pkgname)
   in
   List.iter f
     [ dest_global                 D.bin,      S.bin instfile,        true;
