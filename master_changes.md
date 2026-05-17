@@ -35,6 +35,7 @@ users)
 ## UI
   * Read full lines when asking for user input when `TERM=dumb` [#6829 @arvidj - fix #6828]
   * Fix a typo in the note telling users about new a depexts bypass [#6489 @rjbou @kit-ty-kate]
+  * Add support for terminal resizing detection on Solaris/Illumos [#6933 @kit-ty-kate]
 
 ## Switch
 
@@ -261,6 +262,7 @@ users)
   * `OpamCompat.List.fold_left_map`: was removed [#6879 @kit-ty-kate]
   * `OpamCompat.MAP.filter_map`: was removed [#6879 @kit-ty-kate]
   * `OpamCompat.Map.add_to_list`: was added [#6818 @dra27]
+  * `OpamCompat.Sys.sigwinch` was added [#6933 @kit-ty-kate]
   * `OpamSystem`: add `is_dir_read_only` [#6489 @rjbou]
   * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
