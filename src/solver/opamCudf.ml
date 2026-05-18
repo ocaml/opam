@@ -47,9 +47,6 @@ let is_opam_deprequest p =
 
 let unavailable_package_name =
   Dose_common.CudfAdd.encode "=unavailable"
-let unavailable_package_version = 1
-let unavailable_package = unavailable_package_name, unavailable_package_version
-let is_unavailable_package p = p.Cudf.package = unavailable_package_name
 
 let cudf2opam cpkg =
   if is_opam_invariant cpkg then
@@ -86,15 +83,6 @@ let cudfnv2opam ?version_map ?cudf_universe (name,v) =
       in
       fst (OpamPackage.Map.choose nvset)
     | None -> raise Not_found
-
-let string_of_package p =
-  let installed = if p.Cudf.installed then "installed" else "not-installed" in
-  Printf.sprintf "%s.%d(%s)"
-    p.Cudf.package
-    p.Cudf.version installed
-
-let string_of_packages l =
-  OpamStd.List.to_string string_of_package l
 
 module Json = struct
 
@@ -620,9 +608,6 @@ let string_of_atom (p, c) =
 let string_of_vpkgs constr =
   let constr = List.sort (fun (a,_) (b,_) -> String.compare a b) constr in
   OpamFormula.string_of_conjunction string_of_atom constr
-
-let string_of_universe u =
-  string_of_packages (List.sort Dose_common.CudfAdd.compare (Cudf.get_packages u))
 
 let vpkg2atom cudfnv2opam (name,cstr) =
   match cstr with
@@ -1223,11 +1208,6 @@ let conflict_explanations packages unav_reasons = function
   | _univ, _version_map, Conflict_cycle cycles ->
     [], strings_of_cycles cycles
 
-let conflict_cycles = function
-  | _cudf_universe, _version_map, Conflict_cycle cycles ->
-     Some (List.map (List.map (map_action cudf2opam)) cycles)
-  | _ -> None
-
 let string_of_explanations unav_reasons (cflts, cycles) =
   let cflts = List.map (string_of_explanation unav_reasons) cflts in
   let cycles = strings_of_cycles cycles in
@@ -1282,29 +1262,6 @@ let remove universe name constr =
   let filter p =
     p.Cudf.package <> name
     || not (Cudf.version_matches p.Cudf.version constr) in
-  let packages = Cudf.get_packages ~filter universe in
-  Cudf.load_universe packages
-
-let uninstall_all universe =
-  let packages = Cudf.get_packages universe in
-  let packages = List.rev_map (fun p -> { p with Cudf.installed = false }) packages in
-  Cudf.load_universe packages
-
-let install universe package =
-  let p = Cudf.lookup_package universe (package.Cudf.package, package.Cudf.version) in
-  let p = { p with Cudf.installed = true } in
-  let packages =
-    let filter p =
-      p.Cudf.package <> package.Cudf.package
-      || p.Cudf.version <> package.Cudf.version in
-    Cudf.get_packages ~filter universe in
-  Cudf.load_universe (p :: packages)
-
-let remove_all_uninstalled_versions_but universe name constr =
-  let filter p =
-    p.Cudf.installed
-    || p.Cudf.package <> name
-    || Cudf.version_matches p.Cudf.version constr in
   let packages = Cudf.get_packages ~filter universe in
   Cudf.load_universe packages
 
@@ -2053,5 +2010,3 @@ let trim_actions univ req g =
   let discard_actions = Action.Set.diff other_actions connex_actions in
   log "Removed unrelated actions: %s" (Action.Set.to_string discard_actions);
   Action.Set.iter (ActionGraph.remove_vertex g) discard_actions
-
-let packages u = Cudf.get_packages u

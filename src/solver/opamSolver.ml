@@ -20,27 +20,6 @@ module Action = OpamActionGraph.MakeAction(OpamPackage)
 module ActionGraph = OpamActionGraph.Make(Action)
 type solution = OpamCudf.ActionGraph.t
 
-let empty_universe =
-  {
-    u_packages = OpamPackage.Set.empty;
-    u_installed = OpamPackage.Set.empty;
-    u_available = lazy OpamPackage.Set.empty;
-    u_depends = OpamPackage.Map.empty;
-    u_depopts = OpamPackage.Map.empty;
-    u_conflicts = OpamPackage.Map.empty;
-    u_action = Install;
-    u_installed_roots = OpamPackage.Set.empty;
-    u_pinned = OpamPackage.Set.empty;
-    u_invariant = OpamFormula.Empty;
-    u_reinstall = OpamPackage.Set.empty;
-    u_attrs = [];
-  }
-
-let solution_to_json solution =
-  OpamCudf.ActionGraph.to_json solution
-let solution_of_json json =
-  OpamCudf.ActionGraph.of_json json
-
 let cudf_versions_map universe =
   log ~level:3 "cudf_versions_map";
   let add_packages_from_formula acc formula =
@@ -595,27 +574,6 @@ let dependency_sort ~depopts ~build ~post universe packages =
   in
   List.map OpamCudf.cudf2opam
     (OpamCudf.dependency_sort cudf_universe cudf_packages)
-
-let coinstallability_check universe packages =
-  let version_map = cudf_versions_map universe in
-  let cudf_universe, cudf_packages =
-    load_cudf_universe_with_packages
-      ~build:true ~post:true ~add_invariant:true
-      universe ~version_map universe.u_packages packages
-  in
-  match
-    Dose_algo.Depsolver.edos_coinstall cudf_universe
-      (OpamCudf.Set.elements cudf_packages)
-  with
-  | { Dose_algo.Diagnostic.result = Dose_algo.Diagnostic.Success _; _ } ->
-    None
-  | { Dose_algo.Diagnostic.result = Dose_algo.Diagnostic.Failure _; _ } as c ->
-    match OpamCudf.make_conflicts ~version_map cudf_universe c with
-    | Conflicts cs -> Some cs
-    | _ -> None
-
-let check_for_conflicts universe =
-  coinstallability_check universe universe.u_installed
 
 let atom_coinstallability_check universe atoms =
   let version_map = cudf_versions_map universe in

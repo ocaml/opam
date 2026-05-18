@@ -255,6 +255,8 @@ users)
 
 
 ## opam-solver
+  * `OpamCudf`: remove `Package.equal`, `Package.compare`, `Package.to_json`, `Package.of_json`, `diff`, `check_request`, `get_final_universe`, `actions_of_diff`, `remove`, `uninstall_all`, `install`, `remove_all_uninstalled_versions_but`, `opam_invariant_package_name`, `opam_deprequest_package_name`, `unavailable_package`, `is_unavailable_package`, `string_of_vpkgs`, `string_of_explanation`, `conflict_cycles`, `string_of_atom`, `string_of_request`, `string_of_universe`, `string_of_packages`, `packages`, `to_cudf`, and `Json` [#6954 @fantazio]
+  * `OpamSolver`: remove `empty_universe`, `string_of_request`, `solution_to_json`, `solution_of_json`, `cudf_versions_map`, `check_for_conflicts`, and `coinstallability_check` [#6954 @fantazio]
 
 ## opam-format
   * `OpamFile.Descr` was moved to `OpamFile.Descr_legacy` and a simpler `OpamFile.Descr` module was created only containing non-IO functions removing the outdated `descr` file support [#6827 @kit-ty-kate]
