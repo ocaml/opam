@@ -76,7 +76,7 @@ let generate_patch () =
   flush stderr; flush stdout;
   if Sys.command "diff -Naur a b > input.patch" <> 1 then (Printf.eprintf "patch generation failed\n%!"; exit 2);
   set_debug_level (-3) ["PATCH"];
-  OpamSystem.translate_patch ~dir:"c" "input.patch" "output.patch";
+  OpamPatch.translate_patch ~dir:"c" "input.patch" "output.patch";
   set_debug_level 0 [];
   Unix.chdir "c";
   Printf.eprintf "Before patch state of c:\n";
