@@ -252,6 +252,15 @@ users)
   * `OpamUpdate.get_sys_available`: factorize depexts availability computation logic from `OpamUpdate.repositories` [#6489 @arozovyk]
   * `OpamRepositoryState`: add `syspkgs_available` that returns the stored depext availability status in repository state [#6489 @rjbou]
   * `OpamSysInteract`: add `available_packages_and_family` that returns availability status and the os family [#6489 @rjbou]
+  * `OpamEnv`: remove `get_opam`, `get_opam_raw`, `cygwin_non_shadowed_programs`, `path`, `update_user_setup`, `write_static_init_scripts`, and `clear_dynamic_init_scripts` [#6954 @fantazio]
+  * `OpamFileTools`: remove `lint_string` [#6954 @fantazio]
+  * `OpamFormatUpgrade`: remove `latest_version` [#6954 @fantazio]
+  * `OpamGlobalState`: remove `all_installed`, and `unlock` [#6954 @fantazio]
+  * `OpamRepositoryState`: remove `load_repo`, and `cleanup` [#6954 @fantazio]
+  * `OpamScript`: remove `prompt` [#6954 @fantazio]
+  * `OpamStateConfig`: remove `safe_load`, and `load_config_root` [#6954 @fantazio]
+  * `OpamSwitchState`: remove `get_conflicts_t`, `unlock`, `descr`, `descr_opt`, and `dev_packages` [#6954 @fantazio]
+  * `OpamUpdate`: remove `dev_package`, `pinned_packages, and `pinned_package` [#6954 @fantazio]
 
 
 ## opam-solver

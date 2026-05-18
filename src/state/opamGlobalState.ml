@@ -164,11 +164,6 @@ let switch_exists gt switch =
     OpamStateConfig.local_switch_exists gt.root switch
   else OpamStd.List.mem OpamSwitch.equal switch (switches gt)
 
-let all_installed gt =
-  fold_switches (fun _ sel acc ->
-      OpamPackage.Set.union acc sel.sel_installed)
-    gt  OpamPackage.Set.empty
-
 let all_installed_versions gt =
   fold_switches (fun switch sel acc ->
       OpamPackage.Set.fold (fun nv acc ->

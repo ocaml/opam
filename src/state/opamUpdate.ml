@@ -531,40 +531,6 @@ let dev_packages st ?autolock ?(working_dir=OpamPackage.Set.empty) packages =
       selections1;
   success, st, updated_set
 
-let pinned_packages st ?autolock ?(working_dir=OpamPackage.Name.Set.empty) names =
-  log "update-pinned-packages";
-  let command name =
-    let working_dir = OpamPackage.Name.Set.mem name working_dir in
-    OpamProcess.Job.ignore_errors
-      ~default:((fun st -> st), OpamPackage.Name.Set.empty)
-    @@ fun () ->
-    pinned_package st ?autolock ~working_dir name @@| fun (st_update, changed) ->
-    st_update,
-    match changed with
-    | true -> OpamPackage.Name.Set.singleton name
-    | false -> OpamPackage.Name.Set.empty
-  in
-  let merge (st_update1, set1) (st_update2, set2) =
-    (fun st -> st_update1 (st_update2 st)),
-    OpamPackage.Name.Set.union set1 set2
-  in
-  let st_update, updates =
-    OpamParallel.reduce
-      ~jobs:(Lazy.force OpamStateConfig.(!r.jobs))
-      ~command
-      ~merge
-      ~nil:((fun st -> st), OpamPackage.Name.Set.empty)
-      (OpamPackage.Name.Set.elements names)
-  in
-  let st = st_update st in
-  let updates =
-    OpamPackage.Name.Set.fold (fun name acc ->
-        OpamPackage.Set.add (OpamPinned.package st name) acc)
-      updates OpamPackage.Set.empty
-  in
-  OpamSwitchAction.add_to_reinstall st ~unpinned_only:false updates,
-  updates
-
 let active_caches st nvs =
   let global_cache = OpamFile.Config.dl_cache st.switch_global.config in
   let rt = st.switch_repos in

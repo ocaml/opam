@@ -731,12 +731,6 @@ let opam st nv = OpamPackage.Map.find nv st.opams
 
 let opam_opt st nv = try Some (opam st nv) with Not_found -> None
 
-let descr_opt st nv =
-  OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.descr)
-
-let descr st nv =
-  OpamStd.Option.Op.(descr_opt st nv +! OpamFile.Descr.empty)
-
 let url st nv =
   OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.url)
 
@@ -819,10 +813,6 @@ let depexts_status_of_packages st set =
 
 let depexts_unavailable st nv =
   depexts_unavailable_raw (Lazy.force st.sys_packages) nv
-
-let dev_packages st =
-  OpamPackage.Set.filter (is_dev_package st)
-    (st.installed ++ OpamPinned.packages st)
 
 let conflicts_with st subset =
   let forward_conflicts, conflict_classes =

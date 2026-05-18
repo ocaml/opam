@@ -22,9 +22,6 @@ val load: 'a lock -> 'a global_state
     it locked (as per the [lock] argument), releasing the lock afterwards *)
 val with_: 'a lock -> ('a global_state -> 'b) -> 'b
 
-(** The set of all installed packages, in any switch *)
-val all_installed: 'a global_state -> package_set
-
 val switches: 'a global_state -> switch list
 
 (** Fold over switches, using switch selections. Switch selection file
@@ -45,9 +42,6 @@ val all_installed_versions: 'a global_state -> switch list package_map
     priority. This can be overridden by switch-specific selections, and does not
     have to include all configured repositories. *)
 val repos_list: 'a global_state -> repository_name list
-
-(** Releases any locks on the given global_state *)
-val unlock: 'a global_state -> unlocked global_state
 
 (** Releases any locks on the given global state and then ignores it.
 

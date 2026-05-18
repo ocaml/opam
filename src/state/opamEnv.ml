@@ -698,9 +698,6 @@ let get_pure ?(updates=[]) () =
   let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
   add env updates
 
-let get_opam ~set_opamroot ~set_opamswitch ~force_path st =
-  add [] (updates ~set_opamroot ~set_opamswitch ~force_path st)
-
 let get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch =
   let env_file = OpamPath.Switch.environment root switch in
   let upd = OpamFile.Environment.safe_read env_file in
@@ -718,13 +715,6 @@ let get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch =
         | e -> e) upd
   in
   updates_common ~set_opamroot ~set_opamswitch root switch @ upd
-
-let get_opam_raw ~set_opamroot ~set_opamswitch ?(base=[]) ~force_path
-  root switch =
-  let upd =
-    get_opam_raw_updates ~set_opamroot ~set_opamswitch ~force_path root switch
-  in
-  add base upd
 
 let hash_env_updates upd =
   (* Should we use OpamFile.Environment.write_to_string ? cons: it contains
@@ -807,13 +797,6 @@ let switch_path_update ~force_path root switch =
       (if force_path then PlusEq else EqPlusEq)
       (OpamFilename.Dir.to_string bindir)
       ~comment:"Current opam switch binary dir" ]
-
-let path ~force_path root switch =
-  let env = expand (switch_path_update ~force_path root switch) in
-  let (_, path_value, _) =
-    List.find (fun (v, _, _) -> OpamStd.Env.Name.equal_string v "PATH") env
-  in
-  path_value
 
 let full_with_path ~force_path ?(updates=[]) root switch =
   let env0 = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
@@ -1247,11 +1230,6 @@ let write_dynamic_init_scripts st =
   with OpamSystem.Locked ->
     OpamConsole.warning
       "Global shell init scripts not installed (could not acquire lock)"
-
-let clear_dynamic_init_scripts gt =
-  List.iter (fun shell ->
-      OpamFilename.remove (OpamPath.init gt.root // variables_file shell))
-    [SH_sh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
 
 let dot_profile_needs_update root dot_profile =
   if not (OpamFilename.exists dot_profile) then `yes else

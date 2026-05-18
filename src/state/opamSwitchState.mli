@@ -55,20 +55,9 @@ val compute_available_packages:
   pinned:package_set -> opams:OpamFile.OPAM.t package_map ->
   package_set
 
-(** Raw function to compute the conflicts for all packages, given
-    the set of available packages and the corresponding opam files.
-    This is useful to populate the `u_conflicts` field when building
-    a universe manually. *)
-val get_conflicts_t:
-  (package -> OpamFilter.env) -> package_set ->
-  OpamFile.OPAM.t package_map -> formula package_map
-
 (** Infer a switch invariant from a switch state with compiler_packages and
     roots set, using some heuristics. Useful for migration from pre-2.1 opam *)
 val infer_switch_invariant: 'a switch_state -> OpamFormula.t
-
-(** Releases any locks on the given switch_state *)
-val unlock: 'a switch_state -> unlocked switch_state
 
 (** Releases any locks on the given switch state and then ignores it.
 
@@ -110,12 +99,6 @@ val primary_url: 'a switch_state -> package -> url option
 
 val primary_url_with_subpath: 'a switch_state -> package -> url option
 
-(** Return the descr field for the given package (or an empty descr if none) *)
-val descr: 'a switch_state -> package -> OpamFile.Descr.t
-
-(** Return the descr field for the given package *)
-val descr_opt: 'a switch_state -> package -> OpamFile.Descr.t option
-
 (** Return the installed package's local configuration *)
 val package_config: 'a switch_state -> name -> OpamFile.Dot_config.t
 
@@ -146,9 +129,6 @@ val is_pinned: 'a switch_state -> name -> bool
 (** Checks if the given package is version-pinned, i.e. pinned without
     overlay metadata, and relying on the repo's data *)
 val is_version_pinned: 'a switch_state -> name -> bool
-
-(** The set of all "dev packages" (see {!is_dev_package} for a definition) *)
-val dev_packages: 'a switch_state -> package_set
 
 (** Returns the local source mirror for the given package
     ({!OpamPath.Switch.sources} or {!OpamPath.Switch.pinned_package}, depending

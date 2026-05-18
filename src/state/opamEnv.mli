@@ -29,24 +29,6 @@ val get_full:
   set_opamroot:bool -> set_opamswitch:bool -> force_path:bool ->
   ?updates: ('r, euok_internal) env_update list -> ?scrub:string list -> 'a switch_state -> env
 
-(** Get only environment modified by OPAM. If [force_path], the PATH is modified
-    to ensure opam dirs are leading. [set_opamroot] and [set_opamswitch] can be
-    additionally used to set the [OPAMROOT] and [OPAMSWITCH] variables.
-
-    With [base], apply the modifications to the specified base environment *)
-val get_opam:
-  set_opamroot:bool -> set_opamswitch:bool -> force_path:bool ->
-  'a switch_state -> env
-
-(** Like {!get_opam}, but reads the cache file from the given opam root and
-    switch instead of computing the environment from a switch state.
-
-    With [base], apply the modifications to the specified base environment *)
-val get_opam_raw:
-  set_opamroot:bool -> set_opamswitch:bool -> ?base:env ->
-  force_path:bool ->
-  dirname -> switch -> env
-
 (** Like {!get_opam_raw}, but returns the list of updates instead of the new
     environment. *)
 val get_opam_raw_updates:
@@ -60,12 +42,6 @@ val hash_env_updates: ('a, euok_writeable) env_update list -> string
 (** Returns the running environment, with any opam modifications cleaned out,
     and optionally the given updates *)
 val get_pure: ?updates:(spf_resolved, euok_internal) env_update list -> unit -> env
-
-(** The list of executables from Cygwin which must not be allowed to be shadowed
-    by other directories of PATH. This list must not contain git.exe - it is
-    added only if Cygwin's git is installed. The list is used to determine the
-    furthest point in PATH that Cygwin's bin directory can be placed. *)
-val cygwin_non_shadowed_programs : string list
 
 (** Update an environment, including reverting opam changes that could have been
     previously applied (therefore, don't apply to an already updated env as
@@ -105,10 +81,6 @@ val opam_env_invocation:
 val eval_string:
   'a global_state -> ?set_opamswitch:bool -> switch option -> string
 
-(** Returns the updated contents of the PATH variable for the given opam root
-    and switch (set [force_path] to ensure the opam path is leading) *)
-val path: force_path:bool -> dirname -> switch -> string
-
 (** Returns the full environment with only the PATH variable updated, as per
     [path] *)
 val full_with_path:
@@ -129,17 +101,6 @@ val setup:
 (* (\** Display the global and user configuration for OPAM. *\)
  * val display_setup: dirname -> dot_profile:filename -> shell -> unit *)
 
-(** Update the user configuration in $HOME for good opam integration. *)
-val update_user_setup:
-  dirname -> ?dot_profile:filename -> shell -> unit
-
-(** Write the generic scripts in ~/.opam/opam-init needed to import state for
-    various shells. If specified, completion and env_hook files can also be
-    written or removed (the default is to keep them as they are). If [inplace]
-    is true, they are updated if they exist. *)
-val write_static_init_scripts:
-  dirname -> ?completion:bool -> ?env_hook:bool -> ?inplace:bool -> unit -> unit
-
 (** Write into {!OpamPath.hooks_dir} the given custom scripts (listed as
     (filename, content)), normally provided by opamrc ({!OpamFile.InitConfig}) *)
 val write_custom_init_scripts:
@@ -151,10 +112,6 @@ val write_custom_init_scripts:
     beforehand, but only when working on the switch selected in
     ~/.opam/config) *)
 val write_dynamic_init_scripts: 'a switch_state -> unit
-
-(** Removes the dynamic init scripts setting the variables for any given
-    switch. *)
-val clear_dynamic_init_scripts: rw global_state -> unit
 
 (** Print a warning if the environment is not set-up properly.
     (General message) *)

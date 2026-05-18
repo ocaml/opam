@@ -48,16 +48,6 @@ val lint_channel:
   OpamFile.OPAM.t OpamFile.typed_file -> in_channel ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
-(** Like {!lint_file}, but takes the file contents as a string.
-   [check_extra_files] defaults to a function that will look for a [files/]
-   directory besides [filename] *)
-val lint_string:
-  ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
-  ?check_upstream: bool ->
-  ?handle_dirname:bool ->
-  OpamFile.OPAM.t OpamFile.typed_file -> string ->
-  (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
-
 val all_lint_warnings: unit -> (int * [`Warning|`Error] * string) list
 
 (** Utility function to print validation results *)
