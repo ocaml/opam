@@ -227,6 +227,9 @@ users)
 ## opam-repository
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
+  * `OpamRepository`: remove `find_backend` [#6954 @fantazio]
+  * `OpamRepositoryBackend`: remove `to_json`, `compare`, and `check_digest` [#6954 @fantazio]
+  * `OpamRepositoryConfig`: remove `E.curl`, and `E.fetch` [#6954 @fantazio]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
