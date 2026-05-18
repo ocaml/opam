@@ -3837,42 +3837,50 @@ module Dot_installSyntax = struct
          if op.optional then "?" ^ OpamFilename.Base.to_string op.c
          else OpamFilename.Base.to_string op.c)
 
-  let fields =
-    let pp_check_relative name =
+  let pp_check ~name ~f msg =
       Pp.pp ~name
-           (fun ~pos s ->
-              if OpamFilename.might_escape ~sep:`Unspecified s then
-                Pp.bad_format ~pos "%s references its parent directory." s
-              else if Filename.is_relative s then
-                 s
-              else
-                Pp.bad_format ~pos "%s is an absolute filename." s)
+        (fun ~pos s ->
+          if f s then Pp.bad_format ~pos msg s else s)
         Fun.id
+
+  let fields =
+    let pp_check_relative =
+      pp_check ~name:"rel-filename" ~f:(OpamFilename.might_escape ~sep:`Unspecified)
+        "%s references its parent directory."
+    in
+    let pp_check_not_absolute =
+      pp_check ~name:"rel-filename" ~f:(Fun.negate Filename.is_relative)
+        "%s is an absolute filename."
     in
     let pp_field =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
         (Pp.opt @@
-         Pp.singleton -| Pp.V.string -| pp_check_relative "rel-filename"
-          -| Pp.of_module "filename" (module OpamFilename.Base))
+         Pp.singleton -| Pp.V.string -| pp_check_relative
+           -| pp_check_not_absolute
+           -| Pp.of_module "filename" (module OpamFilename.Base))
     in
     let pp_prefix =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
         (Pp.opt @@
-         Pp.singleton -| Pp.V.string -| pp_check_relative "rel-filename"
-           (* TODO verify that no paths start with .opam-switch/ *)
+         Pp.singleton -| Pp.V.string -| pp_check_relative
+           -| pp_check_not_absolute
+           -| pp_check ~name:"rel-filename"
+               ~f:(fun s -> List.exists
+                   (String.equal ".opam-switch")
+                   (OpamFilename.split ~sep:`Unspecified s))
+               "%s tries to overwrite opam internal files."
           -| Pp.of_module "filename" (module OpamFilename.Base))
     in
     let pp_misc =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
-        (Pp.singleton -| Pp.V.string -| Pp.pp ~name:"abs-filename"
-           (fun ~pos s ->
-              if not (Filename.is_relative s) then OpamFilename.of_string s
-              else Pp.bad_format ~pos
-                  "%s is not an absolute filename." s)
-           OpamFilename.to_string)
+        (Pp.singleton -| Pp.V.string
+        -| pp_check ~name:"abs-filename"
+            ~f:Filename.is_relative
+            "%s is not an absolute filename."
+        -| Pp.of_module "filename" (module OpamFilename))
     in
     [
       "prefix", Pp.ppacc with_prefix prefix pp_prefix;

@@ -396,6 +396,13 @@ misc: [
   "dosiero" { "/tmp/../middle/dosiero" }
   "good"    { "good" }
   ]
+prefix: [
+  "a-file"  { "../../a-file" }
+  "fichier" { "/ab/so/lute/path/fichier" }
+  "dosiero" { "/tmp/../middle/dosiero" }
+  "internal" { "././.opam-switch/switch-state" }
+  "good"    { "windows-sysroot/good" }
+  ]
 ### <pkg:eskape.1:a-file>
 hellow
 ### <pkg:eskape.1:fichier>
