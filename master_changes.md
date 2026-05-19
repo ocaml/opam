@@ -70,7 +70,7 @@ users)
 
 ## Clean
 
-  * Use the [dead_code_analyzer](https://github.com/LexiFi/dead_code_analyzer) to remove unused exported values [#6954 @fantazio]
+  * Use the [dead_code_analyzer](https://github.com/LexiFi/dead_code_analyzer) to remove unused exported values, fields and constructors [#6954 @fantazio]
 
 ## Env
 
@@ -220,7 +220,7 @@ users)
   * `OpamClientConfig`: remove `search_files` [#6954 @fantazio]
   * `OpamConfigCommand`: remove `parse_whole` [#6954 @fantazio]
   * `OpamInitDefaults`: remove `default_compiler`, and `eval_variables` [#6954 @fantazio]
-  * `OpamListCommand`: remove `field_of_string` [#6954 @fantazio]
+  * `OpamListCommand`: remove `field_of_string`, `pattern_selector.ext_fields`, and `selector.Atoms` [#6954 @fantazio]
   * `OpamCommand`: remove `update_global_selection` [#6954 @fantazio]
   * `OpamSolution`: remove `eq_atom`, and `sum` [#6954 @fantazio]
 

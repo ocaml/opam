@@ -35,7 +35,6 @@ type pattern_selector = {
   exact: bool;
   glob: bool;
   fields: string list;
-  ext_fields: bool; (** Match on raw strings in [x-foo] fields *)
 }
 
 val default_pattern_selector: pattern_selector
@@ -56,7 +55,6 @@ type selector =
   | Coinstallable_with of dependency_toggles * package list
   | Solution of dependency_toggles * atom list
   | Pattern of pattern_selector * string
-  | Atoms of atom list
   | Flag of package_flag
   | NotFlag of package_flag
   | Tag of string

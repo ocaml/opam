@@ -45,7 +45,6 @@ type pattern_selector = {
   exact: bool;
   glob: bool;
   fields: string list;
-  ext_fields: bool;
 }
 
 let default_pattern_selector = {
@@ -53,7 +52,6 @@ let default_pattern_selector = {
   exact = false;
   glob = true;
   fields = ["name"; "synopsis"; "descr"; "tags"];
-  ext_fields = false;
 }
 
 type selector =
@@ -71,7 +69,6 @@ type selector =
   | Coinstallable_with of dependency_toggles * package list
   | Solution of dependency_toggles * atom list
   | Pattern of pattern_selector * string
-  | Atoms of atom list
   | Flag of package_flag
   | NotFlag of package_flag
   | Tag of string
@@ -122,9 +119,6 @@ let string_of_selector =
       | _ -> fctname
     in
     Printf.sprintf "%s(%s)" (fctname % `green) (str % `bold)
-  | Atoms atoms ->
-    OpamStd.List.concat_map ~left:"(" ~right:")" " | "
-      (fun a -> OpamFormula.short_string_of_atom a % `bold) atoms
   | Flag fl ->
     Printf.sprintf "%s(%s)" ("has-flag" % `green)
       (OpamTypesBase.string_of_pkg_flag fl % `bold)
@@ -225,7 +219,6 @@ let uses_depexts = function
   | Pinned
   | Latests_only
   | Pattern _
-  | Atoms _
   | Flag _
   | NotFlag _
   | Tag _
@@ -336,8 +329,6 @@ let apply_selector ~base st = function
       (fun nv -> List.exists (OpamStd.String.Set.exists (Re.execp re))
           (content_strings nv))
       base
-  | Atoms atoms ->
-    OpamFormula.packages_of_atoms base atoms
   | Flag f ->
     OpamPackage.Set.filter (fun nv ->
         get_opam st nv |> OpamFile.OPAM.has_flag f)
