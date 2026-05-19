@@ -83,6 +83,10 @@ EOF
       opam install omd odoc
     fi
 
+    if [ "$OPAM_TEST" = "1" ]; then
+      opam pin git+https://codeberg.org/kit-ty-kate/micro_httpd
+    fi
+
     rm -f "$OPAMBSROOT"/log/*
   fi
 }

@@ -152,7 +152,7 @@ if [ "$OPAM_TEST" = "1" ]; then
   fi
 
   # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
-  make tests
+  opam exec -- make tests
 
   make distclean
 

@@ -188,6 +188,7 @@ users)
   * depexts: Always use the latest 'stable' version of each distribution [#6905 @kit-ty-kate]
   * depexts: Always use the already installed ocaml package via ocaml-system [#6905 @kit-ty-kate]
   * Trigger CI upon changes in `doc/` [#6927 @kit-ty-kate - fix #6810]
+  * Install `micro_httpd` in test scripts [#6939 @rjbou]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
