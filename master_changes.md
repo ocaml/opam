@@ -55,6 +55,7 @@ users)
   * Update depexts availability repository state cache when running `opam update --depexts` [#6489 @arozovyk - fix #6461]
   * Display status message while loading system package availability during `opam update` [#6489 @arozovyk - fix #6461]
   * `opam update` now supports updating a repository that changed a file to a directory of the same name and vice versa [#6915 @rjbou @arozovyk - fix #3830]
+  * Add some debug logging for opam files loading from repository (dir vs diff) [#6941 @rjbou]
 
 ## Tree
 
