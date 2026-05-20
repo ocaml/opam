@@ -308,7 +308,6 @@ type universe = {
   u_depends  : filtered_formula package_map;
   u_depopts  : filtered_formula package_map;
   u_conflicts: formula package_map;
-  u_action   : user_action;
   u_installed_roots: package_set;
   u_pinned   : package_set;
   u_invariant: formula;
@@ -362,7 +361,7 @@ type switch_selections = {
 (** {2 Misc} *)
 
 (** The different kinds of locks *)
-type lock =
+type lock = private
 
   | Read_lock of (unit -> unit)
   (** The function does not modify anything, but it needs the state

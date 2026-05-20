@@ -298,6 +298,8 @@ users)
   * `OpamPp`: remove `ignore` [#6954 @fantazio]
   * `OpamSysPkg`: remove `string_of_status`, and `string_of_to_install` [#6954 @fantazio]
   * `OpamTypesBase`: remove `map_atomic_action`, `map_highlevel_action`, `map_concrete_action`, `nullify_pos_map`, `pos_best`, `iter_success`, `env_update`, `switch_selections_compare`, `simple_arg_equal`, and `arg_equal` [#6954 @fantazio]
+  * `OpamTypes`: remove `universe.u_action` [#6954 @fantazio]
+  * `OpamTypes`: make type `lock` private [#6954 @fantazio]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
