@@ -332,7 +332,7 @@ users)
   * `OpamDirTrack`: remove `is_empty`, and `string_of_change` [#6954 @fantazio]
   * `OpamFilename`: remove `env_of_list`, `to_list_dir`, `with_open_out_bin`, `with_tmp_file`, `with_tmp_file_job`, `with_contents`, `copy_in`, `extract_generic_file`, `with_flock_write_then_read`, `Attribute.to_string_list`, and `Attribute.of_string_list` [#6954 @fantazio]
   * `OpamHash`: remove `md5`, `sha256`, and `sha512` [#6954 @fantazio]
-  * `OpamProcess`: remove `is_verbose`, and `Job.seq_map` [#6954 @fantazio]
+  * `OpamProcess`: remove `is_verbose`, `Job.seq_map`, and `t.p_info` [#6954 @fantazio]
   * `OpamSHA`: remove `sha1_file`, `sha256_file`, `sha512_file`, `sha1_string`, `sha256_string`, and `sha512_string` [#6954 @fantazio]
   * `OpamSystem`: remove `verbose_for_base_commands`, `get_files`, `files_with_links`, `directories_with_links`, `lock_max`, `register_printer`, and `classify_executable` [#6954 @fantazio]
   * `OpamVersion`: remove `major`, `git`, and `message` [#6954 @fantazio]

@@ -248,7 +248,6 @@ type t = {
   p_stdout : string option;
   p_stderr : string option;
   p_env    : string option;
-  p_info   : string option;
   p_metadata: (string * string) list;
   p_verbose: bool;
   p_tmp_files: string list;
@@ -468,7 +467,6 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
     p_stdout = stdout_file;
     p_stderr = stderr_file;
     p_env    = env_file;
-    p_info   = info_file;
     p_metadata = metadata;
     p_verbose = verbose;
     p_tmp_files = tmp_files;
@@ -573,7 +571,6 @@ let dry_run_background c = {
   p_stdout = None;
   p_stderr = None;
   p_env    = None;
-  p_info   = None;
   p_metadata = OpamStd.Option.default [] c.cmd_metadata;
   p_verbose = is_verbose_command c;
   p_tmp_files = [];
