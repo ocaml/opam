@@ -12,7 +12,7 @@
 open OpamTypes
 open OpamStateTypes
 
-let log fmt = OpamConsole.log "RSTATE" fmt
+let log ?level fmt = OpamConsole.log ?level "RSTATE" fmt
 let slog = OpamConsole.slog
 
 module Cache = struct
@@ -127,6 +127,8 @@ let load_opams_from_dir repo_name repo_root =
     OpamConsole.status_line "Processing: [%s: loading data]"
       (OpamConsole.colorise `blue (OpamRepositoryName.to_string repo_name));
   (* FIXME: why is this different from OpamPackage.list ? *)
+  log ~level:3 "load repo %a from dir"
+    (slog OpamRepositoryName.to_string) repo_name;
   let rec aux r dir =
     if OpamFilename.exists_dir dir then
       let dir_str = OpamFilename.Dir.to_string dir in
@@ -153,6 +155,8 @@ let load_opams_from_diff repo diffs rt =
   if OpamConsole.disp_status_line () || OpamConsole.verbose () then
     OpamConsole.status_line "Processing: [%s: loading data]"
       (OpamConsole.colorise `blue (OpamRepositoryName.to_string repo.repo_name));
+  log ~level:3 "load repo %a from diff"
+    (slog OpamRepositoryName.to_string) repo.repo_name;
   let existing_opams =
     OpamRepositoryName.Map.find repo.repo_name rt.repo_opams
   in
