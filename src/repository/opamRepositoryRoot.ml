@@ -274,3 +274,13 @@ let delayed_read_repo = function
 let remove_both root name =
   remove (Tar (Tar.Path.root root name));
   remove (Dir (Dir.Path.root root name))
+
+let on_dir f = function
+  | Dir dir -> f dir
+  | Tar tar ->
+    OpamFilename.with_tmp_dir (fun dir ->
+        Tar.extract_in tar dir;
+        let repo_dir = Dir.of_dir dir in
+        let res = f repo_dir in
+        make_tar_gz tar repo_dir;
+        res)

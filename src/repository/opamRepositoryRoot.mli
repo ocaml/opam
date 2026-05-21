@@ -148,3 +148,8 @@ val delayed_read_repo : t -> bool * (unit -> OpamFile.Repo.t)
 
 (** TAR TODOC remove directory and archive, if present *)
 val remove_both : dirname -> repository_name -> unit
+
+(** Applies the function in the repository root directory. If repository root
+    is an archive, it uncompress it, applies the function and update archive
+    with the changed directory. *)
+val on_dir: (dirname -> 'a) -> t -> 'a
