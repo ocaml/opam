@@ -637,12 +637,6 @@ let load lock_kind gt rt switch =
     (Lazy.force ext_files_changed %% Lazy.force available_packages) ++
     Lazy.force sys_packages_changed
   ) in
-  let invalidated = lazy (
-    Lazy.force changed ++
-    Lazy.force ext_files_changed ++
-    Lazy.force sys_packages_changed
-    -- Lazy.force available_packages
-  ) in
   let st = {
     switch_global = (gt :> unlocked global_state);
     switch_repos = (rt :> unlocked repos_state);
@@ -651,7 +645,7 @@ let load lock_kind gt rt switch =
     repos_package_index; installed_opams;
     installed; pinned; installed_roots;
     opams; conf_files;
-    packages; available_packages; sys_packages; reinstall; invalidated;
+    packages; available_packages; sys_packages; reinstall;
     overwrote_opams = OpamPackage.Map.empty;
   } in
   log "Switch state loaded in %.3fs" (chrono ());
@@ -696,7 +690,6 @@ let load_virtual ?repos_list ?(avail_default=true) gt rt =
     sys_packages = lazy OpamPackage.Map.empty;
     available_packages;
     reinstall = lazy OpamPackage.Set.empty;
-    invalidated = lazy (OpamPackage.Set.empty);
     overwrote_opams = OpamPackage.Map.empty;
   }
 

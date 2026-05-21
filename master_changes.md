@@ -261,6 +261,7 @@ users)
   * `OpamStateConfig`: remove `safe_load`, and `load_config_root` [#6954 @fantazio]
   * `OpamSwitchState`: remove `get_conflicts_t`, `unlock`, `descr`, `descr_opt`, and `dev_packages` [#6954 @fantazio]
   * `OpamUpdate`: remove `dev_package`, `pinned_packages, and `pinned_package` [#6954 @fantazio]
+  * `OpamStateTypes`: remove `switch_state.invalidated` [#6954 @fantazio]
 
 
 ## opam-solver
