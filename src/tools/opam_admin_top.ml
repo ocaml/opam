@@ -14,7 +14,7 @@ open OpamFilename.Op
 let identity _ x = x
 let true_ _ = true
 
-let repo = OpamFilename.cwd ()
+let repo = OpamRepositoryRoot.Dir.cwd ()
 let packages = OpamRepository.packages repo
 
 let wopt w f = function
@@ -49,15 +49,15 @@ let iter_packages_gen ?(quiet=false) f =
       if not quiet then
         OpamConsole.msg "Processing package %s... "
           (OpamPackage.to_string package);
-      let opam_file = OpamRepositoryPath.opam repo prefix package in
+      let opam_file = OpamRepositoryRoot.Dir.Path.opam repo prefix package in
       let opam = OpamFile.OPAM.read opam_file in
-      let descr_file = OpamRepositoryPath.descr repo prefix package in
+      let descr_file = OpamRepositoryRoot.Dir.Path.descr repo prefix package in
       let descr = OpamFile.Descr_legacy.read_opt descr_file in
-      let url_file = OpamRepositoryPath.url repo prefix package in
+      let url_file = OpamRepositoryRoot.Dir.Path.url repo prefix package in
       let url = OpamFile.URL_legacy.read_opt url_file in
       let dot_install_file : OpamFile.Dot_install.t OpamFile.t =
         OpamFile.make
-          (OpamRepositoryPath.files repo prefix package
+          (OpamRepositoryRoot.Dir.Path.files repo prefix package
            // (OpamPackage.Name.to_string (OpamPackage.name package)
                ^ OpamPathName.install_suffix))
       in

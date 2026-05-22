@@ -14,7 +14,7 @@ let log ?level fmt = OpamConsole.log "REPO_BACKEND" ?level fmt
 let slog = OpamConsole.slog
 
 type update =
-  | Update_full of dirname
+  | Update_full of OpamRepositoryRoot.t
   | Update_patch of (filename * Patch.t list)
   | Update_empty
   | Update_err of exn
@@ -26,9 +26,9 @@ module type S = sig
     ?cache_dir:dirname -> ?subpath:subpath -> dirname -> OpamHash.t option -> url ->
     filename option download OpamProcess.job
   val fetch_repo_update:
-    repository_name -> ?cache_dir:dirname -> dirname -> url ->
+    repository_name -> ?cache_dir:dirname -> OpamRepositoryRoot.t -> url ->
     update OpamProcess.job
-  val repo_update_complete: dirname -> url -> unit OpamProcess.job
+  val repo_update_complete: OpamRepositoryRoot.t -> url -> unit OpamProcess.job
   val revision: dirname -> string option OpamProcess.job
   val sync_dirty:
     ?subpath:subpath -> dirname -> url -> filename option download OpamProcess.job
@@ -76,7 +76,7 @@ let job_text name label =
 (* We put back the prefix for patch -p1 harmonisation *)
 let add_prefix repo1 repo2 =
   let prefix repo =
-    OpamFilename.basename_dir repo
+    OpamRepositoryRoot.basename repo
     |> OpamFilename.Base.to_string
   in
   let p1 x = prefix repo1 ^ "/" ^ x in
@@ -96,16 +96,16 @@ let get_diff repo1 repo2 =
   log "diff: %a"
     (fun fmt () ->
        if OpamFilename.Dir.equal
-           (OpamFilename.dirname_dir repo1)
-           (OpamFilename.dirname_dir repo2) then
+           (OpamRepositoryRoot.dirname repo1)
+           (OpamRepositoryRoot.dirname repo2) then
          Format.fprintf fmt "%s/{%s,%s}"
-           (OpamFilename.Dir.to_string (OpamFilename.dirname_dir repo1))
-           (OpamFilename.Base.to_string (OpamFilename.basename_dir repo1))
-           (OpamFilename.Base.to_string (OpamFilename.basename_dir repo2))
+           (OpamFilename.Dir.to_string (OpamRepositoryRoot.dirname repo1))
+           (OpamFilename.Base.to_string (OpamRepositoryRoot.basename repo1))
+           (OpamFilename.Base.to_string (OpamRepositoryRoot.basename repo2))
        else
          Format.fprintf fmt "%s vs %s"
-           (OpamFilename.Dir.to_string repo1)
-           (OpamFilename.Dir.to_string repo2))
+           (OpamRepositoryRoot.to_string repo1)
+           (OpamRepositoryRoot.to_string repo2))
     ();
   let get_contents =
     let read_dir_contents dir =
@@ -137,8 +137,9 @@ let get_diff repo1 repo2 =
       in
       aux OpamStd.String.Map.empty None dir
     in
-    fun dir ->
-      read_dir_contents (OpamFilename.Dir.to_string dir)
+    function
+    | OpamRepositoryRoot.Dir dir ->
+      read_dir_contents (OpamRepositoryRoot.Dir.to_string dir)
   in
   let contents1 = get_contents repo1 in
   let contents2 = get_contents repo2 in

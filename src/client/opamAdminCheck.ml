@@ -408,7 +408,7 @@ let check ~quiet ~installability ~cycles ~obsolete repo_root =
   let pkg_prefixes = OpamRepository.packages_with_prefixes repo_root in
   let opams =
     OpamPackage.Map.fold (fun nv prefix acc ->
-        let opam_file = OpamRepositoryPath.opam repo_root prefix nv in
+        let opam_file = OpamRepositoryRoot.Dir.Path.opam repo_root prefix nv in
         match OpamFile.OPAM.read_opt opam_file with
         | Some o -> OpamPackage.Map.add nv o acc
         | None ->
