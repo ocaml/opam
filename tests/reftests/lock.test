@@ -1370,3 +1370,20 @@ name: "distant-x"
 opam-version: "2.0"
 pin-depends: [["local-one.dev" "file://${BASEDIR}/local-one"] ["local-two.dev" "file://${BASEDIR}/local-two"]]
 version: "1"
+### : Undefined variables in lock files shouldn't fail on non strict mode :
+### <pin:with-nope/with-nope.opam>
+opam-version: "2.0"
+### <pin:with-nope/with-nope.opam.locked>
+opam-version: "2.0"
+depends: [ "nope" {with-nope} ]
+### # we need to disable strict mode to see the default behaviour
+### OPAMSTRICT=0
+### opam switch create undef-var --empty
+### opam pin ./with-nope --locked
+Fatal error: Undefined boolean filter value: with-nope
+# Return code 99 #
+### OPAMSTRICT=1
+### opam switch create undef-var-strict --empty
+### opam pin ./with-nope --locked
+Fatal error: Undefined boolean filter value: with-nope
+# Return code 99 #

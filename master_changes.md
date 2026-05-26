@@ -173,6 +173,7 @@ users)
   * Fix `extrafile` test : remove trailing mkdir, the error was fixed in #6679 [#6970 rjbou]
   * Fix trailing full path for `tar` call in `no-depexts-sandboxed.unix.test` [#6970 @rjbou]
   * Fix some forgotten sed in `extrasource` and `update` tests in #6734 [#6970 @rjbou]
+  * Add a lock test for undefined variables in a lock file [#6947 @rjbou - fix #6946]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
