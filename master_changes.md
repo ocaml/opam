@@ -68,6 +68,7 @@ users)
 ## Repository
 
 ## Lock
+  * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
 
 ## Clean
 
