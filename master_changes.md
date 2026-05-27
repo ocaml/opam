@@ -194,6 +194,7 @@ users)
   * Add a tests for the several layouts of packages in a repository [#6941 @rjbou]
   * Add a test ensuring installing files through a .install file can't escape the opam switch (CVE-2026-57825) [#7005 @NathanReb]
   * Add a `opam repo set-url` case in repository-http [#6625 @rjbou]
+  * Add in `repository-http` a test case for switching from directory to archive format, automatically [#6625 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
