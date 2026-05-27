@@ -206,4 +206,53 @@ satu   --
 tiga   --
 ### opam repository remove set-repo --all
 ### rm -r SETREPO
+### :VI: TODOC from dir to tar, http mode
+### <packages/delapan/delapan.9/opam>
+opam-version: "2.0"
+### <packages/enam/enam.6/opam>
+opam-version: "2.0"
+### rm -r packages/tiga
+### opam admin index
+Generating urls.txt...
+Generating index.tar.gz...
+Done.
+### find OPAM/repo | sort
+OPAM/repo
+OPAM/repo/http-repo.tar.gz
+OPAM/repo/lock
+OPAM/repo/repos-config
+OPAM/repo/state-magicv.cache
+### mkdir OPAM/repo/http-repo
+### tar xf OPAM/repo/http-repo.tar.gz -C OPAM/repo/http-repo
+### rm OPAM/repo/http-repo.tar.gz
+### OPAMDEBUGSECTIONS="RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
+### opam update | sed-cmd curl tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+UPDATE                          repository format change: from directory to archive (${BASEDIR}/OPAM/repo/http-repo.tar.gz)
+REPOSITORY                      update http-repo from http://localhost:port
+Processing  1/1: [http-repo: http]
+curl-or-wget -- "http://localhost:port/index.tar.gz"
+REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{http-repo.tar.gz,http-repo.tar.gz.new}
+REPO_BACKEND                    Internal diff (non-empty, 4 changed files) done in 0.00s.
+[http-repo] synchronised from http://localhost:port
+REPOSITORY                      http-repo: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
+UPDATE                          Repository has new changes
+Processing: [http-repo: loading data]
+Now run 'opam upgrade' to apply any package updates.
+### unset OPAMDEBUGSECTIONS
+### unset OPAMDEBUG
+### unset OPAMVERBOSE
+### opam list --all
+# Packages matching: any
+# Name  # Installed # Synopsis
+delapan --
+dua     --
+empat   --
+enam    --
+lima    --
+satu    --
 [[[Killing micro_httpd]]]
