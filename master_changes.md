@@ -257,6 +257,7 @@ users)
   * `OpamTar.create`: add `?flat` argument to do not integrate the target root directory in the archive [#6625 @rjbou]
   * `OpamTar.create`: add `?except_vcs` argument exclude VCS files from archive creation [#6625 @rjbou]
   * `OpamTar`: when an archive is opened, the first step is to check and normalise canonical paths (no `/../`, remove `./`, etc.) [#6625 @rjbou]
+  * `OpamRepositoryRoot`: add `remove_prefix` and `remove_prefix_dir` [#6625 @rjbou]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
