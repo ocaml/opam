@@ -321,3 +321,4 @@ users)
   * `OpamSystem`: add `open_in` and `open_in_bin` that checks is the file is a directory and raise `Sys_error` in that case [#6941 @rjbou]
   * `OpamFilename.{open_in,open_in_bin}`: now errors when the filename is a directory, in all platforms [#6941 @rjbou]
   * `OpamFilename.Unix`: add `basename` and `dirname` [#6625 @rjbou]
+  * `OpamFilename.Unix.Dir`: add `basename` and `dirname` [#6625 @rjbou]

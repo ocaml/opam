@@ -391,17 +391,6 @@ module Unix : sig
   (** [of_string] will translate filesystem dir sep to slashes '/'. *)
   include OpamStd.ABSTRACT
 
-  module Dir : sig
-    (** [of_string] will translate filesystem dir sep to slashes '/'. *)
-    include OpamStd.ABSTRACT
-
-    (** Convert dirname to a raw dirname.
-        Translates filesystem dir sep to slashes '/'. *)
-    val of_dir : Dir.t -> t
-
-    val to_dir : t -> Dir.t
-  end
-
   module Base : sig
     (** [of_string] will translate filesystem dir sep to slashes '/'. *)
     include OpamStd.ABSTRACT
@@ -411,6 +400,20 @@ module Unix : sig
     val of_base : Base.t -> t
 
     val to_base : t -> Base.t
+  end
+
+  module Dir : sig
+    (** [of_string] will translate filesystem dir sep to slashes '/'. *)
+    include OpamStd.ABSTRACT
+
+    (** Convert dirname to a raw dirname.
+        Translates filesystem dir sep to slashes '/'. *)
+    val of_dir : Dir.t -> t
+
+    val to_dir : t -> Dir.t
+
+    val dirname : t -> t
+    val basename : t -> Base.t
   end
 
   module Op : sig
