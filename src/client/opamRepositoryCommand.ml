@@ -116,8 +116,7 @@ let set_url rt name url trust_anchors =
       OpamConsole.error_and_exit `Not_found "No repository %s found"
         (OpamRepositoryName.to_string name);
   in
-  OpamRepositoryRoot.Dir.remove
-    (OpamRepositoryRoot.Dir.Path.root rt.repos_global.root name);
+  OpamRepositoryRoot.remove_both rt.repos_global.root name;
   let repo = { repo with repo_url = url; repo_trust = trust_anchors; } in
   update_repos_config rt (OpamRepositoryName.Map.add name repo rt.repositories)
 
