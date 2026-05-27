@@ -3215,11 +3215,15 @@ i-am-sys-compiler 2           One-line description
 ### :V:8:a: From 2.2 root, global
 ### ocaml generate.ml 2.2
 ### # ro global state
-### opam option jobs
+### opam option jobs | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 ### # ro global state, ro repo state, ro switch state
-### opam list
+### opam list | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
 RSTATE                          loaded opam files from repo default in 0.000s
@@ -3231,8 +3235,10 @@ i-am-another-package 2           One-line description
 i-am-package         2           One-line description
 i-am-sys-compiler    1           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-another-package --switch sw-comp
+### opam install i-am-another-package --switch sw-comp | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ sw-comp
@@ -3247,8 +3253,10 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-compiler.2 }
 Done.
 ### # ro global state, rw repo state
-### opam repo add root-config ./root-config
+### opam repo add root-config ./root-config | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 [root-config] Initialised
@@ -3256,8 +3264,15 @@ RSTATE                          Cache found
        Run `opam repository add root-config --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
 
 ### # rw global state
-### opam option jobs=4
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.2 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version current which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [Y/n] y
+Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -3267,7 +3282,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -3290,6 +3305,8 @@ roots: ["i-am-another-package.2" "i-am-compiler.2" "i-am-package.2"]
 ### ocaml generate.ml 2.2 local
 ### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
 RSTATE                          loaded opam files from repo default in 0.000s
@@ -3299,8 +3316,10 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package
+### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
@@ -3316,8 +3335,15 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
-### opam option jobs=4
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.2 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version current which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [Y/n] y
+Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -3327,7 +3353,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -3351,6 +3377,8 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### ocaml generate.ml 2.2 local
 ### opam list | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
 RSTATE                          loaded opam files from repo default in 0.000s
@@ -3362,6 +3390,8 @@ i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
 ### opam install i-am-package | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
@@ -3376,8 +3406,15 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
-### opam option jobs=4
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.2 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version current which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [Y/n] y
+Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -3387,7 +3424,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "${BASEDIR}" "default"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -3410,8 +3447,10 @@ roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:8:d: Upgraded root and local 2.2 switch not recorded
 ### ocaml generate.ml 2.2 orphaned 2.2
 ### # ro global state, ro repo state, ro switch state
-### opam list
+### opam list | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
 RSTATE                          loaded opam files from repo default in 0.000s
@@ -3421,8 +3460,10 @@ STATE                           Switch state loaded in 0.000s
 # Name            # Installed # Synopsis
 i-am-sys-compiler 2           One-line description
 ### # ro global state, ro repo state, rw switch state
-### opam install i-am-package
+### opam install i-am-package | "${OPAMROOTVERSION}$" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FMT_UPG                         On-the-fly config upgrade, from 2.2 to current
+FMT_UPG                         Format upgrade done
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          Cache found
 STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
@@ -3437,8 +3478,15 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
-### opam option jobs=4
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.2 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version current which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [Y/n] y
+Format upgrade done.
 Set to '4' the field jobs in global configuration
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
@@ -3448,7 +3496,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 1
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 jobs: 4
 opam-root-version: current
 opam-version: "2.0"
@@ -3470,9 +3518,16 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:8:e: reinit from 2.2
 ### ocaml generate.ml 2.2
-### opam init --reinit --bypass-checks --no-setup | grep -v Cygwin
+### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Light config upgrade, from 2.2 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version current which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [Y/n] y
+Format upgrade done.
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
 RSTATE                          loaded opam files from repo default in 0.000s
@@ -3487,7 +3542,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+installed-switches: ["sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -3502,7 +3557,6 @@ ${BASEDIR}
 default
 sw-comp
 sw-sys-comp
-this-internal-error
 ### opam list
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
