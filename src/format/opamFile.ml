@@ -69,7 +69,7 @@ module type IO_FILE = sig
   val read_opt: 'a typed_file -> t option
   val safe_read: 'a typed_file -> t
   val read_from_channel: ?filename:'a typed_file -> in_channel -> t
-  val read_from_string: ?filename:'a typed_file -> string -> t
+  val read_from_string: ?loc:string -> ?filename:'a typed_file -> string -> t
   val write_to_channel: ?filename:'a typed_file -> out_channel -> t -> unit
   val write_to_string: ?filename:'a typed_file -> t -> string
 end
@@ -153,8 +153,17 @@ module MakeIO (F : IO_Arg) = struct
   let read_from_channel ?(filename=dummy_file) ic =
     read_from_f (F.of_channel filename) ic
 
-  let read_from_string ?(filename=dummy_file) str =
-    read_from_f (F.of_string filename) str
+  let read_from_string ?loc ?(filename=dummy_file) str =
+    let of_string str =
+      let chrono = OpamConsole.timer () in
+      let r = F.of_string filename str in
+      log ~level:3 "Read %s%s in %.3fs"
+        (OpamFilename.to_string filename)
+        (OpamStd.Option.to_string (Printf.sprintf " (out of %s)") loc)
+        (chrono ());
+      r
+    in
+    read_from_f of_string str
 
   let write_to_channel ?(filename=dummy_file) oc t =
     F.to_channel filename oc t
@@ -711,8 +720,8 @@ module Environment = struct include LineFile(struct
     open_env_updates (safe_read file)
   let read_from_channel ?filename ch =
     open_env_updates (read_from_channel ?filename ch)
-  let read_from_string ?filename s =
-    open_env_updates (read_from_string ?filename s)
+  let read_from_string ?loc ?filename s =
+    open_env_updates (read_from_string ?loc ?filename s)
 end
 
 (** (2) Part of the public repository format *)
@@ -1244,7 +1253,7 @@ module type BestEffortRead = sig
   val read_opt: t typed_file -> t option
   val safe_read: t typed_file -> t
   val read_from_channel: ?filename:t typed_file -> in_channel -> t
-  val read_from_string: ?filename:t typed_file -> string -> t
+  val read_from_string: ?loc:string -> ?filename:t typed_file -> string -> t
 end
 
 module MakeBestEffort (S: BestEffortArg) : BestEffortRead
