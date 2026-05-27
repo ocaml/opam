@@ -1869,6 +1869,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:remove.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-repository-http)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff repository-http.test repository-http.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-repository-http)))
+
+(rule
+ (targets repository-http.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:repository-http.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-repository-patchdiff)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

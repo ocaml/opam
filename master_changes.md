@@ -168,8 +168,10 @@ users)
   * Add a test showing that `opam install ./` will leave packages pinned if
     aborted or failed [#6922 @NathanReb]
   * Add test for update in repository that changes directories to files and vice versa [#6915 @rjbou]
+  * Add an http repository test [#6939 @rjbou]
 
 ### Engine
+  * Add `http-server` to launch a minimal http server [#6939 @rjbou]
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
@@ -187,6 +189,7 @@ users)
   * depexts: Always use the latest 'stable' version of each distribution [#6905 @kit-ty-kate]
   * depexts: Always use the already installed ocaml package via ocaml-system [#6905 @kit-ty-kate]
   * Trigger CI upon changes in `doc/` [#6927 @kit-ty-kate - fix #6810]
+  * Install `micro_httpd` in test scripts [#6939 @rjbou]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
