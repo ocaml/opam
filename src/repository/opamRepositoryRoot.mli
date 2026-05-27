@@ -52,6 +52,7 @@ module Dir : sig
     with type repo_root = t
      and type repo_dirname = dirname
      and type 'a typed_file = 'a OpamFile.t
+
 end
 
 val make_tar_gz : filename -> Dir.t -> unit
@@ -75,6 +76,9 @@ val make_empty : t -> unit
 val dirname : t -> dirname
 val basename : t -> basename
 val to_string : t -> string
+
+val remove_prefix: filename -> t -> filename
+val remove_prefix_dir: dirname -> t -> dirname
 
 val copy : src:t -> dst:t -> unit
 val move : src:t -> dst:t -> unit

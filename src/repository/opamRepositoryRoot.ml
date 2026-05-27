@@ -53,6 +53,7 @@ module Dir = struct
       let to_typed_file = OpamFile.make
       module Op = Op
     end)
+
 end
 
 let make_tar_gz = OpamTar.create ~flat:false
@@ -84,6 +85,16 @@ let basename = function
 
 let to_string = function
   | Dir dir -> Dir.to_string dir
+
+let remove_prefix file = function
+  | Dir dir ->
+    OpamFilename.remove_prefix dir file
+    |> OpamFilename.raw
+
+let remove_prefix_dir d = function
+  | Dir dir ->
+    OpamFilename.remove_prefix_dir dir d
+    |> OpamFilename.raw_dir
 
 let copy ~src ~dst =
   match src, dst with
