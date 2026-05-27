@@ -191,6 +191,7 @@ users)
   * Add a test showing the behaviour of `opam repo add` and `opam update` when faced with a repository containing an `opam` directory [#6995 @kit-ty-kate]
   * Add a tests for the several layouts of packages in a repository [#6941 @rjbou]
   * Add a `opam repo set-url` case in repository-http [#6625 @rjbou]
+  * Add in `repository-http` a test case for switching from directory to archive format, automatically [#6625 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
