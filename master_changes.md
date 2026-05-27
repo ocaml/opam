@@ -93,6 +93,7 @@ users)
   * Fix switch and repo format upgrade on Windows. A block occurred because the global lock fd was reopened instead of using the one already opened.  [#6839 @rjbou]
   * Add opam root format upgrade conditional mechanism for hard upgrades [#6949 @rjbou]
   * Stop the opam 1.2 to 2.0 repository upgrade process from downloading packages without checksums to add a non-trusted md5 [#6978 @kit-ty-kate]
+  * Add conditional upgrade to opam root 2.6. It is triggered by an already present repository archive (from `OPAMREPOSITORYTARRING` usage, or 2.1 opamroot) [#6625 @rjbou]
 
 ## Sandbox
   * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
@@ -197,6 +198,7 @@ users)
   * Add in `repository-http` a test case for switching from directory to archive format, automatically [#6625 @rjbou]
   * Add in `repository` test cases for switching automatically from directory to archive format & vice versa [#6625 @rjbou]
   * Add in `repository` test cases for upgrade opam root from 2.5 with repo tarring or 2.1 to 2.6, with `OPAMREPOSITORYTARRING` enabled (trigger upgrade) [#6625 @rjbou]
+  * Add 2.6 root test cases in opamroot-versions [#6625 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]

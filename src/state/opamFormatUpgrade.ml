@@ -1152,6 +1152,56 @@ let v2_2 = OpamVersion.of_string "2.2"
 
 let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 
+let v2_6_alpha = OpamVersion.of_string "2.6~alpha"
+
+let from_2_2_to_2_6_alpha ~on_the_fly:_ root conf =
+  let repos =
+    OpamFile.Repos_config.safe_read (OpamPath.repos_config root)
+  in
+  OpamRepositoryName.Map.iter (fun name _ ->
+      let tgz = OpamRepositoryRoot.Tgz.Path.root root name in
+      if OpamRepositoryRoot.Tgz.exists tgz then
+        OpamFilename.with_tmp_dir @@ fun tmp_dir ->
+        OpamRepositoryRoot.Tgz.extract_in tgz tmp_dir;
+        match OpamSystem.get_files (OpamFilename.Dir.to_string tmp_dir) with
+        | [] | _::_::_ -> ()
+        | [x] ->
+          OpamConsole.msg
+            "Upgrading the internal repository format for '%s'...\n"
+            (OpamRepositoryName.to_string name);
+          OpamTar.create ~flat:true
+            (OpamRepositoryRoot.Tgz.to_file tgz)
+            OpamFilename.Op.(tmp_dir / x))
+    repos;
+  conf, gtc_none
+
+let cond_hard_upg_2_6_alpha root _conf =
+  let exception Found of bool in
+  let repos =
+    OpamFile.Repos_config.safe_read (OpamPath.repos_config root)
+  in
+  OpamRepositoryName.Map.exists (fun name _ ->
+      let tgz = OpamRepositoryRoot.Tgz.(to_file (Path.root root name)) in
+      OpamFilename.exists tgz
+      (* We need to check for a given archive that it is not the root of a
+         repository *)
+      && (try
+            OpamTar.fold_reg_files (fun _ rfile _ ->
+                let is_package =
+                  Option.equal String.equal
+                    (OpamFilename.Unix.root_dir rfile)
+                    (Some OpamRepositoryPathName.packages_d)
+                in
+                let is_repo =
+                  String.equal (OpamFilename.Unix.to_string rfile)
+                    OpamRepositoryPathName.repo_f
+                in
+                raise (Found (is_package || is_repo)))
+              () tgz;
+            false
+          with Found is_repo_or_package_dir -> not is_repo_or_package_dir))
+    repos
+
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
@@ -1250,6 +1300,7 @@ let upgrades root_version root config =
       v2_2_alpha,  from_2_1_to_2_2_alpha,          None;
       v2_2_beta,   from_2_2_alpha_to_2_2_beta,     None;
       v2_2,        from_2_2_beta_to_2_2,           None;
+      v2_6_alpha,  from_2_2_to_2_6_alpha,          Some cond_hard_upg_2_6_alpha;
     ]
   in
   (* First we filter the unneeded upgrades *)
