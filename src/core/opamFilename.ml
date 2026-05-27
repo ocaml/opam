@@ -749,13 +749,6 @@ module Unix = struct
     let to_base = Fun.id
   end
 
-  module Dir = struct
-    include Internal
-
-    let of_dir = OpamSystem.back_to_forward
-    let to_dir = Fun.id
-  end
-
   (* Copied from the OCaml Stdlib Filename module *)
   (* Copyright 1996 Institut National de Recherche en Informatique et
      en Automatique. *)
@@ -811,6 +804,16 @@ module Unix = struct
     then current_dir_name
     else find_end (String.length name - 1)
   let basename = generic_basename is_dir_sep current_dir_name
+
+  module Dir = struct
+    include Internal
+
+    let of_dir = OpamSystem.back_to_forward
+    let to_dir = Fun.id
+    let dirname = dirname
+    let basename = basename
+  end
+
 
   module Op = struct
     let (/) = concat
