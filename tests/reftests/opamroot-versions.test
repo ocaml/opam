@@ -2908,11 +2908,11 @@ RSTATE                          Cache found
        Run `opam repository add root-config --all-switches|--set-default' to use it in all existing switches, or in newly created switches, respectively.
 
 ### # rw global state
-### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.2~beta to current
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
@@ -2979,11 +2979,11 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
-### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.2~beta to current
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
@@ -3050,11 +3050,11 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
-### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.2~beta to current
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
@@ -3122,11 +3122,11 @@ The following actions will be performed:
 STATE                           dependencies (0.000) result={ i-am-sys-compiler.2 }
 Done.
 ### # rw global state
-### opam option jobs=4 | "${OPAMROOTVERSION}$" -> "current"
+### opam option jobs=4 | "${OPAMROOTVERSION}($|,)" -> "current"
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
 FMT_UPG                         Light config upgrade, from 2.2~beta to current
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
@@ -3162,12 +3162,12 @@ opam-version: "2.0"
 roots: ["i-am-package.2" "i-am-sys-compiler.2"]
 ### :V:7:e: reinit from 2.2~beta
 ### ocaml generate.ml 2.2~beta
-### opam init --reinit --bypass-checks --no-setup | grep -v Cygwin
+### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
 No configuration file found, using built-in defaults.
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 [WARNING] Removing global switch 'this-internal-error' as it no longer exists
-FMT_UPG                         Light config upgrade, from 2.2~beta to 2.2
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version 2.2, which can't be reverted.
+FMT_UPG                         Light config upgrade, from 2.2~beta to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2~beta to version current which can't be reverted.
 You may want to back it up before going further.
 
 Continue? [Y/n] y
