@@ -99,6 +99,7 @@ users)
 ## Internal: Windows
 
 ## Test
+  * Add `opamUnit` as a basic unit test framework [#6953 @NathanReb]
 
 ## Benchmarks
 
