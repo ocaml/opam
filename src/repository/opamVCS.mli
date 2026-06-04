@@ -22,7 +22,7 @@ module type VCS = sig
   val exists: dirname -> bool
 
   (** Init a repository. *)
-  val init: dirname -> url -> unit OpamProcess.job
+  val init: ?will_full_fetch:bool -> dirname -> url -> unit OpamProcess.job
 
   (** Fetch changes from upstream. This is supposed to put the changes
       in a staging area.

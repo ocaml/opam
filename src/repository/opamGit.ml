@@ -32,37 +32,46 @@ module VCS : OpamVCS.VCS = struct
     fun ?verbose ?stdout args ->
       OpamSystem.make_command ?verbose ?stdout "git" ("-C"::dir::args)
 
-  let init repo_root repo_url =
+  let init ?(will_full_fetch = false) repo_root repo_url =
     OpamFilename.mkdir repo_root;
-    OpamProcess.Job.of_list [
-      git repo_root [ "init" ];
-      (* Enforce this option, it can break our use of git if set *)
-      git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
-      (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)
-      git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"];
-      (* Disable automatic line-ending conversion and switch core.eol to Unix.
-         THIS DOES NOT MEAN ALL FILES GET LF-ONLY LINE-ENDINGS!
-         This combination of settings means that files will be checked out
-         exactly as they appear in the repository, so if files are checked in
-         with CRLF line-endings (either by not having .gitattributes with
-         core.autocrlf = false, or having an explicit eol=crlf in
-         .gitattributes), then they will still be checked out with CRLF endings.
-       *)
-      git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false"];
-      git repo_root [ "config" ; "--local" ; "core.eol"; "lf"];
-      git repo_root [ "config" ; "--local" ; "color.ui"; "false" ];
-      (* Document the remote for user-friendliness (we don't use it) *)
-      git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
-    ] @@+ function
-    | None -> Done ()
-    | Some (_,err) -> OpamSystem.process_error err
+    if will_full_fetch then
+      OpamProcess.Job.of_list [
+        git repo_root [ "init" ];
+        (* Document the remote for user-friendliness (we don't use it) *)
+        git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
+      ] @@+ function
+      | None -> Done ()
+      | Some (_,err) -> OpamSystem.process_error err
+    else 
+      OpamProcess.Job.of_list [
+        git repo_root [ "init" ];
+        (* Enforce this option, it can break our use of git if set *)
+        git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
+        (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)
+        git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"];
+        (* Disable automatic line-ending conversion and switch core.eol to Unix.
+           THIS DOES NOT MEAN ALL FILES GET LF-ONLY LINE-ENDINGS!
+           This combination of settings means that files will be checked out
+           exactly as they appear in the repository, so if files are checked in
+           with CRLF line-endings (either by not having .gitattributes with
+           core.autocrlf = false, or having an explicit eol=crlf in
+           .gitattributes), then they will still be checked out with CRLF endings.
+         *)
+        git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false"];
+        git repo_root [ "config" ; "--local" ; "core.eol"; "lf"];
+        git repo_root [ "config" ; "--local" ; "color.ui"; "false" ];
+        (* Document the remote for user-friendliness (we don't use it) *)
+        git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
+      ] @@+ function
+      | None -> Done ()
+      | Some (_,err) -> OpamSystem.process_error err
 
   let remote_ref url =
     match url.OpamUrl.hash with
     | Some h -> "refs/remotes/opam-ref-"^h
     | None -> "refs/remotes/opam-ref"
 
-  let fetch ?(full_fetch = true) ?cache_dir ?subpath repo_root repo_url =
+  let fetch ?(full_fetch = false) ?cache_dir ?subpath repo_root repo_url =
     (match subpath with
      | Some sp ->
        git repo_root [ "config"; "--local"; "core.sparseCheckout"; "true" ]

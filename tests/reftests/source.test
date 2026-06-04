@@ -58,6 +58,7 @@ pandore/.git
 pandore/root.ml
 pandore/src
 pandore/src/src.ml
+### cat pandore/.git/config | grep "ui = false"
 ### opam source pandore --dev --dir pandore4
 Successfully fetched pandore development repo to ${BASEDIR}/pandore4
 ### find pandore4 | grep -v '.git/' | unordered
