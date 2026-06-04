@@ -320,3 +320,6 @@ users)
   * `OpamCompat.Seq`: add `to_dispenser` [#6945 @kit-ty-kate]
   * `OpamSystem.directories_with_links`, `OpamSystem.rec_files`, `OpamFilename.rec_files`: add optional `?except_vcs` that default to false to exclude VCS directories [#6945 @kit-ty-kate @rjbou]
   * `OpamFilename.make_tar_gz{_job}`: rename `make_tar_gz_job` into `make_tar_gz` as it no longer need an external process call [#6945 @kit-ty-kate]
+  * `OpamFilename.{,dir_}starts_with`: Fix a bug where `foo/bar` would be considered a prefix of `foo/bar-baz` [#6953 @NathanReb - fix #6948]
+  * `OpamFilename.{,dir_}starts_with`: `/` and `\` are now equivalent on Windows [#6953 @NathanReb]
+  * `OpamFilename.starts_with`: `starts_with "a/b" "a/b"` no longer returns `true` [#6953 @NathanReb]
