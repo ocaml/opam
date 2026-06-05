@@ -3846,13 +3846,13 @@ module Dot_installSyntax = struct
       Pp.check ~name:"rel-filename"
         ~raise:raise_with_file
         ~errmsg:"references its parent directory."
-        (OpamFilename.might_escape ~sep:`Unspecified)
+        (Fun.negate @@ OpamFilename.might_escape ~sep:`Unspecified)
     in
     let pp_check_not_absolute =
       Pp.check ~name:"rel-filename"
         ~raise:raise_with_file
         ~errmsg:"is an absolute filename."
-        (Fun.negate Filename.is_relative)
+        Filename.is_relative
     in
     let pp_field =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
@@ -3873,9 +3873,9 @@ module Dot_installSyntax = struct
            -| Pp.check ~name:"rel-filename"
                 ~raise:raise_with_file
                 ~errmsg:"tries to overwrite opam internal files."
-                (fun s -> List.exists
-                  (String.equal OpamPathName.opamswitch_d)
-                  (OpamFilename.split ~sep:`Unspecified s))
+             (fun s -> not
+               (List.mem OpamPathName.opamswitch_d
+                 (OpamFilename.split ~sep:`Unspecified s)))
           -| Pp.of_module "file" (module OpamFilename.Base))
     in
     let pp_misc =
@@ -3885,7 +3885,7 @@ module Dot_installSyntax = struct
         -| Pp.check ~name:"abs-filename"
              ~raise:raise_with_file
              ~errmsg:"is not an absolute filename."
-             Filename.is_relative
+             (Fun.negate Filename.is_relative)
         -| Pp.of_module "file" (module OpamFilename))
     in
     [
