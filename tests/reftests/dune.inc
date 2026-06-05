@@ -525,6 +525,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:deps-only.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-dot-install-all-fields)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff dot-install-all-fields.test dot-install-all-fields.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-dot-install-all-fields)))
+
+(rule
+ (targets dot-install-all-fields.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:dot-install-all-fields.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-dot-install)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
