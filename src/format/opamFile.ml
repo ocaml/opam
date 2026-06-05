@@ -3723,6 +3723,8 @@ module Dot_installSyntax = struct
   let format_version = OpamVersion.of_string "2.0"
 
   type t =  {
+    prefix  : (basename optional * basename option) list;
+    prefixexec  : (basename optional * basename option) list;
     bin     : (basename optional * basename option) list;
     sbin    : (basename optional * basename option) list;
     lib     : (basename optional * basename option) list;
@@ -3740,6 +3742,8 @@ module Dot_installSyntax = struct
   }
 
   let empty = {
+    prefix   = [];
+    prefixexec = [];
     lib      = [];
     bin      = [];
     sbin     = [];
@@ -3756,6 +3760,8 @@ module Dot_installSyntax = struct
     doc      = [];
   }
 
+  let prefix t = t.prefix
+  let prefixexec t = t.prefixexec
   let bin t = t.bin
   let sbin t = t.sbin
   let lib t = t.lib
@@ -3771,6 +3777,8 @@ module Dot_installSyntax = struct
   let lib_root t = t.lib_root
   let libexec_root t = t.libexec_root
 
+  let with_prefix prefix t = { t with prefix }
+  let with_prefixexec prefixexec t = { t with prefixexec }
   let with_bin bin t = { t with bin }
   let with_sbin sbin t = { t with sbin }
   let with_lib lib t = { t with lib }
@@ -3829,32 +3837,60 @@ module Dot_installSyntax = struct
          if op.optional then "?" ^ OpamFilename.Base.to_string op.c
          else OpamFilename.Base.to_string op.c)
 
+
   let fields =
+    let raise_with_file file ?pos message =
+      Pp.bad_format ?pos ("%s " ^^ message) file
+    in
+    let pp_check_parent_dir =
+      Pp.check ~name:"rel-filename"
+        ~raise:raise_with_file
+        ~errmsg:"references its parent directory."
+        (Fun.negate @@ OpamFilename.might_escape ~sep:`Unspecified)
+    in
+    let pp_check_not_absolute =
+      Pp.check ~name:"rel-filename"
+        ~raise:raise_with_file
+        ~errmsg:"is an absolute filename."
+        Filename.is_relative
+    in
     let pp_field =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
         (Pp.opt @@
-         Pp.singleton -| Pp.V.string -| Pp.pp ~name:"rel-filename"
-           (fun ~pos s ->
-              if OpamFilename.might_escape ~sep:`Unspecified s then
-                Pp.bad_format ~pos "%s references its parent directory." s
-              else if Filename.is_relative s then
-                OpamFilename.Base.of_string s
-              else
-                Pp.bad_format ~pos "%s is an absolute filename." s)
-           OpamFilename.Base.to_string)
+         Pp.singleton -| Pp.V.string
+           -| pp_check_parent_dir
+           -| pp_check_not_absolute
+           -| Pp.of_module "file" (module OpamFilename.Base))
+    in
+    let pp_prefix =
+      Pp.V.map_list ~depth:1 @@ Pp.V.map_option
+        (Pp.V.string -| pp_optional)
+        (Pp.opt @@
+         Pp.singleton -| Pp.V.string
+           -| pp_check_parent_dir
+           -| pp_check_not_absolute
+           -| Pp.check ~name:"rel-filename"
+                ~raise:raise_with_file
+                ~errmsg:"tries to overwrite opam internal files."
+             (fun s -> not
+               (List.mem OpamPathName.opamswitch_d
+                 (OpamFilename.split ~sep:`Unspecified s)))
+          -| Pp.of_module "file" (module OpamFilename.Base))
     in
     let pp_misc =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
-        (Pp.singleton -| Pp.V.string -| Pp.pp ~name:"abs-filename"
-           (fun ~pos s ->
-              if not (Filename.is_relative s) then OpamFilename.of_string s
-              else Pp.bad_format ~pos
-                  "%s is not an absolute filename." s)
-           OpamFilename.to_string)
+        (Pp.singleton -| Pp.V.string
+        -| Pp.check ~name:"abs-filename"
+             ~raise:raise_with_file
+             ~errmsg:"is not an absolute filename."
+             (Fun.negate Filename.is_relative)
+        -| Pp.of_module "file" (module OpamFilename))
     in
     [
+      "prefix", Pp.ppacc with_prefix prefix pp_prefix;
+      "prefixexec", Pp.ppacc with_prefixexec prefixexec pp_prefix;
       "lib", Pp.ppacc with_lib lib pp_field;
       "bin", Pp.ppacc with_bin bin pp_field;
       "sbin", Pp.ppacc with_sbin sbin pp_field;

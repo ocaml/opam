@@ -15,6 +15,9 @@
 (* Returns [true] if string contains '..' between directory separators *)
 val might_escape: sep:[`Unix | `Windows | `Unspecified ] -> string -> bool
 
+(* Returns a list of elements between directory separators *)
+val split: sep:[`Unix | `Windows | `Unspecified ] -> string -> string list
+
 (** Basenames *)
 module Base: sig
   include OpamStd.ABSTRACT

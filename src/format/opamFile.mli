@@ -926,6 +926,12 @@ module Dot_install: sig
 
   include IO_FILE
 
+  (** List of files to install directly under the switch root. *)
+  val prefix: t -> (basename optional * basename option) list
+
+  (** List of files to install directly under the switch root, with +x set. *)
+  val prefixexec: t -> (basename optional * basename option) list
+
   (** List of files to install in $bin/ *)
   val bin:  t -> (basename optional * basename option) list
 
@@ -967,6 +973,12 @@ module Dot_install: sig
 
   (** List of other files to install *)
   val misc: t -> (basename optional * filename) list
+
+  (** List of files to install directly under the switch root. *)
+  val with_prefix: (basename optional * basename option) list -> t -> t
+
+  (** List of files to install directly under the switch root, with +x set. *)
+  val with_prefixexec: (basename optional * basename option) list -> t -> t
 
   (** List of files to install in $bin/ *)
   val with_bin : (basename optional * basename option) list -> t -> t
