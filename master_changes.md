@@ -169,6 +169,7 @@ users)
     aborted or failed [#6922 @NathanReb]
   * Add test for update in repository that changes directories to files and vice versa [#6915 @rjbou]
   * Add an http repository test [#6939 @rjbou]
+  * Add a test for all fields in `.install` files [#6956 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
