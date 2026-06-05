@@ -1,0 +1,1202 @@
+N0REP0
+### :::::::
+### : In this test, we test all executable fields of `.install` files
+### : For each fields, we test 5 cases:
+### :   * default install with binary as exe (.exe ext) : [ "filename" ]
+### :   * install with target : [ "filename" {"target"} ]
+### :   * optional install : [ "?non-existing-filename" ]
+### :   * non existing filename : [ "non-existing-filename" ]
+### :   * default install with binary not as exe (no .exe ext) : [ "filename" ]
+### :
+### : Fields are : bin, sbin, stublibs, libexec, libexec_root
+### : Non executable fields are tested in dot-install-exec-fields.*.test
+### :
+### : For each package, there is no install target. The only side effect is
+### : that it doesn't trigger switch root directory tracking, all addition and
+### :  removal are done according install file
+### :  There is some specific fields that have some additional tests:
+### :    * misc: it needs a target and an absolute path
+### :    * man: it needs a specific file format
+### :::::::
+### OPAMYES=1
+### # we need to disable strict bc of erroring warnings
+### OPAMSTRICT=0
+### # we neeed the precise tracking to have a sha in changes file instead of timestamp
+### OPAMPRECISETRACKING=1
+### OPAMDEBUGSECTIONS="TRACK ACTION"
+### # Print the installed file 'installed-bin*' in switch (or root)
+### <cat.ml>
+#directory "+str"
+#load "str.cma"
+
+(* check if the file is executable, by extension *)
+let is_exec file = Filename.check_suffix file ".exe"
+
+(* print information about a file:
+  - its path
+  - if it is executable
+  - it not found
+  - if empty *)
+let cat file =
+  if Sys.file_exists file then
+    let header = if is_exec file then file^" (+x)" else file in
+    Printf.printf "==> %s\n" header ;
+    let error () =
+      let ic = open_in file in
+      let _ : char = input_char ic in
+      close_in ic
+    in
+    try error () with
+    | exn ->
+      let err =
+        match exn with
+        | End_of_file -> "Empty file"
+        | exn -> (Printexc.to_string exn)
+      in
+      Printf.printf "%s" err; exit 1
+  else
+    Printf.printf "--> %s: not found\n" file
+
+let switch = Sys.argv.(1)
+let pkg = Sys.argv.(2)
+let root = Sys.getenv "OPAMROOT"
+let (/) = Filename.concat
+
+let bname = "installed-bin"
+let root_file = try Some Sys.argv.(3) with Invalid_argument _ -> None
+let files =
+  match root_file with
+  | None -> []
+  | Some f -> [ root / f ]
+
+(* retrieve all files names 'installed-file' in switch prefix *)
+let files =
+  let rec aux files cwd =
+    let ls = Sys.readdir cwd |> Array.to_list in
+    let dirs, cwd_files =
+      List.partition (fun f -> Sys.is_directory (cwd / f)) ls
+    in
+    let dirs =
+      if (cwd : string) = root / switch then
+        List.filter (fun f -> f <> ".opam-switch") dirs
+      else dirs
+    in
+    let files =
+      files
+      @ List.filter_map (fun f ->
+          if String.starts_with ~prefix:bname f then
+            Some (cwd / f) else None)
+        cwd_files
+    in
+    if dirs = [] then files else
+      List.fold_left (fun files dir -> aux files (cwd / dir)) files dirs
+  in
+  aux files (root / switch)
+  |> List.sort String.compare
+
+let () =
+  match files with
+  | [] -> Printf.printf "==> No '%s*' found" bname
+  | _ -> List.iter cat files
+
+### <tiny.ml>
+print_endline "youhou i'm installed!"
+### ocamlc tiny.ml -o installed-bin.exe
+### openssl md5 installed-bin.exe | '.*= ' -> '' >$ BINMD5
+### ::::::::::::::::
+### :I: Field 'bin'
+### ::::::::::::::::
+### mkdir -p REPO/packages/pkg-bin/pkg-bin.1/files
+### cp installed-bin.exe REPO/packages/pkg-bin/pkg-bin.1/files/installed-bin.exe
+### opam switch create sw-bin --empty
+### :I:1: No defined destination path
+### <pkg:pkg-bin.1>
+opam-version: "2.0"
+### <pkg:pkg-bin.1:pkg-bin.install>
+bin: [ "installed-bin.exe" ]
+### OPAMDEBUG=-5 opam install pkg-bin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-bin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-bin.1
+ACTION                          prepare_package_source: pkg-bin.1 at ${BASEDIR}/OPAM/sw-bin/.opam-switch/build/pkg-bin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-bin.1.
+
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-bin.1: 1 items (addition: 1)
+-> installed pkg-bin.1
+Done.
+### opam-cat OPAM/sw-bin/.opam-switch/install/pkg-bin.changes | sed-hash $BINMD5 hash
+added: "bin/installed-bin.exe" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-bin pkg-bin
+==> ${BASEDIR}/OPAM/sw-bin/bin/installed-bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-bin
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-bin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-bin.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-bin.1: files bin/installed-bin.exe were already removed
+-> removed   pkg-bin.1
+ACTION                          Cleaning up artefacts of pkg-bin.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-bin/.opam-switch/install/pkg-bin.changes
+# OPAM/sw-bin/.opam-switch/install/pkg-bin.changes not found
+### ocaml cat.ml sw-bin pkg-bin
+==> No 'installed-bin*' found
+### :I:2: Specify destination path
+### <pkg:pkg-bin.1>
+opam-version: "2.0"
+### <pkg:pkg-bin.1:pkg-bin.install>
+bin: [ "installed-bin.exe" {"installed-bin.bin.exe"} ]
+### OPAMDEBUG=-5 opam install pkg-bin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-bin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-bin.1
+ACTION                          prepare_package_source: pkg-bin.1 at ${BASEDIR}/OPAM/sw-bin/.opam-switch/build/pkg-bin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-bin.1.
+
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-bin.1: 1 items (addition: 1)
+-> installed pkg-bin.1
+Done.
+### opam-cat OPAM/sw-bin/.opam-switch/install/pkg-bin.changes | sed-hash $BINMD5 hash
+added: "bin/installed-bin.bin.exe" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-bin pkg-bin
+==> ${BASEDIR}/OPAM/sw-bin/bin/installed-bin.bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-bin
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-bin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-bin.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-bin.1: files bin/installed-bin.bin.exe were already removed
+-> removed   pkg-bin.1
+ACTION                          Cleaning up artefacts of pkg-bin.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-bin/.opam-switch/install/pkg-bin.changes
+# OPAM/sw-bin/.opam-switch/install/pkg-bin.changes not found
+### ocaml cat.ml sw-bin pkg-bin
+==> No 'installed-bin*' found
+### :I:3: Non existing filename, with optional argument
+### <pkg:pkg-bin.1>
+opam-version: "2.0"
+### <pkg:pkg-bin.1:pkg-bin.install>
+bin: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-bin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-bin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-bin.1
+ACTION                          prepare_package_source: pkg-bin.1 at ${BASEDIR}/OPAM/sw-bin/.opam-switch/build/pkg-bin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-bin.1.
+
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-bin/.opam-switch/build/pkg-bin.1/finst is not present and optional.
+TRACK                           after install: 1 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-bin.1: 0 items
+-> installed pkg-bin.1
+Done.
+### opam-cat OPAM/sw-bin/.opam-switch/install/pkg-bin.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-bin pkg-bin
+==> No 'installed-bin*' found
+### OPAMDEBUG=-5 opam remove pkg-bin
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-bin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-bin.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-bin.1
+ACTION                          Cleaning up artefacts of pkg-bin.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-bin/.opam-switch/install/pkg-bin.changes
+# OPAM/sw-bin/.opam-switch/install/pkg-bin.changes not found
+### ocaml cat.ml sw-bin pkg-bin
+==> No 'installed-bin*' found
+### :I:4: Non existing filename
+### <pkg:pkg-bin.1>
+opam-version: "2.0"
+### <pkg:pkg-bin.1:pkg-bin.install>
+bin: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-bin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-bin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-bin.1
+ACTION                          prepare_package_source: pkg-bin.1 at ${BASEDIR}/OPAM/sw-bin/.opam-switch/build/pkg-bin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-bin.1.
+
+[ERROR] Installation of pkg-bin.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-bin/.opam-switch/install/pkg-bin.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-bin/.opam-switch/build/pkg-bin.1/finst to ${BASEDIR}/OPAM/sw-bin/bin
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-bin 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-bin/.opam-switch/install/pkg-bin.changes
+# OPAM/sw-bin/.opam-switch/install/pkg-bin.changes not found
+### ocaml cat.ml sw-bin pkg-bin
+==> No 'installed-bin*' found
+### :I:5: Default install with no executable bit
+### mv REPO/packages/pkg-bin/pkg-bin.1/files/installed-bin.exe REPO/packages/pkg-bin/pkg-bin.1/files/installed-bin
+### <pkg:pkg-bin.1>
+opam-version: "2.0"
+### <pkg:pkg-bin.1:pkg-bin.install>
+bin: [ "installed-bin" ]
+### OPAMDEBUG=-5 opam install pkg-bin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-bin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-bin.1
+ACTION                          prepare_package_source: pkg-bin.1 at ${BASEDIR}/OPAM/sw-bin/.opam-switch/build/pkg-bin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-bin.1.
+
+[WARNING] Automatically adding .exe to ${BASEDIR}/OPAM/sw-bin/bin/installed-bin
+TRACK                           after install: 1 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-bin.1: 0 items
+-> installed pkg-bin.1
+Done.
+### opam-cat OPAM/sw-bin/.opam-switch/install/pkg-bin.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-bin pkg-bin
+==> ${BASEDIR}/OPAM/sw-bin/bin/installed-bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-bin
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-bin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-bin.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-bin.1
+ACTION                          Cleaning up artefacts of pkg-bin.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-bin/.opam-switch/install/pkg-bin.changes
+# OPAM/sw-bin/.opam-switch/install/pkg-bin.changes not found
+### ocaml cat.ml sw-bin pkg-bin
+==> ${BASEDIR}/OPAM/sw-bin/bin/installed-bin.exe (+x)
+### ::::::::::::::::::
+### :II: Field 'sbin'
+### ::::::::::::::::::
+### mkdir -p REPO/packages/pkg-sbin/pkg-sbin.1/files
+### cp installed-bin.exe REPO/packages/pkg-sbin/pkg-sbin.1/files/installed-bin.exe
+### opam switch create sw-sbin --empty
+### :II:1: No defined destination path
+### <pkg:pkg-sbin.1>
+opam-version: "2.0"
+### <pkg:pkg-sbin.1:pkg-sbin.install>
+sbin: [ "installed-bin.exe" ]
+### OPAMDEBUG=-5 opam install pkg-sbin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-sbin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-sbin.1
+ACTION                          prepare_package_source: pkg-sbin.1 at ${BASEDIR}/OPAM/sw-sbin/.opam-switch/build/pkg-sbin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-sbin.1.
+
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-sbin.1: 1 items (addition: 1)
+-> installed pkg-sbin.1
+Done.
+### opam-cat OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes | sed-hash $BINMD5 hash
+added: "sbin/installed-bin.exe" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-sbin pkg-sbin
+==> ${BASEDIR}/OPAM/sw-sbin/sbin/installed-bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-sbin
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-sbin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-sbin.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-sbin.1: files sbin/installed-bin.exe were already removed
+-> removed   pkg-sbin.1
+ACTION                          Cleaning up artefacts of pkg-sbin.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes
+# OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes not found
+### ocaml cat.ml sw-sbin pkg-sbin
+==> No 'installed-bin*' found
+### :II:2: Specify destination path
+### <pkg:pkg-sbin.1>
+opam-version: "2.0"
+### <pkg:pkg-sbin.1:pkg-sbin.install>
+sbin: [ "installed-bin.exe" {"installed-bin.sbin.exe"} ]
+### OPAMDEBUG=-5 opam install pkg-sbin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-sbin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-sbin.1
+ACTION                          prepare_package_source: pkg-sbin.1 at ${BASEDIR}/OPAM/sw-sbin/.opam-switch/build/pkg-sbin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-sbin.1.
+
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-sbin.1: 1 items (addition: 1)
+-> installed pkg-sbin.1
+Done.
+### opam-cat OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes | sed-hash $BINMD5 hash
+added: "sbin/installed-bin.sbin.exe" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-sbin pkg-sbin
+==> ${BASEDIR}/OPAM/sw-sbin/sbin/installed-bin.sbin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-sbin
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-sbin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-sbin.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-sbin.1: files sbin/installed-bin.sbin.exe were already removed
+-> removed   pkg-sbin.1
+ACTION                          Cleaning up artefacts of pkg-sbin.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes
+# OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes not found
+### ocaml cat.ml sw-sbin pkg-sbin
+==> No 'installed-bin*' found
+### :II:3: Non existing filename, with optional argument
+### <pkg:pkg-sbin.1>
+opam-version: "2.0"
+### <pkg:pkg-sbin.1:pkg-sbin.install>
+sbin: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-sbin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-sbin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-sbin.1
+ACTION                          prepare_package_source: pkg-sbin.1 at ${BASEDIR}/OPAM/sw-sbin/.opam-switch/build/pkg-sbin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-sbin.1.
+
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-sbin/.opam-switch/build/pkg-sbin.1/finst is not present and optional.
+TRACK                           after install: 1 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-sbin.1: 0 items
+-> installed pkg-sbin.1
+Done.
+### opam-cat OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-sbin pkg-sbin
+==> No 'installed-bin*' found
+### OPAMDEBUG=-5 opam remove pkg-sbin
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-sbin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-sbin.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-sbin.1
+ACTION                          Cleaning up artefacts of pkg-sbin.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes
+# OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes not found
+### ocaml cat.ml sw-sbin pkg-sbin
+==> No 'installed-bin*' found
+### :II:4: Non existing filename
+### <pkg:pkg-sbin.1>
+opam-version: "2.0"
+### <pkg:pkg-sbin.1:pkg-sbin.install>
+sbin: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-sbin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-sbin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-sbin.1
+ACTION                          prepare_package_source: pkg-sbin.1 at ${BASEDIR}/OPAM/sw-sbin/.opam-switch/build/pkg-sbin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-sbin.1.
+
+[ERROR] Installation of pkg-sbin.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-sbin/.opam-switch/install/pkg-sbin.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-sbin/.opam-switch/build/pkg-sbin.1/finst to ${BASEDIR}/OPAM/sw-sbin/sbin
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-sbin 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes
+# OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes not found
+### ocaml cat.ml sw-sbin pkg-sbin
+==> No 'installed-bin*' found
+### :II:5: Default install with no executable bit
+### mv REPO/packages/pkg-sbin/pkg-sbin.1/files/installed-bin.exe REPO/packages/pkg-sbin/pkg-sbin.1/files/installed-bin
+### <pkg:pkg-sbin.1>
+opam-version: "2.0"
+### <pkg:pkg-sbin.1:pkg-sbin.install>
+sbin: [ "installed-bin" ]
+### OPAMDEBUG=-5 opam install pkg-sbin
+The following actions will be performed:
+=== install 1 package
+  - install pkg-sbin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-sbin.1
+ACTION                          prepare_package_source: pkg-sbin.1 at ${BASEDIR}/OPAM/sw-sbin/.opam-switch/build/pkg-sbin.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-sbin.1.
+
+[WARNING] Automatically adding .exe to ${BASEDIR}/OPAM/sw-sbin/sbin/installed-bin
+TRACK                           after install: 1 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-sbin.1: 0 items
+-> installed pkg-sbin.1
+Done.
+### opam-cat OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-sbin pkg-sbin
+==> ${BASEDIR}/OPAM/sw-sbin/sbin/installed-bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-sbin
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-sbin 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-sbin.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-sbin.1
+ACTION                          Cleaning up artefacts of pkg-sbin.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes
+# OPAM/sw-sbin/.opam-switch/install/pkg-sbin.changes not found
+### ocaml cat.ml sw-sbin pkg-sbin
+==> ${BASEDIR}/OPAM/sw-sbin/sbin/installed-bin.exe (+x)
+### :::::::::::::::::::::
+### :III: Field 'stublibs'
+### :::::::::::::::::::::
+### mkdir -p REPO/packages/pkg-stublibs/pkg-stublibs.1/files
+### cp installed-bin.exe REPO/packages/pkg-stublibs/pkg-stublibs.1/files/installed-bin.exe
+### opam switch create sw-stublibs --empty
+### :III:1: No defined destination path
+### <pkg:pkg-stublibs.1>
+opam-version: "2.0"
+### <pkg:pkg-stublibs.1:pkg-stublibs.install>
+stublibs: [ "installed-bin.exe" ]
+### OPAMDEBUG=-5 opam install pkg-stublibs
+The following actions will be performed:
+=== install 1 package
+  - install pkg-stublibs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-stublibs.1
+ACTION                          prepare_package_source: pkg-stublibs.1 at ${BASEDIR}/OPAM/sw-stublibs/.opam-switch/build/pkg-stublibs.1
+TRACK                           before install: 2 elements scanned in 0.000s
+ACTION                          Installing pkg-stublibs.1.
+
+TRACK                           after install: 3 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-stublibs.1: 1 items (addition: 1)
+-> installed pkg-stublibs.1
+Done.
+### opam-cat OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes | sed-hash $BINMD5 hash
+added: "lib/stublibs/installed-bin.exe" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-stublibs pkg-stublibs
+==> ${BASEDIR}/OPAM/sw-stublibs/lib/stublibs/installed-bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-stublibs
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-stublibs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-stublibs.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-stublibs.1: files lib/stublibs/installed-bin.exe were already removed
+-> removed   pkg-stublibs.1
+ACTION                          Cleaning up artefacts of pkg-stublibs.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes
+# OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes not found
+### ocaml cat.ml sw-stublibs pkg-stublibs
+==> No 'installed-bin*' found
+### :III:2: Specify destination path
+### <pkg:pkg-stublibs.1>
+opam-version: "2.0"
+### <pkg:pkg-stublibs.1:pkg-stublibs.install>
+stublibs: [ "installed-bin.exe" {"installed-bin.stublibs.exe"} ]
+### OPAMDEBUG=-5 opam install pkg-stublibs
+The following actions will be performed:
+=== install 1 package
+  - install pkg-stublibs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-stublibs.1
+ACTION                          prepare_package_source: pkg-stublibs.1 at ${BASEDIR}/OPAM/sw-stublibs/.opam-switch/build/pkg-stublibs.1
+TRACK                           before install: 2 elements scanned in 0.000s
+ACTION                          Installing pkg-stublibs.1.
+
+TRACK                           after install: 3 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-stublibs.1: 1 items (addition: 1)
+-> installed pkg-stublibs.1
+Done.
+### opam-cat OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes | sed-hash $BINMD5 hash
+added: "lib/stublibs/installed-bin.stublibs.exe" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-stublibs pkg-stublibs
+==> ${BASEDIR}/OPAM/sw-stublibs/lib/stublibs/installed-bin.stublibs.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-stublibs
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-stublibs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-stublibs.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-stublibs.1: files lib/stublibs/installed-bin.stublibs.exe were already removed
+-> removed   pkg-stublibs.1
+ACTION                          Cleaning up artefacts of pkg-stublibs.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes
+# OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes not found
+### ocaml cat.ml sw-stublibs pkg-stublibs
+==> No 'installed-bin*' found
+### :III:3: Non existing filename, with optional argument
+### <pkg:pkg-stublibs.1>
+opam-version: "2.0"
+### <pkg:pkg-stublibs.1:pkg-stublibs.install>
+stublibs: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-stublibs
+The following actions will be performed:
+=== install 1 package
+  - install pkg-stublibs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-stublibs.1
+ACTION                          prepare_package_source: pkg-stublibs.1 at ${BASEDIR}/OPAM/sw-stublibs/.opam-switch/build/pkg-stublibs.1
+TRACK                           before install: 2 elements scanned in 0.000s
+ACTION                          Installing pkg-stublibs.1.
+
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-stublibs/.opam-switch/build/pkg-stublibs.1/finst is not present and optional.
+TRACK                           after install: 2 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-stublibs.1: 0 items
+-> installed pkg-stublibs.1
+Done.
+### opam-cat OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-stublibs pkg-stublibs
+==> No 'installed-bin*' found
+### OPAMDEBUG=-5 opam remove pkg-stublibs
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-stublibs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-stublibs.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-stublibs.1
+ACTION                          Cleaning up artefacts of pkg-stublibs.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes
+# OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes not found
+### ocaml cat.ml sw-stublibs pkg-stublibs
+==> No 'installed-bin*' found
+### :III:4: Non existing filename
+### <pkg:pkg-stublibs.1>
+opam-version: "2.0"
+### <pkg:pkg-stublibs.1:pkg-stublibs.install>
+stublibs: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-stublibs
+The following actions will be performed:
+=== install 1 package
+  - install pkg-stublibs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-stublibs.1
+ACTION                          prepare_package_source: pkg-stublibs.1 at ${BASEDIR}/OPAM/sw-stublibs/.opam-switch/build/pkg-stublibs.1
+TRACK                           before install: 2 elements scanned in 0.000s
+ACTION                          Installing pkg-stublibs.1.
+
+[ERROR] Installation of pkg-stublibs.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-stublibs/.opam-switch/build/pkg-stublibs.1/finst to ${BASEDIR}/OPAM/sw-stublibs/lib/stublibs
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-stublibs 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes
+# OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes not found
+### ocaml cat.ml sw-stublibs pkg-stublibs
+==> No 'installed-bin*' found
+### :III:5: Default install with no executable bit
+### mv REPO/packages/pkg-stublibs/pkg-stublibs.1/files/installed-bin.exe REPO/packages/pkg-stublibs/pkg-stublibs.1/files/installed-bin
+### <pkg:pkg-stublibs.1>
+opam-version: "2.0"
+### <pkg:pkg-stublibs.1:pkg-stublibs.install>
+stublibs: [ "installed-bin" ]
+### OPAMDEBUG=-5 opam install pkg-stublibs
+The following actions will be performed:
+=== install 1 package
+  - install pkg-stublibs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-stublibs.1
+ACTION                          prepare_package_source: pkg-stublibs.1 at ${BASEDIR}/OPAM/sw-stublibs/.opam-switch/build/pkg-stublibs.1
+TRACK                           before install: 2 elements scanned in 0.000s
+ACTION                          Installing pkg-stublibs.1.
+
+[WARNING] Automatically adding .exe to ${BASEDIR}/OPAM/sw-stublibs/lib/stublibs/installed-bin
+TRACK                           after install: 2 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-stublibs.1: 0 items
+-> installed pkg-stublibs.1
+Done.
+### opam-cat OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-stublibs pkg-stublibs
+==> ${BASEDIR}/OPAM/sw-stublibs/lib/stublibs/installed-bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-stublibs
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-stublibs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-stublibs.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-stublibs.1
+ACTION                          Cleaning up artefacts of pkg-stublibs.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes
+# OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.changes not found
+### ocaml cat.ml sw-stublibs pkg-stublibs
+==> ${BASEDIR}/OPAM/sw-stublibs/lib/stublibs/installed-bin.exe (+x)
+### :::::::::::::::::::::
+### :IV: Field 'libexec'
+### :::::::::::::::::::::
+### mkdir -p REPO/packages/pkg-libexec/pkg-libexec.1/files
+### cp installed-bin.exe REPO/packages/pkg-libexec/pkg-libexec.1/files/installed-bin.exe
+### opam switch create sw-libexec --empty
+### :IV:1: No defined destination path
+### <pkg:pkg-libexec.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec.1:pkg-libexec.install>
+libexec: [ "installed-bin.exe" ]
+### OPAMDEBUG=-5 opam install pkg-libexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec.1
+ACTION                          prepare_package_source: pkg-libexec.1 at ${BASEDIR}/OPAM/sw-libexec/.opam-switch/build/pkg-libexec.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-libexec/lib/pkg-libexec
+TRACK                           after install: 3 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-libexec.1: 2 items (addition: 2)
+-> installed pkg-libexec.1
+Done.
+### opam-cat OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes | sed-hash $BINMD5 hash
+added: ["lib/pkg-libexec" {"D"} "lib/pkg-libexec/installed-bin.exe" {"F:+hash+"}]
+opam-version: "2.0"
+### ocaml cat.ml sw-libexec pkg-libexec
+==> ${BASEDIR}/OPAM/sw-libexec/lib/pkg-libexec/installed-bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-libexec
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-libexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-libexec.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-libexec.1: files lib/pkg-libexec/installed-bin.exe, lib/pkg-libexec were already removed
+-> removed   pkg-libexec.1
+ACTION                          Cleaning up artefacts of pkg-libexec.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes
+# OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes not found
+### ocaml cat.ml sw-libexec pkg-libexec
+==> No 'installed-bin*' found
+### :IV:2: Specify destination path
+### <pkg:pkg-libexec.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec.1:pkg-libexec.install>
+libexec: [ "installed-bin.exe" {"installed-bin.libexec.exe"} ]
+### OPAMDEBUG=-5 opam install pkg-libexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec.1
+ACTION                          prepare_package_source: pkg-libexec.1 at ${BASEDIR}/OPAM/sw-libexec/.opam-switch/build/pkg-libexec.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-libexec/lib/pkg-libexec
+TRACK                           after install: 3 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-libexec.1: 2 items (addition: 2)
+-> installed pkg-libexec.1
+Done.
+### opam-cat OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes | sed-hash $BINMD5 hash
+added: ["lib/pkg-libexec" {"D"} "lib/pkg-libexec/installed-bin.libexec.exe" {"F:+hash+"}]
+opam-version: "2.0"
+### ocaml cat.ml sw-libexec pkg-libexec
+==> ${BASEDIR}/OPAM/sw-libexec/lib/pkg-libexec/installed-bin.libexec.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-libexec
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-libexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-libexec.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-libexec.1: files lib/pkg-libexec/installed-bin.libexec.exe, lib/pkg-libexec were already removed
+-> removed   pkg-libexec.1
+ACTION                          Cleaning up artefacts of pkg-libexec.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes
+# OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes not found
+### ocaml cat.ml sw-libexec pkg-libexec
+==> No 'installed-bin*' found
+### :IV:3: Non existing filename, with optional argument
+### <pkg:pkg-libexec.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec.1:pkg-libexec.install>
+libexec: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-libexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec.1
+ACTION                          prepare_package_source: pkg-libexec.1 at ${BASEDIR}/OPAM/sw-libexec/.opam-switch/build/pkg-libexec.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-libexec/lib/pkg-libexec
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-libexec/.opam-switch/build/pkg-libexec.1/finst is not present and optional.
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-libexec.1: 1 items (addition: 1)
+-> installed pkg-libexec.1
+Done.
+### opam-cat OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes
+added: "lib/pkg-libexec" {"D"}
+opam-version: "2.0"
+### ocaml cat.ml sw-libexec pkg-libexec
+==> No 'installed-bin*' found
+### OPAMDEBUG=-5 opam remove pkg-libexec
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-libexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-libexec.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-libexec.1: files lib/pkg-libexec were already removed
+-> removed   pkg-libexec.1
+ACTION                          Cleaning up artefacts of pkg-libexec.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes
+# OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes not found
+### ocaml cat.ml sw-libexec pkg-libexec
+==> No 'installed-bin*' found
+### :IV:4: Non existing filename
+### <pkg:pkg-libexec.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec.1:pkg-libexec.install>
+libexec: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-libexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec.1
+ACTION                          prepare_package_source: pkg-libexec.1 at ${BASEDIR}/OPAM/sw-libexec/.opam-switch/build/pkg-libexec.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-libexec/lib/pkg-libexec
+[ERROR] Installation of pkg-libexec.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-libexec/.opam-switch/install/pkg-libexec.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-libexec/.opam-switch/build/pkg-libexec.1/finst to ${BASEDIR}/OPAM/sw-libexec/lib/pkg-libexec
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-libexec 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes
+# OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes not found
+### ocaml cat.ml sw-libexec pkg-libexec
+==> No 'installed-bin*' found
+### :IV:5: Default install with no executable bit
+### mv REPO/packages/pkg-libexec/pkg-libexec.1/files/installed-bin.exe REPO/packages/pkg-libexec/pkg-libexec.1/files/installed-bin
+### <pkg:pkg-libexec.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec.1:pkg-libexec.install>
+libexec: [ "installed-bin.exe" ]
+### OPAMDEBUG=-5 opam install pkg-libexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec.1
+ACTION                          prepare_package_source: pkg-libexec.1 at ${BASEDIR}/OPAM/sw-libexec/.opam-switch/build/pkg-libexec.1
+TRACK                           before install: 2 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec.1.
+
+[ERROR] Installation of pkg-libexec.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-libexec/.opam-switch/install/pkg-libexec.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-libexec/.opam-switch/build/pkg-libexec.1/installed-bin.exe to ${BASEDIR}/OPAM/sw-libexec/lib/pkg-libexec
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-libexec 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes
+# OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes not found
+### ocaml cat.ml sw-libexec pkg-libexec
+==> No 'installed-bin*' found
+### OPAMDEBUG=-5 opam remove pkg-libexec
+[NOTE] pkg-libexec is not installed.
+
+Nothing to do.
+### opam-cat OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes
+# OPAM/sw-libexec/.opam-switch/install/pkg-libexec.changes not found
+### ocaml cat.ml sw-libexec pkg-libexec
+==> No 'installed-bin*' found
+### ::::::::::::::::::::::::::
+### :V: Field 'libexec_root'
+### ::::::::::::::::::::::::::
+### mkdir -p REPO/packages/pkg-libexec_root/pkg-libexec_root.1/files
+### cp installed-bin.exe REPO/packages/pkg-libexec_root/pkg-libexec_root.1/files/installed-bin.exe
+### opam switch create sw-libexec_root --empty
+### :V:1: No defined destination path
+### <pkg:pkg-libexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
+libexec_root: [ "installed-bin.exe" ]
+### OPAMDEBUG=-5 opam install pkg-libexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec_root.1
+ACTION                          prepare_package_source: pkg-libexec_root.1 at ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/build/pkg-libexec_root.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec_root.1.
+
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-libexec_root.1: 1 items (addition: 1)
+-> installed pkg-libexec_root.1
+Done.
+### opam-cat OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes | sed-hash $BINMD5 hash
+added: "lib/installed-bin.exe" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-libexec_root pkg-libexec_root
+==> ${BASEDIR}/OPAM/sw-libexec_root/lib/installed-bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-libexec_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-libexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-libexec_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-libexec_root.1
+ACTION                          Cleaning up artefacts of pkg-libexec_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes
+# OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes not found
+### ocaml cat.ml sw-libexec_root pkg-libexec_root
+==> No 'installed-bin*' found
+### :V:2: Specify destination path
+### <pkg:pkg-libexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
+libexec_root: [ "installed-bin.exe" {"installed-bin.libexec_root.exe"} ]
+### OPAMDEBUG=-5 opam install pkg-libexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec_root.1
+ACTION                          prepare_package_source: pkg-libexec_root.1 at ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/build/pkg-libexec_root.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec_root.1.
+
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-libexec_root.1: 1 items (addition: 1)
+-> installed pkg-libexec_root.1
+Done.
+### opam-cat OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes | sed-hash $BINMD5 hash
+added: "lib/installed-bin.libexec_root.exe" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-libexec_root pkg-libexec_root
+==> ${BASEDIR}/OPAM/sw-libexec_root/lib/installed-bin.libexec_root.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-libexec_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-libexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-libexec_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-libexec_root.1
+ACTION                          Cleaning up artefacts of pkg-libexec_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes
+# OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes not found
+### ocaml cat.ml sw-libexec_root pkg-libexec_root
+==> No 'installed-bin*' found
+### :V:3: Non existing filename, with optional argument
+### <pkg:pkg-libexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
+libexec_root: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-libexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec_root.1
+ACTION                          prepare_package_source: pkg-libexec_root.1 at ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/build/pkg-libexec_root.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec_root.1.
+
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/build/pkg-libexec_root.1/finst is not present and optional.
+TRACK                           after install: 1 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-libexec_root.1: 0 items
+-> installed pkg-libexec_root.1
+Done.
+### opam-cat OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-libexec_root pkg-libexec_root
+==> No 'installed-bin*' found
+### OPAMDEBUG=-5 opam remove pkg-libexec_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-libexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-libexec_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-libexec_root.1
+ACTION                          Cleaning up artefacts of pkg-libexec_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes
+# OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes not found
+### ocaml cat.ml sw-libexec_root pkg-libexec_root
+==> No 'installed-bin*' found
+### :V:4: Non existing filename
+### <pkg:pkg-libexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
+libexec_root: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-libexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec_root.1
+ACTION                          prepare_package_source: pkg-libexec_root.1 at ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/build/pkg-libexec_root.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec_root.1.
+
+[ERROR] Installation of pkg-libexec_root.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/build/pkg-libexec_root.1/finst to ${BASEDIR}/OPAM/sw-libexec_root/lib
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-libexec_root 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes
+# OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes not found
+### ocaml cat.ml sw-libexec_root pkg-libexec_root
+==> No 'installed-bin*' found
+### :V:5: Default install with no executable bit
+### mv REPO/packages/pkg-libexec_root/pkg-libexec_root.1/files/installed-bin.exe REPO/packages/pkg-libexec_root/pkg-libexec_root.1/files/installed-bin
+### <pkg:pkg-libexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
+libexec_root: [ "installed-bin" ]
+### OPAMDEBUG=-5 opam install pkg-libexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-libexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-libexec_root.1
+ACTION                          prepare_package_source: pkg-libexec_root.1 at ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/build/pkg-libexec_root.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-libexec_root.1.
+
+[WARNING] Automatically adding .exe to ${BASEDIR}/OPAM/sw-libexec_root/lib/installed-bin
+TRACK                           after install: 1 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-libexec_root.1: 0 items
+-> installed pkg-libexec_root.1
+Done.
+### opam-cat OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-libexec_root pkg-libexec_root
+==> ${BASEDIR}/OPAM/sw-libexec_root/lib/installed-bin.exe (+x)
+### OPAMDEBUG=-5 opam remove pkg-libexec_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-libexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-libexec_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-libexec_root.1
+ACTION                          Cleaning up artefacts of pkg-libexec_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes
+# OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes not found
+### ocaml cat.ml sw-libexec_root pkg-libexec_root
+==> ${BASEDIR}/OPAM/sw-libexec_root/lib/installed-bin.exe (+x)

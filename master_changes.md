@@ -202,6 +202,7 @@ users)
   * Add in `repository` test cases for switching automatically from directory to archive format & vice versa [#6625 @rjbou]
   * Add in `repository` test cases for upgrade opam root from 2.5 with repo tarring or 2.1 to 2.6, with `OPAMREPOSITORYTARRING` enabled (trigger upgrade) [#6625 @rjbou]
   * Add 2.6 root test cases in opamroot-versions [#6625 @rjbou]
+  * Add tests for `.install` fields handling [#6956 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
