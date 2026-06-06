@@ -507,46 +507,49 @@ let init cli =
         ?update_config ?env_hook ?completion
         ~check_sandbox:(not no_sandboxing)
         ?cygwin_setup ?git_location
+        ~no_compiler
         shell
     in
     OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
     @@ fun () ->
-    if no_compiler then () else
-    let invariant, default_compiler, name =
-      match compiler with
-      | Some comp when String.length comp > 0 ->
-        OpamSwitchCommand.guess_compiler_invariant rt [comp],
-        [],
-        comp
-      | _ ->
-        OpamFile.Config.default_invariant gt.config,
-        default_compiler, "default"
-    in
-    OpamConsole.header_msg "Creating initial switch '%s' (invariant %s%s)"
-      name
-      (match invariant with
-       | OpamFormula.Empty -> "empty"
-       | c -> OpamFileTools.dep_formula_to_string c)
-      (match default_compiler with
-       | [] -> ""
-       | comp -> " - initially with "^ (OpamFormula.string_of_atoms comp));
-    let (), st =
-      try
-        OpamSwitchCommand.create
-          gt ~rt ~invariant ~update_config:true (OpamSwitch.of_string name) @@
-        (fun st ->
-           (),
-           OpamSwitchCommand.install_compiler st
-             ~ask:false
-             ~additional_installs:default_compiler)
-      with e ->
-        OpamStd.Exn.finalise e @@ fun () ->
-        OpamConsole.note
-          "Opam has been initialised, but the initial switch creation \
-           failed.\n\
-           Use 'opam switch create <compiler>' to get started."
-    in
-    OpamSwitchState.drop st
+    match default_compiler with
+    | None -> ()
+    | Some default_compiler ->
+      let invariant, default_compiler, name =
+        match compiler with
+        | Some comp when String.length comp > 0 ->
+          OpamSwitchCommand.guess_compiler_invariant rt [comp],
+          [],
+          comp
+        | _ ->
+          OpamFile.Config.default_invariant gt.config,
+          default_compiler, "default"
+      in
+      OpamConsole.header_msg "Creating initial switch '%s' (invariant %s%s)"
+        name
+        (match invariant with
+         | OpamFormula.Empty -> "empty"
+         | c -> OpamFileTools.dep_formula_to_string c)
+        (match default_compiler with
+         | [] -> ""
+         | comp -> " - initially with "^ (OpamFormula.string_of_atoms comp));
+      let (), st =
+        try
+          OpamSwitchCommand.create
+            gt ~rt ~invariant ~update_config:true (OpamSwitch.of_string name) @@
+          (fun st ->
+             (),
+             OpamSwitchCommand.install_compiler st
+               ~ask:false
+               ~additional_installs:default_compiler)
+        with e ->
+          OpamStd.Exn.finalise e @@ fun () ->
+          OpamConsole.note
+            "Opam has been initialised, but the initial switch creation \
+             failed.\n\
+             Use 'opam switch create <compiler>' to get started."
+      in
+      OpamSwitchState.drop st
   in
   mk_command  ~cli cli_original "init" ~doc ~man
     Term.(const init

@@ -21,6 +21,7 @@ users)
 
 ## Init
   * ✘ Display an appropriate error message when the file given to `opam init --config` does not exist or is in a VCS. This changes the behaviour for VCS local urls that was previously retrieved. [#5979 @kit-ty-kate - fix #5971]
+  * Improve the performance of `opam init --bare` by no longer computing the default compiler in that case [#6957 @tuesdayjz @kit-ty-kate - fix #5815]
 
 ## Config report
 
@@ -276,6 +277,7 @@ users)
 ## opam-client
   * `OpamArg`: add `build_options_no_depexts` getter to retrieve the value of the given flag  [#6489 @rjbou]
   * `OpamArg{,Tools}.cli2_6` was added [#6978 @kit-ty-kate]
+  * `OpamClient.init`: a new `?no_compiler` argument was added to not compute the default compiler and the list of atom returned is now an option to separate empty invariant from no switch [#6957 @kit-ty-kate]
   * `OpamClientConfig.opam_init`: replace `no_depexts` argument by `depexts` [#6489 @rjbou]
   * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
   * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
