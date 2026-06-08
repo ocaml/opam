@@ -1002,7 +1002,7 @@ SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-m
 SYSTEM                          write ${BASEDIR}/OPAM/sw-misc/.opam-switch/build/pkg-misc.1/pkg-misc.install
 [WARNING] Errors in ${BASEDIR}/OPAM/sw-misc/.opam-switch/build/pkg-misc.1/pkg-misc.install, some fields have been ignored:
             - At ${BASEDIR}/OPAM/sw-misc/.opam-switch/build/pkg-misc.1/pkg-misc.install:1:8-1:20::
-              expected file
+              expected abs-filename
 
 TRACK                           before install: 0 elements scanned in 0.000s
 ACTION                          Installing pkg-misc.1.

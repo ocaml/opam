@@ -3886,7 +3886,7 @@ module Dot_installSyntax = struct
              ~raise:raise_with_file
              ~errmsg:"is not an absolute filename."
              (Fun.negate Filename.is_relative)
-        -| Pp.of_module "file" (module OpamFilename))
+        -| Pp.of_module "abs-filename" (module OpamFilename))
     in
     [
       "prefix", Pp.ppacc with_prefix prefix pp_prefix;
