@@ -191,6 +191,7 @@ users)
   * Trigger CI upon changes in `doc/` [#6927 @kit-ty-kate - fix #6810]
   * Install `micro_httpd` in test scripts [#6939 @rjbou]
   * Fix ubuntu depext job: remove install of no longer available system packages  'ocaml-compiler-libs' [#6960 @rjbou]
+  * Fix opensuse depexts job : force resolution in case of conflict (ocaml/ncurses) [#6960 @rjbou]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
