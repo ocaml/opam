@@ -87,6 +87,8 @@ module Tar : sig
   val fold:
     ('a -> OpamTar.archived_file -> OpamTar.archived_file_content -> 'a) ->
     'a -> t -> 'a
+  (* clean hashtbl that keep the repositories in ram *)
+  val unload_repo_tars: unit -> unit
 
   (* Repository paths *)
   module Path : OpamRepositoryPath.PATH

@@ -75,7 +75,27 @@ module Tar = struct
   let move = OpamFilename.move
   let is_symlink = OpamFilename.is_symlink
 
-  let fold = OpamTar.fold_reg_files
+  let archives : (OpamHash.t, string OpamFilename.Unix.Map.t) Hashtbl.t = Hashtbl.create 8
+  let unload_repo_tars () = Hashtbl.clear archives
+
+  let fold f x tar =
+    (* TAR TOQUESTION : do we need to have a sha256 ? md5 have collision, will it
+       really happen irl ? *)
+    let hash = OpamHash.compute ~kind:`SHA256 (OpamFilename.to_string tar) in
+    match Hashtbl.find_opt archives hash with
+    | Some contents ->
+      OpamFilename.Unix.Map.fold (fun filename content acc ->
+          f acc filename content)
+        contents x
+    | None ->
+      let result, map =
+        OpamTar.fold_reg_files (fun (acc, map) file content ->
+            f acc file content,
+            OpamFilename.Unix.Map.add file content map)
+          (x, OpamFilename.Unix.Map.empty) tar
+      in
+      Hashtbl.add archives hash map;
+      result
 
   let files t =
     fold (fun files file _ -> file::files) [] t

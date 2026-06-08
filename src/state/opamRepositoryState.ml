@@ -388,7 +388,7 @@ let unlock ?cleanup:(cln=true) rt =
 
 let drop ?cleanup rt =
   let _ = unlock ?cleanup rt in
-  ()
+  OpamRepositoryRoot.Tar.unload_repo_tars ()
 
 let with_write_lock ?dontblock rt f =
   if OpamStateConfig.is_newer_than_self ~lock_kind:`Lock_write rt.repos_global
