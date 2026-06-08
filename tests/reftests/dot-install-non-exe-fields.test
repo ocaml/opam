@@ -1835,3 +1835,282 @@ Some files in ${BASEDIR}/OPAM/sw-lib_root/.opam-switch/install/pkg-lib_root.inst
 # OPAM/sw-lib_root/.opam-switch/install/pkg-lib_root.changes not found
 ### ocaml cat.ml sw-lib_root pkg-lib_root
 ==> No 'installed-file' found
+### :::::::::::::::::::::::::
+### :V: Field 'root'
+### :::::::::::::::::::::::::
+### mkdir -p REPO/packages/pkg-root/pkg-root.1/files
+### cp installed-file REPO/packages/pkg-root/pkg-root.1/files/installed-file
+### opam switch create sw-root --empty
+### :V:1: No defined destination path
+### <pkg:pkg-root.1>
+opam-version: "2.0"
+### <pkg:pkg-root.1:pkg-root.install>
+root: [ "installed-file" ]
+### OPAMDEBUG=-5 opam install pkg-root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-root.1
+ACTION                          prepare_package_source: pkg-root.1 at ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-root.1.
+
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-root.1: 1 items (addition: 1)
+-> installed pkg-root.1
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+added: "installed-file" {"F:a611026bf7b99362c57473c4e1ef30a0"}
+opam-version: "2.0"
+### ocaml cat.ml sw-root pkg-root
+==> ${BASEDIR}/OPAM/sw-root/installed-file
+### OPAMDEBUG=-5 opam remove pkg-root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-root.1: files installed-file were already removed
+-> removed   pkg-root.1
+ACTION                          Cleaning up artefacts of pkg-root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+# OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
+### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
+### :V:2: Specify destination path
+### <pkg:pkg-root.1>
+opam-version: "2.0"
+### <pkg:pkg-root.1:pkg-root.install>
+root: [ "installed-file" {"installed-file.root"} ]
+### OPAMDEBUG=-5 opam install pkg-root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-root.1
+ACTION                          prepare_package_source: pkg-root.1 at ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-root.1.
+
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-root.1: 1 items (addition: 1)
+-> installed pkg-root.1
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+added: "installed-file.root" {"F:a611026bf7b99362c57473c4e1ef30a0"}
+opam-version: "2.0"
+### ocaml cat.ml sw-root pkg-root
+==> ${BASEDIR}/OPAM/sw-root/installed-file.root
+### OPAMDEBUG=-5 opam remove pkg-root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-root.1: files installed-file.root were already removed
+-> removed   pkg-root.1
+ACTION                          Cleaning up artefacts of pkg-root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+# OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
+### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
+### :V:3: Non existing filename, with optional argument
+### <pkg:pkg-root.1>
+opam-version: "2.0"
+### <pkg:pkg-root.1:pkg-root.install>
+root: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-root.1
+ACTION                          prepare_package_source: pkg-root.1 at ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-root.1.
+
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1/finst is not present and optional.
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-root.1: 0 items
+-> installed pkg-root.1
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
+### OPAMDEBUG=-5 opam remove pkg-root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-root.1
+ACTION                          Cleaning up artefacts of pkg-root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+# OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
+### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
+### :V:4: Non existing filename
+### <pkg:pkg-root.1>
+opam-version: "2.0"
+### <pkg:pkg-root.1:pkg-root.install>
+root: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-root.1
+ACTION                          prepare_package_source: pkg-root.1 at ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-root.1.
+
+[ERROR] Installation of pkg-root.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-root/.opam-switch/install/pkg-root.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1/finst to ${BASEDIR}/OPAM/sw-root
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-root 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+# OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
+### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
+### OPAMDEBUG=-5 opam remove pkg-root
+[NOTE] pkg-root is not installed.
+
+Nothing to do.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+# OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
+### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
+### :V:5: Target path is checked
+### :V:5:a: Begins with '.opam-switch'
+### <pkg:pkg-root.1>
+opam-version: "2.0"
+### <pkg:pkg-root.1:pkg-root.install>
+root: [
+  "installed-file" {".opam-switch/installed-file.opam-switch.root"}
+  ]
+### OPAMDEBUG=-5 opam install pkg-root --strict
+The following actions will be performed:
+=== install 1 package
+  - install pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-root.1
+ACTION                          prepare_package_source: pkg-root.1 at ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1
+[WARNING] Errors in ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1/pkg-root.install, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1/pkg-root.install:2:20-2:66::
+              .opam-switch/installed-file.opam-switch.root tries to overwrite opam internal files.
+
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-root.1.
+
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-root.1: 0 items
+-> installed pkg-root.1
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
+### OPAMDEBUG=-5 opam remove pkg-root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-root.1
+ACTION                          Cleaning up artefacts of pkg-root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+# OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
+### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
+### :V:5:b: Forbidden '.opam-switch' in another layer of path
+### <pkg:pkg-root.1>
+opam-version: "2.0"
+### <pkg:pkg-root.1:pkg-root.install>
+root: [
+  "installed-file" {"not-fst/.opam-switch/installed-file.opam-switch.root"}
+  ]
+### OPAMDEBUG=-5 opam install pkg-root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-root.1
+ACTION                          prepare_package_source: pkg-root.1 at ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-root.1.
+
+TRACK                           after install: 3 elements, 3 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-root.1: 3 items (addition: 3)
+-> installed pkg-root.1
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+added: ["not-fst" {"D"} "not-fst/.opam-switch" {"D"} "not-fst/.opam-switch/installed-file.opam-switch.root" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+opam-version: "2.0"
+### ocaml cat.ml sw-root pkg-root
+==> ${BASEDIR}/OPAM/sw-root/not-fst/.opam-switch/installed-file.opam-switch.root
+### OPAMDEBUG=-5 opam remove pkg-root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-root.1: files not-fst/.opam-switch/installed-file.opam-switch.root were already removed
+-> removed   pkg-root.1
+ACTION                          Cleaning up artefacts of pkg-root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
+# OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
+### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
