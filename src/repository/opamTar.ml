@@ -186,7 +186,7 @@ module Inplace = struct
 
 end
 
-let create ?(flat=false) tar dir =
+let create ?(flat=false) ?(except_vcs=false) tar dir =
   log "creating archive %s from %s"
     (OpamFilename.to_string tar)
     (OpamFilename.Dir.to_string dir);
@@ -195,7 +195,7 @@ let create ?(flat=false) tar dir =
       [Unix.O_CREAT; Unix.O_TRUNC; Unix.O_WRONLY] 0o640
   in
   Fun.protect ~finally:(fun () -> Unix.close fd) @@ fun () ->
-  let files = OpamFilename.rec_files dir in
+  let files = OpamFilename.rec_files ~except_vcs dir in
   let content =
     let remove_prefix =
       let dir =
