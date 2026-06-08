@@ -1002,7 +1002,7 @@ SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-m
 SYSTEM                          write ${BASEDIR}/OPAM/sw-misc/.opam-switch/build/pkg-misc.1/pkg-misc.install
 [WARNING] Errors in ${BASEDIR}/OPAM/sw-misc/.opam-switch/build/pkg-misc.1/pkg-misc.install, some fields have been ignored:
             - At ${BASEDIR}/OPAM/sw-misc/.opam-switch/build/pkg-misc.1/pkg-misc.install:1:8-1:20::
-              expected abs-filename
+              expected file
 
 TRACK                           before install: 0 elements scanned in 0.000s
 ACTION                          Installing pkg-misc.1.
@@ -4324,4 +4324,570 @@ SYSTEM                          rm ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/
 ### ocaml cat.ml sw-libexec_root pkg-libexec_root
 ==> pkg-libexec_root changes
 Not found: ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes
+==> No 'finstalled' file found
+### :::::::::::::::::::
+### :XV: Field 'prefix'
+### :::::::::::::::::::
+### <pkg:pkg-prefix.1:finstalled>
+youhou, i'm installed!
+### opam switch create sw-prefix --empty
+### :XV:1: No defined destination path
+### <pkg:pkg-prefix.1>
+opam-version: "2.0"
+### <pkg:pkg-prefix.1:pkg-prefix.install>
+prefix: [ "finstalled" ]
+### OPAMDEBUG=-5 opam install pkg-prefix | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/backup
+The following actions will be performed:
+=== install 1 package
+  - install pkg-prefix 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: pkg-prefix.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+ACTION                          prepare_package_source: pkg-prefix.1 at ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finstalled
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/pkg-prefix.install
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-prefix.1.
+
+SYSTEM                          install ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finstalled -> ${BASEDIR}/OPAM/sw-prefix/finstalled (644)
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-prefix.1: 1 items (addition: 1)
+-> installed pkg-prefix.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/finstalled
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/pkg-prefix.install
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefix pkg-prefix
+==> pkg-prefix changes
+opam-version: "2.0"
+added: "finstalled" {"F:a611026bf7b99362c57473c4e1ef30a0"}
+==> ${BASEDIR}/OPAM/sw-prefix/finstalled
+### OPAMDEBUG=-5 opam remove pkg-prefix | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-prefix 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          Removing pkg-prefix.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/remove/pkg-prefix.1
+ACTION                          Removing files from .install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/lib/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/lib/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/share/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/etc/pkg-prefix
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/finstalled
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/doc/pkg-prefix
+ACTION                          Removing the misc files
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.install
+TRACK                           While removing pkg-prefix.1: files finstalled were already removed
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.changes
+-> removed   pkg-prefix.1
+ACTION                          Cleaning up artefacts of pkg-prefix.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/remove/pkg-prefix.1
+ACTION                          Removing the local metadata
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/opam
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/finstalled
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/sources/pkg-prefix.1
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefix pkg-prefix
+==> pkg-prefix changes
+Not found: ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.changes
+==> No 'finstalled' file found
+### :XV:2: Specify destination path
+### <pkg:pkg-prefix.1>
+opam-version: "2.0"
+### <pkg:pkg-prefix.1:pkg-prefix.install>
+prefix: [ "finstalled" {"finstalled.prefix"} ]
+### OPAMDEBUG=-5 opam install pkg-prefix | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== install 1 package
+  - install pkg-prefix 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: pkg-prefix.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finstalled
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/pkg-prefix.install
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+ACTION                          prepare_package_source: pkg-prefix.1 at ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/pkg-prefix.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finstalled
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-prefix.1.
+
+SYSTEM                          install ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finstalled -> ${BASEDIR}/OPAM/sw-prefix/finstalled.prefix (644)
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-prefix.1: 1 items (addition: 1)
+-> installed pkg-prefix.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/finstalled
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefix pkg-prefix
+==> pkg-prefix changes
+opam-version: "2.0"
+added: "finstalled.prefix" {"F:a611026bf7b99362c57473c4e1ef30a0"}
+==> ${BASEDIR}/OPAM/sw-prefix/finstalled.prefix
+### OPAMDEBUG=-5 opam remove pkg-prefix | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-prefix 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          Removing pkg-prefix.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/remove/pkg-prefix.1
+ACTION                          Removing files from .install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/lib/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/lib/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/share/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/etc/pkg-prefix
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/finstalled.prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/doc/pkg-prefix
+ACTION                          Removing the misc files
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.install
+TRACK                           While removing pkg-prefix.1: files finstalled.prefix were already removed
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.changes
+-> removed   pkg-prefix.1
+ACTION                          Cleaning up artefacts of pkg-prefix.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/remove/pkg-prefix.1
+ACTION                          Removing the local metadata
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/opam
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/finstalled
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/sources/pkg-prefix.1
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefix pkg-prefix
+==> pkg-prefix changes
+Not found: ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.changes
+==> No 'finstalled' file found
+### :XV:3: Non existing filename, with optional argument
+### <pkg:pkg-prefix.1>
+opam-version: "2.0"
+### <pkg:pkg-prefix.1:pkg-prefix.install>
+prefix: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-prefix | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== install 1 package
+  - install pkg-prefix 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: pkg-prefix.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/pkg-prefix.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finstalled
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+ACTION                          prepare_package_source: pkg-prefix.1 at ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/pkg-prefix.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finstalled
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-prefix.1.
+
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finst is not present and optional.
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-prefix.1: 0 items
+-> installed pkg-prefix.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/finstalled
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefix pkg-prefix
+==> pkg-prefix changes
+opam-version: "2.0"
+==> No 'finstalled' file found
+### OPAMDEBUG=-5 opam remove pkg-prefix | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-prefix 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          Removing pkg-prefix.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/remove/pkg-prefix.1
+ACTION                          Removing files from .install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/lib/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/lib/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/share/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/etc/pkg-prefix
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/doc/pkg-prefix
+ACTION                          Removing the misc files
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.changes
+-> removed   pkg-prefix.1
+ACTION                          Cleaning up artefacts of pkg-prefix.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/remove/pkg-prefix.1
+ACTION                          Removing the local metadata
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/opam
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/packages/pkg-prefix.1/files/finstalled
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/sources/pkg-prefix.1
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefix pkg-prefix
+==> pkg-prefix changes
+Not found: ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.changes
+==> No 'finstalled' file found
+### :XV:4: Non existing filename
+### <pkg:pkg-prefix.1>
+opam-version: "2.0"
+### <pkg:pkg-prefix.1:pkg-prefix.install>
+prefix: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-prefix | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== install 1 package
+  - install pkg-prefix 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: pkg-prefix.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/pkg-prefix.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finstalled
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+ACTION                          prepare_package_source: pkg-prefix.1 at ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/pkg-prefix.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/pkg-prefix.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefix/pkg-prefix.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finstalled
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-prefix.1.
+
+[ERROR] Installation of pkg-prefix.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-prefix/.opam-switch/build/pkg-prefix.1/finst to ${BASEDIR}/OPAM/sw-prefix
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-prefix 1
++- 
+- No changes have been performed
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefix/.opam-switch/backup/state-today.export
+# Return code 31 #
+### ocaml cat.ml sw-prefix pkg-prefix
+==> pkg-prefix changes
+Not found: ${BASEDIR}/OPAM/sw-prefix/.opam-switch/install/pkg-prefix.changes
+==> No 'finstalled' file found
+### ::::::::::::::::::::::::
+### :XVI: Field 'prefixexec'
+### ::::::::::::::::::::::::
+### <pkg:pkg-prefixexec.1:finstalled>
+youhou, i'm installed!
+### opam switch create sw-prefixexec --empty
+### :XVI:1: No defined destination path
+### <pkg:pkg-prefixexec.1>
+opam-version: "2.0"
+### <pkg:pkg-prefixexec.1:pkg-prefixexec.install>
+prefixexec: [ "finstalled" ]
+### OPAMDEBUG=-5 opam install pkg-prefixexec | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/backup
+The following actions will be performed:
+=== install 1 package
+  - install pkg-prefixexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: pkg-prefixexec.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+ACTION                          prepare_package_source: pkg-prefixexec.1 at ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finstalled
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/pkg-prefixexec.install
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-prefixexec.1.
+
+SYSTEM                          install ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finstalled -> ${BASEDIR}/OPAM/sw-prefixexec/finstalled (755)
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-prefixexec.1: 1 items (addition: 1)
+-> installed pkg-prefixexec.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/finstalled
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/pkg-prefixexec.install
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefixexec pkg-prefixexec
+==> pkg-prefixexec changes
+opam-version: "2.0"
+added: "finstalled" {"F:a611026bf7b99362c57473c4e1ef30a0"}
+==> ${BASEDIR}/OPAM/sw-prefixexec/finstalled (+x)
+### OPAMDEBUG=-5 opam remove pkg-prefixexec | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-prefixexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          Removing pkg-prefixexec.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/remove
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/remove/pkg-prefixexec.1
+ACTION                          Removing files from .install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/lib/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/lib/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/share/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/etc/pkg-prefixexec
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/finstalled
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/doc/pkg-prefixexec
+ACTION                          Removing the misc files
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.install
+TRACK                           While removing pkg-prefixexec.1: files finstalled were already removed
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.changes
+-> removed   pkg-prefixexec.1
+ACTION                          Cleaning up artefacts of pkg-prefixexec.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/remove/pkg-prefixexec.1
+ACTION                          Removing the local metadata
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/opam
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/finstalled
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/sources/pkg-prefixexec.1
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefixexec pkg-prefixexec
+==> pkg-prefixexec changes
+Not found: ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.changes
+==> No 'finstalled' file found
+### :XVI:2: Specify destination path
+### <pkg:pkg-prefixexec.1>
+opam-version: "2.0"
+### <pkg:pkg-prefixexec.1:pkg-prefixexec.install>
+prefixexec: [ "finstalled" {"finstalled.prefixexec"} ]
+### OPAMDEBUG=-5 opam install pkg-prefixexec | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== install 1 package
+  - install pkg-prefixexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: pkg-prefixexec.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finstalled
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/pkg-prefixexec.install
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+ACTION                          prepare_package_source: pkg-prefixexec.1 at ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/pkg-prefixexec.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finstalled
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-prefixexec.1.
+
+SYSTEM                          install ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finstalled -> ${BASEDIR}/OPAM/sw-prefixexec/finstalled.prefixexec (755)
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-prefixexec.1: 1 items (addition: 1)
+-> installed pkg-prefixexec.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/finstalled
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefixexec pkg-prefixexec
+==> pkg-prefixexec changes
+opam-version: "2.0"
+added: "finstalled.prefixexec" {"F:a611026bf7b99362c57473c4e1ef30a0"}
+==> ${BASEDIR}/OPAM/sw-prefixexec/finstalled.prefixexec (+x)
+### OPAMDEBUG=-5 opam remove pkg-prefixexec | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-prefixexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          Removing pkg-prefixexec.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/remove/pkg-prefixexec.1
+ACTION                          Removing files from .install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/lib/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/lib/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/share/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/etc/pkg-prefixexec
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/finstalled.prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/doc/pkg-prefixexec
+ACTION                          Removing the misc files
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.install
+TRACK                           While removing pkg-prefixexec.1: files finstalled.prefixexec were already removed
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.changes
+-> removed   pkg-prefixexec.1
+ACTION                          Cleaning up artefacts of pkg-prefixexec.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/remove/pkg-prefixexec.1
+ACTION                          Removing the local metadata
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/opam
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/finstalled
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/sources/pkg-prefixexec.1
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefixexec pkg-prefixexec
+==> pkg-prefixexec changes
+Not found: ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.changes
+==> No 'finstalled' file found
+### :XVI:3: Non existing filename, with optional argument
+### <pkg:pkg-prefixexec.1>
+opam-version: "2.0"
+### <pkg:pkg-prefixexec.1:pkg-prefixexec.install>
+prefixexec: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-prefixexec | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== install 1 package
+  - install pkg-prefixexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: pkg-prefixexec.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/pkg-prefixexec.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finstalled
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+ACTION                          prepare_package_source: pkg-prefixexec.1 at ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/pkg-prefixexec.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finstalled
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-prefixexec.1.
+
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finst is not present and optional.
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-prefixexec.1: 0 items
+-> installed pkg-prefixexec.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/finstalled
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefixexec pkg-prefixexec
+==> pkg-prefixexec changes
+opam-version: "2.0"
+==> No 'finstalled' file found
+### OPAMDEBUG=-5 opam remove pkg-prefixexec | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-prefixexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          Removing pkg-prefixexec.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/remove/pkg-prefixexec.1
+ACTION                          Removing files from .install
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/lib/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/lib/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/share/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/etc/pkg-prefixexec
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/doc/pkg-prefixexec
+ACTION                          Removing the misc files
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.changes
+-> removed   pkg-prefixexec.1
+ACTION                          Cleaning up artefacts of pkg-prefixexec.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/remove/pkg-prefixexec.1
+ACTION                          Removing the local metadata
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/cache
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/opam
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/packages/pkg-prefixexec.1/files/finstalled
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/sources/pkg-prefixexec.1
+Done.
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/backup/state-today.export
+### ocaml cat.ml sw-prefixexec pkg-prefixexec
+==> pkg-prefixexec changes
+Not found: ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.changes
+==> No 'finstalled' file found
+### :XVI:4: Non existing filename
+### <pkg:pkg-prefixexec.1>
+opam-version: "2.0"
+### <pkg:pkg-prefixexec.1:pkg-prefixexec.install>
+prefixexec: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-prefixexec | grep -v LOCK
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+The following actions will be performed:
+=== install 1 package
+  - install pkg-prefixexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+ACTION                          download_package: pkg-prefixexec.1
+SYSTEM                          rmdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/pkg-prefixexec.install
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finstalled
+SYSTEM                          mkdir ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+ACTION                          prepare_package_source: pkg-prefixexec.1 at ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/pkg-prefixexec.install
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/pkg-prefixexec.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/pkg-prefixexec/pkg-prefixexec.1/files/finstalled
+SYSTEM                          write ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finstalled
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-prefixexec.1.
+
+[ERROR] Installation of pkg-prefixexec.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/build/pkg-prefixexec.1/finst to ${BASEDIR}/OPAM/sw-prefixexec
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-prefixexec 1
++- 
+- No changes have been performed
+SYSTEM                          rm ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/backup/state-today.export
+# Return code 31 #
+### ocaml cat.ml sw-prefixexec pkg-prefixexec
+==> pkg-prefixexec changes
+Not found: ${BASEDIR}/OPAM/sw-prefixexec/.opam-switch/install/pkg-prefixexec.changes
 ==> No 'finstalled' file found
