@@ -255,6 +255,7 @@ users)
   * `OpamRepositoryCommand.update_with_auto_upgrade`, `OpamUpdate.repository`: no longer call an external process to create an archive [#6945 @kit-ty-kate]
   * `OpamTar`: add `patch` function to patch files in an tar gz archive [#6625 @rjbou]
   * `OpamTar.create`: add `?flat` argument to do not integrate the target root directory in the archive [#6625 @rjbou]
+  * `OpamTar.create`: add `?except_vcs` argument exclude VCS files from archive creation [#6625 @rjbou]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]

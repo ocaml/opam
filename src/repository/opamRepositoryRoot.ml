@@ -55,7 +55,7 @@ module Dir = struct
     end)
 end
 
-let make_tar_gz = OpamTar.create ~flat:false
+let make_tar_gz = OpamTar.create ~flat:false ~except_vcs:false
 let extract_in_job = OpamFilename.extract_in_job
 
 type t =
