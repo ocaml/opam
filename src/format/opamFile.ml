@@ -3874,7 +3874,7 @@ module Dot_installSyntax = struct
                 ~raise:raise_with_file
                 ~errmsg:"tries to overwrite opam internal files."
              (fun s -> not
-               (List.mem OpamPathName.opamswitch_d
+               (OpamStd.List.mem String.equal OpamPathName.opamswitch_d
                  (OpamFilename.split ~sep:`Unspecified s)))
           -| Pp.of_module "file" (module OpamFilename.Base))
     in
