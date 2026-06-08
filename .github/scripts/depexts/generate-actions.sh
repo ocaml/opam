@@ -120,7 +120,7 @@ EOF
   cat > "$dir/Dockerfile" << EOF
 FROM ubuntu
 RUN apt update
-RUN apt install -y $mainlibs $ocaml
+RUN apt install -y $mainlibs ocaml
 RUN apt install -y g++
 EOF
     ;;
