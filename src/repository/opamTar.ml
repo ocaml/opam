@@ -76,24 +76,24 @@ let fold_reg_files_aux f acc fd =
   in
   run fd (Tar_gz.in_gzipped (Tar.fold go acc))
 
-let fold_reg_files f acc fname =
-  let fd = Unix.openfile (OpamFilename.to_string fname) [Unix.O_RDONLY] 0 in
+let fold_reg_files f acc archive =
+  let fd = Unix.openfile (OpamFilename.to_string archive) [Unix.O_RDONLY] 0 in
   Fun.protect ~finally:(fun () -> Unix.close fd) @@ fun () ->
   fold_reg_files_aux f acc fd
 
 module Inplace = struct
   module Map = OpamFilename.Unix.Map
   type t = {
-    filename: filename;
+    archive: archive;
     fd : Unix.file_descr;
     content : archived_file_content Map.t;
   }
 
-  let with_open_out fname f =
-    let fd = Unix.openfile (OpamFilename.to_string fname) [Unix.O_RDWR] 0o640 in
+  let with_open_out archive f =
+    let fd = Unix.openfile (OpamFilename.to_string archive) [Unix.O_RDWR] 0o640 in
     Fun.protect ~finally:(fun () -> Unix.close fd) @@ fun () ->
     f {
-      filename = fname;
+      archive = archive;
       fd;
       content = fold_reg_files_aux (fun acc k x -> Map.add k x acc) Map.empty fd
     }
@@ -128,7 +128,7 @@ module Inplace = struct
     { t with content }
 
   let write (t:t) =
-    let to_buffer (buf:Buffer.t) t =
+    let to_buffer (buf:Buffer.t) tar =
       let rec run : type a. Buffer.t -> (a, 'err, _) Tar.t -> a = fun buf -> function
         | Tar.Write str ->
           Buffer.add_string buf str
@@ -141,7 +141,7 @@ module Inplace = struct
         | Tar.Bind (x, f) ->
           run buf (f (run buf x))
       in
-      run buf t
+      run buf tar
     in
     let entries =
       let dispenser =
@@ -172,7 +172,7 @@ module Inplace = struct
     let str = Buffer.contents buf in
     let _ : int = Unix.lseek t.fd 0 Unix.SEEK_SET in
     Unix.ftruncate t.fd 0;
-    log ~level:3 "Writing archive %s" (OpamFilename.to_string t.filename);
+    log ~level:3 "Writing archive %s" (OpamFilename.to_string t.archive);
     let _ : int = Unix.write_substring t.fd str 0 (String.length str) in
     ()
 
@@ -195,4 +195,4 @@ let create tar dir =
         Inplace.Map.add k (OpamFilename.read f) map)
       Inplace.Map.empty files
   in
-  Inplace.write { filename = tar; fd; content }
+  Inplace.write { archive = tar; fd; content }
