@@ -834,4 +834,31 @@ module Unix = struct
     else
       OpamStd.String.remove_prefix ~prefix:(concat prefix "") filename
 
+
+  let to_relative_canonical_list filename =
+      match String.split_on_char '/' filename with
+      | [] -> assert false
+      | ""::_::_ -> invalid_arg "not relative"
+      | [""] -> invalid_arg "current directory"
+      | file ->
+        if List.hd (List.rev file) = "" then
+          invalid_arg "current directory"
+        else
+          let lst =
+            List.filter (fun seg ->
+                if seg = ".." then
+                  invalid_arg "'..' is forbidden"
+                else
+                  seg <> "" && not (String.equal current_dir_name seg))
+              file
+          in
+          match lst with
+          | [] -> invalid_arg "current directory"
+          | _ -> lst
+
+  let to_relative_canonical filename =
+    try Ok (String.concat dir_sep
+              (to_relative_canonical_list filename))
+    with Invalid_argument msg -> Error msg
+
 end

@@ -439,4 +439,10 @@ module Unix : sig
   (** Return the directory name *)
   val dirname: t -> Dir.t
 
+  (* [to_relative_canonical ~dir_sep filename] return [Ok canonical] where
+     [canonical] is the canonical form of [filename], using [dir_sep] as
+     separator.  If [filename] contains '..', is not relative, or resolve to a
+     '.', it error with [Error err] *)
+  val to_relative_canonical: t -> (t, string) result
+
 end
