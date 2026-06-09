@@ -10,7 +10,11 @@
 (**************************************************************************)
 
 (** Tar gz archives manipulation *)
-(* The current implementation handles only files not directories *)
+(* The current implementation handles only files not directories.
+   When opening an archive, filenames are checked (no absolute, no parent
+   dirname, no empty or resolve to current directory, cf.
+   {!OpamFilename.Unix.to_relative_canonical}) and used filenames in fold
+   functions are canonical ones. *)
 
 open OpamTypes
 

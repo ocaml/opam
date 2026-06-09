@@ -64,6 +64,16 @@ let run archive =
   in run
 
 let fold_reg_files_aux archive f acc fd =
+  let f acc filename content =
+    let filename =
+      match OpamFilename.Unix.to_relative_canonical filename with
+      | Ok filename -> filename
+      | Error err ->
+        raise_error archive "Path '%s' not allowed: %s"
+                    (OpamFilename.Unix.to_string filename) err
+    in
+    f acc filename content
+  in
   let go ?global:_ hdr acc =
     match hdr.Tar.Header.link_indicator with
     | Normal ->
