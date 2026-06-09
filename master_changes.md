@@ -323,4 +323,5 @@ users)
   * `OpamFilename.Unix`: add `basename` and `dirname` [#6625 @rjbou]
   * `OpamFilename.Unix`: add `basename`, `dirname` and `remove_prefix` [#6625 @rjbou]
   * `OpamFilename.Unix`: add `basename`, `dirname`, `remove_prefix` and `add_extension` [#6625 @rjbou]
+  * `OpamFilename.Unix`: add `basename`, `dirname`, `remove_prefix`, `add_extension`, `check_canonical` [#6625 @rjbou]
   * `OpamFilename.Unix.Dir`: add `basename` and `dirname` [#6625 @rjbou]
