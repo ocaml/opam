@@ -410,6 +410,8 @@ module Unix : sig
         Translates filesystem dir sep to slashes '/'. *)
     val of_dir : Dir.t -> t
 
+    (** Convert raw dirname to a [dirname].
+        Translates slashes '/' to filesystem dir sep. *)
     val to_dir : t -> Dir.t
 
     val dirname : t -> t
@@ -425,6 +427,8 @@ module Unix : sig
       Translates filesystem dir sep to slashes '/'. *)
   val of_filename : filename -> t
 
+  (** Convert raw filename to a [filename].
+      Translates slashes '/' to filesystem dir sep. *)
   val to_filename : t -> filename
 
   (** Check whether a filename starts by a given Dir.t *)

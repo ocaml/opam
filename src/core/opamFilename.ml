@@ -809,7 +809,7 @@ module Unix = struct
     include Internal
 
     let of_dir = OpamSystem.back_to_forward
-    let to_dir = Fun.id
+    let to_dir = OpamSystem.forward_to_back
     let dirname = dirname
     let basename = basename
   end
@@ -821,7 +821,10 @@ module Unix = struct
   end
 
   let of_filename x = OpamSystem.back_to_forward (concat x.dirname x.basename)
-  let to_filename x = {dirname = dirname x; basename = basename x}
+  let to_filename x = {
+    dirname = OpamSystem.forward_to_back (dirname x);
+    basename = basename x;
+  }
 
   let starts_with prefix filename =
     if prefix = (filename : string) then true
