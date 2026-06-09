@@ -848,4 +848,37 @@ module Unix = struct
   let add_extension filename suffix =
     filename ^ "." ^ suffix
 
+  let check_canonical filename =
+    let check_parent_dir_and_remove_trailing_slashes elems =
+    (* .. at any place : fail *)
+      if List.exists (String.equal "..") elems then Error "contains '..'" else
+        match elems with
+        | [] -> assert false
+        | [x] -> Ok x
+        | elems ->
+          let end_trailing_slash =
+            match List.rev elems with
+            | ""::_ -> true
+            | _ -> false
+          in
+          (* remove trailing slashes *)
+          let elems = List.filter (Fun.negate @@ String.equal "") elems in
+          match elems with
+          | [] -> Error "results in an empty path"
+          | elems ->
+            let core = String.concat dir_sep elems in
+            let res =
+              if end_trailing_slash then core ^ dir_sep else core
+            in
+            Ok res
+    in
+    match String.split_on_char dir_sep.[0] filename with
+    | [] -> assert false
+    (* ^/ : fail *)
+    | ""::_ -> Error "begins with '/'"
+    (* ^./ : delete the ./ *)
+    | "."::elements -> check_parent_dir_and_remove_trailing_slashes elements
+    | [_] -> Ok filename
+    | elements -> check_parent_dir_and_remove_trailing_slashes elements
+
 end

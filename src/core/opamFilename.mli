@@ -442,4 +442,7 @@ module Unix : sig
   (** Adds a dot and the given file extension *)
   val add_extension: t -> string -> t
 
+ (** Return [Error err] if path is absolute or contains '..'
+     Return [Ok filename] where trailing '/' are removed and './' at the beginning *)
+  val check_canonical: t -> (t, string) result
 end
