@@ -325,3 +325,4 @@ users)
   * `OpamFilename.Unix`: add `basename`, `dirname`, `remove_prefix` and `add_extension` [#6625 @rjbou]
   * `OpamFilename.Unix`: add `basename`, `dirname`, `remove_prefix`, `add_extension`, `check_canonical` [#6625 @rjbou]
   * `OpamFilename.Unix.Dir`: add `basename` and `dirname` [#6625 @rjbou]
+  * `OpamFilename.Unix.{to_dir,to_filename}`: now translate `/` into filesystem directory separator [#6625 @rjbou]
