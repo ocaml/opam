@@ -196,6 +196,7 @@ users)
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
+  * Add to automatic path subsitutions lines that contains `packages` [#6625 @rjbou]
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
