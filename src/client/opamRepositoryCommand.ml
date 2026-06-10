@@ -104,8 +104,7 @@ let remove rt name =
     update_repos_config rt (OpamRepositoryName.Map.remove name rt.repositories)
   in
   OpamRepositoryState.Cache.save rt;
-  OpamRepositoryRoot.Dir.remove
-    (OpamRepositoryRoot.Dir.Path.root rt.repos_global.root name);
+  OpamRepositoryRoot.remove_both rt.repos_global.root name;
   rt
 
 let set_url rt name url trust_anchors =
