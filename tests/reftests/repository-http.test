@@ -18,11 +18,22 @@ opam-version:"2.0"
 opam-version:"2.0"
 ### <packages/empat/empat.4/opam>
 opam-version:"2.0"
+### # We need this script to remove automatically embed timestamp in repo file
+### # by 'opam admin index'
+### <remove-timestamp.sh>
+set -eu
+cat > repo << EOF
+opam-version:"2.0"
+EOF
+gzip -d index.tar.gz
+tar rf index.tar repo
+gzip index.tar
 ### : Creation of the archive to serve
 ### opam admin index
 Generating urls.txt...
 Generating index.tar.gz...
 Done.
+### sh remove-timestamp.sh
 ### : Clean the already default repository
 ### opam repo remove --all default
 ### opam repo --all | grep -v '^#'
@@ -64,6 +75,7 @@ opam-version:"2.0"
 Generating urls.txt...
 Generating index.tar.gz...
 Done.
+### sh remove-timestamp.sh
 ### OPAMDEBUGSECTIONS="RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
 ### opam update http-repo | sed-cmd tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -101,6 +113,7 @@ tujuh  --
 Generating urls.txt...
 Generating index.tar.gz...
 Done.
+### sh remove-timestamp.sh
 ### OPAMDEBUGSECTIONS="RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
 ### opam update http-repo | sed-cmd tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -140,6 +153,7 @@ synopsis: "A tautological synopsis."
 Generating urls.txt...
 Generating index.tar.gz...
 Done.
+### sh remove-timestamp.sh
 ### OPAMDEBUGSECTIONS="RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
 ### opam update http-repo | sed-cmd tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
