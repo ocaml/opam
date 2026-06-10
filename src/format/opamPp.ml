@@ -49,13 +49,25 @@ let rec string_of_bad_format ?file e =
   | Bad_format (None, msg), Some filename
   | Bad_version ((Some {filename; start = -1, -1 ; stop = -1,-1 }, msg), _), _
   | Bad_format (Some {filename; start = -1, -1 ; stop = -1,-1 }, msg), _ ->
-    (* TODO: this should probably be done earlier but where *)
-    let filename = OpamSystem.back_to_forward filename in
+    (* TAR TODO: this should probably be done earlier but where
+       rjbou: this shouldn't be done earlier. Prior to these changes, it was
+       the full path that was printed, which we no longer do. So filename is
+       only the relative path from repo root when it is a repo file, and we
+       print it. In the reftests, these paths was harmonised by the sed
+       mechanism because it constained $BASEDIR, which is no longer the case ;
+       on normal use it is the windows path that was printed.
+       So the solution is either:
+         * choose to print only the unix form of the path, which is not good
+           because of plain paths (pin for ex) that shouldn't be changed in
+           their printing
+         * have theses paths pass through the sed mechanism
+         * the good fix is change the 'pos' type to have either a full path of
+           a partial one with prefix information
+         *)
     Printf.sprintf "In %s:\n%s" filename msg
   | Bad_version ((Some pos, msg), _), _
   | Bad_format (Some pos, msg), _ ->
-    (* TODO: this should probably be done earlier but where *)
-    let pos = {pos with filename = OpamSystem.back_to_forward pos.filename} in
+    (* TAR TODO: cf earlier *)
     Printf.sprintf "At %s:\n%s" (string_of_pos pos) msg
   | Bad_version ((None, msg), _), None
   | Bad_format (None, msg), None ->
