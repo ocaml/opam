@@ -75,7 +75,7 @@ users)
 ## Opamfile
   * The `url` file now only supports the legacy opam 1.2 fields [#6827 @kit-ty-kate]
   * Filter fields in .install files containing destinations with `..` or absolute filepaths as parse errors [#6897 @kit-ty-kate]
-  * Add `prefix` and `prefixexec` sections to .install files [#6919 @WardBrian]
+  * Add `root` and `root` sections to .install files [#6919 @WardBrian]
 
 ## External dependencies
   * Restore the distribution detection on Gentoo [#6886 @kit-ty-kate - fix #6887]

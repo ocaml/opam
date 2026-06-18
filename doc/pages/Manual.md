@@ -1399,9 +1399,9 @@ allowed.
   installs to `<prefix>/doc/<pkgname>/`
 - <a id="installfield-stublibs">`stublibs:`</a>
   installs to `<prefix>/lib/stublibs/`, with the `exec` bit set
-- <a id="installfield-prefix">`prefix:`</a>
+- <a id="installfield-root">`root:`</a>
   installs to `<prefix>/` (since opam 2.6.0)
-- <a id="installfield-prefixexec">`prefixexec:`</a>
+- <a id="installfield-rootexec">`rootexec:`</a>
   installs to `<prefix>/`, but the `exec` bit is set (since
   opam 2.6.0)
 

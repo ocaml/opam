@@ -148,7 +148,7 @@ module I = OpamFile.InitConfig
 
 let (@|) g f = OpamStd.Op.(g @* f) ()
 
-let init_config ?(sandboxing=true) () =
+let init_config ?(sandboxing=false) () =
   I.empty |>
   I.with_repositories
     [OpamRepositoryName.of_string "default", (repository_url, None)] |>

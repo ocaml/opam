@@ -3723,8 +3723,8 @@ module Dot_installSyntax = struct
   let format_version = OpamVersion.of_string "2.0"
 
   type t =  {
-    prefix  : (basename optional * basename option) list;
-    prefixexec  : (basename optional * basename option) list;
+    root    : (basename optional * basename option) list;
+    rootexec  : (basename optional * basename option) list;
     bin     : (basename optional * basename option) list;
     sbin    : (basename optional * basename option) list;
     lib     : (basename optional * basename option) list;
@@ -3742,8 +3742,8 @@ module Dot_installSyntax = struct
   }
 
   let empty = {
-    prefix   = [];
-    prefixexec = [];
+    root     = [];
+    rootexec = [];
     lib      = [];
     bin      = [];
     sbin     = [];
@@ -3760,8 +3760,8 @@ module Dot_installSyntax = struct
     doc      = [];
   }
 
-  let prefix t = t.prefix
-  let prefixexec t = t.prefixexec
+  let root t = t.root
+  let rootexec t = t.rootexec
   let bin t = t.bin
   let sbin t = t.sbin
   let lib t = t.lib
@@ -3777,8 +3777,8 @@ module Dot_installSyntax = struct
   let lib_root t = t.lib_root
   let libexec_root t = t.libexec_root
 
-  let with_prefix prefix t = { t with prefix }
-  let with_prefixexec prefixexec t = { t with prefixexec }
+  let with_root root t = { t with root }
+  let with_rootexec rootexec t = { t with rootexec }
   let with_bin bin t = { t with bin }
   let with_sbin sbin t = { t with sbin }
   let with_lib lib t = { t with lib }
@@ -3863,7 +3863,7 @@ module Dot_installSyntax = struct
            -| pp_check_not_absolute
            -| Pp.of_module "file" (module OpamFilename.Base))
     in
-    let pp_prefix =
+    let pp_root =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
         (Pp.opt @@
@@ -3889,8 +3889,8 @@ module Dot_installSyntax = struct
         -| Pp.of_module "abs-filename" (module OpamFilename))
     in
     [
-      "prefix", Pp.ppacc with_prefix prefix pp_prefix;
-      "prefixexec", Pp.ppacc with_prefixexec prefixexec pp_prefix;
+      "root", Pp.ppacc with_root root pp_root;
+      "rootexec", Pp.ppacc with_rootexec rootexec pp_root;
       "lib", Pp.ppacc with_lib lib pp_field;
       "bin", Pp.ppacc with_bin bin pp_field;
       "sbin", Pp.ppacc with_sbin sbin pp_field;
