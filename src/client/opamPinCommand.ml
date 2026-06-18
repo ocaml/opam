@@ -560,7 +560,7 @@ and source_pin
          using the one found locally.";
       Some local
     | Some local, Some vers when
-        not OpamFile.(OPAM.effectively_equal
+        not OpamFile.(OPAM.effectively_equal (Some nv)
                         (OPAM.with_url URL.empty local)
                         (OPAM.with_url URL.empty vers)) ->
       OpamConsole.warning
