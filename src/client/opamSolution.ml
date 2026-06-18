@@ -1516,7 +1516,7 @@ let apply ?ask t ~requested ?print_requested ?add_roots
           ~requested ?add_roots ~assume_built ~download_only ?force_remove
           action_graph
       in
-      let success = match r with | OK _ -> true | _ -> false in
+      let success = match r with | OK _ -> true | Nothing_to_do | Aborted | Partial_error _ -> false in
       let post_session =
         let open OpamPackage.Set.Op in
         let local = [
