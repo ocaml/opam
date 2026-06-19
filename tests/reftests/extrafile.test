@@ -618,11 +618,6 @@ Clearing cache of downloaded files
              error 53: Mismatching 'extra-files:' field: "../../../no-checksum/no-checksum.1/files/p.patch"
              error 73: Field 'extra-files' contains path with '..': "../../../no-checksum/no-checksum.1/files/p.patch"
 # Return code 1 #
-### # ERROR it copies it to build dir ^ relative path -> escape!!!!
-### # currently writing in /tmp as a common it copies in
-### # /tmp/build_d2b6ce_dune/opam-reftest-8f9413/escape-good-md5.1/../../../no-checksum/no-checksum.1/files
-### # This is needed for test portability, windows doesn't check path before resolving it
-### mkdir ${BASEDIR}/OPAM/repo/default/packages/escape-good-md5/escape-good-md5.1/files
 ### opam install escape-good-md5
 The following actions will be performed:
 === install 1 package
