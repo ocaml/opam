@@ -38,7 +38,7 @@ Done.
 ### opam repo remove --all default
 ### opam repo --all | grep -v '^#'
 ### :I: First checkout: we add the repository and fetch/load it for the first time friom the http server and check that they are available in opam
-### OPAMDEBUGSECTIONS="RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
+### OPAMDEBUGSECTIONS="TAR RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
 ### opam repo add http-repo http://localhost:$HTTPSERVERPORT --set-default | sed-cmd tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -75,7 +75,7 @@ Generating urls.txt...
 Generating index.tar.gz...
 Done.
 ### sh remove-timestamp.sh
-### OPAMDEBUGSECTIONS="RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
+### OPAMDEBUGSECTIONS="TAR RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
 ### opam update http-repo | sed-cmd tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -89,6 +89,7 @@ REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{http-repo.tar.gz,htt
 REPO_BACKEND                    Internal diff (non-empty, 3 changed files) done in 0.00s.
 [http-repo] synchronised from http://localhost:port
 REPOSITORY                      http-repo: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/http-repo.tar.gz
 UPDATE                          Repository has new changes
 Processing: [http-repo: loading data]
 Now run 'opam upgrade' to apply any package updates.
@@ -112,7 +113,7 @@ Generating urls.txt...
 Generating index.tar.gz...
 Done.
 ### sh remove-timestamp.sh
-### OPAMDEBUGSECTIONS="RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
+### OPAMDEBUGSECTIONS="TAR RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
 ### opam update http-repo | sed-cmd tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -126,6 +127,7 @@ REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{http-repo.tar.gz,htt
 REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [http-repo] synchronised from http://localhost:port
 REPOSITORY                      http-repo: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/http-repo.tar.gz
 UPDATE                          Repository has new changes
 Processing: [http-repo: loading data]
 Now run 'opam upgrade' to apply any package updates.
@@ -150,7 +152,7 @@ Generating urls.txt...
 Generating index.tar.gz...
 Done.
 ### sh remove-timestamp.sh
-### OPAMDEBUGSECTIONS="RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
+### OPAMDEBUGSECTIONS="TAR RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
 ### opam update http-repo | sed-cmd tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -164,6 +166,7 @@ REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{http-repo.tar.gz,htt
 REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done in 0.00s.
 [http-repo] synchronised from http://localhost:port
 REPOSITORY                      http-repo: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/http-repo.tar.gz
 UPDATE                          Repository has new changes
 Processing: [http-repo: loading data]
 ### unset OPAMDEBUGSECTIONS
@@ -225,7 +228,7 @@ OPAM/repo/state-magicv.cache
 ### mkdir OPAM/repo/http-repo
 ### tar xf OPAM/repo/http-repo.tar.gz -C OPAM/repo/http-repo
 ### rm OPAM/repo/http-repo.tar.gz
-### OPAMDEBUGSECTIONS="RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
+### OPAMDEBUGSECTIONS="TAR RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
 ### opam update | sed-cmd curl tar | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | "${HTTPSERVERPORT}" -> "port"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
@@ -233,6 +236,8 @@ RSTATE                          Cache found
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 UPDATE                          repository format change: from directory to archive (${BASEDIR}/OPAM/repo/http-repo.tar.gz)
+TAR                             creating archive ${BASEDIR}/OPAM/repo/http-repo.tar.gz from ${BASEDIR}/OPAM/repo/http-repo
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/http-repo.tar.gz
 REPOSITORY                      update http-repo from http://localhost:port
 Processing  1/1: [http-repo: http]
 curl-or-wget -- "http://localhost:port/index.tar.gz"
@@ -240,6 +245,7 @@ REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{http-repo.tar.gz,htt
 REPO_BACKEND                    Internal diff (non-empty, 4 changed files) done in 0.00s.
 [http-repo] synchronised from http://localhost:port
 REPOSITORY                      http-repo: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/http-repo.tar.gz
 UPDATE                          Repository has new changes
 Processing: [http-repo: loading data]
 Now run 'opam upgrade' to apply any package updates.

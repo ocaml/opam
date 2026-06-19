@@ -966,3 +966,577 @@ Now run 'opam upgrade' to apply any package updates.
 +++ test-git.new/packages/test/test.4/opam
 @@ -0,0 +1,1 @@
 +opam-version: "2.0"
+### : repository format change
+### : we test here only local dir or tarred to & from vcs. Simple local to and
+### :   from tar is already tested at the beginning of the file
+### : should the test force tarred/dir/git by directly writing it internally
+### :   or should it keep using opam to setup the state ?
+### : ===> it should be done via internal change, it is unreachable states via opam
+### opam repository remove oper oper3 test-git to-many-commits --all
+### <CHG/repo>
+opam-version: "2.0"
+### <CHG/packages/yan/yan.1/opam>
+opam-version: "2.0"
+### <CHG/packages/yan/yan.1/files/nay>
+un
+### sh hash.sh CHG yan.1
+### opam switch create format-change --empty
+### OPAMREPOSITORYTARRING=1
+### OPAMDEBUGSECTIONS="TAR RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
+### opam repository add changes ./CHG --this-switch
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+REPOSITORY                      repository-add
+REPOSITORY                      update changes from file://${BASEDIR}/CHG
+TAR                             creating archive ${BASEDIR}/OPAM/repo/changes.tar.gz.new from ${BASEDIR}/CHG
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/changes.tar.gz.new
+REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.tar.gz.new
+[changes] Initialised
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+### test -d OPAM/repo/changes
+# Return code 1 #
+### test -d OPAM/repo/changes/.git
+# Return code 1 #
+### test -f OPAM/repo/changes.tar.gz
+### cp OPAM/repo/changes.tar.gz changes.tar.gz
+### :: local tarred - git * no changes
+### git -C ./CHG init -q
+### git -C ./CHG config core.autocrlf false
+### git -C ./CHG add repo packages
+### git -C ./CHG commit -qm "yan"
+### test -f OPAM/repo/changes.tar.gz
+### opam repository set-url changes git+file://${BASEDIR}/CHG | sed-cmd git | grep -v "HEAD is now"
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+REPOSITORY                      repository-set-url
+REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
+Processing  1/1: [changes: git]
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
+- Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "add" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "clean" "-fdx"
+REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
+[changes] Initialised
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+### test -d OPAM/repo/changes
+### test -d OPAM/repo/changes/.git
+### test -f OPAM/repo/changes.tar.gz
+# Return code 1 #
+### opam install yan
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+The following actions will be performed:
+=== install 1 package
+  - install yan 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed yan.1
+Done.
+### :: local tarred - git * changes
+### OPAMREPOSITORYTARRING=1
+### cp changes.tar.gz OPAM/repo/changes.tar.gz
+### rm -r OPAM/repo/changes
+### <CHG/packages/sin/sin.2/opam>
+opam-version: "2.0"
+### <CHG/packages/sin/sin.2/files/nis>
+deux
+### sh hash.sh CHG sin.2
+### git -C ./CHG add packages
+### git -C ./CHG commit -qm "sin"
+### opam update | sed-cmd git tar | grep -v "HEAD is now"
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+UPDATE                          repository format change: from archive to directory (${BASEDIR}/OPAM/repo/changes)
+Processing  1/1:
++ tar "xfz" "${BASEDIR}/OPAM/repo/changes.tar.gz" "-C" "${BASEDIR}/OPAM/repo/changes"
+REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
+Processing  1/1: [changes: git]
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
+- Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "add" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "clean" "-fdx"
+REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
+[changes] Initialised
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+Now run 'opam upgrade' to apply any package updates.
+### test -d OPAM/repo/changes
+### opam install sin
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+The following actions will be performed:
+=== install 1 package
+  - install sin 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed sin.2
+Done.
+### :: git - local tarred * no changes
+### OPAMREPOSITORYTARRING=1
+### cp -R OPAM/repo/changes changes
+### rm -rf CHG/.git
+### opam repository set-url changes file://${BASEDIR}/CHG
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+REPOSITORY                      repository-set-url
+REPOSITORY                      update changes from file://${BASEDIR}/CHG
+TAR                             creating archive ${BASEDIR}/OPAM/repo/changes.tar.gz.new from ${BASEDIR}/CHG
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/changes.tar.gz.new
+REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.tar.gz.new
+[changes] Initialised
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+### test -f OPAM/repo/changes.tar.gz
+### opam reinstall sin
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+The following actions will be performed:
+=== recompile 1 package
+  - recompile sin 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   sin.2
+-> installed sin.2
+Done.
+### :: git - local tarred * changes
+### OPAMREPOSITORYTARRING=1
+### <CHG/packages/krad/krad.3/opam>
+opam-version: "2.0"
+### <CHG/packages/krad/krad.3/files/dark>
+trois
+### sh hash.sh CHG krad.3
+### rm OPAM/repo/changes.tar.gz
+### mv changes OPAM/repo/changes
+### opam update
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+UPDATE                          repository format change: from directory to archive (${BASEDIR}/OPAM/repo/changes.tar.gz)
+TAR                             creating archive ${BASEDIR}/OPAM/repo/changes.tar.gz from ${BASEDIR}/OPAM/repo/changes
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/changes.tar.gz
+REPOSITORY                      update changes from file://${BASEDIR}/CHG
+TAR                             creating archive ${BASEDIR}/OPAM/repo/changes.tar.gz.new from ${BASEDIR}/CHG
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/changes.tar.gz.new
+REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{changes.tar.gz,changes.tar.gz.new}
+REPO_BACKEND                    Internal diff (non-empty, 2 changed files) done in 0.00s.
+[changes] synchronised from file://${BASEDIR}/CHG
+REPOSITORY                      changes: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/changes.tar.gz
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+Now run 'opam upgrade' to apply any package updates.
+### test -d OPAM/repo/changes
+# Return code 1 #
+### test -d OPAM/repo/changes/.git
+# Return code 1 #
+### test -f OPAM/repo/changes.tar.gz
+### opam install krad
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+The following actions will be performed:
+=== install 1 package
+  - install krad 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed krad.3
+Done.
+### :: local dir - git * no changes
+### OPAMREPOSITORYTARRING=0
+### mkdir OPAM/repo/changes
+### tar xf OPAM/repo/changes.tar.gz -C OPAM/repo/changes
+### rm OPAM/repo/changes.tar.gz
+### git -C ./CHG init -q
+### git -C ./CHG config core.autocrlf false
+### git -C ./CHG add repo packages
+### git -C ./CHG commit -qm "krad"
+### opam repository set-url changes git+file://${BASEDIR}/CHG | sed-cmd git | grep -v "HEAD is now"
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+REPOSITORY                      repository-set-url
+REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
+Processing  1/1: [changes: git]
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
+- Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "add" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "clean" "-fdx"
+REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
+[changes] Initialised
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+### test -d OPAM/repo/changes
+### test -d OPAM/repo/changes/.git
+### test -f OPAM/repo/changes.tar.gz
+# Return code 1 #
+### opam reinstall krad
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+The following actions will be performed:
+=== recompile 1 package
+  - recompile krad 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   krad.3
+-> installed krad.3
+Done.
+### :: local dir - git * changes
+### OPAMREPOSITORYTARRING=0
+### <CHG/packages/okkoz/okkoz.4/opam>
+opam-version: "2.0"
+### <CHG/packages/okkoz/okkoz.4/files/okkoz>
+quatre
+### sh hash.sh CHG okkoz.4
+### git -C ./CHG add packages
+### git -C ./CHG commit -qm "okkoz"
+### rm -r OPAM/repo/changes/.git
+### opam update | sed-cmd git | grep -v "HEAD is now"
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
+Processing  1/1: [changes: git]
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
+- Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "add" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "clean" "-fdx"
+REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
+[changes] Initialised
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+Now run 'opam upgrade' to apply any package updates.
+### test -d OPAM/repo/changes
+### test -d OPAM/repo/changes/.git
+### test -f OPAM/repo/changes.tar.gz
+# Return code 1 #
+### opam install okkoz
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+The following actions will be performed:
+=== install 1 package
+  - install okkoz 4
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed okkoz.4
+Done.
+### :: git - local dir * no changes
+### OPAMREPOSITORYTARRING=0
+### cp -R OPAM/repo/changes changes
+### rm -rf CHG/.git
+### opam repository set-url changes file://${BASEDIR}/CHG
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+REPOSITORY                      repository-set-url
+REPOSITORY                      update changes from file://${BASEDIR}/CHG
+REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
+[changes] Initialised
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+### test -d OPAM/repo/changes
+### test -d OPAM/repo/changes/.git
+# Return code 1 #
+### test -f OPAM/repo/changes.tar.gz
+# Return code 1 #
+### opam reinstall okkoz
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+The following actions will be performed:
+=== recompile 1 package
+  - recompile okkoz 4
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   okkoz.4
+-> installed okkoz.4
+Done.
+### :: git - local dir * changes
+### OPAMREPOSITORYTARRING=0
+### <CHG/packages/semmus/semmus.5/opam>
+opam-version: "2.0"
+### <CHG/packages/semmus/semmus.5/files/summes>
+cinq
+### sh hash.sh CHG semmus.5
+### rm -r OPAM/repo/changes
+### mv changes OPAM/repo/
+### opam update
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+REPOSITORY                      update changes from file://${BASEDIR}/CHG
+REPO_BACKEND                    diff: ${BASEDIR}/OPAM/repo/{changes,changes.new}
+REPO_BACKEND                    Internal diff (non-empty, 2 changed files) done in 0.00s.
+[changes] synchronised from file://${BASEDIR}/CHG
+REPOSITORY                      changes: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+Now run 'opam upgrade' to apply any package updates.
+### test -d OPAM/repo/changes
+### test -d OPAM/repo/changes/.git
+### test -f OPAM/repo/changes.tar.gz
+# Return code 1 #
+### opam install semmus
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+The following actions will be performed:
+=== install 1 package
+  - install semmus 5
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed semmus.5
+Done.
+### :: both exists - no tarring
+### opam-cat OPAM/repo/repos-config
+opam-version: "2.0"
+repositories: "changes" {"file://${BASEDIR}/CHG"}
+### sh -c "test -d CHG/.git && rm -r CHG/.git || true"
+### OPAMREPOSITORYTARRING=0
+### cp changes.tar.gz OPAM/repo/changes.tar.gz
+### <CHG/packages/semmus/semmus.5/opam>
+opam-version: "2.0"
+build: true
+### opam update
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+UPDATE                          repository exists as directory and archive, removing both
+REPOSITORY                      update changes from file://${BASEDIR}/CHG
+REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
+[changes] Initialised
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+Now run 'opam upgrade' to apply any package updates.
+### test -d OPAM/repo/changes
+### test -d OPAM/repo/changes/.git
+# Return code 1 #
+### test -f OPAM/repo/changes.tar.gz
+# Return code 1 #
+### :: both exists - tarring
+### OPAMREPOSITORYTARRING=1
+### cp changes.tar.gz OPAM/repo/changes.tar.gz
+### <CHG/packages/semmus/semmus.5/opam>
+opam-version: "2.0"
+build: false
+### opam update
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+UPDATE                          repository exists as directory and archive, removing both
+REPOSITORY                      update changes from file://${BASEDIR}/CHG
+TAR                             creating archive ${BASEDIR}/OPAM/repo/changes.tar.gz.new from ${BASEDIR}/CHG
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/changes.tar.gz.new
+REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.tar.gz.new
+[changes] Initialised
+UPDATE                          Repository has new changes
+Processing: [changes: loading data]
+### test -d OPAM/repo/changes
+# Return code 1 #
+### test -d OPAM/repo/changes/.git
+# Return code 1 #
+### test -f OPAM/repo/changes.tar.gz
+### unset OPAMDEBUG OPAMDEBUGSECTIONS OPAMVERBOSE
+### : change format from old tarred to the new one, trigger from repo state
+### : the old format was present when using OPAMREPOTARRING=1 (>= 2.1 < 2.6)
+### : or by default in opam 2.1
+### mkdir -p old-tarred/packages empty-repo/packages
+### cp -R REPO/packages/foo old-tarred/packages/
+### cp REPO/repo old-tarred/
+### cp REPO/repo empty-repo/
+### tar czf old-tarred.tar.gz old-tarred
+### rm -rf "$OPAMROOT"
+### OPAMREPOSITORYTARRING=1
+### opam init --no-setup --bypass-checks --disable-sandbox --bare old-tarred ./old-tarred
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[old-tarred] Initialised
+### opam switch create empty --empty
+### sed -i.bak 's/opam-root-version.*/opam-root-version: "2.5.0"/' OPAM/config
+### sh -c "rm OPAM/repo/*.cache"
+### OPAMDEBUGSECTIONS="TAR FMT_UPG RSTATE" OPAMDEBUG=-5 OPAMYES=1 OPAMVERBOSE=2
+### head OPAM/config
+opam-version: "2.0"
+opam-root-version: "2.5.0"
+repositories: "old-tarred"
+installed-switches: "empty"
+switch: "empty"
+download-jobs: 3
+eval-variables: [
+  [
+    sys-ocaml-version
+    ["ocamlc" "-vnum"]
+### cp old-tarred.tar.gz OPAM/repo/old-tarred.tar.gz
+### tar tf OPAM/repo/old-tarred.tar.gz | grep repo
+old-tarred/repo
+### # We need to grep over SUCCESS because of sandbox re enabled on format upgrade reinit, see #6968
+### opam repo add empty-r ./empty-repo | sed-cmd tar | grep -v SUCCESS | grep -v 'cygpath\.exe' | grep -v 'cygwin'
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FMT_UPG                         Hard config upgrade, from 2.5.0 to 2.6~alpha
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.5.0 to version 2.6~alpha, which can't be reverted.
+You may want to back it up before going further.
+
+Perform the update and continue? [Y/n] y
++ tar "xfz" "${BASEDIR}/OPAM/repo/old-tarred.tar.gz" "-C" "${OPAMTMP}"
+Upgrading the internal repository format for 'old-tarred'...
+TAR                             creating archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz from ${OPAMTMP}/old-tarred
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz
+Format upgrade done.
+
+<><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+Processing: [old-tarred: loading data]
+RSTATE                          read repo
+RSTATE                          loaded opam files from repo old-tarred in 0.000s
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+TAR                             creating archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz.new from ${BASEDIR}/old-tarred
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz.new
+[old-tarred] no changes from file://${BASEDIR}/old-tarred
+Update done, please now retry your command.
+# Return code 10 #
+### tar tf OPAM/repo/old-tarred.tar.gz | grep repo
+repo
+### opam list --all-versions --available
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+# Packages matching: available
+# Package # Installed # Synopsis
+foo.1     --
+foo.2     --
+foo.3     --
+foo.4     --
+foo.5     --
+foo.6     --
+### : change format from old tarred to the new one, trigger from global state
+### rm -rf "$OPAMROOT"
+### OPAMREPOSITORYTARRING=1
+### opam init --no-setup --bypass-checks --disable-sandbox --bare old-tarred ./old-tarred | grep -v 'cygpath\.exe' | grep -v 'cygwin'
+No configuration file found, using built-in defaults.
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+Processing: [old-tarred: loading data]
+RSTATE                          loaded opam files from repo old-tarred in 0.000s
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+TAR                             creating archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz.new from ${BASEDIR}/old-tarred
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz.new
+[old-tarred] Initialised
+RSTATE                          read repo
+### opam switch create empty --empty
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+### sed -i.bak 's/opam-root-version.*/opam-root-version: "2.5.0"/' OPAM/config
+### sh -c "rm OPAM/repo/*.cache"
+### head OPAM/config
+opam-version: "2.0"
+opam-root-version: "2.5.0"
+repositories: "old-tarred"
+installed-switches: "empty"
+switch: "empty"
+download-jobs: 3
+eval-variables: [
+  [
+    sys-ocaml-version
+    ["ocamlc" "-vnum"]
+### cp old-tarred.tar.gz OPAM/repo/old-tarred.tar.gz
+### tar tf OPAM/repo/old-tarred.tar.gz | grep repo
+old-tarred/repo
+### opam update | sed-cmd tar | grep -v SUCCESS | grep -v 'cygpath\.exe' | grep -v 'cygwin'
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FMT_UPG                         Hard config upgrade, from 2.5.0 to 2.6~alpha
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.5.0 to version 2.6~alpha, which can't be reverted.
+You may want to back it up before going further.
+
+Perform the update and continue? [Y/n] y
++ tar "xfz" "${BASEDIR}/OPAM/repo/old-tarred.tar.gz" "-C" "${OPAMTMP}"
+Upgrading the internal repository format for 'old-tarred'...
+TAR                             creating archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz from ${OPAMTMP}/old-tarred
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz
+Format upgrade done.
+
+<><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+Processing: [old-tarred: loading data]
+RSTATE                          read repo
+RSTATE                          loaded opam files from repo old-tarred in 0.000s
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+TAR                             creating archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz.new from ${BASEDIR}/old-tarred
+TAR                             Writing archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz.new
+[old-tarred] no changes from file://${BASEDIR}/old-tarred
+Update done, please now retry your command.
+# Return code 10 #
+### tar tf OPAM/repo/old-tarred.tar.gz | grep repo
+repo
+### opam list --all-versions --available
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          Cache found
+# Packages matching: available
+# Package # Installed # Synopsis
+foo.1     --
+foo.2     --
+foo.3     --
+foo.4     --
+foo.5     --
+foo.6     --
