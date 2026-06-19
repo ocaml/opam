@@ -73,13 +73,14 @@ some content
 ### opam install foo.4 -vv | grep '^\+' | sed-cmd test tar
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.4)
 ### mkdir tarred-ext
-### tar xf OPAM/repo/tarred.tar.gz
+### tar xf OPAM/repo/tarred.tar.gz -C tarred-ext
 tar: OPAM/repo/tarred.tar.gz: Cannot open: No such file or directory
 tar: Error is not recoverable: exiting now
 # Return code 2 #
-### diff -ru ./tarred REPO
-diff: ./tarred: No such file or directory
-# Return code 2 #
+### diff -ru ./tarred-ext REPO
+Only in REPO: packages
+Only in REPO: repo
+# Return code 1 #
 ### ls $OPAMROOT/repo | grep -v "cache"
 lock
 repos-config
