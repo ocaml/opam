@@ -192,6 +192,8 @@ users)
   * Add a tests for the several layouts of packages in a repository [#6941 @rjbou]
   * Add a `opam repo set-url` case in repository-http [#6625 @rjbou]
   * Add in `repository-http` a test case for switching from directory to archive format, automatically [#6625 @rjbou]
+  * Add in `repository` test cases for switching automatically from directory to archive format & vice versa [#6625 @rjbou]
+  * Add in `repository` test cases for upgrade opam root from 2.5 with repo tarring or 2.1 to 2.6, with `OPAMREPOSITORYTARRING` enabled (trigger upgrade) [#6625 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
