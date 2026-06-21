@@ -607,8 +607,8 @@ REPO_BACKEND                    Internal diff (non-empty, 2 changed files) done 
 [incremental] synchronised from file://${BASEDIR}/INCR_REPO
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 Now run 'opam upgrade' to apply any package updates.
-### opam show eta --field extra-files:
-"eta.installl" "md5=d9b673248d119b87a2e1f9766e543aa3"
+### opam show eta --field extra-files: | sed-hash $INSTALL_MD5 install-md5
+"eta.installl" "md5=+install-md5+"
 ### opam install eta
 The following actions will be performed:
 === install 1 package
@@ -727,8 +727,8 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 opam-file                       Mismatching extra-files at ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1: wrong checksum (1)
 Now run 'opam upgrade' to apply any package updates.
-### opam show eta --field extra-files:
-"eta.installl" "md5=d9b673248d119b87a2e1f9766e543aa3"
+### opam show eta --field extra-files: | sed-hash $INSTALL_MD5 install-md5
+"eta.installl" "md5=+install-md5+"
 ### opam install eta
 The following actions will be performed:
 === install 1 package
@@ -763,8 +763,8 @@ REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done 
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/opam in 0.000s
 opam-file                       Missing expected extra files eta.installl at ${BASEDIR}/OPAM/repo/incremental/packages/eta/eta.1/files
-### opam show eta --field extra-files:
-"eta.installl" "md5=d9b673248d119b87a2e1f9766e543aa3"
+### opam show eta --field extra-files: | sed-hash $INSTALL_MD5 install-md5
+"eta.installl" "md5=+install-md5+"
 ### opam install eta
 The following actions will be performed:
 === install 1 package
