@@ -13,6 +13,7 @@
     (names opam_stubs)
     (flags :standard
            -DUNICODE -D_UNICODE -DCAML_NAME_SPACE
+           -D_WIN32_WINNT=0x602 ; Require Windows 8 / Server 2012 or later
            (:include c-flags.sexp)))
   (c_library_flags (:standard
                    (:include c-libraries.sexp)))
