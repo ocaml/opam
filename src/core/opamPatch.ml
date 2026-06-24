@@ -322,31 +322,63 @@ let translate_patch ~dir orig corrected =
   end;
   close_in ch
 
+(* Patch configurator *)
+
+module type FS_ABSTR = sig
+  type root
+  type file
+  type target
+  val root_label : string
+  val translate_patch : bool
+  val root_to_string : root -> string
+  val file_to_string : file -> string
+  val end_slash : root -> root
+  val get_path : fail:(unit -> unit) -> root -> string -> file
+  val ext : file -> string -> file
+  val write : file -> string -> target -> target
+  val on_rejection : file -> string option -> Patch.t -> unit
+  val exists : file -> target -> bool
+  val exists_dir : file -> target -> bool
+  val read : file -> target -> string
+  val remove : file -> target -> target
+  val remove_dir : file -> target -> target
+  val same_dirname : src:file -> dst:file -> bool
+  val mv : src:file -> dst:file -> target -> target
+  val open_ : root -> (target -> unit) -> unit
+  val save : target -> unit
+end
+
 exception Internal_patch_error of string
 
-let patch ~allow_unclean ?patch_filename ~dir diffs =
+let patch_t (type a) (module FS : FS_ABSTR with type root = a)
+    ~allow_unclean ?patch_filename (to_patch:a) diffs =
+ if diffs = [] then () else
+  let tdebug = false in
+  if tdebug then
+    OpamConsole.error "patch_t: patch %s"
+      (Format.asprintf "%a" Patch.pp_list diffs);
   let internal_patch_error fmt =
     Printf.ksprintf (fun str -> raise (Internal_patch_error str)) fmt
   in
   let patch_info_path =
-    OpamStd.Option.default ("in directory "^dir) patch_filename
+    OpamStd.Option.default
+      (Printf.sprintf "in %s %s" FS.root_label (FS.root_to_string to_patch))
+      patch_filename
   in
-  (* NOTE: It is important to keep this `concat dir ""` to ensure the
-     is_prefix_of below doesn't match another similarly named directory *)
-  let dir = Filename.concat (OpamSystem.real_path dir) "" in
+  let to_patch = FS.end_slash to_patch in
   let get_path file =
-    let file = OpamSystem.real_path (Filename.concat dir file) in
-    if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
+    let fail () =
       internal_patch_error "Patch %S tried to escape its scope."
-        patch_info_path;
-    file
+        patch_info_path
+    in
+    FS.get_path ~fail to_patch file
   in
-  let patch ~file content diff =
+ let patch file content diff patching =
     (* NOTE: The None case returned by [Patch.patch] is only returned
        if [diff = Patch.Delete _]. This sub-function is not called in
        this case so we [assert false] instead. *)
     match Patch.patch ~cleanly:true content diff with
-    | Some x -> x
+    | Some x -> patching, x
     | None -> assert false (* See NOTE above *)
     | exception _ when not allow_unclean ->
       internal_patch_error "Patch %S does not apply cleanly."
@@ -354,55 +386,99 @@ let patch ~allow_unclean ?patch_filename ~dir diffs =
     | exception _ ->
       match Patch.patch ~cleanly:false content diff with
       | Some x ->
-        Option.iter (OpamSystem.write (file^".orig")) content;
-        x
+        let patching =
+          OpamStd.Option.map_default (fun content ->
+              FS.write (FS.ext file ".orig") content patching)
+            patching content
+        in
+        patching, x
       | None -> assert false (* See NOTE above *)
       | exception _ ->
-        Option.iter (OpamSystem.write (file^".orig")) content;
-        OpamSystem.write (file^".rej") (Format.asprintf "%a" Patch.pp diff);
+        FS.on_rejection file content diff;
         internal_patch_error "Patch %S does not apply cleanly."
           patch_info_path
   in
-  let apply diff = match diff.Patch.operation with
+  let apply patching diff =
+    match diff.Patch.operation with
     | Patch.Edit (file1, file2) ->
       let file1 = get_path file1 in
       let file2 = get_path file2 in
-      let file1_exists = Sys.file_exists file1 in
+      let file1_exists = FS.exists file1 patching in
       (* That seems to be the GNU patch behaviour *)
       let file = if file1_exists then file1 else file2 in
-      let content = OpamSystem.read file in
-      let content = patch ~file:file (Some content) diff in
-      OpamSystem.write file content;
-      if file1_exists && file1 <> (file2 : string) then
-        OpamSystem.rmdir_cleanup (Filename.dirname file1)
+      let content = FS.read file patching in
+      let patching, content = patch file (Some content) diff patching in
+      let patching = FS.write file content patching in
+      let patching =
+        if file1_exists && file1 <> (file2 : FS.file) then
+          FS.remove_dir file1 patching
+        else
+          patching
+      in
+      patching
     | Patch.Delete file | Patch.Git_ext (file, _, Patch.Delete_only) ->
       let file = get_path file in
-      OpamSystem.remove_file file;
-      OpamSystem.rmdir_cleanup (Filename.dirname file)
+      let patching = FS.remove file patching in
+      let patching = FS.remove_dir file patching in
+      patching
     | Patch.Create file | Patch.Git_ext (_, file, Patch.Create_only) ->
       let file = get_path file in
-      let content = patch ~file None diff in
-      OpamSystem.write file content
+      let patching, content = patch file None diff patching in
+      let patching = FS.write file content patching in
+      patching
     | Patch.Git_ext (_, _, Patch.Rename_only (src, dst)) ->
       let src = get_path src in
       let dst = get_path dst in
-      OpamSystem.mv src dst;
-      let dirname_src = Filename.dirname src in
-      if dirname_src <> (Filename.dirname dst : string) then
-        OpamSystem.rmdir_cleanup dirname_src
+      let patching = FS.mv ~src ~dst patching in
+      let patching =
+        if FS.same_dirname ~src ~dst then
+          FS.remove_dir src patching
+        else
+          patching
+      in
+      patching
   in
-  List.iter apply diffs
+  FS.open_ to_patch (fun patching ->
+      let patched : FS.target = List.fold_left apply patching diffs in
+      FS.save patched)
 
-let parse_patch ~dir ~file =
+let parse_patch ~translate file =
   if not (Sys.file_exists file) then
     (OpamConsole.error "Patch file %S not found." file;
      raise Not_found);
   let file' =
-    let file' = OpamSystem.temp_file ~auto_clean:false "processed-patch" in
-    translate_patch ~dir file file';
-    file'
+    match translate with
+    | Some dir ->
+      let file' = OpamSystem.temp_file ~auto_clean:false "processed-patch" in
+      translate_patch ~dir file file';
+      file'
+    | None -> file
   in
   let content = OpamSystem.read file' in
   Fun.protect (fun () -> Patch.parse ~p:1 content)
     ~finally:(fun () -> if not (OpamConsole.debug ()) then Sys.remove file')
 
+let patch (type a) (module FS : FS_ABSTR with type root = a)
+    ~allow_unclean patch_source (to_patch:a) =
+  let operations_result diffs =
+    Ok (List.map (fun d -> d.Patch.operation) diffs)
+  in
+  let patch ?patch_filename diffs =
+    patch_t (module FS) ~allow_unclean ?patch_filename to_patch diffs
+  in
+  try
+    match patch_source with
+    | `Patch_diffs diffs ->
+      patch diffs;
+      operations_result diffs
+    | `Patch_file p ->
+      let diffs =
+        let translate =
+          if FS.translate_patch then Some (FS.root_to_string to_patch)
+          else None
+        in
+        parse_patch ~translate p
+      in
+      patch ~patch_filename:p diffs;
+      operations_result diffs
+  with exn -> Error exn

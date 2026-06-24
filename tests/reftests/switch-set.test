@@ -46,6 +46,7 @@ Would select opam switch bar.
 ### opam switch - --show
 Would select opam switch -.
 ### opam switch --cli=2.1 -
+[WARNING] OPAMREPOSITORYTARRING was ignored because CLI 2.1 was requested and it was introduced in 2.2.
 ### opam switch - --show
 Would select opam switch bar.
 ### opam switch show

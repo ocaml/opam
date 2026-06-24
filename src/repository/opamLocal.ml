@@ -145,16 +145,30 @@ module B = struct
     rsync_dirs url local_dirname
 
   let fetch_repo_update repo_name ?cache_dir:_ repo_root url =
+    let tdebug = false in
     log "pull-repo-update";
-    match repo_root with
-    | OpamRepositoryRoot.Dir repo_root ->
-      let quarantine = OpamRepositoryRoot.Dir.quarantine repo_root in
-      let finalise () = OpamRepositoryRoot.Dir.remove quarantine in
-      OpamProcess.Job.catch (fun e ->
-          finalise ();
-          Done (OpamRepositoryBackend.Update_err e))
-      @@ fun () ->
-      OpamRepositoryBackend.job_text repo_name "sync"
+    let quarantine = OpamRepositoryRoot.quarantine repo_root in
+    let finalise () = OpamRepositoryRoot.remove quarantine in
+    if tdebug then
+      (OpamConsole.error "LOCAL:fetch: RR %s" (OpamRepositoryRoot.to_string repo_root);
+       OpamConsole.error "LOCAL:fetch: QUAR %s" (OpamRepositoryRoot.to_string quarantine);
+       OpamConsole.error "LOCAL:fetch: URL %s" (OpamUrl.to_string url));
+    let populate_quarantine () =
+      match repo_root, quarantine with
+      | OpamRepositoryRoot.Tar _, OpamRepositoryRoot.Tar quarantine ->
+        (let to_archive dir =
+           OpamRepositoryRoot.make_tar_gz quarantine
+             (OpamRepositoryRoot.Dir.of_dir dir);
+           Done (Result ())
+         in
+         match OpamUrl.local_dir url with
+         | Some dir -> to_archive dir
+         | None ->
+           OpamFilename.with_tmp_dir_job @@ fun dir ->
+           pull_dir_quiet dir url @@+ function
+           | Result () -> to_archive dir
+           | exn -> Done exn)
+      | OpamRepositoryRoot.Dir dir, OpamRepositoryRoot.Dir quarantine ->
         (match OpamUrl.local_dir url with
          | Some dir ->
            let dir = OpamRepositoryRoot.Dir.of_dir dir in
@@ -164,30 +178,42 @@ module B = struct
               OpamFilename.link_dir ~target:dir ~link:quarantine; *)
            Done (Result ())
          | None ->
-           if OpamRepositoryRoot.Dir.exists repo_root then
-             OpamRepositoryRoot.Dir.copy_except_vcs
-               ~src:repo_root ~dst:quarantine
+           if OpamRepositoryRoot.Dir.exists dir then
+             OpamRepositoryRoot.Dir.copy_except_vcs ~src:dir ~dst:quarantine
            else
              OpamRepositoryRoot.Dir.make_empty quarantine;
            pull_dir_quiet (OpamRepositoryRoot.Dir.to_dir quarantine) url)
-      @@+ function
-      | Not_available (_, msg) ->
+      (* we have the gaurantee that repo root and quarantine have the same kind *)
+      | _, _ -> assert false
+    in
+    OpamProcess.Job.catch (fun e ->
         finalise ();
-        Done (OpamRepositoryBackend.Update_err (Failure ("rsync error: " ^ msg)))
-      | Up_to_date () ->
-        finalise (); Done OpamRepositoryBackend.Update_empty
-      | Result () ->
-        if OpamRepositoryRoot.Dir.is_empty repo_root <> Some false then
-          Done (OpamRepositoryBackend.Update_full
-                  (OpamRepositoryRoot.Dir quarantine))
-        else
-          OpamStd.Exn.finally finalise @@ fun () ->
-          OpamRepositoryBackend.get_diff
-            (OpamRepositoryRoot.Dir repo_root)
-            (OpamRepositoryRoot.Dir quarantine)
-          |> function
-          | None -> Done OpamRepositoryBackend.Update_empty
-          | Some p -> Done (OpamRepositoryBackend.Update_patch p)
+        Done (OpamRepositoryBackend.Update_err e)) @@ fun () ->
+    OpamRepositoryBackend.job_text repo_name "sync"
+      (populate_quarantine ()) @@| function
+    | Not_available (_, msg) ->
+      finalise ();
+      OpamRepositoryBackend.Update_err (Failure ("rsync error: " ^ msg))
+    | Up_to_date () ->
+      finalise ();  OpamRepositoryBackend.Update_empty
+    | Result () ->
+      if tdebug then
+        (OpamConsole.error "LOCAL:fetch: QUR CONTENT %s\n%s"
+           (OpamRepositoryRoot.to_string quarantine)
+           (OpamRepositoryRoot.ls quarantine);
+         OpamConsole.error "LOCAL:fetch: TAR CONTENT %s\n%s"
+           (OpamRepositoryRoot.to_string repo_root)
+           (if (OpamRepositoryRoot.is_empty repo_root <> None) then
+              OpamRepositoryRoot.ls repo_root
+            else "ABSENT"));
+      if OpamRepositoryRoot.is_empty repo_root <> Some false then
+        OpamRepositoryBackend.Update_full quarantine
+      else
+        OpamStd.Exn.finally finalise @@ fun () ->
+        OpamRepositoryBackend.get_diff repo_root quarantine
+        |> function
+        | None ->  OpamRepositoryBackend.Update_empty
+        | Some p -> OpamRepositoryBackend.Update_patch p
 
   let repo_update_complete _ _ = Done ()
 

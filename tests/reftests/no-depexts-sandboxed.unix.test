@@ -52,7 +52,7 @@ Done.
 Added '[os-family "debian" "Set through 'opam var'"]' to field global-variables in global configuration
 ### sh -c "rm OPAM/repo/state-*.cache"
 ### OPAMVERBOSE=2 OPAMNODEPEXTS=1 OPAMDEBUG=-1 OPAMDEBUGSECTIONS="XSYS RSTATE"
-### opam install foo | sed-cmd rsync
+### opam install foo | sed-cmd rsync tar
 RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
 RSTATE                          No cache found
 Processing: [default: loading data]
@@ -67,7 +67,7 @@ Processing  1/3: [foo.1: rsync]
 - foo.tgz
 - 
 Processing  1/3: [foo.1: extract]
-+ /usr/bin/tar "xfz" "${OPAMTMP}/foo.tgz" "-C" "${OPAMTMP}"
++ tar "xfz" "${OPAMTMP}/foo.tgz" "-C" "${OPAMTMP}"
 -> retrieved foo.1  (file://${BASEDIR}/foo.tgz)
 Processing  2/3: [foo: sh build.sh]
 + ${BASEDIR}/OPAM/opam-init/hooks/sandbox.sh "build" "sh" "build.sh" (CWD=${BASEDIR}/OPAM/internals-debian/.opam-switch/build/foo.1)

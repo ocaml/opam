@@ -283,27 +283,43 @@ let files_in_source_w_target ?locked ?recurse ?subpath
     (files_in_source ?locked ?recurse ?subpath dir)
 
 let orig_opam_file st name opam =
-  (match OpamFile.OPAM.metadata_dir opam with
-   | None -> None
-   | Some (None, abs) ->
-     Some (OpamFilename.Dir.of_string abs)
-   | Some (Some r, rel) ->
-     let dirname =
-       match OpamRepositoryState.get_root st.switch_repos r with
-       | OpamRepositoryRoot.Dir r -> OpamRepositoryRoot.Dir.to_dir r
-     in
-     Some (dirname / rel))
-  >>= fun dir ->
-  let opam_files = [
-    dir // (OpamPackage.Name.to_string name ^ OpamPathName.opam_suffix);
-    dir // OpamPathName.opam_f
-  ] in
-  let locked_files =
-    match OpamFile.OPAM.locked opam with
-    | Some locked ->
-      List.map (fun f -> OpamFilename.add_extension f locked) opam_files
-    | None -> []
-  in
-  List.find_opt OpamFilename.exists locked_files
-  ++ List.find_opt OpamFilename.exists opam_files
-  >>| OpamFile.make
+  match OpamFile.OPAM.metadata_dir opam with
+  | None -> None
+  | Some (None, abs) -> (* Pin case *)
+    let dir = OpamFilename.Dir.of_string abs in
+    let opam_files = [
+      dir // (OpamPackage.Name.to_string name ^ OpamPathName.opam_suffix);
+      dir // OpamPathName.opam_f
+    ] in
+    let locked_files =
+      match OpamFile.OPAM.locked opam with
+      | Some locked ->
+        List.map (fun f -> OpamFilename.add_extension f locked) opam_files
+      | None -> []
+    in
+    List.find_opt OpamFilename.exists locked_files
+    ++ List.find_opt OpamFilename.exists opam_files
+    >>| OpamFile.make
+  | Some (Some r, rel) -> (* Repo case *)
+    match OpamRepositoryState.get_root st.switch_repos r with
+    | OpamRepositoryRoot.Dir dir ->
+      let dir = OpamRepositoryRoot.Dir.to_dir dir / rel in
+      let opam_file = dir // OpamPathName.opam_f in
+      if OpamFilename.exists opam_file then
+        Some (OpamFile.make opam_file)
+      else None
+    | OpamRepositoryRoot.Tar tar ->
+      let dir = OpamFilename.Unix.Dir.of_string rel in
+      let opam_file = OpamFilename.Unix.Op.(dir // OpamPathName.opam_f) in
+      match List.rev (OpamRepositoryRoot.Tar.filter_files
+                        (OpamFilename.Unix.equal opam_file) tar) with
+      | [] -> None
+      | (opam_file, content)::_ ->
+        (* we take the last one, there is a non zero possibility that 2 files
+           have the same name, see -r option of tar *)
+        let file = OpamFilename.Unix.to_string opam_file in
+        let tmp = OpamFilename.mk_tmp_dir () in
+        let filename = tmp // file in
+        OpamFilename.write filename content;
+        OpamStd.Sys.at_exit (fun () -> OpamFilename.rmdir tmp);
+        Some (OpamFile.make filename)

@@ -118,13 +118,19 @@ let mkdir dir =
     end in
   aux dir
 
+let is_vcs = function
+  | ".git" | ".hg" | "_darcs" -> true
+  | _ -> false
+
 let get_files_t ~except_vcs dirname =
   let dir = Unix.opendir dirname in
   let rec aux files =
     match Unix.readdir dir with
     | "." | ".." -> aux files
-    | ".git" | ".hg" | "_darcs" when except_vcs -> aux files
-    | file -> aux (file :: files)
+    | file ->
+      if except_vcs && is_vcs file then aux files
+      else
+        aux (file :: files)
     | exception End_of_file -> files
   in
   let files = aux [] in
@@ -360,12 +366,14 @@ let files_all_not_dir =
 let directories_strict =
   list (fun f -> try Sys2.is_directory f with Sys_error _ -> false)
 
-let directories_with_links =
-  list (fun f -> try Sys.is_directory f with Sys_error _ -> false)
+let directories_with_links ?(except_vcs=false) =
+  list (fun f ->
+  if except_vcs && is_vcs (Filename.basename f) then false else
+  try Sys.is_directory f with Sys_error _ -> false)
 
-let rec_files dir =
+let rec_files ?except_vcs dir =
   let rec aux accu dir =
-    let d = directories_with_links dir in
+    let d = directories_with_links ?except_vcs dir in
     let f = files_with_links dir in
     List.fold_left aux (f @ accu) d in
   aux [] dir
@@ -937,17 +945,6 @@ module Tar = struct
           make_command tar_cmd [ Printf.sprintf "xf%c" c ; f file; "-C" ; f dir ]
         in
         command (extract_option typ))
-
-  let compress_command =
-    fun file dir ->
-      let f = Lazy.force cygpath_tar in
-      let tar_cmd = Lazy.force tar_cmd in
-      make_command tar_cmd [
-        "cfz"; f file;
-        "-C" ; f (Filename.dirname dir);
-        f (Filename.basename dir)
-      ]
-
 end
 
 module Zip = struct
@@ -987,16 +984,6 @@ let is_archive file =
 let extract_command file =
   if Zip.is_archive file then Zip.extract_command file
   else Tar.extract_command file
-
-let make_tar_gz_job ~dir file =
-  let tmpfile = file ^ ".tmp" in
-  remove_file tmpfile;
-  Tar.compress_command tmpfile dir @@> fun r ->
-  OpamProcess.cleanup r;
-  if OpamProcess.is_success r then
-    (mv tmpfile file; Done None)
-  else
-    (remove_file tmpfile; Done (Some (Process_error r)))
 
 let extract_job ~dir file =
   if not (Sys.file_exists file) then

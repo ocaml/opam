@@ -288,8 +288,8 @@ let add_extension filename suffix =
 let chop_extension filename =
   of_string (Filename.chop_extension (to_string filename))
 
-let rec_files d =
-  let fs = OpamSystem.rec_files (Dir.to_string d) in
+let rec_files ?except_vcs d =
+  let fs = OpamSystem.rec_files ?except_vcs (Dir.to_string d) in
   List.rev_map of_string fs
 
 let files d =
@@ -392,9 +392,6 @@ let extract_in filename dirname =
 let extract_in_job filename dirname =
   OpamSystem.extract_in_job (to_string filename) ~dir:(Dir.to_string dirname)
 
-let make_tar_gz_job filename dirname =
-  OpamSystem.make_tar_gz_job (to_string filename) ~dir:(Dir.to_string dirname)
-
 type generic_file =
   | D of Dir.t
   | F of t
@@ -453,25 +450,48 @@ let link ?(relative=false) ~target ~link =
 [@@ocaml.warning "-16"]
 
 let parse_patch ~dir patch_file =
-  OpamPatch.parse_patch ~dir:(Dir.to_string dir) ~file:(to_string patch_file)
+  OpamPatch.parse_patch ~translate:(Some (Dir.to_string dir)) (to_string patch_file)
+
+module PatchFS = struct
+  type root = string
+  type file = string
+  type target = unit
+  let root_label = "directory"
+  let translate_patch = true
+  let root_to_string root = root
+  let file_to_string file = file
+  let end_slash dir = Filename.concat (OpamSystem.real_path dir) ""
+  let get_path ~fail dir file =
+    let file = OpamSystem.real_path (Filename.concat dir file) in
+    if not (OpamStd.String.is_prefix_of ~from:0 ~full:file dir) then
+      fail ();
+    file
+  let ext file ext = file ^ ext
+  let write file content _target = OpamSystem.write file content
+  let on_rejection file content diff =
+    Option.iter (fun c -> write (file^".orig") c ()) content;
+    write (file^".rej") (Format.asprintf "%a" Patch.pp diff) ()
+  let exists file _target = Sys.file_exists file
+  let exists_dir file _target =
+    let dir = Filename.dirname file in
+    Sys.file_exists dir && Sys.is_directory dir
+  let read file _target = OpamSystem.read file
+  let remove file _target = OpamSystem.remove_file file
+  let remove_dir file _target = OpamSystem.rmdir_cleanup (Filename.dirname file)
+  let same_dirname ~src ~dst =
+    Filename.dirname src <> (Filename.dirname dst : string)
+  let mv ~src ~dst _target = OpamSystem.mv src dst
+  let open_ _target f = f ()
+  let save _target = ()
+end
 
 let patch ~allow_unclean patch_source dir =
-  let operations_result diffs =
-    Ok (List.map (fun d -> d.Patch.operation) diffs)
-  in
-  let patch ?patch_filename diffs =
-    OpamPatch.patch ~allow_unclean ?patch_filename ~dir:(Dir.to_string dir)
-      diffs
-  in
-  try
+  let patch_source =
     match patch_source with
-    | `Patch_diffs diffs -> patch diffs;
-      operations_result diffs
-    | `Patch_file p ->
-      let diffs = parse_patch ~dir:(Dir.to_string dir) p in
-      patch ~patch_filename:(to_string p) diffs;
-      operations_result diffs
-  with exn -> Error exn
+    | `Patch_file f -> `Patch_file (to_string f)
+    | `Patch_diffs _ as d -> d
+  in
+  OpamPatch.patch (module PatchFS) ~allow_unclean patch_source dir
 
 let flock flag ?dontblock file = OpamSystem.flock flag ?dontblock (to_string file)
 
@@ -740,13 +760,6 @@ module Unix = struct
     let to_base = Fun.id
   end
 
-  module Dir = struct
-    include Internal
-
-    let of_dir = OpamSystem.back_to_forward
-    let to_dir = Fun.id
-  end
-
   (* Copied from the OCaml Stdlib Filename module *)
   (* Copyright 1996 Institut National de Recherche en Informatique et
      en Automatique. *)
@@ -803,11 +816,83 @@ module Unix = struct
     else find_end (String.length name - 1)
   let basename = generic_basename is_dir_sep current_dir_name
 
+  module Dir = struct
+    include Internal
+
+    let of_dir = OpamSystem.back_to_forward
+    let to_dir = OpamSystem.forward_to_back
+    let dirname = dirname
+    let basename = basename
+  end
+
+
   module Op = struct
     let (/) = concat
     let (//) = concat
   end
 
   let of_filename x = OpamSystem.back_to_forward (concat x.dirname x.basename)
-  let to_filename x = {dirname = dirname x; basename = basename x}
+  let to_filename x = {
+    dirname = OpamSystem.forward_to_back (dirname x);
+    basename = basename x;
+  }
+
+  let starts_with prefix filename =
+    if prefix = (filename : string) then true
+    else
+      let prefix = concat prefix "" in
+      OpamCompat.String.starts_with ~prefix filename
+
+  let remove_prefix prefix filename =
+    if prefix = "" then filename
+    else
+      OpamStd.String.remove_prefix ~prefix:(concat prefix "") filename
+
+  let add_extension filename suffix =
+    filename ^ "." ^ suffix
+
+  let check_canonical filename =
+    let check_parent_dir_and_remove_trailing_slashes elems =
+    (* .. at any place : fail *)
+      if List.exists (String.equal "..") elems then Error "contains '..'" else
+        match elems with
+        | [] -> assert false
+        | [x] -> Ok x
+        | elems ->
+          let end_trailing_slash =
+            match List.rev elems with
+            | ""::_ -> true
+            | _ -> false
+          in
+          (* remove trailing slashes *)
+          let elems = List.filter (Fun.negate @@ String.equal "") elems in
+          match elems with
+          | [] -> Error "results in an empty path"
+          | elems ->
+            let core = String.concat dir_sep elems in
+            let res =
+              if end_trailing_slash then core ^ dir_sep else core
+            in
+            Ok res
+    in
+    match String.split_on_char dir_sep.[0] filename with
+    | [] -> assert false
+    (* ^/ : fail *)
+    | ""::_ -> Error "begins with '/'"
+    (* ^./ : delete the ./ *)
+    | "."::elements -> check_parent_dir_and_remove_trailing_slashes elements
+    | [_] -> Ok filename
+    | elements -> check_parent_dir_and_remove_trailing_slashes elements
+
+  let rec root_dir filename =
+    if Char.equal filename.[0] dir_sep.[0] then
+      let filename =
+        String.sub filename 1 (String.length filename - 2)
+      in
+      Option.map ((^) dir_sep) (root_dir filename)
+    else
+      match OpamStd.String.cut_at filename dir_sep.[0] with
+      | Some (root, _rest) -> Some root
+      | None -> None
+
 end

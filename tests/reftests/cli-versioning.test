@@ -14,12 +14,14 @@ Set to 'false' the field depext in global configuration
 opam: install was removed in version 2.1 of the opam CLI, but version CURRENTMAJOR has been requested. Use create instead or set OPAMCLI environment variable to 2.0.
 # Return code 2 #
 ### OPAMCLI=2.0 opam switch install cli-versioning --empty
+[WARNING] OPAMREPOSITORYTARRING was ignored because CLI 2.0 was requested and it was introduced in 2.2.
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 ### OPAMSHOW=1
 ### opam list --cli 31.4
 [ERROR] opam command-line version 31.4 is not supported.
 # Return code 2 #
 ### opam install baz --assume-depexts --cli 2.1
+[WARNING] OPAMREPOSITORYTARRING was ignored because CLI 2.1 was requested and it was introduced in 2.2.
 The following actions would be performed:
 === install 1 package
   - install baz 2
@@ -30,11 +32,13 @@ opam: --assume-depexts was added in version 2.1 of the opam CLI, but version 2.0
 [WARNING] set was deprecated in version 2.1 of the opam CLI. Use opam var instead or set OPAMCLI environment variable to 2.0.
 Added 'cli: "version"' to field variables in switch cli-versioning
 ### OPAMCLI=2.0 opam config set cli version
+[WARNING] OPAMREPOSITORYTARRING was ignored because CLI 2.0 was requested and it was introduced in 2.2.
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 Added 'cli: "version"' to field variables in switch cli-versioning
 ### OPAMSHOW=0 opam switch set-invariant baz.1 --no-action
 The switch invariant was set to ["baz" {= "1"}]
 ### OPAMCLI=2.0 opam install baz.2
+[WARNING] OPAMREPOSITORYTARRING was ignored because CLI 2.0 was requested and it was introduced in 2.2.
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 [ERROR] Package conflict!
   * No agreement on the version of baz:
@@ -61,6 +65,7 @@ The following actions would be performed:
 === install 1 package
   - install baz 2
 ### OPAMCLI=2.0 opam install baz.2 --unlock-base
+[WARNING] OPAMREPOSITORYTARRING was ignored because CLI 2.0 was requested and it was introduced in 2.2.
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 The following actions would be performed:
 === install 1 package
@@ -141,6 +146,7 @@ Done.
 [WARNING] OPAMBUILDDOC was ignored because CLI CURRENTMAJOR was requested and it was removed in 2.1, set OPAMCLI environment variable to 2.0.
 ${BASEDIR}/OPAM/cli-versioning/share
 ### OPAMCLI=2.0 OPAMBUILDDOC=1 opam config var share
+[WARNING] OPAMREPOSITORYTARRING was ignored because CLI 2.0 was requested and it was introduced in 2.2.
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 ${BASEDIR}/OPAM/cli-versioning/share
 ### # Switch creation with packages & formulaes
@@ -151,6 +157,7 @@ ${BASEDIR}/OPAM/cli-versioning/share
         opam switch create flambda --formula='["ocaml" {="4.12.0"} "ocaml-option-flambda"]'
 # Return code 2 #
 ### OPAMCLI=2.0 opam switch create working baz --packages baz.2 --show
+[WARNING] OPAMREPOSITORYTARRING was ignored because CLI 2.0 was requested and it was introduced in 2.2.
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>

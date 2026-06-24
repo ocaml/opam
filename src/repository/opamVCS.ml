@@ -81,6 +81,8 @@ module Make (VCS: VCS) = struct
         VCS.reset_tree (OpamRepositoryRoot.Dir.to_dir tmpdir) repo_url
         @@| fun () ->
         OpamRepositoryBackend.Update_full (OpamRepositoryRoot.Dir tmpdir)
+    | OpamRepositoryRoot.Tar _ ->
+      assert false (* VCS repository are always repositories *)
 
   let repo_update_complete repo_root url =
     match repo_root with
@@ -88,6 +90,8 @@ module Make (VCS: VCS) = struct
       VCS.patch_applied (OpamRepositoryRoot.Dir.to_dir repo_root) url
       @@+ fun () ->
       Done ()
+    | OpamRepositoryRoot.Tar _ ->
+      assert false (* VCS repository are always repositories *)
 
   let pull_url ?full_fetch ?cache_dir ?subpath dirname checksum url =
     if checksum <> None then invalid_arg "VC pull_url doesn't allow checksums";

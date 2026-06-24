@@ -69,7 +69,8 @@ module type IO_FILE = sig
   val read_opt: 'a typed_file -> t option
   val safe_read: 'a typed_file -> t
   val read_from_channel: ?filename:'a typed_file -> in_channel -> t
-  val read_from_string: ?filename:'a typed_file -> string -> t
+  val read_from_string: ?loc:string -> ?filename:'a typed_file -> string -> t
+  val safe_read_from_string: ?loc:string -> ?filename:'a typed_file -> string -> t
   val write_to_channel: ?filename:'a typed_file -> out_channel -> t -> unit
   val write_to_string: ?filename:'a typed_file -> t -> string
 end
@@ -129,17 +130,19 @@ module MakeIO (F : IO_Arg) = struct
       OpamSystem.internal_error "File %s does not exist or can't be read"
         (OpamFilename.to_string f)
 
-  let safe_read f =
-    try
-      match read_opt f with
-      | Some f -> f
-      | None ->
-        log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
-        F.empty
-    with
+  let safe_wrapper ~file rd =
+    try rd () with
     | (Pp.Bad_version _ | Pp.Bad_format _) as e->
       OpamConsole.error "%s [skipped]\n"
-        (Pp.string_of_bad_format ~file:(OpamFilename.to_string f) e);
+        (Pp.string_of_bad_format ~file:(OpamFilename.to_string file) e);
+      F.empty
+
+  let safe_read f =
+    safe_wrapper ~file:f @@ fun () ->
+    match read_opt f with
+    | Some f -> f
+    | None ->
+      log ~level:2 "Cannot find %a" (slog OpamFilename.to_string) f;
       F.empty
 
   let read_from_f f input =
@@ -153,8 +156,21 @@ module MakeIO (F : IO_Arg) = struct
   let read_from_channel ?(filename=dummy_file) ic =
     read_from_f (F.of_channel filename) ic
 
-  let read_from_string ?(filename=dummy_file) str =
-    read_from_f (F.of_string filename) str
+  let read_from_string ?loc ?(filename=dummy_file) str =
+    let of_string str =
+      let chrono = OpamConsole.timer () in
+      let r = F.of_string filename str in
+      log ~level:3 "Read %s%s in %.3fs"
+        (OpamSystem.back_to_forward (OpamFilename.to_string filename))
+        (OpamStd.Option.to_string (Printf.sprintf " (out of %s)") loc)
+        (chrono ());
+      r
+    in
+    read_from_f of_string str
+
+  let safe_read_from_string ?loc ?(filename=dummy_file) str =
+    safe_wrapper ~file:filename @@ fun () ->
+    read_from_string ?loc ~filename str
 
   let write_to_channel ?(filename=dummy_file) oc t =
     F.to_channel filename oc t
@@ -711,8 +727,10 @@ module Environment = struct include LineFile(struct
     open_env_updates (safe_read file)
   let read_from_channel ?filename ch =
     open_env_updates (read_from_channel ?filename ch)
-  let read_from_string ?filename s =
-    open_env_updates (read_from_string ?filename s)
+  let read_from_string ?loc ?filename s =
+    open_env_updates (read_from_string ?loc ?filename s)
+  let safe_read_from_string ?loc ?filename s =
+    open_env_updates (safe_read_from_string ?loc ?filename s)
 end
 
 (** (2) Part of the public repository format *)
@@ -880,6 +898,7 @@ module Syntax = struct
       in
       raise (OpamPp.Bad_format (Some pos, msg))
     in
+(*   OpamConsole.error "PARSER_MAIN FILENAME %s" (OpamFilename.to_string filename); *)
     let filename = OpamFilename.to_string filename in
     lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with
                                   Lexing.pos_fname = filename };
@@ -1205,6 +1224,7 @@ module SyntaxFile(X: SyntaxFileArg) : IO_FILE with type t := X.t = struct
 
     let of_string (filename:filename) str =
       let opamfile = Syntax.of_string filename str |> catch_future_syntax_error in
+(*   OpamConsole.error "OF_STRING FILENAME %s" (OpamFilename.to_string filename); *)
       Pp.parse X.pp ~pos:(pos_file filename) opamfile
       |> snd
 
@@ -1244,7 +1264,9 @@ module type BestEffortRead = sig
   val read_opt: t typed_file -> t option
   val safe_read: t typed_file -> t
   val read_from_channel: ?filename:t typed_file -> in_channel -> t
-  val read_from_string: ?filename:t typed_file -> string -> t
+  val read_from_string: ?loc:string -> ?filename:t typed_file -> string -> t
+  val safe_read_from_string:
+    ?loc:string -> ?filename:t typed_file -> string -> t
 end
 
 module MakeBestEffort (S: BestEffortArg) : BestEffortRead
@@ -1395,7 +1417,7 @@ module ConfigSyntax = struct
   let internal = "config"
   let format_version = OpamVersion.of_string "2.1"
   let file_format_version = OpamVersion.of_string "2.0"
-  let root_version = OpamVersion.of_string "2.2"
+  let root_version = OpamVersion.of_string "2.6~alpha"
 
   let default_old_root_version = OpamVersion.of_string "2.1~~previous"
 
@@ -2875,6 +2897,7 @@ module OPAMSyntax = struct
   let with_version version (t:t) = { t with version = Some version }
   let with_version_opt version (t:t) = { t with version }
   let with_nv nv (t:t) =
+(*   OpamConsole.error "WITH NV"; *)
     { t with name = Some (nv.OpamPackage.name);
              version = Some (nv.OpamPackage.version) }
 
@@ -3662,13 +3685,21 @@ module OPAM = struct
   let get_extra_files ~get_repo_files o =
     let open OpamFilename.Op in
     let open OpamStd.Option.Op in
+    let tdebug = false in
     (match metadata_dir o with
-     | None -> None
+     | None ->
+       if tdebug then
+         OpamConsole.error "gt extra files NONE";
+       None
      | Some (None, abs) ->
-       let files_dir = OpamFilename.Dir.of_string abs / OpamPathName.files_d in
+       if tdebug then
+         OpamConsole.error "gt extra files abs %s" abs;
+       let files_dir = OpamFilename.Dir.of_string abs / "files" in
        extra_files o >>| List.map @@ fun (basename, hash) ->
        let content =
          let f = OpamFilename.create files_dir basename in
+         if tdebug then
+           OpamConsole.error "exists ? %s %B" (OpamFilename.to_string f) (OpamFilename.exists f);
          if OpamFilename.exists f then
            Some (lazy (OpamFilename.read f))
          else
@@ -3676,6 +3707,9 @@ module OPAM = struct
        in
        (basename, content, hash)
      | Some (Some r, rel) ->
+       if tdebug then
+         OpamConsole.error "gt extra files r %s rel %s"
+           (OpamRepositoryName.to_string r) rel;
        let files =
          get_repo_files r
            (rel ^ Filename.dir_sep ^ OpamRepositoryPathName.files_d)
@@ -3692,9 +3726,17 @@ module OPAM = struct
       OpamConsole.error "In the opam file%s:\n%s\
                          %s %s been %s."
         (match o.name, o.version, file, o.metadata_dir with
+         | Some n, Some v, _, (Some (Some repo, _)) ->
+           Printf.sprintf " for %s from repository %s"
+             (OpamPackage.to_string (OpamPackage.create n v))
+             (OpamRepositoryName.to_string repo)
          | Some n, Some v, _, _ ->
            Printf.sprintf " for %s"
              (OpamPackage.to_string (OpamPackage.create n v))
+         | _, _, Some f, (Some (Some repo, _)) ->
+           Printf.sprintf " at %s from repository %s"
+             (to_string f)
+             (OpamRepositoryName.to_string repo)
          | _, _, Some f, _ ->
            Printf.sprintf " at %s" (to_string f)
          | _, _, _, Some (None, dir) ->

@@ -86,6 +86,7 @@ let base_env =
     "OPAMNOENVNOTICE", "1";
     "OPAMNODEPEXTS", "1";
     "OPAMDOWNLOADJOBS", "1";
+    "OPAMREPOSITORYTARRING", "1";
   ]
 
 (* See [opamprocess.safe_wait] *)
@@ -664,6 +665,8 @@ let common_filters ?opam dir =
       str "opam-";
       rep1 (alt [xdigit; char '-'])],
     Sed "${OPAMTMP}";
+    seq [ str "packages"; set "/\\" ],
+    Sed "packages/";
     seq [
       str "state-";
       repn digit 14 (Some 14);

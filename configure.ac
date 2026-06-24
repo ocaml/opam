@@ -374,7 +374,7 @@ AS_IF([test "${enable_static}" = yes],[
   ],[
     unix_lib_name=unixnat
   ])
-  echo "(-noautolink -cclib -l${unix_lib_name} -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs -cclib -lopam_core_stubs ${platform_dependent_stuff})" > src/client/linking.sexp
+  echo "(-noautolink -cclib -l${unix_lib_name} -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs -cclib -lopam_core_stubs -cclib -lcheckseum_c_stubs ${platform_dependent_stuff})" > src/client/linking.sexp
   AC_MSG_RESULT([static])
 ],[
   AC_MSG_RESULT([shared])
@@ -398,6 +398,9 @@ AC_CHECK_OCAML_PKG_AT_LEAST([uutf], [1.0.3])
 AC_CHECK_OCAML_PKG_AT_LEAST([sha], [1.13])
 AC_CHECK_OCAML_PKG_AT_LEAST([swhid_core], [0.1])
 AC_CHECK_OCAML_PKG_AT_LEAST([patch], [3.0.0])
+AC_CHECK_OCAML_PKG_AT_LEAST([tar], [3.3.0])
+AC_CHECK_OCAML_PKG_AT_LEAST([checkseum], [0.5.2])
+AC_CHECK_OCAML_PKG_AT_LEAST([decompress], [1.5.1])
 
 # Optional dependencies
 AC_CHECK_OCAML_PKG_AT_LEAST([mccs],[1.1+17])

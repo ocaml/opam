@@ -1152,6 +1152,56 @@ let v2_2 = OpamVersion.of_string "2.2"
 
 let from_2_2_beta_to_2_2 ~on_the_fly:_ _ conf = conf, gtc_none
 
+let v2_6_alpha = OpamVersion.of_string "2.6~alpha"
+
+let from_2_2_to_2_6_alpha ~on_the_fly:_ root conf =
+  let repos =
+    OpamFile.Repos_config.safe_read (OpamPath.repos_config root)
+  in
+  OpamRepositoryName.Map.iter (fun name _ ->
+      let tar = OpamRepositoryRoot.Tar.Path.root root name in
+      if OpamRepositoryRoot.Tar.exists tar then
+        OpamFilename.with_tmp_dir @@ fun tmp_dir ->
+        OpamRepositoryRoot.Tar.extract_in tar tmp_dir;
+        match OpamSystem.get_files (OpamFilename.Dir.to_string tmp_dir) with
+        | [] | _::_::_ -> ()
+        | [x] ->
+          OpamConsole.msg
+            "Upgrading the internal repository format for '%s'...\n"
+            (OpamRepositoryName.to_string name);
+          OpamTar.create ~flat:true
+            (OpamRepositoryRoot.Tar.to_file tar)
+            OpamFilename.Op.(tmp_dir / x))
+    repos;
+  conf, gtc_none
+
+let cond_hard_upg_2_6_alpha root _conf =
+  let exception Found of bool in
+  let repos =
+    OpamFile.Repos_config.safe_read (OpamPath.repos_config root)
+  in
+  OpamRepositoryName.Map.exists (fun name _ ->
+      let tar = OpamRepositoryRoot.Tar.(to_file (Path.root root name)) in
+      OpamFilename.exists tar
+      (* We need to check for a given archive that it is not the root of a
+         repository *)
+      && (try
+            OpamTar.fold_reg_files (fun _ rfile _ ->
+                let is_package =
+                  Option.equal String.equal
+                    (OpamFilename.Unix.root_dir rfile)
+                    (Some OpamRepositoryPathName.packages_d)
+                in
+                let is_repo =
+                  String.equal (OpamFilename.Unix.to_string rfile)
+                    OpamRepositoryPathName.repo_f
+                in
+                raise (Found (is_package || is_repo)))
+              () tar;
+            false
+          with Found is_repo_or_package_dir -> not is_repo_or_package_dir))
+    repos
+
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
@@ -1174,7 +1224,17 @@ let latest_version = OpamFile.Config.root_version
    Essentially, a "Hard" upgrade is used where the change is difficult (or even
    impossible) to perform in-memory. We try our hardest to keep all format
    upgrades "Light" - i.e. the aim is that this version below should never
-   change. *)
+   change.
+
+   Nonetheless, in 2.6, we needed to do an hard upgrade (not possible to have
+   in-memory update), but only for a tiny number of users under some
+   circumstances. We decided to add the conditional hard upgrade. By default,
+   all users won't need to upgrade their opam root, but for a small number, it
+   will trigger an hard upgrade to that version. For each condition hard
+   upgrade, if the condition is not met, it will be a no-op light upgrade.
+   We want to keep the invariant that if there is an conditional hard upgrade,
+   there is no light upgrade associated to the same version.
+   *)
 let latest_hard_upgrade = (* to *) v2_0_beta5
 
 (* intermediate roots that need a hard upgrade when upgrading from them *)
@@ -1212,41 +1272,85 @@ let flock_root =
         "Could not acquire lock for performing format upgrade."
 
 (* returns hard upgrades * light upgrades lists *)
-let upgrades root_version =
+let upgrades root_version root config =
   let is_2_1_intermediate_root =
     List.exists (OpamVersion.equal root_version) v2_1_intermediate_roots
   in
-  let latest_hard_upgrade =
-    if is_2_1_intermediate_root then v2_1_rc else latest_hard_upgrade
+  let all_upgrades =
+    (if is_2_1_intermediate_root then [
+        v2_1_alpha,  from_2_0_to_2_1_alpha,        None;
+        v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2, None;
+        v2_1_rc,     from_2_1_alpha2_to_2_1_rc,    None;
+        v2_1,        from_2_1_rc_to_2_1,           None;
+      ] else [
+       v1_1,        from_1_0_to_1_1,               None;
+       v1_2,        from_1_1_to_1_2,               None;
+       v1_3_dev2,   from_1_2_to_1_3_dev2,          None;
+       v1_3_dev5,   from_1_3_dev2_to_1_3_dev5,     None;
+       v1_3_dev6,   from_1_3_dev5_to_1_3_dev6,     None;
+       v1_3_dev7,   from_1_3_dev6_to_1_3_dev7,     None;
+       v2_0_alpha,  from_1_3_dev7_to_2_0_alpha,    None;
+       v2_0_alpha2, from_2_0_alpha_to_2_0_alpha2,  None;
+       v2_0_alpha3, from_2_0_alpha2_to_2_0_alpha3, None;
+       v2_0_beta,   from_2_0_alpha3_to_2_0_beta,   None;
+       v2_0_beta5,  from_2_0_beta_to_2_0_beta5,    None;
+       v2_0,        from_2_0_beta5_to_2_0,         None;
+       v2_1,        from_2_0_to_2_1,               None;
+     ]) @ [
+      v2_2_alpha,  from_2_1_to_2_2_alpha,          None;
+      v2_2_beta,   from_2_2_alpha_to_2_2_beta,     None;
+      v2_2,        from_2_2_beta_to_2_2,           None;
+      v2_6_alpha,  from_2_2_to_2_6_alpha,          Some cond_hard_upg_2_6_alpha;
+    ]
   in
-  (if is_2_1_intermediate_root then [
-      v2_1_alpha,  from_2_0_to_2_1_alpha;
-      v2_1_alpha2, from_2_1_alpha_to_2_1_alpha2;
-      v2_1_rc,     from_2_1_alpha2_to_2_1_rc;
-      v2_1,        from_2_1_rc_to_2_1;
-    ] else [
-     v1_1,        from_1_0_to_1_1;
-     v1_2,        from_1_1_to_1_2;
-     v1_3_dev2,   from_1_2_to_1_3_dev2;
-     v1_3_dev5,   from_1_3_dev2_to_1_3_dev5;
-     v1_3_dev6,   from_1_3_dev5_to_1_3_dev6;
-     v1_3_dev7,   from_1_3_dev6_to_1_3_dev7;
-     v2_0_alpha,  from_1_3_dev7_to_2_0_alpha;
-     v2_0_alpha2, from_2_0_alpha_to_2_0_alpha2;
-     v2_0_alpha3, from_2_0_alpha2_to_2_0_alpha3;
-     v2_0_beta,   from_2_0_alpha3_to_2_0_beta;
-     v2_0_beta5,  from_2_0_beta_to_2_0_beta5;
-     v2_0,        from_2_0_beta5_to_2_0;
-     v2_1,        from_2_0_to_2_1;
-   ]) @ [
-    v2_2_alpha,  from_2_1_to_2_2_alpha;
-    v2_2_beta,   from_2_2_alpha_to_2_2_beta;
-    v2_2,        from_2_2_beta_to_2_2;
-  ]
-  |> List.filter (fun (v,_) ->
-      OpamVersion.compare root_version v < 0)
-  |> List.partition (fun (v,_) ->
-      OpamVersion.compare v latest_hard_upgrade <= 0)
+  (* First we filter the unneeded upgrades *)
+  let from_root_version =
+    List.filter (fun (v,_,_) ->
+        OpamVersion.compare root_version v < 0)
+      all_upgrades
+  in
+  (* We retrieve hard upgrades version : conditional and unconditional *)
+  let all_hard_upgrades =
+    let latest_hard_upgrade =
+      if is_2_1_intermediate_root then v2_1_rc
+      else latest_hard_upgrade
+    in
+    (latest_hard_upgrade
+     :: List.filter_map (function
+         | _, _, None -> None
+         | v, _, Some cond ->
+           if cond root config then Some v else None)
+       from_root_version)
+  in
+  let hard_upg, light_upg =
+    (* We take the last hard upgrade *)
+    let hard_upgrades =
+      List.filter (fun v ->
+          OpamVersion.compare root_version v < 0)
+        all_hard_upgrades
+      |> List.sort (fun v v' -> -(OpamVersion.compare v v'))
+    in
+    match hard_upgrades with
+    | latest_hard_upgrade::_ ->
+      List.partition (fun (v,_,_cond) ->
+          OpamVersion.compare v latest_hard_upgrade <= 0)
+        from_root_version
+    | [] ->
+      [],
+      (* If there is no hard upgrade, we add a light upgrade for conditional
+         hard upgrade versions *)
+      List.map (fun (v, f, cond) ->
+          let f =
+            match cond with
+            | Some _ -> fun ~on_the_fly:_ _ conf -> conf, gtc_none
+            | None -> f
+          in
+          v, f, cond
+        )
+        from_root_version
+  in
+  let clean (x,y,_) = (x,y) in
+  List.map clean hard_upg, List.map clean light_upg
 
 let default_opam_root_version = v2_1_alpha
 
@@ -1270,7 +1374,7 @@ let as_necessary ?reinit requested_lock global_lock root config =
   let root_version = get_root_version root config in
   let cmp = OpamVersion.(compare OpamFile.Config.root_version root_version) in
   if cmp <= 0 then config, gtc_none (* newer or same *) else
-  let hard_upg, light_upg = upgrades root_version in
+  let hard_upg, light_upg = upgrades root_version root config in
   let need_hard_upg = hard_upg <> [] in
   let on_the_fly, global_lock_kind =
     if not need_hard_upg && requested_lock <> `Lock_write then
@@ -1416,7 +1520,7 @@ let as_necessary_repo_switch_t updates read_f lock_kind gt =
         (* we keep only light upgrades as hard upgrade is already handled by
            global state loading, so we must not have to handle hard upgrades
            as this point. *)
-        let _, upgrades = upgrades written_root_version in
+        let _, upgrades = upgrades written_root_version root config in
         let config =
           OpamStd.Option.default config
             (OpamFile.Config.BestEffort.read_opt config_f)

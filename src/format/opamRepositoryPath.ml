@@ -87,7 +87,7 @@ end
 
 (* Other paths *)
 
-let tar root name =
+let repo_tarring root name =
   root / OpamRepositoryPathName.repo_d //
   (OpamRepositoryName.to_string name ^ ".tar.gz")
 

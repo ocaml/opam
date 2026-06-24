@@ -12,6 +12,13 @@ open OpamTypes
 
 let log ?level fmt = OpamConsole.log "REPO_BACKEND" ?level fmt
 let slog = OpamConsole.slog
+let _tdebug go =
+  if go then
+    fun fmt ->
+      Printf.ksprintf (fun str ->  OpamConsole.error "RBACK:%s" str) fmt
+  else
+    fun fmt ->
+      Printf.ksprintf (fun _ -> ()) fmt
 
 type update =
   | Update_full of OpamRepositoryRoot.t
@@ -92,6 +99,15 @@ let add_prefix repo1 repo2 =
     {patch with operation}
 
 let get_diff repo1 repo2 =
+  let tdebug = false in
+  if tdebug then OpamConsole.error "RBCK: DIFF GENERIQ";
+  if tdebug then OpamConsole.error "RBCK: diff repo1 : %s" (OpamRepositoryRoot.to_string repo1);
+  if tdebug then OpamConsole.error "RBCK: diff repo2 : %s" (OpamRepositoryRoot.to_string repo2);
+  if false
+  && ((OpamRepositoryRoot.is_dir repo1 && OpamRepositoryRoot.is_tar repo2)
+      || (OpamRepositoryRoot.is_dir repo2 && OpamRepositoryRoot.is_tar repo1))
+  then
+    OpamConsole.error "RBACK: DIFF BETWEEN TWO TYPES, yeah!";
   let chrono = OpamConsole.timer () in
   log "diff: %a"
     (fun fmt () ->
@@ -103,11 +119,20 @@ let get_diff repo1 repo2 =
            (OpamFilename.Base.to_string (OpamRepositoryRoot.basename repo1))
            (OpamFilename.Base.to_string (OpamRepositoryRoot.basename repo2))
        else
-         Format.fprintf fmt "%s vs %s"
+         let prefix r = if OpamRepositoryRoot.is_tar r then "tar" else "dir" in
+         Format.fprintf fmt "%s %s vs %s %s"
+           (prefix repo1)
            (OpamRepositoryRoot.to_string repo1)
+           (prefix repo2)
            (OpamRepositoryRoot.to_string repo2))
     ();
   let get_contents =
+    let get_tar_contents tar =
+      OpamRepositoryRoot.Tar.fold (fun acc filename content ->
+          OpamStd.String.Map.add
+            (OpamFilename.Unix.to_string filename) content acc)
+        OpamStd.String.Map.empty tar
+    in
     let read_dir_contents dir =
       let fail s = failwith (s ^ " are unsupported") in
       (* Recursively read directory contents into a string map.
@@ -140,9 +165,16 @@ let get_diff repo1 repo2 =
     function
     | OpamRepositoryRoot.Dir dir ->
       read_dir_contents (OpamRepositoryRoot.Dir.to_string dir)
+    | OpamRepositoryRoot.Tar tar ->
+      get_tar_contents tar
   in
   let contents1 = get_contents repo1 in
   let contents2 = get_contents repo2 in
+  if tdebug then
+    (OpamConsole.error "ORB:DIFF: CONTENTS 1:\n%s"
+       (OpamStd.Format.itemize Fun.id (OpamStd.String.Map.keys contents1));
+     (OpamConsole.error "ORB:DIFF: CONTENTS 2:\n%s"
+        (OpamStd.Format.itemize Fun.id (OpamStd.String.Map.keys contents2))));
   let get_content_diffs filename contents1 content2 diffs seen =
     (* Compute content diffs for a single file.
        Compares [content2] (new) against [contents1] (old state map).
@@ -177,6 +209,9 @@ let get_diff repo1 repo2 =
           | Some diff -> diff :: diffs)
       contents1 diffs
   in
+  if tdebug then
+    OpamConsole.error "ORB:DIFF: patch list\n %s"
+      ((Format.asprintf "%a" Patch.pp_list) diffs);
   match diffs with
   | [] ->
     log "Internal diff (empty) done in %.2fs." (chrono ());
@@ -188,4 +223,6 @@ let get_diff repo1 repo2 =
     let patch_file = OpamFilename.of_string patch in
     let file_diffs = List.map (add_prefix repo1 repo2) diffs in
     OpamFilename.write patch_file (Format.asprintf "%a" Patch.pp_list file_diffs);
+    if tdebug then
+      OpamConsole.error "ORB:DIFF: patch file \n%s" (OpamFilename.read patch_file);
     Some (patch_file, diffs)

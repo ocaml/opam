@@ -91,7 +91,7 @@ The following actions will be faked:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 Faking installation of test-all-fields.1
 Done.
-### cat OPAM/repo/default/packages/test-all-fields/test-all-fields.1/opam
+### tar -x -O -f OPAM/repo/default.tar.gz packages/test-all-fields/test-all-fields.1/opam
 opam-version:
 "2.0"
 name:

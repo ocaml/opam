@@ -528,6 +528,7 @@ let apply_repo_update repo repo_root = function
          (OpamRepositoryName.to_string repo.repo_name));
     Done []
   | Update_patch (f, diffs)  ->
+    let tdebug = false in
     OpamConsole.msg "[%s] synchronised from %s\n"
       (OpamConsole.colorise `green
          (OpamRepositoryName.to_string repo.repo_name))
@@ -535,6 +536,11 @@ let apply_repo_update repo repo_root = function
     log "%a: applying patch update at %a"
       (slog OpamRepositoryName.to_string) repo.repo_name
       (slog OpamFilename.to_string) f;
+    if tdebug then
+      OpamConsole.error "REPO:ARU: patch file\n%s" (OpamFilename.read f);
+    if tdebug then
+      OpamConsole.error "REPO:ARU: patch diff\n%s"
+        ((Format.asprintf "%a" Patch.pp_list) diffs);
     let patch_result =
       OpamRepositoryRoot.patch ~allow_unclean:false (`Patch_diffs diffs)
         repo_root

@@ -875,11 +875,13 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
            let repo_dir =
              OpamRepositoryRoot.Dir.Path.root st.switch_global.root repo
            in
-           let tar = OpamRepositoryPath.tar st.switch_global.root repo in
-           if OpamFilename.exists tar &&
+           let tar =
+             OpamRepositoryRoot.Tar.Path.root st.switch_global.root repo
+           in
+           if OpamRepositoryRoot.Tar.exists tar &&
               not (OpamRepositoryRoot.Dir.exists repo_dir) then
              Printf.sprintf "<%s>%s%s"
-               (OpamFilename.to_string tar)
+               (OpamRepositoryRoot.Tar.to_string tar)
                Filename.dir_sep
                rdir
            else
