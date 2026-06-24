@@ -55,6 +55,7 @@ users)
   * Update depexts availability repository state cache when running `opam update --depexts` [#6489 @arozovyk - fix #6461]
   * Display status message while loading system package availability during `opam update` [#6489 @arozovyk - fix #6461]
   * `opam update` now supports updating a repository that changed a file to a directory of the same name and vice versa [#6915 @rjbou @arozovyk - fix #3830]
+  * Add some debug logging for opam files loading from repository (dir vs diff) [#6941 @rjbou]
 
 ## Tree
 
@@ -169,6 +170,7 @@ users)
     aborted or failed [#6922 @NathanReb]
   * Add test for update in repository that changes directories to files and vice versa [#6915 @rjbou]
   * Add an http repository test [#6939 #6961 @rjbou]
+  * Add a tests for the several layouts of packages in a repository [#6941 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -238,6 +240,7 @@ users)
   * `OpamUpdate.get_sys_available`: factorize depexts availability computation logic from `OpamUpdate.repositories` [#6489 @arozovyk]
   * `OpamRepositoryState`: add `syspkgs_available` that returns the stored depext availability status in repository state [#6489 @rjbou]
   * `OpamSysInteract`: add `available_packages_and_family` that returns availability status and the os family [#6489 @rjbou]
+  * `OpamRepositoryState.load_opams_from_dir`: now sorts files and directories read from disk before processing them [#6941 @rjbou]
 
 
 ## opam-solver
