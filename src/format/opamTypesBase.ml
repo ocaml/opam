@@ -42,6 +42,7 @@ let all_std_paths =
 
 let string_of_shell = function
   | SH_fish -> "fish"
+  | SH_nu   -> "nu"
   | SH_csh  -> "csh"
   | SH_zsh  -> "zsh"
   | SH_sh   -> "sh"
