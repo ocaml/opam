@@ -2242,9 +2242,8 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### :III: Switch creation
 ### :III:1: empty
 ### opam switch create empty-switch --mpety
-opam: unknown option '--mpety', did you mean either '-m' or '--empty'?
-Usage: opam switch [OPTION]… [COMMAND] [ARG]…
-Try 'opam switch --help' or 'opam --help' for more information.
+Usage: opam switch [--help] [OPTION]… [COMMAND] [ARG]…
+opam: unknown option '--mpety'. Did you mean either '-m' or '--empty'?
 # Return code 2 #
 ### :III:2: with package
 ### opam switch create package-switch --package main-repo | grep -v '^- ./$' | sed-cmd rsync tar cp touch mkdir | sed-hash $MD5 md5 | sed-hash $XSMD5 xs-hash

@@ -75,15 +75,39 @@ val string_of_enum: (validity * string * 'a) list -> string
 type 'a subcommand = validity * string * 'a * string list * string
 type 'a subcommands = 'a subcommand list
 
+
+type ('cmd, 'd) parameter_completer =
+      opt_switch:string option ->
+      ('cmd, 'd) Arg.Completion.func
+
 val mk_subcommands:
-  cli:OpamCLIVersion.Sourced.t -> 'a subcommands ->
+  cli:OpamCLIVersion.Sourced.t ->
+  ?complete_parameters: ('a, string) parameter_completer ->
+  'a subcommands ->
   'a option Term.t * string list Term.t
 
 type 'a default = [> `default of string] as 'a
 
+(** In [mk_subcommands_with_default], we use this completer twice:
+    - once, alongside the built-in enum completer, to provide suggestions for the first parameter,
+      which is either a subcommand name or the argument to the default subcommand.
+    - once to provide suggestions for the parameters of subcommands, as in [mk_subcommands].
+
+    Unfortunately, the type of the returned ['a directive]s differs between the two, so we need
+    higher-rank polymorphism to express this, which we smuggle in via this wrapper record.
+*)
+type 'cmd parameter_completer_default = {
+  complete_parameters:'d. ('cmd default, 'd) parameter_completer
+} [@@unboxed]
+
 val mk_subcommands_with_default:
-  cli:OpamCLIVersion.Sourced.t -> 'a default subcommands ->
+  cli:OpamCLIVersion.Sourced.t ->
+  ?complete_parameters:'a parameter_completer_default ->
+  'a default subcommands ->
   'a option Term.t * string list Term.t
+
+val complete_switches: ('a, 'b) Arg.Completion.func
+val switch_flag: string option Term.t
 
 val bad_subcommand:
   cli:OpamCLIVersion.Sourced.t -> 'a default subcommands ->

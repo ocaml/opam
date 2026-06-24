@@ -676,7 +676,37 @@ let mk_subdoc ~cli ?(defaults=[]) ?(extra_defaults=[]) commands =
       `I (cmds, d)
     ) commands
 
-let mk_subcommands_aux ~cli my_enum commands =
+let complete_switches _ ~token =
+  OpamGlobalState.with_ `Lock_none @@ fun gt ->
+  let gt = OpamGlobalState.fix_switch_list gt in
+  let switches = OpamFile.Config.installed_switches gt.config |> List.sort OpamSwitch.compare in
+  let directives = List.filter_map
+    (fun sw ->
+      let sw_name = OpamSwitch.to_string sw in
+      if OpamCompat.String.starts_with sw_name ~prefix:token then
+          Some (Arg.Completion.string sw_name)
+      else
+        None)
+    switches
+  in
+  Ok directives
+
+
+(** part of the global_options term, but by separating it out we can have other
+    completions depend on it for contextual information *)
+let switch_flag =
+  let switch = Arg.Conv.of_conv ~completion:(Arg.Completion.make complete_switches)
+      Arg.string
+  in
+  mk_opt ~cli:(cli2_0, `Default) cli_original ~section:Manpage.s_common_options ["switch"]
+    "SWITCH" "Use $(docv) as the current compiler switch. \
+              This is equivalent to setting $(b,\\$OPAMSWITCH) to $(i,SWITCH)."
+    (Arg.some switch) None
+
+type ('cmd, 'd) parameter_completer =
+  opt_switch:string option -> ('cmd, 'd) Arg.Completion.func
+
+let mk_subcommands_aux ~cli ~complete_parameters my_enum commands =
   let commands =
     List.map (fun (v,n,c,a,d) -> contented_validity v c, n, a, d) commands
   in
@@ -697,26 +727,59 @@ let mk_subcommands_aux ~cli my_enum commands =
     term_cli_check ~check Arg.(pos 0 (some & my_enum scommand) None & doc)
   in
   let params =
+
+    let completion =
+      let completer ctx ~token =
+        let (opt_switch, cmd) = Option.default (None, None) ctx in
+        complete_parameters ~opt_switch cmd ~token in
+      Arg.Completion.make ~context:(Term.product switch_flag command) completer in
+    let params_conv = Arg.Conv.of_conv ~completion Arg.string in
     let doc = Arg.info ~doc:"Optional parameters." [] in
-    Arg.(value & pos_right 0 string [] & doc)
+    Arg.(value & pos_right 0 params_conv [] & doc)
   in
   command, params
 
-let mk_subcommands ~cli commands =
-  mk_subcommands_aux ~cli Arg.enum commands
+let default_subcommand_completer =
+  fun ~opt_switch:_ _ ~token:_ -> Ok []
+
+let mk_subcommands ~cli ?(complete_parameters=default_subcommand_completer) commands =
+  mk_subcommands_aux ~cli ~complete_parameters Arg.enum commands
 
 type 'a default = [> `default of string] as 'a
 
-let mk_subcommands_with_default ~cli commands =
+type 'cmd parameter_completer_default = {
+  complete_parameters:'d. ('cmd default, 'd) parameter_completer
+} [@@unboxed]
+
+let mk_subcommands_with_default ~cli
+  ?complete_parameters:({complete_parameters}={complete_parameters=default_subcommand_completer})
+  commands
+  =
   let enum_with_default_valrem sl =
-    let parse, print = Arg.enum sl in
-    let parse s =
-      match parse s with
-      | `Ok x -> `Ok (x)
-      | _ -> `Ok (Valid (`default s)) in
-    parse, print
+    let base = Arg.enum sl in
+    let parser = Arg.Conv.parser base in
+    let completion =
+      let Complete (_, enum_completer) = Arg.Completion.complete
+        (Arg.Conv.completion base)
+      in
+      let complete ctx ~token =
+        let opt_switch = Option.default None ctx in
+        let enum_values =
+          enum_completer None ~token |> Result.value ~default:[]
+        in
+        match complete_parameters ~opt_switch (Some (`default "")) ~token  with
+        | Error _ -> Ok enum_values
+        | Ok l -> Ok (enum_values @ l)
+      in
+      Arg.Completion.make ~context:switch_flag complete
+    in
+    let parser s =
+      match parser s with
+      | Ok x -> Ok (x)
+      | _ -> Ok (Valid (`default s)) in
+    Arg.Conv.of_conv ~completion ~parser base
   in
-  mk_subcommands_aux ~cli enum_with_default_valrem commands
+  mk_subcommands_aux ~cli ~complete_parameters enum_with_default_valrem commands
 
 let bad_subcommand ~cli subcommands (command, usersubcommand, userparams) =
   match usersubcommand with
