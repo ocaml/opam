@@ -1395,7 +1395,7 @@ module ConfigSyntax = struct
   let internal = "config"
   let format_version = OpamVersion.of_string "2.1"
   let file_format_version = OpamVersion.of_string "2.0"
-  let root_version = OpamVersion.of_string "2.2"
+  let root_version = OpamVersion.of_string "2.6~alpha1"
 
   let default_old_root_version = OpamVersion.of_string "2.1~~previous"
 
@@ -1966,7 +1966,9 @@ module InitConfig = struct
   include SyntaxFile(InitConfigSyntax)
 end
 
-module Repos_configSyntax = struct
+(** Repositories configuration *)
+
+module Repos_config_LegacySyntax = struct
 
   let internal = "repos-config"
   let format_version = OpamVersion.of_string "2.0"
@@ -2000,6 +2002,145 @@ module Repos_configSyntax = struct
   let pp = pp_cond ()
 
 end
+
+module Repos_config_Legacy = struct
+  include Repos_config_LegacySyntax
+  include SyntaxFile(Repos_config_LegacySyntax)
+  module BestEffort = MakeBestEffort(Repos_config_LegacySyntax)
+end
+
+(* A repository configuration section "repo" in <repos/reposèconfig> file *)
+
+module Repo_configSyntax = struct
+  let internal = "repo-config"
+  let format_version = OpamVersion.of_string "2.6"
+
+  type t = {
+    url: url;
+    trust: trust_anchors option;
+    errors: (string * Pp.bad_format) list;
+  }
+
+  let empty = {
+    url = OpamUrl.empty;
+    trust  = None;
+    errors = [];
+  }
+
+  let create ?trust url = { url; trust; errors = [] }
+
+  let url t = t.url
+  let trust t = t.trust
+
+  let fields = [
+    "url", Pp.ppacc
+      (fun url t -> { t with url })
+      (fun { url; _ } -> url)
+      Pp.V.url;
+    "fingerprint", Pp.ppacc_opt
+      (fun fingerprints t ->
+         match t.trust with
+         | Some x -> { t with trust = Some { x with fingerprints }}
+         | None -> { t with trust = Some { fingerprints; quorum = 1}})
+      (fun t ->
+         match t.trust with
+         | Some {fingerprints; _} -> Some fingerprints
+         | None -> None)
+      (Pp.V.map_list ~depth:1 Pp.V.string);
+    "quorum",
+    Pp.ppacc_opt
+      (fun quorum t ->
+         match t.trust with
+         | Some x -> { t with trust = Some { x with quorum }}
+         | None -> { t with trust = Some { quorum; fingerprints = []}})
+      (fun t ->
+         match t.trust with
+         | Some {quorum; _} -> Some quorum
+         | None -> None)
+      Pp.V.int;
+  ]
+
+  let pp_contents : (opamfile_item list, t) OpamPp.t =
+    let name = internal in
+    Pp.I.fields ~name ~empty fields
+    -| Pp.I.on_errors ~name (fun t e -> {t with errors = e::t.errors})
+    -| Pp.pp ~name
+      (fun ~pos t ->
+         if t.url = OpamUrl.empty then
+           OpamPp.bad_format ~pos "missing URL in repo field"
+         else t)
+      (fun x -> x)
+
+  let pp = Pp.I.map_file pp_contents
+
+end
+
+module Repo_config = struct
+  include Repo_configSyntax
+  include SyntaxFile(Repo_configSyntax)
+end
+
+(* Repositories configuration <repos/repos-config> *)
+
+module Repos_configSyntax = struct
+
+  let internal = "repos-config"
+  let format_version = OpamVersion.of_string "2.6"
+  let file_format_version = OpamVersion.of_string "2.0"
+
+  type repo = Repo_config.t
+  type t = {
+    opam_version: opam_version;
+    repos : repo OpamRepositoryName.Map.t;
+  }
+
+  let empty = {
+    opam_version = file_format_version;
+    repos = OpamRepositoryName.Map.empty;
+  }
+
+  let create ?opam_version repos = {
+    opam_version = OpamStd.Option.default file_format_version opam_version;
+    repos;
+  }
+
+  let opam_version t = t.opam_version
+  let repos t = t.repos
+  let with_opam_version opam_version t = { t with opam_version }
+  let with_repos repos t = { t with repos }
+
+  let fields = [
+    "opam-version", Pp.ppacc with_opam_version opam_version
+      (Pp.V.string -| Pp.of_module "opam-version" (module OpamVersion));
+  ]
+
+  let sections = [
+    "repo", Pp.ppacc with_repos repos
+      ((Pp.map_list
+          (Pp.map_pair
+             (Pp.pp
+                (fun ~pos -> function
+                   | Some o -> OpamRepositoryName.of_string o
+                   | None -> Pp.bad_format ~pos "missing repo name")
+                (fun b -> Some (OpamRepositoryName.to_string b)))
+             Repo_config.pp_contents))
+       -| Pp.of_pair "RepositoryNameMap"
+         OpamRepositoryName.Map.(of_list, bindings))
+  ]
+
+  let pp_cond ?f ?condition () =
+    let name = internal in
+    let format_version = file_format_version in
+    Pp.I.map_file @@
+    Pp.I.check_opam_version ?f ~format_version ()
+    -| Pp.I.opam_version ~format_version ()
+    -| Pp.I.fields ~name ~empty ~sections fields
+    -| Pp.I.show_errors ~name ?condition ()
+
+  let pp = pp_cond ()
+
+end
+
 module Repos_config = struct
   include Repos_configSyntax
   include SyntaxFile(Repos_configSyntax)
