@@ -196,7 +196,7 @@ let init cli =
     `P "Initialise the opam state, or update opam init options";
     `P (Printf.sprintf
          "The $(b,init) command initialises a local \"opam root\" (by default, \
-          $(i,~%s.opam%s) unless overriden by $(i,--root) or the $(i,OPAMROOT) \
+          $(i,~%s.opam%s) unless overriden by $(b,--root) or the $(b,OPAMROOT) \
           environment variable) that holds opam's data and packages. This is a \
           necessary step for normal operation of opam. The initial software \
           repositories are fetched, and an initial 'switch' can also be \
@@ -217,7 +217,7 @@ let init cli =
     `P (Printf.sprintf
          "Any field from the built-in initial configuration can be overridden \
           through $(i,~%s.opamrc), $(i,/etc/opamrc), or a file supplied with \
-          $(i,--config). The default configuration for this version of opam \
+          $(b,--config). The default configuration for this version of opam \
           can be obtained using $(b,--show-default-opamrc)."
          OpamArg.dir_sep);
   ] @ OpamArg.man_build_option_section
@@ -596,7 +596,7 @@ let list ?(force_search=false) cli =
   let pattern_list =
     arg_list "PATTERNS"
       "Package patterns with globs. Unless $(b,--search) is specified, they \
-       match againsta $(b,NAME) or $(b,NAME.VERSION)"
+       match againsta $(i,NAME) or $(i,NAME.VERSION)"
       Arg.string
   in
   let state_selector =
@@ -1337,7 +1337,7 @@ module Common_config_flags = struct
 
   let inplace_path cli =
     mk_flag ~cli cli_original ["inplace-path"]
-      "When updating the $(i,PATH) variable, replace any pre-existing opam \
+      "When updating the $(b,PATH) variable, replace any pre-existing opam \
        path in-place rather than putting the new path in front. This means \
        programs installed in opam that were shadowed will remain so after \
        $(b,opam env)"
@@ -1345,13 +1345,13 @@ module Common_config_flags = struct
   let set_opamroot cli =
     mk_flag ~cli cli_original ["set-root"]
       "With the $(b,env) and $(b,exec) subcommands, also sets the \
-       $(i,OPAMROOT) variable, making sure further calls to opam will use the \
+       $(b,OPAMROOT) variable, making sure further calls to opam will use the \
        same root."
 
   let set_opamswitch cli =
     mk_flag ~cli cli_original ["set-switch"]
       "With the $(b,env) and $(b,exec) subcommands, also sets the \
-       $(i,OPAMSWITCH) variable, making sure further calls to opam will use \
+       $(b,OPAMSWITCH) variable, making sure further calls to opam will use \
        the same switch as this one."
 
 end
@@ -1366,7 +1366,7 @@ let config cli =
     Printf.sprintf
       "Returns the bindings for the environment variables set in the \
        current switch, e.g. PATH, in a format intended to be evaluated by \
-       a shell. With $(i,-v), add comments documenting the reason or \
+       a shell. With $(b,-v), add comments documenting the reason or \
        package of origin for each binding. This is most usefully used as \
        $(b,%s) to have further shell commands be evaluated in the proper \
        opam context. Can also be accessed through $(b,opam env)."
@@ -1399,7 +1399,7 @@ let config cli =
      can be used to cross-compile between switches using $(b,opam config exec \
      --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion takes place in \
      command and args. If no switch is present on the command line or in the \
-     $(i,OPAMSWITCH) environment variable, $(i,OPAMSWITCH) is not set in \
+     $(b,OPAMSWITCH) environment variable, $(b,OPAMSWITCH) is not set in \
      $(i,COMMAND)'s environment. Can also be accessed through $(b,opam exec).";
     cli_between ~option:`default cli2_0 cli2_1 ~replaced:"opam var", "set", `set,
     ["VAR";"VALUE"], "Set switch variable";
@@ -1684,8 +1684,8 @@ let exec cli =
         command can be used to cross-compile between switches using $(b,opam \
         config exec --switch=SWITCH -- COMMAND ARG1 ... ARGn). Opam expansion \
         takes place in command and args. If no switch is present on the \
-        command line or in the $(i,OPAMSWITCH) environment variable, \
-        $(i,OPAMSWITCH) is not set in $(i,COMMAND)'s environment.";
+        command line or in the $(b,OPAMSWITCH) environment variable, \
+        $(b,OPAMSWITCH) is not set in $(i,COMMAND)'s environment.";
     `P "This is a shortcut, and equivalent to $(b,opam config exec).";
   ] in
   let cmd =
@@ -1721,7 +1721,7 @@ let env cli =
     `P (Printf.sprintf
         "Returns the bindings for the environment variables set in the current \
          switch, e.g. PATH, in a format intended to be evaluated by a shell. \
-         With $(i,-v), add comments documenting the reason or package of origin \
+         With $(b,-v), add comments documenting the reason or package of origin \
          for each binding. This is most usefully used as $(b,%s) \
          to have further shell commands be evaluated in the proper opam \
          context."
@@ -2681,7 +2681,7 @@ let switch cli =
     cli_original, "create", `install, ["SWITCH"; "[COMPILER]"],
     "Create a new switch, and install the given compiler there. $(i,SWITCH) \
      can be a plain name, or a directory, absolute or relative, in which case \
-     a local switch is created below the given directory. $(i,COMPILER), if \
+     a local switch is created below the given directory. $(b,COMPILER), if \
      omitted, defaults to $(i,SWITCH) if it is a plain name, unless \
      $(b,--packages), $(b,--formula) or $(b,--empty) is specified. When \
      creating a local switch, and none of these options are present, the \
@@ -2744,7 +2744,7 @@ let switch cli =
          that will be held inside $(i,~%s.opam), or a directory name, which in \
          that case is the directory where the switch prefix will be installed, as \
          %s. Opam will automatically select a switch by that name found in the \
-         current directory or its parents, unless $(i,OPAMSWITCH) is set or \
+         current directory or its parents, unless $(b,OPAMSWITCH) is set or \
          $(b,--switch) is specified. When creating a directory switch, if \
          package definitions are found locally, the user is automatically \
          prompted to install them after the switch is created unless \
@@ -2765,7 +2765,7 @@ let switch cli =
       ~extra_defaults:[
         cli_from cli2_2, "-",
         "Switches back to the previous non-local switch (similar to $(b,git switch -)). \
-         To set the current switch to a switch named $(i,-) use $(b,--cli=2.1) \
+         To set the current switch to a switch named $(b,-) use $(b,--cli=2.1) \
          or lower, or use $(b,opam switch set -)"
       ] commands
     @ [
@@ -2816,8 +2816,8 @@ let switch cli =
       "When creating a new switch, use the given selection of repositories \
        instead of the default. $(i,REPOS) should be a comma-separated list of \
        either already registered repository names (configured through e.g. \
-       $(i,opam repository add --dont-select)), or $(b,NAME)=$(b,URL) \
-       bindings, in which case $(b,NAME) should not be registered already to a \
+       $(i,opam repository add --dont-select)), or $(i,NAME)=$(i,URL) \
+       bindings, in which case $(i,NAME) should not be registered already to a \
        different URL, and the new repository will be registered. See $(i,opam \
        repository) for more details. This option also affects \
        $(i,list-available)."
@@ -3291,7 +3291,7 @@ let pin ?(unpin_only=false) cli =
         modifies package $(i,PKG) to fetch its source from $(i,URL). If a \
         package definition is found in the package's source tree, it will be \
         used locally.";
-    `P "If (or $(i,-)) is specified, the package is pinned without a source \
+    `P "If (or $(b,-)) is specified, the package is pinned without a source \
         archive. The package name can be omitted if the target is a directory \
         containing one or more valid package definitions (this allows one to do \
         e.g. $(i,opam pin add .) from a source directory.";
@@ -3331,7 +3331,7 @@ let pin ?(unpin_only=false) cli =
         "Sets the kind of pinning. Must be one of %s. \
          If unset or $(i,auto), is inferred from the format of the target, \
          defaulting to the appropriate version control if one is detected in \
-         the given directory, or to $(i,path) otherwise. $(i,OPAMPINKINDAUTO) \
+         the given directory, or to $(i,path) otherwise. $(b,OPAMPINKINDAUTO) \
          can be set to \"0\" to disable automatic detection of version control.\
          Use $(i,none) to pin without a target (for virtual packages)."
         (Arg.doc_alts_enum main_kinds)
@@ -3364,7 +3364,7 @@ let pin ?(unpin_only=false) cli =
     mk_opt ~cli (cli_from cli2_1) ["with-version"] "VERSION"
       "Set the pinning version to $(i,VERSION) for named $(i,PACKAGES) or \
        packages retrieved from $(i,TARGET). It has priority over any other \
-       version specification (opam file version field, $(b,name.vers) \
+       version specification (opam file version field, $(i,name.vers) \
        argument)). When pinning to a version, the package source from that \
        version is used, but declared as being $(i,VERSION) to opam.\n\
        Using $(b,--with-version) is equivalent to using $(b,--edit) and \
@@ -3939,10 +3939,10 @@ let lint cli =
   let warnings =
     mk_opt ~cli cli_original ["warnings";"W"] "WARNS"
       "Select the warnings to show or hide. $(i,WARNS) should be a \
-       concatenation of $(b,+N), $(b,-N), $(b,@N), $(b,+N..M), \
-       $(b,-N..M), $(b,@N..M) to respectively enable, disable or \
-       enable-as-error warning or error number $(b,N) or \
-       all warnings with numbers between $(b,N) and $(b,M) inclusive.\n\
+       concatenation of $(i,+N), $(i,-N), $(i,@N), $(i,+N..M), \
+       $(i,-N..M), $(i,@N..M) to respectively enable, disable or \
+       enable-as-error warning or error number $(i,N) or \
+       all warnings with numbers between $(i,N) and $(i,M) inclusive.\n\
        All warnings are enabled by default, unless $(i,WARNS) starts with \
        $(b,+) or $(b,@), which disables all but the selected ones."
       warn_selector []
@@ -4427,7 +4427,7 @@ let lock cli =
         dependencies some packages are pinned";
     `P "- pins are resolved: if a package is locally pinned, opam tries to get \
         its remote url and branch, and sets this as the target URL; otherwise \
-        it ignore them. You can use $(i,--keep-local) to keep the local urls.";
+        it ignore them. You can use $(b,--keep-local) to keep the local urls.";
     `S Manpage.s_arguments;
     `S Manpage.s_options;
   ]
