@@ -1323,6 +1323,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list-coinstallable.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-list-format)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff list-format.test list-format.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-list-format)))
+
+(rule
+ (targets list-format.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list-format.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-list-large-dependencies)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
