@@ -280,9 +280,9 @@ The following actions will be performed:
 -> installed nip.1
 Done.
 ### opam pin add nip2 --kind version
-opam: Ambiguous argument "nip2", if it is the pinning target, you must specify a package name first
-Usage: opam pin [OPTION]… [COMMAND] [ARG]…
-Try 'opam pin --help' or 'opam --help' for more information.
+Usage: opam pin [--help] [OPTION]… [COMMAND] [ARG]…
+opam: Ambiguous argument "nip2", if it is the pinning target, you must
+      specify a package name first
 # Return code 2 #
 ### opam pin add nip2 ./nip2 --kind version
 Fatal error: Invalid character '/' in package version "./nip2"

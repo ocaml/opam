@@ -953,6 +953,10 @@ let show cli =
               $(i,deprecated) flag");
   ] in
   let fields =
+    let fields_conv =
+      let completion = Arg.Completion.make complete_opam_fields in
+      Arg.(Conv.of_conv ~completion (list string))
+    in
     mk_opt ~cli cli_original ["f";"field"] "FIELDS"
       (Printf.sprintf
          "Only display the values of these fields. Fields can be selected \
@@ -961,7 +965,7 @@ let show cli =
           field can be queried by combinig with $(b,--raw)"
          (OpamStd.List.concat_map ", " (Printf.sprintf "$(i,%s)" @* snd)
             OpamListCommand.field_names))
-      Arg.(list string) []
+      fields_conv []
   in
   let show_empty =
     mk_flag ~cli cli_original ["empty-fields"]
@@ -1426,8 +1430,15 @@ let config cli =
   ] @ mk_subdoc ~cli commands
     @ [`S Manpage.s_options]
   in
-
-  let command, params = mk_subcommands ~cli commands in
+  let complete_parameters ~opt_switch cmd ~token =
+    match cmd with
+    | Some (`list) ->
+      OpamArg.complete_packages () (Some opt_switch) ~token
+    | Some (`subst | `pef | `cudf) ->
+      Ok [Arg.Completion.files]
+    | _ -> Ok []
+  in
+  let command, params = mk_subcommands ~complete_parameters ~cli commands in
   let open Common_config_flags in
 
   let config global_options
@@ -1689,7 +1700,8 @@ let exec cli =
     `P "This is a shortcut, and equivalent to $(b,opam config exec).";
   ] in
   let cmd =
-    Arg.(non_empty & pos_all string [] & info ~docv:"COMMAND [ARG]..." [])
+    let cmd_conv = Arg.(Conv.of_conv ~completion:Completion.complete_restart string) in
+    Arg.(non_empty & pos_all cmd_conv [] & info ~docv:"COMMAND [ARG]..." [])
   in
   let no_switch =
     mk_flag ~cli (cli_from cli2_2) ["no-switch"]
@@ -1772,11 +1784,12 @@ let env cli =
         (OpamEnv.add [] [])
   in
   let open Common_config_flags in
+  let ( $ ) = OpamCmdliner.Term.( $ ) in
   mk_command  ~cli cli_original "env" ~doc ~man
-  Term.(const env
-        $global_options cli $shell_opt cli cli_original $sexp cli
-        $inplace_path cli $set_opamroot cli $set_opamswitch cli
-        $revert $check)
+    (Term.const env
+     $global_options cli $shell_opt cli cli_original $sexp cli
+     $inplace_path cli $set_opamroot cli $set_opamswitch cli
+     $revert $check)
 
 (* INSTALL *)
 let install_doc = "Install a list of packages."
@@ -2141,9 +2154,18 @@ let update cli =
     mk_flag ~cli cli_original ["u";"upgrade"]
       "Automatically run $(b,opam upgrade) after the update." in
   let name_list =
+    let completion =
+      let complete ctx ~token =
+        let repos = OpamArg.complete_repos ctx ~token |> Result.value ~default:[] in
+         OpamArg.complete_packages ~which:(`Pinned) ~extras:repos () ctx ~token
+      in
+      Arg.Completion.make ~context:OpamArgTools.switch_flag complete
+    in
+    let names_conv =
+      Arg.(Conv.of_conv ~completion string) in
     arg_list "NAMES"
       "List of repository or development package names to update."
-      Arg.string in
+      names_conv in
   let all =
     mk_flag ~cli cli_original ["a"; "all"]
       "Update all configured repositories, not only what is set in the current \
@@ -2320,7 +2342,16 @@ let repository cli =
       `S Manpage.s_options;
     ]
   in
-  let command, params = mk_subcommands ~cli commands in
+  let complete_parameters ~opt_switch:_ cmd ~token  =
+    match cmd with
+      | Some (`add | `set_url) ->
+        OpamArg.complete_repos None ~token |> Result.map
+          (List.cons Arg.Completion.dirs)
+      | Some (`remove | `priority | `set_repos) ->
+        OpamArg.complete_repos None ~token
+      | _ -> Ok []
+  in
+  let command, params = mk_subcommands ~complete_parameters ~cli commands in
   let scope =
     let scope_info ?docv flags doc =
       Arg.info ~docs:scope_section ~doc ?docv flags
@@ -2339,7 +2370,9 @@ let repository cli =
       ]
     in
     let switches =
-      Arg.opt Arg.(list string) []
+      let switch_conv = Arg.(Conv.of_conv ~completion:(Completion.make OpamArg.complete_switches) (list string))
+      in
+      Arg.opt switch_conv []
         (scope_info ["on-switches"] ~docv:"SWITCHES"
            "Act on the selections of the given list of switches")
     in
@@ -2357,7 +2390,7 @@ let repository cli =
       order, therefore 1 is the highest priority.  Negative ints can be used to \
       select from the lowest priority, -1 being last. $(b,set-repos) can \
       otherwise be used to explicitly set the repository list at once."
-      Arg.(int) 1
+      level_int 1
   in
   let repository global_options command kind short scope rank params () =
     apply_global_options cli global_options;
@@ -2791,8 +2824,19 @@ let switch cli =
     @ [`S Manpage.s_options]
     @ OpamArg.man_build_option_section
   in
-
-  let command, params = mk_subcommands_with_default ~cli commands in
+  let complete_parameters ~opt_switch command ~token =
+      match command with
+      | Some (`set | `remove | `reinstall | `install | `default _) | None  ->
+        OpamArg.complete_switches None ~token
+      | Some (`link) ->
+        OpamArg.complete_switches None ~token |>
+          Result.map (List.cons Arg.Completion.dirs)
+      | Some (`export | `import) ->
+         Ok [Arg.Completion.files]
+      | Some (`set_invariant) ->
+        OpamArg.complete_packages () (Some opt_switch) ~token
+      | _ -> Ok [] in
+  let command, params = mk_subcommands_with_default ~complete_parameters:{complete_parameters} ~cli commands in
   let no_switch =
     mk_flag ~cli cli_original ["no-switch"]
       "Don't automatically select newly installed switches." in
@@ -3310,7 +3354,18 @@ let pin ?(unpin_only=false) cli =
       Term.const (Some `remove),
       Arg.(value & pos_all string [] & Arg.info [])
     else
-      mk_subcommands_with_default ~cli commands in
+      let complete_parameters ~opt_switch cmd ~token =
+          match cmd with
+          | Some (`scan) ->
+            Ok [Arg.Completion.dirs]
+          | Some (`remove) ->
+            OpamArg.complete_packages ~which:(`Pinned) ~extras:[Arg.Completion.dirs] ()
+              (Some opt_switch) ~token
+          | Some (`add | `default _) ->
+            OpamArg.complete_packages ~which:(`All) ~extras:[Arg.Completion.dirs] ()
+              (Some opt_switch) ~token
+          | _ -> Ok [] in
+      mk_subcommands_with_default ~cli ~complete_parameters:{complete_parameters} commands in
   let edit =
     mk_flag ~cli cli_original ["e";"edit"]
       "With $(i,opam pin add), edit the opam file as with `opam pin edit' \
@@ -3600,16 +3655,16 @@ let pin ?(unpin_only=false) cli =
             match as_url with
             | Some ((_::_) as url) -> err, url @ acc
             | _->
-              match (fst package) arg with
-              | `Ok (name, None) -> err, name::acc
-              | `Ok (name, Some version) ->
+              match (Arg.conv_parser package) arg with
+              | Ok (name, None) -> err, name::acc
+              | Ok (name, Some version) ->
                 (match OpamPinned.version_opt st name with
                  | Some v when not (OpamPackage.Version.equal v version) ->
                    OpamConsole.error "%s is pinned but not to version %s. Skipping."
                      (OpamPackage.Name.to_string name) (OpamPackage.Version.to_string version);
                    true, acc
                  | Some _ | None -> err, name::acc)
-              | `Error _ ->
+              | Error _ ->
                 OpamConsole.error
                   "No package pinned to this target found, or invalid package \
                    name/url: %s" arg;
@@ -3629,15 +3684,15 @@ let pin ?(unpin_only=false) cli =
       OpamSwitchState.drop @@ OpamClient.PIN.unpin st ~action to_unpin;
       `Ok ()
     | `edit nv  ->
-      (match (fst package) nv with
-       | `Ok (name, version) ->
+      (match (Arg.conv_parser package) nv with
+       | Ok (name, version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let version = OpamStd.Option.Op.(with_version ++ version) in
          OpamSwitchState.drop @@
          OpamClient.PIN.edit st ?locked ~action ?version name;
          `Ok ()
-       | `Error e -> `Error (false, e))
+       | Error (`Msg e) -> `Error (false, e))
     | `add_normalised pins ->
       let pins = OpamPinCommand.parse_pins pins in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -3651,8 +3706,8 @@ let pin ?(unpin_only=false) cli =
             pins);
       `Ok ()
     | `add_dev nv ->
-      (match (fst package) nv with
-       | `Ok (name,version) ->
+      (match (Arg.conv_parser package) nv with
+       | Ok (name,version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          let name = OpamSolution.fuzzy_name st name in
@@ -3661,7 +3716,7 @@ let pin ?(unpin_only=false) cli =
          OpamClient.PIN.pin st name ?locked ~edit ?version ~action
            `Dev_upstream;
          `Ok ()
-       | `Error e ->
+       | Error (`Msg e) ->
          if command = Some `add then `Error (false, e)
          else bad_subcommand ~cli commands ("pin", command, params))
     | `add_url arg ->
@@ -3683,9 +3738,9 @@ let pin ?(unpin_only=false) cli =
                names);
          `Ok ())
     | `add_current n ->
-      (match (fst package) n with
-       | `Error e -> `Error (false, e)
-       | `Ok (name,version) ->
+      (match (Arg.conv_parser package) n with
+       | Error (`Msg e) -> `Error (false, e)
+       | Ok (name,version) ->
          OpamGlobalState.with_ `Lock_none @@ fun gt ->
          OpamSwitchState.with_ `Lock_write gt @@ fun st ->
          match OpamPackage.package_of_name_opt st.installed name, version with
@@ -3704,8 +3759,8 @@ let pin ?(unpin_only=false) cli =
            OpamPinCommand.pin_current st nv;
            `Ok ())
     | `add_wtarget (n, target) ->
-      (match (fst package) n with
-       | `Ok (name,version) ->
+      (match (Arg.conv_parser package) n with
+       | Ok (name,version) ->
          let pin =
            match pin_target kind target, with_version with
            | `Version v, Some v' -> `Source_version (v, v')
@@ -3717,7 +3772,7 @@ let pin ?(unpin_only=false) cli =
          OpamSwitchState.drop @@
          OpamClient.PIN.pin st name ?locked ?version ~edit ~action ?subpath pin;
          `Ok ()
-       | `Error e -> `Error (false, e))
+       | Error (`Msg e) -> `Error (false, e))
     | `incorrect -> bad_subcommand ~cli commands ("pin", command, params)
   in
   mk_command_ret  ~cli cli_original "pin" ~doc ~man
@@ -4500,12 +4555,15 @@ let help =
     | None       -> `Help (`Pager, None)
     | Some topic ->
       let topics = "topics" :: cmds in
-      let conv, _ = OpamCmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+      let conv =
+        OpamCmdliner.Arg.conv_parser
+          (OpamCmdliner.Arg.enum (List.rev_map (fun s -> (s, s)) topics))
+      in
       match conv topic with
-      | `Error e -> `Error (false, e)
-      | `Ok t when t = "topics" ->
+      | Error (`Msg e) -> `Error (false, e)
+      | Ok t when t = "topics" ->
           List.iter (OpamConsole.msg "%s\n") cmds; `Ok ()
-      | `Ok t -> `Help (man_format, Some t) in
+      | Ok t -> `Help (man_format, Some t) in
 
   Term.(ret (const help $Arg.man_format $Term.choice_names $topic)),
   Cmd.info "help" ~doc ~man
