@@ -207,6 +207,7 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamAdminRepoUpgrade.do_upgrade_mirror`: allow `repo_root <> cwd` [#6680 @rjbou]
   * `OpamArg`: add `build_options_no_depexts` getter to retrieve the value of the given flag  [#6489 @rjbou]
   * `OpamClientConfig.opam_init`: replace `no_depexts` argument by `depexts` [#6489 @rjbou]
   * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
