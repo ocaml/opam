@@ -69,8 +69,6 @@ let make kind s =
   else invalid_arg ("OpamHash.make_"^string_of_kind kind)
 
 let md5 = make `MD5
-let sha256 = make `SHA256
-let sha512 = make `SHA512
 
 let of_string_opt s =
   try

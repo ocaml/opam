@@ -35,12 +35,6 @@ val add:
 (** Remove a repository from ~/.opam/repos, without updating any selections *)
 val remove: rw repos_state -> repository_name -> rw repos_state
 
-(** Updates the global switch selection, used as default for switches that don't
-    specify their selections (e.g. newly created switches) *)
-val update_global_selection:
-  rw global_state -> (repository_name list -> repository_name list) ->
-  rw global_state
-
 (** Updates the specified selections using the given functions, taking locks as
     required *)
 val update_selection:

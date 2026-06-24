@@ -16,10 +16,6 @@ open OpamTypes
 
 module Package : sig
   type t = Cudf.package
-  val equal : t -> t -> bool
-  val compare : t -> t -> int
-  val to_json : t -> OpamJson.t
-  val of_json : OpamJson.t -> t option
 end
 
 (** Cudf sets *)
@@ -47,10 +43,6 @@ module Graph: sig
 end
 
 
-(** Computation of differences between universe. Returns the sets of packages to
-    install and remove respectively. *)
-val diff: Cudf.universe -> Cudf.universe -> (Set.t * Set.t)
-
 (** Cudf action graph *)
 module Action: OpamActionGraph.ACTION with type package = Package.t
 module ActionGraph: OpamActionGraph.SIG with type package = Package.t
@@ -65,29 +57,6 @@ val dependency_sort: Cudf.universe -> Set.t -> Cudf.package list
 (** Pre-process a universe to remove incompatible/unneeded packages and ease the
     task of the solvers *)
 val trim_universe: Cudf.universe -> Set.t -> Cudf.universe
-
-(** Check if a request is satisfiable and return the reasons why not unless
-    [explain] is set to [false] *)
-val check_request:
-  ?explain:bool ->
-  version_map:int OpamPackage.Map.t ->
-  Cudf.universe ->
-  Cudf_types.vpkg request ->
-  (Cudf.universe, conflict) solver_result
-
-(** Compute the final universe state using the external solver. *)
-val get_final_universe:
-  version_map:int OpamPackage.Map.t ->
-  Cudf.universe ->
-  Cudf_types.vpkg request ->
-  (Cudf.universe, conflict) solver_result
-
-(** Compute the list of actions to match the difference between two
-    universe. Remark: the result order is unspecified, ie. need to use
-    {!atomic_actions} to get a solution which respects the
-    topological order induced by dependencies. *)
-val actions_of_diff:
-  (Set.t * Set.t) -> Cudf.package atomic_action list
 
 exception Cyclic_actions of Cudf.package action list list
 
@@ -147,23 +116,6 @@ val to_actions:
   (Cudf.universe, conflict) solver_result ->
   (Cudf.package atomic_action list, conflict) solver_result
 
-(** [remove universe name constr] Remove all the packages called
-    [name] satisfying the constraints [constr] in the universe
-    [universe]. *)
-val remove: Cudf.universe -> Cudf_types.pkgname -> Cudf_types.constr -> Cudf.universe
-
-(** Uninstall all the package in the universe. *)
-val uninstall_all: Cudf.universe -> Cudf.universe
-
-(** Install a package in the universe. We don't care about any
-    invariant here (eg. the resulting universe can have multiple
-    versions of the same package installed). *)
-val install: Cudf.universe -> Cudf.package -> Cudf.universe
-
-(** Remove all the versions of a given package, but the one given as argument. *)
-val remove_all_uninstalled_versions_but: Cudf.universe ->
-  string -> Cudf_types.constr -> Cudf.universe
-
 (** Cudf labels for package fields in the cudf format
     (use for the field Cudf.pkg_extra and with Cudf.lookup_package_property) *)
 
@@ -188,26 +140,19 @@ val s_version_lag: string
 
 (** valid cudf name for the dummy package used for enforcing opam's switch
     invariants *)
-val opam_invariant_package_name: string
 
 (** valid cudf name and version for the dummy package used for enforcing opam's
     switch invariants *)
 val opam_invariant_package: string * int
 
-val opam_deprequest_package_name: string
 val opam_deprequest_package: string * int
 
 val is_opam_invariant: Cudf.package -> bool
 
 (** dummy package that shouldn't exist and encodes unavailability (by depending on it) *)
 val unavailable_package_name: string
-val unavailable_package: string * int
-val is_unavailable_package: Cudf.package -> bool
 
 (** {2 Pretty-printing} *)
-
-(** Convert a package constraint to something readable. *)
-val string_of_vpkgs: Cudf_types.vpkg list -> string
 
 val make_conflicts:
   version_map:int package_map -> Cudf.universe ->
@@ -241,10 +186,6 @@ val conflict_explanations:
   package_set -> (name * OpamFormula.version_formula -> string) -> conflict ->
   (string * string list * string list) list * string list
 
-val string_of_explanation:
-  (name * OpamFormula.version_formula -> string) -> explanation ->
-  string * string list * string list
-
 val conflict_explanations_raw:
   package_set -> conflict -> explanation list * Action.t list list
 
@@ -253,74 +194,12 @@ val conflict_explanations_raw:
 val string_of_conflict:
   ?start_column:int -> string * string list * string list -> string
 
-val conflict_cycles : conflict -> package action list list option
-
 (** Dumps the given cudf universe to the given channel *)
 val dump_universe: out_channel -> Cudf.universe -> unit
-
-(** Pretty-print atoms *)
-val string_of_atom: Cudf_types.vpkg -> string
-
-(** Pretty-print requests *)
-val string_of_request: Cudf_types.vpkg request -> string
-
-(** Pretty-print the universe *)
-val string_of_universe: Cudf.universe -> string
-
-(** Pretty-print of packages *)
-val string_of_packages: Cudf.package list -> string
 
 (** Convert a cudf package back to an OPAM package *)
 val cudf2opam: Cudf.package -> package
 
-(** Returns the list of packages in a Cudf universe *)
-val packages: Cudf.universe -> Cudf.package list
-
-(** Converts an OPAM request to a Cudf request. The [wish_install] field is
-    required to be a conjunction *)
-val to_cudf: Cudf.universe -> Cudf_types.vpkg request
-  -> Cudf.preamble * Cudf.universe * Cudf.request
-
 (** Like {!OpamTypesBase.action_contents} but return the single package of
     remove, install, reinstal, and change action *)
 val action_contents: 'a action -> 'a
-
-module Json: sig
-  open Cudf_types
-
-  val version_to_json : version OpamJson.encoder
-  val version_of_json : version OpamJson.decoder
-
-  val relop_to_json : relop OpamJson.encoder
-  val relop_of_json : relop OpamJson.decoder
-
-  val enum_keep_to_json : enum_keep OpamJson.encoder
-  val enum_keep_of_json : enum_keep OpamJson.decoder
-
-  val constr_to_json : constr OpamJson.encoder
-  val constr_of_json : constr OpamJson.decoder
-
-  val vpkg_to_json : vpkg OpamJson.encoder
-  val vpkg_of_json : vpkg OpamJson.decoder
-  val vpkglist_to_json : vpkglist OpamJson.encoder
-  val vpkglist_of_json : vpkglist OpamJson.decoder
-
-  val veqpkg_to_json : veqpkg OpamJson.encoder
-  val veqpkg_of_json : veqpkg OpamJson.decoder
-  val veqpkglist_to_json : veqpkglist OpamJson.encoder
-  val veqpkglist_of_json : veqpkglist OpamJson.decoder
-
-  val vpkgformula_to_json : vpkgformula OpamJson.encoder
-  val vpkgformula_of_json : vpkgformula OpamJson.decoder
-
-  val typedecl1_to_json : typedecl1 OpamJson.encoder
-  val typedecl1_of_json : typedecl1 OpamJson.decoder
-  val typedecl_to_json : typedecl OpamJson.encoder
-  val typedecl_of_json : typedecl OpamJson.decoder
-
-  val typed_value_to_json : typed_value OpamJson.encoder
-  val typed_value_of_json : typed_value OpamJson.decoder
-
-  val package_to_json : Cudf.package OpamJson.encoder
-  val package_of_json : Cudf.package OpamJson.decoder
-end

@@ -60,8 +60,6 @@ let backup_file =
 
 let backup_dir t = t / "backup"
 
-let backup t = backup_dir t /- backup_file ()
-
 let plugin_prefix = "opam-"
 
 let plugins t = t / OpamPathName.plugins_d
@@ -75,11 +73,6 @@ let plugin_bin t name =
     else plugin_prefix ^ sname
   in
   plugins_bin t // basename
-
-let plugin t name =
-  let sname = OpamPackage.Name.to_string name in
-  assert (sname <> "bin");
-  plugins t / sname
 
 let last_env t = t / ".last-env"
 
@@ -139,8 +132,6 @@ module Switch = struct
 
   let extra_files_dir t a = meta t a / "extra-files-cache"
 
-  let extra_file t a h = extra_files_dir t a // OpamHash.contents h
-
   let sources t a nv = sources_dir t a / OpamPackage.to_string nv
 
   let pinned_package t a name =
@@ -184,8 +175,6 @@ module Switch = struct
       match num with
       | None -> L.root t a / "man"
       | Some n -> L.root t a / "man" / ("man" ^ n)
-
-    let man_dirs t a = List.map (fun num -> man_dir ~num t a) mans
 
     let share_dir t a = L.root t a / "share"
 

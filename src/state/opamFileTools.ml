@@ -1233,11 +1233,6 @@ let lint_channel ?check_extra_files ?check_upstream ?handle_dirname
   let reader filename = OpamFile.Syntax.of_channel filename ic in
   lint_gen ?check_extra_files ?check_upstream ?handle_dirname reader filename
 
-let lint_string ?check_extra_files ?check_upstream ?handle_dirname
-    filename string =
-  let reader filename = OpamFile.Syntax.of_string filename string in
-  lint_gen ?check_extra_files ?check_upstream ?handle_dirname reader filename
-
 let all_lint_warnings () =
   t_lint ~all:true OpamFile.OPAM.empty
 

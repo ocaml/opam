@@ -98,9 +98,6 @@ val install_depexts: ?force_depext:bool -> ?confirm:bool -> rw switch_state ->
 
 (** {2 Atoms} *)
 
-(** Return an atom with a strict version constraint *)
-val eq_atom: name -> version -> atom
-
 (** Return a simple atom, with no version constraint, from a package*)
 val atom_of_package: package -> atom
 
@@ -131,6 +128,3 @@ val fuzzy_name: 'a switch_state -> name -> name
     Exits with a message on error. *)
 val sanitize_atom_list: ?permissive: bool -> ?installed: bool ->
   'a switch_state -> atom list -> atom list
-
-(** {2 Stats} *)
-val sum: stats -> int

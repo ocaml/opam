@@ -19,12 +19,7 @@ module ActionGraph : OpamActionGraph.SIG with type package = package
 
 type solution
 
-val empty_universe: universe
-
 (** {2 Solver} *)
-
-(** Convert a request to a string *)
-val string_of_request: atom request -> string
 
 (** Compute statistics about a solution *)
 val stats: solution -> stats
@@ -52,13 +47,6 @@ val print_solution:
   requested:name_set -> reinstall:package_set -> available:package_set ->
   ?skip:package OpamPackage.Map.t ->
   solution -> unit
-
-(** Serialize a solution *)
-val solution_to_json : solution OpamJson.encoder
-val solution_of_json : solution OpamJson.decoder
-
-(** Computes an opam->cudf version map from an universe *)
-val cudf_versions_map: universe -> int OpamPackage.Map.t
 
 (** Creates a CUDF universe from an OPAM universe, including the given packages.
     Evaluation of the first 3 arguments is staged. Warning: when [depopts] is
@@ -116,14 +104,6 @@ val dependency_graph :
   installed:bool ->
   unavailable:bool ->
   universe -> PkgGraph.t
-
-(** Check the current set of installed packages in a universe for
-    inconsistencies *)
-val check_for_conflicts : universe -> OpamCudf.conflict option
-
-(** Checks the given package set for complete installability ; returns None if
-    they can all be installed together *)
-val coinstallability_check : universe -> package_set -> OpamCudf.conflict option
 
 (** Checks if the given atoms can be honored at the same time in the given
     universe *)

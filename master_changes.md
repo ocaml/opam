@@ -70,6 +70,8 @@ users)
 
 ## Clean
 
+  * Use the [dead_code_analyzer](https://github.com/LexiFi/dead_code_analyzer) to remove unused exported values, fields and constructors [#6954 @fantazio]
+
 ## Env
 
 ## Opamfile
@@ -212,10 +214,24 @@ users)
   * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
   * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
   * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
+  * `OpamAdminCheck`: remove `installability_check`, `cycle_check`, and `get_obsolete` [#6954 @fantazio]
+  * `OpamArg`: remove `cli2_5`, `escape_path`, `name_list`, `param_list`, `atom_list`, `nonempty_atom_list`, `locked`, `package_with_version`, `atom_or_local`, `atom_or_dir`, `opamlist_columns`, and `scrubbed_environment_variables` [#6954 @fantazio]
+  * `OpamAuxCommands`: remove `name_and_dir_of_opam_file`, and `resolve_locals` [#6954 @fantazio]
+  * `OpamCliMain`: remove `check_and_run_external_commands`, `main_catch_all`, `json_out`, and `run` [#6954 @fantazio]
+  * `OpamClient`: remove `reinstall_t`, `upgrade_t`, and `PIN.post_pin_action` [#6954 @fantazio]
+  * `OpamClientConfig`: remove `search_files` [#6954 @fantazio]
+  * `OpamConfigCommand`: remove `parse_whole` [#6954 @fantazio]
+  * `OpamInitDefaults`: remove `default_compiler`, and `eval_variables` [#6954 @fantazio]
+  * `OpamListCommand`: remove `field_of_string`, `pattern_selector.ext_fields`, and `selector.Atoms` [#6954 @fantazio]
+  * `OpamCommand`: remove `update_global_selection` [#6954 @fantazio]
+  * `OpamSolution`: remove `eq_atom`, and `sum` [#6954 @fantazio]
 
 ## opam-repository
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
+  * `OpamRepository`: remove `find_backend` [#6954 @fantazio]
+  * `OpamRepositoryBackend`: remove `to_json`, `compare`, and `check_digest` [#6954 @fantazio]
+  * `OpamRepositoryConfig`: remove `E.curl`, and `E.fetch` [#6954 @fantazio]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -238,9 +254,21 @@ users)
   * `OpamUpdate.get_sys_available`: factorize depexts availability computation logic from `OpamUpdate.repositories` [#6489 @arozovyk]
   * `OpamRepositoryState`: add `syspkgs_available` that returns the stored depext availability status in repository state [#6489 @rjbou]
   * `OpamSysInteract`: add `available_packages_and_family` that returns availability status and the os family [#6489 @rjbou]
+  * `OpamEnv`: remove `get_opam`, `get_opam_raw`, `cygwin_non_shadowed_programs`, `path`, `update_user_setup`, `write_static_init_scripts`, and `clear_dynamic_init_scripts` [#6954 @fantazio]
+  * `OpamFileTools`: remove `lint_string` [#6954 @fantazio]
+  * `OpamFormatUpgrade`: remove `latest_version` [#6954 @fantazio]
+  * `OpamGlobalState`: remove `all_installed`, and `unlock` [#6954 @fantazio]
+  * `OpamRepositoryState`: remove `load_repo`, and `cleanup` [#6954 @fantazio]
+  * `OpamScript`: remove `prompt` [#6954 @fantazio]
+  * `OpamStateConfig`: remove `safe_load`, and `load_config_root` [#6954 @fantazio]
+  * `OpamSwitchState`: remove `get_conflicts_t`, `unlock`, `descr`, `descr_opt`, and `dev_packages` [#6954 @fantazio]
+  * `OpamUpdate`: remove `dev_package`, `pinned_packages, and `pinned_package` [#6954 @fantazio]
+  * `OpamStateTypes`: remove `switch_state.invalidated` [#6954 @fantazio]
 
 
 ## opam-solver
+  * `OpamCudf`: remove `Package.equal`, `Package.compare`, `Package.to_json`, `Package.of_json`, `diff`, `check_request`, `get_final_universe`, `actions_of_diff`, `remove`, `uninstall_all`, `install`, `remove_all_uninstalled_versions_but`, `opam_invariant_package_name`, `opam_deprequest_package_name`, `unavailable_package`, `is_unavailable_package`, `string_of_vpkgs`, `string_of_explanation`, `conflict_cycles`, `string_of_atom`, `string_of_request`, `string_of_universe`, `string_of_packages`, `packages`, `to_cudf`, and `Json` [#6954 @fantazio]
+  * `OpamSolver`: remove `empty_universe`, `string_of_request`, `solution_to_json`, `solution_of_json`, `cudf_versions_map`, `check_for_conflicts`, and `coinstallability_check` [#6954 @fantazio]
 
 ## opam-format
   * `OpamFile.Descr` was moved to `OpamFile.Descr_legacy` and a simpler `OpamFile.Descr` module was created only containing non-IO functions removing the outdated `descr` file support [#6827 @kit-ty-kate]
@@ -256,6 +284,25 @@ users)
   * `OpamRepositoryPath` was moved from `opam-repository` [#6917 @rjbou]
   * `OpamRepositoryPath.{root,repo,packages_dir,packages,opam,files,descr,url}: have been moved to a new `OpamRepositoryPath.Make` functor [#6680 @rjbou @kit-ty-kate]
   * `OpamFilter.expand_interpolations_in_file`: changed argument type from `basename` to `filename` [#6910 @NathanReb]
+  * `OpamFile.Config`: remove `with_best_effort_prefix`, `with_solver`, and `with_dl_tool` [#6954 @fantazio]
+  * `OpaFile.InitConfig`: remove `opam_version`, `with_jobs`, `with_dl_jobs`, `with_dl_cache`, `with_solver_criteria`, `with_solver`, and `with_global_variables` [#6954 @fantazio]
+  * `OpamFile.Descr_legacy`: remove `of_string`, and `full` [#6954 @fantazio]
+  * `OpamFile.URL`: remove `with_mirrors`, `with_swhid`, `with_subpath`, and `with_subpath_opt` [#6954 @fantazio]
+  * `OpamFile.Environment`: remove `read`, `read_from_channel`, and `read_from_string` [#6954 @fantazio]
+  * `OpamFile.Comp`: remove `create_preinstalled`, `opam_version`, `name`, `src`, `configure`, `make`, `make`, `env`, `tags`, `with_src`, `with_patches`, `with_configure`, `with_make`, `with_build`, and `with_packages` [#6954 @fantazio]
+  * `OpamFile.Dot_installed`: remove `with_bin`, `with_sbin`, `with_lib`, `with_toplevel`, `with_stublibs`, `with_share`, `with_share_root`, `with_etc`, `with_doc`, `with_man`, `with_libexec`, `with_lib_root`, `with_libexec_root`, and `with_misc` [#6954 @fantazio]
+  * `OpamFile.Dot_config: remove `variables` [#6954 @fantazio]
+  * `OpamFile.Report`: remove `browse`, `with_browse`, `with_upstream`, `with_announce`, and `with_stamp_opt` [#6954 @fantazio]
+  * `OpamFile.Syntax`: remove `pp_channel`, `to_channel`, `to_string`, and `to_string_with_preserved_format` [#6954 @fantazio]
+  * `OpamFilter`: remove `string_interp_regex`, `eval_to_string`, `ident_value`, `ident_bool`, `expand_interpolations_in_file_full`, and `gen_filter_formula` [#6954 @fantazio]
+  * `OpamFormat`: remove `value_pos`, `V.simple_arg`, `V.group`, `V.map_group`, `V.filter_ident`, `V.package_atom`, `I.file`, `I.item`, and `I.extract_field` [#6954 @fantazio]
+  * `OpamFormula`: remove `compare_relop`, `compare_version_constraint`, `string_of_disjunction`, `string_of_cnf`, `string_of_dnf`, `compare`, `compare_nc`, `formula_to_cnf`, `dnf_of_formula`, `simplify_ineq_formula`, `to_conjunction`, `of_conjunction`, `to_disjunction`, and `of_disjunction` [#6954 @fantazio]
+  * `OpamPath`: remove `backup`, `plugins`, `plugin`, `Switch.meta_dirname`, `Switch.extra_file`, `Switch.Default.lib_dir`, `Switch.Default.stublibs`, `Switch.Default.toplevel`, `Switch.Default.doc_dir`, `Switch.Default.share_dir`, `Switch.Default.etc_dir`, `Switch.Default.man_dir`, `Switch.Default.man_dirs`, `Switch.Default.sbin`, `Switch.DefaultF.doc_dir`, `Switch.DefaultF.etc_dir`, and `Switch.DefaultF.man_dirs` [#6954 @fantazio]
+  * `OpamPp`: remove `ignore` [#6954 @fantazio]
+  * `OpamSysPkg`: remove `string_of_status`, and `string_of_to_install` [#6954 @fantazio]
+  * `OpamTypesBase`: remove `map_atomic_action`, `map_highlevel_action`, `map_concrete_action`, `nullify_pos_map`, `pos_best`, `iter_success`, `env_update`, `switch_selections_compare`, `simple_arg_equal`, and `arg_equal` [#6954 @fantazio]
+  * `OpamTypes`: remove `universe.u_action` [#6954 @fantazio]
+  * `OpamTypes`: make type `lock` private [#6954 @fantazio]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
@@ -279,3 +326,19 @@ users)
   * `OpamSystem.in_dir`: removed [#6910 @NathanReb]
   * `OpamSystem.chdir`: removed [#6910 @NathanReb]
   * `OpamSystem.{command,commands,read_command_output}`: add a `?dir: dirname` optional arg to launch the command in a specific directory [#6910 @NathanReb]
+  * `Cmdliner_msg`: remove `pp_try_help` [#6954 @fantazio]
+  * `Cmdliner_trie`: remove `is_empty` [#6954 @fantazio]
+  * `OpamCmdliner.Manpage`: remove `title`, `t`, `s_name`, `s_synopsis`, `s_environment_intro`, `s_see_also`, `s_none`, and `print` [#6954 @fantazio]
+  * `OpamCmdliner.Term`: remove `app`, `map`, `product`, `Syntax`, `term_result`, `term_result'`, `cli_parse_result`, `cli_parse_result'`, `main_name`, `with_used_args`, `exit_info`, `default_exits`, `default_error_exits`, `env_info`, `name`, `eval_choice`, `eval_peek_opts`, `exit_status_success`, `exit_status_cli_error`, `exit_status_internal_error`, `exit_status_of_result`, `exit_status_of_status_result`, `exit`, `exit_status`, `pure`, and `man_format` [#6954 @fantazio]
+  * `OpamCmdliner.Cmd`: remove `Exit.ok`, `Exit.some_error`, `Exit.cli_error`, `Exit.internal_error`, `Exit.info`, `Exit.info_code`, `Exit.defaults`, `Env.var`, `Env.info`, `eval`, `eval'`, `eval_result`, `eval_result'`, `eval_exit`, `eval_value'`, and `eval_peek_opts` [#6954 @fantazio]
+  * `OpamCmdliner.Arg`: remove `conv`, `conv'`, `conv_parser`, `conv_printer`, `conv_docv`, `parser_of_kind_of_string`, `some'`, `pos_left`, `last`, `bool`, `char`, `nativeint`, `int32`, `int64`, `float` `file`, `dir`, `non_dir_file`, `array`, `t2`, `t3`, `t4`, `doc_quote`, `doc_alts`, `converter`, `pconv`, `env`, and `env_var` [#6954 @fantazio]
+  * `OpamConsole`: remove `color`, `utf8_extended`, `acolor`, `acolor_w`, `Symbols.latin_capital_letter_o_with_stroke`, and `Tree.get_default_symbols` [#6954 @fantazio]
+  * `OpamCoreConfig`: remove `E.confirmlevel`, `E.yes`, `set`, and `setk` [#6954 @fantazio]
+  * `OpamDirTrack`: remove `is_empty`, and `string_of_change` [#6954 @fantazio]
+  * `OpamFilename`: remove `env_of_list`, `to_list_dir`, `with_open_out_bin`, `with_tmp_file`, `with_tmp_file_job`, `with_contents`, `copy_in`, `extract_generic_file`, `with_flock_write_then_read`, `Attribute.to_string_list`, and `Attribute.of_string_list` [#6954 @fantazio]
+  * `OpamHash`: remove `md5`, `sha256`, and `sha512` [#6954 @fantazio]
+  * `OpamProcess`: remove `is_verbose`, `Job.seq_map`, and `t.p_info` [#6954 @fantazio]
+  * `OpamSHA`: remove `sha1_file`, `sha256_file`, `sha512_file`, `sha1_string`, `sha256_string`, and `sha512_string` [#6954 @fantazio]
+  * `OpamSystem`: remove `verbose_for_base_commands`, `get_files`, `files_with_links`, `directories_with_links`, `lock_max`, `register_printer`, and `classify_executable` [#6954 @fantazio]
+  * `OpamVersion`: remove `major`, `git`, and `message` [#6954 @fantazio]
+  * `OpamVersionCompare`: remove `equal` [#6954 @fantazio]

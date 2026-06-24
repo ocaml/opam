@@ -23,10 +23,6 @@ val contents: t -> string
 
 val string_of_kind: kind -> string
 
-val md5: string -> t
-val sha256: string -> t
-val sha512: string -> t
-
 include OpamStd.ABSTRACT with type t := t
 
 val of_string_opt: string -> t option

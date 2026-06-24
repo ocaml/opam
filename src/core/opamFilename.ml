@@ -135,14 +135,6 @@ let link_dir ~target ~link =
   else
     OpamSystem.link (Dir.to_string target) (Dir.to_string link)
 
-let to_list_dir dir =
-  let base d = Dir.of_string (Filename.basename (Dir.to_string d)) in
-  let rec aux acc dir =
-    let d = dirname_dir dir in
-    if d <> dir then aux (base dir :: acc) d
-    else base dir :: acc in
-  aux [] dir
-
 let (/) d1 s2 =
   let s1 = Dir.to_string d1 in
   raw_dir (Filename.concat s1 s2)
@@ -246,9 +238,6 @@ let with_open_out_bin_aux open_out_bin filename f =
     OpamStd.Exn.finalise e @@ fun () ->
     close_out oc; remove filename
 
-let with_open_out_bin [@deprecated] =
-  with_open_out_bin_aux (fun f -> (), open_out_bin f)
-
 let with_open_out_bin_atomic filename f =
   let open_temp_file filename =
     let mode = [Open_binary] in
@@ -269,15 +258,6 @@ let exists filename =
 
 let opt_file filename =
   if exists filename then Some filename else None
-
-let with_tmp_file fn =
-  OpamSystem.with_tmp_file (fun file -> fn (of_string file))
-
-let with_tmp_file_job fjob =
-  OpamSystem.with_tmp_file_job (fun file -> fjob (of_string file))
-
-let with_contents fn filename =
-  fn (read filename)
 
 let check_suffix filename s =
   Filename.check_suffix (to_string filename) s
@@ -365,18 +345,6 @@ let remove_prefix_dir prefix dir =
     OpamStd.String.remove_prefix ~prefix dirname |>
     OpamStd.String.remove_prefix ~prefix:Filename.dir_sep
 
-let process_in ?root fn src dst =
-  let basename = match root with
-    | None   -> basename src
-    | Some r ->
-      if starts_with r src then remove_prefix r src
-      else OpamSystem.internal_error "%s is not a prefix of %s"
-          (Dir.to_string r) (to_string src) in
-  let dst = Filename.concat (Dir.to_string dst) basename in
-  fn ~src ~dst:(of_string dst)
-
-let copy_in ?root = process_in ?root copy
-
 let is_archive filename =
   OpamSystem.is_archive (to_string filename)
 
@@ -398,21 +366,6 @@ let make_tar_gz_job filename dirname =
 type generic_file =
   | D of Dir.t
   | F of t
-
-let extract_generic_file filename dirname =
-  match filename with
-  | F f ->
-    log "extracting %a to %a"
-      (slog to_string) f
-      (slog Dir.to_string) dirname;
-    extract f dirname
-  | D d ->
-    if d <> dirname then (
-      log "copying %a to %a"
-        (slog Dir.to_string) d
-        (slog Dir.to_string) dirname;
-      copy_dir ~src:d ~dst:dirname
-    )
 
 let ends_with suffix filename =
   OpamCompat.String.ends_with ~suffix (to_string filename)
@@ -513,18 +466,6 @@ let with_flock_upgrade flag ?dontblock lock f =
       OpamStd.Exn.finalise e @@ fun () ->
       OpamSystem.flock_update old_flag lock
   )
-
-let with_flock_write_then_read ?dontblock file write read =
-  let lock = OpamSystem.flock `Lock_write ?dontblock (to_string file) in
-  try
-    let r = write (OpamSystem.get_lock_fd lock) in
-    OpamSystem.flock_update `Lock_read lock;
-    let r = read r in
-    OpamSystem.funlock lock;
-    r
-  with e ->
-    OpamStd.Exn.finalise e @@ fun () ->
-    OpamSystem.funlock lock
 
 let prettify_path s =
   let aux ~short ~prefix =

@@ -130,6 +130,3 @@ let compare (x : string) (y : string) =
       normalize_comp_result
         (loop_lexical lx ly x y
            (OpamCompat.Int.min (rx + 1) lx) (OpamCompat.Int.min (ry + 1) ly))
-
-let equal (x : string) (y : string) =
-  if (x : string) = y then true else (compare x y) = 0

@@ -35,7 +35,6 @@ let get_universe opams =
   let packages = OpamPackage.keys opams in
   {
     u_packages = packages;
-    u_action = Query;
     u_installed = OpamPackage.Set.empty;
     u_available = lazy packages;
     u_depends =

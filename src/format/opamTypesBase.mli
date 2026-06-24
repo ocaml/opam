@@ -26,9 +26,6 @@ val action_equal : ('a -> 'a -> bool) -> 'a action -> 'a action -> bool
 (** Extract a package from a package action. *)
 val action_contents: [< 'a action ] -> 'a list
 
-val map_atomic_action: ('a -> 'b) -> 'a atomic_action -> 'b atomic_action
-val map_highlevel_action: ('a -> 'b) -> 'a highlevel_action -> 'b highlevel_action
-val map_concrete_action: ('a -> 'b) -> 'a concrete_action -> 'b concrete_action
 val map_action: ('a -> 'b) -> 'a action -> 'b action
 
 (** Extract a packages from a package action. This returns all concerned
@@ -44,12 +41,7 @@ val string_of_shell: shell -> string
 (** The empty file position *)
 val pos_null: pos
 val nullify_pos : 'a -> 'a with_pos
-val nullify_pos_map : ('a -> 'b) -> 'a with_pos -> 'b with_pos
 val nullify_pos_value : value -> value
-
-(** [pos_best pos1 pos2] returns the most detailed position between [pos1] and
-    [pos2] (defaulting to [pos1]) *)
-val pos_best: pos -> pos -> pos
 
 (** Position in the given file, with unspecified line and column *)
 val pos_file: filename -> pos
@@ -94,15 +86,9 @@ val all_package_flags: package_flag list
 (** Map on a solver result *)
 val map_success:
   ('a -> 'b) -> ('a,'fail) solver_result -> ('b,'fail) solver_result
-val iter_success: ('a -> unit) -> ('a, 'b) solver_result -> unit
 
 (** Environment update helpers *)
 (* Build an environment update *)
-val env_update:
-  ?comment:string -> rewrite:'a separator_path_format option
-  -> string -> 'b env_update_op_kind -> string
-  -> ('a, 'b) env_update
-
 val env_update_resolved:
   ?comment:string -> ?rewrite:spf_resolved separator_path_format option
   -> string -> 'a env_update_op_kind -> string
@@ -122,10 +108,7 @@ val char_of_separator: separator -> char
 
 (** Comparators **)
 (* Switch selections *)
-val switch_selections_compare : switch_selections -> switch_selections -> int
 val switch_selections_equal : switch_selections -> switch_selections -> bool
 
-val simple_arg_equal : simple_arg -> simple_arg -> bool
-val arg_equal : arg -> arg -> bool
 val filter_equal : filter -> filter -> bool
 val command_equal : command -> command -> bool

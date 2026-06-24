@@ -21,9 +21,6 @@ module E : sig
     | RETRIES of int option
     | VALIDATIONHOOK of string option
 
-  val curl: unit -> string option
-  val fetch: unit -> string list option
-
  (* Non lazy access *)
   val curl_t: unit -> string option
   val fetch_t: unit -> string list option

@@ -94,14 +94,6 @@ end
 
 (** Pretty-print *)
 val to_string: repository -> string
-val to_json: repository -> json
-
-(** Compare repositories *)
-val compare: repository -> repository -> int
-
-(** [check_digest file expected] check that the [file] digest is the
-    one [expected]. *)
-val check_digest: filename -> OpamHash.t option -> bool
 
 (** Adds a label to the given job, for the corresponding repository name and
     action *)

@@ -40,12 +40,6 @@ let current_raw = OpamVersionInfo.version
 
 let current = of_string current_raw
 
-let major v =
-  try
-    let i = String.index v '.' in
-    of_string (String.sub v 0 i)
-  with Not_found -> v
-
 let nopatch v =
   try
     let i = String.index v '.' in
@@ -61,17 +55,6 @@ let nopatch v =
     f 0
 
 let current_nopatch = nopatch current_raw
-
-let message () =
-  OpamConsole.msg "\n\
-    %s version %s\n\
-    \n\
-    Copyright (C) 2012 OCamlPro - INRIA, 2013-2015 OCamlPro\n\
-    \n\
-    This is free software; see the source for copying conditions.  There is NO\n\
-    warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
-    Sys.executable_name current_raw;
-  exit 0
 
 let gitversion = ref None
 

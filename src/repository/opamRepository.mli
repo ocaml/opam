@@ -84,7 +84,6 @@ val current_branch: url -> string option OpamProcess.job
 val is_dirty: ?subpath:subpath -> url -> bool OpamProcess.job
 
 (** Find a backend *)
-val find_backend: repository -> (module OpamRepositoryBackend.S)
 val find_backend_by_kind: OpamUrl.backend -> (module OpamRepositoryBackend.S)
 
 (** Prints user messages upon the result of a download *)

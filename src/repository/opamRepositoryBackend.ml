@@ -37,33 +37,10 @@ module type S = sig
     url option OpamProcess.job
 end
 
-let compare r1 r2 = compare r1.repo_name r2.repo_name
-
 let to_string r =
   Printf.sprintf "%s from %s"
     (OpamRepositoryName.to_string r.repo_name)
     (OpamUrl.to_string r.repo_url)
-
-let to_json r =
-  `O  [ ("name", OpamRepositoryName.to_json r.repo_name);
-        ("kind", `String (OpamUrl.string_of_backend r.repo_url.OpamUrl.backend));
-      ]
-
-let check_digest filename = function
-  | Some expected
-    when OpamRepositoryConfig.(!r.force_checksums) <> Some false ->
-    (match OpamHash.mismatch (OpamFilename.to_string filename) expected with
-     | None -> true
-     | Some bad_hash ->
-       OpamConsole.error
-         "Bad checksum for %s: expected %s\n\
-         \                     got      %s\n\
-          Metadata might be out of date, in this case use `opam update`."
-         (OpamFilename.to_string filename)
-         (OpamHash.to_string expected)
-         (OpamHash.to_string bad_hash);
-       false)
-  | _ -> true
 
 let job_text name label =
   OpamProcess.Job.with_text

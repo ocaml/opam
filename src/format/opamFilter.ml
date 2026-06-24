@@ -418,11 +418,7 @@ let ident_of_var v =
 let ident_of_string s =
   ident_of_var (OpamVariable.Full.of_string s)
 
-let ident_value ?default env id = value ?default (resolve_ident env id)
-
 let ident_string ?default env id = value_string ?default (resolve_ident env id)
-
-let ident_bool ?default env id = value_bool ?default (resolve_ident env id)
 
 (* Substitute the file contents and specify the source and destination *)
 let expand_interpolations_in_file_full env ~src ~dst =

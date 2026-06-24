@@ -615,9 +615,6 @@ let read_command_output ?verbose ?env ?metadata ?dir ?allow_stdin
   raise_on_process_error r;
   r.OpamProcess.r_stdout
 
-let verbose_for_base_commands () =
-  OpamCoreConfig.(!r.verbose_level) >= 3
-
 let copy_file_t ?(with_log=true) src dst =
   if (try Sys.is_directory src
       with Sys_error _ -> raise (File_not_found src))

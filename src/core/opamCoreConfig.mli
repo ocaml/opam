@@ -31,10 +31,8 @@ module E : sig
     | VERBOSE of OpamStd.Config.level option
     | YES of bool option
 
-    val confirmlevel: unit -> OpamStd.Config.answer option
     val debug: unit -> int option
     val logs: unit -> string option
-    val yes: unit -> bool option
 end
 
 type t = private {
@@ -109,10 +107,6 @@ type 'a options_fun =
   'a
 
 val default : t
-
-val set : t -> (unit -> t) options_fun
-
-val setk : (t -> 'a) -> t -> 'a options_fun
 
 val r : t ref
 

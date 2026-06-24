@@ -526,11 +526,6 @@ let whole_of_update_op = function
   | #whole_op as w -> w
   | _ -> raise Not_found
 
-let parse_whole fv =
-  let v, upd = parse_update fv in
-  try v, (whole_of_update_op upd)
-  with Not_found -> raise (Invalid_argument "parse_whole: append operator")
-
 let global_doc = "global configuration"
 let switch_doc switch =
   Printf.sprintf "switch %s"
@@ -665,7 +660,7 @@ let allwd_wrappers wdef wrappers with_wrappers  =
       "wrap-install-commands",
       Wrappers.with_wrap_install, Wrappers.wrap_install;
       "wrap-remove-commands",
-      Wrappers.with_pre_remove, Wrappers.pre_remove;
+      Wrappers.with_wrap_remove, Wrappers.wrap_remove;
       "post-build-commands",
       Wrappers.with_post_build, Wrappers.post_build;
       "post-install-commands",

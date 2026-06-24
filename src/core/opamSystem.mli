@@ -47,10 +47,6 @@ val with_tmp_file: (string -> 'a) -> 'a
     *)
 val with_tmp_file_job: (string -> 'a OpamProcess.job) -> 'a OpamProcess.job
 
-(** Returns true if the default verbose level for base commands (cp, mv, etc.)
-    is reached *)
-val verbose_for_base_commands: unit -> bool
-
 (** {2 Filesystem management} *)
 
 (** Check if directory [dir] is read only.
@@ -132,10 +128,6 @@ val read: string -> string
     advisory write lock to prevent concurrent reads or writes) *)
 val write: string -> string -> unit
 
-(** [get_files dir] returns the list of files (without prefix) inside the
-    directory [dir]. *)
-val get_files : string -> string list
-
 (** Same as [get_files] except it avoids copying VCS directories
     ([.git], [.hg], [_darcs]) *)
 val get_files_except_vcs : string -> string list
@@ -165,10 +157,6 @@ val is_reg_dir: string -> bool
     names) *)
 val ls: string -> string list
 
-(** [files_with_links dir] returns the files in the directory [dir].
-    Links simulating directory are ignored, others links are returned. *)
-val files_with_links: string -> string list
-
 (** [rec_files dir] returns the list of all files in [dir],
     recursively.
     Links behaving like directory are crossed. *)
@@ -191,10 +179,6 @@ val dirs: string -> string list
 (** Returns whether a directory is empty.
     Returns [None] if the directory could not be found. *)
 val dir_is_empty: string -> bool option
-
-(** [directories_with_links dir] returns the directories in the directory [dir].
-    Links pointing to directory are also returned. *)
-val directories_with_links: string -> string list
 
 (** Make a comman suitable for OpamProcess.Job. if [verbose], is set,
     command and output will be displayed (at command end for the
@@ -330,10 +314,6 @@ val flock_update: [< lock_flag ] -> ?dontblock:bool -> lock -> unit
 (** Releases an acquired lock (equivalent to [flock_update `Lock_none]) *)
 val funlock: lock -> unit
 
-(** Returns the highest of the two lock flags (with the order no lock < read
-    lock < write lock) *)
-val lock_max: lock_flag -> lock_flag -> lock_flag
-
 (** Returns true if the lock already has the lock_flag rights or more *)
 val lock_isatleast: [< lock_flag ] -> lock -> bool
 
@@ -357,10 +337,6 @@ val get_eol_encoding : string -> bool option
     terminates (default: [true]). *)
 val temp_file: ?auto_clean:bool -> ?dir:string -> string -> string
 
-(** Registers an exception printer that adds some OPAM version info, and details
-    on process and Unix errors *)
-val register_printer: unit -> unit
-
 (** Initialises signal handlers, catch_break and some exception printers. The
     lib may not perform properly without this if {!Sys.catch_break} isn't set
     and SIGPIPE isn't handled (with a no-op) *)
@@ -371,12 +347,3 @@ val forward_to_back : string -> string
 
 (** On Unix, a no-op. On Windows, convert \ to / *)
 val back_to_forward : string -> string
-
-(** Identifies kinds of executable files. At present, only useful on Windows.
-    Executable or DLLs are recognised based on their content, not on their
-    filename. Any file beginning "#!" is assumed to be a shell script and all
-    files are classified [`Unknown]. *)
-val classify_executable : string -> [ `Exe of [ `i386 | `x86 | `x86_64 ]
-                                    | `Dll of [ `x86 | `x86_64 ]
-                                    | `Script
-                                    | `Unknown ]

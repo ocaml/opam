@@ -97,7 +97,6 @@ module Symbols = struct
   let south_east_arrow = Uchar.of_int 0x2198
   let clockwise_open_circle_arrow = Uchar.of_int 0x21bb
   let greek_small_letter_lambda = Uchar.of_int 0x03bb
-  let latin_capital_letter_o_with_stroke = Uchar.of_int 0x00d8
   let six_pointed_black_star = Uchar.of_int 0x2736
   let upwards_arrow = Uchar.of_int 0x2191
   let downwards_arrow = Uchar.of_int 0x2193

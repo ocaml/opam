@@ -637,12 +637,6 @@ let load lock_kind gt rt switch =
     (Lazy.force ext_files_changed %% Lazy.force available_packages) ++
     Lazy.force sys_packages_changed
   ) in
-  let invalidated = lazy (
-    Lazy.force changed ++
-    Lazy.force ext_files_changed ++
-    Lazy.force sys_packages_changed
-    -- Lazy.force available_packages
-  ) in
   let st = {
     switch_global = (gt :> unlocked global_state);
     switch_repos = (rt :> unlocked repos_state);
@@ -651,7 +645,7 @@ let load lock_kind gt rt switch =
     repos_package_index; installed_opams;
     installed; pinned; installed_roots;
     opams; conf_files;
-    packages; available_packages; sys_packages; reinstall; invalidated;
+    packages; available_packages; sys_packages; reinstall;
     overwrote_opams = OpamPackage.Map.empty;
   } in
   log "Switch state loaded in %.3fs" (chrono ());
@@ -696,7 +690,6 @@ let load_virtual ?repos_list ?(avail_default=true) gt rt =
     sys_packages = lazy OpamPackage.Map.empty;
     available_packages;
     reinstall = lazy OpamPackage.Set.empty;
-    invalidated = lazy (OpamPackage.Set.empty);
     overwrote_opams = OpamPackage.Map.empty;
   }
 
@@ -730,12 +723,6 @@ let with_write_lock ?dontblock st f =
 let opam st nv = OpamPackage.Map.find nv st.opams
 
 let opam_opt st nv = try Some (opam st nv) with Not_found -> None
-
-let descr_opt st nv =
-  OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.descr)
-
-let descr st nv =
-  OpamStd.Option.Op.(descr_opt st nv +! OpamFile.Descr.empty)
 
 let url st nv =
   OpamStd.Option.Op.(opam_opt st nv >>= OpamFile.OPAM.url)
@@ -819,10 +806,6 @@ let depexts_status_of_packages st set =
 
 let depexts_unavailable st nv =
   depexts_unavailable_raw (Lazy.force st.sys_packages) nv
-
-let dev_packages st =
-  OpamPackage.Set.filter (is_dev_package st)
-    (st.installed ++ OpamPinned.packages st)
 
 let conflicts_with st subset =
   let forward_conflicts, conflict_classes =
@@ -996,7 +979,7 @@ let universe st
     ?(force_dev_deps=false)
     ?reinstall
     ~requested
-    user_action =
+    _user_action =
   let chrono = OpamConsole.timer () in
   let names = OpamPackage.names_of_packages requested in
   let requested_allpkgs =
@@ -1079,7 +1062,6 @@ let universe st
   let u =
 {
   u_packages  = st.packages;
-  u_action = user_action;
   u_installed = st.installed;
   u_available;
   u_depends;

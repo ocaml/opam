@@ -17,10 +17,6 @@ open OpamTypes
 (** Url of the default Opam repository *)
 val repository_url: url
 
-val default_compiler: formula
-
-val eval_variables: (OpamVariable.t * string list * string) list
-
 val sandbox_wrappers:
   [> `build of command list
   | `install of command list

@@ -92,9 +92,6 @@ end
 
 val identity : ('a, 'a) t
 
-(** Always parses to [None] *)
-val ignore : ('a, 'b option) t
-
 (** Identity pp, unless the check fails. The check is turned into an assertion
     when printing. If no [errmsg] is given, raises [Unexpected], otherwise
     call [raise] with the given [errmsg]. By default [raise] raises

@@ -93,7 +93,6 @@ val opamroot: ?root_dir:dirname -> unit -> dirname
 
 (** Loads the global configuration file, protecting against concurrent writes *)
 val load: lock_kind: 'a lock -> dirname -> OpamFile.Config.t option
-val safe_load: lock_kind: 'a lock -> dirname -> OpamFile.Config.t
 
 (** Loads the config file from the OPAM root and updates default values for all
     related OpamXxxConfig modules. Doesn't read the env yet, the {!init}
@@ -128,11 +127,6 @@ val is_newer_than_self: lock_kind:'a lock -> 'b global_state -> bool
 
 (** Check config root version regarding self-defined one *)
 val is_newer: OpamFile.Config.t ->  bool
-
-val load_config_root:
-  lock_kind:'a lock ->
-  ((OpamFile.Config.t OpamFile.t -> 'b) * (OpamFile.Config.t OpamFile.t -> 'b)) ->
-  dirname -> 'b
 
 module Switch : sig
   val safe_load_t:

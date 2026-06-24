@@ -26,7 +26,6 @@ val cli2_1: OpamCLIVersion.t
 val cli2_2: OpamCLIVersion.t
 val cli2_3: OpamCLIVersion.t
 val cli2_4: OpamCLIVersion.t
-val cli2_5: OpamCLIVersion.t
 
 (* [cli_from ?platform ?experimental since] validity flag since [since], and no
    removal version. If [experimental] is true, it is marked as is (warning and
@@ -96,9 +95,6 @@ val mk_vflag_all:
    manpage strings *)
 val dir_sep: string
 
-(* Escape Windows path *)
-val escape_path: string -> string
-
 (** {2 Flags} *)
 
 (** --short *)
@@ -124,18 +120,6 @@ val jobs_flag:
 (** --formula *)
 val formula_flag:
   ?section:string -> OpamCLIVersion.Sourced.t -> formula Term.t
-
-(** package names *)
-val name_list: name list Term.t
-
-(** parameters *)
-val param_list: string list Term.t
-
-(** package list with optional constraints *)
-val atom_list: OpamFormula.atom list Term.t
-
-(** package list with optional constraints *)
-val nonempty_atom_list: OpamFormula.atom list Term.t
 
 val atom_or_local_list:
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list
@@ -213,7 +197,6 @@ val subpath: ?section:string -> OpamCLIVersion.Sourced.t -> subpath option Term.
 val apply_build_options: OpamCLIVersion.Sourced.t -> build_options -> unit
 
 (** Lock options *)
-val locked: ?section:string -> OpamCLIVersion.Sourced.t -> bool Term.t
 val lock_suffix: ?section:string -> OpamCLIVersion.Sourced.t -> string Term.t
 
 (** Checksum options *)
@@ -278,18 +261,8 @@ val package_version: version Arg.conv
 (** [name{.version}] (or [name=version]) *)
 val package: (name * version option) Arg.conv
 
-(** [name.version] (or [name=version]) *)
-val package_with_version: package Arg.conv
-
 (** [name{(.|=|!=|>|<|>=|<=)version}] converter*)
 val atom: atom Arg.conv
-
-(** Accepts [atom] but also (explicit) file and directory names *)
-val atom_or_local:
-  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] Arg.conv
-
-val atom_or_dir:
-  [ `Atom of atom | `Dirname of dirname ] Arg.conv
 
 (** Formula, in the same format as [depends:] in opam files *)
 val dep_formula: formula Arg.conv
@@ -299,8 +272,6 @@ val variable_bindings: (OpamVariable.t * string) list Arg.conv
 
 (** Warnings string ["+3..10-4@12"] *)
 val warn_selector: (int * [`Enable | `Disable | `EnableError]) list Arg.conv
-
-val opamlist_columns: OpamListCommand.output_format list Arg.conv
 
 val hash_kinds : OpamHash.kind Arg.conv
 
@@ -384,4 +355,3 @@ val help_sections: OpamCLIVersion.Sourced.t -> Manpage.block list
 
 val preinit_opam_env_variables: unit -> unit
 val init_opam_env_variabes: OpamCLIVersion.Sourced.t -> unit
-val scrubbed_environment_variables: string list

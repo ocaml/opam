@@ -15,9 +15,6 @@ open OpamParserTypes.FullPos
 open OpamTypes
 open OpamPp
 
-(** Get the position out of a value *)
-val value_pos: value -> pos
-
 (** {3 low-level Pps for the Lines parser ([string list list])} *)
 
 type lines = string list list
@@ -60,24 +57,16 @@ module V : sig
   (** Trimmed string *)
   val string_tr : (value, string) t
 
-  (** Command arguments, i.e. strings or idents *)
-  val simple_arg : (value, simple_arg) t
-
   (** Strings or bools *)
   val variable_contents : (value, variable_contents) t
 
   (** "[a b c]"; also allows just "a" to be parsed as a singleton list *)
   val list : (value, value list) t
 
-  (** "(a b c)" *)
-  val group : (value, value list) t
-
   (** Options in the [value] type sense, i.e. a value with an optional list
       of parameters in braces: ["value {op1 op2}"] *)
   val option :
     (value, value * value list) t
-
-  val map_group : (value, 'a) t -> (value, 'a list) t
 
   (** An expected list depth may be specified to enable removal of extra
       brackets (never use [~depth] for an inner list) *)
@@ -119,12 +108,6 @@ module V : sig
 
   val compiler_version : (value, string) t
 
-  val filter_ident :
-    (value,
-     name option list * variable *
-     (string * string) option)
-      t
-
   val filter : (value list, filter) t
 
   (** Arguments in commands (term + optional filter) *)
@@ -151,11 +134,6 @@ module V : sig
 
   (** A package name, encoded as a string, but with restrictions *)
   val pkgname: (value, name) t
-
-  (** Returns an atom parser [("package" {>= "version"})] from a constraint
-      and a version parser*)
-  val package_atom:
-    (value list, 'a) t -> (value, name * 'a) t
 
   (** Takes a parser for constraints. Lists without operator will be
       understood as conjunctions or disjunctions depending on the first
@@ -193,11 +171,7 @@ end
 
 module I :
 sig
-  val file : (opamfile, filename * opamfile_item list) t
-
   val map_file : (opamfile_item list, 'a) t -> (opamfile, filename * 'a) t
-
-  val item : (opamfile_item, string * value) t
 
   val items : (opamfile_item list, (string * value) list) t
 
@@ -264,13 +238,6 @@ sig
   val section :
     string ->
     (opamfile_item, (string option * opamfile_item list)) t
-
-  (** Extracts a single item with the given variable name from an item list.
-      The item is removed from the returned item list, and the two are
-      re-combined when printing *)
-  val extract_field :
-    string ->
-    (opamfile_item list, value option * opamfile_item list) t
 
   (** Checks the [opam_version] field; otherwise the identity *)
   val check_opam_version :

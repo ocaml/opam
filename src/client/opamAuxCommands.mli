@@ -29,10 +29,6 @@ val remove_files_from_destdir: 'a switch_state -> dirname -> package_set -> unit
     suffixing `#current-branch` if no branch/tag/hash was specified. *)
 val url_with_local_branch: url -> url
 
-(** From an in-source opam file, return the corresponding package name if it can
-    be found, and the corresponding source directory *)
-val name_and_dir_of_opam_file: ?locked:string -> filename -> name option * dirname
-
 (** From a directory, retrieve its opam files and returns packages name, opam
     file and subpath option *)
 val opams_of_dir:
@@ -48,16 +44,6 @@ val opams_of_dir_w_target:
   ?locked:string -> ?recurse:bool -> ?subpath:subpath ->
   ?same_kind:(OpamUrl.t -> bool) -> OpamUrl.t -> OpamFilename.Dir.t ->
   name_and_file_w_url list
-
-(** Resolves the opam files and directories in the list to package name and
-    location, and returns the corresponding pinnings and atoms. May fail and
-    exit if package names for provided [`Filename] could not be inferred, or if
-    the same package name appears multiple times.
-*)
-val resolve_locals:
-  ?quiet:bool -> ?locked:string -> ?recurse:bool -> ?subpath:subpath ->
-  [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
-  name_and_file_w_url list * atom list
 
 (** Resolves the opam files and directories in the list to package name and
     location, according to what is currently pinned, and returns the

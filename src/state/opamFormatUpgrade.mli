@@ -21,10 +21,6 @@ open OpamStateTypes
     function to call instead of default (see {!OpamCliMain.main_catch_all}). *)
 exception Upgrade_done of OpamFile.Config.t * (OpamFile.Config.t -> unit) option
 
-(** The latest version of the opam root format, that normal operation of this
-    instance of opam requires *)
-val latest_version: OpamVersion.t
-
 (** [as_necessary requested_lock global_lock root config]
     Runs the upgrade from its current format to the latest compatible version
     for the opam root at [root] directory. Performs an on-the-fly upgrade
