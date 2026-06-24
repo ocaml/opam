@@ -648,7 +648,8 @@ let parallel_apply t
         try true, OpamPackage.Map.find nv inplace
         with Not_found ->
           let dir = OpamPath.Switch.build t.switch_global.root t.switch nv in
-          if not OpamClientConfig.(!r.reuse_build_dir) then
+          if not OpamClientConfig.(!r.reuse_build_dir)
+          && not OpamStateConfig.(!r.dryrun) then
             OpamFilename.rmdir dir;
           false, dir
       in
@@ -659,10 +660,12 @@ let parallel_apply t
         OpamStateConfig.(!r.dev_setup) && found
       in
       let source_dir = source_dir nv in
-      (if OpamFilename.exists_dir source_dir
+      (if OpamStateConfig.(!r.dryrun) then () else
+       if OpamFilename.exists_dir source_dir
        then (if not is_inplace then
                OpamFilename.copy_dir ~src:source_dir ~dst:build_dir)
-       else OpamFilename.mkdir build_dir;
+       else
+         OpamFilename.mkdir build_dir;
        OpamAction.prepare_package_source t nv build_dir @@+ function
        | Some exn -> store_time (); Done (`Exception exn)
        | None ->
@@ -688,7 +691,8 @@ let parallel_apply t
          store_time ();
          Done (`Exception exn))
     | `Remove nv ->
-      (if OpamAction.removal_needs_download t nv then
+      (if not OpamStateConfig.(!r.dryrun)
+       && OpamAction.removal_needs_download t nv then
          let d = OpamPath.Switch.remove t.switch_global.root t.switch nv in
          OpamFilename.rmdir d;
          let source_dir = source_dir nv in
@@ -823,31 +827,32 @@ let parallel_apply t
   (* 2/ Display errors and finalize *)
 
   let save_installed_cache failed =
-    OpamSwitchState.Installed_cache.save
-      (OpamPath.Switch.installed_opams_cache t.switch_global.root t.switch)
-      (OpamPackage.Set.fold (fun nv opams ->
-           (* NOTE: We need to know whether an action was successful
-              or not to know which version of the opam file to store
-              in the case: the previous one if it failed, or the new
-              one if it succeeded. *)
-           let pkg_failed =
-             List.exists (function
-                 | `Fetch ps -> List.for_all (OpamPackage.equal nv) ps
-                 | `Build p | `Change (_, _, p) | `Install p
-                 | `Reinstall p | `Remove p -> OpamPackage.equal nv p)
-               failed
-           in
-           let add_to_opams opam =
-             let opam = OpamFile.OPAM.with_metadata_dir None opam in
-             OpamPackage.Map.add nv opam opams
-           in
-           if pkg_failed then
-             match OpamPackage.Map.find_opt nv t.installed_opams with
-             | None -> opams
-             | Some opam -> add_to_opams opam
-           else
-             add_to_opams (OpamSwitchState.opam t nv))
-          t.installed OpamPackage.Map.empty);
+    if not OpamStateConfig.(!r.dryrun) then
+      OpamSwitchState.Installed_cache.save
+        (OpamPath.Switch.installed_opams_cache t.switch_global.root t.switch)
+        (OpamPackage.Set.fold (fun nv opams ->
+             (* NOTE: We need to know whether an action was successful
+                or not to know which version of the opam file to store
+                in the case: the previous one if it failed, or the new
+                one if it succeeded. *)
+             let pkg_failed =
+               List.exists (function
+                   | `Fetch ps -> List.for_all (OpamPackage.equal nv) ps
+                   | `Build p | `Change (_, _, p) | `Install p
+                   | `Reinstall p | `Remove p -> OpamPackage.equal nv p)
+                 failed
+             in
+             let add_to_opams opam =
+               let opam = OpamFile.OPAM.with_metadata_dir None opam in
+               OpamPackage.Map.add nv opam opams
+             in
+             if pkg_failed then
+               match OpamPackage.Map.find_opt nv t.installed_opams with
+               | None -> opams
+               | Some opam -> add_to_opams opam
+             else
+               add_to_opams (OpamSwitchState.opam t nv))
+            t.installed OpamPackage.Map.empty);
   in
   begin match action_results with
   | `Exception _ | `Error Aborted -> ()
