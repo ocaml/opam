@@ -20,7 +20,7 @@ defaults:
 env:
   OPAMVERSION: 2.5.1
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
-  OPAM_REPO_SHA: ea549f9f2496d9b1454d1cb4817bba7be9013985
+  OPAM_REPO_SHA: ceed23f9d33677f323a62325ad42599d14f46b98
 
 jobs:
   opam-cache:
