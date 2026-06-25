@@ -54,7 +54,7 @@ module Dir : sig
      and type 'a typed_file = 'a OpamFile.t
 end
 
-val make_tar_gz_job : filename -> Dir.t -> exn option OpamProcess.job
+val make_tar_gz : filename -> Dir.t -> unit
 val extract_in_job : filename -> Dir.t -> exn option OpamProcess.job
 
 type t =

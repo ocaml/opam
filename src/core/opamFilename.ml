@@ -392,9 +392,6 @@ let extract_in filename dirname =
 let extract_in_job filename dirname =
   OpamSystem.extract_in_job (to_string filename) ~dir:(Dir.to_string dirname)
 
-let make_tar_gz_job filename dirname =
-  OpamSystem.make_tar_gz_job (to_string filename) ~dir:(Dir.to_string dirname)
-
 type generic_file =
   | D of Dir.t
   | F of t
@@ -810,4 +807,11 @@ module Unix = struct
 
   let of_filename x = OpamSystem.back_to_forward (concat x.dirname x.basename)
   let to_filename x = {dirname = dirname x; basename = basename x}
+
+  let starts_with prefix filename =
+    if prefix = (filename : string) then true
+    else
+      let prefix = concat prefix "" in
+      OpamCompat.String.starts_with ~prefix filename
+
 end

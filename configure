@@ -622,6 +622,9 @@ ac_ct_CXX
 CXXFLAGS
 CXX
 OCAML_PKG_mccs
+OCAML_PKG_decompress
+OCAML_PKG_checkseum
+OCAML_PKG_tar
 OCAML_PKG_patch
 OCAML_PKG_swhid_core
 OCAML_PKG_sha
@@ -5933,7 +5936,7 @@ x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version
 
   fi
 
-  echo "(-noautolink -cclib -l${unix_lib_name} -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs -cclib -lopam_core_stubs ${platform_dependent_stuff})" > src/client/linking.sexp
+  echo "(-noautolink -cclib -l${unix_lib_name} -cclib -lmccs_stubs -cclib -lmccs_glpk_stubs -cclib -lsha_stubs -cclib -lopam_core_stubs -cclib -lcheckseum_c_stubs ${platform_dependent_stuff})" > src/client/linking.sexp
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: static" >&5
 printf "%s\n" "static" >&6; }
 
@@ -6834,6 +6837,192 @@ else $as_nop
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
     OCAML_PKG_patch=no
+
+fi
+
+
+
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package tar 3.3.0 or later" >&5
+printf %s "checking for OCaml findlib package tar 3.3.0 or later... " >&6; }
+
+  if version=`$OCAMLFIND query tar -format '%v' 2>/dev/null`
+then :
+
+
+
+
+  # Used to indicate true or false condition
+  ax_compare_version=false
+
+  # Convert the two version strings to be compared into a format that
+  # allows a simple string comparison.  The end result is that a version
+  # string of the form 1.12.5-r617 will be converted to the form
+  # 0001001200050617.  In other words, each number is zero padded to four
+  # digits, and non digits are removed.
+
+  ax_compare_version_A=`echo "$version" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+  ax_compare_version_B=`echo "3.3.0" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+    ax_compare_version=`echo "x$ax_compare_version_A
+x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/false/;s/x${ax_compare_version_B}/true/;1q"`
+
+
+
+    if test "$ax_compare_version" = "true" ; then
+
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no ($version installed)" >&5
+printf "%s\n" "no ($version installed)" >&6; }
+      OCAML_PKG_tar=no
+
+    else
+      OCAML_PKG_tar=tar
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: found $version" >&5
+printf "%s\n" "found $version" >&6; }
+
+  fi
+
+
+else $as_nop
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    OCAML_PKG_tar=no
+
+fi
+
+
+
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package checkseum 0.5.2 or later" >&5
+printf %s "checking for OCaml findlib package checkseum 0.5.2 or later... " >&6; }
+
+  if version=`$OCAMLFIND query checkseum -format '%v' 2>/dev/null`
+then :
+
+
+
+
+  # Used to indicate true or false condition
+  ax_compare_version=false
+
+  # Convert the two version strings to be compared into a format that
+  # allows a simple string comparison.  The end result is that a version
+  # string of the form 1.12.5-r617 will be converted to the form
+  # 0001001200050617.  In other words, each number is zero padded to four
+  # digits, and non digits are removed.
+
+  ax_compare_version_A=`echo "$version" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+  ax_compare_version_B=`echo "0.5.2" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+    ax_compare_version=`echo "x$ax_compare_version_A
+x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/false/;s/x${ax_compare_version_B}/true/;1q"`
+
+
+
+    if test "$ax_compare_version" = "true" ; then
+
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no ($version installed)" >&5
+printf "%s\n" "no ($version installed)" >&6; }
+      OCAML_PKG_checkseum=no
+
+    else
+      OCAML_PKG_checkseum=checkseum
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: found $version" >&5
+printf "%s\n" "found $version" >&6; }
+
+  fi
+
+
+else $as_nop
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    OCAML_PKG_checkseum=no
+
+fi
+
+
+
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OCaml findlib package decompress 1.5.1 or later" >&5
+printf %s "checking for OCaml findlib package decompress 1.5.1 or later... " >&6; }
+
+  if version=`$OCAMLFIND query decompress -format '%v' 2>/dev/null`
+then :
+
+
+
+
+  # Used to indicate true or false condition
+  ax_compare_version=false
+
+  # Convert the two version strings to be compared into a format that
+  # allows a simple string comparison.  The end result is that a version
+  # string of the form 1.12.5-r617 will be converted to the form
+  # 0001001200050617.  In other words, each number is zero padded to four
+  # digits, and non digits are removed.
+
+  ax_compare_version_A=`echo "$version" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+  ax_compare_version_B=`echo "1.5.1" | sed -e 's/\([0-9]*\)/Z\1Z/g' \
+                     -e 's/Z\([0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/Z\([0-9][0-9][0-9]\)Z/Z0\1Z/g' \
+                     -e 's/[^0-9]//g'`
+
+
+    ax_compare_version=`echo "x$ax_compare_version_A
+x$ax_compare_version_B" | sed 's/^ *//' | sort -r | sed "s/x${ax_compare_version_A}/false/;s/x${ax_compare_version_B}/true/;1q"`
+
+
+
+    if test "$ax_compare_version" = "true" ; then
+
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no ($version installed)" >&5
+printf "%s\n" "no ($version installed)" >&6; }
+      OCAML_PKG_decompress=no
+
+    else
+      OCAML_PKG_decompress=decompress
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: found $version" >&5
+printf "%s\n" "found $version" >&6; }
+
+  fi
+
+
+else $as_nop
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    OCAML_PKG_decompress=no
 
 fi
 

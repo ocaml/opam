@@ -251,8 +251,6 @@ val extract_in: t -> Dir.t -> unit
 
 val extract_in_job: t -> Dir.t -> exn option OpamProcess.job
 
-val make_tar_gz_job: t -> Dir.t -> exn option OpamProcess.job
-
 (** Extract a generic file *)
 val extract_generic_file: generic_file -> Dir.t -> unit
 
@@ -423,4 +421,8 @@ module Unix : sig
   val of_filename : filename -> t
 
   val to_filename : t -> filename
+
+  (** Check whether a filename starts by a given Dir.t *)
+  val starts_with: Dir.t -> t -> bool
+
 end

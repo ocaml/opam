@@ -66,25 +66,25 @@ build/%.image: build/Dockerfile.%
 
 CLINKING_linux = \
 -Wl,-Bstatic \
--lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs -lcheckseum_c_stubs \
 -lstdc++ \
 -static-libgcc \
 -static
 # -Wl,-Bdynamic
 
 CLINKING_macos = \
--lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs -lcheckseum_c_stubs \
 -lstdc++
 
 CLINKING_freebsd = $(CLINKING_macos)
 CLINKING_netbsd = $(CLINKING_macos)
 
 CLINKING_openbsd = \
--lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs -lcheckseum_c_stubs \
 -lstdc++ -lc++ -lc++abi -static
 
 CLINKING_windows = \
--lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs \
+-lunix -lmccs_stubs -lmccs_glpk_stubs -lsha_stubs -lopam_core_stubs -lcheckseum_c_stubs \
 -l:libstdc++.a -l:libpthread.a \
 -Wl,-static \
 -ladvapi32 -lgdi32 -luser32 -lshell32 -lole32 -luuid -luserenv
