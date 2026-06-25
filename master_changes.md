@@ -170,6 +170,9 @@ users)
     aborted or failed [#6922 @NathanReb]
   * Add test for update in repository that changes directories to files and vice versa [#6915 @rjbou]
   * Add an http repository test [#6939 #6961 @rjbou]
+  * Fix `extrafile` test : remove trailing mkdir, the error was fixed in #6679 [#6970 rjbou]
+  * Fix trailing full path for `tar` call in `no-depexts-sandboxed.unix.test` [#6970 @rjbou]
+  * Fix some forgotten sed in `extrasource` and `update` tests in #6734 [#6970 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]

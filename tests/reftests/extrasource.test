@@ -811,18 +811,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source good-md5-bad-sha256
+### opam source good-md5-bad-sha256 | sed-hash $PATCH_SHA256 patch-sha256
 [ERROR] good-md5-bad-sha256.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
           expected sha256=0000000000000000000000000000000000000000000000000000000000000000
-          got      sha256=c00eac22da21925d2077b66a29dc911cddc739b1b0d0909a6cb192344fba55ab
+          got      sha256=+patch-sha256+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-md5-bad-sha256.1/i-am-a-patch
 # Return code 1 #
-### opam source good-md5-bad-sha256 --require-checksums
+### opam source good-md5-bad-sha256 --require-checksums | sed-hash $PATCH_SHA256 patch-sha256
 [ERROR] good-md5-bad-sha256.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
           expected sha256=0000000000000000000000000000000000000000000000000000000000000000
-          got      sha256=c00eac22da21925d2077b66a29dc911cddc739b1b0d0909a6cb192344fba55ab
+          got      sha256=+patch-sha256+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-md5-bad-sha256.1/i-am-a-patch
@@ -854,7 +854,7 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam install good-sha256-bad-md5 --require-checksums
+### opam install good-sha256-bad-md5 --require-checksums | sed-hash $PATCH_MD5 patch-md5
 The following actions will be performed:
 === install 1 package
   - install good-sha256-bad-md5 1
@@ -862,7 +862,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] good-sha256-bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
           expected md5=00000000000000000000000000000000
-          got      md5=cf8c4c20658f6c3efea4eb2c6b1b34d7
+          got      md5=+patch-md5+
 [ERROR] Failed to get extra source "i-am-a-patch" of good-sha256-bad-md5.1: Checksum mismatch
 
 OpamSolution.Fetch_fail("Checksum mismatch")
@@ -874,18 +874,18 @@ OpamSolution.Fetch_fail("Checksum mismatch")
 +- 
 - No changes have been performed
 # Return code 40 #
-### opam source good-sha256-bad-md5
+### opam source good-sha256-bad-md5 | sed-hash $PATCH_MD5 patch-md5
 [ERROR] good-sha256-bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
           expected md5=00000000000000000000000000000000
-          got      md5=cf8c4c20658f6c3efea4eb2c6b1b34d7
+          got      md5=+patch-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-sha256-bad-md5.1/i-am-a-patch
 # Return code 1 #
-### opam source good-sha256-bad-md5 --require-checksums
+### opam source good-sha256-bad-md5 --require-checksums | sed-hash $PATCH_MD5 patch-md5
 [ERROR] good-sha256-bad-md5.1/i-am-a-patch: Checksum mismatch for file://${BASEDIR}/p.patch:
           expected md5=00000000000000000000000000000000
-          got      md5=cf8c4c20658f6c3efea4eb2c6b1b34d7
+          got      md5=+patch-md5+
 [ERROR] Download failed: Checksum mismatch
 # Return code 40 #
 ### test -f good-sha256-bad-md5.1/i-am-a-patch
