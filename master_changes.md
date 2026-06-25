@@ -202,6 +202,8 @@ users)
   * Call man2html only on actual man pages [#6807 @kit-ty-kate]
   * Replace the API example by a link to the API [#6809 @kit-ty-kate - fix #6637]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
   * Invalidate .install fields containing destination filepath trying to escape their scope [#6897 @kit-ty-kate]
 
