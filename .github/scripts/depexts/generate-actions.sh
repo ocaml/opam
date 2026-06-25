@@ -89,7 +89,7 @@ EOF
   # glpk-dev is installed manually because os-family doesn't handle tumbleweed
     cat > "$dir/Dockerfile" << EOF
 FROM opensuse/leap
-RUN zypper --non-interactive install $mainlibs diffutils gzip glpk-devel
+RUN zypper --non-interactive install $mainlibs diffutils findutils gzip glpk-devel
 RUN zypper --non-interactive install --force-resolution ocaml ocaml-compiler-libs-devel
 RUN zypper --non-interactive install gcc-c++
 EOF
