@@ -613,7 +613,7 @@ let env_update_resolved_with_default ?comment var =
   let rewrite = Some (SPF_Resolved (Some (default_sep_fmt_str var))) in
   env_update_resolved ?comment ~rewrite var
 
-let compute_updates ?(force_path=false) st =
+let compute_updates ?(force_path=false) ?(shell=None) st =
   (* Todo: put these back into their packages!
   let perl5 = OpamPackage.Name.of_string "perl5" in
   let add_to_perl5lib =  OpamPath.Switch.lib t.root t.switch t.switch_config perl5 in
@@ -640,14 +640,34 @@ let compute_updates ?(force_path=false) st =
                 st.switch st.switch_config))
           ~comment:"Current opam switch man dir"
       ]
- in
- let switch_env =
-   (env_update_resolved_with_default "OPAM_SWITCH_PREFIX" Eq
-      (OpamFilename.Dir.to_string
-         (OpamPath.Switch.root st.switch_global.root st.switch))
-      ~comment:"Prefix of the current opam switch")
-   ::
-   List.map (env_expansion st) (OpamFile.Switch_config.env st.switch_config)
+  in
+  let share_dir = OpamFilename.Dir.to_string (OpamPath.Switch.share_dir st.switch_global.root st.switch st.switch_config) in
+  let shell = match shell with
+  | Some s -> s
+  | None -> OpamStd.Sys.guess_shell_compat () in
+  let zsh_fpath =
+    match shell with
+    | SH_zsh ->
+      (* add share/zsh/site-functions to FPATH for function lookup *)
+      [ env_update_resolved_with_default "FPATH"
+          EqPlusEq (Filename.concat share_dir (Filename.concat "zsh" "site-functions"))
+          ~comment:"Current opam switch zsh site-functions"
+      ]
+    | _ -> []
+  in
+  let xdg_data_dirs =
+    (* in particular, this is used by bash-completion, but it is not specific to it *)
+    [ env_update_resolved_with_default "XDG_DATA_DIRS"
+        EqPlusEq share_dir
+        ~comment:"Current opam switch share dir" ]
+  in
+  let switch_env =
+    (env_update_resolved_with_default "OPAM_SWITCH_PREFIX" Eq
+       (OpamFilename.Dir.to_string
+          (OpamPath.Switch.root st.switch_global.root st.switch))
+       ~comment:"Prefix of the current opam switch")
+    ::
+    List.map (env_expansion st) (OpamFile.Switch_config.env st.switch_config)
   in
   let pkg_env = (* XXX: Does this need a (costly) topological sort? *)
     let updates =
@@ -660,7 +680,8 @@ let compute_updates ?(force_path=false) st =
     in
     List.map resolve_separator_and_format updates
   in
-  switch_env @ pkg_env @ man_path @ [path]
+  switch_env @ pkg_env @ man_path @ xdg_data_dirs @ zsh_fpath @ [path]
+
 
 let updates_common ~set_opamroot ~set_opamswitch root switch =
   let root =
@@ -688,11 +709,11 @@ let updates_nix st =
      | Some env -> List.map resolve_separator_and_format env)
   | _ -> []
 
-let updates ~set_opamroot ~set_opamswitch ?force_path st =
+let updates ~set_opamroot ~set_opamswitch ?force_path ?shell st =
   let common =
     updates_common ~set_opamroot ~set_opamswitch st.switch_global.root st.switch
   in
-  common @ compute_updates ?force_path st @ updates_nix st
+  common @ compute_updates ?force_path ?shell st @ updates_nix st
 
 let get_pure ?(updates=[]) () =
   let env = List.map (fun (v,va) -> v,va,None) (OpamStd.Env.list ()) in
@@ -943,7 +964,8 @@ let env_hook_file = function
   | SH_pwsh _ | SH_cmd -> None
 
 let variables_file = function
-  | SH_sh | SH_bash | SH_zsh -> "variables.sh"
+  | SH_sh | SH_bash -> "variables.sh"
+  | SH_zsh -> "variables.zsh"
   | SH_csh -> "variables.csh"
   | SH_fish -> "variables.fish"
   | SH_pwsh _ -> "variables.ps1"
@@ -1226,10 +1248,6 @@ let write_dynamic_init_scripts st =
     end
   | _ -> true
   in
-  let updates =
-    updates ~set_opamroot:false ~set_opamswitch:false st
-    |> List.filter is_not_empty_update
-  in
   try
     if OpamStateConfig.is_newer_than_self
         ~lock_kind:`Lock_write st.switch_global then
@@ -1239,11 +1257,15 @@ let write_dynamic_init_scripts st =
     @@ fun _ ->
     List.iter
       (fun shell ->
+         let updates =
+           updates ~set_opamroot:false ~set_opamswitch:false ~shell:(Some shell) st
+           |> List.filter is_not_empty_update
+         in
          write_script (OpamPath.init st.switch_global.root)
            (variables_file shell,
             abort_if_set "OPAM_SWITCH_PREFIX" shell
             ^ string_of_update st shell updates))
-      [SH_sh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
+      [SH_sh; SH_zsh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd]
   with OpamSystem.Locked ->
     OpamConsole.warning
       "Global shell init scripts not installed (could not acquire lock)"
