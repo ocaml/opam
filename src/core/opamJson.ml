@@ -41,7 +41,9 @@ let of_string ?encoding str =
   with Exit -> None
 
 let to_buffer ~minify buff json =
-  let enc e l = ignore (Jsonm.encode e (`Lexeme l)) in
+  let enc e l =
+    let _ : [ `Ok | `Partial ] = Jsonm.encode e (`Lexeme l) in ()
+  in
   let rec value v k e = match v with
     | `A vs -> arr vs k e
     | `O ms -> obj ms k e
@@ -56,7 +58,9 @@ let to_buffer ~minify buff json =
     | [] -> enc e `Oe; k e
   in
   let e = Jsonm.encoder ~minify (`Buffer buff) in
-  let finish e = ignore (Jsonm.encode e `End) in
+  let finish e =
+    let _ : [ `Ok | `Partial ] = Jsonm.encode e `End in ()
+  in
   value json finish e
 
 let to_string ?(minify=false) j =

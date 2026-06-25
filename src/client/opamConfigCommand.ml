@@ -237,7 +237,7 @@ let load_and_verify_env ~set_opamroot ~set_opamswitch ~force_path
   in
   let environment_opam_switch_prefix =
     OpamStd.List.find_map_opt (function
-        | OpamTypes.{ envu_var = "OPAM_SWITCH_PREFIX";
+        | { OpamTypes.envu_var = "OPAM_SWITCH_PREFIX";
                       envu_op = Eq;
                       envu_value; _} ->
           Some envu_value
@@ -328,7 +328,7 @@ let ensure_env_aux ?(base=[]) ?(set_opamroot=false) ?(set_opamswitch=false)
   OpamEnv.add base updates
 
 let ensure_env gt switch =
-  ignore (ensure_env_aux gt switch)
+  let _ : OpamTypes.env = ensure_env_aux gt switch in ()
 
 let env gt switch ?(set_opamroot=false) ?(set_opamswitch=false)
     ~csh ~sexp ~fish ~pwsh ~cmd ~inplace_path =
