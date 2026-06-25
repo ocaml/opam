@@ -214,6 +214,7 @@ users)
   * Bump `actions/cache` to version 6 [#6983 @kit-ty-kate]
 
 ## Doc
+  * Update the packaging page to recommend using static archives for releases [#6973 @mseri]
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
   * Update the Install page with the new opam 2.5.0 release [#6821 @kit-ty-kate]
   * Mention more explicitely that raw fields are an option [@raphael-proust]
