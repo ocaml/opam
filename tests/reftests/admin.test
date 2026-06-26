@@ -88,7 +88,7 @@ packages/ocaml-system/ocaml-system.1.2/files/gen_ocaml_config.ml.in
 depends: ["ocaml"]
 opam-version: "2.0"
 synopsis: "base package"
-### opam-cat packages/ocaml-base-compiler/ocaml-base-compiler.1.2/opam | '=[0-9a-f]{32}"' -> =HASH
+### opam-cat packages/ocaml-base-compiler/ocaml-base-compiler.1.2/opam
 conflict-class: "ocaml-core-compiler"
 depends: ["ocaml" {= "1.2" & post} "base-comp" {post}]
 flags: compiler
@@ -98,7 +98,6 @@ opam-version: "2.0"
 synopsis: "1.2+1 compiler release"
 url {
 src: "file://${BASEDIR}/old-comp.1.2.tgz"
-checksum: "md5=HASH
 }
 ### opam-cat packages/ocaml/ocaml.1.2/opam
 build: ["ocaml" "-I" "+unix" "unix.cma" "gen_ocaml_config.ml"]
@@ -162,7 +161,7 @@ let () =
   p "  compiler: \"%{ocaml-system:installed?system:}%%{ocaml-base-compiler:version}%%{ocaml-variants:version}%\"";
   p "}";
   close_out oc
-### opam-cat packages/ocaml-variants/ocaml-variants.1.2+1/opam | '=[0-9a-f]{32}"' -> =HASH
+### opam-cat packages/ocaml-variants/ocaml-variants.1.2+1/opam
 conflict-class: "ocaml-core-compiler"
 depends: ["ocaml" {= "1.2" & post} "base-comp" {post}]
 flags: compiler
@@ -171,7 +170,6 @@ maintainer: "platform@lists.ocaml.org"
 opam-version: "2.0"
 url {
 src: "file://${BASEDIR}/old-comp.1.2+1.tgz"
-checksum: "md5=HASH
 }
 ### opam-cat packages/ocaml-system/ocaml-system.1.2/opam
 available: sys-ocaml-version = "1.2"
@@ -451,6 +449,10 @@ repo
 ### opam admin lint
 In base-comp.base:
            warning 47: Synopsis should start with a capital and not end with a dot
+In ocaml-base-compiler.1.2:
+           warning 59: url doesn't contain a checksum
+In ocaml-variants.1.2+1:
+           warning 59: url doesn't contain a checksum
 In risus.1:
              error 23: Missing field 'maintainer'
            warning 25: Missing field 'authors'
