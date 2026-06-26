@@ -30,7 +30,6 @@ OPAM/repo/default/packages/foo
 OPAM/repo/default/packages/foo/foo.1
 OPAM/repo/default/packages/foo/foo.1/files
 OPAM/repo/default/packages/foo/foo.1/files/data.txt
-OPAM/repo/default/packages/foo/foo.1/files/link.txt
 OPAM/repo/default/packages/foo/foo.1/opam
 OPAM/repo/default/packages/foo/foo.2
 OPAM/repo/default/packages/foo/foo.2/opam

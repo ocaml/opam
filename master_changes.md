@@ -227,7 +227,7 @@ users)
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
   * `OpamRepositoryCommand.update_with_auto_upgrade`, `OpamUpdate.repository`: no longer call an external process to create an archive [#6945 @kit-ty-kate]
-  * `OpamRepositoryBackend.get_diff` now dereferences symlinks to regular files instead of raising `Failure` on them [#6977 @dra27]
+  * `OpamRepositoryBackend.get_diff` now ignores symlinks to regular files instead of raising `Failure` on them [#6977 @dra27]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
