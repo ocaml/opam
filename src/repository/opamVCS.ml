@@ -15,7 +15,7 @@ open OpamProcess.Job.Op
 module type VCS = sig
   val name: OpamUrl.backend
   val exists: dirname -> bool
-  val init: ?will_full_fetch:bool -> dirname -> url -> unit OpamProcess.job
+  val init: ?full_fetch:bool -> dirname -> url -> unit OpamProcess.job
   val fetch:
     ?full_fetch:bool -> ?cache_dir:dirname -> ?subpath:subpath -> dirname -> url ->
     unit OpamProcess.job
@@ -68,7 +68,7 @@ module Make (VCS: VCS) = struct
             Done (OpamRepositoryBackend.Update_err e))
         @@ fun () ->
         OpamRepositoryBackend.job_text repo_name "init"
-          (VCS.init ~will_full_fetch:full_fetch repo_root_dir repo_url)
+          (VCS.init ~full_fetch:full_fetch repo_root_dir repo_url)
         @@+ fun () ->
         OpamRepositoryBackend.job_text repo_name "sync"
           (VCS.fetch ~full_fetch ?cache_dir repo_root_dir repo_url)
@@ -109,7 +109,7 @@ module Make (VCS: VCS) = struct
         Done (Result None)
     else
       (OpamFilename.mkdir dirname;
-       VCS.init ?will_full_fetch:full_fetch dirname url @@+ fun () ->
+       VCS.init ?full_fetch:full_fetch dirname url @@+ fun () ->
        VCS.fetch ?full_fetch ?cache_dir ?subpath dirname url @@+ fun () ->
        VCS.reset_tree dirname url @@+ fun () ->
        Done (Result None))
