@@ -86,6 +86,7 @@ users)
 ## Format upgrade
   * Fix switch and repo format upgrade on Windows. A block occurred because the global lock fd was reopened instead of using the one already opened.  [#6839 @rjbou]
   * Add opam root format upgrade conditional mechanism for hard upgrades [#6949 @rjbou]
+  * Stop the opam 1.2 to 2.0 repository upgrade process from downloading packages without checksums to add a non-trusted md5 [#6978 @kit-ty-kate]
 
 ## Sandbox
   * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
@@ -125,6 +126,7 @@ users)
   * Fix the AppArmor support when installing in `/usr/bin` [#6823 @kit-ty-kate - fix #6820]
 
 ## Admin
+ * `opam admin upgrade --clear-cache` is now a no-op as it is no longer needed [#6978 @kit-ty-kate]
 
 ## Opam installer
 
@@ -202,6 +204,7 @@ users)
   * Bump the opam-repository commits sha [#6976 @kit-ty-kate]
   * Fix the archlinux depexts run [#6976 @kit-ty-kate]
   * Fix the cygwin backend basic tests [#6979 @kit-ty-kate]
+  * Fix undeterministic tests [#6978 @kit-ty-kate]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
@@ -218,6 +221,7 @@ users)
 # API updates
 ## opam-client
   * `OpamArg`: add `build_options_no_depexts` getter to retrieve the value of the given flag  [#6489 @rjbou]
+  * `OpamArg{,Tools}.cli2_6` was added [#6978 @kit-ty-kate]
   * `OpamClientConfig.opam_init`: replace `no_depexts` argument by `depexts` [#6489 @rjbou]
   * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
   * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
