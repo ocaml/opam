@@ -23,15 +23,6 @@ opam-version: "2.0"
 Now run 'opam upgrade' to apply any package updates.
 ### find OPAM/repo/default | sort | grep -v .git
 OPAM/repo/default
-OPAM/repo/default/.#repo
-OPAM/repo/default/_build
-OPAM/repo/default/_build/install
-OPAM/repo/default/_build/install/default
-OPAM/repo/default/_build/install/default/doc
-OPAM/repo/default/_build/install/default/doc/README.txt
-OPAM/repo/default/_opam
-OPAM/repo/default/_opam/bin
-OPAM/repo/default/_opam/bin/ocamlopt.opt
 OPAM/repo/default/packages
 OPAM/repo/default/packages/foo
 OPAM/repo/default/packages/foo/foo.1

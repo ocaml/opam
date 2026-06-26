@@ -77,7 +77,8 @@ val copy_file: string -> string -> unit
 val copy_dir: string -> string -> unit
 
 (** Same as [copy_dir] except it avoids copying VCS directories
-    ([.git], [.hg], [_darcs]) *)
+    ([.git], [.hg], [_darcs]), opam switches ([_opam*]), [_build]
+    and editor lock files ([.#]) *)
 val copy_dir_except_vcs : string -> string -> unit
 
 val mv: string -> string -> unit
@@ -137,7 +138,8 @@ val write: string -> string -> unit
 val get_files : string -> string list
 
 (** Same as [get_files] except it avoids copying VCS directories
-    ([.git], [.hg], [_darcs]) *)
+    ([.git], [.hg], [_darcs]), opam switches ([_opam*]), [_build]
+    and editor lock files ([.#]) *)
 val get_files_except_vcs : string -> string list
 
 (** [remove filename] removes [filename]. Works whether [filename] is
