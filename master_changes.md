@@ -68,6 +68,7 @@ users)
 ## Repository
   * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
   * Synchronisation now always ignores `_opam`, `_build` and editor lock files (`.#*`) (rsync previously did this, but not local) [#6977 @dra27]
+  * `opam update` of a local repository now dereferences symlinks to regular files instead of failing with "Symlinks are unsupported" [#6977 @dra27]
 
 ## Lock
 
@@ -169,7 +170,6 @@ users)
   * Add disabled depexts tests [#6489 @rjbou]
   * Add depexts tests with debug section that demostrate system availability polling [#6489 @arozovyk]
   * Add a test showing the behaviour of .install files containing destination filepath trying to escape their scope [#6897 @rjbou @kit-ty-kate]
-  * Add `repository-symlink.test` showing that a local repository containing temporary files can be updated incrementally [#6977 @dra27]
   * Add `repository-symlink.test` showing that a local repository containing symlinks and temporary files can be updated incrementally [#6977 @dra27]
   * Add a test showing that `opam install ./` will leave packages pinned if
     aborted or failed [#6922 @NathanReb]
@@ -227,6 +227,7 @@ users)
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
   * `OpamRepositoryCommand.update_with_auto_upgrade`, `OpamUpdate.repository`: no longer call an external process to create an archive [#6945 @kit-ty-kate]
+  * `OpamRepositoryBackend.get_diff` now dereferences symlinks to regular files instead of raising `Failure` on them [#6977 @dra27]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]

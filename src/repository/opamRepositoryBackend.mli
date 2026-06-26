@@ -112,10 +112,12 @@ val job_text:
     returns None if they are equal, and the corresponding patch and the list of
     file-changes otherwise.
 
+    Symlinks to regular files are dereferenced.
+
     @raise Stdlib.Failure if an unsupported file type or comparison is
     detected in any of [subdir1] or [subdir2].
-    Unsupported file types: symlinks, character devices, block devices,
-    named pipes, sockets.
+    Unsupported file types: symlinks to directories or special files, broken
+    symlinks, character devices, block devices, named pipes, sockets.
     Unsupported comparison: comparison between regular files and directories. *)
 val get_diff:
   OpamRepositoryRoot.t -> OpamRepositoryRoot.t ->

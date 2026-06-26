@@ -128,7 +128,16 @@ let get_diff repo1 repo2 =
               OpamStd.String.Map.add relative_path content acc
             | Unix.S_DIR ->
               aux acc (Some relative_path) full_path
-            | Unix.S_LNK -> fail "Symlinks"
+            | Unix.S_LNK ->
+              (* Dereference symlinks *)
+              (match Unix.stat full_path with
+               | { Unix.st_kind = Unix.S_REG; _ } ->
+                 let content = OpamSystem.read full_path in
+                 OpamStd.String.Map.add relative_path content acc
+               | { Unix.st_kind = Unix.S_DIR; _ } ->
+                 fail "Symlinks to directories"
+               | _ -> fail "Symlinks to special files"
+               | exception Unix.Unix_error _ -> fail "Broken symlinks")
             | Unix.S_CHR -> fail "Character devices"
             | Unix.S_BLK -> fail "Block devices"
             | Unix.S_FIFO -> fail "Named pipes"

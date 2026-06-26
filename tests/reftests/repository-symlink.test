@@ -21,12 +21,17 @@ opam-version: "2.0"
 ### opam update
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[ERROR] Could not update repository "default": Symlinks are unsupported
-# Return code 40 #
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### find OPAM/repo/default | sort | grep -v .git
 OPAM/repo/default
 OPAM/repo/default/packages
 OPAM/repo/default/packages/foo
 OPAM/repo/default/packages/foo/foo.1
+OPAM/repo/default/packages/foo/foo.1/files
+OPAM/repo/default/packages/foo/foo.1/files/data.txt
+OPAM/repo/default/packages/foo/foo.1/files/link.txt
 OPAM/repo/default/packages/foo/foo.1/opam
+OPAM/repo/default/packages/foo/foo.2
+OPAM/repo/default/packages/foo/foo.2/opam
 OPAM/repo/default/repo
