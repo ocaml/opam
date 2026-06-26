@@ -101,6 +101,7 @@ users)
   * Add lower-bounds constraints to the dependencies that have none (`ocamlgraph` >= 1.8.8, `jsonm` >= 1.0.2, `swhid_core` >= 0.1, `uutf` >= 1.0.3) [#6878 @kit-ty-kate]
   * Require `spdx_licenses` >= 1.4.0 to ensure compatibility with SPDX v3 syntax [#6878 @kit-ty-kate]
   * Remove support for building opam with OCaml 4.08, 4.09 and 4.10 [#6879 @kit-ty-kate]
+  * Upgrade to ocaml-tar.3.5.0 [#6976 @kit-ty-kate]
 
 ## Infrastructure
 
@@ -198,6 +199,8 @@ users)
   * Install `micro_httpd` in test scripts [#6939 @rjbou]
   * Fix ubuntu depext job: remove install of no longer available system packages  'ocaml-compiler-libs' [#6960 @rjbou]
   * Fix opensuse depexts job : force resolution in case of conflict (ocaml/ncurses) [#6960 @rjbou]
+  * Bump the opam-repository commits sha [#6976 @kit-ty-kate]
+  * Fix the archlinux depexts run [#6976 @kit-ty-kate]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]

@@ -30,6 +30,7 @@ let run archive =
   let raise_error fmt = raise_error archive fmt in
   let rec run : type a. Unix.file_descr -> (a, _, _) Tar.t -> a = fun fd -> function
     | Tar.Read len ->
+      let len = Int64.to_int len in
       let b = Bytes.create len in
       let read = safe_read fd b 0 len in
       if read = 0 then
@@ -47,6 +48,7 @@ let run archive =
           else
             loop fd buf (offset + n) len
       in
+      let len = Int64.to_int len in
       let buf = Bytes.create len in
       loop fd buf 0 len;
       Bytes.unsafe_to_string buf
@@ -65,7 +67,7 @@ let fold_reg_files_aux archive f acc fd =
   let go ?global:_ hdr acc =
     match hdr.Tar.Header.link_indicator with
     | Normal ->
-      let* content = Tar.really_read (Int64.to_int hdr.file_size) in
+      let* content = Tar.really_read hdr.file_size in
       let acc = f acc (OpamFilename.Unix.of_string hdr.file_name) content in
       Tar.return (Ok acc)
     | Directory -> Tar.return (Ok acc)
