@@ -170,6 +170,7 @@ users)
   * Add depexts tests with debug section that demostrate system availability polling [#6489 @arozovyk]
   * Add a test showing the behaviour of .install files containing destination filepath trying to escape their scope [#6897 @rjbou @kit-ty-kate]
   * Add `repository-symlink.test` showing that a local repository containing temporary files can be updated incrementally [#6977 @dra27]
+  * Add `repository-symlink.test` showing that a local repository containing symlinks and temporary files can be updated incrementally [#6977 @dra27]
   * Add a test showing that `opam install ./` will leave packages pinned if
     aborted or failed [#6922 @NathanReb]
   * Add test for update in repository that changes directories to files and vice versa [#6915 @rjbou]
