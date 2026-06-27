@@ -1255,7 +1255,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### opam pin ./main-gpin -n | sed-cmd git | grep -v "HEAD is now"
-+ git "-C" "${BASEDIR}/main-gpin" "symbolic-ref" "--quiet" "--short" "HEAD"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "symbolic-ref" "--quiet" "--short" "HEAD"
 - master
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(opam)                      Read ${BASEDIR}/main-gpin/main-gpin.opam in 0.000s
@@ -1277,18 +1277,18 @@ SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin
 Processing  1/1: [main-gpin: git]
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "init"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "init"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin/.git/
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "color.ui" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "add" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "reset" "--hard" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "add" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "reset" "--hard" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "clean" "-fdx"
 SYSTEM                          rmdir ${OPAMTMP}
 [NOTE] Package main-gpin does not exist in opam repositories registered in the current switch.
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin
@@ -1326,19 +1326,19 @@ FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.
 FILE(opam)                      Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin/main-gpin.opam in 0.000s
 Processing  1/1:
-+ git "-C" "${BASEDIR}/main-gpin" "symbolic-ref" "--quiet" "--short" "HEAD"
-+ git "-C" "${BASEDIR}/main-gpin" "diff" "--no-ext-diff" "--quiet" "HEAD"
-+ git "-C" "${BASEDIR}/main-gpin" "ls-files" "--others" "--exclude-standard"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "clean" "-fdx"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "submodule" "status" "--recursive"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "clean" "-fdx"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "submodule" "status" "--recursive"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "symbolic-ref" "--quiet" "--short" "HEAD"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "HEAD"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "ls-files" "--others" "--exclude-standard"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "submodule" "status" "--recursive"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "submodule" "status" "--recursive"
 - master
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [main-gpin.dev: git]
@@ -1410,19 +1410,19 @@ FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.
 FILE(opam)                      Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin/main-gpin.opam in 0.000s
 Processing  1/1:
-+ git "-C" "${BASEDIR}/main-gpin" "symbolic-ref" "--quiet" "--short" "HEAD"
-+ git "-C" "${BASEDIR}/main-gpin" "diff" "--no-ext-diff" "--quiet" "HEAD"
-+ git "-C" "${BASEDIR}/main-gpin" "ls-files" "--others" "--exclude-standard"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "clean" "-fdx"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "submodule" "status" "--recursive"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "clean" "-fdx"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "submodule" "status" "--recursive"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "symbolic-ref" "--quiet" "--short" "HEAD"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "HEAD"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "ls-files" "--others" "--exclude-standard"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "submodule" "status" "--recursive"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "submodule" "status" "--recursive"
 - master
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [main-gpin.dev: git]
@@ -1525,11 +1525,11 @@ The following actions will be performed:
 FILE(opam)                      Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin/main-gpin.opam in 0.000s
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/2: [main-gpin.dev: git]
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "clean" "-fdx"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "submodule" "status" "--recursive"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "submodule" "status" "--recursive"
 SYSTEM                          rmdir ${OPAMTMP}
 -> retrieved main-gpin.dev  (no changes)
 SYSTEM                          rmdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/remove/main-gpin.dev
@@ -1630,18 +1630,18 @@ CACHE(installed)                Loaded ${BASEDIR}/OPAM/install-from-git-pin-all/
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (read => none)
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config atomically in 0.000s
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export atomically in 0.000s
-+ git "-C" "${BASEDIR}/main-gpin" "symbolic-ref" "--quiet" "--short" "HEAD"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "init"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "color.ui" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "add" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "reset" "--hard" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "clean" "-fdx"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "symbolic-ref" "--quiet" "--short" "HEAD"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "init"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "add" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "reset" "--hard" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "clean" "-fdx"
 - master
 FILE(opam)                      Read ${BASEDIR}/main-gpin/main-gpin.opam in 0.000s
 [NOTE] Package main-gpin does not exist in opam repositories registered in the current switch.
@@ -1721,19 +1721,19 @@ FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.
 FILE(opam)                      Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/overlay/main-gpin/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin/main-gpin.opam in 0.000s
 Processing  1/1:
-+ git "-C" "${BASEDIR}/main-gpin" "symbolic-ref" "--quiet" "--short" "HEAD"
-+ git "-C" "${BASEDIR}/main-gpin" "diff" "--no-ext-diff" "--quiet" "HEAD"
-+ git "-C" "${BASEDIR}/main-gpin" "ls-files" "--others" "--exclude-standard"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "clean" "-fdx"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "submodule" "status" "--recursive"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "clean" "-fdx"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "submodule" "status" "--recursive"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "symbolic-ref" "--quiet" "--short" "HEAD"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "HEAD"
++ git "-C" "${BASEDIR}/main-gpin" "-c" "safe.directory=." "ls-files" "--others" "--exclude-standard"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "submodule" "status" "--recursive"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "diff" "--no-ext-diff" "--quiet" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "-c" "safe.directory=." "submodule" "status" "--recursive"
 - master
 SYSTEM                          mkdir ${OPAMTMP}
 Processing  1/1: [main-gpin.dev: git]
@@ -1843,17 +1843,17 @@ The following actions will be performed:
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev
 Processing  1/2: [main-gpin.dev: git]
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "init"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "config" "--local" "color.ui" "false"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "remote" "add" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "reset" "--hard" "refs/remotes/opam-ref-master" "--"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "init"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "remote" "add" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/main-gpin"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/main-gpin" "--update-shallow" "+master:refs/remotes/opam-ref-master"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "reset" "--hard" "refs/remotes/opam-ref-master" "--"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "-c" "safe.directory=." "clean" "-fdx"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev/.git/
 SYSTEM                          rmdir ${OPAMTMP}
 -> retrieved main-gpin.dev  (git+file://${BASEDIR}/main-gpin#master)

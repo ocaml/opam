@@ -91,6 +91,7 @@ users)
   * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
 
 ## VCS
+  * Add support for using git repositories owned by another local user [#6980 @kit-ty-kate]
 
 ## Build
   * opam no longer depends on `cmdliner` [#6755 @kit-ty-kate - fix #6425]
@@ -202,6 +203,7 @@ users)
   * Bump the opam-repository commits sha [#6976 @kit-ty-kate]
   * Fix the archlinux depexts run [#6976 @kit-ty-kate]
   * Fix the cygwin backend basic tests [#6979 @kit-ty-kate]
+  * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
