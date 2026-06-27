@@ -460,3 +460,10 @@ Proceed with 2 installations? [Y/n] n
 # Return code 10 #
 ### opam pin list
 abort-install.dev  (uninstalled)  git  git+file://${BASEDIR}/abort-install#master  (error while fetching current revision)
+### : Ensure the dir/*.opam pattern works on all platform (see https://github.com/ocaml/opam/issues/6940)
+### opam install abort-install/abort-install.opam --no
+opam: PACKAGES… arguments: Invalid character '/' in package name
+      "abort-install/abort-install"
+Usage: opam install [OPTION]… [PACKAGES]…
+Try 'opam install --help' or 'opam --help' for more information.
+# Return code 2 #
