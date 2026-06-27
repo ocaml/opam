@@ -114,6 +114,11 @@ url {
 }
 ```
 
+It is recommended to use a static archive for the `src:`, since unexpected
+changes in automatic archive generation (e.g. when a repository is migrated
+to a different organization) can lead to changes in the checksums and
+consequently break the package on the opam-repository.
+
 Then get to https://github.com/ocaml/opam-repository and select `Fork` on the
 top-right. Clone the resulting repository, add your package definition, and
 push back, as such:
