@@ -16,6 +16,7 @@ users)
 ## Global CLI
   * Update Kate's email address [#6808 @kit-ty-kate]
   * Remove unnecessary uses of `chdir` [#6910 @NathanReb]
+  * Fix the filename check used when parsing arguments to allow `/` to be recognised as a directory separator on Windows [#6981 @kit-ty-kate - fix #6940]
 
 ## Plugins
 
@@ -289,6 +290,7 @@ users)
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
   * `OpamFilename.in_dir`: removed [#6910 @NathanReb]
+  * `OpamFilename.{is_dir_sep,is_rel_seg}` were added [#6981 @kit-ty-kate]
   * `OpamSystem.in_tmp_dir`: removed [#6910 @NathanReb]
   * `OpamSystem.in_dir`: removed [#6910 @NathanReb]
   * `OpamSystem.chdir`: removed [#6910 @NathanReb]

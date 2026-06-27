@@ -23,6 +23,16 @@ let might_escape ~sep path =
   List.exists (String.equal Filename.parent_dir_name)
     Re.(split (compile sep) path)
 
+let is_dir_sep =
+  if Sys.win32 then
+    function '/' | '\\' -> true | _ -> false
+  else
+    function '/' -> true | _ -> false
+
+let is_rel_seg = function
+  | "." | ".." -> true
+  | _ -> false
+
 module Base = struct
   include OpamStd.AbstractString
 
