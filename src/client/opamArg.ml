@@ -872,8 +872,8 @@ let atom =
 
 let atom_or_local =
   let parse str =
-    if OpamStd.String.contains ~sub:Filename.dir_sep str ||
-       OpamCompat.String.starts_with ~prefix:"." str
+    if OpamFilename.is_rel_seg str ||
+       OpamCompat.String.exists OpamFilename.is_dir_sep str
     then
       if OpamFilename.(exists (of_string str)) then
         Ok (`Filename (OpamFilename.of_string str))

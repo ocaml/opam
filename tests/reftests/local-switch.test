@@ -8,22 +8,22 @@ N0REP0
 ### opam switch show --switch=global-1
 global-1
 ### opam switch show --switch=.global-2
-${BASEDIR}/.global-2
+.global-2
 ### opam switch show --switch=./local-1
 ${BASEDIR}/local-1
 ### opam switch show --switch=local-2/
-local-2/
+${BASEDIR}/local-2
 ### opam switch show --switch=local-3/inner
-local-3/inner
+${BASEDIR}/local-3/inner
 ### ls -a OPAM | sort | grep -v log
 .
 ..
+.global-2
 config
 config.lock
 global-1
-local-2
-local-3
 lock
 opam-init
 repo
 ### test -d OPAM/local-3/inner
+# Return code 1 #
