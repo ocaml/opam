@@ -780,13 +780,6 @@ let upgrade_command cli =
           OpamArg.dir_sep)
   ]
   in
-  let clear_cache_arg =
-    OpamArg.mk_flag ~cli OpamArg.cli_original ["clear-cache"]
-      (Printf.sprintf
-         "Instead of running the upgrade, clear the cache of archive hashes (held \
-          in ~%s.cache), that is used to avoid re-downloading files to obtain \
-          their hashes at every run." OpamArg.dir_sep)
-  in
   let create_mirror_arg =
     OpamArg.mk_opt ~cli OpamArg.cli_original ["m"; "mirror"] "URL"
       "Don't overwrite the current repository, but put an upgraded mirror in \
@@ -795,26 +788,24 @@ let upgrade_command cli =
        of opam don't understand relative redirects)."
       Arg.(some OpamArg.url) None
   in
-  let cmd global_options clear_cache create_mirror () =
+  let cmd global_options create_mirror () =
     OpamArg.apply_global_options cli global_options;
-    if clear_cache then OpamAdminRepoUpgrade.clear_cache ()
-    else
-      let repo_root = checked_repo_root ~check:false () in
-      match create_mirror with
-      | None ->
-        OpamAdminRepoUpgrade.do_upgrade repo_root;
-        if OpamFilename.exists (OpamFilename.of_string "index.tar.gz") ||
-           OpamFilename.exists (OpamFilename.of_string "urls.txt")
-        then
-          OpamConsole.note
-            "Indexes need updating: you should now run:\n\
-             \n\
-            \  opam admin index"
-      | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror repo_root m
+    let repo_root = checked_repo_root ~check:false () in
+    match create_mirror with
+    | None ->
+      OpamAdminRepoUpgrade.do_upgrade repo_root;
+      if OpamFilename.exists (OpamFilename.of_string "index.tar.gz") ||
+         OpamFilename.exists (OpamFilename.of_string "urls.txt")
+      then
+        OpamConsole.note
+          "Indexes need updating: you should now run:\n\
+           \n\
+          \  opam admin index"
+    | Some m -> OpamAdminRepoUpgrade.do_upgrade_mirror repo_root m
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
     Term.(const cmd $ global_options cli $
-          clear_cache_arg $ create_mirror_arg)
+          create_mirror_arg)
 
 let lint_command_doc =
   "Runs 'opam lint' and reports on a whole repository"
