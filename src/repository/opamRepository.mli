@@ -50,7 +50,7 @@ val pull_shared_tree:
    If [full_fetch] is set to false, VCS repository is retrieved with shallow
    history (by default, full history). *)
 val pull_tree:
-  string -> ?full_fetch:bool -> ?cache_dir:dirname -> ?cache_urls:url list ->
+  string -> ?from_source:bool -> ?full_fetch:bool -> ?cache_dir:dirname -> ?cache_urls:url list ->
   ?working_dir:bool -> ?subpath:subpath ->
   dirname -> OpamHash.t list -> url list ->
   string download OpamProcess.job

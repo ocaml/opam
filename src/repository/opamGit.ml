@@ -32,15 +32,15 @@ module VCS : OpamVCS.VCS = struct
     fun ?verbose ?stdout args ->
       OpamSystem.make_command ?verbose ?stdout "git" ("-C"::dir::args)
 
-  let init ?(full_fetch = true) repo_root repo_url =
+  let init ?(from_source = false) repo_root repo_url =
     OpamFilename.mkdir repo_root;
-    let if_not_full_fetch = if not full_fetch then Option.some else Fun.const Option.none in
+    let if_not_from_source = if not from_source then Option.some else Fun.const Option.none in
     (OpamProcess.Job.of_list @@ List.filter_map Fun.id [
       Some (git repo_root [ "init" ]);
       (* Enforce this option, it can break our use of git if set *)
-      if_not_full_fetch (git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"]);
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"]);
       (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)
-      if_not_full_fetch (git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"]);
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"]);
       (* Disable automatic line-ending conversion and switch core.eol to Unix.
          THIS DOES NOT MEAN ALL FILES GET LF-ONLY LINE-ENDINGS!
          This combination of settings means that files will be checked out
@@ -49,9 +49,9 @@ module VCS : OpamVCS.VCS = struct
          core.autocrlf = false, or having an explicit eol=crlf in
          .gitattributes), then they will still be checked out with CRLF endings.
        *)
-      if_not_full_fetch (git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false" ]);
-      if_not_full_fetch (git repo_root [ "config" ; "--local" ; "core.eol"; "lf" ]);
-      if_not_full_fetch (git repo_root [ "config" ; "--local" ; "color.ui"; "false" ]);
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false" ]);
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "core.eol"; "lf" ]);
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "color.ui"; "false" ]);
       (* Document the remote for user-friendliness (we don't use it) *)
       Some (git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ]);
     ]) @@+ function

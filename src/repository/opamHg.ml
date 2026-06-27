@@ -26,7 +26,7 @@ module VCS = struct
     fun ?verbose ?env ?stdout args ->
       OpamSystem.make_command ~dir ?verbose ?env ?stdout "hg" args
 
-  let init ?full_fetch:_ repo_root _repo_url =
+  let init ?from_source:_ repo_root _repo_url =
     OpamFilename.mkdir repo_root;
     hg repo_root [ "init" ] @@> fun r ->
     OpamSystem.raise_on_process_error r;

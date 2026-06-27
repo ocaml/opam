@@ -52,7 +52,7 @@ module type S = sig
       directory.
       If [subpath] is given, only that [subpath] of the url is retrieved. *)
   val pull_url:
-    ?full_fetch:bool ->
+    ?from_source:bool -> ?full_fetch:bool ->
     ?cache_dir:dirname -> ?subpath:subpath -> dirname -> OpamHash.t option ->
     url -> filename option download OpamProcess.job
 

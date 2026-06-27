@@ -237,6 +237,11 @@ SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1
 Processing  1/1: [bar.1: git]
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "init"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "color.ui" "false"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "remote" "add" "origin" "file://${BASEDIR}/bar"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "remote" "set-url" "origin" "file://${BASEDIR}/bar"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "fetch" "-q" "file://${BASEDIR}/bar" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
@@ -291,6 +296,11 @@ SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1
 Processing  1/1: [qux.1: git]
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "init"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "color.ui" "false"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "remote" "add" "origin" "https://github.com/ocaml-opam/opam-depext"
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/git
 + git "-C" git "init" "--bare"
