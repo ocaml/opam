@@ -217,3 +217,16 @@ Done.
 # invariant            ["meta-compiler" "depopt-compiler"]
 # compiler-packages    compiler.1, dep-compiler.1, depopt-compiler.1
 # meta-compiler:compvar something
+### :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+### : opam config subst must accept relative and absolute paths
+### :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+### <some-dir/relative.in>
+%{root}%
+### <some-dir/absolute.in>
+%{root}%
+### opam config subst some-dir/relative
+### cat some-dir/relative
+${BASEDIR}/OPAM
+### opam config subst $BASEDIR/some-dir/absolute | 'OpamSystem.File_not_found.*' -> 'OpamSystem.File_not_found...'
+### cat some-dir/absolute
+${BASEDIR}/OPAM
