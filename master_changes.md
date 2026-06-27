@@ -176,6 +176,7 @@ users)
   * Fix `extrafile` test : remove trailing mkdir, the error was fixed in #6679 [#6970 rjbou]
   * Fix trailing full path for `tar` call in `no-depexts-sandboxed.unix.test` [#6970 @rjbou]
   * Fix some forgotten sed in `extrasource` and `update` tests in #6734 [#6970 @rjbou]
+  * Add a test ensuring `/` can be used as directory separator on Windows when referring to a path to a local repository [#6981 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
