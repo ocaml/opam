@@ -70,6 +70,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * Add support for using git repositories owned by another local user [#6980 @kit-ty-kate - fix #6963]
 
 ## Build
   * Upgrade the autoconf generated files (`configure`) to autoconf 2.72 [#7052 @kit-ty-kate]
@@ -132,6 +133,7 @@ users)
 ## opam-client
 
 ## opam-repository
+  * `OpamGit`: git calls now will all carry git config `safe.directory=.` (current directory) [#6980 @kit-ty-kate - fix #6963]
 
 ## opam-state
 
