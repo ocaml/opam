@@ -30,6 +30,7 @@ val init:
   ?check_sandbox:bool ->
   ?cygwin_setup: [ `internal of OpamSysPkg.t list | `default_location | `location of dirname | `no ] ->
   ?git_location:(dirname, unit) either ->
+  ?no_compiler:bool ->
   shell ->
   rw global_state * unlocked repos_state * atom list
 
