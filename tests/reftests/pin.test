@@ -241,8 +241,8 @@ The following actions will be performed:
 -> installed nip-git2.ved
 Done.
 ### opam pin add ./nip-path2 --kind git | sed-cmd git | " 128.*" -> " 128"
-[ERROR] Command "git -C ${BASEDIR}/nip-path2 ls-files" failed:
-"git -C ${BASEDIR}/nip-path2 ls-files" exited with code 128
+[ERROR] Command "git -C ${BASEDIR}/nip-path2 -c safe.directory=. ls-files" failed:
+"git -C ${BASEDIR}/nip-path2 -c safe.directory=. ls-files" exited with code 128
 # Return code 99 #
 ### : auto
 ### opam pin add ./nip-git3 --kind auto
