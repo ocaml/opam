@@ -22,6 +22,7 @@ let git_env = [
 let git_config = [
   "gc.autoDetach", "false";
   "maintenance.autoDetach", "false";
+  "safe.directory", ".";
 ]
 
 let env =
