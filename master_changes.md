@@ -111,6 +111,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
 
 ## Doc
 
