@@ -75,7 +75,8 @@ val move_dir: src:Dir.t -> dst:Dir.t -> unit
 val copy_dir: src:Dir.t -> dst:Dir.t -> unit
 
 (** Same as [copy_dir] except it avoids copying VCS directories
-    ([.git], [.hg], [_darcs]) *)
+    ([.git], [.hg], [_darcs]), opam switches ([_opam*]), [_build]
+    and editor lock files ([.#]) *)
 val copy_dir_except_vcs : src:Dir.t -> dst:Dir.t -> unit
 
 (** Link a directory *)

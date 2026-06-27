@@ -1,0 +1,36 @@
+N0REP0
+### <REPO/packages/foo/foo.1/opam>
+opam-version: "2.0"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### <REPO/packages/foo/foo.1/files/data.txt>
+hello
+### ln -s data.txt REPO/packages/foo/foo.1/files/link.txt
+### <REPO/.#repo>
+This file is locked by emacs
+### <REPO/_build/install/default/doc/README.txt>
+This file gets copied
+### <REPO/_opam/bin/ocamlopt.opt>
+dummy
+### ln -s ocamlopt.opt REPO/_opam/bin/ocamlopt
+### <REPO/packages/foo/foo.2/opam>
+opam-version: "2.0"
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### find OPAM/repo/default | sort | grep -v .git
+OPAM/repo/default
+OPAM/repo/default/packages
+OPAM/repo/default/packages/foo
+OPAM/repo/default/packages/foo/foo.1
+OPAM/repo/default/packages/foo/foo.1/files
+OPAM/repo/default/packages/foo/foo.1/files/data.txt
+OPAM/repo/default/packages/foo/foo.1/opam
+OPAM/repo/default/packages/foo/foo.2
+OPAM/repo/default/packages/foo/foo.2/opam
+OPAM/repo/default/repo

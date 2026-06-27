@@ -123,8 +123,13 @@ let get_files_t ~except_vcs dirname =
   let rec aux files =
     match Unix.readdir dir with
     | "." | ".." -> aux files
-    | ".git" | ".hg" | "_darcs" when except_vcs -> aux files
-    | file -> aux (file :: files)
+    | ".git" | ".hg" | "_darcs" | "_build" when except_vcs -> aux files
+    | file ->
+      let has_prefix prefix = OpamCompat.String.starts_with ~prefix file in
+      if except_vcs && (has_prefix "_opam" || has_prefix ".#") then
+        aux files
+      else
+        aux (file :: files)
     | exception End_of_file -> files
   in
   let files = aux [] in

@@ -36,6 +36,7 @@ module Dir : sig
   val remove : t -> unit
   val move : src:t -> dst:t -> unit
   val copy : src:t -> dst:t -> unit
+
   val copy_except_vcs : src:t -> dst:t -> unit
   val make_empty : t -> unit
   val dirs : t -> dirname list

@@ -1911,6 +1911,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:repository-patchdiff.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-repository-symlink)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff repository-symlink.test repository-symlink.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-repository-symlink)))
+
+(rule
+ (targets repository-symlink.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:repository-symlink.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-repository)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

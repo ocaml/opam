@@ -128,7 +128,9 @@ let get_diff repo1 repo2 =
               OpamStd.String.Map.add relative_path content acc
             | Unix.S_DIR ->
               aux acc (Some relative_path) full_path
-            | Unix.S_LNK -> fail "Symlinks"
+            | Unix.S_LNK ->
+              (* Ignore symlinks *)
+              acc
             | Unix.S_CHR -> fail "Character devices"
             | Unix.S_BLK -> fail "Block devices"
             | Unix.S_FIFO -> fail "Named pipes"
