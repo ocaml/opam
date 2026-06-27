@@ -173,6 +173,28 @@ if [ "$OPAM_TEST" = "1" ]; then
   opam install opam-rt --deps-only opam-devel
   opam exec -- make || { opam reinstall opam-client -y; opam exec -- make; }
   (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
+
+  # Test https://github.com/ocaml/opam/issues/6963
+  # Done here instead of reftests because sudo/root access is required
+  # This test makes sure that opam is able to handle git repositories
+  # with different owner uid, which is forbidden by git since CVE-2022-24765
+  # https://github.blog/open-source/git/git-security-vulnerability-announced
+  testdir=/tmp/opam-test-6963
+  git init "$testdir"
+  cat > "$testdir/opam" << EOF
+opam-version: "2.0"
+name: "opam-test-6963"
+build: "true"
+EOF
+  git -C "$testdir" add opam
+  git -C "$testdir" commit -m init
+  chmod ugo+rwx -R "$testdir"
+  sudo chown root -R "$testdir"
+  if GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null git -C "$testdir" ls-files; then
+    echo "Your git version is too old for this test"
+    exit 1
+  fi
+  opam install -y "$testdir"
 fi
 
 test_project () {
