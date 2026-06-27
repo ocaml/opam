@@ -16,6 +16,7 @@ users)
 ## Global CLI
   * Update Kate's email address [#6808 @kit-ty-kate]
   * Remove unnecessary uses of `chdir` [#6910 @NathanReb]
+  * Fix the filename check used when parsing arguments to allow `/` to be recognised as a directory separator on Windows [#6981 @kit-ty-kate - fix #6940]
 
 ## Plugins
 
@@ -176,6 +177,7 @@ users)
   * Fix `extrafile` test : remove trailing mkdir, the error was fixed in #6679 [#6970 rjbou]
   * Fix trailing full path for `tar` call in `no-depexts-sandboxed.unix.test` [#6970 @rjbou]
   * Fix some forgotten sed in `extrasource` and `update` tests in #6734 [#6970 @rjbou]
+  * Add a test ensuring `/` can be used as directory separator on Windows when referring to a path to a local repository [#6981 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -288,6 +290,7 @@ users)
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
   * `OpamFilename.in_dir`: removed [#6910 @NathanReb]
+  * `OpamFilename.{is_dir_sep,is_rel_seg}` were added [#6981 @kit-ty-kate]
   * `OpamSystem.in_tmp_dir`: removed [#6910 @NathanReb]
   * `OpamSystem.in_dir`: removed [#6910 @NathanReb]
   * `OpamSystem.chdir`: removed [#6910 @NathanReb]
