@@ -15,7 +15,7 @@ open OpamProcess.Job.Op
 module type VCS = sig
   val name: OpamUrl.backend
   val exists: dirname -> bool
-  val init: dirname -> url -> unit OpamProcess.job
+  val init: ?from_source:bool -> dirname -> url -> unit OpamProcess.job
   val fetch:
     ?full_fetch:bool -> ?cache_dir:dirname -> ?subpath:subpath -> dirname -> url ->
     unit OpamProcess.job
@@ -43,6 +43,7 @@ module Make (VCS: VCS) = struct
   let fetch_repo_update repo_name ?cache_dir repo_root repo_url =
     match repo_root with
     | OpamRepositoryRoot.Dir repo_root ->
+      let from_source = false in
       let full_fetch = false in
       let repo_root_dir = OpamRepositoryRoot.Dir.to_dir repo_root in
       if VCS.exists repo_root_dir then
@@ -68,7 +69,7 @@ module Make (VCS: VCS) = struct
             Done (OpamRepositoryBackend.Update_err e))
         @@ fun () ->
         OpamRepositoryBackend.job_text repo_name "init"
-          (VCS.init repo_root_dir repo_url)
+          (VCS.init ~from_source repo_root_dir repo_url)
         @@+ fun () ->
         OpamRepositoryBackend.job_text repo_name "sync"
           (VCS.fetch ~full_fetch ?cache_dir repo_root_dir repo_url)
@@ -89,7 +90,7 @@ module Make (VCS: VCS) = struct
       @@+ fun () ->
       Done ()
 
-  let pull_url ?full_fetch ?cache_dir ?subpath dirname checksum url =
+  let pull_url ?from_source ?full_fetch ?cache_dir ?subpath dirname checksum url =
     if checksum <> None then invalid_arg "VC pull_url doesn't allow checksums";
     OpamProcess.Job.catch
       (fun e ->
@@ -109,7 +110,7 @@ module Make (VCS: VCS) = struct
         Done (Result None)
     else
       (OpamFilename.mkdir dirname;
-       VCS.init dirname url @@+ fun () ->
+       VCS.init ?from_source dirname url @@+ fun () ->
        VCS.fetch ?full_fetch ?cache_dir ?subpath dirname url @@+ fun () ->
        VCS.reset_tree dirname url @@+ fun () ->
        Done (Result None))

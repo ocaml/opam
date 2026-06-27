@@ -58,6 +58,8 @@ pandore/.git
 pandore/root.ml
 pandore/src
 pandore/src/src.ml
+### git -C pandore config --local fetch.prune
+# Return code 1 #
 ### opam source pandore --dev --dir pandore4
 Successfully fetched pandore development repo to ${BASEDIR}/pandore4
 ### find pandore4 | grep -v '.git/' | unordered

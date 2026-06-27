@@ -62,6 +62,7 @@ users)
 ## Exec
 
 ## Source
+  * `opam source --dev` does no longer sets opam-specific git configuration options.
 
 ## Lint
 

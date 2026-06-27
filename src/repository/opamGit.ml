@@ -32,14 +32,15 @@ module VCS : OpamVCS.VCS = struct
     fun ?verbose ?stdout args ->
       OpamSystem.make_command ?verbose ?stdout "git" ("-C"::dir::args)
 
-  let init repo_root repo_url =
+  let init ?(from_source = false) repo_root repo_url =
     OpamFilename.mkdir repo_root;
-    OpamProcess.Job.of_list [
-      git repo_root [ "init" ];
+    let if_not_from_source = if not from_source then Option.some else Fun.const Option.none in
+    (OpamProcess.Job.of_list @@ List.filter_map Fun.id [
+      Some (git repo_root [ "init" ]);
       (* Enforce this option, it can break our use of git if set *)
-      git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"]);
       (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)
-      git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"];
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"]);
       (* Disable automatic line-ending conversion and switch core.eol to Unix.
          THIS DOES NOT MEAN ALL FILES GET LF-ONLY LINE-ENDINGS!
          This combination of settings means that files will be checked out
@@ -48,12 +49,12 @@ module VCS : OpamVCS.VCS = struct
          core.autocrlf = false, or having an explicit eol=crlf in
          .gitattributes), then they will still be checked out with CRLF endings.
        *)
-      git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false"];
-      git repo_root [ "config" ; "--local" ; "core.eol"; "lf"];
-      git repo_root [ "config" ; "--local" ; "color.ui"; "false" ];
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false" ]);
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "core.eol"; "lf" ]);
+      if_not_from_source (git repo_root [ "config" ; "--local" ; "color.ui"; "false" ]);
       (* Document the remote for user-friendliness (we don't use it) *)
-      git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
-    ] @@+ function
+      Some (git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ]);
+    ]) @@+ function
     | None -> Done ()
     | Some (_,err) -> OpamSystem.process_error err
 

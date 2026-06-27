@@ -3814,6 +3814,7 @@ let source cli =
            match
              OpamProcess.Job.run
                (OpamRepository.pull_tree
+                  ~from_source:true
                   ~full_fetch:true
                   ~cache_dir:(OpamRepositoryPath.download_cache
                                 OpamStateConfig.(!r.root_dir))
