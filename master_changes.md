@@ -245,6 +245,7 @@ users)
   * Upgrade the CI to OCaml 5.5 and 4.14.4 [#6988 @kit-ty-kate]
   * Fix the Cygwin 5.5 build by requiring cygwin gcc 13.4 as 14.4 breaks C++ support [#7007 @kit-ty-kate]
   * Upgrade to use opam 2.5.2 [#7018 @kit-ty-kate]
+  * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
 
 ## Doc
   * Update the packaging page to recommend using static archives for releases [#6973 @mseri]
