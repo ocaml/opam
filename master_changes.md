@@ -201,6 +201,7 @@ users)
   * Fix opensuse depexts job : force resolution in case of conflict (ocaml/ncurses) [#6960 @rjbou]
   * Bump the opam-repository commits sha [#6976 @kit-ty-kate]
   * Fix the archlinux depexts run [#6976 @kit-ty-kate]
+  * Fix the cygwin backend basic tests [#6979 @kit-ty-kate]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
