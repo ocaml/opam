@@ -184,6 +184,7 @@ users)
   * Fix some forgotten sed in `extrasource` and `update` tests in #6734 [#6970 @rjbou]
   * Add a test for `opam config subst` [#6936 @NathanReb]
   * Add a lock test for undefined variables in a lock file [#6947 @rjbou - fix #6946]
+  * Add a test showing the git commands called by `opam source` [#6955 @sporkl]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
