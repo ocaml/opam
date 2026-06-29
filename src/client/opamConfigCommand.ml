@@ -378,11 +378,7 @@ let subst gt fs =
   log "config-substitute";
   OpamSwitchState.with_ `Lock_none gt @@ fun st ->
   let env = OpamPackageVar.resolve st in
-  List.iter
-    (fun b ->
-       let file = OpamFilename.of_basename b in
-       OpamFilter.expand_interpolations_in_file env file)
-    fs
+  List.iter (OpamFilter.expand_interpolations_in_file env) fs
 
 let expand gt str =
   log "config-expand";

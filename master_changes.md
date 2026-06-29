@@ -40,6 +40,7 @@ users)
 ## Switch
 
 ## Config
+  * Fix `opam config subst` so it works with absolute paths [#6936 @NathanReb - fix #6925]
 
 ## Pin
 
@@ -178,6 +179,7 @@ users)
   * Fix `extrafile` test : remove trailing mkdir, the error was fixed in #6679 [#6970 rjbou]
   * Fix trailing full path for `tar` call in `no-depexts-sandboxed.unix.test` [#6970 @rjbou]
   * Fix some forgotten sed in `extrasource` and `update` tests in #6734 [#6970 @rjbou]
+  * Add a test for `opam config subst` [#6936 @NathanReb]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -226,6 +228,7 @@ users)
   * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
   * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
   * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
+  * `OpamConfigCommand.subst` now takes a `filename` instead of a `basename` [#6936 @NathanReb]
 
 ## opam-repository
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
