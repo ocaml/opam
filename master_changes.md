@@ -212,6 +212,7 @@ users)
   * Fix the cygwin backend basic tests [#6979 @kit-ty-kate]
   * Fix undeterministic tests [#6978 @kit-ty-kate]
   * Bump `actions/cache` to version 6 [#6983 @kit-ty-kate]
+  * Upgrade the CI to OCaml 5.5 and 4.14.4 [#6988 @kit-ty-kate]
 
 ## Doc
   * Add spacing between two words in `--locked` man section [#6806 @yosefAlsuhaibani]
