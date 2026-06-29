@@ -37,12 +37,12 @@ fi
 test -r '${BASEDIR}/root/opam-init/variables.sh' && . '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null || true
 ### cat root/opam-init/init.zsh
 if [[ -o interactive ]]; then
-  [[ ! -r '${BASEDIR}/root/opam-init/complete.zsh' ]] || source '${BASEDIR}/root/opam-init/complete.zsh' > /dev/null 2> /dev/null
+  [[ ! -r '${BASEDIR}/root/opam-init/complete.zsh' ]] || source '${BASEDIR}/root/opam-init/complete.zsh' > /dev/null 2> /dev/null; true
 
-  [[ ! -r '${BASEDIR}/root/opam-init/env_hook.zsh' ]] || source '${BASEDIR}/root/opam-init/env_hook.zsh' > /dev/null 2> /dev/null
+  [[ ! -r '${BASEDIR}/root/opam-init/env_hook.zsh' ]] || source '${BASEDIR}/root/opam-init/env_hook.zsh' > /dev/null 2> /dev/null; true
 fi
 
-[[ ! -r '${BASEDIR}/root/opam-init/variables.sh' ]] || source '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null
+[[ ! -r '${BASEDIR}/root/opam-init/variables.sh' ]] || source '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null; true
 ### cat root/opam-init/init.fish
 if status is-interactive
   test -r '${BASEDIR}/root/opam-init/env_hook.fish' && source '${BASEDIR}/root/opam-init/env_hook.fish' > /dev/null 2> /dev/null; or true
@@ -61,7 +61,7 @@ if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-in
 if Test-Path "${BASEDIR}/root/opam-init/variables.ps1" { . "${BASEDIR}/root/opam-init/variables.ps1" *> $null }
 ### : Variables scripts :
 ### cat root/opam-init/variables.sh | grep -v man | grep -v MANPATH
-test -z "${OPAM_SWITCH_PREFIX:+x}" || return
+test -z "${OPAM_SWITCH_PREFIX:+x}" || return 0
 # Prefix of the current opam switch
 OPAM_SWITCH_PREFIX='${BASEDIR}/root/fake'; export OPAM_SWITCH_PREFIX;
 # Binary dir for opam switch fake
@@ -69,7 +69,7 @@ PATH='${BASEDIR}/root/fake/bin':"$PATH"; export PATH;
 ### test -f root/opam-init/variables.zsh
 # Return code 1 #
 ### cat root/opam-init/variables.fish | grep -v man | grep -v MANPATH
-test -z "$OPAM_SWITCH_PREFIX"; or return
+test -z "$OPAM_SWITCH_PREFIX"; or return 0
 # Prefix of the current opam switch
 set -gx OPAM_SWITCH_PREFIX '${BASEDIR}/root/fake';
 # Binary dir for opam switch fake
