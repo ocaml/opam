@@ -28,7 +28,7 @@ module VCS = struct
     | None -> fun cmd -> cmd
     | Some t -> fun cmd -> cmd @ [ "-t"; t ]
 
-  let init repo_root _repo_url =
+  let init ?for_source:_ repo_root _repo_url =
     OpamFilename.mkdir repo_root;
     darcs repo_root [ "init" ]
     @@> fun r ->

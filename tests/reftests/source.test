@@ -52,11 +52,6 @@ pandore2/src/src.ml
 ### rm -rf pandore.3
 ### opam source -vv pandore --dev | sed-cmd git | grep '^\+ git'
 + git "-C" "${BASEDIR}/pandore" "init" "--initial-branch=main"
-+ git "-C" "${BASEDIR}/pandore" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/pandore" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/pandore" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/pandore" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/pandore" "config" "--local" "color.ui" "false"
 + git "-C" "${BASEDIR}/pandore" "remote" "add" "origin" "file://${BASEDIR}/pandev"
 + git "-C" "${BASEDIR}/pandore" "remote" "set-url" "origin" "file://${BASEDIR}/pandev"
 + git "-C" "${BASEDIR}/pandore" "fetch" "-q" "file://${BASEDIR}/pandev" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
@@ -145,11 +140,6 @@ EOF
 Now run 'opam upgrade' to apply any package updates.
 ### opam source -vv pandore.4 --dir pandore5 | sed-cmd git | grep '^\+ git'
 + git "-C" "${BASEDIR}/pandore5" "init" "--initial-branch=main"
-+ git "-C" "${BASEDIR}/pandore5" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/pandore5" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/pandore5" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/pandore5" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/pandore5" "config" "--local" "color.ui" "false"
 + git "-C" "${BASEDIR}/pandore5" "remote" "add" "origin" "file://${BASEDIR}/pandev"
 + git "-C" "${BASEDIR}/pandore5" "remote" "set-url" "origin" "file://${BASEDIR}/pandev"
 + git "-C" "${BASEDIR}/pandore5" "fetch" "-q" "file://${BASEDIR}/pandev" "--update-shallow" "+HEAD:refs/remotes/opam-ref"

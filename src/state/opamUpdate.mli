@@ -92,13 +92,15 @@ val pinned_package:
     any.
     If an archive is not found, it launches Software Heritage fallback (see
     {!OpamDownload.SWHID}).
+    If [for_source] is set to [true], opam-specific VCS configuration will be
+    avoided.
 
     Stops on first error. The extra downloads list is reverted, so that the
     error is always first if any.
 
     Does not print the results as it used to. *)
 val download_package_source:
-  'a switch_state -> package -> dirname ->
+  ?for_source:bool -> 'a switch_state -> package -> dirname ->
   (string download option * (string * string download) list) OpamProcess.job
 
 (** As {!download_package_source} but for several packages sharing the same
