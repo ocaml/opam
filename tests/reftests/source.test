@@ -144,11 +144,6 @@ Successfully fetched pandore development repo to ${BASEDIR}/pandore6
 ### : Actions
 ### opam source -vv pandore --dir pandore7 | sed-cmd git | grep '^\+ git'
 + git "-C" "${BASEDIR}/pandore7" "init"
-+ git "-C" "${BASEDIR}/pandore7" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/pandore7" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/pandore7" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/pandore7" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/pandore7" "config" "--local" "color.ui" "false"
 + git "-C" "${BASEDIR}/pandore7" "remote" "add" "origin" "file://${BASEDIR}/pandev"
 + git "-C" "${BASEDIR}/pandore7" "remote" "set-url" "origin" "file://${BASEDIR}/pandev"
 + git "-C" "${BASEDIR}/pandore7" "fetch" "-q" "file://${BASEDIR}/pandev" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
@@ -156,11 +151,6 @@ Successfully fetched pandore development repo to ${BASEDIR}/pandore6
 + git "-C" "${BASEDIR}/pandore7" "clean" "-fdx"
 ### opam source -vv pandore --dir pandore8 --dev | sed-cmd git | grep '^\+ git'
 + git "-C" "${BASEDIR}/pandore8" "init"
-+ git "-C" "${BASEDIR}/pandore8" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/pandore8" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/pandore8" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/pandore8" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/pandore8" "config" "--local" "color.ui" "false"
 + git "-C" "${BASEDIR}/pandore8" "remote" "add" "origin" "file://${BASEDIR}/pandev"
 + git "-C" "${BASEDIR}/pandore8" "remote" "set-url" "origin" "file://${BASEDIR}/pandev"
 + git "-C" "${BASEDIR}/pandore8" "fetch" "-q" "file://${BASEDIR}/pandev" "--update-shallow" "+HEAD:refs/remotes/opam-ref"

@@ -623,7 +623,7 @@ let cleanup_source st old_opam_opt new_opam =
     OpamFilename.rmdir
       (OpamSwitchState.source_dir st (OpamFile.OPAM.package new_opam))
 
-let download_package_source_t st url nv_dirs =
+let download_package_source_t ?for_source st url nv_dirs =
   let cache_dir = OpamRepositoryPath.download_cache st.switch_global.root in
   let cache_urls = active_caches st (List.map fst nv_dirs) in
   let fetch_source_job =
@@ -639,7 +639,7 @@ let download_package_source_t st url nv_dirs =
           nv_dirs
       in
       let checksums = OpamFile.URL.checksum url in
-      (OpamRepository.pull_shared_tree ~cache_dir ~cache_urls
+      (OpamRepository.pull_shared_tree ?for_source ~cache_dir ~cache_urls
          dirnames checksums
          (OpamFile.URL.url url :: OpamFile.URL.mirrors url))
       @@+ function
@@ -679,8 +679,8 @@ let download_shared_package_source st url nvs =
   download_package_source_t st url
     (List.map (fun nv -> nv, OpamSwitchState.source_dir st nv) nvs)
 
-let download_package_source st nv dirname =
-  download_package_source_t st
+let download_package_source ?for_source st nv dirname =
+  download_package_source_t ?for_source st
     (OpamFile.OPAM.url (OpamSwitchState.opam st nv))
     [nv, dirname]
   @@| fun (sources, extra_sources) ->
