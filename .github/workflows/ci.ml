@@ -13,13 +13,13 @@
 
 open Lib
 
-let latest_ocaml4 = "4.14.2"
-let latest_ocaml5 = "5.4.0" (* Add this number to ocamls below when the next version comes out *)
+let latest_ocaml4 = "4.14.4"
+let latest_ocaml5 = "5.5.0" (* Add this number to ocamls below when the next version comes out *)
 let trunk = "trunk"
 let ocamls = [
   (* Fully supported versions *)
   "4.11.2"; "4.12.1"; "4.13.1";
-  "5.0.0"; "5.1.1"; "5.2.1"; "5.3.0";
+  "5.0.0"; "5.1.1"; "5.2.1"; "5.3.0"; "5.4.1";
 
   (* Optionally supported versions *)
   trunk;
