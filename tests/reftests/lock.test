@@ -1370,3 +1370,33 @@ name: "distant-x"
 opam-version: "2.0"
 pin-depends: [["local-one.dev" "file://${BASEDIR}/local-one"] ["local-two.dev" "file://${BASEDIR}/local-two"]]
 version: "1"
+### : Undefined variables in lock files shouldn't fail on non strict mode :
+### <pin:with-nope/with-nope.opam>
+opam-version: "2.0"
+### <pin:with-nope/with-nope.opam.locked>
+opam-version: "2.0"
+depends: [ "nope" {with-nope} ]
+### # we need to disable strict mode to see the default behaviour
+### OPAMSTRICT=0
+### opam switch create undef-var --empty
+### opam pin ./with-nope --locked
+[NOTE] Package with-nope does not exist in opam repositories registered in the current switch.
+with-nope is now pinned to file://${BASEDIR}/with-nope (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install with-nope dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved with-nope.dev  (file://${BASEDIR}/with-nope)
+-> installed with-nope.dev
+Done.
+### OPAMSTRICT=1
+### opam switch create undef-var-strict --empty
+### opam pin ./with-nope --locked
+[NOTE] Package with-nope does not exist in opam repositories registered in the current switch.
+with-nope is now pinned to file://${BASEDIR}/with-nope (version dev)
+
+[ERROR] Undefined filter variable with-nope in dependencies of with-nope.dev
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+# Return code 30 #

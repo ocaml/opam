@@ -70,6 +70,7 @@ users)
   * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
 
 ## Lock
+  * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
 
 ## Clean
 
@@ -180,6 +181,7 @@ users)
   * Fix trailing full path for `tar` call in `no-depexts-sandboxed.unix.test` [#6970 @rjbou]
   * Fix some forgotten sed in `extrasource` and `update` tests in #6734 [#6970 @rjbou]
   * Add a test for `opam config subst` [#6936 @NathanReb]
+  * Add a lock test for undefined variables in a lock file [#6947 @rjbou - fix #6946]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
