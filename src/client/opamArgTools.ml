@@ -18,6 +18,7 @@ let cli2_2 = OpamCLIVersion.of_string "2.2"
 let cli2_3 = OpamCLIVersion.of_string "2.3"
 let cli2_4 = OpamCLIVersion.of_string "2.4"
 let cli2_5 = OpamCLIVersion.of_string "2.5"
+let cli2_6 = OpamCLIVersion.of_string "2.6"
 
 type subplatform = [ `windows | `unix ]
 type platform = [ `all | subplatform ]
