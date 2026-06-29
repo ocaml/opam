@@ -34,6 +34,7 @@ rule main = parse
                { Buffer.reset word ; Buffer.add_string word w; escaped lexbuf }
 | (normalchar+ as w)
                { WORD w }
+| '\r'         { raise Parsing.Parse_error }
 | eof          { EOF }
 
 and escaped = parse
@@ -41,6 +42,7 @@ and escaped = parse
                { Buffer.add_string word w; escaped lexbuf }
 | (_ normalchar*) as w
                { Buffer.add_string word w; WORD (Buffer.contents word) }
+| ""           { raise Parsing.Parse_error }
 
 {
 

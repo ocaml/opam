@@ -137,7 +137,7 @@ type 'a options_fun =
   ?depexts: bool ->
   'a
 
-let setk k t
+let[@ocaml.warning "-unerasable-optional-argument"] setk k t
     ?root_dir
     ?original_root_dir
     ?root_from

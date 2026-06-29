@@ -122,7 +122,7 @@ type 'a options_fun =
   ?verbose_on:OpamTypes.name_set ->
   'a
 
-let setk k t
+let[@ocaml.warning "-unerasable-optional-argument"] setk k t
     ?pin_kind_auto
     ?autoremove
     ?editor
