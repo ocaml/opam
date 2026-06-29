@@ -36,6 +36,7 @@ users)
   * Read full lines when asking for user input when `TERM=dumb` [#6829 @arvidj - fix #6828]
   * Fix a typo in the note telling users about new a depexts bypass [#6489 @rjbou @kit-ty-kate]
   * Opam files parsing error now prints the origin repository of the failing opam file if relevant [#6971 @rjbou]
+  * Add support for terminal resizing detection on Solaris/Illumos [#6933 @kit-ty-kate]
 
 ## Switch
 
@@ -293,6 +294,7 @@ users)
   * `OpamCompat.MAP.filter_map`: was removed [#6879 @kit-ty-kate]
   * `OpamCompat.Map.add_to_list`: was added [#6818 @dra27]
   * `OpamPatch` was created [#6934 @rjbou]
+  * `OpamCompat.Sys.sigwinch` was added [#6933 @kit-ty-kate]
   * `OpamSystem`: add `is_dir_read_only` [#6489 @rjbou]
   * `OpamSystem.*patch` were moved to `OpamPatch` [#6934 @rjbou]
   * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]
