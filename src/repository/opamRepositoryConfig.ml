@@ -85,7 +85,7 @@ let default = {
   repo_tarring = false;
 }
 
-let setk k t
+let[@ocaml.warning "-unerasable-optional-argument"] setk k t
     ?download_tool
     ?validation_hook
     ?retries

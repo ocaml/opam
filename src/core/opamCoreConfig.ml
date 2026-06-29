@@ -118,7 +118,7 @@ let default = {
   in_opam = false;
 }
 
-let setk k t
+let[@ocaml.warning "-unerasable-optional-argument"] setk k t
     ?auto_answer
     ?debug_level
     ?debug_sections

@@ -40,7 +40,7 @@ let default = {
   all_parens = false;
 }
 
-let setk k t
+let[@ocaml.warning "-unerasable-optional-argument"] setk k t
     ?strict
     ?skip_version_checks
     ?all_parens
