@@ -64,6 +64,7 @@ users)
 ## Exec
 
 ## Source
+  * `opam source` no longer sets opam-specific git configuration options [#6955 @sporkl]
 
 ## Lint
 
@@ -184,6 +185,7 @@ users)
   * Fix some forgotten sed in `extrasource` and `update` tests in #6734 [#6970 @rjbou]
   * Add a test for `opam config subst` [#6936 @NathanReb]
   * Add a lock test for undefined variables in a lock file [#6947 @rjbou - fix #6946]
+  * Add a test showing the git commands called by `opam source` [#6955 @sporkl]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -236,10 +238,13 @@ users)
   * `OpamConfigCommand.subst` now takes a `filename` instead of a `basename` [#6936 @NathanReb]
 
 ## opam-repository
+  * `OpamRepository.pull{,shared}_tree`: add an optional `?for_source` argument [#6955 @sporkl]
+  * `OpamRepositoryBackend.S.pull_url`: add an optional `?for_source` argument [#6955 @sporkl]
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
   * `OpamRepositoryCommand.update_with_auto_upgrade`, `OpamUpdate.repository`: no longer call an external process to create an archive [#6945 @kit-ty-kate]
+  * `OpamVCS.init`: add an optional `?for_source` argument [#6955 @sporkl]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -258,6 +263,7 @@ users)
   * `OpamStateTypes`: add available system package status field `repos_syspkgs_available` (and its type `repo_syspkgs_available`) in `repos_state` for all the depexts declared in repo's packages. The new field is also added to the cache. [#6489 @arozovyk @rjbou]
   * `OpamRepositoryState.load`: load repo's available system packages [#6489 @arozovyk]
   * `OpamFileTools`: add `opams_depexts` to consolidate depexts extraction logic from individual opam files and package maps [#6489 @arozovyk]
+  * `OpamUpdate.download_package_source`: add an optional `?for_source` argument [#6955 @sporkl]
   * `OpamUpdate`: add `update_sys_available_cache` to update the system package availability cache in repository state [#6489 @arozovyk]
   * `OpamUpdate.get_sys_available`: factorize depexts availability computation logic from `OpamUpdate.repositories` [#6489 @arozovyk]
   * `OpamRepositoryState`: add `syspkgs_available` that returns the stored depext availability status in repository state [#6489 @rjbou]
