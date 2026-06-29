@@ -20,3 +20,4 @@ val env_hook : string
 val env_hook_zsh : string
 val env_hook_csh : string
 val env_hook_fish : string
+val env_hook_nu: string

@@ -936,7 +936,7 @@ module OpamSys = struct
     fun () -> Lazy.force os
 
   type powershell_host = Powershell_pwsh | Powershell
-  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish
+  type shell = SH_sh | SH_bash | SH_zsh | SH_csh | SH_fish | SH_nu
     | SH_pwsh of powershell_host | SH_cmd
 
   let all_shells =
@@ -944,6 +944,7 @@ module OpamSys = struct
      SH_zsh;
      SH_csh;
      SH_fish;
+     SH_nu;
      SH_pwsh Powershell_pwsh;
      SH_pwsh Powershell;
      SH_cmd]
@@ -958,6 +959,7 @@ module OpamSys = struct
     | "zsh"  -> Some SH_zsh
     | "bash" -> Some SH_bash
     | "fish" -> Some SH_fish
+    | "nu"   -> Some SH_nu
     | "pwsh" -> Some (SH_pwsh Powershell_pwsh)
     | "dash"
     | "sh"   -> Some SH_sh
@@ -1078,6 +1080,16 @@ module OpamSys = struct
     match shell with
     | SH_fish ->
       Some (List.fold_left Filename.concat (home ".config") ["fish"; "config.fish"])
+    | SH_nu ->
+      (* nu checks XDG_CONFIG_HOME on all operating systems,
+         and then falls back to the system-dependent "dirs" crate *)
+      let config_home = try Env.get "XDG_CONFIG_HOME"
+        with Not_found -> match os () with
+        | Darwin -> home "Library/Application Support"
+        | Win32 -> (try Env.get "APPDATA" with Not_found -> home ".config")
+        | _ -> home ".config"
+      in
+      Some (List.fold_left Filename.concat config_home ["nushell"; "autoload"; "opam.nu"])
     | SH_zsh  ->
       let zsh_home f =
         try Filename.concat (Env.get "ZDOTDIR") f
