@@ -1802,6 +1802,7 @@ let init
     ?dot_profile ?update_config ?env_hook ?(completion=true)
     ?(check_sandbox=true)
     ?cygwin_setup ?git_location
+    ?(no_compiler=false)
     shell =
   log "INIT %a"
     (slog @@ OpamStd.Option.to_string OpamRepositoryBackend.to_string) repo;
@@ -1917,7 +1918,7 @@ let init
            OpamConsole.error_and_exit `Sync_error
              "Initial download of repository failed.");
         let default_compiler =
-          if dontswitch then [] else
+          if dontswitch || no_compiler then [] else
           let chrono = OpamConsole.timer () in
           let alternatives =
             OpamFormula.to_dnf

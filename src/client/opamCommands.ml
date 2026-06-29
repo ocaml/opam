@@ -507,6 +507,7 @@ let init cli =
         ?update_config ?env_hook ?completion
         ~check_sandbox:(not no_sandboxing)
         ?cygwin_setup ?git_location
+        ~no_compiler
         shell
     in
     OpamStd.Exn.finally (fun () -> OpamRepositoryState.drop rt)
