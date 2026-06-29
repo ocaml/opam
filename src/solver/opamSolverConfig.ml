@@ -107,7 +107,7 @@ let default =
     version_lag_power = 1;
   }
 
-let setk k t
+let[@ocaml.warning "-unerasable-optional-argument"] setk k t
     ?cudf_file
     ?solver
     ?best_effort

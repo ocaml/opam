@@ -113,6 +113,7 @@ users)
   * Require `spdx_licenses` >= 1.4.0 to ensure compatibility with SPDX v3 syntax [#6878 @kit-ty-kate]
   * Remove support for building opam with OCaml 4.08, 4.09 and 4.10 [#6879 @kit-ty-kate]
   * Upgrade to ocaml-tar.3.5.0 [#6976 @kit-ty-kate]
+  * Silence warnings raised by OCaml 5.6 [#6987 @kit-ty-kate]
 
 ## Infrastructure
 
