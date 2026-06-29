@@ -27,6 +27,7 @@ users)
 ## Actions
 
 ## Install
+  * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
 
 ## Build (package)
 
@@ -158,6 +159,7 @@ users)
 
 ## Benchmarks
   * Add an even larger real-world diff to benchmark `opam update` [#6567 @kit-ty-kate]
+  * Add a benchmark for `opam install` [#6912 @kit-ty-kate]
 
 ## Reftests
 ### Tests
