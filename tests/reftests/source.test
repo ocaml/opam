@@ -50,8 +50,18 @@ pandore2/root.ml
 pandore2/src
 pandore2/src/src.ml
 ### rm -rf pandore.3
-### opam source pandore --dev
-Successfully fetched pandore development repo to ${BASEDIR}/pandore
+### opam source -vv pandore --dev | sed-cmd git | grep '^\+ git'
++ git "-C" "${BASEDIR}/pandore" "init" "--initial-branch=main"
++ git "-C" "${BASEDIR}/pandore" "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/pandore" "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/pandore" "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/pandore" "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/pandore" "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/pandore" "remote" "add" "origin" "file://${BASEDIR}/pandev"
++ git "-C" "${BASEDIR}/pandore" "remote" "set-url" "origin" "file://${BASEDIR}/pandev"
++ git "-C" "${BASEDIR}/pandore" "fetch" "-q" "file://${BASEDIR}/pandev" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/pandore" "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/pandore" "clean" "-fdx"
 ### find pandore | grep -v '.git/' | unordered
 pandore
 pandore/.git
@@ -133,8 +143,18 @@ EOF
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
-### opam source pandore.4 --dir pandore5
-Successfully extracted to ${BASEDIR}/pandore5
+### opam source -vv pandore.4 --dir pandore5 | sed-cmd git | grep '^\+ git'
++ git "-C" "${BASEDIR}/pandore5" "init" "--initial-branch=main"
++ git "-C" "${BASEDIR}/pandore5" "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/pandore5" "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/pandore5" "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/pandore5" "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/pandore5" "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/pandore5" "remote" "add" "origin" "file://${BASEDIR}/pandev"
++ git "-C" "${BASEDIR}/pandore5" "remote" "set-url" "origin" "file://${BASEDIR}/pandev"
++ git "-C" "${BASEDIR}/pandore5" "fetch" "-q" "file://${BASEDIR}/pandev" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/pandore5" "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/pandore5" "clean" "-fdx"
 ### git -C pandore5 rev-list --all --count
 2
 ### opam source pandore.4 --dev --dir pandore6
@@ -147,3 +167,4 @@ Successfully fetched pandore development repo to ${BASEDIR}/pandore6
 ### git -C pandore6 remote -v
 origin	file://${BASEDIR}/pandev (fetch)
 origin	file://${BASEDIR}/pandev (push)
+### : Actions
