@@ -75,7 +75,7 @@ let preinit_opam_env_variables, doc_opam_env_variables_pre =
   in
   let doc =
     List.map (fun (var, _cons, doc) ->
-        `P (Printf.sprintf "$(i,OPAM%s) %s" var doc))
+        `P (Printf.sprintf "$(b,OPAM%s) %s" var doc))
       preinit_environment_variables
   in
   preinit, doc
@@ -132,7 +132,7 @@ let environment_variables =
          (string_of_enum when_enum));
       "UTF8MSGS", cli_original, (fun v -> UTF8MSGS (env_bool v)),
       "use extended UTF8 characters (camels) in opam messages. Implies \
-       $(i,OPAMUTF8). This is set by default on macOS only.";
+       $(b,OPAMUTF8). This is set by default on macOS only.";
       "VERBOSE", cli_original, (fun v -> VERBOSE (env_level v)),
       "see option `--verbose'.";
     ] in
@@ -169,7 +169,7 @@ let environment_variables =
       "EXTERNALSOLVER", cli_original, (fun v -> EXTERNALSOLVER (env_string v)),
       "see option `--solver'.";
       "FIXUPCRITERIA", cli_original, (fun v -> FIXUPCRITERIA (env_string v)),
-      "same as $(i,OPAMUPGRADECRITERIA), but specific to fixup and reinstall.";
+      "same as $(b,OPAMUPGRADECRITERIA), but specific to fixup and reinstall.";
       "NOASPCUD", cli_original, (fun v -> NOASPCUD (env_bool v)),
       "Deprecated.";
       "PREPRO", cli_original, (fun v -> PREPRO (env_bool v)),
@@ -201,7 +201,7 @@ let environment_variables =
       "UPGRADECRITERIA", cli_original,
       (fun v -> UPGRADECRITERIA (env_string v)),
       "specifies user $(i,preferences) for dependency solving when performing \
-       an upgrade. Overrides $(i,OPAMCRITERIA) in upgrades if both are set. \
+       an upgrade. Overrides $(b,OPAMCRITERIA) in upgrades if both are set. \
        See also option --criteria.";
       "USEINTERNALSOLVER", cli_original,
       (fun v -> USEINTERNALSOLVER (env_bool v)),
@@ -212,7 +212,7 @@ let environment_variables =
   let repository =
     let open OpamRepositoryConfig.E in [
       "CURL", cli_original, (fun v -> CURL (env_string v)),
-      "can be used to select a given 'curl' program. See $(i,OPAMFETCH) for \
+      "can be used to select a given 'curl' program. See $(b,OPAMFETCH) for \
        more options.";
       "FETCH", cli_original, (fun v ->
         FETCH (Option.map OpamShellCommand.of_string (env_string v))),
@@ -351,9 +351,9 @@ let help_sections cli =
   ] @
   List.sort compare (doc_opam_env_variables_pre @ doc_opam_env_variables cli)
   @ [
-    `P "$(i,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
+    `P "$(b,OPAMVAR_var) overrides the contents of the variable $(i,var)  when \
         substituting `%{var}%` strings in `opam` files.";
-    `P "$(i,OPAMVAR_package_var) overrides the contents of the variable \
+    `P "$(b,OPAMVAR_package_var) overrides the contents of the variable \
         $(i,package:var) when substituting `%{package:var}%` strings in \
         `opam` files.";
 
@@ -366,15 +366,15 @@ let help_sections cli =
           "Although opam only supports roots ($(i,~%s.opam%s)) for the current \
            version, it does provide backwards compatibility for its \
            command-line interface." dir_sep dir_sep);
-    `P "Since CLI version support was only added in opam 2.1, use $(i,OPAMCLI) \
+    `P "Since CLI version support was only added in opam 2.1, use $(b,OPAMCLI) \
         to select 2.0 support (as opam 2.0 will just ignore it), \
         and `--cli=2.1' for 2.1 (or later) versions, since an environment variable \
         controlling the parsing of syntax is brittle. To this end, opam \
-        displays a warning if $(i,OPAMCLI) specifies a valid version other \
+        displays a warning if $(b,OPAMCLI) specifies a valid version other \
         than 2.0, and also if `--cli=2.0' is specified.";
     `P "The command-line version is selected by using the `--cli' option or \
-        the $(i,OPAMCLI) environment variable. `--cli' may be specified more\
-        than once, where the last instance takes precedence. $(i,OPAMCLI) is \
+        the $(b,OPAMCLI) environment variable. `--cli' may be specified more\
+        than once, where the last instance takes precedence. $(b,OPAMCLI) is \
         only inspected if `--cli' is not given.";
 
     `S Manpage.s_exit_status;
@@ -1429,7 +1429,7 @@ let locked ?section cli =
      option doesn't generally affect already pinned packages."
 let lock_suffix ?section cli =
   mk_opt ~cli (cli_from cli2_1) ?section ["lock-suffix"] "SUFFIX"
-    "Set locked files suffix to $(i,SUFFIX)."
+    "Set locked files suffix to $(b,SUFFIX)."
     Arg.(string) ("locked")
 
 (* Checksums options *)
@@ -1577,7 +1577,7 @@ let assume_built ?section cli =
      been correctly built, and only run their installation \
      instructions, directly from their source directory. This \
      skips the build instructions and can be useful to install \
-     packages that are being worked on. Implies $(i,--inplace-build). \
+     packages that are being worked on. Implies $(b,--inplace-build). \
      No locally-pinned packages will be skipped."
 
 (* Options common to all path based/related commands, e.g. (un)pin, upgrade,
@@ -1585,14 +1585,14 @@ let assume_built ?section cli =
 
 let recurse ?section cli =
   mk_flag ~cli (cli_from cli2_2) ?section ["recursive"]
-    "Allow recursive lookups of $(b,*.opam) files. Cf. $(i,--subpath) also."
+    "Allow recursive lookups of $(b,*.opam) files. Cf. $(b,--subpath) also."
 
 let subpath ?section cli =
   mk_opt ~cli (cli_from cli2_2) ?section ["subpath"] "PATH"
     "$(b,*.opam) files are retrieved from the given sub directory instead of \
       top directory. Sources are then taken from the targeted sub directory, \
       internally only this subdirectory is copied/fetched.  It can be combined \
-      with $(i,--recursive) to have a recursive lookup on the subpath."
+      with $(b,--recursive) to have a recursive lookup on the subpath."
     Arg.(some subpath_conv) None
 
 let package_selection_section = "PACKAGE SELECTION OPTIONS"
@@ -1622,12 +1622,12 @@ let package_selection cli =
   let section = package_selection_section in
   let depends_on =
     mk_opt_all ~cli cli_original ["depends-on"] "PACKAGES" ~section
-      "List only packages that depend on one of (comma-separated) $(b,PACKAGES)."
+      "List only packages that depend on one of (comma-separated) $(i,PACKAGES)."
       Arg.(list atom)
   in
   let required_by =
     mk_opt_all ~cli cli_original ["required-by"] "PACKAGES" ~section
-      "List only the dependencies of (comma-separated) $(b,PACKAGES)."
+      "List only the dependencies of (comma-separated) $(i,PACKAGES)."
       Arg.(list atom)
   in
   let conflicts_with =
@@ -1640,7 +1640,7 @@ let package_selection cli =
   in
   let coinstallable_with =
     mk_opt_all ~cli cli_original ["coinstallable-with"] "PACKAGES" ~section
-      "Only list packages that are compatible with all of $(b,PACKAGES)."
+      "Only list packages that are compatible with all of $(i,PACKAGES)."
       Arg.(list package_with_version)
   in
   let resolve =
@@ -1765,9 +1765,9 @@ let package_listing cli =
   let columns =
     mk_opt ~cli cli_original ["columns"] "COLUMNS" ~section
       (Printf.sprintf "Select the columns to display among: %s.\n\
-                       The special form $(b,<field>:) (field name followed by \
+                       The special form $(i,<field>:) (field name followed by \
                        colon, e.g., $(b,license:)) selects an arbitrary field. \
-                       The default is $(b,name) when $(i,--short) is present \
+                       The default is $(b,name) when $(b,--short) is present \
                        and %s otherwise."
          (OpamStd.List.concat_map ", " (fun (_,f) -> Printf.sprintf "$(b,%s)" f)
             OpamListCommand.raw_field_names)

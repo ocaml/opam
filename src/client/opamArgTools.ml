@@ -803,7 +803,7 @@ let env_with_cli environment =
   let doc_env cli =
     List.map (fun (var, validity, _cons, doc) ->
         let doc = update_doc_w_cli doc ~cli validity in
-        `P (Printf.sprintf "$(i,OPAM%s) %s" var doc))
+        `P (Printf.sprintf "$(b,OPAM%s) %s" var doc))
       environment
   in
   let init_env cli =
