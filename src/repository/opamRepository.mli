@@ -31,7 +31,8 @@ val update:
   repository -> OpamRepositoryRoot.t ->
   [`Changes of Patch.operation list |`No_changes] OpamProcess.job
 
-(** [pull_shared_tree ?cache_dir ?cache_url labels_dirnames checksums urls]
+(** [pull_shared_tree ?for_source ?cache_dir ?cache_url
+     labels_dirnames checksums urls]
     Fetch an URL and put the resulting tree into the supplied directories
     specified in [labels_dirnames]. The string in [labels_dirnames] are text
     labels of this given dirname for display. [urls] must either point to a
@@ -39,8 +40,11 @@ val update:
     [cache_dir] is used and supplied the hashes verified, then the archive
     uncompressed. In case of a version-controlled URL, it's checked out, or
     synchronised directly if local and [working_dir] was set.  [cache_urls] is
-    used to retrieve from repository caches. *)
+    used to retrieve from repository caches. [for_source] should be set to [true]
+    to indicate the call is meant to be used by [opam source], and will prevent
+    opam-specific VCS configuration from being applied. *)
 val pull_shared_tree:
+  ?for_source:bool ->
   ?cache_dir:dirname ->
   ?cache_urls:OpamUrl.t list ->
   (string * OpamFilename.Dir.t * subpath option) list -> OpamHash.t list ->
@@ -50,7 +54,7 @@ val pull_shared_tree:
    If [full_fetch] is set to false, VCS repository is retrieved with shallow
    history (by default, full history). *)
 val pull_tree:
-  string -> ?full_fetch:bool -> ?cache_dir:dirname -> ?cache_urls:url list ->
+  string -> ?for_source:bool -> ?full_fetch:bool -> ?cache_dir:dirname -> ?cache_urls:url list ->
   ?working_dir:bool -> ?subpath:subpath ->
   dirname -> OpamHash.t list -> url list ->
   string download OpamProcess.job
