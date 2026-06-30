@@ -14,6 +14,14 @@ open OpamProcess.Job.Op
 
 (* let log fmt = OpamConsole.log "GIT" fmt *)
 
+let git_env = [|
+  "GIT_CONFIG_GLOBAL="^Filename.null;
+  "GIT_CONFIG_SYSTEM="^Filename.null;
+|]
+
+let env () =
+  Array.append git_env (OpamProcess.default_env ())
+
 module VCS : OpamVCS.VCS = struct
 
   let name = `git
@@ -30,7 +38,8 @@ module VCS : OpamVCS.VCS = struct
        of git will need to change, as altering PATH could select a different
        Git *)
     fun ?verbose ?stdout args ->
-      OpamSystem.make_command ?verbose ?stdout "git" ("-C"::dir::args)
+      let env = env () in
+      OpamSystem.make_command ~env ?verbose ?stdout "git" ("-C"::dir::args)
 
   let init repo_root repo_url =
     OpamFilename.mkdir repo_root;

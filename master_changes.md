@@ -105,6 +105,7 @@ users)
 
 ## VCS
   * Darcs no longer fall back to “Num Patches” as “Weak Hash” has been supported since 2016 [#6866 @toastal]
+  * Make `git` calls more deterministic regardless of the global or system config [#6992 @kit-ty-kate - fix #6937]
 
 ## Build
   * Fix Windows build on MSYS2 [#6862 @Firobe]
@@ -279,6 +280,8 @@ users)
   * `OpamConfigCommand.subst` now takes a `filename` instead of a `basename` [#6936 @NathanReb]
 
 ## opam-repository
+  * `OpamGit.env` was added [#6992 @kit-ty-kate]
+  * `OpamGit`: git is now always called with the `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` environment variables set to `/dev/null` [#6992 @kit-ty-kate]
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
@@ -355,7 +358,9 @@ users)
   * `OpamCompat.Sys.sigwinch` was added [#6933 @kit-ty-kate]
   * `OpamSystem`: add `is_dir_read_only` [#6489 @rjbou]
   * `OpamSystem.*patch` were moved to `OpamPatch` [#6934 @rjbou]
+  * `OpamFilename.env_of_list` was removed [#6992 @kit-ty-kate]
   * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]
+  * `OpamFilename.exec`: change the type of `?env` to `string array` [#6992 @kit-ty-kate]
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
   * `OpamFilename.in_dir`: removed [#6910 @NathanReb]

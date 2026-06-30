@@ -212,10 +212,41 @@ Processing  1/1: [dup: git]
 -  bbb
 -  ccc
 -  ddd
-- diff --git b/packages/duplicate/duplicate.1/opam a/packages/duplicate/duplicate.2/opam
-- similarity index 100%
-- copy from packages/duplicate/duplicate.1/opam
-- copy to packages/duplicate/duplicate.2/opam
+- diff --git b/packages/duplicate/duplicate.2/opam a/packages/duplicate/duplicate.2/opam
+- new file mode 100644
+- --- /dev/null
+- +++ a/packages/duplicate/duplicate.2/opam
+- @@ -0,0 +1,29 @@
+- +opam-version: "2.0"
+- +post-messages: """
+- +aaa
+- +bbb
+- +ccc
+- +ddd
+- +eee
+- +fff
+- +ggg
+- +hhh
+- +iii
+- +jjj
+- +kkk
+- +lll
+- +mmm
+- +nnn
+- +ooo
+- +ppp
+- +qqq
+- +rrr
+- +sss
+- +ttt
+- +uuu
+- +vvv
+- +www
+- +xxx
+- +yyy
+- +zzz
+- +"""
 [dup] synchronised from git+file://${BASEDIR}/GIT_REPO_DUP
 Processing: [dup: loading data]
+Now run 'opam upgrade' to apply any package updates.
 ### unset GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM
