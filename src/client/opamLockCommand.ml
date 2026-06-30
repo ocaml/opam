@@ -80,27 +80,28 @@ let select_packages atom_locs st =
                | None -> OpamSwitchState.opam st nv
              else OpamSwitchState.opam st nv
            in
-           let atoms =
-             OpamFormula.atoms
+           let cnf =
+             OpamFormula.to_cnf
                (OpamPackageVar.all_depends ~depopts:false st opam)
            in
            let missing =
-             List.filter (fun (n,vc) ->
-                 let pkgs =
-                   OpamPackage.packages_of_name
-                     (OpamPackage.Set.union st.installed packages)
-                     n
-                 in
-                 OpamPackage.Set.is_empty pkgs ||
-                 not (OpamPackage.Set.exists (OpamFormula.check (n,vc)) pkgs))
-               atoms
+             let installed_pkgs = OpamPackage.Set.union st.installed packages in
+             List.filter (fun disj ->
+                 List.for_all (fun (n,vc) ->
+                     let pkgs = OpamPackage.packages_of_name installed_pkgs n in
+                     OpamPackage.Set.is_empty pkgs ||
+                     not (OpamPackage.Set.exists (OpamFormula.check (n,vc)) pkgs))
+                   disj)
+               cnf
            in
            if missing <> [] then
              (OpamConsole.error
                 "Skipping %s, dependencies are not satisfied in this switch, \
                  not installed packages are:\n%s"
                 (OpamPackage.to_string nv)
-                (OpamStd.Format.itemize OpamFormula.string_of_atom missing);
+                (OpamStd.Format.itemize
+                   (OpamStd.List.concat_map " | " OpamFormula.string_of_atom)
+                   missing);
               acc)
            else
              OpamPackage.Set.add nv acc)

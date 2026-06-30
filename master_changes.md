@@ -72,6 +72,7 @@ users)
 
 ## Lock
   * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
+  * [BUG] Fix `opam lock` support of dependency formula that include disjunctions [#6990 @kit-ty-kate - fix #6944]
 
 ## Clean
 
@@ -185,6 +186,7 @@ users)
   * Fix some forgotten sed in `extrasource` and `update` tests in #6734 [#6970 @rjbou]
   * Add a test for `opam config subst` [#6936 @NathanReb]
   * Add a lock test for undefined variables in a lock file [#6947 @rjbou - fix #6946]
+  * Add a test showing the behaviour of `opam lock` in presence of disjunction in the dependency formula [#6990 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]

@@ -108,17 +108,17 @@ depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
 depopts:
 conflicts:
 ### : error or formulaes :
-### ### ERROR ###
 ### <pin:tolock/tolock.opam>
 opam-version: "2.0"
 depends: [ "foo" ("bar" | "qux") ]
 depopts: "baz"
 build: [ "test" "-f" "content" ]
+### opam list -s --installed foo bar qux
+bar
+foo
 ### opam lock tolock
-[ERROR] Skipping tolock.1, dependencies are not satisfied in this switch, not installed packages are:
-          - qux
-
-No lock file generated
+Generated lock files for:
+  - tolock.1: ${BASEDIR}/tolock.opam.locked
 ### opam show --just-file --normalise ./tolock.opam.locked --field depends,depopts,conflicts
 depends:   ["bar" {= "1"} "baz" {= "1"} "foo" {= "1"}]
 depopts:
@@ -1400,3 +1400,29 @@ with-nope is now pinned to file://${BASEDIR}/with-nope (version dev)
 [ERROR] Undefined filter variable with-nope in dependencies of with-nope.dev
 [NOTE] Pinning command successful, but your installed packages may be out of sync.
 # Return code 30 #
+### opam unpin with-nope
+Ok, with-nope is no longer pinned to file://${BASEDIR}/with-nope (version dev)
+### : disjunctions
+### <pkg:dep.1>
+opam-version: "2.0"
+### <pkg:dep.2>
+opam-version: "2.0"
+### <pin:disjunction/disjunction.opam>
+opam-version: "2.0"
+depends: ["dep" {= "1" | = "2"}]
+### opam lock disjunction/
+[ERROR] Skipping disjunction.dev, dependencies are not satisfied in this switch, not installed packages are:
+          - dep (= 1) | dep (= 2)
+
+No lock file generated
+### opam install dep.2
+The following actions will be performed:
+=== install 1 package
+  - install dep 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep.2
+Done.
+### opam lock disjunction/
+Generated lock files for:
+  - disjunction.dev: ${BASEDIR}/disjunction.opam.locked
