@@ -69,6 +69,7 @@ users)
 
 ## Repository
   * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
+  * Synchronisation now always ignores `_opam`, `_build` and editor lock files (`.#*`) (rsync previously did this, but not local) [#6977 @dra27]
 
 ## Lock
   * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
@@ -176,6 +177,7 @@ users)
   * Add disabled depexts tests [#6489 @rjbou]
   * Add depexts tests with debug section that demostrate system availability polling [#6489 @arozovyk]
   * Add a test showing the behaviour of .install files containing destination filepath trying to escape their scope [#6897 @rjbou @kit-ty-kate]
+  * Add `repository-symlink.test` showing that a local repository containing temporary files can be updated incrementally [#6977 @dra27]
   * Add a test showing that `opam install ./` will leave packages pinned if
     aborted or failed [#6922 @NathanReb]
   * Add test for update in repository that changes directories to files and vice versa [#6915 @rjbou]
@@ -285,6 +287,7 @@ users)
   * `OpamFile.OPAM.print_errors`: now prints the repository if the informations is available [#6971 @rjbou]
 
 ## opam-core
+  * `OpamSystem.{get_files_except_vcs,copy_dir_except_vcs}` (and `OpamFilename.copy_dir_except_vcs`) now also skip `_opam`, `_build` and editor lock files (`.#*`) [#6977 @dra27]
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
   * `OpamUrl`: rename and expose `local_path` as `looks_like_local_path` [#5979 @kit-ty-kate]
   * `OpamCompat.Gc.ramp_up`: was added [#6515 @dra27]
