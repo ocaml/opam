@@ -431,6 +431,8 @@ Switch initialisation failed: clean up? ('n' will leave the switch partially ins
 ### :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ### : Aborting install . should not leave half-pinned packages around
 ### :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+### : When aborting an install, any packages pinned during the process
+### : is unpinned, including pin-depends.
 ### opam switch create abort-install-local --empty
 ### <abort-install/abort-install.opam>
 opam-version: "2.0"
@@ -442,13 +444,14 @@ bug-reports: "foo.com/bugs"
 license: "MIT"
 synopsis: "Test pkg please ignore"
 depends: [ "dep-lib" ]
-### <pkg:dep-lib.1>
-opam-version: "2.0"
 ### git -C abort-install init -q --initial-branch=master
 ### git -C abort-install config core.autocrlf false
 ### git -C abort-install add abort-install.opam
 ### git -C abort-install commit -qm 'init'
-### opam install ./abort-install --no
+### <pkg:dep-lib.1>
+opam-version: "2.0"
+### OPAMAUTOANSWER=install-pin-depends=yes:proceed-actions=no
+### opam install ./abort-install
 [NOTE] Package abort-install does not exist in opam repositories registered in the current switch.
 abort-install is now pinned to git+file://${BASEDIR}/abort-install#master (version dev)
 The following actions will be performed:
@@ -457,6 +460,121 @@ The following actions will be performed:
   - install dep-lib       1            [required by abort-install]
 
 Proceed with 2 installations? [Y/n] n
+Unpinning packages pinned during install:
+  - abort-install
+Ok, abort-install is no longer pinned to git+file://${BASEDIR}/abort-install#master (version dev)
 # Return code 10 #
 ### opam pin list
-abort-install.dev  (uninstalled)  git  git+file://${BASEDIR}/abort-install#master  (at error while fetching current revision)
+### opam install ./abort-install --deps-only
+The following actions will be performed:
+=== install 1 package
+  - install dep-lib 1 [required by abort-install]
+
+Proceed with 1 installation? [Y/n] n
+# Return code 10 #
+### opam pin list
+### opam install ./abort-install --check
+Missing dependencies:
+dep-lib
+# Return code 1 #
+### opam pin list
+### opam install ./abort-install --dry-run
+The following actions will be simulated:
+=== install 2 packages
+  - install abort-install dev (pinned)
+  - install dep-lib       1            [required by abort-install]
+
+Proceed with 2 installations? [Y/n] n
+Unpinning packages pinned during install:
+  - abort-install
+Ok, abort-install is no longer pinned locally (version dev)
+# Return code 10 #
+### opam pin list
+### :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+### : Autopin removal on aborted install should also correctly handle
+### : pin-depends
+### :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+### <abort-install/abort-install.opam>
+opam-version: "2.0"
+name: "abort-install"
+maintainer: "me"
+authors: "me"
+homepage: "foo.com"
+bug-reports: "foo.com/bugs"
+license: "MIT"
+synopsis: "Test pkg please ignore"
+depends: [ "dep-lib" "pin-dep-lib" ]
+### <add-pin-depends.sh>
+set -eu
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> abort-install/abort-install.opam << EOF
+pin-depends: [["pin-dep-lib.dev" "git+file://$basedir/pin-dep-lib"]]
+EOF
+### sh add-pin-depends.sh
+### git -C abort-install add abort-install.opam
+### git -C abort-install commit -qm 'init'
+### <pin-dep-lib/pin-dep-lib.opam>
+opam-version:"2.0"
+maintainer: "me"
+authors: "me"
+homepage: "foo.com"
+bug-reports: "foo.com/bugs"
+license: "MIT"
+synopsis: "Test pkg please ignore"
+### git -C pin-dep-lib init -q --initial-branch=master
+### git -C pin-dep-lib config core.autocrlf false
+### git -C pin-dep-lib add pin-dep-lib.opam
+### git -C pin-dep-lib commit -qm 'init'
+### opam install ./abort-install
+[NOTE] Package abort-install does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by abort-install.dev:
+  - pin-dep-lib.dev at git+file://${BASEDIR}/pin-dep-lib
+Pin and install them? [Y/n] y
+[NOTE] Package pin-dep-lib does not exist in opam repositories registered in the current switch.
+[pin-dep-lib.dev] synchronised (no changes)
+pin-dep-lib is now pinned to git+file://${BASEDIR}/pin-dep-lib (version dev)
+abort-install is now pinned to git+file://${BASEDIR}/abort-install#master (version dev)
+The following actions will be performed:
+=== install 3 packages
+  - install abort-install dev (pinned)
+  - install dep-lib       1            [required by abort-install]
+  - install pin-dep-lib   dev (pinned) [required by abort-install]
+
+Proceed with 3 installations? [Y/n] n
+Unpinning packages pinned during install:
+  - abort-install
+  - pin-dep-lib
+Ok, abort-install is no longer pinned to git+file://${BASEDIR}/abort-install#master (version dev)
+Ok, pin-dep-lib is no longer pinned to git+file://${BASEDIR}/pin-dep-lib (version dev)
+# Return code 10 #
+### opam pin list | '\(at .*\)' -> '(at <git-revision>)'
+### opam install ./abort-install --deps-only
+The following additional pinnings are required by abort-install.dev:
+  - pin-dep-lib.dev at git+file://${BASEDIR}/pin-dep-lib
+Pin and install them? [Y/n] y
+[NOTE] Package pin-dep-lib does not exist in opam repositories registered in the current switch.
+[pin-dep-lib.dev] synchronised (no changes)
+pin-dep-lib is now pinned to git+file://${BASEDIR}/pin-dep-lib (version dev)
+The following actions will be performed:
+=== install 2 packages
+  - install dep-lib     1            [required by abort-install]
+  - install pin-dep-lib dev (pinned) [required by abort-install]
+
+Proceed with 2 installations? [Y/n] n
+Unpinning packages pinned during install:
+  - pin-dep-lib
+Ok, pin-dep-lib is no longer pinned to git+file://${BASEDIR}/pin-dep-lib (version dev)
+# Return code 10 #
+### opam pin list | '\(at .*\)' -> '(at <git-revision>)'
+### opam install ./abort-install --check
+The following additional pinnings are required by abort-install.dev:
+  - pin-dep-lib.dev at git+file://${BASEDIR}/pin-dep-lib
+Pin and install them? [Y/n] y
+[NOTE] Package pin-dep-lib does not exist in opam repositories registered in the current switch.
+[pin-dep-lib.dev] synchronised (no changes)
+pin-dep-lib is now pinned to git+file://${BASEDIR}/pin-dep-lib (version dev)
+Missing dependencies:
+dep-lib pin-dep-lib
+# Return code 1 #
+### opam pin list | '\(at .*\)' -> '(at <git-revision>)'
+pin-dep-lib.dev  (uninstalled)  git  git+file://${BASEDIR}/pin-dep-lib  (at <git-revision>)
