@@ -60,11 +60,8 @@ val is_dir_read_only: Dir.t -> bool
 (** List the sub-directory (do not recurse) *)
 val dirs: Dir.t -> Dir.t list
 
-(** Turns an assoc list into an array suitable to be provided as environment *)
-val env_of_list: (string * string) list -> string array
-
 (** Execute a list of commands in a given directory *)
-val exec: Dir.t -> ?env:(string * string) list -> ?name:string ->
+val exec: Dir.t -> ?env:string array -> ?name:string ->
   ?metadata:(string * string) list -> ?keep_going:bool -> string list list -> unit
 
 (** Move a directory *)

@@ -330,7 +330,12 @@ let write_setup ?(only_fst=false) dir content =
 let git_cmds ~dir repo_root commands error_msg =
   let commands =
     List.map (fun args ->
-        OpamSystem.make_command "git"
+        let args =
+          "-c"::"user.email=you@example.com"::
+          "-c"::"user.name=Your Name"::
+          args
+        in
+        OpamSystem.make_command ~env:(OpamGit.env ()) "git"
           ("-C"::(OpamFilename.Dir.to_string repo_root)::args))
       commands
   in
