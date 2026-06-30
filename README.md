@@ -10,6 +10,8 @@ workflow.
 
 Opam was created and is maintained by [OCamlPro](http://www.ocamlpro.com).
 
+See the [MAINTAINERS](./MAINTAINERS) file for the list of maintainers.
+
 To get started, checkout the [Install](http://opam.ocaml.org/doc/Install.html)
 and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 
