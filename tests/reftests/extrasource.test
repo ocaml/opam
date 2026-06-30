@@ -1094,7 +1094,7 @@ Successfully extracted to ${BASEDIR}/not-mentioned.1
 # Return code 1 #
 ### opam install multiple
 [ERROR] In the opam file for multiple.1 from repository default:
-          - In ${BASEDIR}/OPAM/repo/default/packages/multiple/multiple.1/opam:
+          - In packages/multiple/multiple.1/opam:
             Duplicate section extra-source
         'extra-source' has been ignored.
 The following actions will be performed:
@@ -1107,7 +1107,7 @@ The following actions will be performed:
 Done.
 ### opam remove multiple
 [ERROR] In the opam file for multiple.1 from repository default:
-          - In ${BASEDIR}/OPAM/repo/default/packages/multiple/multiple.1/opam:
+          - In packages/multiple/multiple.1/opam:
             Duplicate section extra-source
         'extra-source' has been ignored.
 The following actions will be performed:
@@ -1119,7 +1119,7 @@ The following actions will be performed:
 Done.
 ### opam install multiple --require-checksums
 [ERROR] In the opam file for multiple.1 from repository default:
-          - In ${BASEDIR}/OPAM/repo/default/packages/multiple/multiple.1/opam:
+          - In packages/multiple/multiple.1/opam:
             Duplicate section extra-source
         'extra-source' has been ignored.
 The following actions will be performed:

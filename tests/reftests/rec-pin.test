@@ -1237,7 +1237,7 @@ url {
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
-[ERROR] In ${BASEDIR}/OPAM/repo/default/packages/subpath-err/subpath-err.1/opam:
+[ERROR] In packages/subpath-err/subpath-err.1/opam:
         The url.subpath field is not allowed in files with `opam-version` <= 2.0
 [ERROR] Strict mode: aborting
 [ERROR] Could not update repository "default": OpamStd.OpamSys.Exit(30)
