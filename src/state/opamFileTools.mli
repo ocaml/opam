@@ -38,6 +38,18 @@ val lint_file:
   OpamFile.OPAM.t OpamFile.typed_file ->
   (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
 
+(** Same as {!lint}, but operates on an registered repository opam file.
+    It allows to retrieve extra files accordingly to the repository nature :
+    archive or directory.
+*)
+val lint_repo_package:
+  OpamRepositoryRoot.t ->
+  ?check_extra_files:(basename * (OpamHash.t -> bool)) list ->
+  ?check_upstream:bool ->
+  ?handle_dirname:bool ->
+  OpamFile.OPAM.t OpamFile.typed_file ->
+  (int * [`Warning|`Error] * string) list * OpamFile.OPAM.t option
+
 (** Same as {!lint_file}, but taking input from a channel. [check_extra_files]
    defaults to a function that will look for a [files/] directory besides
    [filename] *)
@@ -93,8 +105,23 @@ val read_opam: dirname -> OpamFile.OPAM.t option
 (** Like {!read_opam}, but additionally fills in the [metadata_dir] info
     correctly for the given repository. *)
 val read_repo_opam:
+  repo_name:repository_name -> root:dirname ->
+  dirname -> OpamFile.OPAM.t option
+
+(** Like {!read_opam}, but additionally fills in the [metadata_dir] info
+    correctly for the given directory repository root. *)
+val read_repo_opam_dir:
   repo_name:repository_name -> repo_root:OpamRepositoryRoot.Dir.t ->
   dirname -> OpamFile.OPAM.t option
+
+(** Like {!read_opam}, but additionally fills in the [metadata_dir] info
+    correctly for the given repository. *)
+val read_repo_opam_tgz:
+  repo_name:repository_name -> repo_root:OpamRepositoryRoot.Tgz.t ->
+  OpamFilename.Unix.Dir.t -> OpamFilename.Unix.t
+  -> OpamTar.archived_file_content
+  -> OpamTar.archived_file_content OpamFilename.Unix.Map.t
+  -> OpamFile.OPAM.t option
 
 (** Adds data from 'url' and 'descr' files found in the specified dir or the
     opam file's metadata dir, if not already present in the opam file. if

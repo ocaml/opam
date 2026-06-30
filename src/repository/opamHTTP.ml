@@ -21,12 +21,18 @@ let remote_index_archive url = OpamUrl.Op.(url / index_archive_name)
 
 let sync_state name repo_root url =
   OpamFilename.with_tmp_dir_job @@ fun dir ->
-  let local_index_archive = OpamFilename.Op.(dir // index_archive_name) in
-  OpamDownload.download_as ~quiet:true ~overwrite:true
+  let local_index_archive =
+    OpamRepositoryRoot.Tgz.of_file
+      OpamFilename.Op.(dir // index_archive_name)
+  in
+  OpamRepositoryRoot.Tgz.download_as ~quiet:true ~overwrite:true
     (remote_index_archive url)
     local_index_archive
   @@+ fun () ->
   match repo_root with
+  | OpamRepositoryRoot.Tgz repo_root ->
+    OpamRepositoryRoot.Tgz.copy ~src:local_index_archive ~dst:repo_root;
+    Done ()
   | OpamRepositoryRoot.Dir repo_root ->
     List.iter OpamFilename.rmdir (OpamRepositoryRoot.Dir.dirs repo_root);
     OpamProcess.Job.with_text

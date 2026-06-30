@@ -224,10 +224,10 @@ let environment_variables =
       "enables option --no-checksums when available.";
       "REPOSITORYTARRING", cli_from cli2_2,
       (fun b -> REPOSITORYTARRING (env_bool b)),
-      "internally store the repositories as tar.gz files. This can be much \
-       faster on filesystems that don't cope well with scanning large trees \
-       but have good caching in /tmp. However this is slower in the \
-       general case.";
+      "internally store all non-vcs repositories as tar.gz files (by default, \
+       http repositories are stored as archive). This can be much faster on \
+       filesystems that don't cope well with scanning large trees. All \
+       operation are done in-memory, no I/O for scanning the repository.";
       "REQUIRECHECKSUMS", cli_original,
       (fun v -> REQUIRECHECKSUMS (env_bool v)),
       "Enables option `--require-checksums' when available \

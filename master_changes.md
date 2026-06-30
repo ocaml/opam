@@ -71,6 +71,7 @@ users)
 ## Repository
   * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
   * [BUG] Do not fail on directories named `opam` when scanning the `packages` directory of a repository during `opam repo add` or `opam init` (worked on subsequent `opam update`) [#6941 @kit-ty-kate @rjbou]
+  * Speedup repository operations on certain file-systems (e.g. NTFS on Windows or IO constrained machines) by changing its storage in the opam root from plain directory to archive, for HTTP repositories, or non-VCS one if `OPAMREPOSITORYTARRING` is enabled [#6625 @rjbou @kit-ty-kate @arozovyk - fix #5346 #5741 #5648 #5484 #5559 #3050 #6974]
 
 ## Lock
   * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
@@ -260,6 +261,8 @@ users)
   * `OpamTar`: when an archive is opened, the first step is to check and normalise canonical paths (no `/../`, remove `./`, etc.) [#6625 @rjbou]
   * `OpamRepositoryRoot`: add `remove_prefix` and `remove_prefix_dir` [#6625 @rjbou]
   * `OpamRepositoryRoot`: add `read_file` that reads an `OpamFile.t` using its pp from the archive [#6625 @rjbou]
+  * `OpamRepositoryBackend.get_diff`: now computes the diff between two repository roots (dir, archive), instead of only dirs [#6625 @rjbou]
+  * `OpamRepositoryRoot`: add `Tgz` module for tar gz archive repository root support [#6625 @rjbou @kit-ty-kate]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -283,6 +286,10 @@ users)
   * `OpamRepositoryState`: add `syspkgs_available` that returns the stored depext availability status in repository state [#6489 @rjbou]
   * `OpamSysInteract`: add `available_packages_and_family` that returns availability status and the os family [#6489 @rjbou]
   * `OpamRepositoryState.load_opams_from_dir`: now sorts files and directories read from disk before processing them [#6941 @rjbou]
+  * `OpamFileTools`: add new `lint_repo_package` that lints a file from a repository root [#6625 @rjbou]
+  * `OpamRepositoryState`: add `load_opams_from_tgz` [#6625 @rjbou]
+  * `OpamRepositoryState`: add `load_opams` that operates from a repository root [#6625 @rjbou]
+  * `OpamStateTypes.repos_state`: remove `repos_tmp` field [#6625 @kit-ty-kate @rjbou]
 
 ## opam-solver
 
@@ -303,6 +310,7 @@ users)
   * `OpamFile.OPAM.print_errors`: now prints the repository if the informations is available [#6971 @rjbou]
   * `OpamFile.*.read_from_string`: add optional `?loc` string argument to propagate location information when available (path on disk, archive, etc.), and add logging with level 3 that displays it [#6625 @rjbou]
   * `OpamFile.*`: add `safe_read_from_string` [#6625 @rjbou]
+  * `OpamRepositoryPath.tar`: renamed to `repo_tarring`, deprecated, no longer used [#6625 @rjbou]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]

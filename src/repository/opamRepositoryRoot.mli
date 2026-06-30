@@ -55,11 +55,49 @@ module Dir : sig
 
 end
 
-val make_tar_gz : filename -> Dir.t -> unit
-val extract_in_job : filename -> Dir.t -> exn option OpamProcess.job
+module Tgz : sig
+  type t
+
+  val of_file : filename -> t
+  val to_file : t -> filename
+  val to_string : t -> string
+
+  val quarantine : t -> t
+  val backup : inn:dirname -> t -> t
+
+  val exists : t -> bool
+  val remove : t -> unit
+  val extract_in : t -> dirname -> unit
+  val download_as :
+    ?quiet:bool ->
+    ?validate:bool ->
+    overwrite:bool ->
+    ?compress:bool ->
+    ?checksum:OpamHash.t ->
+    OpamUrl.t -> t -> unit OpamProcess.job
+  val copy : src:t -> dst:t -> unit
+  val move : src:t -> dst:t -> unit
+
+  val filter_files:
+    (OpamTar.archived_file -> bool) -> t ->
+    (OpamTar.archived_file * OpamTar.archived_file_content) list
+  val fold:
+    ('a -> OpamTar.archived_file -> OpamTar.archived_file_content -> 'a) ->
+    'a -> t -> 'a
+
+  (* Repository paths *)
+  module Path : OpamRepositoryPath.PATH
+    with type repo_root = t
+     and type repo_dirname = unix_dirname
+     and type 'a typed_file = 'a OpamFile.t
+end
+
+val make_tar_gz : Tgz.t -> Dir.t -> unit
+val extract_in_job : Tgz.t -> Dir.t -> exn option OpamProcess.job
 
 type t =
   | Dir of Dir.t
+  | Tgz of Tgz.t
 
 (** [quarantine repo_root] returns a temporary repository root dedicated
     to [repo_root]. the returned repository is not created on disk and
@@ -110,3 +148,13 @@ val patch :
 (** Returns a pair [(exists, f)] where [exists] tells whether the
     [repo] file exists in the repository and [f] reads it *)
 val delayed_read_repo : t -> bool * (unit -> OpamFile.Repo.t)
+
+(** Remove [repo_name] repository roots, directory and archive, if present *)
+val remove_both : dirname -> repository_name -> unit
+
+(** Applies the function in the repository root directory. If repository root
+    is an archive, it uncompress it, applies the function and update archive
+    with the changed directory. *)
+val on_dir: (dirname -> 'a) -> t -> 'a
+
+val root_exists : dirname -> repository_name -> bool
