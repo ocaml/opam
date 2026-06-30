@@ -107,7 +107,7 @@ jobs:
     needs: Analyse
     strategy:
       matrix:
-        ocamlv: [ 4.11.2, 4.12.1, 4.13.1, 5.0.0, 5.1.1, 5.2.1, 5.3.0, trunk, 4.14.2, 5.4.0 ]
+        ocamlv: [ 4.11.2, 4.12.1, 4.13.1, 5.0.0, 5.1.1, 5.2.1, 5.3.0, 5.4.1, trunk, 4.14.4, 5.5.0 ]
       fail-fast: true
     steps:
     - name: Install bubblewrap
@@ -151,28 +151,28 @@ jobs:
         include:
           - host: x86_64-pc-cygwin
             build: x86_64-pc-cygwin
-            ocamlv: 4.14.2
+            ocamlv: 4.14.4
           - host: i686-w64-mingw32
             build: x86_64-pc-cygwin
-            ocamlv: 4.14.2
+            ocamlv: 4.14.4
           - host: x86_64-w64-mingw32
             build: x86_64-pc-cygwin
-            ocamlv: 4.14.2
+            ocamlv: 4.14.4
           - host: i686-pc-windows
             build: x86_64-pc-cygwin
-            ocamlv: 4.14.2
+            ocamlv: 4.14.4
           - host: x86_64-pc-windows
             build: x86_64-pc-cygwin
-            ocamlv: 4.14.2
+            ocamlv: 4.14.4
           - host: x86_64-pc-cygwin
             build: x86_64-pc-cygwin
-            ocamlv: 5.4.0
+            ocamlv: 5.5.0
           - host: x86_64-w64-mingw32
             build: x86_64-pc-cygwin
-            ocamlv: 5.4.0
+            ocamlv: 5.5.0
           - host: x86_64-pc-windows
             build: x86_64-pc-cygwin
-            ocamlv: 5.4.0
+            ocamlv: 5.5.0
       fail-fast: false
     defaults:
       run:
@@ -252,7 +252,7 @@ jobs:
     needs: Analyse
     strategy:
       matrix:
-        ocamlv: [ 4.14.2, 5.4.0 ]
+        ocamlv: [ 4.14.4, 5.5.0 ]
       fail-fast: true
     steps:
     - name: Install GNU patch
@@ -294,7 +294,7 @@ jobs:
     needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        ocamlv: [ 4.14.2, 5.4.0 ]
+        ocamlv: [ 4.14.4, 5.5.0 ]
       fail-fast: false
     env:
       OPAM_TEST: 1
@@ -351,7 +351,7 @@ jobs:
     needs: Analyse
     strategy:
       matrix:
-        ocamlv: [ 4.14.2, 5.4.0 ]
+        ocamlv: [ 4.14.4, 5.5.0 ]
       fail-fast: false
     env:
       OPAM_TEST: 1
@@ -440,7 +440,7 @@ jobs:
     needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        ocamlv: [ 4.14.2, 5.4.0 ]
+        ocamlv: [ 4.14.4, 5.5.0 ]
       fail-fast: false
     env:
       OPAM_DOC: 1
@@ -497,7 +497,7 @@ jobs:
     strategy:
       matrix:
         solver: [ z3, 0install ]
-        ocamlv: [ 4.14.2, 5.4.0 ]
+        ocamlv: [ 4.14.4, 5.5.0 ]
       fail-fast: false
     env:
       SOLVER: ${{ matrix.solver }}
@@ -549,7 +549,7 @@ jobs:
     needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        ocamlv: [ 4.14.2, 5.4.0 ]
+        ocamlv: [ 4.14.4, 5.5.0 ]
       fail-fast: false
     steps:
     - name: Install bubblewrap
@@ -623,7 +623,7 @@ jobs:
     needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        ocamlv: [ 4.14.2, 5.4.0 ]
+        ocamlv: [ 4.14.4, 5.5.0 ]
       fail-fast: false
     env:
       OPAM_DEPENDS: 1
