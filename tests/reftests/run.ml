@@ -86,6 +86,10 @@ let base_env =
     "OPAMNOENVNOTICE", "1";
     "OPAMNODEPEXTS", "1";
     "OPAMDOWNLOADJOBS", "1";
+
+    "GIT_CONFIG_COUNT", "1";
+    "GIT_CONFIG_KEY_0", "protocol.file.allow";
+    "GIT_CONFIG_VALUE_0", "always";
   ]
 
 (* See [opamprocess.safe_wait] *)

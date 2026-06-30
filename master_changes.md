@@ -189,6 +189,7 @@ users)
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
+  * Set the `protocol.file.allow=always` git config while running the reftests regardless of `GIT_CONFIG_GLOBAL` [#6992 @kit-ty-kate]
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
