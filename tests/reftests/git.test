@@ -142,3 +142,83 @@ Done.
 [WARNING] Dependency dep-nip.dev is pinned to local target git+file://${BASEDIR}/dep-nip#master, skipping
 Generated lock files for:
   - nip.dev: ${BASEDIR}/nip.opam.locked
+### : Make sure the global or system git config doesn't change the behaviour of opam
+### opam switch create dup --empty
+### <mygitconfig>
+[diff]
+	renames = copies
+### <GIT_REPO_DUP/repo>
+opam-version: "2.0"
+### : NOTE: This file is large to make sure git doesn't suddenly decide
+### : that having 'copy from' in the diff isn't worth it.
+### <GIT_REPO_DUP/packages/duplicate/duplicate.1/opam>
+opam-version: "2.0"
+post-messages: """
+aaa
+bbb
+ccc
+ddd
+eee
+fff
+ggg
+hhh
+iii
+jjj
+kkk
+lll
+mmm
+nnn
+ooo
+ppp
+qqq
+rrr
+sss
+ttt
+uuu
+vvv
+www
+xxx
+yyy
+zzz
+"""
+### git -C GIT_REPO_DUP init -q --initial-branch=master
+### git -C GIT_REPO_DUP config core.autocrlf false
+### git -C GIT_REPO_DUP add *
+### git -C GIT_REPO_DUP commit -qm init
+### opam repo add dup ./GIT_REPO_DUP --this-switch
+[dup] Initialised
+### mkdir GIT_REPO_DUP/packages/duplicate/duplicate.2
+### cp GIT_REPO_DUP/packages/duplicate/duplicate.1/opam GIT_REPO_DUP/packages/duplicate/duplicate.2/opam
+### sed -i.bak 's/aaa/ααα/' GIT_REPO_DUP/packages/duplicate/duplicate.1/opam
+### rm GIT_REPO_DUP/packages/duplicate/duplicate.1/opam.bak
+### git -C GIT_REPO_DUP add *
+### git -C GIT_REPO_DUP commit -qm dup
+### GIT_CONFIG_GLOBAL=${BASEDIR}/mygitconfig GIT_CONFIG_SYSTEM=/dev/null
+### git config --get --global diff.renames
+copies
+### opam update -vv dup | sed-cmd git | grep -v "^- index "
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+Processing  1/1: [dup: git]
++ git "-C" "${BASEDIR}/OPAM/repo/dup" "remote" "set-url" "origin" "file://${BASEDIR}/GIT_REPO_DUP"
++ git "-C" "${BASEDIR}/OPAM/repo/dup" "fetch" "-q" "file://${BASEDIR}/GIT_REPO_DUP" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/repo/dup" "add" "."
++ git "-C" "${BASEDIR}/OPAM/repo/dup" "-c" "diff.noprefix=false" "diff" "--text" "--no-ext-diff" "-R" "-p" "refs/remotes/opam-ref" "--"
+- diff --git b/packages/duplicate/duplicate.1/opam a/packages/duplicate/duplicate.1/opam
+- --- b/packages/duplicate/duplicate.1/opam
+- +++ a/packages/duplicate/duplicate.1/opam
+- @@ -1,6 +1,6 @@
+-  opam-version: "2.0"
+-  post-messages: """
+- -aaa
+- +ααα
+-  bbb
+-  ccc
+-  ddd
+- diff --git b/packages/duplicate/duplicate.1/opam a/packages/duplicate/duplicate.2/opam
+- similarity index 100%
+- copy from packages/duplicate/duplicate.1/opam
+- copy to packages/duplicate/duplicate.2/opam
+[dup] synchronised from git+file://${BASEDIR}/GIT_REPO_DUP
+Processing: [dup: loading data]
+### unset GIT_CONFIG_GLOBAL GIT_CONFIG_SYSTEM
