@@ -162,6 +162,8 @@ users)
   * lib/patchDiff: Ensure a more consistent output accross Unix and Windows platforms [#6915 @kit-ty-kate]
   * lib/patchdiff: add dir-file transformations tests [#6915 @rjbou]
   * Add the `lib-tests` target to the main Makefile [#6928 @kit-ty-kate]
+  * Add `opamUnit` as a basic unit test framework [#6953 @NathanReb]
+  * Add unit tests for `OpamFilename.starts_with` and `dir_starts_with` in `tests/lib/core` [#6953 @NathanReb]
 
 ## Benchmarks
   * Add an even larger real-world diff to benchmark `opam update` [#6567 @kit-ty-kate]
@@ -311,3 +313,4 @@ users)
   * `OpamCompat.Seq`: add `to_dispenser` [#6945 @kit-ty-kate]
   * `OpamSystem.directories_with_links`, `OpamSystem.rec_files`, `OpamFilename.rec_files`: add optional `?except_vcs` that default to false to exclude VCS directories [#6945 @kit-ty-kate @rjbou]
   * `OpamFilename.make_tar_gz{_job}`: rename `make_tar_gz_job` into `make_tar_gz` as it no longer need an external process call [#6945 @kit-ty-kate]
+  * `OpamFilename.{,dir_}starts_with`: Fix a bug where `foo/bar` would be considered a prefix of `foo/bar-baz` [#6953 @NathanReb]
