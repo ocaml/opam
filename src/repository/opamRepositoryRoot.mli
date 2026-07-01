@@ -95,6 +95,13 @@ val read_file:
   (module OpamFile.IO_FILE with type t = 'a) ->
   ?safe:bool -> t -> ?filename:'a OpamFile.t -> string -> 'a
 
+(* [patch ~allow_unclean patch_source arch] applies a patch to an archive
+   [arch]. The patch source can be either [`Patch_file filename] for a patch
+   file, or [`Patch_diffs diffs] for a list of file-level changes.
+
+   @param allow_unclean decides if applying a patch on a directory which
+   differs slightly from the one described in the patch file is allowed.
+   Allowing unclean applications imitates the default behaviour of GNU Patch. *)
 val patch :
   allow_unclean:bool ->
   [`Patch_file of filename | `Patch_diffs of Patch.t list ] -> t ->
