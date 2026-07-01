@@ -1277,7 +1277,7 @@ SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin
 Processing  1/1: [main-gpin: git]
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "init"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "init" "--initial-branch=main"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin/.git/
 + git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "diff.noprefix" "false"
@@ -1631,7 +1631,7 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.o
 FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config atomically in 0.000s
 FILE(switch-state)              Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/backup/state-today.export atomically in 0.000s
 + git "-C" "${BASEDIR}/main-gpin" "symbolic-ref" "--quiet" "--short" "HEAD"
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "init"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "init" "--initial-branch=main"
 + git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "diff.noprefix" "false"
 + git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin" "config" "--local" "core.autocrlf" "false"
@@ -1843,7 +1843,7 @@ The following actions will be performed:
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev
 Processing  1/2: [main-gpin.dev: git]
-+ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "init"
++ git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "init" "--initial-branch=main"
 + git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "config" "--local" "diff.noprefix" "false"
 + git "-C" "${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/sources/main-gpin.dev" "config" "--local" "core.autocrlf" "false"

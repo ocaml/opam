@@ -4383,7 +4383,8 @@ let clean cli =
        List.iter (fun dir ->
            match OpamFilename.(Base.to_string (basename_dir dir)) with
            | "git" ->
-             (try OpamFilename.exec dir ~name:"git gc" [["git"; "gc"]]
+             let env = OpamGit.env () in
+             (try OpamFilename.exec ~env dir ~name:"git gc" [["git"; "gc"]]
               with e -> OpamStd.Exn.fatal e)
            | _ -> cleandir dir
          )
