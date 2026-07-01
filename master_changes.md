@@ -30,6 +30,7 @@ users)
   * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
 
 ## Build (package)
+  * When fetching a git repository, the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
 
 ## Remove
 
@@ -67,6 +68,7 @@ users)
 ## Exec
 
 ## Source
+  * When fetching a git repository (i.e. `--dev-repo` or a package with git url), the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
 
 ## Lint
 
@@ -74,6 +76,7 @@ users)
   * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
   * [BUG] Do not fail on directories named `opam` when scanning the `packages` directory of a repository during `opam repo add` or `opam init` (worked on subsequent `opam update`) [#6941 @kit-ty-kate @rjbou]
   * Speedup repository operations on certain file-systems (e.g. NTFS on Windows or IO constrained machines) by changing its storage in the opam root from plain directory to archive, for HTTP repositories, or non-VCS one if `OPAMREPOSITORYTARRING` is enabled [#6625 @rjbou @kit-ty-kate @arozovyk - fix #5346 #5741 #5648 #5484 #5559 #3050 #6974]
+  * When fetching a git repository, the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
 
 ## Lock
   * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
