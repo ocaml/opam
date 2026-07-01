@@ -29,6 +29,7 @@ users)
 ## Install
 
 ## Build (package)
+  * When fetching a git repository, the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
 
 ## Remove
 
@@ -64,11 +65,13 @@ users)
 ## Exec
 
 ## Source
+  * When fetching a git repository (e.g. `--dev-repo`), the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
 
 ## Lint
 
 ## Repository
   * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
+  * When fetching a git repository, the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
 
 ## Lock
   * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
