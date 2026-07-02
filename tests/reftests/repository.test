@@ -976,13 +976,18 @@ opam-version: "2.0"
 build: ["echo" "init"]
 ### opam repo add --this-switch opam-dir OPAM-DIR
 [opam-dir] Initialised
-[WARNING] Could not read file ${BASEDIR}/OPAM/repo/opam-dir/packages/opam. skipping:
-          At ${BASEDIR}/OPAM/repo/opam-dir/packages/opam:1:0-1:0::
-          Parse error
 ### opam install --verbose opam | sed-cmd echo
-[ERROR] No package named opam found.
-'${OPAM} install --verbose opam' failed.
-# Return code 5 #
+The following actions will be performed:
+=== install 1 package
+  - install opam 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [opam: echo init]
++ echo "init" (CWD=${BASEDIR}/OPAM/opam-dir/.opam-switch/build/opam.1)
+- init
+-> compiled  opam.1
+-> installed opam.1
+Done.
 ### <OPAM-DIR/packages/opam/opam.1/opam>
 opam-version: "2.0"
 build: ["echo" "update"]
@@ -992,15 +997,15 @@ build: ["echo" "update"]
 [opam-dir] synchronised from file://${BASEDIR}/OPAM-DIR
 Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall --yes --verbose opam | sed-cmd echo
-opam is not installed. Install it? [Y/n] y
 The following actions will be performed:
-=== install 1 package
-  - install opam 1
+=== recompile 1 package
+  - recompile opam 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-Processing  2/3: [opam: echo update]
+Processing  2/4: [opam: echo update]
 + echo "update" (CWD=${BASEDIR}/OPAM/opam-dir/.opam-switch/build/opam.1)
 - update
 -> compiled  opam.1
+-> removed   opam.1
 -> installed opam.1
 Done.

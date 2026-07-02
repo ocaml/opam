@@ -69,6 +69,7 @@ users)
 
 ## Repository
   * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
+  * [BUG] Do not fail on directories named `opam` when scanning the `packages` directory of a repository during `opam repo add` or `opam init` (worked on subsequent `opam update`) [#6941 @kit-ty-kate @rjbou]
 
 ## Lock
   * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
