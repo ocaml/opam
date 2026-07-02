@@ -124,6 +124,12 @@ val string_of_channel: in_channel -> string
     bad permissions, etc.) *)
 exception File_not_found of string
 
+(** [open_in filename] is like {!Stdlib.open_in} but have an additional check
+    if the given filename is a directory, and raise {!Sys_error} in that case.
+*)
+val open_in: string -> in_channel
+val open_in_bin: string -> in_channel
+
 (** [read filename] returns the contents of [filename] (while taking an advisory
     read lock to prevent concurrent writes) *)
 val read: string -> string

@@ -311,3 +311,5 @@ users)
   * `OpamCompat.Seq`: add `to_dispenser` [#6945 @kit-ty-kate]
   * `OpamSystem.directories_with_links`, `OpamSystem.rec_files`, `OpamFilename.rec_files`: add optional `?except_vcs` that default to false to exclude VCS directories [#6945 @kit-ty-kate @rjbou]
   * `OpamFilename.make_tar_gz{_job}`: rename `make_tar_gz_job` into `make_tar_gz` as it no longer need an external process call [#6945 @kit-ty-kate]
+  * `OpamSystem`: add `open_in` and `open_in_bin` that checks is the file is a directory and raise `Sys_error` in that case [#6996 @rjbou - fix #6997]
+  * `OpamFilename.{open_in,open_in_bin}`: now errors when the filename is a directory, in all platforms [#6996 @rjbou - fix #6997]
