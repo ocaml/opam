@@ -23,14 +23,12 @@ archive-mirrors: "https://opam.ocaml.org/cache"
 EOF
 opam switch create default ocaml-system
 eval $(opam env)
-# TODO: Temporary: revert back to « opam install lwt » once the following tickets are fixed
+# TODO: Temporary: remove the pins once the following tickets are fixed
 #       https://github.com/ocaml/ocamlfind/pull/112
-#       https://github.com/ocsigen/lwt/issues/1081
-#       https://github.com/ocsigen/lwt/issues/1082
 #       https://github.com/ocaml/dune/issues/15340
 opam pin add -yn git+https://github.com/dra27/ocamlfind.git#c9efeea72743b2ff59ef67d354e0a88a08804a2c
 opam pin add -yn dune 3.22.2
-opam pin add lwt 5.9.1
+opam install --verbose lwt
 opam list
 opam config report
 
