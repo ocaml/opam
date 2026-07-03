@@ -213,6 +213,7 @@ users)
   * Fix the cygwin backend basic tests [#6979 @kit-ty-kate]
   * Fix undeterministic tests [#6978 @kit-ty-kate]
   * Bump `actions/cache` to version 6 [#6983 @kit-ty-kate]
+  * Fix Doc jobs when a opam root format upgrade is needed [#6998 @rjbou]
 
 ## Doc
   * Update the packaging page to recommend using static archives for releases [#6973 @mseri]
