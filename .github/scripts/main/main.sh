@@ -206,6 +206,9 @@ test_project () {
 }
 
 if [ "$OPAM_DEPENDS" = "1" ]; then
+  # test if an upgrade is needed
+  need-upgrade
+
   DEPENDS_ERRORS=""
   LIB_ERRORS=""
   OCAMLVER=$(ocamlc -version)
