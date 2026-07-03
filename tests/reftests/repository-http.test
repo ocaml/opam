@@ -52,6 +52,7 @@ REPOSITORY                      http-repo: applying update from scratch at ${BAS
 [http-repo] Initialised
 UPDATE                          Repository has new changes
 Processing: [http-repo: loading data]
+RSTATE                          load repo http-repo from dir
 ### unset OPAMDEBUGSECTIONS
 ### unset OPAMDEBUG
 ### unset OPAMVERBOSE
@@ -93,6 +94,7 @@ REPO_BACKEND                    Internal diff (non-empty, 3 changed files) done 
 REPOSITORY                      http-repo: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
 UPDATE                          Repository has new changes
 Processing: [http-repo: loading data]
+RSTATE                          load repo http-repo from diff
 Now run 'opam upgrade' to apply any package updates.
 ### unset OPAMDEBUGSECTIONS
 ### unset OPAMDEBUG
@@ -131,6 +133,7 @@ REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done 
 REPOSITORY                      http-repo: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
 UPDATE                          Repository has new changes
 Processing: [http-repo: loading data]
+RSTATE                          load repo http-repo from diff
 RSTATE                          ERR: Could not load ${BASEDIR}/OPAM/repo/http-repo/packages/tujuh/tujuh.7/opam, ignored
 Now run 'opam upgrade' to apply any package updates.
 ### unset OPAMDEBUGSECTIONS
@@ -171,6 +174,7 @@ REPO_BACKEND                    Internal diff (non-empty, 1 changed files) done 
 REPOSITORY                      http-repo: applying patch update at ${BASEDIR}/OPAM/log/patch-xxx
 UPDATE                          Repository has new changes
 Processing: [http-repo: loading data]
+RSTATE                          load repo http-repo from diff
 ### unset OPAMDEBUGSECTIONS
 ### unset OPAMDEBUG
 ### unset OPAMVERBOSE
