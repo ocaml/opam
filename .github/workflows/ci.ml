@@ -13,13 +13,13 @@
 
 open Lib
 
-let latest_ocaml4 = "4.14.2"
-let latest_ocaml5 = "5.4.0" (* Add this number to ocamls below when the next version comes out *)
+let latest_ocaml4 = "4.14.4"
+let latest_ocaml5 = "5.5.0" (* Add this number to ocamls below when the next version comes out *)
 let trunk = "trunk"
 let ocamls = [
   (* Fully supported versions *)
   "4.11.2"; "4.12.1"; "4.13.1";
-  "5.0.0"; "5.1.1"; "5.2.1"; "5.3.0";
+  "5.0.0"; "5.1.1"; "5.2.1"; "5.3.0"; "5.4.1";
 
   (* Optionally supported versions *)
   trunk;
@@ -363,12 +363,10 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
            {|opam init --yes --bare default git+file://%cd%/../../../opam-repository#${{ env.OPAM_TEST_REPO_SHA }} --no-git-location|};
            {|opam switch --yes create default ocaml-system|};
            {|opam env|};
-           (* TODO: Temporary: revert back to « opam install lwt » once the following tickets are fixed *)
+           (* TODO: Temporary: remove the pins once the following tickets are fixed *)
            (*       https://github.com/ocaml/ocamlfind/pull/112 *)
-           (*       https://github.com/ocsigen/lwt/issues/1081 *)
-           (*       https://github.com/ocsigen/lwt/issues/1082 *)
            {|opam pin add -yn git+https://github.com/dra27/ocamlfind.git#c9efeea72743b2ff59ef67d354e0a88a08804a2c|};
-           {|opam pin add --yes lwt 5.9.1|};
+           {|opam install -y --verbose lwt|};
            {|opam list|};
            {|opam config report|};
           ]))
