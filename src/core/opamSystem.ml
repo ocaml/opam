@@ -261,6 +261,15 @@ let string_of_channel ic =
   iter ic b s;
   Buffer.contents b
 
+let open_in_t fopen filename =
+  if Sys.is_directory filename then
+    raise (Sys_error "Is a directory")
+  else
+    fopen filename
+
+let open_in filename = open_in_t open_in filename
+let open_in_bin filename = open_in_t open_in_bin filename
+
 let read file =
   log ~level:5 "read %s" file;
   let ic =

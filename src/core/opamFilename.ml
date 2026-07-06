@@ -210,11 +210,11 @@ let read filename =
   OpamSystem.read (to_string filename)
 
 let open_in filename =
-  try open_in (to_string filename)
+  try OpamSystem.open_in (to_string filename)
   with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
 
 let open_in_bin filename =
-  try open_in_bin (to_string filename)
+  try OpamSystem.open_in_bin (to_string filename)
   with Sys_error _ -> raise (OpamSystem.File_not_found (to_string filename))
 
 let open_out filename =
