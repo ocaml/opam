@@ -207,7 +207,7 @@ users)
   * Add more tests for depexts behaviour with unknown family types [#6489 @arozovyk]
   * Add disabled depexts tests [#6489 @rjbou]
   * Add depexts tests with debug section that demostrate system availability polling [#6489 @arozovyk]
-  * Add a test showing the behaviour of .install files containing destination filepath trying to escape their scope [#6897 @rjbou @kit-ty-kate]
+  * Add a test showing the behaviour of .install files containing destination filepath trying to escape their scope [#6897 #7008 @rjbou @kit-ty-kate]
   * Add a test showing that `opam install ./` will leave packages pinned if
     aborted or failed [#6922 @NathanReb]
   * Add test for update in repository that changes directories to files and vice versa [#6915 @rjbou]

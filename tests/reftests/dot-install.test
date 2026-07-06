@@ -370,30 +370,35 @@ lib: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 bin: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 etc: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 share: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 misc: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 root: [
@@ -444,17 +449,17 @@ SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/good
 SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/good
 [WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install, some fields have been ignored:
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:34:15-34:29::
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:39:15-39:29::
               ../../a-file references its parent directory.
             - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:2:14-2:28::
               ../../a-file references its parent directory.
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:8:14-8:28::
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:9:14-9:28::
               ../../a-file references its parent directory.
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:26:14-26:28::
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:30:14-30:28::
               ../../a-file is not an absolute filename.
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:20:14-20:28::
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:23:14-23:28::
               ../../a-file references its parent directory.
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:14:14-14:28::
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:16:14-16:28::
               ../../a-file references its parent directory.
 
 -> installed eskape.1
