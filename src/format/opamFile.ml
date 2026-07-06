@@ -3730,9 +3730,7 @@ module Dot_installSyntax = struct
         (Pp.opt @@
          Pp.singleton -| Pp.V.string -| Pp.pp ~name:"rel-filename"
            (fun ~pos s ->
-              if OpamFilename.might_escape ~sep:`Unspecified s then
-                Pp.bad_format ~pos "%s references its parent directory." s
-              else if Filename.is_relative s then
+              if Filename.is_relative s then
                 OpamFilename.Base.of_string s
               else
                 Pp.bad_format ~pos "%s is an absolute filename." s)
