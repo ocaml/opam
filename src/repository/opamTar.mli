@@ -28,11 +28,21 @@ val fold_reg_files :
   ('acc -> archived_file -> archived_file_content -> 'acc) -> 'acc -> archive
   -> 'acc
 
-(* [create archive dir] Creates an compressed archive [archive] containing the
-   [dir] at root.
+(* [create ?flat ?except_vcs archive dir] Creates an compressed archive
+   [archive] containing the [dir].
    If the directory contains a VCS directory, it is not integrated in the
-   archive. *)
-val create : archive -> dirname -> unit
+   archive.
+   If [flat] is set to true, the archive contains the flat content of [dir],
+   otherwise, the root directory in the archive is [dir].
+   if [except_vcs] is set to true, VCS directories and files are not embed in
+   the archive. The default is set to false. *)
+val create : ?flat:bool -> ?except_vcs:bool -> archive -> dirname -> unit
+
+(* Apply a patch on an archive *)
+val patch:
+  allow_unclean:bool ->
+  [`Patch_file of string | `Patch_diffs of Patch.t list ] -> archive ->
+  (Patch.operation list, exn) result
 
 (* This module contains helpers to act on the archive once openned *)
 module Inplace : sig

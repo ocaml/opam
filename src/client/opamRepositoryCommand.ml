@@ -81,13 +81,10 @@ let add rt name url trust_anchors =
     let repo = { repo_name = name; repo_url = url;
                  repo_trust = trust_anchors; }
     in
-    let repo_root = OpamRepositoryRoot.Dir.Path.root root name in
-    if OpamRepositoryRoot.Dir.exists repo_root ||
-       OpamFilename.exists (OpamRepositoryPath.tar root name)
-    then
+    if OpamRepositoryRoot.root_exists root name then
       OpamConsole.error_and_exit `Bad_arguments
         "Invalid repository name, %s exists"
-        (OpamRepositoryRoot.Dir.to_string repo_root);
+        (OpamRepositoryName.to_string name);
     if url.OpamUrl.backend = `rsync &&
        OpamUrl.local_dir url <> None &&
        OpamUrl.local_dir (OpamRepositoryPath.Remote.packages_url url)
@@ -106,10 +103,7 @@ let remove rt name =
     update_repos_config rt (OpamRepositoryName.Map.remove name rt.repositories)
   in
   OpamRepositoryState.Cache.save rt;
-  OpamRepositoryRoot.Dir.remove
-    (OpamRepositoryRoot.Dir.Path.root rt.repos_global.root name);
-  OpamFilename.remove
-    (OpamRepositoryPath.tar rt.repos_global.root name);
+  OpamRepositoryRoot.remove_both rt.repos_global.root name;
   rt
 
 let set_url rt name url trust_anchors =
@@ -120,12 +114,8 @@ let set_url rt name url trust_anchors =
       OpamConsole.error_and_exit `Not_found "No repository %s found"
         (OpamRepositoryName.to_string name);
   in
-  OpamRepositoryRoot.Dir.remove
-    (OpamRepositoryRoot.Dir.Path.root rt.repos_global.root name);
-  OpamFilename.remove
-    (OpamRepositoryPath.tar rt.repos_global.root name);
+  OpamRepositoryRoot.remove_both rt.repos_global.root name;
   let repo = { repo with repo_url = url; repo_trust = trust_anchors; } in
-  OpamRepositoryState.remove_from_repos_tmp  rt name;
   update_repos_config rt (OpamRepositoryName.Map.add name repo rt.repositories)
 
 let print_selection rt ~short repos_list =
@@ -259,22 +249,15 @@ let update_with_auto_upgrade rt repo_names =
                 OpamRepositoryState.Cache.remove ());
              OpamConsole.msg "Upgrading repository \"%s\"...\n"
                (OpamRepositoryName.to_string r.repo_name);
-             let repo_root =
-               match OpamRepositoryState.get_repo_root rt r with
-               | OpamRepositoryRoot.Dir x -> x
+             let repo_root = OpamRepositoryState.get_repo_root rt r in
+             OpamRepositoryRoot.on_dir (fun dir ->
+                 OpamAdminRepoUpgrade.do_upgrade (OpamRepositoryRoot.Dir.of_dir dir))
+               repo_root;
+             let def, opams =
+               OpamRepositoryState.load_repo r repo_root
              in
-             OpamAdminRepoUpgrade.do_upgrade repo_root;
-             if OpamRepositoryConfig.(!r.repo_tarring) then
-               OpamRepositoryRoot.make_tar_gz
-                 (OpamRepositoryPath.tar rt.repos_global.root r.repo_name)
-                 repo_root;
              let def =
-               OpamRepositoryRoot.Dir.Path.repo repo_root
-               |> OpamFile.Repo.safe_read
-               |> OpamFile.Repo.with_root_url r.repo_url
-             in
-             let opams =
-               OpamRepositoryState.load_opams_from_dir r.repo_name repo_root
+               OpamFile.Repo.with_root_url r.repo_url def
              in
              let rt = {
                rt with
