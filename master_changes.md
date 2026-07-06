@@ -99,6 +99,8 @@ users)
 ## Internal: Windows
 
 ## Test
+  * Add `opamUnit` as a basic unit test framework [#6953 @NathanReb]
+  * Add unit tests for `OpamFilename.starts_with` and `dir_starts_with` in `tests/lib/core` [#6953 @NathanReb]
 
 ## Benchmarks
 
@@ -125,3 +127,6 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamFilename.{,dir_}starts_with`: Fix a bug where `foo/bar` would be considered a prefix of `foo/bar-baz` [#6953 @NathanReb - fix #6948]
+  * `OpamFilename.{,dir_}starts_with`: `/` and `\` are now equivalent on Windows [#6953 @NathanReb]
+  * `OpamFilename.starts_with`: `starts_with "a/b" "a/b"` no longer returns `true` [#6953 @NathanReb]

@@ -1,0 +1,4 @@
+(test
+ (name testOpamCore)
+ (package opam-core)
+ (libraries opam-core opamUnit))

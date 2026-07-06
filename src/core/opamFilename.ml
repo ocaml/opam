@@ -344,11 +344,23 @@ let is_exec file =
   with Unix.Unix_error _ ->
     OpamSystem.internal_error "%s does not exist." (to_string file)
 
-let starts_with dirname filename =
-  OpamCompat.String.starts_with ~prefix:(Dir.to_string dirname) (to_string filename)
+let cmpable_dir_string dir =
+  match OpamSystem.forward_to_back (Dir.to_string dir) with
+  | "" -> ""
+  | d -> Filename.concat d ""
 
-let dir_starts_with pfx dir =
-  OpamCompat.String.starts_with ~prefix:(Dir.to_string pfx) (Dir.to_string dir)
+let cmpable_file_string file =
+  OpamSystem.forward_to_back (to_string file)
+
+let starts_with prefix filename =
+  let prefix = cmpable_dir_string prefix in
+  let dir = cmpable_file_string filename in
+  OpamCompat.String.starts_with ~prefix dir
+
+let dir_starts_with prefix dir =
+  let prefix = cmpable_dir_string prefix in
+  let dir = cmpable_dir_string dir in
+  OpamCompat.String.starts_with ~prefix dir
 
 let remove_prefix prefix filename =
   let prefix =
