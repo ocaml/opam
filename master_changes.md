@@ -107,6 +107,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test showing the behaviour of .install files containing destination filepath trying to escape their scope [#6897 #7008 @rjbou @kit-ty-kate]
   * Add a test ensuring installing files through a .install file can't escape the opam switch (CVE-2026-57825) [#7005 @NathanReb]
 
 ### Engine
