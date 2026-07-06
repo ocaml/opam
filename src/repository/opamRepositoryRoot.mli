@@ -80,6 +80,8 @@ val to_string : t -> string
 val remove_prefix: t -> filename -> unix_filename
 val remove_prefix_dir: t -> dirname -> unix_dirname
 
+val string_of_backend: t -> string
+
 val copy : src:t -> dst:t -> unit
 val move : src:t -> dst:t -> unit
 

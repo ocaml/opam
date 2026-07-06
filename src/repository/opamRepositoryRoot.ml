@@ -98,6 +98,9 @@ let remove_prefix_dir rr d =
     OpamFilename.remove_prefix_dir dir d
     |> OpamFilename.Unix.Dir.of_string
 
+let string_of_backend = function
+  | Dir _ -> "dir"
+
 let copy ~src ~dst =
   match src, dst with
   | Dir src, Dir dst -> Dir.copy ~src ~dst
