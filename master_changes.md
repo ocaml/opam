@@ -97,7 +97,7 @@ users)
 
 ## Opamfile
   * The `url` file now only supports the legacy opam 1.2 fields [#6827 @kit-ty-kate]
-  * Filter fields in .install files containing destinations with `..` or absolute filepaths as parse errors [#6897 @kit-ty-kate]
+  * Warn on fields in .install files containing destinations with `..` and filter absolute filepaths as parse errors [#6897 #7008 @kit-ty-kate]
 
 ## External dependencies
   * Restore the distribution detection on Gentoo [#6886 @kit-ty-kate - fix #6887]
@@ -290,7 +290,7 @@ users)
   * Update the Install page with the new opam 2.5.2 release [#7018 @kit-ty-kate]
 
 ## Security fixes
-  * Invalidate .install fields containing destination filepath trying to escape their scope [#6897 @kit-ty-kate]
+  * Invalidate .install fields containing absolute destination filepath except when in the `misc` field [#6897 #7008 @kit-ty-kate]
   * Fix a bug that allowed a package to install files anywhere on the system using a symlink to an external directory without warning the user and asking for their permission: CVE-2026-57825. [#7005 @NathanReb]
 
 # API updates
