@@ -106,6 +106,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test ensuring installing files through a .install file can't escape the opam switch (CVE-2026-57825) [#7005 @NathanReb]
 
 ### Engine
 
@@ -114,6 +115,7 @@ users)
 ## Doc
 
 ## Security fixes
+  * Fix a bug that allowed a package to install files anywhere on the system using a symlink to an external directory without warning the user and asking for their permission: CVE-2026-57825. [#7005 @NathanReb]
 
 # API updates
 ## opam-client
