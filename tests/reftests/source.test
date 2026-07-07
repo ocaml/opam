@@ -51,12 +51,8 @@ pandore2/src
 pandore2/src/src.ml
 ### rm -rf pandore.3
 ### opam source -vv pandore --dev | sed-cmd git | grep '^\+ git'
-+ git "-C" "${BASEDIR}/pandore" "init" "--initial-branch=main"
-+ git "-C" "${BASEDIR}/pandore" "remote" "add" "origin" "file://${BASEDIR}/pandev"
-+ git "-C" "${BASEDIR}/pandore" "remote" "set-url" "origin" "file://${BASEDIR}/pandev"
-+ git "-C" "${BASEDIR}/pandore" "fetch" "-q" "file://${BASEDIR}/pandev" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
-+ git "-C" "${BASEDIR}/pandore" "reset" "--hard" "refs/remotes/opam-ref" "--"
-+ git "-C" "${BASEDIR}/pandore" "clean" "-fdx"
++ git "-C" "${BASEDIR}/pandore" "clone" "file://${BASEDIR}/pandev" "."
++ git "-C" "${BASEDIR}/pandore" "submodule" "update" "--init" "--recursive"
 ### find pandore | grep -v '.git/' | unordered
 pandore
 pandore/.git
@@ -139,12 +135,8 @@ EOF
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
 ### opam source -vv pandore.4 --dir pandore5 | sed-cmd git | grep '^\+ git'
-+ git "-C" "${BASEDIR}/pandore5" "init" "--initial-branch=main"
-+ git "-C" "${BASEDIR}/pandore5" "remote" "add" "origin" "file://${BASEDIR}/pandev"
-+ git "-C" "${BASEDIR}/pandore5" "remote" "set-url" "origin" "file://${BASEDIR}/pandev"
-+ git "-C" "${BASEDIR}/pandore5" "fetch" "-q" "file://${BASEDIR}/pandev" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
-+ git "-C" "${BASEDIR}/pandore5" "reset" "--hard" "refs/remotes/opam-ref" "--"
-+ git "-C" "${BASEDIR}/pandore5" "clean" "-fdx"
++ git "-C" "${BASEDIR}/pandore5" "clone" "file://${BASEDIR}/pandev" "."
++ git "-C" "${BASEDIR}/pandore5" "submodule" "update" "--init" "--recursive"
 ### git -C pandore5 rev-list --all --count
 2
 ### opam source pandore.4 --dev --dir pandore6
@@ -152,8 +144,9 @@ Successfully fetched pandore development repo to ${BASEDIR}/pandore6
 ### git -C pandore6 rev-list --all --count
 2
 ### git -C pandore6 branch -avv | ' [a-f0-9]+ ' -> ' +hash+ '
-* main             +hash+ second empty commit
-  remotes/opam-ref +hash+ second empty commit
+* master                +hash+ [origin/master] second empty commit
+  remotes/origin/HEAD   -> origin/master
+  remotes/origin/master +hash+ second empty commit
 ### git -C pandore6 remote -v
 origin	file://${BASEDIR}/pandev (fetch)
 origin	file://${BASEDIR}/pandev (push)
