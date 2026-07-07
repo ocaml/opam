@@ -224,6 +224,8 @@ users)
   * Add a test showing some of the internal steps of `opam init` [#6957 @kit-ty-kate]
   * Add tests for `.install` `root` and `rootexec` fields [#6938 @rjbou]
   * Add a test showing the git commands called by `opam source` [#6955 @sporkl]
+  * Add tests checking installation and source for mercurial repositories [#6955 @sporkl]
+  * Add tests checking installation and source for darcs repositories [#6955 @sporkl]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
