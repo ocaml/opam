@@ -220,20 +220,8 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved http-archive-test.dev  (http://localhost:port/http-archive.tar.gz)
-[ERROR] The compilation of http-archive-test.dev failed at "cat file".
-
-##% output ###
-# cat: file: No such file or directory
-
-
-
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - build http-archive-test dev
-+- 
-- No changes have been performed
-[NOTE] Pinning command successful, but your installed packages may be out of sync.
-# Return code 31 #
+-> installed http-archive-test.dev
+Done.
 ### :::::::::::::::::::::::
 ### :II: Pin kinds
 ### :::::::::::::::::::::::

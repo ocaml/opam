@@ -18,6 +18,7 @@ users)
   * Remove unnecessary uses of `chdir` [#6910 @NathanReb]
   * Added `--ignore-available-on` option to allow ignoring the `available:` section of certain packages. [#6836 @WardBrian - fix #5283]
   * Fix the filename check used when parsing arguments to allow `/` to be recognised as a directory separator on Windows [#6981 @kit-ty-kate - fix #6940]
+  * [BUG] Fix package installation during `opam pin add <url to archive>` [#7012 @zoggy - fix #6999]
 
 ## Plugins
 
