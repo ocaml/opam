@@ -87,10 +87,6 @@ end
 
 (* Other paths *)
 
-let tar root name =
-  root / OpamRepositoryPathName.repo_d //
-  (OpamRepositoryName.to_string name ^ ".tar.gz")
-
 let download_cache root = root / OpamRepositoryPathName.download_cache_d
 
 let pin_cache_dir =

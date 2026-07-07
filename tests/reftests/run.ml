@@ -643,6 +643,14 @@ let common_filters ?opam dir =
       repn xdigit 3 (Some 9);
     ]
   in
+  let extra_packages_dirs d =
+    seq [ str d; set "/\\" ],
+    Sed (d^"/");
+  in
+  let extra_standalone_file f =
+    seq [ char '.'; set "/\\"; str f ],
+    Sed ("./"^f);
+  in
   [
     seq [ bol;
           alt [ str "#=== ERROR";
@@ -664,6 +672,12 @@ let common_filters ?opam dir =
       str "opam-";
       rep1 (alt [xdigit; char '-'])],
     Sed "${OPAMTMP}";
+    (* We need this sed to ensure that the line containing 'packages' is
+       rewritten with the good dir sep replacements *)
+    extra_packages_dirs "packages";
+    extra_packages_dirs "pkg";
+    extra_packages_dirs "root-no-nv";
+    extra_standalone_file "repo";
     seq [
       str "state-";
       repn digit 14 (Some 14);

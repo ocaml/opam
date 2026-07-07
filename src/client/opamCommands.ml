@@ -2524,32 +2524,31 @@ let repository cli =
       in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
       OpamRepositoryState.with_ `Lock_write gt @@ fun rt ->
-      OpamFilename.with_tmp_dir @@ fun tmp_dir ->
+      OpamFilename.with_tmp_dir @@ fun inn ->
+      let repo_root =
+        OpamRepositoryState.get_repo_root rt
+          (OpamRepositoryState.get_repo rt name)
+      in
+      if not (OpamRepositoryRoot.exists repo_root) then
+        OpamConsole.error_and_exit `Internal_error
+          "Repository not found, consider running 'opam update %s' \
+           to retrieve a consistent state."
+          (OpamRepositoryName.to_string name);
       let rt0 = rt in
-      let backup =
-        let tar = OpamRepositoryPath.tar gt.root name in
-        if OpamFilename.exists tar then
-          (let target = OpamFilename.create tmp_dir (OpamFilename.basename tar) in
-           OpamFilename.copy ~src:tar ~dst:target;
-           fun () -> OpamFilename.copy ~src:target ~dst:tar)
-        else
-          (let dir = OpamRepositoryRoot.Dir.Path.root gt.root name in
-           if not (OpamRepositoryRoot.Dir.exists dir) then
-             OpamConsole.error_and_exit `Internal_error
-               "Repository not found, consider running 'opam update %s' \
-                to retrieve a consistent state."
-               (OpamRepositoryName.to_string name);
-           let target = OpamRepositoryRoot.Dir.backup ~inn:tmp_dir dir in
-           OpamRepositoryRoot.Dir.copy ~src:dir ~dst:target;
-           fun () -> OpamRepositoryRoot.Dir.copy ~src:target ~dst:dir)
+      let backup = OpamRepositoryRoot.backup ~inn repo_root in
+      OpamRepositoryRoot.copy ~src:repo_root ~dst:backup;
+      let restore_backup () =
+        OpamRepositoryRoot.copy ~src:backup ~dst:repo_root
       in
       let rt = OpamRepositoryCommand.set_url rt name url trust_anchors in
       let failed, rt =
         OpamRepositoryCommand.update_with_auto_upgrade rt [name]
       in
       OpamRepositoryState.drop rt;
-      if failed <> [] then
-        (let repo = OpamRepositoryState.get_repo rt0 name in
+      (match failed with
+       | [] -> `Ok ()
+       | _ ->
+         let repo = OpamRepositoryState.get_repo rt0 name in
          OpamConsole.error
            "Fetching repository %s with %s fails, reverting to %s"
            (OpamRepositoryName.to_string name)
@@ -2558,10 +2557,9 @@ let repository cli =
          let rt =
            OpamRepositoryCommand.set_url rt0 name repo.repo_url repo.repo_trust
          in
-         backup ();
+         restore_backup ();
          OpamRepositoryState.drop rt;
-         OpamStd.Sys.exit_because `Sync_error);
-      `Ok ()
+         OpamStd.Sys.exit_because `Sync_error)
     | Some `set_repos, names ->
       let names = List.map OpamRepositoryName.of_string names in
       OpamGlobalState.with_ `Lock_none @@ fun gt ->
@@ -2740,7 +2738,7 @@ let switch cli =
         lists installed switches, with one switch argument, defaults to \
         $(b,set).";
     `P (Printf.sprintf
-         "Switch handles $(i,SWITCH) can be either a plain name, for switches \
+       "Switch handles $(i,SWITCH) can be either a plain name, for switches \
          that will be held inside $(i,~%s.opam), or a directory name, which in \
          that case is the directory where the switch prefix will be installed, as \
          %s. Opam will automatically select a switch by that name found in the \
@@ -3999,19 +3997,26 @@ let lint cli =
              | None -> raise Not_found
            else
              let opam = OpamSwitchState.opam st nv in
-             match OpamPinned.orig_opam_file st (OpamPackage.name nv) opam with
+             match OpamPinned.orig_opam_file st name opam with
              | None -> raise Not_found
              | Some file ->
-               let label =
-                 let reponame =
+               let repo, label =
+                 let repo, reponame =
                    match OpamFile.OPAM.metadata_dir opam with
-                   | None | Some (None, _) -> "repo"
-                   | Some (Some repo, _) -> OpamRepositoryName.to_string repo
+                   | None | Some (None, _) -> None, "repo"
+                   | Some (Some repo, _) ->
+                     Some repo,
+                     OpamRepositoryName.to_string repo
                  in
+                 repo,
                  Printf.sprintf "<%s>/%s"
                    reponame (OpamPackage.to_string nv)
                in
-               [`pkg (file, label)]
+               match repo with
+               | None -> [`pkg (file, label)]
+               | Some repo ->
+                 let repo_root = OpamRepositoryState.get_root st.switch_repos repo in
+                 [`repopkg (repo_root, file, label)]
          with Not_found ->
            OpamConsole.error_and_exit `Not_found "No opam file found for %s%s"
              (OpamPackage.Name.to_string (fst pkg))
@@ -4044,6 +4049,10 @@ let lint cli =
               | `pkg (file, label) ->
                 OpamFileTools.lint_file ~check_upstream ~handle_dirname:false
                   file,
+                Some label
+              | `repopkg (repo_root, file, label) ->
+                OpamFileTools.lint_repo_package repo_root ~check_upstream
+                  ~handle_dirname:false file,
                 Some label
               | `stdin ->
                 OpamFileTools.lint_channel ~check_upstream ~handle_dirname:false
@@ -4129,9 +4138,9 @@ let clean cli =
   let download_cache =
     mk_flag ~cli cli_original ["c"; "download-cache"]
       (Printf.sprintf
-        "Clear the cache of downloaded files (\\$OPAMROOT%sdownload-cache), as \
-         well as the obsolete \\$OPAMROOT%sarchives, if that exists."
-        OpamArg.dir_sep OpamArg.dir_sep)
+       "Clear the cache of downloaded files (\\$OPAMROOT%sdownload-cache), as \
+        well as the obsolete \\$OPAMROOT%sarchives, if that exists."
+       OpamArg.dir_sep OpamArg.dir_sep)
   in
   let repos =
     mk_flag ~cli cli_original ["unused-repositories"]
@@ -4364,7 +4373,8 @@ let clean cli =
            rmdir
              (OpamRepositoryRoot.Dir.to_dir
                 (OpamRepositoryRoot.Dir.Path.root root r));
-           rm (OpamRepositoryPath.tar root r))
+           rm (OpamRepositoryRoot.Tgz.to_file
+                 (OpamRepositoryRoot.Tgz.Path.root root r)))
          unused_repos;
        let repos_config =
          OpamRepositoryName.Map.filter

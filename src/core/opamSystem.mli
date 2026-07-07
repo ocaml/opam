@@ -171,8 +171,10 @@ val files_with_links: string -> string list
 
 (** [rec_files dir] returns the list of all files in [dir],
     recursively.
-    Links behaving like directory are crossed. *)
-val rec_files: string -> string list
+    Links behaving like directory are crossed.
+    Exclude VCS directories from selection if [except_vcs] is set to true. Keep
+    them otherwise. *)
+val rec_files: ?except_vcs:bool -> string -> string list
 
 (** Return the list of files in the current directory. *)
 val files: string -> string list
@@ -193,8 +195,10 @@ val dirs: string -> string list
 val dir_is_empty: string -> bool option
 
 (** [directories_with_links dir] returns the directories in the directory [dir].
-    Links pointing to directory are also returned. *)
-val directories_with_links: string -> string list
+    Links pointing to directory are also returned.
+    Exclude VCS directories from selection if [except_vcs] is set to true. Keep
+    them otherwise. *)
+val directories_with_links: ?except_vcs:bool -> string -> string list
 
 (** Make a comman suitable for OpamProcess.Job. if [verbose], is set,
     command and output will be displayed (at command end for the

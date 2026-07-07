@@ -103,11 +103,19 @@ let get_diff repo1 repo2 =
            (OpamFilename.Base.to_string (OpamRepositoryRoot.basename repo1))
            (OpamFilename.Base.to_string (OpamRepositoryRoot.basename repo2))
        else
-         Format.fprintf fmt "%s vs %s"
+         Format.fprintf fmt "%s %s vs %s %s"
+           (OpamRepositoryRoot.string_of_backend repo1)
            (OpamRepositoryRoot.to_string repo1)
+           (OpamRepositoryRoot.string_of_backend repo2)
            (OpamRepositoryRoot.to_string repo2))
     ();
   let get_contents =
+    let get_tgz_contents tgz =
+      OpamRepositoryRoot.Tgz.fold (fun acc filename content ->
+          OpamStd.String.Map.add
+            (OpamFilename.Unix.to_string filename) content acc)
+        OpamStd.String.Map.empty tgz
+    in
     let read_dir_contents dir =
       let fail s = failwith (s ^ " are unsupported") in
       (* Recursively read directory contents into a string map.
@@ -140,6 +148,8 @@ let get_diff repo1 repo2 =
     function
     | OpamRepositoryRoot.Dir dir ->
       read_dir_contents (OpamRepositoryRoot.Dir.to_string dir)
+    | OpamRepositoryRoot.Tgz tgz ->
+      get_tgz_contents tgz
   in
   let contents1 = get_contents repo1 in
   let contents2 = get_contents repo2 in

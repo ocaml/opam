@@ -54,6 +54,10 @@ val load_opams_from_dir:
   repository_name -> OpamRepositoryRoot.Dir.t ->
   OpamFile.OPAM.t OpamPackage.Map.t
 
+val load_opams_from_tgz:
+  repository_name -> OpamRepositoryRoot.Tgz.t ->
+  OpamFile.OPAM.t OpamPackage.Map.t
+
 (** [load_opams_from_diff repo diffs rt] incrementally
     updates package definitions by processing only changed files.
 
@@ -69,6 +73,9 @@ val load_opams_from_diff:
   repository -> Patch.operation list -> 'a repos_state
   -> OpamFile.OPAM.t package_map
 
+val load_opams:
+  repository_name -> OpamRepositoryRoot.t -> OpamFile.OPAM.t package_map
+
 (** Load all the metadata within the local mirror of the given repository,
     without cache *)
 val load_repo:
@@ -82,7 +89,7 @@ val syspkgs_available:
   ?env:gt_variables -> repo_syspkgs_available
   -> OpamSysPkg.availability_mode option
 
-(** Get the (lazily extracted) repository root for the given repository *)
+(** Get the repository root for the given repository *)
 val get_root: 'a repos_state -> repository_name -> OpamRepositoryRoot.t
 
 (** Same as {!get_root}, but with a repository rather than just a name as argument *)
@@ -107,8 +114,8 @@ val get_repo_files:
  *   'a global_state -> repository ->
  *   (OpamFilename.Dir.t -> 'b OpamProcess.job) -> 'b OpamProcess.job *)
 
-(** Releases any locks on the given repos_state, and cleans the tmp extracted
-    tree if any unless [cleanup=false] *)
+(** Releases any locks on the given repos_state.
+    [cleanup] is a no-op *)
 val unlock: ?cleanup:bool -> 'a repos_state -> unlocked repos_state
 
 (** Releases any locks on the given repos_state and then ignores it.
@@ -120,11 +127,7 @@ val unlock: ?cleanup:bool -> 'a repos_state -> unlocked repos_state
 *)
 val drop: ?cleanup:bool -> 'a repos_state -> unit
 
-(** Cleanup before removing the repository from temporary table *)
-val remove_from_repos_tmp: 'a repos_state -> repository_name -> unit
-
-(** Clears tmp files corresponding to a repo state (uncompressed repository
-    contents) *)
+(** Clears tmp files corresponding to a repo state *)
 val cleanup: 'a repos_state -> unit
 
 (** Calls the provided function, ensuring a temporary write lock on the given

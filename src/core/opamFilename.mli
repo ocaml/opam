@@ -192,8 +192,10 @@ val add_extension: t -> string -> t
 (** Remove the file extension *)
 val chop_extension: t -> t
 
-(** List all the filenames, recursively *)
-val rec_files: Dir.t -> t list
+(** List all the filenames, recursively.
+    Exclude VCS directories from selection if [except_vcs] is set to true. Keep
+    them otherwise. *)
+val rec_files: ?except_vcs:bool -> Dir.t -> t list
 
 (** List all the filename. Do not recurse. *)
 val files: Dir.t -> t list
@@ -389,17 +391,6 @@ module Unix : sig
   (** [of_string] will translate filesystem dir sep to slashes '/'. *)
   include OpamStd.ABSTRACT
 
-  module Dir : sig
-    (** [of_string] will translate filesystem dir sep to slashes '/'. *)
-    include OpamStd.ABSTRACT
-
-    (** Convert dirname to a raw dirname.
-        Translates filesystem dir sep to slashes '/'. *)
-    val of_dir : Dir.t -> t
-
-    val to_dir : t -> Dir.t
-  end
-
   module Base : sig
     (** [of_string] will translate filesystem dir sep to slashes '/'. *)
     include OpamStd.ABSTRACT
@@ -411,6 +402,22 @@ module Unix : sig
     val to_base : t -> Base.t
   end
 
+  module Dir : sig
+    (** [of_string] will translate filesystem dir sep to slashes '/'. *)
+    include OpamStd.ABSTRACT
+
+    (** Convert dirname to a raw dirname.
+        Translates filesystem dir sep to slashes '/'. *)
+    val of_dir : Dir.t -> t
+
+    (** Convert raw dirname to a [dirname].
+        Translates slashes '/' to filesystem dir sep. *)
+    val to_dir : t -> Dir.t
+
+    val dirname : t -> t
+    val basename : t -> Base.t
+  end
+
   module Op : sig
     val (/): Dir.t -> string -> Dir.t
     val (//): Dir.t -> string -> t
@@ -420,9 +427,29 @@ module Unix : sig
       Translates filesystem dir sep to slashes '/'. *)
   val of_filename : filename -> t
 
+  (** Convert raw filename to a [filename].
+      Translates slashes '/' to filesystem dir sep. *)
   val to_filename : t -> filename
 
   (** Check whether a filename starts by a given Dir.t *)
   val starts_with: Dir.t -> t -> bool
+
+  (** Remove a prefix from a file name *)
+  val remove_prefix: Dir.t -> t -> string
+
+  (** Return the base name *)
+  val basename: t -> Base.t
+
+  (** Return the directory name *)
+  val dirname: t -> Dir.t
+
+  (* [to_relative_canonical ~dir_sep filename] return [Ok canonical] where
+     [canonical] is the canonical form of [filename], using [dir_sep] as
+     separator.  If [filename] contains '..', is not relative, or resolve to a
+     '.', it error with [Error err] *)
+  val to_relative_canonical: t -> (t, string) result
+
+  (** Return the first element of the path, if not empty *)
+  val root_dir: t -> string option
 
 end

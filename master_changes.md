@@ -71,6 +71,7 @@ users)
 ## Repository
   * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
   * [BUG] Do not fail on directories named `opam` when scanning the `packages` directory of a repository during `opam repo add` or `opam init` (worked on subsequent `opam update`) [#6941 @kit-ty-kate @rjbou]
+  * Speedup repository operations on certain file-systems (e.g. NTFS on Windows or IO constrained machines) by changing its storage in the opam root from plain directory to archive, for HTTP repositories, or non-VCS one if `OPAMREPOSITORYTARRING` is enabled [#6625 @rjbou @kit-ty-kate @arozovyk - fix #5346 #5741 #5648 #5484 #5559 #3050 #6974]
 
 ## Lock
   * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
@@ -92,6 +93,7 @@ users)
   * Fix switch and repo format upgrade on Windows. A block occurred because the global lock fd was reopened instead of using the one already opened.  [#6839 @rjbou]
   * Add opam root format upgrade conditional mechanism for hard upgrades [#6949 @rjbou]
   * Stop the opam 1.2 to 2.0 repository upgrade process from downloading packages without checksums to add a non-trusted md5 [#6978 @kit-ty-kate]
+  * Add conditional upgrade to opam root 2.6. It is triggered by an already present repository archive (from `OPAMREPOSITORYTARRING` usage, or 2.1 opamroot) [#6625 @rjbou]
 
 ## Sandbox
   * Allow the macOS sandbox to write in the `/var/folders/` and `/var/db/mds/` directories as it is required by some of macOS core tools [#4797 @kit-ty-kate - fix #4389 #6460]
@@ -192,9 +194,15 @@ users)
   * Add a test showing the behaviour of `opam repo add` and `opam update` when faced with a repository containing an `opam` directory [#6995 @kit-ty-kate]
   * Add a tests for the several layouts of packages in a repository [#6941 @rjbou]
   * Add a test ensuring installing files through a .install file can't escape the opam switch (CVE-2026-57825) [#7005 @NathanReb]
+  * Add a `opam repo set-url` case in repository-http [#6625 @rjbou]
+  * Add in `repository-http` a test case for switching from directory to archive format, automatically [#6625 @rjbou]
+  * Add in `repository` test cases for switching automatically from directory to archive format & vice versa [#6625 @rjbou]
+  * Add in `repository` test cases for upgrade opam root from 2.5 with repo tarring or 2.1 to 2.6, with `OPAMREPOSITORYTARRING` enabled (trigger upgrade) [#6625 @rjbou]
+  * Add 2.6 root test cases in opamroot-versions [#6625 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
+  * Add to automatic path subsitutions lines that contains `packages` [#6625 @rjbou]
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
@@ -252,6 +260,14 @@ users)
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
   * `OpamRepositoryCommand.update_with_auto_upgrade`, `OpamUpdate.repository`: no longer call an external process to create an archive [#6945 @kit-ty-kate]
+  * `OpamTar`: add `patch` function to patch files in an tar gz archive [#6625 @rjbou]
+  * `OpamTar.create`: add `?flat` argument to do not integrate the target root directory in the archive [#6625 @rjbou]
+  * `OpamTar.create`: add `?except_vcs` argument exclude VCS files from archive creation [#6625 @rjbou]
+  * `OpamTar`: when an archive is opened, the first step is to check and normalise canonical paths (no `/../`, remove `./`, etc.) [#6625 @rjbou]
+  * `OpamRepositoryRoot`: add `remove_prefix` and `remove_prefix_dir` [#6625 @rjbou]
+  * `OpamRepositoryRoot`: add `read_file` that reads an `OpamFile.t` using its pp from the archive [#6625 @rjbou]
+  * `OpamRepositoryBackend.get_diff`: now computes the diff between two repository roots (dir, archive), instead of only dirs [#6625 @rjbou]
+  * `OpamRepositoryRoot`: add `Tgz` module for tar gz archive repository root support [#6625 @rjbou @kit-ty-kate]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -275,7 +291,10 @@ users)
   * `OpamRepositoryState`: add `syspkgs_available` that returns the stored depext availability status in repository state [#6489 @rjbou]
   * `OpamSysInteract`: add `available_packages_and_family` that returns availability status and the os family [#6489 @rjbou]
   * `OpamRepositoryState.load_opams_from_dir`: now sorts files and directories read from disk before processing them [#6941 @rjbou]
-
+  * `OpamFileTools`: add new `lint_repo_package` that lints a file from a repository root [#6625 @rjbou]
+  * `OpamRepositoryState`: add `load_opams_from_tgz` [#6625 @rjbou]
+  * `OpamRepositoryState`: add `load_opams` that operates from a repository root [#6625 @rjbou]
+  * `OpamStateTypes.repos_state`: remove `repos_tmp` field [#6625 @kit-ty-kate @rjbou]
 
 ## opam-solver
 
@@ -294,6 +313,9 @@ users)
   * `OpamRepositoryPath.{root,repo,packages_dir,packages,opam,files,descr,url}: have been moved to a new `OpamRepositoryPath.Make` functor [#6680 @rjbou @kit-ty-kate]
   * `OpamFilter.expand_interpolations_in_file`: changed argument type from `basename` to `filename` [#6910 @NathanReb]
   * `OpamFile.OPAM.print_errors`: now prints the repository if the informations is available [#6971 @rjbou]
+  * `OpamFile.*.read_from_string`: add optional `?loc` string argument to propagate location information when available (path on disk, archive, etc.), and add logging with level 3 that displays it [#6625 @rjbou]
+  * `OpamFile.*`: add `safe_read_from_string` [#6625 @rjbou]
+  * `OpamRepositoryPath.tar`: renamed to `repo_tarring`, deprecated, no longer used [#6625 @rjbou]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
@@ -320,8 +342,18 @@ users)
   * `OpamSystem.{command,commands,read_command_output}`: add a `?dir: dirname` optional arg to launch the command in a specific directory [#6910 @NathanReb]
   * `OpamFilename.Unix`: add `starts_with` [#6945 @rjbou]
   * `OpamCompat.Seq`: add `to_dispenser` [#6945 @kit-ty-kate]
-  * `OpamSystem.directories_with_links`, `OpamSystem.rec_files`, `OpamFilename.rec_files`: add optional `?except_vcs` that default to false to exclude VCS directories [#6945 @kit-ty-kate @rjbou]
+  * `OpamSystem.directories_with_links`, `OpamSystem.rec_files`, `OpamFilename.rec_files`: add optional `?except_vcs` that default to false to exclude VCS directories [#6625 @kit-ty-kate @rjbou]
   * `OpamFilename.make_tar_gz{_job}`: rename `make_tar_gz_job` into `make_tar_gz` as it no longer need an external process call [#6945 @kit-ty-kate]
   * `OpamFilename.{,dir_}starts_with`: Fix a bug where `foo/bar` would be considered a prefix of `foo/bar-baz` [#6953 @NathanReb - fix #6948]
   * `OpamFilename.{,dir_}starts_with`: `/` and `\` are now equivalent on Windows [#6953 @NathanReb]
   * `OpamFilename.starts_with`: `starts_with "a/b" "a/b"` no longer returns `true` [#6953 @NathanReb]
+  * `OpamSystem`: add `open_in` and `open_in_bin` that checks is the file is a directory and raise `Sys_error` in that case [#6941 @rjbou]
+  * `OpamFilename.{open_in,open_in_bin}`: now errors when the filename is a directory, in all platforms [#6941 @rjbou]
+  * `OpamFilename.Unix`: add `basename` and `dirname` [#6625 @rjbou]
+  * `OpamFilename.Unix.Dir`: add `basename` and `dirname` [#6625 @rjbou]
+  * `OpamFilename.Unix`: add `remove_prefix` [#6625 @rjbou]
+  * `OpamFilename.Unix`: add `to_relative_canonical` [#6625 @kit-ty-kate @rjbou]
+  * `OpamFilename.Unix`: add `root_dir` [#6625 @rjbou]
+  * `OpamFilename.Unix.{to_dir,to_filename}`: now translate `/` into filesystem directory separator [#6625 @rjbou]
+  * `OpamPatch.patch`: no longer patch a file on disk, but take as argument a filesystem abstraction `FS_ABSTR` that delivers the needed functions [#6625 @rjbou]
+  * `OpamPatch.parse_patch`: no longer take `~dir` the directory to translate the patch in as argument, it now takes `~translate` argument that is a string option (directory option), if we want to perform a translation in that directory [#6625 @rjbou]

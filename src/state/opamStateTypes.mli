@@ -129,9 +129,6 @@ type +'lock repos_state = {
   (** All available system packages required by the repo's packages.
       [None] when depext system is disabled or unavailable. *)
 
-  repos_tmp: (OpamRepositoryName.t, OpamRepositoryRoot.Dir.t Lazy.t) Hashtbl.t;
-  (** Temporary directories containing the uncompressed contents of the
-      repositories *)
 } constraint 'lock = 'lock lock
 
 

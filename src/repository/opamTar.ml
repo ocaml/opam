@@ -64,6 +64,16 @@ let run archive =
   in run
 
 let fold_reg_files_aux archive f acc fd =
+  let f acc filename content =
+    let filename =
+      match OpamFilename.Unix.to_relative_canonical filename with
+      | Ok filename -> filename
+      | Error err ->
+        raise_error archive "Path '%s' not allowed: %s"
+                    (OpamFilename.Unix.to_string filename) err
+    in
+    f acc filename content
+  in
   let go ?global:_ hdr acc =
     match hdr.Tar.Header.link_indicator with
     | Normal ->
@@ -186,7 +196,7 @@ module Inplace = struct
 
 end
 
-let create tar dir =
+let create ?(flat=false) ?(except_vcs=false) tar dir =
   log "creating archive %s from %s"
     (OpamFilename.to_string tar)
     (OpamFilename.Dir.to_string dir);
@@ -195,12 +205,53 @@ let create tar dir =
       [Unix.O_CREAT; Unix.O_TRUNC; Unix.O_WRONLY] 0o640
   in
   Fun.protect ~finally:(fun () -> Unix.close fd) @@ fun () ->
-  let files = OpamFilename.rec_files dir in
+  let files = OpamFilename.rec_files ~except_vcs dir in
   let content =
-    let remove_prefix = OpamFilename.remove_prefix (OpamFilename.dirname_dir dir) in
+    let remove_prefix =
+      let dir =
+        if flat then dir else OpamFilename.dirname_dir dir
+      in
+      OpamFilename.remove_prefix dir
+    in
     List.fold_left (fun map f ->
         let k = OpamFilename.Unix.of_string (remove_prefix f) in
         Inplace.Map.add k (OpamFilename.read f) map)
       Inplace.Map.empty files
   in
   Inplace.write { archive = tar; fd; content }
+
+module PatchFS = struct
+  type root = OpamFilename.t
+  module Tar = Inplace
+  type file = OpamFilename.Unix.t
+  type target = Tar.t
+  let root_label = "archive"
+  let translate_patch = false
+  let root_to_string = OpamFilename.to_string
+  let file_to_string = OpamFilename.Unix.to_string
+  let equal_file = OpamFilename.Unix.equal
+  let get_path ~fail _target file =
+  let file = OpamFilename.Unix.of_string file in
+    match OpamFilename.Unix.to_relative_canonical file with
+    | Ok file -> file
+    | Error _ -> fail (); file
+  let on_unclean_accept _ _ = ()
+  let on_unclean_reject _ _ _ = ()
+  let write = Tar.add
+  let exists = Tar.exists
+  let exists_dir _file _target = false
+  let read = Tar.read
+  let remove = Tar.remove
+  let remove_dir file target =
+    Tar.remove_dir (OpamFilename.Unix.dirname file) target
+  let same_dirname ~src ~dst =
+    OpamFilename.Unix.Dir.equal
+      (OpamFilename.Unix.dirname src)
+      (OpamFilename.Unix.dirname dst)
+  let mv = Tar.mv
+  let open_ = Tar.with_open_out
+  let save = Tar.write
+end
+
+let patch ~allow_unclean patch_source tar =
+  OpamPatch.patch (module PatchFS) ~allow_unclean patch_source tar

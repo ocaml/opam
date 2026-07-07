@@ -52,13 +52,52 @@ module Dir : sig
     with type repo_root = t
      and type repo_dirname = dirname
      and type 'a typed_file = 'a OpamFile.t
+
 end
 
-val make_tar_gz : filename -> Dir.t -> unit
-val extract_in_job : filename -> Dir.t -> exn option OpamProcess.job
+module Tgz : sig
+  type t
+
+  val of_file : filename -> t
+  val to_file : t -> filename
+  val to_string : t -> string
+
+  val quarantine : t -> t
+  val backup : inn:dirname -> t -> t
+
+  val exists : t -> bool
+  val remove : t -> unit
+  val extract_in : t -> dirname -> unit
+  val download_as :
+    ?quiet:bool ->
+    ?validate:bool ->
+    overwrite:bool ->
+    ?compress:bool ->
+    ?checksum:OpamHash.t ->
+    OpamUrl.t -> t -> unit OpamProcess.job
+  val copy : src:t -> dst:t -> unit
+  val move : src:t -> dst:t -> unit
+
+  val filter_files:
+    (OpamTar.archived_file -> bool) -> t ->
+    (OpamTar.archived_file * OpamTar.archived_file_content) list
+  val fold:
+    ('a -> OpamTar.archived_file -> OpamTar.archived_file_content -> 'a) ->
+    'a -> t -> 'a
+
+  (* Repository paths *)
+  module Path : OpamRepositoryPath.PATH
+    with type repo_root = t
+     and type repo_dirname = unix_dirname
+     and type 'a typed_file = 'a OpamFile.t
+end
+
+val make_tar_gz : Tgz.t -> Dir.t -> unit
+val extract_in_job : Tgz.t -> Dir.t -> exn option OpamProcess.job
 
 type t =
   | Dir of Dir.t
+  | Tgz of Tgz.t
 
 (** [quarantine repo_root] returns a temporary repository root dedicated
     to [repo_root]. the returned repository is not created on disk and
@@ -76,12 +115,31 @@ val dirname : t -> dirname
 val basename : t -> basename
 val to_string : t -> string
 
+val remove_prefix: t -> filename -> unix_filename
+val remove_prefix_dir: t -> dirname -> unix_dirname
+
+val string_of_backend: t -> string
+
 val copy : src:t -> dst:t -> unit
 val move : src:t -> dst:t -> unit
 
 val exists : t -> bool
 val is_symlink : t -> bool
 
+(* [read_file IO_FILE ?safe t ?filename content] reads [content] using
+   [IO_FILE.read_from_string]. Is [safe] is true, uses
+   [IO_FILE.safe_read_from_string]. *)
+val read_file:
+  (module OpamFile.IO_FILE with type t = 'a) ->
+  ?safe:bool -> t -> ?filename:'a OpamFile.t -> string -> 'a
+
+(* [patch ~allow_unclean patch_source arch] applies a patch to an archive
+   [arch]. The patch source can be either [`Patch_file filename] for a patch
+   file, or [`Patch_diffs diffs] for a list of file-level changes.
+
+   @param allow_unclean decides if applying a patch on a directory which
+   differs slightly from the one described in the patch file is allowed.
+   Allowing unclean applications imitates the default behaviour of GNU Patch. *)
 val patch :
   allow_unclean:bool ->
   [`Patch_file of filename | `Patch_diffs of Patch.t list ] -> t ->
@@ -90,3 +148,13 @@ val patch :
 (** Returns a pair [(exists, f)] where [exists] tells whether the
     [repo] file exists in the repository and [f] reads it *)
 val delayed_read_repo : t -> bool * (unit -> OpamFile.Repo.t)
+
+(** Remove [repo_name] repository roots, directory and archive, if present *)
+val remove_both : dirname -> repository_name -> unit
+
+(** Applies the function in the repository root directory. If repository root
+    is an archive, it uncompress it, applies the function and update archive
+    with the changed directory. *)
+val on_dir: (dirname -> 'a) -> t -> 'a
+
+val root_exists : dirname -> repository_name -> bool
