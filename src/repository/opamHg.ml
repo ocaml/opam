@@ -32,6 +32,12 @@ module VCS = struct
     OpamSystem.raise_on_process_error r;
     Done ()
 
+  let clone ?full_fetch:_ repo_root url =
+    OpamFilename.mkdir repo_root;
+    hg repo_root [ "clone"; OpamUrl.base_url url; "." ] @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    Done ()
+
   let mark_from_url url =
     match url.OpamUrl.hash with
     | None -> mark_prefix

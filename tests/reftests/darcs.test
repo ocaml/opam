@@ -48,25 +48,19 @@ The following actions will be performed:
 -> installed darkdore.3
 Done.
 ### opam source -vv darkdore | sed-cmd darcs | grep '^\+ darcs'
-+ darcs "init" (CWD=${BASEDIR}/darkdore.3)
-+ darcs "get" "${BASEDIR}/darkdev" "--repodir" "${OPAMTMP}/repo" "--quiet" "--lazy" (CWD=${BASEDIR}/darkdore.3)
-+ darcs "tag" "opam-remote-tag" "-A" "opam" (CWD=${BASEDIR}/darkdore.3)
-+ darcs "record" "-l" "--boring" "--all" "-m" "opam-revert-laststate" "-A" "opam" (CWD=${BASEDIR}/darkdore.3)
-+ darcs "tag" "opam-local-tag" "-A" "opam" (CWD=${BASEDIR}/darkdore.3)
-+ darcs "obliterate" "--all" "-t" "opam-local-tag" (CWD=${BASEDIR}/darkdore.3)
-+ darcs "obliterate" "--all" "-p" "opam-revert-laststate" (CWD=${BASEDIR}/darkdore.3)
++ darcs "clone" "${BASEDIR}/darkdev" "--repodir" "${OPAMTMP}/repo" "--quiet" "--lazy" (CWD=${OPAMTMP})
 ### find darkdore.3 | grep -v '_darcs/' | unordered
 darkdore.3
 darkdore.3/opam
+darkdore.3/root.ml
 darkdore.3/_darcs
+darkdore.3/src
+darkdore.3/src/src.ml
 ### opam source -vv --dev darkdore | sed-cmd darcs | grep '^\+ darcs'
-+ darcs "init" (CWD=${BASEDIR}/darkdore)
-+ darcs "get" "${BASEDIR}/darkdev" "--repodir" "${OPAMTMP}/repo" "--quiet" "--lazy" (CWD=${BASEDIR}/darkdore)
-+ darcs "tag" "opam-remote-tag" "-A" "opam" (CWD=${BASEDIR}/darkdore)
-+ darcs "record" "-l" "--boring" "--all" "-m" "opam-revert-laststate" "-A" "opam" (CWD=${BASEDIR}/darkdore)
-+ darcs "tag" "opam-local-tag" "-A" "opam" (CWD=${BASEDIR}/darkdore)
-+ darcs "obliterate" "--all" "-t" "opam-local-tag" (CWD=${BASEDIR}/darkdore)
-+ darcs "obliterate" "--all" "-p" "opam-revert-laststate" (CWD=${BASEDIR}/darkdore)
++ darcs "clone" "${BASEDIR}/darkdev" "--repodir" "${OPAMTMP}/repo" "--quiet" "--lazy" (CWD=${OPAMTMP})
 ### find darkdore | grep -v '_darcs/' | unordered
 darkdore
+darkdore/root.ml
 darkdore/_darcs
+darkdore/src
+darkdore/src/src.ml

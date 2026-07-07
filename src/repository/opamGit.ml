@@ -77,6 +77,27 @@ module VCS : OpamVCS.VCS = struct
     | None -> Done ()
     | Some (_,err) -> OpamSystem.process_error err
 
+  let clone ?(full_fetch = true) repo_root url =
+    OpamFilename.mkdir repo_root;
+    if full_fetch then
+      git repo_root [ "clone"; OpamUrl.base_url url; "." ]
+      @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      git repo_root
+        [ "submodule"; "update"; "--init"; "--recursive" ]
+      @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      Done ()
+    else
+      git repo_root [ "clone"; OpamUrl.base_url url; "."; "--depth"; "1" ]
+      @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      git repo_root
+        [ "submodule"; "update"; "--init"; "--recursive"; "--depth"; "1" ]
+      @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      Done ()
+
   let remote_ref url =
     match url.OpamUrl.hash with
     | Some h -> "refs/remotes/opam-ref-"^h

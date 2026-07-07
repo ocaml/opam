@@ -73,6 +73,7 @@ users)
 ## Source
   * When fetching a git repository (i.e. `--dev-repo` or a package with git url), the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
   * `opam source` no longer sets opam-specific git configuration options [#6955 @sporkl]
+  * `opam source` now uses VCS `clone` when possible [#6955 @sporkl]
 
 ## Lint
 
@@ -310,6 +311,7 @@ users)
   * `OpamRepositoryBackend.get_diff`: now computes the diff between two repository roots (dir, archive), instead of only dirs [#6625 @rjbou]
   * `OpamRepositoryRoot`: add `Tgz` module for tar gz archive repository root support [#6625 @rjbou @kit-ty-kate]
   * `OpamVCS.init`: add an optional `?for_source` argument [#6955 @sporkl]
+  * `OpamVCS.clone`: add new VCS `clone` function [#6955 @sporkl]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]

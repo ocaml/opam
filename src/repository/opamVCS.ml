@@ -16,6 +16,7 @@ module type VCS = sig
   val name: OpamUrl.backend
   val exists: dirname -> bool
   val init: ?for_source:bool -> dirname -> url -> unit OpamProcess.job
+  val clone: ?full_fetch:bool -> dirname -> url -> unit OpamProcess.job
   val fetch:
     ?full_fetch:bool -> ?cache_dir:dirname -> ?subpath:subpath -> dirname -> url ->
     unit OpamProcess.job
@@ -94,7 +95,8 @@ module Make (VCS: VCS) = struct
     | OpamRepositoryRoot.Tgz _ ->
       assert false (* VCS repository are always repositories *)
 
-  let pull_url ?for_source ?full_fetch ?cache_dir ?subpath dirname checksum url =
+  let pull_url ?(for_source = false)  ?full_fetch ?cache_dir ?subpath
+    dirname checksum url =
     if checksum <> None then invalid_arg "VC pull_url doesn't allow checksums";
     OpamProcess.Job.catch
       (fun e ->
@@ -112,9 +114,12 @@ module Make (VCS: VCS) = struct
       | false ->
         VCS.reset_tree dirname url @@+ fun () ->
         Done (Result None)
+    else if for_source then
+      VCS.clone ?full_fetch dirname url @@+ fun() ->
+      Done (Result None)
     else
       (OpamFilename.mkdir dirname;
-       VCS.init ?for_source dirname url @@+ fun () ->
+       VCS.init ~for_source dirname url @@+ fun () ->
        VCS.fetch ?full_fetch ?cache_dir ?subpath dirname url @@+ fun () ->
        VCS.reset_tree dirname url @@+ fun () ->
        Done (Result None))

@@ -43,10 +43,7 @@ The following actions will be performed:
 -> installed hugdore.3
 Done.
 ### opam source -vv hugdore | sed-cmd hg | grep '^\+ hg'
-+ hg "init" (CWD=${BASEDIR}/hugdore.3)
-+ hg "pull" "--rev" "default" "file://${BASEDIR}/hugdev" (CWD=${BASEDIR}/hugdore.3)
-+ hg "bookmark" "--force" "--rev" "default" "opam-mark" (CWD=${BASEDIR}/hugdore.3)
-+ hg "update" "--clean" "--rev" "opam-mark" (CWD=${BASEDIR}/hugdore.3)
++ hg "clone" "file://${BASEDIR}/hugdev" "." (CWD=${BASEDIR}/hugdore.3)
 ### find hugdore.3 | grep -v '.hg/' | unordered
 hugdore.3
 hugdore.3/opam
@@ -55,10 +52,7 @@ hugdore.3/.hg
 hugdore.3/src
 hugdore.3/src/src.ml
 ### opam source -vv --dev hugdore | sed-cmd hg | grep '^\+ hg'
-+ hg "init" (CWD=${BASEDIR}/hugdore)
-+ hg "pull" "--rev" "default" "file://${BASEDIR}/hugdev" (CWD=${BASEDIR}/hugdore)
-+ hg "bookmark" "--force" "--rev" "default" "opam-mark" (CWD=${BASEDIR}/hugdore)
-+ hg "update" "--clean" "--rev" "opam-mark" (CWD=${BASEDIR}/hugdore)
++ hg "clone" "file://${BASEDIR}/hugdev" "." (CWD=${BASEDIR}/hugdore)
 ### find hugdore | grep -v '.hg/' | unordered
 hugdore
 hugdore/root.ml
