@@ -92,7 +92,7 @@ if "%1" equ "x86_64-pc-cygwin" (
 
 :: libicu-devel is needed until an alternative to the uconv call in MungeSymlinks
 :: is found
-set CYGWIN_PACKAGES=make,patch,curl,diffutils,tar,unzip,git,gcc-g++,libicu-devel%CYGWIN_PACKAGES%
+set CYGWIN_PACKAGES=make,patch,curl,diffutils,tar,unzip,git,gcc-g++=13.4.0-1,libicu-devel%CYGWIN_PACKAGES%
 :: xxd is needed for reftests
 set CYGWIN_PACKAGES=xxd,%CYGWIN_PACKAGES%
 
