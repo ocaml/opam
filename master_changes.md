@@ -168,6 +168,7 @@ users)
   * Add the `lib-tests` target to the main Makefile [#6928 @kit-ty-kate]
   * Add `opamUnit` as a basic unit test framework [#6953 @NathanReb]
   * Add unit tests for `OpamFilename.starts_with` and `dir_starts_with` in `tests/lib/core` [#6953 @NathanReb]
+  * Add unit test for `OpamSystem.real_path` [#7011 @rjbou]
 
 ## Benchmarks
   * Add an even larger real-world diff to benchmark `opam update` [#6567 @kit-ty-kate]
