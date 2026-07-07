@@ -101,6 +101,7 @@ users)
 ## Test
   * Add `opamUnit` as a basic unit test framework [#6953 @NathanReb]
   * Add unit tests for `OpamFilename.starts_with` and `dir_starts_with` in `tests/lib/core` [#6953 @NathanReb]
+  * Add unit test for `OpamSystem.real_path` [#7011 @rjbou]
 
 ## Benchmarks
 
