@@ -358,3 +358,4 @@ users)
   * `OpamFilename.Unix.{to_dir,to_filename}`: now translate `/` into filesystem directory separator [#6625 @rjbou]
   * `OpamPatch.patch`: no longer patch a file on disk, but take as argument a filesystem abstraction `FS_ABSTR` that delivers the needed functions [#6625 @rjbou]
   * `OpamPatch.parse_patch`: no longer take `~dir` the directory to translate the patch in as argument, it now takes `~translate` argument that is a string option (directory option), if we want to perform a translation in that directory [#6625 @rjbou]
+  * `OpamSystem.real_path`: fix a bug where paths after a non existent directory where not resolve [#7011 @kit-ty-kate - fix #7010]
