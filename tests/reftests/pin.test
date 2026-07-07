@@ -1,4 +1,6 @@
 N0REP0
+### http-server
+HTTP SERVER launched
 ### OPAMYES=1
 ### <add-pin.sh>
 nv=$1
@@ -200,6 +202,38 @@ OPAM/targets/lib/nip-path3/nip-path3.ved.t
 OPAM/targets/lib/nip-v/nip-v.2.t
 OPAM/targets/lib/nip2/nip2.ved.t
 OPAM/targets/lib/no-url/no-url.ved.t
+### : pin <url to archive>
+### <http-archive/file>
+hi, i'm a file, i exist
+### <http-archive/opam>
+opam-version: "2.0"
+name: "http-archive-test"
+build: ["cat" "file"]
+### tar czf http-archive.tar.gz http-archive
+### opam pin add http://localhost:$HTTPSERVERPORT/http-archive.tar.gz | "${HTTPSERVERPORT}" -> "port"
+[NOTE] Package http-archive-test does not exist in opam repositories registered in the current switch.
+http-archive-test is now pinned to http://localhost:port/http-archive.tar.gz (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install http-archive-test dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved http-archive-test.dev  (http://localhost:port/http-archive.tar.gz)
+[ERROR] The compilation of http-archive-test.dev failed at "cat file".
+
+##% output ###
+# cat: file: No such file or directory
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build http-archive-test dev
++- 
+- No changes have been performed
+[NOTE] Pinning command successful, but your installed packages may be out of sync.
+# Return code 31 #
 ### :::::::::::::::::::::::
 ### :II: Pin kinds
 ### :::::::::::::::::::::::
@@ -1675,3 +1709,4 @@ pinned-pkg is now pinned to git+file://${BASEDIR}/no-source-dir#master (version 
 ### rm -r OPAM/no-source-dir/.opam-switch/sources/pinned-pkg
 ### opam pin
 pinned-pkg.dev  (uninstalled)  git  git+file://${BASEDIR}/no-source-dir#master  (error while fetching current revision)
+[[[Killing micro_httpd]]]
