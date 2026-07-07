@@ -1,0 +1,67 @@
+N0REP0
+### <hugdev/src/src.ml>
+print_endline "I am a source code"
+### <hugdev/root.ml>
+print_endline "I am root"
+### tar czf origin.tgz hugdev
+### hg --cwd ./hugdev init
+### <hugdev/.hg/hgrc>
+[ui]
+username = test
+### hg --cwd ./hugdev add
+adding root.ml
+adding src/src.ml
+### hg --cwd ./hugdev commit -m "init"
+### <pkg:hugdore.3>
+opam-version: "2.0"
+### <mkurl.sh>
+p=hugdore.3
+arch=origin
+file="REPO/packages/${p%.*}/$p/opam"
+MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "$file" << EOF
+url {
+  hg: "$basedir/hugdev"
+}
+dev-repo: "hg+file://${basedir}/hugdev"
+EOF
+### sh mkurl.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create phantom --empty
+### opam install hugdore
+The following actions will be performed:
+=== install 1 package
+  - install hugdore 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved hugdore.3  (hg+file://${BASEDIR}/hugdev)
+-> installed hugdore.3
+Done.
+### opam source -vv hugdore | sed-cmd hg | grep '^\+ hg'
++ hg "init" (CWD=${BASEDIR}/hugdore.3)
++ hg "pull" "--rev" "default" "file://${BASEDIR}/hugdev" (CWD=${BASEDIR}/hugdore.3)
++ hg "bookmark" "--force" "--rev" "default" "opam-mark" (CWD=${BASEDIR}/hugdore.3)
++ hg "update" "--clean" "--rev" "opam-mark" (CWD=${BASEDIR}/hugdore.3)
+### find hugdore.3 | grep -v '.hg/' | unordered
+hugdore.3
+hugdore.3/opam
+hugdore.3/root.ml
+hugdore.3/.hg
+hugdore.3/src
+hugdore.3/src/src.ml
+### opam source -vv --dev hugdore | sed-cmd hg | grep '^\+ hg'
++ hg "init" (CWD=${BASEDIR}/hugdore)
++ hg "pull" "--rev" "default" "file://${BASEDIR}/hugdev" (CWD=${BASEDIR}/hugdore)
++ hg "bookmark" "--force" "--rev" "default" "opam-mark" (CWD=${BASEDIR}/hugdore)
++ hg "update" "--clean" "--rev" "opam-mark" (CWD=${BASEDIR}/hugdore)
+### find hugdore | grep -v '.hg/' | unordered
+hugdore
+hugdore/root.ml
+hugdore/.hg
+hugdore/src
+hugdore/src/src.ml
