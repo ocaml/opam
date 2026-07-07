@@ -25,6 +25,7 @@ let preprocess_dot_install_t st nv build_dir =
   if not (OpamFilename.exists_dir build_dir) then [], None else
   let root = st.switch_global.root in
   let switch_prefix = OpamPath.Switch.root root st.switch in
+  let switch_meta = OpamPath.Switch.meta root st.switch in
   let file_wo_prefix f = OpamFilename.remove_prefix switch_prefix f in
 
   let name = nv.name in
@@ -112,7 +113,23 @@ let preprocess_dot_install_t st nv build_dir =
         let inst warning =
           if append then warning (OpamFilename.to_string src_file) `Add_exe;
           let check, warn = check ~src:build_dir ~dst:dst_dir base in
-          if check then
+          let real_dst =
+            OpamFilename.of_string
+              (OpamSystem.real_path (OpamFilename.to_string dst_file))
+          in
+          let escapes =
+            not (OpamFilename.starts_with switch_prefix real_dst)
+            || (OpamFilename.starts_with switch_meta real_dst)
+          in
+          if escapes then
+            (OpamConsole.error
+              "package %s attempted to install a file outside allowed \
+               destination directories: %s -> %s."
+              (OpamPackage.Name.to_string name)
+              (OpamFilename.to_string dst_file)
+              (OpamFilename.to_string real_dst);
+             failwith ".install file escaping allowed directories")
+          else if check then
             OpamFilename.install ~warning ~exec ~src:src_file ~dst:dst_file ();
           warn
         in

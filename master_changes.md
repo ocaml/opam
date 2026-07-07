@@ -191,6 +191,7 @@ users)
   * Add a lock test for undefined variables in a lock file [#6947 @rjbou - fix #6946]
   * Add a test showing the behaviour of `opam repo add` and `opam update` when faced with a repository containing an `opam` directory [#6995 @kit-ty-kate]
   * Add a tests for the several layouts of packages in a repository [#6941 @rjbou]
+  * Add a test ensuring installing files through a .install file can't escape the opam switch (CVE-2026-57825) [#7005 @NathanReb]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -234,6 +235,7 @@ users)
 
 ## Security fixes
   * Invalidate .install fields containing destination filepath trying to escape their scope [#6897 @kit-ty-kate]
+  * Fix a bug that allowed a package to install files anywhere on the system using a symlink to an external directory without warning the user and asking for their permission: CVE-2026-57825. [#7005 @NathanReb]
 
 # API updates
 ## opam-client
