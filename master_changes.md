@@ -132,3 +132,4 @@ users)
   * `OpamFilename.{,dir_}starts_with`: Fix a bug where `foo/bar` would be considered a prefix of `foo/bar-baz` [#6953 @NathanReb - fix #6948]
   * `OpamFilename.{,dir_}starts_with`: `/` and `\` are now equivalent on Windows [#6953 @NathanReb]
   * `OpamFilename.starts_with`: `starts_with "a/b" "a/b"` no longer returns `true` [#6953 @NathanReb]
+  * `OpamSystem.real_path`: fix a bug where paths after a non existent directory where not resolve [#7011 @kit-ty-kate - fix #7010]
