@@ -21,6 +21,7 @@ users)
 ## Config report
 
 ## Actions
+  * Stop the installation process via .install file from creating unnecessary intermediate directories for paths that contain `..` [#7015 @kit-ty-kate]
 
 ## Install
 
