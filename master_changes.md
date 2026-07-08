@@ -16,6 +16,7 @@ users)
 ## Global CLI
   * Update Kate's email address [#6808 @kit-ty-kate]
   * Remove unnecessary uses of `chdir` [#6910 @NathanReb]
+  * Make error message for opam repo add more explicit [#7014 @yannl35133 - fix #6943]
 
 ## Plugins
 
