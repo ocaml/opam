@@ -230,6 +230,7 @@ users)
   * Bump `actions/cache` to version 6 [#6983 @kit-ty-kate]
   * Fix Doc & Depends jobs when a opam root format upgrade is needed [#6998 #7002 @rjbou]
   * Upgrade the CI to OCaml 5.5 and 4.14.4 [#6988 @kit-ty-kate]
+  * Fix the Cygwin 5.5 build by requiring cygwin gcc 13.4 as 14.4 breaks C++ support [#7007 @kit-ty-kate]
 
 ## Doc
   * Update the packaging page to recommend using static archives for releases [#6973 @mseri]

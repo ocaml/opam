@@ -84,16 +84,15 @@ md %CYGWIN_ROOT%
 :: installed with Cygwin64.
 if "%1" equ "x86_64-pc-cygwin" (
   curl -fsSLo %CYGWIN_ROOT%\setup.exe https://cygwin.com/setup-x86_64.exe
-  set CYGWIN_PACKAGES=,mingw64-i686-gcc-core=14.3.0-0.1,mingw64-x86_64-gcc-core=14.3.0-0.1,mingw64-i686-gcc-g++=14.3.0-0.1,mingw64-x86_64-gcc-g++=14.3.0-0.1
+  set CYGWIN_PACKAGES=,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core,mingw64-i686-gcc-g++,mingw64-x86_64-gcc-g++
 ) else (
   curl -fsSLo %CYGWIN_ROOT%\setup.exe https://cygwin.com/setup-x86.exe
   set CYGWIN_PACKAGES=
 )
 
-:: TODO: Remove the explicit version set for diffutils when https://debbugs.gnu.org/cgi/bugreport.cgi?bug=76452 is fixed
 :: libicu-devel is needed until an alternative to the uconv call in MungeSymlinks
 :: is found
-set CYGWIN_PACKAGES=make,patch,curl,diffutils=3.10-1,tar,unzip,git,gcc-g++,libicu-devel%CYGWIN_PACKAGES%
+set CYGWIN_PACKAGES=make,patch,curl,diffutils,tar,unzip,git,gcc-g++=13.4.0-1,libicu-devel%CYGWIN_PACKAGES%
 :: xxd is needed for reftests
 set CYGWIN_PACKAGES=xxd,%CYGWIN_PACKAGES%
 
