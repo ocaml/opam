@@ -370,30 +370,35 @@ lib: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 bin: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 etc: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 share: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 misc: [
   "a-file"  { "../../a-file" }
   "fichier" { "/ab/so/lute/path/fichier" }
   "dosiero" { "/tmp/../middle/dosiero" }
+  "dosiero" { "tmp/../../../../middle/dosiero" }
   "good"    { "good" }
   ]
 ### <pkg:eskape.1:a-file>
@@ -410,7 +415,7 @@ hallo
 [default] no changes from file://${BASEDIR}/REPO
 ### opam switch create escapability --empty
 ### OPAMDEBUGSECTIONS="SYSTEM" OPAMDEBUG=-5
-### opam install eskape
+### opam install eskape | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
@@ -437,16 +442,16 @@ SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/good
 SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/good
 [WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install, some fields have been ignored:
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:2:14-2:28::
-              ../../a-file references its parent directory.
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:8:14-8:28::
-              ../../a-file references its parent directory.
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:26:14-26:28::
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:3:14-3:40::
+              /ab/so/lute/path/fichier is an absolute filename.
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:10:14-10:40::
+              /ab/so/lute/path/fichier is an absolute filename.
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:30:14-30:28::
               ../../a-file is not an absolute filename.
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:20:14-20:28::
-              ../../a-file references its parent directory.
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:14:14-14:28::
-              ../../a-file references its parent directory.
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:24:14-24:40::
+              /ab/so/lute/path/fichier is an absolute filename.
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:17:14-17:40::
+              /ab/so/lute/path/fichier is an absolute filename.
 
 -> installed eskape.1
 SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache
@@ -473,4 +478,316 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ==> eskape installed file
 Not found: ${BASEDIR}/OPAM/escapability/share/eskape/a-file
 ==> eskape changes
+opam-version: "2.0"
+### : Testing escapability with a relative path containing '..' that does exist and doesn't escape
+### <pkg:eskape-rel-dotdot-exists.1>
+opam-version: "2.0"
+install: [ "echo" "hellow" ]
+### touch OPAM/escapability/a-file
+### <pkg:eskape-rel-dotdot-exists.1:eskape-rel-dotdot-exists.install>
+lib: [
+  "a-file"  { "../../a-file" }
+]
+etc: [
+  "a-file"  { "../../a-file" }
+]
+share: [
+  "a-file"  { "../../a-file" }
+]
+misc: [
+  "a-file"  { "../../a-file" }
+]
+### <pkg:eskape-rel-dotdot-exists.1:a-file>
+hellow
+### opam install eskape-rel-dotdot-exists | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (read => none)
+The following actions will be performed:
+=== install 1 package
+  - install eskape-rel-dotdot-exists 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-rel-dotdot-exists/eskape-rel-dotdot-exists.1/files/eskape-rel-dotdot-exists.install
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/eskape-rel-dotdot-exists.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-rel-dotdot-exists/eskape-rel-dotdot-exists.1/files/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file
+[WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/eskape-rel-dotdot-exists.install, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/eskape-rel-dotdot-exists.install:11:14-11:28::
+              ../../a-file is not an absolute filename.
+
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/lib/eskape-rel-dotdot-exists
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file -> ${BASEDIR}/OPAM/escapability/a-file (644)
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file -> ${BASEDIR}/OPAM/escapability/a-file (644)
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file -> ${BASEDIR}/OPAM/escapability/a-file (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share/eskape-rel-dotdot-exists
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc/eskape-rel-dotdot-exists
+-> installed eskape-rel-dotdot-exists.1
+SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-dotdot-exists.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-dotdot-exists.1/files
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-rel-dotdot-exists/eskape-rel-dotdot-exists.1/files/eskape-rel-dotdot-exists.install
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-dotdot-exists.1/files/eskape-rel-dotdot-exists.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-rel-dotdot-exists/eskape-rel-dotdot-exists.1/files/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-dotdot-exists.1/files/a-file
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### ocaml cat.ml escapability eskape-rel-dotdot-exists
+==> eskape-rel-dotdot-exists installed file
+Not found: ${BASEDIR}/OPAM/escapability/share/eskape-rel-dotdot-exists/a-file
+==> eskape-rel-dotdot-exists changes
+opam-version: "2.0"
+added: [
+  "etc" {"D"}
+  "etc|eskape-rel-dotdot-exists" {"D"}
+  "lib|eskape-rel-dotdot-exists" {"D"}
+  "share" {"D"}
+  "share|eskape-rel-dotdot-exists" {"D"}
+]
+contents-changed: "a-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+### : Testing escapability with a relative path containing '..' in the middle, that does not exist and doesn't escape
+### <pkg:eskape-rel-middotdot-notexists.1>
+opam-version: "2.0"
+install: [ "echo" "hellow" ]
+### <pkg:eskape-rel-middotdot-notexists.1:eskape-rel-middotdot-notexists.install>
+lib: [
+  "a-file" { "tmp/../middle/a-file" }
+]
+bin: [
+  "a-file" { "tmp/../middle/a-file" }
+]
+etc: [
+  "a-file" { "tmp/../middle/a-file" }
+]
+share: [
+  "a-file" { "tmp/../middle/a-file" }
+]
+misc: [
+  "a-file" { "tmp/../middle/a-file" }
+]
+### <pkg:eskape-rel-middotdot-notexists.1:a-file>
+hellow
+### opam install eskape-rel-middotdot-notexists | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (read => none)
+The following actions will be performed:
+=== install 1 package
+  - install eskape-rel-middotdot-notexists 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-rel-middotdot-notexists/eskape-rel-middotdot-notexists.1/files/eskape-rel-middotdot-notexists.install
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/eskape-rel-middotdot-notexists.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-rel-middotdot-notexists/eskape-rel-middotdot-notexists.1/files/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file
+[WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/eskape-rel-middotdot-notexists.install, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/eskape-rel-middotdot-notexists.install:14:13-14:35::
+              tmp/../middle/a-file is not an absolute filename.
+
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/bin/middle
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/bin/middle/a-file (755)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/lib/eskape-rel-middotdot-notexists/middle
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/lib/eskape-rel-middotdot-notexists/middle/a-file (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists/middle
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists/middle/a-file (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc/eskape-rel-middotdot-notexists/middle
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/etc/eskape-rel-middotdot-notexists/middle/a-file (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/lib/eskape-rel-middotdot-notexists
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc/eskape-rel-middotdot-notexists
+-> installed eskape-rel-middotdot-notexists.1
+SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-middotdot-notexists.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-middotdot-notexists.1/files
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-rel-middotdot-notexists/eskape-rel-middotdot-notexists.1/files/eskape-rel-middotdot-notexists.install
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-middotdot-notexists.1/files/eskape-rel-middotdot-notexists.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-rel-middotdot-notexists/eskape-rel-middotdot-notexists.1/files/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-middotdot-notexists.1/files/a-file
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### ocaml cat.ml escapability eskape-rel-middotdot-notexists
+==> eskape-rel-middotdot-notexists installed file
+Not found: ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists/a-file
+==> eskape-rel-middotdot-notexists changes
+opam-version: "2.0"
+added: [
+  "bin|middle" {"D"}
+  "bin|middle|a-file" {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "etc|eskape-rel-middotdot-notexists" {"D"}
+  "etc|eskape-rel-middotdot-notexists|middle" {"D"}
+  "etc|eskape-rel-middotdot-notexists|middle|a-file"
+    {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "lib|eskape-rel-middotdot-notexists" {"D"}
+  "lib|eskape-rel-middotdot-notexists|middle" {"D"}
+  "lib|eskape-rel-middotdot-notexists|middle|a-file"
+    {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+  "share|eskape-rel-middotdot-notexists" {"D"}
+  "share|eskape-rel-middotdot-notexists|middle" {"D"}
+  "share|eskape-rel-middotdot-notexists|middle|a-file"
+    {"F:12fc204edeae5b57713c5ad7dcb97d39"}
+]
+### : Testing escapability with a relative path containing '..' in the middle, that does not exist and does escape
+### <pkg:realeskape-rel-middotdot-notexists.1>
+opam-version: "2.0"
+install: [ "echo" "hellow" ]
+### <pkg:realeskape-rel-middotdot-notexists.1:realeskape-rel-middotdot-notexists.install>
+lib: [
+  "a-file" { "tmp/../../../../middle/a-file" }
+]
+bin: [
+  "a-file" { "tmp/../../../middle/a-file" }
+]
+etc: [
+  "a-file" { "tmp/../../../../middle/a-file" }
+]
+share: [
+  "a-file" { "tmp/../../../../middle/a-file" }
+]
+misc: [
+  "a-file" { "tmp/../../../../middle/a-file" }
+]
+### <pkg:realeskape-rel-middotdot-notexists.1:a-file>
+hellow
+### opam install realeskape-rel-middotdot-notexists | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (read => none)
+The following actions will be performed:
+=== install 1 package
+  - install realeskape-rel-middotdot-notexists 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/realeskape-rel-middotdot-notexists/realeskape-rel-middotdot-notexists.1/files/realeskape-rel-middotdot-notexists.install
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1/realeskape-rel-middotdot-notexists.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/realeskape-rel-middotdot-notexists/realeskape-rel-middotdot-notexists.1/files/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1/a-file
+[WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1/realeskape-rel-middotdot-notexists.install, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1/realeskape-rel-middotdot-notexists.install:14:13-14:44::
+              tmp/../../../../middle/a-file is not an absolute filename.
+
+[ERROR] package realeskape-rel-middotdot-notexists attempted to install a file outside allowed destination directories: ${BASEDIR}/OPAM/escapability/bin/tmp/../../../middle/a-file -> ${BASEDIR}/OPAM/middle/a-file.
+SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/lib/realeskape-rel-middotdot-notexists
+SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/lib/realeskape-rel-middotdot-notexists
+SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/share/realeskape-rel-middotdot-notexists
+SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/etc/realeskape-rel-middotdot-notexists
+SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/doc/realeskape-rel-middotdot-notexists
+SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/install/realeskape-rel-middotdot-notexists.install
+
+.install file escaping allowed directories
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (write => none)
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install realeskape-rel-middotdot-notexists 1
++- 
+- No changes have been performed
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+# Return code 31 #
+### ocaml cat.ml escapability realeskape-rel-middotdot-notexists
+==> realeskape-rel-middotdot-notexists installed file
+Not found: ${BASEDIR}/OPAM/escapability/share/realeskape-rel-middotdot-notexists/a-file
+==> realeskape-rel-middotdot-notexists changes
+Not found: ${BASEDIR}/OPAM/escapability/.opam-switch/install/realeskape-rel-middotdot-notexists.changes
+### : Testing escapability with an absolute path
+### <pkg:eskape-abs.1>
+opam-version: "2.0"
+install: [ "echo" "hellow" ]
+### <pkg:eskape-abs.1:eskape-abs.install>
+lib: [
+  "fichier" { "/ab/so/lute/path/fichier" }
+]
+bin: [
+  "fichier" { "/ab/so/lute/path/fichier" }
+]
+etc: [
+  "fichier" { "/ab/so/lute/path/fichier" }
+]
+share: [
+  "fichier" { "/ab/so/lute/path/fichier" }
+]
+### <pkg:eskape-abs.1:a-file>
+hellow
+### opam install eskape-abs | unordered
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (read => none)
+The following actions will be performed:
+=== install 1 package
+  - install eskape-abs 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-abs.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-abs.1
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-abs/eskape-abs.1/files/eskape-abs.install
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-abs.1/eskape-abs.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-abs/eskape-abs.1/files/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-abs.1/a-file
+[WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-abs.1/eskape-abs.install, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-abs.1/eskape-abs.install:2:14-2:40::
+              /ab/so/lute/path/fichier is an absolute filename.
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-abs.1/eskape-abs.install:5:14-5:40::
+              /ab/so/lute/path/fichier is an absolute filename.
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-abs.1/eskape-abs.install:11:14-11:40::
+              /ab/so/lute/path/fichier is an absolute filename.
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-abs.1/eskape-abs.install:8:14-8:40::
+              /ab/so/lute/path/fichier is an absolute filename.
+
+-> installed eskape-abs.1
+SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-abs.1
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-abs.1/files
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-abs/eskape-abs.1/files/eskape-abs.install
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-abs.1/files/eskape-abs.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape-abs/eskape-abs.1/files/a-file
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-abs.1/files/a-file
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (write => none)
+Done.
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/backup/state-today.export
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### ocaml cat.ml escapability eskape-abs
+==> eskape-abs installed file
+Not found: ${BASEDIR}/OPAM/escapability/share/eskape-abs/a-file
+==> eskape-abs changes
 opam-version: "2.0"

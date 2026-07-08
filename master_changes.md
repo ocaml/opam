@@ -21,6 +21,7 @@ users)
 ## Config report
 
 ## Actions
+  * Stop the installation process via .install file from creating unnecessary intermediate directories for paths that contain `..` [#7015 @kit-ty-kate]
 
 ## Install
 
@@ -107,6 +108,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test showing the behaviour of .install files containing destination filepath trying to escape their scope [#6897 #7008 @rjbou @kit-ty-kate]
   * Add a test ensuring installing files through a .install file can't escape the opam switch (CVE-2026-57825) [#7005 @NathanReb]
 
 ### Engine
@@ -116,6 +118,7 @@ users)
 ## Doc
 
 ## Security fixes
+  * Invalidate .install fields containing absolute destination filepath except when in the `misc` field [#6897 #7008 @kit-ty-kate]
   * Fix a bug that allowed a package to install files anywhere on the system using a symlink to an external directory without warning the user and asking for their permission: CVE-2026-57825. [#7005 @NathanReb]
 
 # API updates
