@@ -13,6 +13,7 @@ users)
 ## Version
 
 ## Global CLI
+  * Make error message for opam repo add more explicit [#7014 @yannl35133 - fix #6943]
 
 ## Plugins
 
