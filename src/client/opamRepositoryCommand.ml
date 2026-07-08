@@ -63,8 +63,11 @@ let add rt name url trust_anchors =
     -> rt
   | Some r ->
     OpamConsole.error_and_exit `Bad_arguments
-      "Repository %s is already set up%s. To change that, use 'opam \
-       repository set-url %s %s'."
+      "Repository %s has already been globally set up%s. \
+       To add the repository to the current switch as is, \
+       use 'opam repository add %s'; \
+       to change the %s, \
+       use 'opam repository set-url %s %s%s'."
       (OpamRepositoryName.to_string name)
       (if r.repo_url <> url then
          " and points to "^OpamUrl.to_string r.repo_url
@@ -76,7 +79,17 @@ let add rt name url trust_anchors =
                 ta.fingerprints)
              ta.quorum)
       (OpamRepositoryName.to_string name)
+      (if r.repo_url <> url then "address" else "trust anchors")
+      (OpamRepositoryName.to_string name)
       (OpamUrl.to_string url)
+      (match trust_anchors with
+        | None -> ""
+        | Some ta ->
+          (* TODO: is this the correct syntax? *)
+          Printf.sprintf " %d %s"
+            ta.quorum
+            (OpamStd.List.concat_map " " String.escaped
+              ta.fingerprints))
   | None ->
     let repo = { repo_name = name; repo_url = url;
                  repo_trust = trust_anchors; }
