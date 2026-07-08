@@ -81,15 +81,11 @@ module Unix = struct
 
   (** NOTE: OCaml >= 4.13 *)
   let realpath s =
-    let getchdir s =
-      let p =
-        try Sys.getcwd ()
-        with Sys_error _ -> Filename.get_temp_dir_name ()
-      in
-      Unix.chdir s;
-      p
-    in
-    try getchdir (getchdir s) with Unix.Unix_error _ -> s
+    let orig_cwd = Sys.getcwd () in
+    Unix.chdir s;
+    let r = Unix.getcwd () in
+    Sys.chdir orig_cwd;
+    r
 
   include Unix
 end

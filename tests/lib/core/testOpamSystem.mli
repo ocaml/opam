@@ -8,8 +8,4 @@
 (*                                                                        *)
 (**************************************************************************)
 
-let () =
-  OpamUnit.run_tests @@ fun ctxt ->
-  TestOpamFilename.test ~ctxt ();
-  TestOpamSystem.test ~ctxt ();
-  ()
+val test : ctxt: OpamUnit.ctxt -> unit -> unit

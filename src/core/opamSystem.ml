@@ -55,28 +55,21 @@ let file_or_symlink_exists f =
 
 let (/) = Filename.concat
 
-let real_path p =
-  (* if Filename.is_relative p then *)
-    match (try Some (Sys.is_directory p) with Sys_error _ -> None) with
-    | None ->
-      let rec resolve dir =
-        if Sys.file_exists dir then OpamCompat.Unix.realpath dir else
-        let parent = Filename.dirname dir in
-        if dir = parent then dir
-        else Filename.concat (resolve parent) (Filename.basename dir)
-      in
-      let p =
-        if Filename.is_relative p then Filename.concat (Sys.getcwd ()) p
-        else p
-      in
-      resolve p
-    | Some true -> OpamCompat.Unix.realpath p
-    | Some false ->
-      let dir = OpamCompat.Unix.realpath (Filename.dirname p) in
-      match Filename.basename p with
-      | "." -> dir
-      | base -> dir / base
-  (* else p *)
+let rec real_path p =
+  try OpamCompat.Unix.realpath p with
+  | Unix.Unix_error _ when p = "." ->
+    raise (Sys_error "No such file or directory")
+  | Unix.Unix_error _ ->
+    let dirname = Filename.dirname p in
+    match Filename.basename p with
+    | "." -> real_path dirname
+    | ".." ->
+      let dirname = real_path dirname in
+      if String.equal (Filename.dirname dirname) dirname then
+        raise (Sys_error "Invalid path")
+      else
+        Filename.dirname dirname
+    | x -> real_path dirname / x
 
 let temp_basename prefix =
   Printf.sprintf "%s-%d-%06x" prefix (OpamStubs.getpid ()) (Random.int 0xFFFFFF)
