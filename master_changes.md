@@ -243,6 +243,7 @@ users)
   * Improve visibility of `depopts` filter note [#6920 @ccoulombel - fix #5367]
   * Call man2html only on actual man pages [#6807 @kit-ty-kate]
   * Replace the API example by a link to the API [#6809 @kit-ty-kate - fix #6637]
+  * Update the Install page with the new opam 2.5.2 release [#7018 @kit-ty-kate]
 
 ## Security fixes
   * Invalidate .install fields containing destination filepath trying to escape their scope [#6897 @kit-ty-kate]
