@@ -651,6 +651,10 @@ let common_filters ?opam dir =
     seq [ char '.'; set "/\\"; str f ],
     Sed ("./"^f);
   in
+  let extra_dotinstall_dirs d =
+    seq [ str " "; str d; set "/\\" ],
+    Sed (" "^d^"/");
+  in
   [
     seq [ bol;
           alt [ str "#=== ERROR";
@@ -678,6 +682,14 @@ let common_filters ?opam dir =
     extra_packages_dirs "pkg";
     extra_packages_dirs "root-no-nv";
     extra_standalone_file "repo";
+    (* dot-install-*-fields tests *)
+    extra_dotinstall_dirs "lib";
+    extra_dotinstall_dirs "bin";
+    extra_dotinstall_dirs "doc";
+    extra_dotinstall_dirs "etc";
+    extra_dotinstall_dirs "man";
+    extra_dotinstall_dirs "sbin";
+    extra_dotinstall_dirs "share";
     seq [
       str "state-";
       repn digit 14 (Some 14);
