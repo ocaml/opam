@@ -546,6 +546,69 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:deps-only.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-dot-install-exe-fields.unix)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff dot-install-exe-fields.unix.test dot-install-exe-fields.unix.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-dot-install-exe-fields.unix)))
+
+(rule
+ (targets dot-install-exe-fields.unix.out)
+ (deps root-N0REP0)
+ (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:dot-install-exe-fields.unix.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-dot-install-exe-fields.win32)
+ (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff dot-install-exe-fields.win32.test dot-install-exe-fields.win32.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-dot-install-exe-fields.win32)))
+
+(rule
+ (targets dot-install-exe-fields.win32.out)
+ (deps root-N0REP0)
+ (enabled_if (and (= %{os_type} "Win32") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:dot-install-exe-fields.win32.test} %{read-lines:testing-env}))))
+
+(rule
+ (alias reftest-dot-install-non-exe-fields)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff dot-install-non-exe-fields.test dot-install-non-exe-fields.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-dot-install-non-exe-fields)))
+
+(rule
+ (targets dot-install-non-exe-fields.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:dot-install-non-exe-fields.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-dot-install)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
