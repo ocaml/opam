@@ -237,6 +237,7 @@ users)
   * Fix Doc & Depends jobs when a opam root format upgrade is needed [#6998 #7002 @rjbou]
   * Upgrade the CI to OCaml 5.5 and 4.14.4 [#6988 @kit-ty-kate]
   * Fix the Cygwin 5.5 build by requiring cygwin gcc 13.4 as 14.4 breaks C++ support [#7007 @kit-ty-kate]
+  * Upgrade to use opam 2.5.2 [#7018 @kit-ty-kate]
 
 ## Doc
   * Update the packaging page to recommend using static archives for releases [#6973 @mseri]
@@ -247,6 +248,7 @@ users)
   * Improve visibility of `depopts` filter note [#6920 @ccoulombel - fix #5367]
   * Call man2html only on actual man pages [#6807 @kit-ty-kate]
   * Replace the API example by a link to the API [#6809 @kit-ty-kate - fix #6637]
+  * Update the Install page with the new opam 2.5.2 release [#7018 @kit-ty-kate]
 
 ## Security fixes
   * Invalidate .install fields containing destination filepath trying to escape their scope [#6897 @kit-ty-kate]

@@ -3,6 +3,27 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.5.2:
+* Fix a bug that allowed a package to install files anywhere on the system
+  using a symlink to an external directory without warning the user and
+  asking for their permission: CVE-2026-57825 / OSEC-2026-10.
+  [#7005 @NathanReb]
+* Re-allow `..` in `.install` files, partially reverts 2.5.1's #6898
+  [#7009 @kit-ty-kate - fix ocaml/dune#14393]
+* Stop the installation process via .install file from creating unnecessary
+  intermediate directories for paths that contain `..` [#7015 @kit-ty-kate]
+* Improve and extend the testsuite
+  [#6953 #7011 #7009 #7005 @NathanReb @rjbou @kit-ty-kate]
+* API changes in `opam-core`:
+  * `OpamFilename.{,dir_}starts_with`: Fix a bug where `foo/bar` would be
+    considered a prefix of `foo/bar-baz` [#6953 @NathanReb - fix #6948]
+  * `OpamFilename.{,dir_}starts_with`: `/` and `\` are now equivalent on
+    Windows [#6953 @NathanReb]
+  * `OpamFilename.starts_with`: `starts_with "a/b" "a/b"` no longer returns
+    `true` [#6953 @NathanReb]
+  * `OpamSystem.real_path`: fix a bug where paths after a non existent
+    directory where not resolve [#7011 @kit-ty-kate - fix #7010]
+
 2.5.1:
 * OSEC-2026-03: Invalidate .install fields containing destination filepath trying to escape their scope [#6897 @kit-ty-kate - report by @andrew]
 * Fix a string injection from the depexts field to nix-build, when `os-family=nixos` [#6894 @RyanGibb]
