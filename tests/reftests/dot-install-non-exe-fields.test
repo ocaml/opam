@@ -18,6 +18,8 @@ N0REP0
 ### :    * man: it needs a specific file format
 ### :::::::
 ### OPAMYES=1
+### # we need to disable strict bc of erroring warnings
+### OPAMSTRICT=0
 ### # we neeed the precise tracking to have a sha in changes file instead of timestamp
 ### OPAMPRECISETRACKING=1
 ### OPAMDEBUGSECTIONS="TRACK ACTION"
@@ -1555,6 +1557,14 @@ Some files in ${BASEDIR}/OPAM/sw-man/.opam-switch/install/pkg-man.install couldn
 # OPAM/sw-man/.opam-switch/install/pkg-man.changes not found
 ### ocaml cat.ml sw-man pkg-man
 ==> No 'installed-file' found
+### OPAMDEBUG=-5 opam remove pkg-man
+[NOTE] pkg-man is not installed.
+
+Nothing to do.
+### opam-cat OPAM/sw-man/.opam-switch/install/pkg-man.changes
+# OPAM/sw-man/.opam-switch/install/pkg-man.changes not found
+### ocaml cat.ml sw-man pkg-man
+==> No 'installed-file' found
 ### :VIII:5: Wrongly-formed filename, no destination specified
 ### # ERROR: this error should be better handled
 ### <pkg:pkg-man.1>
@@ -1573,18 +1583,33 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-man.1
 ACTION                          prepare_package_source: pkg-man.1 at ${BASEDIR}/OPAM/sw-man/.opam-switch/build/pkg-man.1
 [ERROR] In ${BASEDIR}/OPAM/sw-man/.opam-switch/build/pkg-man.1/pkg-man.install:
-        Not_found
-[ERROR] Strict mode: aborting
+        Not_found [skipped]
 
-OpamStd.OpamSys.Exit(30)
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-man.1.
 
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-man.1: 0 items
+-> installed pkg-man.1
+Done.
+### opam-cat OPAM/sw-man/.opam-switch/install/pkg-man.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-man pkg-man
+==> No 'installed-file' found
+### OPAMDEBUG=-5 opam remove pkg-man
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-man 1
 
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - install pkg-man 1
-+- 
-- No changes have been performed
-# Return code 31 #
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-man.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-man.1
+ACTION                          Cleaning up artefacts of pkg-man.1
+ACTION                          Removing the local metadata
+Done.
 ### opam-cat OPAM/sw-man/.opam-switch/install/pkg-man.changes
 # OPAM/sw-man/.opam-switch/install/pkg-man.changes not found
 ### ocaml cat.ml sw-man pkg-man
@@ -1607,18 +1632,33 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-man.1
 ACTION                          prepare_package_source: pkg-man.1 at ${BASEDIR}/OPAM/sw-man/.opam-switch/build/pkg-man.1
 [ERROR] In ${BASEDIR}/OPAM/sw-man/.opam-switch/build/pkg-man.1/pkg-man.install:
-        Not_found
-[ERROR] Strict mode: aborting
+        Not_found [skipped]
 
-OpamStd.OpamSys.Exit(30)
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-man.1.
 
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-man.1: 0 items
+-> installed pkg-man.1
+Done.
+### opam-cat OPAM/sw-man/.opam-switch/install/pkg-man.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-man pkg-man
+==> No 'installed-file' found
+### OPAMDEBUG=-5 opam remove pkg-man
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-man 1
 
-<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-+- The following actions failed
-| - install pkg-man 1
-+- 
-- No changes have been performed
-# Return code 31 #
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-man.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-man.1
+ACTION                          Cleaning up artefacts of pkg-man.1
+ACTION                          Removing the local metadata
+Done.
 ### opam-cat OPAM/sw-man/.opam-switch/install/pkg-man.changes
 # OPAM/sw-man/.opam-switch/install/pkg-man.changes not found
 ### ocaml cat.ml sw-man pkg-man
