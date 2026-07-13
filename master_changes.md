@@ -28,6 +28,8 @@ users)
 
 ## Install
 
+  * Unpin packages pinned by `opam install` when the install is aborted by the user. [#6923, @NathanReb]
+
 ## Build (package)
 
 ## Remove
