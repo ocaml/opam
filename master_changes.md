@@ -152,6 +152,7 @@ users)
 
 ## Shell
   * added return 0 for zsh/bash/sh/fish to prevent leaking error codes [#6930 @ta2005]
+  * Update PATH in place in env hook [#6859 @gridbugs fix #6815]
 
 ## Internal
   * Improve cache-loading performance when using OCaml >= 5.4 by using `Gc.ramp_up` [#6515 @dra27]
