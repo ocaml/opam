@@ -1,0 +1,28 @@
+N0REP0
+### : Redirection :
+### rm -rf $OPAMROOT
+### OPAMROOT="roots/with path"
+### opam init --no-setup --bare --bypass-checks default REPO/ | grep -v Cygwin
+[ERROR] You opam root directory contains a space, this may lead to several malfunction... bzzz.... nooo
+No configuration file found, using built-in defaults.
+Your opam root path '${BASEDIR}/roots/with path' contains a space, we'll redirect to 'C:\opamroot'.
+Do you want to choose and enter another spaceless folder? [y/n] n
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### opam var root --debug --debug-level=-1
+CLI                             Parsing CLI version 2.2
+GSTATE                          LOAD-GLOBAL-STATE @ C:\opamroot
+C:\opamroot
+### cat 'roots/with path/redirected-opamroot'
+C:\opamroot
+### opam switch create --empty test
+### opam switch --debug --debug-level=-1
+CLI                             Parsing CLI version 2.2
+GSTATE                          LOAD-GLOBAL-STATE @ C:\opamroot
+SWITCH                          list
+#   switch  compiler  description
+->  test              test
+### echo $OPAMROOT
+roots/with path
+### rm -rf 'C:\opamroot'
