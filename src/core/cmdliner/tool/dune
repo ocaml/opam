@@ -1,0 +1,4 @@
+(executable
+ (name opamCmdliner_tool)
+ (libraries opamCmdliner)
+ (flags :standard -w -27-32-35-50-39))

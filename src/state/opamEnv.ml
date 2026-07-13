@@ -933,7 +933,8 @@ let shells_list = [ SH_sh; SH_zsh; SH_csh; SH_fish; SH_pwsh Powershell; SH_cmd ]
 let complete_file = function
   | SH_sh | SH_bash -> Some "complete.sh"
   | SH_zsh -> Some "complete.zsh"
-  | SH_csh | SH_fish | SH_pwsh _ | SH_cmd -> None
+  | SH_pwsh _ -> Some "complete.ps1"
+  | SH_csh | SH_fish | SH_cmd -> None
 
 let env_hook_file = function
   | SH_sh | SH_bash -> Some "env_hook.sh"
@@ -960,8 +961,9 @@ let init_file = function
 let complete_script = function
   | SH_sh | SH_bash -> Some OpamScript.complete
   | SH_zsh -> Some OpamScript.complete_zsh
+  | SH_pwsh _ -> Some OpamScript.complete_ps1
   | SH_csh | SH_fish -> None
-  | SH_pwsh _ | SH_cmd -> None
+  | SH_cmd -> None
 
 let env_hook_script_base = function
   | SH_sh | SH_bash -> Some OpamScript.env_hook
