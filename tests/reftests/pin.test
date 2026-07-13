@@ -1623,7 +1623,7 @@ Done.
 file1
 ### opam-cat OPAM/flag-edit/.opam-switch/overlay/tide/opam | grep install
 install: [["mkdir" "%{lib}%/%{name}%"] ["cp" "file1" "%{lib}%/%{name}%/file1"]]
-### :C:h: opam pin doesn't upgrade outdated dependencies
+### :C:k: opam pin doesn't upgrade outdated dependencies
 ### opam switch create no-upgrade --empty
 ### <pkg:dep.1>
 opam-version: "2.0"
@@ -1660,3 +1660,18 @@ The following actions will be performed:
 -> installed dep.2
 -> installed pkg.1
 Done.
+### :C:l: make sure opam pin list works even when the source git directory is missing
+### opam switch create no-source-dir --empty
+### <no-source-dir/opam>
+opam-version: "2.0"
+name: "pinned-pkg"
+### git -C no-source-dir init -q --initial-branch=master
+### git -C no-source-dir config core.autocrlf false
+### git -C no-source-dir add opam
+### git -C no-source-dir commit -qm 'init'
+### opam pin add -n ./no-source-dir
+[NOTE] Package pinned-pkg does not exist in opam repositories registered in the current switch.
+pinned-pkg is now pinned to git+file://${BASEDIR}/no-source-dir#master (version dev)
+### rm -r OPAM/no-source-dir/.opam-switch/sources/pinned-pkg
+### opam pin
+pinned-pkg.dev  (uninstalled)  git  git+file://${BASEDIR}/no-source-dir#master  (error while fetching current revision)

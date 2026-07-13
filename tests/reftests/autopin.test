@@ -459,4 +459,4 @@ The following actions will be performed:
 Proceed with 2 installations? [Y/n] n
 # Return code 10 #
 ### opam pin list
-abort-install.dev  (uninstalled)  git  git+file://${BASEDIR}/abort-install#master  (at error while fetching current revision)
+abort-install.dev  (uninstalled)  git  git+file://${BASEDIR}/abort-install#master  (error while fetching current revision)
