@@ -896,7 +896,8 @@ let parse_pins pins =
   let get s =
     try
       let groups = Re.exec re s in
-      Some Re.Group.{
+      let get = Re.Group.get in
+      Some {
           pinned_name = OpamPackage.Name.of_string @@ get groups 1;
           pinned_version =
             Stdlib.Option.map OpamPackage.Version.of_string
