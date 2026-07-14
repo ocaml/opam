@@ -227,6 +227,7 @@ users)
   * Add a test showing some of the internal steps of `opam init` [#6957 @kit-ty-kate]
   * Add tests for `.install` `root` and `rootexec` fields [#6938 @rjbou]
   * Test the new `--ignore-available-on` argument and `OPAMIGNOREAVAILABLE` environment variable [#6836 @WardBrian @kit-ty-kate]
+  * Add a test showing the behaviour of `opam init` when the default compiler failed to build [#6851 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
