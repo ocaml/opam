@@ -36,7 +36,14 @@ esac
 
 export PATH="$PREFIX/bin:$PATH"
 
-git clone https://codeberg.org/kit-ty-kate/micro_httpd
+# Fetch micro_httpd
+export OPAMROOT=$(pwd)/tmp-opamroot
+opam init -n --bypass-checks --bare "git+$OPAM_REPO_MAIN#$OPAM_REPO_SHA"
+opam source --no-switch --dir=micro_httpd micro_httpd
+rm -rf "$OPAMROOT"
+unset OPAMROOT
+
+# Build micro_httpd
 pushd micro_httpd
 dune build -p micro_httpd
 dune install --root . --prefix "$CONFIGURE_PREFIX"
