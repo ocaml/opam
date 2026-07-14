@@ -3059,7 +3059,7 @@ module OPAMSyntax = struct
 
   let cleanup_tags opam_version ~pos tags =
     let flags = List.filter_map flag_of_tag tags in
-    ignore (cleanup_flags opam_version ~pos flags);
+    let _ : package_flag list = cleanup_flags opam_version ~pos flags in
     tags
 
   let cleanup_dev_repo opam_version ~pos:_ dev_repo =

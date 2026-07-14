@@ -485,7 +485,7 @@ let main () =
   OpamCoreConfig.set_in_opam ();
   if Sys.win32 then begin
     (* Disable the critical error handling dialog *)
-    ignore (OpamStubs.setErrorMode (1 lor OpamStubs.getErrorMode ()));
+    let _ : int = OpamStubs.setErrorMode (1 lor OpamStubs.getErrorMode ()) in
     OpamStubs.setConsoleToUTF8 ();
   end;
   OpamStd.Sys.at_exit (fun () ->

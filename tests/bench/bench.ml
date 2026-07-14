@@ -51,7 +51,10 @@ let () =
     let n = 100 in
     let l = List.init n (fun _ ->
         let before = Unix.gettimeofday () in
-        List.iter (fun file -> ignore (OpamSystem.read file)) files;
+        List.iter (fun file ->
+            let _ : string = OpamSystem.read file in
+            ())
+          files;
         Unix.gettimeofday () -. before)
     in
     List.fold_left (+.) 0.0 l /. float_of_int n
@@ -131,7 +134,10 @@ let () =
     let n = 10 in
     let l = List.init n (fun _ ->
         let before = Unix.gettimeofday () in
-        List.iter (fun line -> ignore (OpamStd.String.split line ' ')) lines;
+        List.iter (fun line ->
+            let _ : string list = OpamStd.String.split line ' ' in
+            ())
+          lines;
         Unix.gettimeofday () -. before)
     in
     List.fold_left (+.) 0.0 l /. float_of_int n

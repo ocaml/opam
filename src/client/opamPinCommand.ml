@@ -288,7 +288,7 @@ let edit st ?version name =
       OpamFilename.remove (OpamFile.filename temp_file);
 
       (* Save back to source *)
-      ignore (
+      let _ : unit option =
           OpamFile.OPAM.get_url opam >>= OpamUrl.local_dir >>| fun dir ->
           let src_opam =
               (OpamPinned.find_opam_file_in_source name dir >>| fst)
@@ -305,7 +305,7 @@ let edit st ?version name =
                (OpamFile.to_string src_opam) then
             OpamFile.OPAM.write_with_preserved_format src_opam
               (clean_opam opam)
-        );
+      in
 
       let nv = OpamPackage.create name (OpamFile.OPAM.version opam) in
       let st = OpamSwitchState.update_pin nv opam st in
@@ -896,7 +896,8 @@ let parse_pins pins =
   let get s =
     try
       let groups = Re.exec re s in
-      Some Re.Group.{
+      let get = Re.Group.get in
+      Some {
           pinned_name = OpamPackage.Name.of_string @@ get groups 1;
           pinned_version =
             Stdlib.Option.map OpamPackage.Version.of_string
