@@ -66,7 +66,7 @@ bonjour
 saluton
 ### OPAMYES=1
 ### opam switch create inst --empty
-### OPAMPRECISETRACKING=1 OPAMDEBUGSECTIONS="TRACK ACTION" OPAMDEBUG=-1
+### OPAMPRECISETRACKING=1 OPAMDEBUGSECTIONS="TRACK ACTION" OPAMDEBUG=-2
 ### opam install nodot
 The following actions will be performed:
 === install 1 package
@@ -75,6 +75,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          download_package: nodot.~dev
 ACTION                          prepare_package_source: nodot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/nodot.~dev
+TRACK                           before install: 16 elements scanned in 0.000s
 ACTION                          Installing nodot.~dev.
 
 ACTION                          creating ${BASEDIR}/OPAM/inst/share/nodot
@@ -100,6 +101,7 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          download_package: dot.~dev
 ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/dot.~dev
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing dot.~dev.
 
 ACTION                          creating ${BASEDIR}/OPAM/inst/share/dot
@@ -127,10 +129,10 @@ ACTION                          download_package: dot.~dev
 ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/dot.~dev
 ACTION                          Removing dot.~dev
 -> removed   dot.~dev
+TRACK                           before install: 3 elements scanned in 0.000s
 Installing dot.~dev.
-TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+TRACK                           after install: 3 elements, 0 added, scanned in 0.000s
 -> installed dot.~dev
-ACTION                          Cleaning up artefacts of dot.~dev
 Done.
 ### ocaml cat.ml inst dot
 ==> dot installed file
@@ -167,8 +169,6 @@ The following actions will be simulated:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          Removing dot.~dev
 -> removed   dot.~dev
-ACTION                          Cleaning up artefacts of dot.~dev
-ACTION                          Removing the local metadata
 Done.
 ### ocaml cat.ml inst dot
 ==> dot installed file
@@ -195,8 +195,9 @@ The following actions will be simulated:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ACTION                          download_package: dot.~dev
 ACTION                          prepare_package_source: dot.~dev at ${BASEDIR}/OPAM/inst/.opam-switch/build/dot.~dev
+TRACK                           before install: 1 elements scanned in 0.000s
 Installing dot.~dev.
-TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+TRACK                           after install: 1 elements, 0 added, scanned in 0.000s
 -> installed dot.~dev
 Done.
 ### ocaml cat.ml inst dot
