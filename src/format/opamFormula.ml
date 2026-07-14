@@ -396,15 +396,47 @@ let dnf_of_formula t =
     | And (x,y) -> mk_right (mk x) (mk y) in
   mk t
 
-let verifies f nv =
-  let name_formula =
-    map (fun ((n, _) as a) -> if n = OpamPackage.name nv then Atom a else Empty)
-      (dnf_of_formula f)
+let name_formula name f =
+  let is_name (n, _cstr) = OpamPackage.Name.equal n name in
+  let formula_or_empty cond f = if cond then f else Empty in
+  (* Determine if nv could possibly part of the solution for [f]. This
+     means checking that either [v] satisfies the constraints on name.
+     This is done by converting [f] to DNF, which allows us to transform
+     the formula into a union of intervals, where ignoring atoms for
+     different package names works. We can then ignore conjunctions
+     where [name] doesn't appear. However, this function is typically
+     used on a dependency formula, which is most normally a large
+     conjunction. We capitalise on this with a peephole simplification,
+     observing that if we're testing for package name A in the formula
+     [X & Y], then we can ignore X if it doesn't contain A (and likewise
+     Y). This eliminates unrelated sub-formula from the top-level
+     conjunction, in particular it means that
+     [Dep1 & Dep2 & (Dep3 | Dep4) & (Dep5 | Dep6)] does not cause
+     trigger worst-case expansion for DNF. *)
+  let rec simplify_formula f =
+    match f with
+    | Empty -> Empty
+    | Atom atom ->
+      formula_or_empty (is_name atom) f
+    | Block b ->
+      formula_or_empty (exists is_name b) f
+    | Or(a, b) ->
+      formula_or_empty (exists is_name a || exists is_name b) f
+    | And(a, b) ->
+      let a = simplify_formula a in
+      let b = simplify_formula b in
+      make_and a b
   in
-  name_formula <> Empty &&
+  simplify_formula f
+  |> dnf_of_formula
+  |> map (fun a -> formula_or_empty (is_name a) (Atom a))
+
+let verifies f nv =
+  let f = name_formula (OpamPackage.name nv) f in
+  f <> Empty &&
   eval (fun (_name, cstr) ->
       check_version_formula cstr (OpamPackage.version nv))
-    name_formula
+    f
 
 let all_names f =
   fold_left (fun acc (name, _) ->
@@ -413,42 +445,7 @@ let all_names f =
 
 let packages pkgset f =
   OpamPackage.Name.Set.fold (fun name acc ->
-      let is_name (n, _cstr) = OpamPackage.Name.equal n name in
-      let formula_or_empty cond f = if cond then f else Empty in
-      (* Determine if nv could possibly part of the solution for [f]. This
-         means checking that either [v] satisfies the constraints on name.
-         This is done by converting [f] to DNF, which allows us to transform
-         the formula into a union of intervals, where ignoring atoms for
-         different package names works. We can then ignore conjunctions
-         where [name] doesn't appear. However, this function is typically
-         used on a dependency formula, which is most normally a large
-         conjunction. We capitalise on this with a peephole simplification,
-         observing that if we're testing for package name A in the formula
-         [X & Y], then we can ignore X if it doesn't contain A (and likewise
-         Y). This eliminates unrelated sub-formula from the top-level
-         conjunction, in particular it means that
-         [Dep1 & Dep2 & (Dep3 | Dep4) & (Dep5 | Dep6)] does not cause
-         trigger worst-case expansion for DNF. *)
-      let rec simplify_formula f =
-        match f with
-        | Empty -> Empty
-        | Atom atom ->
-            formula_or_empty (is_name atom) f
-        | Block b ->
-            formula_or_empty (exists is_name b) f
-        | Or(a, b) ->
-            formula_or_empty (exists is_name a || exists is_name b) f
-        | And(a, b) ->
-            let a = simplify_formula a in
-            let b = simplify_formula b in
-            make_and a b
-      in
-      let f =
-        f
-        |> simplify_formula
-        |> dnf_of_formula
-        |> map (fun a -> formula_or_empty (is_name a) (Atom a))
-      in
+      let f = name_formula name f in
       OpamPackage.Set.union acc @@
       OpamPackage.Set.filter (fun nv ->
           let v = OpamPackage.version nv in
