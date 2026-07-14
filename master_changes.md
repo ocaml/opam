@@ -127,6 +127,7 @@ users)
   * Fix the regexp matching on temporary files [#7094 @kit-ty-kate]
 
 ## Github Actions
+  * Ensure a better availability of the `micro_httpd` dependency [#7033 @kit-ty-kate]
 
 ## Doc
 
