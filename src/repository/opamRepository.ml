@@ -108,7 +108,8 @@ let fetch_from_cache =
     with
     | None, _ -> raise Not_found
     | Some hit_file, miss_files ->
-      if List.for_all
+      if OpamRepositoryConfig.(!r.trust_cache) ||
+         List.for_all
           (fun ck -> OpamHash.check_file (OpamFilename.to_string hit_file) ck)
           checksums
       then begin
