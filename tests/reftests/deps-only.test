@@ -437,14 +437,11 @@ The following actions will be performed:
 Done.
 ### opam install --deps-only lorem dolor
 The following actions will be performed:
-=== install 2 packages
+=== install 1 package
   - install ipsum 1 [required by dolor]
-  - install sit   1 [required by lorem]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   deps-of-lorem.1
 -> installed ipsum.1
--> installed sit.1
 Done.
 ### :III:5: deps of same packages, good version specified, already installed package
 ### opam switch create deps-conflicts-5 --empty
@@ -536,10 +533,10 @@ opam-version: "2.0"
 ### opam install --deps-only lorem dolor
 The following actions will be performed:
 === install 1 package
-  - install sit 2 [required by lorem]
+  - install ipsum 1 [required by lorem]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed sit.2
+-> installed ipsum.1
 Done.
 ### opam switch create deps-conflicts-7b --empty
 ### # it takes lorem.1

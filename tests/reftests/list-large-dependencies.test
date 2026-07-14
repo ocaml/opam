@@ -344,13 +344,13 @@ abt
 ### opam install abella --show
 The following actions would be performed:
 === install 10 packages
-  - install abella                2.0.7
-  - install base-bigarray         base
-  - install base-threads          base
-  - install base-unix             base
-  - install ocaml                 4.12.1 [required by abella]
-  - install ocaml-base-compiler   4.12.1 [required by ocaml]
-  - install ocaml-config          2      [required by ocaml]
-  - install ocaml-options-vanilla 1
-  - install ocamlbuild            0.14.0 [required by abella]
-  - install ocamlfind             1.9.1  [required by abella]
+  - install abella         2.0.2
+  - install base-bigarray  base
+  - install base-domains   base
+  - install base-threads   base
+  - install base-unix      base
+  - install ocaml          5.00.0       [required by abella]
+  - install ocaml-config   2            [required by ocaml]
+  - install ocaml-variants 5.00.0+trunk [required by ocaml]
+  - install ocamlbuild     0.14.0       [required by abella]
+  - install ocamlfind      1.9.1        [required by abella]
