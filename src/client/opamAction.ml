@@ -155,6 +155,10 @@ let preprocess_dot_install_t st nv build_dir =
     false, (instdir_gen P.lib_dir), I.lib_root;
     true, (instdir_gen P.lib_dir), I.libexec_root;
 
+    (* prefix files *)
+    false, (fun r s _ -> P.root r s), I.root;
+    true, (fun r s _ -> P.root r s), I.rootexec;
+
     (* toplevel *)
     false, (instdir_gen P.toplevel), I.toplevel;
 
@@ -827,6 +831,8 @@ let remove_package_aux
     remove_files OpamPath.Switch.share_dir OpamFile.Dot_install.share_root;
     remove_files_and_dir OpamPath.Switch.etc OpamFile.Dot_install.etc;
     remove_files (OpamPath.Switch.man_dir ?num:None) OpamFile.Dot_install.man;
+    remove_files ((fun r s _ -> OpamPath.Switch.root r s)) OpamFile.Dot_install.root;
+    remove_files ((fun r s _ -> OpamPath.Switch.root r s)) OpamFile.Dot_install.rootexec;
     remove_files_and_dir OpamPath.Switch.doc OpamFile.Dot_install.doc;
 
     (* Remove the misc files *)

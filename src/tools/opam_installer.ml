@@ -194,7 +194,9 @@ let iter_install f instfile o =
       dest_pkg                    D.share,    S.share instfile,      false;
       dest_global                 D.share_dir,S.share_root instfile, false;
       dest_pkg                    D.etc,      S.etc instfile,        false;
-      dest_pkg    ?fix:o.docdir   D.doc,      S.doc instfile,        false; ]
+      dest_pkg    ?fix:o.docdir   D.doc,      S.doc instfile,        false;
+      dest                        o.prefix,   S.root instfile,       false;
+      dest                        o.prefix,   S.rootexec instfile,   true;  ]
 
 let install options =
   let instfile = OpamFile.Dot_install.safe_read options.file in

@@ -3751,6 +3751,8 @@ module Dot_installSyntax = struct
   let format_version = OpamVersion.of_string "2.0"
 
   type t =  {
+    root    : (basename optional * basename option) list;
+    rootexec  : (basename optional * basename option) list;
     bin     : (basename optional * basename option) list;
     sbin    : (basename optional * basename option) list;
     lib     : (basename optional * basename option) list;
@@ -3768,6 +3770,8 @@ module Dot_installSyntax = struct
   }
 
   let empty = {
+    root     = [];
+    rootexec = [];
     lib      = [];
     bin      = [];
     sbin     = [];
@@ -3784,6 +3788,8 @@ module Dot_installSyntax = struct
     doc      = [];
   }
 
+  let root t = t.root
+  let rootexec t = t.rootexec
   let bin t = t.bin
   let sbin t = t.sbin
   let lib t = t.lib
@@ -3799,6 +3805,8 @@ module Dot_installSyntax = struct
   let lib_root t = t.lib_root
   let libexec_root t = t.libexec_root
 
+  let with_root root t = { t with root }
+  let with_rootexec rootexec t = { t with rootexec }
   let with_bin bin t = { t with bin }
   let with_sbin sbin t = { t with sbin }
   let with_lib lib t = { t with lib }
@@ -3858,31 +3866,77 @@ module Dot_installSyntax = struct
          else OpamFilename.Base.to_string op.c)
 
   let fields =
+    let raise_with_file file ?pos message =
+      Pp.bad_format ?pos ("%s " ^^ message) file
+    in
+    let pp_check_parent_dir =
+      Pp.check ~name:"rel-filename"
+        ~raise:raise_with_file
+        ~errmsg:"references its parent directory."
+        (Fun.negate @@ OpamFilename.might_escape ~sep:`Unspecified)
+    in
+    let pp_check_not_absolute =
+      Pp.check ~name:"rel-filename"
+        ~raise:raise_with_file
+        ~errmsg:"is an absolute filename."
+        Filename.is_relative
+    in
+    let pp_warn_std_paths =
+      Pp.pp ~name:"std-paths"
+        (fun ~pos str ->
+           let paths = OpamTypesBase.all_std_paths in
+           let paths = List.filter (fun x -> x <> Prefix) paths in
+           let paths = List.map OpamTypesBase.string_of_std_path paths in
+           (match OpamFilename.split ~sep:`Unspecified str with
+            | root::_::_ ->
+              if OpamStd.List.mem String.equal root paths then
+                Pp.warn ~pos
+                  "Path '%s' begins with %s directory in 'root' field. \
+                   Use '%s' field instead."
+                  str root root
+            | _ -> ());
+           str)
+        Fun.id
+    in
     let pp_field =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
         (Pp.opt @@
-         Pp.singleton -| Pp.V.string -| Pp.pp ~name:"rel-filename"
-           (fun ~pos s ->
-              if OpamFilename.might_escape ~sep:`Unspecified s then
-                Pp.bad_format ~pos "%s references its parent directory." s
-              else if Filename.is_relative s then
-                OpamFilename.Base.of_string s
-              else
-                Pp.bad_format ~pos "%s is an absolute filename." s)
-           OpamFilename.Base.to_string)
+         Pp.singleton -| Pp.V.string
+         -| pp_check_parent_dir
+         -| pp_check_not_absolute
+         -| Pp.of_module "file" (module OpamFilename.Base))
+    in
+    let pp_root =
+      Pp.V.map_list ~depth:1 @@ Pp.V.map_option
+        (Pp.V.string -| pp_optional)
+        (Pp.opt @@
+         Pp.singleton -| Pp.V.string
+         -| pp_check_parent_dir
+         -| pp_check_not_absolute
+         -| pp_warn_std_paths
+         -| Pp.check ~name:"rel-filename"
+           ~raise:raise_with_file
+           ~errmsg:"tries to overwrite opam internal files."
+           (fun s ->
+              match OpamFilename.split ~sep:`Unspecified s with
+              | root::_::_ -> (root : string) <> OpamPathName.opamswitch_d
+              | _ -> true)
+         -| Pp.of_module "file" (module OpamFilename.Base))
     in
     let pp_misc =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
-        (Pp.singleton -| Pp.V.string -| Pp.pp ~name:"abs-filename"
-           (fun ~pos s ->
-              if not (Filename.is_relative s) then OpamFilename.of_string s
-              else Pp.bad_format ~pos
-                  "%s is not an absolute filename." s)
-           OpamFilename.to_string)
+        (Pp.singleton -| Pp.V.string
+         -| Pp.check ~name:"abs-filename"
+           ~raise:raise_with_file
+           ~errmsg:"is not an absolute filename."
+           (Fun.negate Filename.is_relative)
+         -| Pp.of_module "abs-filename" (module OpamFilename))
     in
     [
+      "root", Pp.ppacc with_root root pp_root;
+      "rootexec", Pp.ppacc with_rootexec rootexec pp_root;
       "lib", Pp.ppacc with_lib lib pp_field;
       "bin", Pp.ppacc with_bin bin pp_field;
       "sbin", Pp.ppacc with_sbin sbin pp_field;
