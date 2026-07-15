@@ -137,10 +137,10 @@ Nothing to do.
 ### opam upgrade mirage-solo5 --formula '"mirage-no-solo5"' --best-effort
 [WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.
 The following actions would be faked:
-=== remove 1 package
-  - remove  mirage-solo5    0.5.0
 === install 1 package
   - install mirage-no-solo5 1
+=== remove 1 package
+  - remove  mirage-solo5    0.5.0
 ### OPAMSHOW=0 opam switch create test --empty
 ### opam install --formula '"ocaml-base-compiler" | "ocaml-system"'
 [WARNING] Flag --formula is experimental, there is no guarantee that it will be kept; avoid using it in scripts.

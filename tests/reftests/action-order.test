@@ -1,0 +1,87 @@
+N0REP0
+### OPAMYES=1
+### <pkg:install.1>
+opam-version: "2.0"
+### <pkg:reinstall.1>
+opam-version: "2.0"
+depends: ["upgrade" {= "1"} "downgrade" {= "2"}]
+### <pkg:upgrade.1>
+opam-version: "2.0"
+### <pkg:upgrade.2>
+opam-version: "2.0"
+### <pkg:downgrade.1>
+opam-version: "2.0"
+### <pkg:downgrade.2>
+opam-version: "2.0"
+### <pkg:remove.1>
+opam-version: "2.0"
+### opam switch create order --empty
+### opam install reinstall upgrade.1 downgrade remove
+The following actions will be performed:
+=== install 4 packages
+  - install downgrade 2
+  - install reinstall 1
+  - install remove    1
+  - install upgrade   1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed downgrade.2
+-> installed remove.1
+-> installed upgrade.1
+-> installed reinstall.1
+Done.
+### <pkg:reinstall.1>
+opam-version: "2.0"
+depends: ["install" "upgrade" {= "2"} "downgrade" {= "1"}]
+conflicts: "remove"
+### opam install --show install reinstall
+[NOTE] Package reinstall is already installed (current version is 1).
+The following actions would be performed:
+=== recompile 1 package
+  - recompile reinstall 1
+=== install 1 package
+  - install   install   1
+=== upgrade 1 package
+  - upgrade   upgrade   1 to 2 [required by reinstall]
+=== downgrade 1 package
+  - downgrade downgrade 2 to 1 [required by reinstall]
+=== remove 1 package
+  - remove    remove    1      [conflicts with reinstall]
+### opam reinstall --show install reinstall
+install is not installed. Install it? [Y/n] y
+The following actions would be performed:
+=== recompile 1 package
+  - recompile reinstall 1
+=== install 1 package
+  - install   install   1
+=== upgrade 1 package
+  - upgrade   upgrade   1 to 2 [required by reinstall]
+=== downgrade 1 package
+  - downgrade downgrade 2 to 1 [required by reinstall]
+=== remove 1 package
+  - remove    remove    1      [conflicts with reinstall]
+### opam upgrade --show install reinstall
+install is not installed. Install it? [Y/n] y
+The following actions would be performed:
+=== recompile 1 package
+  - recompile reinstall 1
+=== upgrade 1 package
+  - upgrade   upgrade   1 to 2 [required by reinstall]
+=== install 1 package
+  - install   install   1
+=== downgrade 1 package
+  - downgrade downgrade 2 to 1 [required by reinstall]
+=== remove 1 package
+  - remove    remove    1      [conflicts with reinstall]
+### opam remove --show remove
+The following actions would be performed:
+=== recompile 1 package
+  - recompile reinstall 1      [uses remove]
+=== remove 1 package
+  - remove    remove    1
+=== upgrade 1 package
+  - upgrade   upgrade   1 to 2 [required by reinstall]
+=== downgrade 1 package
+  - downgrade downgrade 2 to 1 [required by reinstall]
+=== install 1 package
+  - install   install   1      [required by reinstall]

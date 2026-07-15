@@ -88,10 +88,10 @@ The following actions will be performed:
 Done.
 ### opam install a.1
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade a 2 to 1
 === install 1 package
   - install   b 1      [required by a]
+=== downgrade 1 package
+  - downgrade a 2 to 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   a.2

@@ -14,6 +14,8 @@
 open OpamTypes
 open OpamStateTypes
 
+type action_solution = user_action * OpamSolver.solution
+
 (** Resolve an user request *)
 val resolve:
   'a switch_state ->
@@ -21,7 +23,7 @@ val resolve:
   ?reinstall:package_set ->
   requested:package_set ->
   atom request ->
-  (OpamSolver.solution, OpamCudf.conflict) solver_result
+  (action_solution, OpamCudf.conflict) solver_result
 
 (** Apply a solution returned by the solver. If [ask] is not specified, prompts
     the user whenever the solution isn't obvious from the request. [add_roots]
@@ -40,7 +42,7 @@ val apply:
   ?assume_built:bool ->
   ?download_only:bool ->
   ?force_remove:bool ->
-  OpamSolver.solution ->
+  action_solution ->
   rw switch_state * solution_result
 
 (** Call the solver to get a solution and then call [apply]. If [ask] is not

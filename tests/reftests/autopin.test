@@ -138,11 +138,11 @@ other           1
 foo-format is now pinned to file://${BASEDIR}/foo (version 2.0)
 foo-core is now pinned to file://${BASEDIR}/foo (version 2.0)
 The following actions will be performed:
-=== downgrade 1 package
-  - downgrade foo-file-format 3 to 2
 === install 2 packages
   - install   foo-core        2.0 (pinned)
   - install   foo-format      2.0 (pinned)
+=== downgrade 1 package
+  - downgrade foo-file-format 3 to 2
 
 The following system packages will first need to be installed:
     some-depext

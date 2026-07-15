@@ -933,10 +933,10 @@ P2.1
 P5.1
 ### opam remove P2 -a --yes
 The following actions will be performed:
-=== remove 1 package
-  - remove    P2 1
 === recompile 1 package
   - recompile P5 1 [uses P2]
+=== remove 1 package
+  - remove    P2 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P5.1  (no changes)

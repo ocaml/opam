@@ -25,6 +25,7 @@ users)
 ## Config report
 
 ## Actions
+  * Reorder the list of actions by increased priority [#6864 @kit-ty-kate - fix #6863]
 
 ## Install
   * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
@@ -216,6 +217,7 @@ users)
   * Add a test showing opam pin list not working when the source git directory is missing [#6597 @kit-ty-kate]
   * Add a test making sure the global or system `git` config doesn't change the behaviour of opam [#6992 @kit-ty-kate]
   * Add a test showing the remote and branch names of a git repository extracted by `opam source` [#6992 @kit-ty-kate]
+  * Add a test showing the order of install actions for each relevant commands [#6864 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -276,6 +278,8 @@ users)
   * `OpamClientConfig.opam_init`: replace `no_depexts` argument by `depexts` [#6489 @rjbou]
   * `OpamSolution` remove the heuristic of recomputing depexts of additional (pinned) packages. [#6489 @arozovyk]
   * `OpamClient` update the system package status check for dependencies during `opam install --deps-only`, including support for pinned packages; also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
+  * `OpamSolution.apply`: now also take the `user_action` as parameter [#6864 @kit-ty-kate]
+  * `OpamSolution.resolve`: the return type now also return the `user_action` [#6864 @kit-ty-kate]
   * `OpamSolution.get_depexts` remove no longer needed `recover` option that was used with `--depext-only` option  [#6489 @arozovyk]
   * `OpamConfigCommand.subst` now takes a `filename` instead of a `basename` [#6936 @NathanReb]
 
