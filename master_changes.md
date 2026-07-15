@@ -167,6 +167,7 @@ users)
   * Fix a rare potential GC corruption in `OpamStubs.uname` [#6880 @avsm @kit-ty-kate @andrew]
   * Fix a rare potential GC corruption in `OpamStubs.enumRegistry` on Windows [#6882 @kit-ty-kate]
   * Remove uses of `Stdlib.ignore` [#6481 @rjbou @kit-ty-kate]
+  * Mitigate potential exponential blow-up converting dependency formulae to DNF [#6831 @dra27]
 
 ## Internal: Unix
 
