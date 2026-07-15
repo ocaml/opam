@@ -113,8 +113,12 @@ let clean_background_processes () =
   Hashtbl.iter (fun (pid, ic) cmd ->
       Printf.printf "[[[Killing %s]]]\n" cmd;
       close_in ic;
-      try Unix.kill pid Sys.sigkill
-      with Unix.Unix_error (ESRCH, "kill", _) -> ()
+      (try Unix.kill pid Sys.sigkill
+       with Unix.Unix_error (ESRCH, "kill", _) -> ());
+      let _ : int * Unix.process_status = Unix.waitpid [] pid in
+      (* we need to ensure the process has ended
+         before removing the test directory on Windows *)
+      ()
     ) background_pids;
   Hashtbl.clear background_pids
 
