@@ -777,11 +777,7 @@ let rec list_remove x = function
 
 let run_http_server dir () =
   let port =
-    let rec aux p =
-      if p < 1030 then aux (Random.int 49000)
-      else p
-    in
-    aux (Random.int 49000)
+    Random.int (65535 - 1030) + 1030
   in
   let cmd = "micro_httpd" in
   let args = ["-p"; string_of_int port; dir] in

@@ -215,6 +215,7 @@ users)
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
   * Add to automatic path subsitutions lines that contains `packages` [#6625 @rjbou]
   * Add to automatic path substitutions lines that contains switch installation paths [#6956 @rjbou]
+  * Fix the port number range on Windows [#7029 @kit-ty-kate]
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
