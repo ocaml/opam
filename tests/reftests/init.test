@@ -402,3 +402,17 @@ this is not the content of a config file
 ### opam init --bypass-checks --bare --no-setup --config wrong-config --config non-existant --config $BASEDIR/config-files/config
 [ERROR] File does not exist: ${BASEDIR}/non-existant
 # Return code 2 #
+### :III: Debug logs
+### :III:1: CLIENT actions during --bare (detects if the default compiler was computed or not)
+### ::::::: See https://github.com/ocaml/opam/issues/5815
+### rm -rf $OPAMROOT
+### <opamrc>
+opam-version: "2.0"
+### OPAMDEBUGSECTIONS=CLIENT OPAMDEBUG=-5 opam init --bypass-checks --bare --no-setup --config opamrc REPO/ | grep -v Cygwin | grep -v git-location
+Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
+CLIENT                          INIT default from file://${BASEDIR}/REPO
+CLIENT                          updating repository state
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+CLIENT                          Selected default compiler ocaml-base-compiler in 0.000s

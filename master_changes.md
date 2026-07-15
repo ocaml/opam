@@ -218,6 +218,7 @@ users)
   * Add a test making sure the global or system `git` config doesn't change the behaviour of opam [#6992 @kit-ty-kate]
   * Add a test showing the remote and branch names of a git repository extracted by `opam source` [#6992 @kit-ty-kate]
   * Add a test showing the order of install actions for each relevant commands [#6864 @kit-ty-kate]
+  * Add a test showing some of the internal steps of `opam init` [#6957 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
