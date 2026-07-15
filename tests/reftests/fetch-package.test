@@ -107,7 +107,7 @@ Done.
 files
 opam
 root.ml
-### opam pin foo-git-pin ./a-dev -y
+### opam pin foo-git-pin ./a-dev -yb
 [NOTE] Package foo-git-pin does not exist in opam repositories registered in the current switch.
 [foo-git-pin.dev] synchronised (git+file://${BASEDIR}/a-dev#master)
 foo-git-pin is now pinned to git+file://${BASEDIR}/a-dev#master (version dev)
@@ -125,9 +125,15 @@ opam
 root.ml
 ### cat OPAM/downloads-pin/lib/foo-git-pin-hist
 2
+### git -C OPAM/downloads-pin/.opam-switch/build/foo-git-pin.dev branch -avv | ' [a-f0-9]+ ' -> ' +hash+ '
+* main                    +hash+ i'm empty
+  remotes/opam-ref-master +hash+ i'm empty
+### git -C OPAM/downloads-pin/.opam-switch/build/foo-git-pin.dev remote -v
+origin	file://${BASEDIR}/a-dev (fetch)
+origin	file://${BASEDIR}/a-dev (push)
 ### :: dev-repo
 ### opam switch create downloads-devrepo --empty
-### opam pin foo-git --dev-repo -y
+### opam pin foo-git --dev-repo -yb
 [foo-git.1] synchronised (git+file://${BASEDIR}/a-dev)
 foo-git is now pinned to git+file://${BASEDIR}/a-dev (version 1)
 
@@ -144,3 +150,9 @@ opam
 root.ml
 ### cat OPAM/downloads-devrepo/lib/foo-git-hist
 2
+### git -C OPAM/downloads-devrepo/.opam-switch/build/foo-git.1 branch -avv | ' [a-f0-9]+ ' -> ' +hash+ '
+* main             +hash+ i'm empty
+  remotes/opam-ref +hash+ i'm empty
+### git -C OPAM/downloads-devrepo/.opam-switch/build/foo-git.1 remote -v
+origin	file://${BASEDIR}/a-dev (fetch)
+origin	file://${BASEDIR}/a-dev (push)
