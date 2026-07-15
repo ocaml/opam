@@ -3881,6 +3881,23 @@ module Dot_installSyntax = struct
         ~errmsg:"is an absolute filename."
         Filename.is_relative
     in
+    let pp_warn_std_paths =
+      Pp.pp ~name:"std-paths"
+        (fun ~pos str ->
+           let paths = OpamTypesBase.all_std_paths in
+           let paths = List.filter (fun x -> x <> Prefix) paths in
+           let paths = List.map OpamTypesBase.string_of_std_path paths in
+           (match OpamFilename.split ~sep:`Unspecified str with
+            | root::_::_ ->
+              if OpamStd.List.mem String.equal root paths then
+                Pp.warn ~pos
+                  "Path '%s' begins with %s directory in 'root' field. \
+                   Use '%s' field instead."
+                  str root root
+            | _ -> ());
+           str)
+        Fun.id
+    in
     let pp_field =
       Pp.V.map_list ~depth:1 @@ Pp.V.map_option
         (Pp.V.string -| pp_optional)
@@ -3897,6 +3914,7 @@ module Dot_installSyntax = struct
          Pp.singleton -| Pp.V.string
          -| pp_check_parent_dir
          -| pp_check_not_absolute
+         -| pp_warn_std_paths
          -| Pp.check ~name:"rel-filename"
            ~raise:raise_with_file
            ~errmsg:"tries to overwrite opam internal files."

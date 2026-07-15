@@ -2188,26 +2188,21 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-root.1
 ACTION                          prepare_package_source: pkg-root.1 at ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1
-TRACK                           before install: 7 elements scanned in 0.000s
+[WARNING] Errors in ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1/pkg-root.install, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/sw-root/.opam-switch/build/pkg-root.1/pkg-root.install:2:20-2:49::
+              Path 'lib/installed-file.lib.root' begins with lib directory in 'root' field. Use 'lib' field instead.
+
+TRACK                           before install: 0 elements scanned in 0.000s
 ACTION                          Installing pkg-root.1.
 
-TRACK                           after install: 18 elements, 11 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-root.1: 11 items (addition: 11)
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-root.1: 0 items
 -> installed pkg-root.1
 Done.
 ### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
-added: ["bin/installed-file.bin.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "doc/installed-file.doc.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "etc" {"D"} "etc/installed-file.etc.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "lib/installed-file.lib.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "lib/stublibs/installed-file.stublibs.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "lib/toplevel/installed-file.lib.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "man/installed-file.man.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "sbin/installed-file.sbin.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "share" {"D"} "share/installed-file.share.root" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
 opam-version: "2.0"
 ### ocaml cat.ml sw-root pkg-root
-==> ${BASEDIR}/OPAM/sw-root/bin/installed-file.bin.root
-==> ${BASEDIR}/OPAM/sw-root/doc/installed-file.doc.root
-==> ${BASEDIR}/OPAM/sw-root/etc/installed-file.etc.root
-==> ${BASEDIR}/OPAM/sw-root/lib/installed-file.lib.root
-==> ${BASEDIR}/OPAM/sw-root/lib/stublibs/installed-file.stublibs.root
-==> ${BASEDIR}/OPAM/sw-root/lib/toplevel/installed-file.lib.root
-==> ${BASEDIR}/OPAM/sw-root/man/installed-file.man.root
-==> ${BASEDIR}/OPAM/sw-root/sbin/installed-file.sbin.root
-==> ${BASEDIR}/OPAM/sw-root/share/installed-file.share.root
+==> No 'installed-file' found
 ### OPAMDEBUG=-5 opam remove pkg-root
 The following actions will be performed:
 === remove 1 package
@@ -2218,7 +2213,6 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          Removing pkg-root.1
 ACTION                          Removing files from .install
 ACTION                          Removing the misc files
-TRACK                           While removing pkg-root.1: files share/installed-file.share.root, sbin/installed-file.sbin.root, man/installed-file.man.root, lib/toplevel/installed-file.lib.root, lib/stublibs/installed-file.stublibs.root, lib/installed-file.lib.root, etc/installed-file.etc.root, doc/installed-file.doc.root, bin/installed-file.bin.root were already removed
 -> removed   pkg-root.1
 ACTION                          Cleaning up artefacts of pkg-root.1
 ACTION                          Removing the local metadata
@@ -2254,15 +2248,14 @@ ACTION                          prepare_package_source: pkg-root.1 at ${BASEDIR}
 TRACK                           before install: 0 elements scanned in 0.000s
 ACTION                          Installing pkg-root.1.
 
-TRACK                           after install: 21 elements, 21 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-root.1: 21 items (addition: 21)
+TRACK                           after install: 19 elements, 19 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-root.1: 19 items (addition: 19)
 -> installed pkg-root.1
 Done.
 ### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
-added: ["not-fst" {"D"} "not-fst/.opam-switch" {"D"} "not-fst/.opam-switch/installed-file.opam-switch.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/bin" {"D"} "not-fst/bin/installed-file.bin.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/doc" {"D"} "not-fst/doc/installed-file.doc.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/etc" {"D"} "not-fst/etc/installed-file.etc.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/lib" {"D"} "not-fst/lib/installed-file.lib.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/lib/stublibs" {"D"} "not-fst/lib/stublibs/installed-file.stublibs.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/lib/toplevel" {"D"} "not-fst/lib/toplevel/installed-file.lib.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/man" {"D"} "not-fst/man/installed-file.man.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/sbin" {"D"} "not-fst/sbin/installed-file.sbin.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/share" {"D"} "not-fst/share/installed-file.share.root" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+added: ["not-fst" {"D"} "not-fst/bin" {"D"} "not-fst/bin/installed-file.bin.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/doc" {"D"} "not-fst/doc/installed-file.doc.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/etc" {"D"} "not-fst/etc/installed-file.etc.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/lib" {"D"} "not-fst/lib/installed-file.lib.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/lib/stublibs" {"D"} "not-fst/lib/stublibs/installed-file.stublibs.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/lib/toplevel" {"D"} "not-fst/lib/toplevel/installed-file.lib.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/man" {"D"} "not-fst/man/installed-file.man.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/sbin" {"D"} "not-fst/sbin/installed-file.sbin.root" {"F:a611026bf7b99362c57473c4e1ef30a0"} "not-fst/share" {"D"} "not-fst/share/installed-file.share.root" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
 opam-version: "2.0"
 ### ocaml cat.ml sw-root pkg-root
-==> ${BASEDIR}/OPAM/sw-root/not-fst/.opam-switch/installed-file.opam-switch.root
 ==> ${BASEDIR}/OPAM/sw-root/not-fst/bin/installed-file.bin.root
 ==> ${BASEDIR}/OPAM/sw-root/not-fst/doc/installed-file.doc.root
 ==> ${BASEDIR}/OPAM/sw-root/not-fst/etc/installed-file.etc.root
@@ -2282,7 +2275,7 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          Removing pkg-root.1
 ACTION                          Removing files from .install
 ACTION                          Removing the misc files
-TRACK                           While removing pkg-root.1: files not-fst/share/installed-file.share.root, not-fst/sbin/installed-file.sbin.root, not-fst/man/installed-file.man.root, not-fst/lib/toplevel/installed-file.lib.root, not-fst/lib/stublibs/installed-file.stublibs.root, not-fst/lib/installed-file.lib.root, not-fst/etc/installed-file.etc.root, not-fst/doc/installed-file.doc.root, not-fst/bin/installed-file.bin.root, not-fst/.opam-switch/installed-file.opam-switch.root were already removed
+TRACK                           While removing pkg-root.1: files not-fst/share/installed-file.share.root, not-fst/sbin/installed-file.sbin.root, not-fst/man/installed-file.man.root, not-fst/lib/toplevel/installed-file.lib.root, not-fst/lib/stublibs/installed-file.stublibs.root, not-fst/lib/installed-file.lib.root, not-fst/etc/installed-file.etc.root, not-fst/doc/installed-file.doc.root, not-fst/bin/installed-file.bin.root were already removed
 -> removed   pkg-root.1
 ACTION                          Cleaning up artefacts of pkg-root.1
 ACTION                          Removing the local metadata
