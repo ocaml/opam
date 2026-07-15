@@ -25,6 +25,7 @@ val reinstall_d: string
 val remove_d: string
 val sources_d: string
 val opam_d: string
+val opamswitch_d: string
 
 (** {2 Files} *)
 val config_f: string

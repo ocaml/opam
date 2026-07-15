@@ -30,6 +30,7 @@ users)
 
 ## Install
   * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
+  * Add `root` and `rootexec` sections to `.install` files to install files from prefix root [#6938 @WardBrian @rjbou - fix #6919]
 
 ## Build (package)
   * When fetching a git repository, the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
@@ -220,6 +221,7 @@ users)
   * Add a test showing the remote and branch names of a git repository extracted by `opam source` [#6992 @kit-ty-kate]
   * Add a test showing the order of install actions for each relevant commands [#6864 @kit-ty-kate]
   * Add a test showing some of the internal steps of `opam init` [#6957 @kit-ty-kate]
+  * Add tests for `.install` `root` and `rootexec` fields [#6938 @rjbou]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -349,6 +351,9 @@ users)
   * `OpamFile.*.read_from_string`: add optional `?loc` string argument to propagate location information when available (path on disk, archive, etc.), and add logging with level 3 that displays it [#6625 @rjbou]
   * `OpamFile.*`: add `safe_read_from_string` [#6625 @rjbou]
   * `OpamRepositoryPath.tar`: renamed to `repo_tarring`, deprecated, no longer used [#6625 @rjbou]
+  * `OpamPathName`: add `opam_switch_d` for `.opam-switch` [#6938 @WardBrian]
+  * `OpamFile.Dot_install`: add fields `root` and `rootexec` to type record `t` [#6938 @WardBrian]
+  * `OpamFile.Dot_install`: add `root`, `rootexec`, `with_root`, and `with_rootexec` functions [#6938 @WardBrian]
 
 ## opam-core
   * `OpamCmdliner` was added. It is accessible through a new `opam-core.cmdliner` sub-library [#6755 @kit-ty-kate]
@@ -393,3 +398,4 @@ users)
   * `OpamPatch.patch`: no longer patch a file on disk, but take as argument a filesystem abstraction `FS_ABSTR` that delivers the needed functions [#6625 @rjbou]
   * `OpamPatch.parse_patch`: no longer take `~dir` the directory to translate the patch in as argument, it now takes `~translate` argument that is a string option (directory option), if we want to perform a translation in that directory [#6625 @rjbou]
   * `OpamSystem.real_path`: fix a bug where paths after a non existent directory where not resolve [#7011 @kit-ty-kate - fix #7010]
+  * `OpamFilename`: add `split` function that returns the list of paths elements, not platform dependent [#6938 @WardBrian]

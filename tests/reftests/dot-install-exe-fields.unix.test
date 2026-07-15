@@ -1211,3 +1211,223 @@ Done.
 # OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_root.changes not found
 ### ocaml cat.ml sw-libexec_root pkg-libexec_root
 ==> No 'installed-bin' found
+### ::::::::::::::::::::::::::
+### :VI: Field 'rootexec'
+### ::::::::::::::::::::::::::
+### mkdir -p REPO/packages/pkg-rootexec/pkg-rootexec.1/files
+### cp installed-bin REPO/packages/pkg-rootexec/pkg-rootexec.1/files/installed-bin
+### opam switch create sw-rootexec --empty
+### :VI:1: No defined destination path
+### <pkg:pkg-rootexec.1>
+opam-version: "2.0"
+### <pkg:pkg-rootexec.1:pkg-rootexec.install>
+rootexec: [ "installed-bin" ]
+### OPAMDEBUG=-5 opam install pkg-rootexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-rootexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-rootexec.1
+ACTION                          prepare_package_source: pkg-rootexec.1 at ${BASEDIR}/OPAM/sw-rootexec/.opam-switch/build/pkg-rootexec.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-rootexec.1.
+
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-rootexec.1: 1 items (addition: 1)
+-> installed pkg-rootexec.1
+Done.
+### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes | sed-hash $BINMD5 hash
+added: "installed-bin" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-rootexec pkg-rootexec
+==> ${BASEDIR}/OPAM/sw-rootexec/installed-bin (+x)
+### OPAMDEBUG=-5 opam remove pkg-rootexec
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-rootexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-rootexec.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-rootexec.1: files installed-bin were already removed
+-> removed   pkg-rootexec.1
+ACTION                          Cleaning up artefacts of pkg-rootexec.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes
+# OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes not found
+### ocaml cat.ml sw-rootexec pkg-rootexec
+==> No 'installed-bin' found
+### :VI:2: Specify destination path
+### <pkg:pkg-rootexec.1>
+opam-version: "2.0"
+### <pkg:pkg-rootexec.1:pkg-rootexec.install>
+rootexec: [ "installed-bin" {"installed-bin.rootexec"} ]
+### OPAMDEBUG=-5 opam install pkg-rootexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-rootexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-rootexec.1
+ACTION                          prepare_package_source: pkg-rootexec.1 at ${BASEDIR}/OPAM/sw-rootexec/.opam-switch/build/pkg-rootexec.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-rootexec.1.
+
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-rootexec.1: 1 items (addition: 1)
+-> installed pkg-rootexec.1
+Done.
+### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes | sed-hash $BINMD5 hash
+added: "installed-bin.rootexec" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-rootexec pkg-rootexec
+==> ${BASEDIR}/OPAM/sw-rootexec/installed-bin.rootexec (+x)
+### OPAMDEBUG=-5 opam remove pkg-rootexec
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-rootexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-rootexec.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-rootexec.1: files installed-bin.rootexec were already removed
+-> removed   pkg-rootexec.1
+ACTION                          Cleaning up artefacts of pkg-rootexec.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes
+# OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes not found
+### ocaml cat.ml sw-rootexec pkg-rootexec
+==> No 'installed-bin' found
+### :VI:3: Non existing filename, with optional argument
+### <pkg:pkg-rootexec.1>
+opam-version: "2.0"
+### <pkg:pkg-rootexec.1:pkg-rootexec.install>
+rootexec: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-rootexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-rootexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-rootexec.1
+ACTION                          prepare_package_source: pkg-rootexec.1 at ${BASEDIR}/OPAM/sw-rootexec/.opam-switch/build/pkg-rootexec.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-rootexec.1.
+
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-rootexec/.opam-switch/build/pkg-rootexec.1/finst is not present and optional.
+TRACK                           after install: 0 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-rootexec.1: 0 items
+-> installed pkg-rootexec.1
+Done.
+### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes
+opam-version: "2.0"
+### ocaml cat.ml sw-rootexec pkg-rootexec
+==> No 'installed-bin' found
+### OPAMDEBUG=-5 opam remove pkg-rootexec
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-rootexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-rootexec.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-rootexec.1
+ACTION                          Cleaning up artefacts of pkg-rootexec.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes
+# OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes not found
+### ocaml cat.ml sw-rootexec pkg-rootexec
+==> No 'installed-bin' found
+### :VI:4: Non existing filename
+### <pkg:pkg-rootexec.1>
+opam-version: "2.0"
+### <pkg:pkg-rootexec.1:pkg-rootexec.install>
+rootexec: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-rootexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-rootexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-rootexec.1
+ACTION                          prepare_package_source: pkg-rootexec.1 at ${BASEDIR}/OPAM/sw-rootexec/.opam-switch/build/pkg-rootexec.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-rootexec.1.
+
+[ERROR] Installation of pkg-rootexec.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-rootexec/.opam-switch/build/pkg-rootexec.1/finst to ${BASEDIR}/OPAM/sw-rootexec
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-rootexec 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes
+# OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes not found
+### ocaml cat.ml sw-rootexec pkg-rootexec
+==> No 'installed-bin' found
+### :VI:5: Default install with no executable bit
+### chmod -x REPO/packages/pkg-rootexec/pkg-rootexec.1/files/installed-bin
+### <pkg:pkg-rootexec.1>
+opam-version: "2.0"
+### <pkg:pkg-rootexec.1:pkg-rootexec.install>
+rootexec: [ "installed-bin" ]
+### OPAMDEBUG=-5 opam install pkg-rootexec
+The following actions will be performed:
+=== install 1 package
+  - install pkg-rootexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-rootexec.1
+ACTION                          prepare_package_source: pkg-rootexec.1 at ${BASEDIR}/OPAM/sw-rootexec/.opam-switch/build/pkg-rootexec.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-rootexec.1.
+
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-rootexec.1: 1 items (addition: 1)
+-> installed pkg-rootexec.1
+Done.
+### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes | sed-hash $BINMD5 hash
+added: "installed-bin" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-rootexec pkg-rootexec
+==> ${BASEDIR}/OPAM/sw-rootexec/installed-bin (+x)
+### OPAMDEBUG=-5 opam remove pkg-rootexec
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-rootexec 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-rootexec.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-rootexec.1: files installed-bin were already removed
+-> removed   pkg-rootexec.1
+ACTION                          Cleaning up artefacts of pkg-rootexec.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes
+# OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes not found
+### ocaml cat.ml sw-rootexec pkg-rootexec
+==> No 'installed-bin' found

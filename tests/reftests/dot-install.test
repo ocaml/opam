@@ -396,6 +396,13 @@ misc: [
   "dosiero" { "/tmp/../middle/dosiero" }
   "good"    { "good" }
   ]
+root: [
+  "good"     { "windows-sysroot/good" }
+  "internal" { "././.opam-switch/switch-state" }
+  "a-file"   { "../../a-file" }
+  "fichier"  { "/ab/so/lute/path/fichier" }
+  "dosiero"  { "/tmp/../middle/dosiero" }
+  ]
 ### <pkg:eskape.1:a-file>
 hellow
 ### <pkg:eskape.1:fichier>
@@ -437,6 +444,8 @@ SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/good
 SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/good
 [WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:34:15-34:29::
+              ../../a-file references its parent directory.
             - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:2:14-2:28::
               ../../a-file references its parent directory.
             - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:8:14-8:28::

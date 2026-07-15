@@ -22,6 +22,7 @@ let reinstall_d = "reinstall"
 let remove_d = "remove"
 let sources_d = "sources"
 let opam_d = "opam"
+let opamswitch_d = ".opam-switch"
 
 let config_f = "config"
 let opam_f = OpamRepositoryPathName.opam_f

@@ -698,6 +698,7 @@ let common_filters ?opam dir =
     extra_dotinstall_dirs "man";
     extra_dotinstall_dirs "sbin";
     extra_dotinstall_dirs "share";
+    extra_dotinstall_dirs "not-fst";
     seq [
       str "state-";
       repn digit 14 (Some 14);
