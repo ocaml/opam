@@ -16,8 +16,10 @@ src_ext/*.tbz
 src_ext/0install-solver/
 src_ext/archives/*
 src_ext/base64/
+src_ext/checkseum/
 src_ext/cppo/
 src_ext/cudf/
+src_ext/decompress/
 src_ext/dose3/
 src_ext/dune
 src_ext/dune-local/
@@ -28,12 +30,14 @@ src_ext/menhir/
 src_ext/ocamlgraph/
 src_ext/opam-0install-cudf/
 src_ext/opam-file-format/
+src_ext/optint/
 src_ext/patch/
 src_ext/re/
 src_ext/sha/
 src_ext/spdx_licenses/
 src_ext/stdlib-shims/
 src_ext/swhid_core/
+src_ext/tar/
 src_ext/uutf/
 Opam.Runtime.*/
 *.tar.bz2
