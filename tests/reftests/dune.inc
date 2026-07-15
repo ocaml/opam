@@ -21,6 +21,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:action-disk.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-action-order)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff action-order.test action-order.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-action-order)))
+
+(rule
+ (targets action-order.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:action-order.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-admin-cache)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

@@ -216,6 +216,7 @@ users)
   * Add a test showing opam pin list not working when the source git directory is missing [#6597 @kit-ty-kate]
   * Add a test making sure the global or system `git` config doesn't change the behaviour of opam [#6992 @kit-ty-kate]
   * Add a test showing the remote and branch names of a git repository extracted by `opam source` [#6992 @kit-ty-kate]
+  * Add a test showing the order of install actions for each relevant commands [#6864 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
