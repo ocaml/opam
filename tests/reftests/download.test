@@ -236,17 +236,17 @@ The following actions will be performed:
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1
 Processing  1/1: [bar.1: git]
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "init"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "color.ui" "false"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "remote" "add" "origin" "file://${BASEDIR}/bar"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "remote" "set-url" "origin" "file://${BASEDIR}/bar"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "fetch" "-q" "file://${BASEDIR}/bar" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "reset" "--hard" "refs/remotes/opam-ref" "--"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "init"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "remote" "add" "origin" "file://${BASEDIR}/bar"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/bar"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/bar" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "-c" "safe.directory=." "clean" "-fdx"
 SYSTEM                          rmdir ${OPAMTMP}
 Done.
 ### :II:2: distant
@@ -295,20 +295,20 @@ The following actions will be performed:
 SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1
 Processing  1/1: [qux.1: git]
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "init"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "color.ui" "false"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "remote" "add" "origin" "https://github.com/ocaml-opam/opam-depext"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "init"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "remote" "add" "origin" "https://github.com/ocaml-opam/opam-depext"
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download-cache/git
-+ git "-C" git "init" "--bare"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "remote" "set-url" "origin" "https://github.com/ocaml-opam/opam-depext"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "fetch" "-q" "https://github.com/ocaml-opam/opam-depext" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "push" git "+refs/remotes/opam-ref:refs/remotes/cd8336413a06dcd0c48d3f48df5d1940"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "reset" "--hard" "refs/remotes/opam-ref" "--"
-+ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "clean" "-fdx"
++ git "-C" git "-c" "safe.directory=." "init" "--bare"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "remote" "set-url" "origin" "https://github.com/ocaml-opam/opam-depext"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "fetch" "-q" "https://github.com/ocaml-opam/opam-depext" "--update-shallow" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "push" git "+refs/remotes/opam-ref:refs/remotes/cd8336413a06dcd0c48d3f48df5d1940"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "-c" "safe.directory=." "clean" "-fdx"
 SYSTEM                          rmdir ${OPAMTMP}
 Done.
 ### :::::::::::::::

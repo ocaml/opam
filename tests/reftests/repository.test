@@ -293,7 +293,7 @@ opam-version: "2.0"
 first  --
 ### ::: rsync - git :::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper -c safe.directory=. fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -301,7 +301,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper -c safe.directory=. fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -332,7 +332,7 @@ first  --
 first  --
 ### ::: git - git :::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper -c safe.directory=. fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -340,7 +340,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper -c safe.directory=. fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -459,7 +459,7 @@ opam-version: "2.0"
 first  --
 ### :::: rsync - git ::::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper -c safe.directory=. fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -467,7 +467,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper -c safe.directory=. fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -498,7 +498,7 @@ first  --
 first  --
 ### :::: git - git ::::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper -c safe.directory=. fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -506,7 +506,7 @@ first  --
 # Name # Installed # Synopsis
 first  --
 ### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper -c safe.directory=. fetch -q" exited with code 128
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -1058,18 +1058,18 @@ RSTATE                          Cache found
 REPOSITORY                      repository-set-url
 REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "init"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "color.ui" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "add" "origin" "file://${BASEDIR}/CHG"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "reset" "--hard" "refs/remotes/opam-ref" "--"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "remote" "add" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "-c" "safe.directory=." "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "-c" "safe.directory=." "clean" "-fdx"
 REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
 [changes] Initialised
 UPDATE                          Repository has new changes
@@ -1112,18 +1112,18 @@ Processing  1/1:
 + tar "xfz" "${BASEDIR}/OPAM/repo/changes.tar.gz" "-C" "${BASEDIR}/OPAM/repo/changes"
 REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "init"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "color.ui" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "add" "origin" "file://${BASEDIR}/CHG"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "reset" "--hard" "refs/remotes/opam-ref" "--"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "remote" "add" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "-c" "safe.directory=." "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "-c" "safe.directory=." "clean" "-fdx"
 REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
 [changes] Initialised
 UPDATE                          Repository has new changes
@@ -1234,18 +1234,18 @@ RSTATE                          Cache found
 REPOSITORY                      repository-set-url
 REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "init"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "color.ui" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "add" "origin" "file://${BASEDIR}/CHG"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "reset" "--hard" "refs/remotes/opam-ref" "--"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "remote" "add" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "-c" "safe.directory=." "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "-c" "safe.directory=." "clean" "-fdx"
 REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
 [changes] Initialised
 UPDATE                          Repository has new changes
@@ -1285,18 +1285,18 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "init"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.eol" "lf"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "color.ui" "false"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "add" "origin" "file://${BASEDIR}/CHG"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "reset" "--hard" "refs/remotes/opam-ref" "--"
-+ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "clean" "-fdx"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "fetch.prune" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "diff.noprefix" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "core.autocrlf" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "core.eol" "lf"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "config" "--local" "color.ui" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "remote" "add" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "remote" "set-url" "origin" "file://${BASEDIR}/CHG"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "-c" "safe.directory=." "fetch" "-q" "file://${BASEDIR}/CHG" "--update-shallow" "--depth=1" "+HEAD:refs/remotes/opam-ref"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "-c" "safe.directory=." "reset" "--hard" "refs/remotes/opam-ref" "--"
++ git "-C" "${BASEDIR}/OPAM/repo/changes.new" "-c" "safe.directory=." "clean" "-fdx"
 REPOSITORY                      changes: applying update from scratch at ${BASEDIR}/OPAM/repo/changes.new
 [changes] Initialised
 UPDATE                          Repository has new changes
