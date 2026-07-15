@@ -1512,6 +1512,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list.unix.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-local-switch)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff local-switch.test local-switch.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-local-switch)))
+
+(rule
+ (targets local-switch.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:local-switch.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-lock)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

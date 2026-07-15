@@ -230,6 +230,7 @@ users)
   * Test the new `--ignore-available-on` argument and `OPAMIGNOREAVAILABLE` environment variable [#6836 @WardBrian @kit-ty-kate]
   * Add a test showing the behaviour of `opam init` when the default compiler failed to build [#6851 @kit-ty-kate]
   * Add a test ensuring `/` can be used as directory separator on Windows when referring to a path to a local repository [#6981 @kit-ty-kate]
+  * Add a test showing when opam creates a local switch vs. global [#6981 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
