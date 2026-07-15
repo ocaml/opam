@@ -3822,6 +3822,7 @@ let source cli =
            match
              OpamProcess.Job.run
                (OpamRepository.pull_tree
+                  ~for_source:true
                   ~full_fetch:true
                   ~cache_dir:(OpamRepositoryPath.download_cache
                                 OpamStateConfig.(!r.root_dir))
@@ -3839,7 +3840,8 @@ let source cli =
       else
         (let job =
            let open OpamProcess.Job.Op in
-           OpamUpdate.download_package_source t nv dir @@+ function
+           OpamUpdate.download_package_source ~for_source:true t nv dir
+           @@+ function
            | Some (Not_available (_,s)), _ | _, (_, Not_available (_, s)) :: _ ->
              OpamConsole.error_and_exit `Sync_error "Download failed: %s" s
            | None, _ | Some (Result _ | Up_to_date _), _ ->

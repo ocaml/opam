@@ -72,6 +72,8 @@ users)
 
 ## Source
   * When fetching a git repository (i.e. `--dev-repo` or a package with git url), the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
+  * `opam source` no longer sets opam-specific git configuration options [#6955 @sporkl]
+  * `opam source` now uses VCS `clone` when possible [#6955 @sporkl]
 
 ## Lint
 
@@ -222,6 +224,9 @@ users)
   * Add a test showing the order of install actions for each relevant commands [#6864 @kit-ty-kate]
   * Add a test showing some of the internal steps of `opam init` [#6957 @kit-ty-kate]
   * Add tests for `.install` `root` and `rootexec` fields [#6938 @rjbou]
+  * Add a test showing the git commands called by `opam source` [#6955 @sporkl]
+  * Add tests checking installation and source for mercurial repositories [#6955 @sporkl]
+  * Add tests checking installation and source for darcs repositories [#6955 @sporkl]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -291,6 +296,8 @@ users)
 ## opam-repository
   * `OpamGit.env` was added [#6992 @kit-ty-kate]
   * `OpamGit`: git is now always called with the `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` environment variables set to `/dev/null` [#6992 @kit-ty-kate]
+  * `OpamRepository.pull{,shared}_tree`: add an optional `?for_source` argument [#6955 @sporkl]
+  * `OpamRepositoryBackend.S.pull_url`: add an optional `?for_source` argument [#6955 @sporkl]
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
@@ -303,6 +310,8 @@ users)
   * `OpamRepositoryRoot`: add `read_file` that reads an `OpamFile.t` using its pp from the archive [#6625 @rjbou]
   * `OpamRepositoryBackend.get_diff`: now computes the diff between two repository roots (dir, archive), instead of only dirs [#6625 @rjbou]
   * `OpamRepositoryRoot`: add `Tgz` module for tar gz archive repository root support [#6625 @rjbou @kit-ty-kate]
+  * `OpamVCS.init`: add an optional `?for_source` argument [#6955 @sporkl]
+  * `OpamVCS.clone`: add new VCS `clone` function [#6955 @sporkl]
 
 ## opam-state
   * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling informations by `depexts` field that returns if the depexts mechanism is enabled. This field is automatically update by global config value in `OpamStateConfig.load_defaults` [#6489 @rjbou]
@@ -321,6 +330,7 @@ users)
   * `OpamStateTypes`: add available system package status field `repos_syspkgs_available` (and its type `repo_syspkgs_available`) in `repos_state` for all the depexts declared in repo's packages. The new field is also added to the cache. [#6489 @arozovyk @rjbou]
   * `OpamRepositoryState.load`: load repo's available system packages [#6489 @arozovyk]
   * `OpamFileTools`: add `opams_depexts` to consolidate depexts extraction logic from individual opam files and package maps [#6489 @arozovyk]
+  * `OpamUpdate.download_package_source`: add an optional `?for_source` argument [#6955 @sporkl]
   * `OpamUpdate`: add `update_sys_available_cache` to update the system package availability cache in repository state [#6489 @arozovyk]
   * `OpamUpdate.get_sys_available`: factorize depexts availability computation logic from `OpamUpdate.repositories` [#6489 @arozovyk]
   * `OpamRepositoryState`: add `syspkgs_available` that returns the stored depext availability status in repository state [#6489 @rjbou]

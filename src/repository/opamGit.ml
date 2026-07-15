@@ -41,30 +41,62 @@ module VCS : OpamVCS.VCS = struct
       let env = env () in
       OpamSystem.make_command ~env ?verbose ?stdout "git" ("-C"::dir::args)
 
-  let init repo_root repo_url =
+  let init ?(for_source = false) repo_root repo_url =
     OpamFilename.mkdir repo_root;
-    OpamProcess.Job.of_list [
-      git repo_root [ "init"; "--initial-branch=main" ];
-      (* Enforce this option, it can break our use of git if set *)
-      git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
-      (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)
-      git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"];
-      (* Disable automatic line-ending conversion and switch core.eol to Unix.
-         THIS DOES NOT MEAN ALL FILES GET LF-ONLY LINE-ENDINGS!
-         This combination of settings means that files will be checked out
-         exactly as they appear in the repository, so if files are checked in
-         with CRLF line-endings (either by not having .gitattributes with
-         core.autocrlf = false, or having an explicit eol=crlf in
-         .gitattributes), then they will still be checked out with CRLF endings.
-       *)
-      git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false"];
-      git repo_root [ "config" ; "--local" ; "core.eol"; "lf"];
-      git repo_root [ "config" ; "--local" ; "color.ui"; "false" ];
-      (* Document the remote for user-friendliness (we don't use it) *)
-      git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
-    ] @@+ function
+    let if_not_for_source =
+      if not for_source then Option.some else Fun.const Option.none
+    in
+    (OpamProcess.Job.of_list @@ List.filter_map Fun.id [
+        Some (git repo_root [ "init"; "--initial-branch=main" ]);
+        (* Enforce this option, it can break our use of git if set *)
+        if_not_for_source
+          (git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"]);
+        (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid
+           https://github.com/ocaml/opam/issues/3627 *)
+        if_not_for_source
+          (git repo_root [ "config" ; "--local" ; "diff.noprefix"; "false"]);
+        (* Disable automatic line-ending conversion and switch core.eol to Unix.
+           THIS DOES NOT MEAN ALL FILES GET LF-ONLY LINE-ENDINGS!
+           This combination of settings means that files will be checked out
+           exactly as they appear in the repository, so if files are checked in
+           with CRLF line-endings (either by not having .gitattributes with
+           core.autocrlf = false, or having an explicit eol=crlf in
+           .gitattributes), then they will still be checked out with CRLF
+           endings.
+        *)
+        if_not_for_source
+          (git repo_root [ "config" ; "--local" ; "core.autocrlf"; "false" ]);
+        if_not_for_source
+          (git repo_root [ "config" ; "--local" ; "core.eol"; "lf" ]);
+        if_not_for_source
+          (git repo_root [ "config" ; "--local" ; "color.ui"; "false" ]);
+        (* Document the remote for user-friendliness (we don't use it) *)
+        Some (git repo_root
+                [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ]);
+      ]) @@+ function
     | None -> Done ()
     | Some (_,err) -> OpamSystem.process_error err
+
+  let clone ?(full_fetch = true) repo_root url =
+    OpamFilename.mkdir repo_root;
+    if full_fetch then
+      git repo_root [ "clone"; OpamUrl.base_url url; "." ]
+      @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      git repo_root
+        [ "submodule"; "update"; "--init"; "--recursive" ]
+      @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      Done ()
+    else
+      git repo_root [ "clone"; OpamUrl.base_url url; "."; "--depth"; "1" ]
+      @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      git repo_root
+        [ "submodule"; "update"; "--init"; "--recursive"; "--depth"; "1" ]
+      @@> fun r ->
+      OpamSystem.raise_on_process_error r;
+      Done ()
 
   let remote_ref url =
     match url.OpamUrl.hash with

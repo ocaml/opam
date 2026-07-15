@@ -1,0 +1,66 @@
+N0REP0
+### <darkdev/src/src.ml>
+print_endline "I am a source code"
+### <darkdev/root.ml>
+print_endline "I am root"
+### tar czf origin.tgz darkdev
+### darcs init ./darkdev
+Finished initializing repository.
+### darcs add --repodir ./darkdev --recursive .
+WARNING: Some files were not added because they are already in the repository.
+Adding './root.ml'
+Adding './src'
+Adding './src/src.ml'
+Finished adding:
+./root.ml
+./src
+./src/src.ml
+### darcs record --repodir ./darkdev --author "test" -m "init" -a
+Finished recording patch 'init'
+### <pkg:darkdore.3>
+opam-version: "2.0"
+### <mkurl.sh>
+p=darkdore.3
+arch=origin
+file="REPO/packages/${p%.*}/$p/opam"
+MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> "$file" << EOF
+url {
+  darcs: "$basedir/darkdev"
+}
+dev-repo: "darcs+file://${basedir}/darkdev"
+EOF
+### sh mkurl.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create phantom --empty
+### opam install darkdore
+The following actions will be performed:
+=== install 1 package
+  - install darkdore 3
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved darkdore.3  (darcs+file://${BASEDIR}/darkdev)
+-> installed darkdore.3
+Done.
+### opam source -vv darkdore | sed-cmd darcs | grep '^\+ darcs'
++ darcs "clone" "${BASEDIR}/darkdev" "--repodir" "${OPAMTMP}/repo" "--quiet" "--lazy" (CWD=${OPAMTMP})
+### find darkdore.3 | grep -v '_darcs/' | unordered
+darkdore.3
+darkdore.3/opam
+darkdore.3/root.ml
+darkdore.3/_darcs
+darkdore.3/src
+darkdore.3/src/src.ml
+### opam source -vv --dev darkdore | sed-cmd darcs | grep '^\+ darcs'
++ darcs "clone" "${BASEDIR}/darkdev" "--repodir" "${OPAMTMP}/repo" "--quiet" "--lazy" (CWD=${OPAMTMP})
+### find darkdore | grep -v '_darcs/' | unordered
+darkdore
+darkdore/root.ml
+darkdore/_darcs
+darkdore/src
+darkdore/src/src.ml
