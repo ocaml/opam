@@ -30,6 +30,7 @@ users)
   * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
 
 ## Build (package)
+  * When fetching a git repository, the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
 
 ## Remove
 
@@ -67,6 +68,7 @@ users)
 ## Exec
 
 ## Source
+  * When fetching a git repository (i.e. `--dev-repo` or a package with git url), the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
 
 ## Lint
 
@@ -74,6 +76,7 @@ users)
   * No longer call tar tool to create archives, use tar library instead [#6945 @kit-ty-kate]
   * [BUG] Do not fail on directories named `opam` when scanning the `packages` directory of a repository during `opam repo add` or `opam init` (worked on subsequent `opam update`) [#6941 @kit-ty-kate @rjbou]
   * Speedup repository operations on certain file-systems (e.g. NTFS on Windows or IO constrained machines) by changing its storage in the opam root from plain directory to archive, for HTTP repositories, or non-VCS one if `OPAMREPOSITORYTARRING` is enabled [#6625 @rjbou @kit-ty-kate @arozovyk - fix #5346 #5741 #5648 #5484 #5559 #3050 #6974]
+  * When fetching a git repository, the resulting git branch is now deterministically named `main` instead of taking the system's `init.defaultBranch` [#6992 @kit-ty-kate]
 
 ## Lock
   * [BUG] Fix `undefined variable` error when a lock file filter contains an undefined variables: fail gracefully with strict mode, continue and default the variable to false on normal mode [#6947 @rjbou - fix #6946]
@@ -102,6 +105,7 @@ users)
 
 ## VCS
   * Darcs no longer fall back to “Num Patches” as “Weak Hash” has been supported since 2016 [#6866 @toastal]
+  * Make `git` calls more deterministic regardless of the global or system config [#6992 @kit-ty-kate - fix #6937]
 
 ## Build
   * Fix Windows build on MSYS2 [#6862 @Firobe]
@@ -210,6 +214,8 @@ users)
   * Add 2.6 root test cases in opamroot-versions [#6625 @rjbou]
   * Add tests for `.install` fields handling [#6956 #67026 @rjbou]
   * Add a test showing opam pin list not working when the source git directory is missing [#6597 @kit-ty-kate]
+  * Add a test making sure the global or system `git` config doesn't change the behaviour of opam [#6992 @kit-ty-kate]
+  * Add a test showing the remote and branch names of a git repository extracted by `opam source` [#6992 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -217,6 +223,7 @@ users)
   * Add to automatic path substitutions lines that contains switch installation paths [#6956 @rjbou]
   * Fix the port number range on Windows [#7029 @kit-ty-kate]
   * Wait for background processes to end before removing its working directory [#7030 @kit-ty-kate]
+  * Set the `protocol.file.allow=always` git config while running the reftests regardless of `GIT_CONFIG_GLOBAL` [#6992 @kit-ty-kate]
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]
@@ -273,6 +280,8 @@ users)
   * `OpamConfigCommand.subst` now takes a `filename` instead of a `basename` [#6936 @NathanReb]
 
 ## opam-repository
+  * `OpamGit.env` was added [#6992 @kit-ty-kate]
+  * `OpamGit`: git is now always called with the `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` environment variables set to `/dev/null` [#6992 @kit-ty-kate]
   * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
   * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
   * `OpamTar`: add module to manipulate tar gz archive. It handles only files, not directories [#6945 @kit-ty-kate @rjbou]
@@ -349,7 +358,9 @@ users)
   * `OpamCompat.Sys.sigwinch` was added [#6933 @kit-ty-kate]
   * `OpamSystem`: add `is_dir_read_only` [#6489 @rjbou]
   * `OpamSystem.*patch` were moved to `OpamPatch` [#6934 @rjbou]
+  * `OpamFilename.env_of_list` was removed [#6992 @kit-ty-kate]
   * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]
+  * `OpamFilename.exec`: change the type of `?env` to `string array` [#6992 @kit-ty-kate]
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
   * `OpamFilename.in_dir`: removed [#6910 @NathanReb]

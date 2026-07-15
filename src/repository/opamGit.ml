@@ -14,6 +14,14 @@ open OpamProcess.Job.Op
 
 (* let log fmt = OpamConsole.log "GIT" fmt *)
 
+let git_env = [|
+  "GIT_CONFIG_GLOBAL="^Filename.null;
+  "GIT_CONFIG_SYSTEM="^Filename.null;
+|]
+
+let env () =
+  Array.append git_env (OpamProcess.default_env ())
+
 module VCS : OpamVCS.VCS = struct
 
   let name = `git
@@ -30,12 +38,13 @@ module VCS : OpamVCS.VCS = struct
        of git will need to change, as altering PATH could select a different
        Git *)
     fun ?verbose ?stdout args ->
-      OpamSystem.make_command ?verbose ?stdout "git" ("-C"::dir::args)
+      let env = env () in
+      OpamSystem.make_command ~env ?verbose ?stdout "git" ("-C"::dir::args)
 
   let init repo_root repo_url =
     OpamFilename.mkdir repo_root;
     OpamProcess.Job.of_list [
-      git repo_root [ "init" ];
+      git repo_root [ "init"; "--initial-branch=main" ];
       (* Enforce this option, it can break our use of git if set *)
       git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
       (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)

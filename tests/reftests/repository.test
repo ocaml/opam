@@ -1058,7 +1058,7 @@ RSTATE                          Cache found
 REPOSITORY                      repository-set-url
 REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "init" "--initial-branch=main"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
@@ -1112,7 +1112,7 @@ Processing  1/1:
 + tar "xfz" "${BASEDIR}/OPAM/repo/changes.tar.gz" "-C" "${BASEDIR}/OPAM/repo/changes"
 REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "init" "--initial-branch=main"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
@@ -1234,7 +1234,7 @@ RSTATE                          Cache found
 REPOSITORY                      repository-set-url
 REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "init" "--initial-branch=main"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
@@ -1285,7 +1285,7 @@ RSTATE                          Cache found
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
-+ git "-C" "${BASEDIR}/OPAM/repo/changes" "init"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "init" "--initial-branch=main"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"

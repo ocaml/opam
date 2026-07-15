@@ -141,3 +141,9 @@ Successfully extracted to ${BASEDIR}/pandore5
 Successfully fetched pandore development repo to ${BASEDIR}/pandore6
 ### git -C pandore6 rev-list --all --count
 2
+### git -C pandore6 branch -avv | ' [a-f0-9]+ ' -> ' +hash+ '
+* main             +hash+ second empty commit
+  remotes/opam-ref +hash+ second empty commit
+### git -C pandore6 remote -v
+origin	file://${BASEDIR}/pandev (fetch)
+origin	file://${BASEDIR}/pandev (push)
