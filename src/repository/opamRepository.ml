@@ -366,7 +366,7 @@ let pull_tree_t
               List.for_all OpamUrl.(fun u ->
                   match u.backend with
                   | #version_control -> true
-                  | `http -> false
+                  | `http -> OpamFilename.exists_dir (OpamRepositoryPath.pin_cache u)
                   | `rsync -> local_dir u <> None)
                 remote_urls
             in
