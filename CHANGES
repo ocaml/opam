@@ -3,6 +3,349 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.6.0~alpha1:
+* (*) The shell env hook will now update the current bin path in `PATH` in
+  place instead of always prioritising opam's path over every other one
+  [#6859 @gridbugs - fix #6815]
+* Add `root` and `rootexec` sections to `.install` files to install files
+  from prefix root [#6938 @WardBrian @rjbou - fix #6919]
+* Performance improvements:
+  * Speedup repository operations on certain file-systems
+    (e.g. NTFS on Windows or IO constrained machines) by changing its storage
+    in the opam root from plain directory to archive for HTTP repositories
+    (or non-VCS one if `OPAMREPOSITORYTARRING` is enabled)
+    [#6625 @rjbou @kit-ty-kate @arozovyk
+     - fix #5346 #5741 #5648 #5484 #5559 #3050 #6974]
+  * Improve cache-loading performance when opam is compiled with OCaml >= 5.4
+    by using `Gc.ramp_up` [#6515 @dra27]
+  * Improve the performance of most opam commands by a few percents by making
+    some hot functions allocation-free [#6515 @dra27]
+  * Improve the performance of `opam init --bare` by no longer computing the
+    default compiler in that case [#6957 @tuesdayjz @kit-ty-kate - fix #5815]
+  * Improve performance of `opam show` by reading switch selection only once
+    instead of once per package-version [#6818 @dra27]
+* Reduce the disk space usage of opam:
+  * Remove the build directory as soon as possible when installing a package
+    [#6906 @kit-ty-kate - fix #5884]
+  * The internal `sources` directory now only serves to cache dev packages
+    instead of every packages, for which it is now removed during the build
+    phase [#6440 @kit-ty-kate - fix #4056 #5448]
+* The system's `tar` utility is now only use to extract packages, every other
+  use is now done using the ocaml-tar library [#6945 @kit-ty-kate]
+* (+) Added `--ignore-available-on` option to allow ignoring the `available:`
+  field of certain packages [#6836 @WardBrian - fix #5283]
+* `opam update` now supports updating a repository that changed a file to a
+  directory of the same name and vice versa
+  [#6915 @rjbou @arozovyk - fix #3830]
+* (*) Improved depexts handling by caching system package availability during
+  `opam update`, avoiding redundant system checks at install time
+  [#6489 @arozovyk - fix #6461]
+* Warn on destination containing a `..` path segment in `.install` files
+  [#7008 @rjbou]
+* Allow detection of installed packages through their virtual names on
+  ALT Linux, RHEL-based and SUSE-based distributions,
+  at the cost of ~300ms per run [#6431 @kit-ty-kate - fix #6426]
+* Improve the UI:
+  * Reorder the list of actions by increased priority
+    [#6864 @kit-ty-kate - fix #6863]
+  * Show a working `opam switch create` command when `opam init` fails to
+    create the default switch [#6851 @kit-ty-kate - partial fix #6848]
+  * Fix a typo in the note telling users about new a depexts bypass
+    [#6489 @rjbou @kit-ty-kate]
+  * Opam files parsing error now prints the origin repository of the failing
+    opam file if relevant [#6971 @rjbou]
+  * Display an appropriate error message when the file given to
+    `opam init --config` does not exist or is in a VCS. This changes the
+    behaviour for local VCS urls that was previously retrieved
+    [#5979 @kit-ty-kate - fix #5971]
+* Bug fixes:
+  * Fix an opam 2.5 regression where `opam pin list` failed abruptly when the
+    source of the pinned package doesn't exist
+    [#6910 #6597 @NathanReb @kit-ty-kate]
+  * Do not fail on directories named `opam` when scanning the `packages`
+    directory of a repository during `opam repo add` or `opam init`
+    (worked on subsequent `opam update`) [#6941 @kit-ty-kate @rjbou]
+  * Added return 0 for zsh/bash/sh/fish to prevent leaking error codes
+    [#6930 @ta2005]
+  * Fix the filename check used when parsing arguments to allow `/` to be
+    recognised as a directory separator on Windows
+    [#6981 @kit-ty-kate - fix #6940]
+  * Fix "undefined variable" error when a lock file filter contains an
+    undefined variables: fail gracefully with strict mode, continue and
+    default the variable to false otherwise [#6947 @rjbou - fix #6946]
+  * Fix `opam lock` support of dependency formula that include disjunctions
+    [#6990 @kit-ty-kate - fix #6944]
+  * Fix package installation during `opam pin add <url to archive>`
+    [#7012 @zoggy - fix #6999]
+  * Fix `opam config subst` so it works with absolute paths
+    [#6936 @NathanReb - fix #6925]
+  * Make `git` calls more deterministic regardless of the global or
+    system config [#6992 @kit-ty-kate - fix #6937]
+  * Read full lines when asking for user input when `TERM=dumb`
+    (e.g. emacs' `M-x shell`) [#6829 @arvidj - fix #6828]
+* Build changes:
+  * The `opam-repository` library (and thus `opam` itself) now depends on the
+    `tar`, `checkseum` and `decompress` libraries
+    [#6945 #6976 @kit-ty-kate @rjbou]
+  * Require `spdx_licenses` >= 1.4.0 to ensure compatibility with SPDX v3
+    syntax [#6878 @kit-ty-kate]
+  * Add lower-bounds constraints to the dependencies that have none
+    (`ocamlgraph` >= 1.8.8, `jsonm` >= 1.0.2, `swhid_core` >= 0.1,
+     `uutf` >= 1.0.3) [#6878 @kit-ty-kate]
+  * Fix Windows build on MSYS2 [#6862 @Firobe]
+  * Update the download-if-missing `patch` library to 3.1.0
+    [#6772 @kit-ty-kate]
+  * Remove support for building opam with OCaml 4.08, 4.09 and 4.10
+    [#6879 @kit-ty-kate]
+* Improve the release script:
+  * Harden the Makefile's inline shell scripts [#6751 @kit-ty-kate]
+  * Fix the release script not being a noop on re-runs [#6903 @kit-ty-kate]
+* Various internal changes:
+  * Remove unnecessary uses of `chdir` [#6910 @NathanReb]
+  * Source compatibility with newer `cmdliner` versions [#6854 @WardBrian]
+  * Remove uses of `Stdlib.ignore` [#6481 @rjbou @kit-ty-kate]
+  * Silence warnings raised by OCaml 5.6 [#6987 @kit-ty-kate]
+  * Harden the Makefile's inline shell scripts [#6751 @kit-ty-kate]
+  * Add a helper script to help generate the configure file on platforms
+    without autoconf 2.71 [#6878 @kit-ty-kate]
+  * Add some debug logging for opam files loading from repository
+    (dir vs diff) [#6941 @rjbou]
+  * Add opam root format upgrade conditional mechanism for hard upgrades
+    [#6949 @rjbou]
+* Add support for terminal resizing detection on Solaris/Illumos
+  [#6933 @kit-ty-kate]
+* Stop the opam 1.2 to 2.0 repository upgrade process from downloading
+  packages without checksums to add a non-trusted md5 [#6978 @kit-ty-kate]
+  * `opam admin upgrade --clear-cache` is no longer needed, it is deprecated
+    (no-op) [#6978 @kit-ty-kate]
+* The legacy `url` file from opam 1.2 now only supports the legacy opam 1.2
+  fields [#6827 @kit-ty-kate]
+* Drop support for darcs < 2.12.0 (released in 2016) [#6866 @toastal]
+* When fetching a git repository, the resulting git branch is now
+  deterministically named `main` instead of taking the system's
+  `init.defaultBranch` [#6992 @kit-ty-kate]
+* (*) When fetching a git repository
+  (e.g. `opam source --dev-repo` or a package with git url), the resulting
+  git branch is now deterministically named `main` instead of taking the
+  system's `init.defaultBranch` [#6992 @kit-ty-kate]
+* Add conditional hard upgrade to opam root 2.6. It is triggered by an already
+  present repository archive
+  (from `OPAMREPOSITORYTARRING` usage, or 2.1 opamroot)
+  [#6949 #6839 #6625 @rjbou]
+* Improve and extend the benchmarks [#6567 #6912 @kit-ty-kate]
+* Improve and extend the testsuite
+  [#6915 #6928 #6793 #5979 #6860 #6489 #6922 #6939 #6970 #6936 #6947 #6990
+   #6995 #6941 #6625 #6956 #6597 #6992 #6864 #6957 #6938 #6836 #6851 #6981
+   #7012
+   @rjbou @kit-ty-kate @NathanReb @arozovyk @WardBrian]
+* Improve and extend the test infrastructure
+  [#6939 #6625 #6956 #7029 #7030 #6992 #6732 #6684 #6768 #6771 #6811 #6835
+   #6832 #6886 #6889 #6888 #6904 #6905 #6905 #6927 #6939 #6960 #6976 #6976
+   #6979 #6978 #6983 #6998 #6988 #7007 #7018 #6821 #7002 #7044
+   @kit-ty-kate @rjbou]
+* Improve and extend the documentation
+  [#6973 #6806 #6821 #6846 #6858 #6920 #6807 #6809 #7018
+   @kit-ty-kate @mseri @yosefAlsuhaibani @raphael-proust @gridbugs @ccoulombel]
+* API changes in `opam-client`:
+  * `OpamArg`: add `build_options_no_depexts` getter to retrieve the value of
+    the given flag  [#6489 @rjbou]
+  * `OpamArg{,Tools}.cli2_6` was added [#6978 @kit-ty-kate]
+  * `OpamClient` update the system package status check for dependencies
+    during `opam install --deps-only`, including support for pinned packages;
+    also update this in `OpamAuxCommands.autopin` [#6489 @arozovyk]
+  * `OpamClient.init`: a new `?no_compiler` argument was added to not compute
+    the default compiler and the list of atom returned is now an option to
+    separate empty invariant from no switch [#6957 @kit-ty-kate]
+  * `OpamClientConfig.opam_init`: replace `no_depexts` argument by `depexts`
+    [#6489 @rjbou]
+  * `OpamConfigCommand.subst` now takes a `filename` instead of a `basename`
+    [#6936 @NathanReb]
+  * `OpamSolution` remove the heuristic of recomputing depexts of additional
+    (pinned) packages [#6489 @arozovyk]
+  * `OpamSolution.apply`: now also take the `user_action` as parameter
+    [#6864 @kit-ty-kate]
+  * `OpamSolution.get_depexts` remove no longer needed `recover` option that
+    was used with `--depext-only` option [#6489 @arozovyk]
+  * `OpamSolution.resolve`: the return type now also return the `user_action`
+    [#6864 @kit-ty-kate]
+* API changes in `opam-repository`:
+  * `OpamGit`: git is now always called with the `GIT_CONFIG_GLOBAL` and
+    `GIT_CONFIG_SYSTEM` environment variables set to `/dev/null`
+    [#6992 @kit-ty-kate]
+  * `OpamGit.env` was added [#6992 @kit-ty-kate]
+  * `OpamRepositoryBackend.get_diff`: now computes the diff between two
+    repository roots (dir, archive), instead of only dirs [#6625 @rjbou]
+  * `OpamRepositoryCommand.update_with_auto_upgrade`, `OpamUpdate.repository`:
+    no longer call an external process to create an archive
+    [#6945 @kit-ty-kate]
+  * `OpamRepositoryPath` was moved to `opam-format` [#6917 @rjbou]
+  * `OpamRepositoryRoot` was added [#6680 @kit-ty-kate @rjbou]
+  * `OpamRepositoryRoot`: add `remove_prefix` and `remove_prefix_dir`
+    [#6625 @rjbou]
+  * `OpamRepositoryRoot`: add `read_file` that reads an `OpamFile.t` using its
+    pp from the archive [#6625 @rjbou]
+  * `OpamRepositoryRoot`: add `Tgz` module for tar gz archive repository root
+    support [#6625 @rjbou @kit-ty-kate]
+  * `OpamTar`: add module to manipulate tar gz archive. It handles only files,
+    not directories [#6945 @kit-ty-kate @rjbou]
+  * `OpamTar`: add `patch` function to patch files in an tar gz archive
+    [#6625 @rjbou]
+  * `OpamTar`: when an archive is opened, the first step is to check and
+    normalise canonical paths (no `/../`, remove `./`, etc.) [#6625 @rjbou]
+  * `OpamTar.create`: add `?flat` argument to do not integrate the target root
+    directory in the archive [#6625 @rjbou]
+  * `OpamTar.create`: add `?except_vcs` argument exclude VCS files from
+    archive creation [#6625 @rjbou]
+* API changes in `opam-state`:
+  * `OpamFileTools`: add `opams_depexts` to consolidate depexts extraction
+    logic from individual opam files and package maps [#6489 @arozovyk]
+  * `OpamFileTools`: add new `lint_repo_package` that lints a file from a
+    repository root [#6625 @rjbou]
+  * `OpamGlobalState`: add `is_root_read_only` to check if we are in sandboxed
+    environment [#6489 @rjbou]
+  * `OpamGlobalState.all_installed_versions`: was added [#6818 @dra27]
+  * `OpamGlobalState.installed_versions`: was removed [#6818 @dra27]
+  * `OpamRepositoryState`: add `load_opams_from_tgz` [#6625 @rjbou]
+  * `OpamRepositoryState`: add `load_opams` that operates from a repository
+    root [#6625 @rjbou]
+  * `OpamRepositoryState`: add `syspkgs_available` that returns the stored
+    depext availability status in repository state [#6489 @rjbou]
+  * `OpamRepositoryState.load`: load repo's available system packages
+    [#6489 @arozovyk]
+  * `OpamRepositoryState.load_opams_from_dir`: now sorts files and directories
+    read from disk before processing them [#6941 @rjbou]
+  * `OpamStateConfig.t`: replace `no_depexts` fields that contains disabling
+    informations by `depexts` field that returns if the depexts mechanism is
+    enabled. This field is automatically update by global config value in
+    `OpamStateConfig.load_defaults` [#6489 @rjbou]
+  * `OpamStateConfig.options_fun`: replace `no_depexts` argument by `depexts`
+    [#6489 @rjbou]
+  * `OpamStateTypes`: add `os_family` type that was defined and used
+    internally in `OpamSysInteract` [#6489 @rjbou]
+  * `OpamStateTypes`: add available system package status field
+    `repos_syspkgs_available` (and its type `repo_syspkgs_available`) in
+    `repos_state` for all the depexts declared in repo's packages.
+    The new field is also added to the cache [#6489 @arozovyk @rjbou]
+  * `OpamStateTypes.global_state`: add field `lock` that contains the global
+    lock (not config one) [#6839 @rjbou]
+  * `OpamStateTypes.repos_state`: remove `repos_tmp` field
+    [#6625 @kit-ty-kate @rjbou]
+  * `OpamSwitchState`: add `is_source_dir_temporary` [#6440 @kit-ty-kate]
+  * `OpamSwitchState`: add `update_sys_packages` to update depexts status
+    of a set of packages [#6489 @arozovyk]
+  * `OpamSysInteract`: add `disable_depexts_note` to be used to display a note
+    to disable depexts [#6489 @rjbou]
+  * `OpamSysInteract`: add some os families helpers `string_of_os_family`,
+    `equal_os_family`, `same_os_family` [#6489 @rjbou]
+  * `OpamSysInteract`: add `available_packages` and `installed_packages`
+    to be computed separately, redefine `packages_status` accordingly.
+    These functions are now no-op if the given system packages set is empty
+    [#6489 @arozovyk]
+  * `OpamSysInteract`: add `available_packages_and_family` that returns
+    availability status and the os family [#6489 @rjbou]
+  * `OpamSysInteract`: add `available_packages` and `installed_packages`
+    to be computed separately, redefine `packages_status` accordingly
+    [#6489 @arozovyk]
+  * `OpamUpdate`: add `update_sys_available_cache` to update the system
+    package availability cache in repository state [#6489 @arozovyk]
+  * `OpamUpdate.get_sys_available`: factorize depexts availability
+    computation logic from `OpamUpdate.repositories` [#6489 @arozovyk]
+* API changes in `opam-format`:
+  * `OpamFile`: allow dummy filenames to be added a prefix and still be
+    detected as a dummy filename [#6913 @rjbou]
+  * `OpamFile.Descr` was moved to `OpamFile.Descr_legacy` and a simpler
+    `OpamFile.Descr` module was created only containing non-IO functions
+    removing the outdated `descr` file support [#6827 @kit-ty-kate]
+  * `OpamFile.Descr.of_legacy`: was added [#6827 @kit-ty-kate]
+  * `OpamFile.Dot_install`: add fields `root` and `rootexec` to type
+    record `t` [#6938 @WardBrian]
+  * `OpamFile.Dot_install`: add `root`, `rootexec`, `with_root`,
+    and `with_rootexec` functions [#6938 @WardBrian]
+  * `OpamFile.OPAM.print_errors`: now prints the repository if the
+    informations is available [#6971 @rjbou]
+  * `OpamFile.URL` was moved to `OpamFile.URL_legacy` and a simpler
+    `OpamFile.URL` module was created only containing non-IO functions
+    removing the outdated `url` file support [#6827 @kit-ty-kate]
+  * `OpamFile.URL.of_legacy`: was added [#6827 @kit-ty-kate]
+  * `OpamFile.*`: add `safe_read_from_string` [#6625 @rjbou]
+  * `OpamFile.*.read_from_string`: add optional `?loc` string argument to
+    propagate location information when available
+    (path on disk, archive, etc.), and add logging with level 3 that
+    displays it [#6625 @rjbou]
+  * `OpamFilter.expand_interpolations_in_file`: changed argument type
+    from `basename` to `filename` [#6910 @NathanReb]
+  * `OpamPathName` was added [#6917 @rjbou]
+  * `OpamRepositoryPath` was moved from `opam-repository` [#6917 @rjbou]
+  * `OpamRepositoryPath.{root,repo,packages_dir,packages,opam,files,descr,url}:
+    have been moved to a new `OpamRepositoryPath.Make` functor
+    [#6680 @rjbou @kit-ty-kate]
+  * `OpamRepositoryPathName` was added [#6917 @rjbou]
+  * `OpamSysPkg`: add `availability_mode` type to indicate the availability of
+    system packages on a given system [#6489 @arozovyk]
+  * `OpamSysPkg`: add `equal_availability_mode` function [#6489 @arozovyk]
+  * `OpamTypes`: change `result` type name to `solver_result` to avoid
+    conflicts with Stdlib [#6885 @rjbou]
+  * `OpamRepositoryPath.tar`: removed [#6625 @rjbou]
+  * `OpamPathName`: add `opam_switch_d` for `.opam-switch` [#6938 @WardBrian]
+* API changes in `opam-core`:
+  * `OpamCompat.Filename`: was removed [#6879 @kit-ty-kate]
+  * `OpamCompat.Gc.ramp_up`: was added [#6515 @dra27]
+  * `OpamCompat.Int.min`: was added [#6515 @kit-ty-kate]
+  * `OpamCompat.List.fold_left_map`: was removed [#6879 @kit-ty-kate]
+  * `OpamCompat.Map.add_to_list`: was added [#6818 @dra27]
+  * `OpamCompat.MAP.filter_map`: was removed [#6879 @kit-ty-kate]
+  * `OpamCompat.Seq`: add `to_dispenser` [#6945 @kit-ty-kate]
+  * `OpamCompat.Sys.sigwinch` was added [#6933 @kit-ty-kate]
+  * `OpamFilename`: add `is_dir_read_only` [#6489 @rjbou]
+  * `OpamFilename`: add `split` function that returns the list of paths
+    elements, not platform dependent [#6938 @WardBrian]
+  * `OpamFilename.env_of_list` was removed [#6992 @kit-ty-kate]
+  * `OpamFilename.exec`: change the type of `?env` to `string array`
+    [#6992 @kit-ty-kate]
+  * `OpamFilename.{is_dir_sep,is_rel_seg}` were added [#6981 @kit-ty-kate]
+  * `OpamFilename.in_dir`: removed [#6910 @NathanReb]
+  * `OpamFilename.make_tar_gz{_job}`: rename `make_tar_gz_job` into
+    `make_tar_gz` as it no longer need an external process call
+    [#6945 @kit-ty-kate]
+  * `OpamFilename.{open_in,open_in_bin}`: now errors when the filename is a
+    directory, in all platforms [#6941 @rjbou]
+  * `OpamFilename.Unix`: add `starts_with` [#6945 @rjbou]
+  * `OpamFilename.Unix` was added abstracting over `/` separated paths
+    regardless of the current system [#6914 @rjbou @kit-ty-kate]
+  * `OpamFilename.Unix`: add `basename` and `dirname` [#6625 @rjbou]
+  * `OpamFilename.Unix`: add `remove_prefix` [#6625 @rjbou]
+  * `OpamFilename.Unix`: add `to_relative_canonical` [#6625 @kit-ty-kate @rjbou]
+  * `OpamFilename.Unix`: add `root_dir` [#6625 @rjbou]
+  * `OpamFilename.Unix.{to_dir,to_filename}`: now translate `/` into
+    filesystem directory separator [#6625 @rjbou]
+  * `OpamFilename.Unix.Dir`: add `basename` and `dirname` [#6625 @rjbou]
+  * `OpamPatch` was created [#6934 @rjbou]
+  * `OpamPatch.parse_patch`: no longer take `~dir` the directory to translate
+    the patch in as argument, it now takes `~translate` argument that is a
+    string option (directory option), if we want to perform a translation
+    in that directory [#6625 @rjbou]
+  * `OpamPatch.patch`: no longer patch a file on disk, but take as argument a
+    filesystem abstraction `FS_ABSTR` that delivers the needed functions
+    [#6625 @rjbou]
+  * `OpamStd.String.compare_case`: is now allocation free [#6515 @dra27]
+  * `OpamSystem`: add `is_dir_read_only` [#6489 @rjbou]
+  * `OpamSystem`: add `open_in` and `open_in_bin` that checks is the file is
+    a directory and raise `Sys_error` in that case [#6941 @rjbou]
+  * `OpamSystem.chdir`: removed [#6910 @NathanReb]
+  * `OpamSystem.directories_with_links`, `OpamSystem.rec_files`,
+    `OpamFilename.rec_files`: add optional `?except_vcs` that default to false
+    to exclude VCS directories [#6625 @kit-ty-kate @rjbou]
+  * `OpamSystem.{command,commands,read_command_output}`: add a `?dir: dirname`
+    optional arg to launch the command in a specific directory
+    [#6910 @NathanReb]
+  * `OpamSystem.in_tmp_dir`: removed [#6910 @NathanReb]
+  * `OpamSystem.in_dir`: removed [#6910 @NathanReb]
+  * `OpamSystem.*patch` were moved to `OpamPatch` [#6934 @rjbou]
+  * `OpamUrl`: rename and expose `local_path` as `looks_like_local_path`
+    [#5979 @kit-ty-kate]
+  * `OpamVersionCompare.{compare,equal}`: are now allocation free
+    [#6515 @dra27]
+
 2.5.2:
 * Fix a bug that allowed a package to install files anywhere on the system
   using a symlink to an external directory without warning the user and
