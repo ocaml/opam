@@ -460,3 +460,13 @@ Proceed with 2 installations? [Y/n] n
 # Return code 10 #
 ### opam pin list
 abort-install.dev  (uninstalled)  git  git+file://${BASEDIR}/abort-install#master  (error while fetching current revision)
+### : Ensure the dir/*.opam pattern works on all platform (see https://github.com/ocaml/opam/issues/6940)
+### opam install abort-install/abort-install.opam --no
+[abort-install.dev] synchronised (git+file://${BASEDIR}/abort-install#master)
+The following actions will be performed:
+=== install 2 packages
+  - install abort-install dev (pinned)
+  - install dep-lib       1            [required by abort-install]
+
+Proceed with 2 installations? [Y/n] n
+# Return code 10 #

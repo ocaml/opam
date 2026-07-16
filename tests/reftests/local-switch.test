@@ -1,0 +1,29 @@
+N0REP0
+### OPAMYES=1
+### opam switch create global-1 --empty
+### opam switch create .global-2 --empty
+### opam switch create ./local-1 --empty
+### opam switch create local-2/ --empty
+### opam switch create local-3/inner --empty
+### opam switch show --switch=global-1
+global-1
+### opam switch show --switch=.global-2
+.global-2
+### opam switch show --switch=./local-1
+${BASEDIR}/local-1
+### opam switch show --switch=local-2/
+${BASEDIR}/local-2
+### opam switch show --switch=local-3/inner
+${BASEDIR}/local-3/inner
+### ls -a OPAM | sort | grep -v log
+.
+..
+.global-2
+config
+config.lock
+global-1
+lock
+opam-init
+repo
+### test -d OPAM/local-3/inner
+# Return code 1 #

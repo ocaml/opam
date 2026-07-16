@@ -12,11 +12,17 @@
 (** Higher level file and directory name manipulation AND file operations,
     wrappers on OpamSystem using the filename type *)
 
-(* Returns [true] if string contains '..' between directory separators *)
+(** Returns [true] if string contains '..' between directory separators *)
 val might_escape: sep:[`Unix | `Windows | `Unspecified ] -> string -> bool
 
 (* Returns a list of elements between directory separators *)
 val split: sep:[`Unix | `Windows | `Unspecified ] -> string -> string list
+
+(** Returns [true] if the character is a directory separator *)
+val is_dir_sep: char -> bool
+
+(** Returns [true] if the string is [".."] or ["."] (relative segment) *)
+val is_rel_seg: string -> bool
 
 (** Basenames *)
 module Base: sig

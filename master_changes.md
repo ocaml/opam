@@ -17,6 +17,7 @@ users)
   * Update Kate's email address [#6808 @kit-ty-kate]
   * Remove unnecessary uses of `chdir` [#6910 @NathanReb]
   * Added `--ignore-available-on` option to allow ignoring the `available:` section of certain packages. [#6836 @WardBrian - fix #5283]
+  * Fix the filename check used when parsing arguments to allow `/` to be recognised as a directory separator on Windows [#6981 @kit-ty-kate - fix #6940]
 
 ## Plugins
 
@@ -229,6 +230,8 @@ users)
   * Add tests for `.install` `root` and `rootexec` fields [#6938 @rjbou]
   * Test the new `--ignore-available-on` argument and `OPAMIGNOREAVAILABLE` environment variable [#6836 @WardBrian @kit-ty-kate]
   * Add a test showing the behaviour of `opam init` when the default compiler failed to build [#6851 @kit-ty-kate]
+  * Add a test ensuring `/` can be used as directory separator on Windows when referring to a path to a local repository [#6981 @kit-ty-kate]
+  * Add a test showing when opam creates a local switch vs. global [#6981 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
@@ -383,6 +386,7 @@ users)
   * `OpamFilename.might_escape`: ensure / is detected as a file separator when called with `~sep:Unspecified` on Windows [#6897 @kit-ty-kate]
   * `OpamFilename.Unix` was added abstracting over `/` separated paths regardless of the current system [#6914 @rjbou @kit-ty-kate]
   * `OpamFilename.in_dir`: removed [#6910 @NathanReb]
+  * `OpamFilename.{is_dir_sep,is_rel_seg}` were added [#6981 @kit-ty-kate]
   * `OpamSystem.in_tmp_dir`: removed [#6910 @NathanReb]
   * `OpamSystem.in_dir`: removed [#6910 @NathanReb]
   * `OpamSystem.chdir`: removed [#6910 @NathanReb]
