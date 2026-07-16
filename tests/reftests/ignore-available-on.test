@@ -1,0 +1,179 @@
+N0REP0
+### OPAMYES=1
+### <pkg:unavail.1>
+opam-version: "2.0"
+available: false
+### :I: Unavailable package
+### :I:1: Install
+### :I:1:a: - without ignore-available-on
+### opam switch create direct --empty
+### opam install unavail
+[ERROR] unavail: unmet availability conditions: 'false'
+# Return code 5 #
+### :I:1:b: - with ignore-available-on
+### opam install unavail --ignore-available-on unavail
+The following actions will be performed:
+=== install 1 package
+  - install unavail 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed unavail.1
+Done.
+### :I:2: Upgrade
+### <pkg:unavail.2>
+opam-version: "2.0"
+available: false
+### :I:2:a: - upgrade all without ignore-available-on
+### opam upgrade --show
+The following actions would be performed:
+=== remove 1 package
+  - remove unavail 1 [no longer available]
+### :I:2:b: - upgrade pkg without ignore-available-on
+### opam upgrade unavail
+[ERROR] unavail: unmet availability conditions, e.g. 'false'
+# Return code 5 #
+### :I:2:c: - upgrade all with ignore-available-on
+### opam upgrade --show --ignore-available-on unavail
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade unavail 1 to 2
+### :I:2:d: - upgrade pkg with ignore-available-on via environment
+### OPAMIGNOREAVAILABLE=unavail opam upgrade --show unavail
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade unavail 1 to 2
+### :I:2:e: - upgrade pkg with ignore-available-on
+### opam upgrade unavail --show --ignore-available-on unavail
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade unavail 1 to 2
+### :I:3: Reinstall
+### :I:3:a: - without ignore-available-on
+### opam reinstall unavail
+[ERROR] unavail: unmet availability conditions, e.g. 'false'
+# Return code 5 #
+### :I:2:d: - upgrade pkg with ignore-available-on via environment
+### OPAMIGNOREAVAILABLE=unavail opam reinstall --show unavail
+The following actions would be performed:
+=== recompile 1 package
+  - recompile unavail 1
+### :I:3:b: - with ignore-available-on
+### opam reinstall unavail --ignore-available-on unavail
+The following actions will be performed:
+=== recompile 1 package
+  - recompile unavail 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   unavail.1
+-> installed unavail.1
+Done.
+### :I:4: Remove (flag is unnecessary)
+### opam remove unavail
+The following actions will be performed:
+=== remove 1 package
+  - remove unavail 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   unavail.1
+Done.
+### :II: Available package with unavailable dependency
+### <pkg:avail.1>
+opam-version: "2.0"
+depends: "unavail"
+### :II:1: Install
+### :II:1:a: - without ignore-available-on
+### opam install avail
+[ERROR] Package conflict!
+  * Missing dependency:
+    - avail -> unavail
+    unmet availability conditions, e.g. 'false'
+
+No solution found, exiting
+# Return code 20 #
+### :II:1:b: - with ignore-available-on via environment
+### OPAMIGNOREAVAILABLE=unavail opam install --show avail
+The following actions would be performed:
+=== install 2 packages
+  - install avail   1
+  - install unavail 2 [required by avail]
+### :II:1:c: - with ignore-available-on
+### opam install avail --ignore-available-on unavail
+The following actions will be performed:
+=== install 2 packages
+  - install avail   1
+  - install unavail 2 [required by avail]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed unavail.2
+-> installed avail.1
+Done.
+### :II:2: Upgrade
+### <pkg:avail.2>
+opam-version: "2.0"
+depends: "unavail"
+### :II:2:a: - without ignore-available-on
+### opam upgrade avail
+[ERROR] Package conflict!
+  * Missing dependency:
+    - avail >= 2 -> unavail -> unavail.2: no longer available
+
+# Return code 20 #
+### :II:2:b: - with ignore-available-on via environment
+### OPAMIGNOREAVAILABLE=unavail opam upgrade --show avail
+The following actions would be performed:
+=== upgrade 1 package
+  - upgrade avail 1 to 2
+### :II:2:c: - with ignore-available-on
+### opam upgrade avail --ignore-available-on unavail
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade avail 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   avail.1
+-> installed avail.2
+Done.
+### :II:3: Reinstall
+### :II:3:a: - without ignore-available-on
+### opam reinstall avail
+  * Missing dependency:
+    - avail >= 2 -> unavail -> unavail.2: no longer available
+
+No solution found, exiting
+# Return code 20 #
+### :II:3:b: - - with ignore-available-on via environment
+### OPAMIGNOREAVAILABLE=unavail opam reinstall --show avail
+The following actions would be performed:
+=== recompile 1 package
+  - recompile avail 2
+### :II:3:c: - with ignore-available-on
+### opam reinstall avail --ignore-available-on unavail
+The following actions will be performed:
+=== recompile 1 package
+  - recompile avail 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   avail.2
+-> installed avail.2
+Done.
+### :II:4: Remove
+### :II:4:a: - without ignore-available-on (also removes dependency)
+### opam remove --show avail
+The following actions would be performed:
+=== remove 2 packages
+  - remove avail   2
+  - remove unavail 2 [no longer available]
+### :II:4:b: - with ignore-available-on via environment
+### OPAMIGNOREAVAILABLE=unavail opam remove --show avail
+The following actions would be performed:
+=== remove 1 package
+  - remove avail 2
+### :II:4:c: - with ignore-available-on (leaves unavail installed)
+### opam remove avail --ignore-available-on unavail
+The following actions will be performed:
+=== remove 1 package
+  - remove avail 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   avail.2
+Done.

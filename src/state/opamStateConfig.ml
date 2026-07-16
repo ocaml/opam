@@ -18,6 +18,7 @@ module E = struct
     | BUILDTEST of bool option
     | DOWNLOADJOBS of int option
     | DRYRUN of bool option
+    | IGNOREAVAILABLE of string option
     | IGNORECONSTRAINTS of string option
     | JOBS of int option
     | LOCKED of string option
@@ -36,6 +37,7 @@ module E = struct
   let buildtest = value (function BUILDTEST b -> b | _ -> None)
   let downloadjobs = value (function DOWNLOADJOBS i -> i | _ -> None)
   let dryrun = value (function DRYRUN b -> b | _ -> None)
+  let ignoreavailable = value (function IGNOREAVAILABLE s -> s | _ -> None)
   let ignoreconstraints = value (function IGNORECONSTRAINTS s -> s | _ -> None)
   let jobs = value (function JOBS i -> i | _ -> None)
   let locked = value (function LOCKED s -> s | _ -> None)
@@ -65,6 +67,7 @@ type t = {
   dryrun: bool;
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
+  ignore_available_on: name_set;
   unlock_base: bool;
   no_env_notice: bool;
   locked: string option;
@@ -111,6 +114,7 @@ let default = {
       | _ -> "make"
     );
   ignore_constraints_on = OpamPackage.Name.Set.empty;
+  ignore_available_on = OpamPackage.Name.Set.empty;
   unlock_base = false;
   no_env_notice = false;
   locked = None;
@@ -131,6 +135,7 @@ type 'a options_fun =
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
+  ?ignore_available_on:name_set ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->
@@ -151,6 +156,7 @@ let[@ocaml.warning "-unerasable-optional-argument"] setk k t
     ?dryrun
     ?makecmd
     ?ignore_constraints_on
+    ?ignore_available_on
     ?unlock_base
     ?no_env_notice
     ?locked
@@ -172,6 +178,7 @@ let[@ocaml.warning "-unerasable-optional-argument"] setk k t
     dryrun = t.dryrun + dryrun;
     makecmd = t.makecmd + makecmd;
     ignore_constraints_on = t.ignore_constraints_on + ignore_constraints_on;
+    ignore_available_on = t.ignore_available_on + ignore_available_on;
     unlock_base = t.unlock_base + unlock_base;
     no_env_notice = t.no_env_notice + no_env_notice;
     locked = t.locked + locked;
@@ -198,6 +205,12 @@ let initk k =
     | Some "" | None -> None, None
     | Some s -> Some (OpamSwitch.of_string s), Some `Env
   in
+  let pkgname_list f =
+    f () >>| fun s ->
+    OpamStd.String.split s ',' |>
+    List.map OpamPackage.Name.of_string |>
+    OpamPackage.Name.Set.of_list
+  in
   setk (setk (fun c -> r := c; k)) !r
     ?root_dir
     ?original_root_dir
@@ -211,11 +224,8 @@ let initk k =
     ?dev_setup:(E.withdevsetup())
     ?dryrun:(E.dryrun ())
     ?makecmd:(E.makecmd () >>| fun s -> lazy s)
-    ?ignore_constraints_on:
-      (E.ignoreconstraints () >>| fun s ->
-       OpamStd.String.split s ',' |>
-       List.map OpamPackage.Name.of_string |>
-       OpamPackage.Name.Set.of_list)
+    ?ignore_constraints_on:(pkgname_list E.ignoreconstraints)
+    ?ignore_available_on:(pkgname_list E.ignoreavailable)
     ?unlock_base:(E.unlockbase ())
     ?no_env_notice:(E.noenvnotice ())
     ?locked:(E.locked () >>| function "" -> None | s -> Some s)

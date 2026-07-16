@@ -20,6 +20,7 @@ module E : sig
     | BUILDTEST of bool option
     | DOWNLOADJOBS of int option
     | DRYRUN of bool option
+    | IGNOREAVAILABLE of string option
     | IGNORECONSTRAINTS of string option
     | JOBS of int option
     | LOCKED of string option
@@ -50,6 +51,7 @@ type t = private {
   dryrun: bool;
   makecmd: string Lazy.t;
   ignore_constraints_on: name_set;
+  ignore_available_on: name_set;
   unlock_base: bool;
   no_env_notice: bool;
   locked: string option;
@@ -70,6 +72,7 @@ type 'a options_fun =
   ?dryrun:bool ->
   ?makecmd:string Lazy.t ->
   ?ignore_constraints_on:name_set ->
+  ?ignore_available_on:name_set ->
   ?unlock_base:bool ->
   ?no_env_notice:bool ->
   ?locked:string option ->

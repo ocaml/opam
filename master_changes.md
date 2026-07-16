@@ -16,6 +16,7 @@ users)
 ## Global CLI
   * Update Kate's email address [#6808 @kit-ty-kate]
   * Remove unnecessary uses of `chdir` [#6910 @NathanReb]
+  * Added `--ignore-available-on` option to allow ignoring the `available:` section of certain packages. [#6836 @WardBrian - fix #5283]
 
 ## Plugins
 
@@ -223,6 +224,7 @@ users)
   * Add a test showing the order of install actions for each relevant commands [#6864 @kit-ty-kate]
   * Add a test showing some of the internal steps of `opam init` [#6957 @kit-ty-kate]
   * Add tests for `.install` `root` and `rootexec` fields [#6938 @rjbou]
+  * Test the new `--ignore-available-on` argument and `OPAMIGNOREAVAILABLE` environment variable [#6836 @WardBrian @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
