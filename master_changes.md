@@ -242,6 +242,7 @@ users)
   * Fix the port number range on Windows [#7029 @kit-ty-kate]
   * Wait for background processes to end before removing its working directory [#7030 @kit-ty-kate]
   * Set the `protocol.file.allow=always` git config while running the reftests regardless of `GIT_CONFIG_GLOBAL` [#6992 @kit-ty-kate]
+  * Stop transforming `/` into `\` in command lines on Windows [#7044 @kit-ty-kate]
 
 ## Github Actions
   * Add OCaml 5.4 to the test matrix [#6732 @kit-ty-kate]

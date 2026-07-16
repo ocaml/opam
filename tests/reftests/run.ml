@@ -142,7 +142,7 @@ let escape_regexps s =
     ) s;
   Buffer.contents buf
 
-let str_replace_path ?escape whichway filters s =
+let str_replace_path ?escape ?(wrap_whole_path=true) whichway filters s =
   let s =
     match escape with
     | Some `Unescape -> Re.(replace_string (compile @@ str "\\\\") ~by:"\\" s)
@@ -160,13 +160,17 @@ let str_replace_path ?escape whichway filters s =
     | Some `Unescape | None -> fun s -> s
   in
   List.fold_left (fun s (re, by) ->
-      let re_path = Re.(
-          seq [re; group (rep (diff any (alt [set ":;$\"'"; space])))]
-        ) in
       match by with
       | Sed by ->
-        Re.replace (Re.compile re_path) s ~f:(fun g ->
-            escape_regexps by ^ escape_backslashes (whichway (Re.Group.(get g (nb_groups g - 1)))))
+        if wrap_whole_path then
+          let re_path = Re.(
+              seq [re; group (rep (diff any (alt [set ":;$\"'"; space])))]
+            ) in
+          Re.replace (Re.compile re_path) s ~f:(fun g ->
+              escape_regexps by ^
+              escape_backslashes (whichway (Re.Group.(get g (nb_groups g - 1)))))
+        else
+          Re.replace_string (Re.compile re) s ~by:(escape_regexps by)
       | Grep | GrepV ->
         if (by = Grep) = Re.execp (Re.compile re) s then s else "\\c")
     s filters
@@ -766,7 +770,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) ?(sort=false) cmd
           if a <> "" && a.[0] = '\'' then a
           else
             str_replace_path ~escape:`Backslashes OpamSystem.forward_to_back
-              var_filters a
+              ~wrap_whole_path:false var_filters a
         in
         Parse.get_str expanded)
       args
