@@ -415,3 +415,96 @@ CLIENT                          updating repository state
 
 <><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
 [default] Initialised
+### :IV: Advice message when default switch creation fails
+### <pkg:fail-compiler.1>
+opam-version: "2.0"
+build: "false"
+flags: compiler
+### :IV:1: simple compiler name without version
+### rm -rf $OPAMROOT
+### opam init --no-setup --bypass-checks default REPO/ -c fail-compiler | grep -v Cygwin
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'fail-compiler' (invariant ["fail-compiler"]) ><><>
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["fail-compiler"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of fail-compiler.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build fail-compiler 1
++- 
+- No changes have been performed
+Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
+[NOTE] Opam has been initialised, but the initial switch creation failed.
+       Use opam switch create default fail-compiler to get started.
+# Return code 31 #
+### :IV:2: simple compiler name with version constraint
+### rm -rf $OPAMROOT
+### opam init --no-setup --bypass-checks default REPO/ -c fail-compiler.1 | grep -v Cygwin
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'fail-compiler.1' (invariant ["fail-compiler" {= "1"}])
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["fail-compiler" {= "1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of fail-compiler.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build fail-compiler 1
++- 
+- No changes have been performed
+Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
+[NOTE] Opam has been initialised, but the initial switch creation failed.
+       Use opam switch create default 'fail-compiler=1' to get started.
+# Return code 31 #
+### :IV:3: complex formula
+### rm -rf $OPAMROOT
+### <opamrc>
+opam-version: "2.0"
+default-compiler: "fail-compiler"
+default-invariant: "fail-compiler" {= "1"} | "ocaml" {>= "4.10"}
+### opam init --no-setup --bypass-checks default REPO/ --config opamrc | grep -v Cygwin
+Configuring from ${BASEDIR}/opamrc and then from built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+
+<><> Creating initial switch 'default' (invariant ["fail-compiler" {= "1"} | "ocaml" {>= "4.10"}] - initially with fail-compiler)
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["fail-compiler" {= "1"} | "ocaml" {>= "4.10"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of fail-compiler.1 failed at "false".
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build fail-compiler 1
++- 
+- No changes have been performed
+Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
+[NOTE] Opam has been initialised, but the initial switch creation failed.
+       Use opam switch create default --formula '["fail-compiler" {= "1"} | "ocaml" {>= "4.10"}]' to get started.
+# Return code 31 #

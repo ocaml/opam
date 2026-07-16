@@ -23,6 +23,7 @@ users)
 ## Init
   * ✘ Display an appropriate error message when the file given to `opam init --config` does not exist or is in a VCS. This changes the behaviour for VCS local urls that was previously retrieved. [#5979 @kit-ty-kate - fix #5971]
   * Improve the performance of `opam init --bare` by no longer computing the default compiler in that case [#6957 @tuesdayjz @kit-ty-kate - fix #5815]
+  * Show a working `opam switch create` command when `opam init` fails to create the default switch [#6851 @kit-ty-kate - partial fix #6848]
 
 ## Config report
 
@@ -227,6 +228,7 @@ users)
   * Add a test showing some of the internal steps of `opam init` [#6957 @kit-ty-kate]
   * Add tests for `.install` `root` and `rootexec` fields [#6938 @rjbou]
   * Test the new `--ignore-available-on` argument and `OPAMIGNOREAVAILABLE` environment variable [#6836 @WardBrian @kit-ty-kate]
+  * Add a test showing the behaviour of `opam init` when the default compiler failed to build [#6851 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]
