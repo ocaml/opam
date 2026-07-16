@@ -31,6 +31,7 @@ users)
 
 ## Actions
   * Reorder the list of actions by increased priority [#6864 @kit-ty-kate - fix #6863]
+  * The internal `sources` directory now only serves to cache dev packages instead of every packages, saving disk space. For other packages it is now removed during the build phase. [#6440 @kit-ty-kate - fix #4056 #5448]
 
 ## Install
   * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
@@ -332,6 +333,7 @@ users)
   * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly. These funct-ions are now no-op if the given system packages set is empty.  [#6489 @arozovyk]
   * `OpamGlobalState`: add `is_root_read_only` to check if we are in sandboxed environment [#6489 @rjbou]
   * `OpamSwitchState`: add `update_sys_packages` to update depexts status of a set of packages. [#6489 @arozovyk]
+  * `OpamSwitchState`: add `is_source_dir_temporary` [#6440 @kit-ty-kate]
   * `OpamSysInteract`: add `available_packages` and `installed_packages` to be computed separately, redefine `packages_status` accordingly [#6489 @arozovyk]
   * `OpamStateTypes`: add available system package status field `repos_syspkgs_available` (and its type `repo_syspkgs_available`) in `repos_state` for all the depexts declared in repo's packages. The new field is also added to the cache. [#6489 @arozovyk @rjbou]
   * `OpamRepositoryState.load`: load repo's available system packages [#6489 @arozovyk]

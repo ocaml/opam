@@ -152,8 +152,14 @@ val dev_packages: 'a switch_state -> package_set
 
 (** Returns the local source mirror for the given package
     ({!OpamPath.Switch.sources} or {!OpamPath.Switch.pinned_package}, depending
-    on wether it's pinned). *)
+    on whether it's pinned. If it's not pinned, be mindful that the directory
+    is temporary (see {!is_source_dir_temporary}). *)
 val source_dir: 'a switch_state -> package -> dirname
+
+(** Returns [true] if the {!source_dir} of the package is meant to be a
+    temporary directory: packages that are not pinned or "dev package"
+    as defined in {!is_dev_package}. *)
+val is_source_dir_temporary: 'a switch_state -> package -> bool
 
 (** Returns the opam file overlay stored internally for pinned packages *)
 val overlay_opam_file:

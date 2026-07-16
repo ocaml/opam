@@ -661,8 +661,12 @@ let parallel_apply t
       in
       let source_dir = source_dir nv in
       (if OpamFilename.exists_dir source_dir
-       then (if not is_inplace then
-               OpamFilename.copy_dir ~src:source_dir ~dst:build_dir)
+       then
+         (if not is_inplace then
+            (if OpamSwitchState.is_source_dir_temporary t nv then
+               OpamFilename.move_dir ~src:source_dir ~dst:build_dir
+             else
+               OpamFilename.copy_dir ~src:source_dir ~dst:build_dir))
        else OpamFilename.mkdir build_dir;
        OpamAction.prepare_package_source t nv build_dir @@+ function
        | Some exn -> store_time (); Done (`Exception exn)
@@ -702,7 +706,11 @@ let parallel_apply t
          OpamFilename.rmdir d;
          let source_dir = source_dir nv in
          if OpamFilename.exists_dir source_dir
-         then OpamFilename.copy_dir ~src:source_dir ~dst:d
+         then
+           (if OpamSwitchState.is_source_dir_temporary t nv then
+              OpamFilename.move_dir ~src:source_dir ~dst:d
+            else
+              OpamFilename.copy_dir ~src:source_dir ~dst:d)
          else OpamFilename.mkdir d;
          OpamAction.prepare_package_source t nv d
        else Done None) @@+ fun _ ->
