@@ -32,6 +32,7 @@ users)
 ## Actions
   * Reorder the list of actions by increased priority [#6864 @kit-ty-kate - fix #6863]
   * The internal `sources` directory now only serves to cache dev packages instead of every packages, saving disk space. For other packages it is now removed during the build phase. [#6440 @kit-ty-kate - fix #4056 #5448]
+  * Stop the installation process via .install file from creating unnecessary intermediate directories for paths that contain `..` [#7015 @kit-ty-kate]
 
 ## Install
   * Remove the build directory as soon as possible when installing a package [#6906 @kit-ty-kate - fix #5884]
@@ -237,6 +238,7 @@ users)
   * Add a test showing when opam creates a local switch vs. global [#6981 @kit-ty-kate]
   * Add a test showing the behaviour of `opam lock` in presence of disjunction in the dependency formula [#6990 @kit-ty-kate]
   * Add a test showing the behaviour of `opam pin add <url to archive>` [#7012 @kit-ty-kate]
+  * Add more tests to ensure the inescapability of relative paths containing `..` in .install files [#7015 @kit-ty-kate]
 
 ### Engine
   * Add `http-server` to launch a minimal http server [#6939 @rjbou]

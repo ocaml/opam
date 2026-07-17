@@ -101,7 +101,7 @@ let preprocess_dot_install_t st nv build_dir =
           else
             (base, false) in
         let src_file = OpamFilename.create build_dir base.c in
-        let dst_file = match dst with
+        let unsafe_dst_file = match dst with
           | None   -> OpamFilename.create dst_dir (OpamFilename.basename src_file)
           | Some d ->
             if append && not (OpamFilename.Base.check_suffix d ".exe") then
@@ -109,25 +109,25 @@ let preprocess_dot_install_t st nv build_dir =
                 (OpamFilename.Base.add_extension d "exe")
             else
               OpamFilename.create dst_dir d in
+        let dst_file =
+          OpamFilename.of_string
+            (OpamSystem.real_path (OpamFilename.to_string unsafe_dst_file))
+        in
         let file = file_wo_prefix dst_file in
         let inst warning =
           if append then warning (OpamFilename.to_string src_file) `Add_exe;
           let check, warn = check ~src:build_dir ~dst:dst_dir base in
-          let real_dst =
-            OpamFilename.of_string
-              (OpamSystem.real_path (OpamFilename.to_string dst_file))
-          in
           let escapes =
-            not (OpamFilename.starts_with switch_prefix real_dst)
-            || (OpamFilename.starts_with switch_meta real_dst)
+            not (OpamFilename.starts_with switch_prefix dst_file)
+            || (OpamFilename.starts_with switch_meta dst_file)
           in
           if escapes then
             (OpamConsole.error
               "package %s attempted to install a file outside allowed \
                destination directories: %s -> %s."
               (OpamPackage.Name.to_string name)
-              (OpamFilename.to_string dst_file)
-              (OpamFilename.to_string real_dst);
+              (OpamFilename.to_string unsafe_dst_file)
+              (OpamFilename.to_string dst_file);
              failwith ".install file escaping allowed directories")
           else if check then
             OpamFilename.install ~warning ~exec ~src:src_file ~dst:dst_file ();
