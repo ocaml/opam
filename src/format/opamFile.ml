@@ -32,14 +32,15 @@ module Pp = struct
   module V = OpamFormat.V
   module I = OpamFormat.I
 
-  let warn ?pos ?(strict=OpamFormatConfig.(!r.strict)) ?exn fmt =
+  let warn ?pos ?(show=OpamConsole.verbose ())
+      ?(strict=OpamFormatConfig.(!r.strict)) ?exn fmt =
     if strict then
       match exn with
       | Some e -> raise e
       | None -> bad_format ?pos fmt
     else
       Printf.ksprintf (fun s ->
-          if OpamConsole.verbose () then
+          if show then
             match exn with
             | None ->
               OpamConsole.warning "%s"
@@ -3869,11 +3870,14 @@ module Dot_installSyntax = struct
     let raise_with_file file ?pos message =
       Pp.bad_format ?pos ("%s " ^^ message) file
     in
-    let pp_check_parent_dir =
-      Pp.check ~name:"rel-filename"
-        ~raise:raise_with_file
-        ~errmsg:"references its parent directory."
-        (Fun.negate @@ OpamFilename.might_escape ~sep:`Unspecified)
+    let pp_warn_parent_dir =
+      Pp.pp ~name:"rel-filename"
+        (fun ~pos x ->
+           if OpamFilename.might_escape ~sep:`Unspecified x then
+             Pp.warn ~show:true ~pos
+               "Path '%s' contains '..', its use is discouraged" x;
+           x)
+        (fun x -> x)
     in
     let pp_check_not_absolute =
       Pp.check ~name:"rel-filename"
@@ -3886,7 +3890,7 @@ module Dot_installSyntax = struct
         (Pp.V.string -| pp_optional)
         (Pp.opt @@
          Pp.singleton -| Pp.V.string
-         -| pp_check_parent_dir
+         -| pp_warn_parent_dir
          -| pp_check_not_absolute
          -| Pp.of_module "file" (module OpamFilename.Base))
     in
@@ -3895,7 +3899,7 @@ module Dot_installSyntax = struct
         (Pp.V.string -| pp_optional)
         (Pp.opt @@
          Pp.singleton -| Pp.V.string
-         -| pp_check_parent_dir
+         -| pp_warn_parent_dir
          -| pp_check_not_absolute
          -| Pp.check ~name:"rel-filename"
            ~raise:raise_with_file
