@@ -808,6 +808,9 @@ let source_dir st nv =
   then OpamPath.Switch.pinned_package st.switch_global.root st.switch nv.name
   else OpamPath.Switch.sources st.switch_global.root st.switch nv
 
+let is_source_dir_temporary st nv =
+  not (OpamPackage.Set.mem nv st.pinned || is_dev_package st nv)
+
 let overlay_opam_file st name =
   if is_pinned st name then
     let file =
