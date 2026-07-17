@@ -32,14 +32,15 @@ module Pp = struct
   module V = OpamFormat.V
   module I = OpamFormat.I
 
-  let warn ?pos ?(strict=OpamFormatConfig.(!r.strict)) ?exn fmt =
+  let warn ?pos ?(show=OpamConsole.verbose ())
+      ?(strict=OpamFormatConfig.(!r.strict)) ?exn fmt =
     if strict then
       match exn with
       | Some e -> raise e
       | None -> bad_format ?pos fmt
     else
       Printf.ksprintf (fun s ->
-          if OpamConsole.verbose () then
+          if show then
             match exn with
             | None ->
               OpamConsole.warning "%s"
