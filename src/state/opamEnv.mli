@@ -27,7 +27,9 @@ val resolve_separator_and_format:
     remove from the environment. *)
 val get_full:
   set_opamroot:bool -> set_opamswitch:bool -> force_path:bool ->
-  ?updates: ('r, euok_internal) env_update list -> ?scrub:string list -> 'a switch_state -> env
+  build_env:('r, euok_internal) env_update list ->
+  ?updates: ('r, euok_internal) env_update list ->
+  ?scrub:string list -> 'a switch_state -> env
 
 (** Get only environment modified by OPAM. If [force_path], the PATH is modified
     to ensure opam dirs are leading. [set_opamroot] and [set_opamswitch] can be
@@ -76,7 +78,8 @@ val add: env -> (spf_resolved, euok_internal) env_update list -> env
     these [updates] instead of the new environment. *)
 val updates:
   set_opamroot:bool -> set_opamswitch:bool -> ?force_path:bool ->
-  'a switch_state -> (spf_resolved, [> euok_writeable ]) env_update list
+  build_env:(spf_resolved, 'k) env_update list ->
+  'a switch_state -> (spf_resolved, [> euok_writeable ] as 'k) env_update list
 
 (** Check if the shell environment is in sync with the current OPAM switch,
     unless [skip] is true (it's default value is OPAMNOENVNOTICE *)
@@ -89,7 +92,11 @@ val is_up_to_date_switch: dirname -> switch -> bool
 
 (** Returns the current environment updates to configure the current switch with
     its set of installed packages *)
-val compute_updates: ?force_path:bool -> 'a switch_state -> (spf_resolved, [> euok_writeable ]) env_update list
+val compute_updates:
+  ?force_path:bool ->
+  build_env:(spf_resolved, 'k) env_update list ->
+  'a switch_state ->
+  (spf_resolved, [> euok_writeable ] as 'k) env_update list
 
 (** Returns shell-appropriate statement to evaluate [cmd]. *)
 val shell_eval_invocation:
