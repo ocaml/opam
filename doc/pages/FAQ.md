@@ -437,3 +437,31 @@ We don't recommend using it in day-to-day use of opam in the shell, because
 you'll be typing more and you won't get to notice exciting new features! If the
 behaviour of a command or option is altered, and you write something which in no
 longer valid, opam will try to tell you what the new command should look like.
+
+---
+
+#### 🐫  How does `opam init` and `opam switch create <version>` know which compiler package to choose?
+
+Since opam 2.4, `opam init` will choose `ocaml-base-compiler` as default
+compiler for the `default` switch, and let the solver choose the latest
+version. Of course this default can always be changed using `--compiler`
+or by skipping the creation of the `default` switch all-together with
+`--bare`.
+
+For example if you would rather use the OCaml compiler that you have
+installed by other means, you can use the `ocaml-system` package as follows:
+`opam init --compiler=ocaml-system`. Be careful though, system-wide compilers
+can be setup in a way that the default opam-repository doesn't expect,
+so failures may occur. Thus this option should only be used if you know
+what you're doing.
+
+`opam switch create <version>` on the other hand, works slightly differently.
+Since the only unknown is: which package is going to be used.
+Opam decides this by looking at all the packages that have been tagged as
+`compiler`, filter which ones have the right version, and then let the solver
+decide. For example calling `opam switch create 5.4 5.4.0` will create a
+switch named `5.4` and look for compiler packages with versions `5.4.0` which
+by default, with [opam-repository](https://github.com/ocaml/opam-repository/),
+will get back with `ocaml-base-compiler.5.4.0` and `ocaml-system.5.4.0`.
+Since 2025, `ocaml-system` is tagged as `avoid-version` so the solver will
+choose `ocaml-base-compiler.5.4.0`.
