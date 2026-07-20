@@ -77,6 +77,7 @@ users)
 ## Release scripts
 
 ## Install script
+  * Add `2.6.0~alpha1` to the install scripts [#7047 @kit-ty-kate]
 
 ## Admin
 
