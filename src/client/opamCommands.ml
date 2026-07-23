@@ -972,6 +972,10 @@ let show cli =
               $(i,deprecated) flag");
   ] in
   let fields =
+    let fields_conv =
+      let completion = Arg.Completion.make complete_opam_fields in
+      Arg.(Conv.of_conv ~completion (list string))
+    in
     mk_opt ~cli cli_original ["f";"field"] "FIELDS"
       (Printf.sprintf
          "Only display the values of these fields. Fields can be selected \
@@ -980,7 +984,7 @@ let show cli =
           field can be queried by combinig with $(b,--raw)"
          (OpamStd.List.concat_map ", " (Printf.sprintf "$(i,%s)" @* snd)
             OpamListCommand.field_names))
-      Arg.(list string) []
+      fields_conv []
   in
   let show_empty =
     mk_flag ~cli cli_original ["empty-fields"]
@@ -1445,8 +1449,15 @@ let config cli =
   ] @ mk_subdoc ~cli commands
     @ [`S Manpage.s_options]
   in
-
-  let command, params = mk_subcommands ~cli commands in
+  let complete_parameters ~opt_switch cmd ~token =
+    match cmd with
+    | Some (`list) ->
+      OpamArg.complete_packages () (Some opt_switch) ~token
+    | Some (`subst | `pef | `cudf) ->
+      Ok [Arg.Completion.files]
+    | _ -> Ok []
+  in
+  let command, params = mk_subcommands ~complete_parameters ~cli commands in
   let open Common_config_flags in
 
   let config global_options
@@ -1708,7 +1719,8 @@ let exec cli =
     `P "This is a shortcut, and equivalent to $(b,opam config exec).";
   ] in
   let cmd =
-    Arg.(non_empty & pos_all string [] & info ~docv:"COMMAND [ARG]..." [])
+    let cmd_conv = Arg.(Conv.of_conv ~completion:Completion.complete_restart string) in
+    Arg.(non_empty & pos_all cmd_conv [] & info ~docv:"COMMAND [ARG]..." [])
   in
   let no_switch =
     mk_flag ~cli (cli_from cli2_2) ["no-switch"]
@@ -2161,9 +2173,18 @@ let update cli =
     mk_flag ~cli cli_original ["u";"upgrade"]
       "Automatically run $(b,opam upgrade) after the update." in
   let name_list =
+    let completion =
+      let complete ctx ~token =
+        let repos = OpamArg.complete_repos ctx ~token |> Result.value ~default:[] in
+         OpamArg.complete_packages ~which:(`Pinned) ~extras:repos () ctx ~token
+      in
+      Arg.Completion.make ~context:OpamArgTools.switch_flag complete
+    in
+    let names_conv =
+      Arg.(Conv.of_conv ~completion string) in
     arg_list "NAMES"
       "List of repository or development package names to update."
-      Arg.string in
+      names_conv in
   let all =
     mk_flag ~cli cli_original ["a"; "all"]
       "Update all configured repositories, not only what is set in the current \
@@ -2340,7 +2361,16 @@ let repository cli =
       `S Manpage.s_options;
     ]
   in
-  let command, params = mk_subcommands ~cli commands in
+  let complete_parameters ~opt_switch:_ cmd ~token  =
+    match cmd with
+      | Some (`add | `set_url) ->
+        OpamArg.complete_repos None ~token |> Result.map
+          (List.cons Arg.Completion.dirs)
+      | Some (`remove | `priority | `set_repos) ->
+        OpamArg.complete_repos None ~token
+      | _ -> Ok []
+  in
+  let command, params = mk_subcommands ~complete_parameters ~cli commands in
   let scope =
     let scope_info ?docv flags doc =
       Arg.info ~docs:scope_section ~doc ?docv flags
@@ -2359,7 +2389,9 @@ let repository cli =
       ]
     in
     let switches =
-      Arg.opt Arg.(list string) []
+      let switch_conv = Arg.(Conv.of_conv ~completion:(Completion.make OpamArg.complete_switches) (list string))
+      in
+      Arg.opt switch_conv []
         (scope_info ["on-switches"] ~docv:"SWITCHES"
            "Act on the selections of the given list of switches")
     in
@@ -2377,7 +2409,7 @@ let repository cli =
       order, therefore 1 is the highest priority.  Negative ints can be used to \
       select from the lowest priority, -1 being last. $(b,set-repos) can \
       otherwise be used to explicitly set the repository list at once."
-      Arg.(int) 1
+      level_int 1
   in
   let repository global_options command kind short scope rank params () =
     apply_global_options cli global_options;
@@ -2814,8 +2846,19 @@ let switch cli =
     @ [`S Manpage.s_options]
     @ OpamArg.man_build_option_section
   in
-
-  let command, params = mk_subcommands_with_default ~cli commands in
+  let complete_parameters ~opt_switch command ~token =
+      match command with
+      | Some (`set | `remove | `reinstall | `install | `default _) | None  ->
+        OpamArg.complete_switches None ~token
+      | Some (`link) ->
+        OpamArg.complete_switches None ~token |>
+          Result.map (List.cons Arg.Completion.dirs)
+      | Some (`export | `import) ->
+         Ok [Arg.Completion.files]
+      | Some (`set_invariant) ->
+        OpamArg.complete_packages () (Some opt_switch) ~token
+      | _ -> Ok [] in
+  let command, params = mk_subcommands_with_default ~complete_parameters:{complete_parameters} ~cli commands in
   let no_switch =
     mk_flag ~cli cli_original ["no-switch"]
       "Don't automatically select newly installed switches." in
@@ -3333,7 +3376,18 @@ let pin ?(unpin_only=false) cli =
       Term.const (Some `remove),
       Arg.(value & pos_all string [] & Arg.info [])
     else
-      mk_subcommands_with_default ~cli commands in
+      let complete_parameters ~opt_switch cmd ~token =
+          match cmd with
+          | Some (`scan) ->
+            Ok [Arg.Completion.dirs]
+          | Some (`remove) ->
+            OpamArg.complete_packages ~which:(`Pinned) ~extras:[Arg.Completion.dirs] ()
+              (Some opt_switch) ~token
+          | Some (`add | `default _) ->
+            OpamArg.complete_packages ~which:(`All) ~extras:[Arg.Completion.dirs] ()
+              (Some opt_switch) ~token
+          | _ -> Ok [] in
+      mk_subcommands_with_default ~cli ~complete_parameters:{complete_parameters} commands in
   let edit =
     mk_flag ~cli cli_original ["e";"edit"]
       "With $(i,opam pin add), edit the opam file as with `opam pin edit' \

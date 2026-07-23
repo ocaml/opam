@@ -1,0 +1,20 @@
+diff --git c/src/core/cmdliner/dune i/src/core/cmdliner/dune
+new file mode 100644
+index 000000000..1b684cc42
+--- /dev/null
++++ i/src/core/cmdliner/dune
+@@ -0,0 +1,4 @@
++(library
++ (name opamCmdliner)
++ (public_name opam-core.cmdliner)
++ (flags :standard -w -27-32-35-50))
+diff --git c/src/core/cmdliner/tool/dune i/src/core/cmdliner/tool/dune
+new file mode 100644
+index 000000000..d078fa1b7
+--- /dev/null
++++ i/src/core/cmdliner/tool/dune
+@@ -0,0 +1,4 @@
++(executable
++ (name opamCmdliner_tool)
++ (libraries opamCmdliner)
++ (flags :standard -w -27-32-35-50-39))
