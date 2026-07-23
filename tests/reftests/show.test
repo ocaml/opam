@@ -452,19 +452,16 @@ version: "4"
 4
 ### : Check the error message in case of an invalid character
 ### opam show a&b
+Usage: opam show [--help] [OPTION]… [PACKAGES]…
 opam: PACKAGES… arguments: Invalid character '&' in package name "a&b"
-Usage: opam show [OPTION]… [PACKAGES]…
-Try 'opam show --help' or 'opam --help' for more information.
 # Return code 2 #
 ### opam show bépo
+Usage: opam show [--help] [OPTION]… [PACKAGES]…
 opam: PACKAGES… arguments: Invalid character '\195' in package name
       "b\195\169po"
-Usage: opam show [OPTION]… [PACKAGES]…
-Try 'opam show --help' or 'opam --help' for more information.
 # Return code 2 #
 ### opam show a.bépo
+Usage: opam show [--help] [OPTION]… [PACKAGES]…
 opam: PACKAGES… arguments: Invalid character '\195' in package version
       "b\195\169po"
-Usage: opam show [OPTION]… [PACKAGES]…
-Try 'opam show --help' or 'opam --help' for more information.
 # Return code 2 #
