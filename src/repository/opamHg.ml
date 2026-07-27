@@ -72,7 +72,7 @@ module VCS = struct
   let diff repo_root repo_url =
     let patch_file = OpamSystem.temp_file ~auto_clean:false "hg-diff" in
     let finalise () = OpamSystem.remove_file patch_file in
-    OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
+    OpamProcess.Job.catch (fun e -> OpamStd.Exn.finalise e finalise) @@ fun () ->
     let mark = mark_from_url repo_url in
     hg repo_root ~stdout:patch_file [ "diff"; "--text"; "--subrepos"; "--reverse";
         "--rev"; mark ] @@> fun r ->

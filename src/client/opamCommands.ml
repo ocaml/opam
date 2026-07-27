@@ -473,8 +473,8 @@ let init cli =
           match OpamStateConfig.load ~lock_kind:`Lock_write root with
           | Some c -> c
           | exception (OpamPp.Bad_version _ as e) ->
+            OpamStd.Exn.finalise e @@ fun () ->
             OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates ~reinit root;
-            raise e
           | None -> OpamFile.Config.empty
         in
         reinit config
@@ -4019,11 +4019,11 @@ let lint cli =
                  Printf.sprintf "<pinned>/%s" (OpamPackage.to_string nv)
                in
                [`pkg (file, label)]
-             | None -> raise Not_found
+             | None -> raise_notrace Not_found
            else
              let opam = OpamSwitchState.opam st nv in
              match OpamPinned.orig_opam_file st name opam with
-             | None -> raise Not_found
+             | None -> raise_notrace Not_found
              | Some file ->
                let repo, label =
                  let repo, reponame =

@@ -128,7 +128,7 @@ module VCS = struct
     | false ->
       let patch_file = OpamSystem.temp_file ~auto_clean: false "darcs-diff" in
       let finalise () = OpamSystem.remove_file patch_file in
-      OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
+      OpamProcess.Job.catch (fun e -> OpamStd.Exn.finalise e finalise) @@ fun () ->
       darcs repo_root ~stdout:patch_file
         [ "diff";
           "--from-tag"; opam_remote_tag; "--to-tag"; opam_local_tag;

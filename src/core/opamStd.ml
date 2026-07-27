@@ -236,7 +236,7 @@ module Set = struct
     exception Found of elt
 
     let find_opt fn t =
-      try iter (fun x -> if fn x then raise (Found x)) t; None
+      try iter (fun x -> if fn x then raise_notrace (Found x)) t; None
       with Found x -> Some x
 
     let find fn t =
@@ -666,7 +666,7 @@ module OpamString = struct
     try
       String.iter (function
           | '0'..'9' | 'A'..'F' | 'a'..'f' -> ()
-          | _ -> raise Exit)
+          | _ -> raise_notrace Exit)
         s;
       true
     with Exit -> false

@@ -750,7 +750,7 @@ let classify_executable file =
               | 0x14c ->
                   `x86
               | _ ->
-                  raise End_of_file
+                  raise_notrace End_of_file
             in
             let _ : string = really_input_string c 14 in
             let size_of_opt_header = input_short_little c in
@@ -758,7 +758,7 @@ let classify_executable file =
             (* Executable images must have a PE "optional" header and be marked executable *)
             (* Could also validate IMAGE_FILE_32BIT_MACHINE (0x100) for x86 and IMAGE_FILE_LARGE_ADDRESS_AWARE (0x20) for x64 *)
             if size_of_opt_header <= 0 || characteristics land 0x2 = 0 then
-              raise End_of_file;
+              raise_notrace End_of_file;
             close_in c;
             if characteristics land 0x2000 <> 0 then
               `Dll arch
@@ -1156,7 +1156,7 @@ let rec flock_update
            file (if Sys.win32 then "CTRL+C" else "C-c");
          let rec lock_w_ignore_sig () =
            try Unix.lockf fd (unix_lock_op ~dontblock:false flag) 0;
-           with Sys.Break as e -> (OpamConsole.errmsg "\n"; raise e)
+           with Sys.Break as e -> OpamStd.Exn.finalise e (fun () -> OpamConsole.errmsg "\n")
               | Unix.Unix_error (Unix.EINTR,_,_) -> lock_w_ignore_sig ()
          in lock_w_ignore_sig ();
          OpamConsole.errmsg "lock acquired.\n");
