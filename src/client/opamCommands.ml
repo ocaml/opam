@@ -477,7 +477,10 @@ let init cli =
             raise e
           | None -> OpamFile.Config.empty
         in
-        reinit config
+        try reinit config with
+        | OpamFormatUpgrade.Upgrade_done (c, None) ->
+          (* Upgrade done. Now we can actually reinit. *)
+          raise (OpamFormatUpgrade.Upgrade_done (c, Some reinit))
       else
         (if not interactive
             && update_config <> Some true

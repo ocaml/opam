@@ -1382,8 +1382,7 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
-Update done, please now retry your command.
-# Return code 10 #
+Update done.
 ### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}
@@ -3592,8 +3591,7 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
-Update done, please now retry your command.
-# Return code 10 #
+Update done.
 ### test -f OPAM/repo/default.tar.gz
 # Return code 1 #
 ### test -d OPAM/repo/default

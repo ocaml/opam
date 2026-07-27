@@ -17,6 +17,7 @@ users)
 ## Plugins
 
 ## Init
+  * Do not make `opam init --reinit` ask to retry the command when upgrading from a 2.1 root [#7058 @kit-ty-kate - fix #7057]
 
 ## Config report
 
