@@ -78,11 +78,16 @@ let remove_files_from_destdir st pfx packages =
       end
   | _ -> ()
 
+(* Guesses a package name from a project directory name: everything up
+   to the first dot, mirroring the name/version split of package
+   strings (e.g. "foo.2.0" gives "foo"). Directory names starting with
+   a dot yield no name (see #7043). *)
 let name_from_project_dirname d =
-  try
-    Some (OpamFilename.(Base.to_string (basename_dir d)) |>
-          Re.(replace_string (compile (seq [char '.'; any]))) ~by:"" |>
-          OpamPackage.Name.of_string)
+  let base = OpamFilename.(Base.to_string (basename_dir d)) in
+  let name =
+    OpamStd.Option.map_default fst base (OpamStd.String.cut_at base '.')
+  in
+  try Some (OpamPackage.Name.of_string name)
   with Failure _ -> None
 
 let url_with_local_branch = function

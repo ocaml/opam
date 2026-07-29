@@ -23,6 +23,7 @@ users)
 ## Actions
 
 ## Install
+  * [BUG] Fix package name inference from a local project directory name: the name is everything up to the first dot, and directory names starting with a dot no longer infer a mangled name (`opam install ./.foo` used to infer, pin and install a package named `oo`) [#XXXX @MavenRain - fix #7043]
 
 ## Build (package)
 
@@ -105,6 +106,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test covering package name inference from local project directory names [#XXXX @MavenRain]
 
 ### Engine
 

@@ -1,0 +1,49 @@
+N0REP0
+### opam switch create infer --empty
+### :::No package name is inferred from a dot-directory (#7043):::
+### <pin:.foo/opam>
+opam-version: "2.0"
+### opam install ./.foo
+[WARNING] Ignoring file at ${BASEDIR}/.foo/opam: could not infer package name
+[WARNING] No package definitions found at ${BASEDIR}/.foo
+Nothing to do
+### opam install .foo/opam
+[ERROR] Could not infer package name from package definition file ${BASEDIR}/.foo/opam
+# Return code 5 #
+### :::A name.version directory name still infers the name:::
+### <pin:proj.2.0/opam>
+opam-version: "2.0"
+### opam install ./proj.2.0 --show
+The following actions would be performed:
+=== install 1 package
+  - install proj 2.0 (pinned)
+### :::Multi-segment versions still infer via the opam file reader:::
+### <pin:proj2.12.3/opam>
+opam-version: "2.0"
+### opam install ./proj2.12.3 --show
+The following actions would be performed:
+=== install 1 package
+  - install proj2 12.3 (pinned)
+### :::File-form installs infer from the enclosing directory too:::
+### opam install proj.2.0/opam --show
+The following actions would be performed:
+=== install 1 package
+  - install proj 2.0 (pinned)
+### opam install proj2.12.3/opam --show
+The following actions would be performed:
+=== install 1 package
+  - install proj2 12.3 (pinned)
+### :::A dotted name whose stem is not a valid package name declines inference:::
+### <pin:2024.report/opam>
+opam-version: "2.0"
+### opam install ./2024.report
+[WARNING] Ignoring file at ${BASEDIR}/2024.report/opam: could not infer package name
+[WARNING] No package definitions found at ${BASEDIR}/2024.report
+Nothing to do
+### :::A dotted name with an unparseable version part infers the stem:::
+### <pin:foo.1@2/opam>
+opam-version: "2.0"
+### opam install ./foo.1@2 --show
+The following actions would be performed:
+=== install 1 package
+  - install foo dev (pinned)
