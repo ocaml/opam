@@ -359,13 +359,12 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/safe-cache/.opam-switch/pac
 CACHE(installed)                Bad installed cache: incompatible magic string "00000000" (expected "${MAGICV}").
 SYSTEM                          LOCK ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache (read => none)
 CACHE(installed)                Invalid installed cache, removing
-SYSTEM                          rm ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache
 CACHE(installed)                Running in safe mode, not upgrading the installed cache
 im-here
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### opam-cache installed safe-cache
-No cache
+Invalid cache
 ### :II:2: without safe mode
 ### opam reinstall im-here
 The following actions will be performed:

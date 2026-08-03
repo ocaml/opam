@@ -14,6 +14,7 @@ users)
 
 ## Global CLI
   * Stop resetting debuglevel to 0 in safe mode [#7091 @kit-ty-kate - fix #7000]
+  * Respect safe mode when encountering an outdated cache file [#7067 @kit-ty-kate - fix #7066]
 
 ## Plugins
 

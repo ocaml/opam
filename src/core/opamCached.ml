@@ -66,6 +66,10 @@ end = struct
     in
     OpamStd.Option.Op.(check_marshaled_file fd >>= f)
 
+  let remove cache_file =
+    if not OpamCoreConfig.(!r.safe_mode) then
+      OpamFilename.remove cache_file
+
   let load cache_file =
     match OpamFilename.opt_file cache_file with
     | Some file ->
@@ -75,7 +79,7 @@ end = struct
         in
         if r = None then begin
           log "Invalid %s cache, removing" X.name;
-          OpamFilename.remove file
+          remove file
         end;
         r
     | None -> None
@@ -97,8 +101,5 @@ end = struct
     with Unix.Unix_error _ ->
       log "Could not acquire lock for writing %s, skipping %s cache update"
         (OpamFilename.prettify cache_file) X.name
-
-  let remove cache_file =
-    OpamFilename.remove cache_file
 
 end
