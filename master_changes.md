@@ -18,6 +18,7 @@ users)
 
 ## Init
   * Do not make `opam init --reinit` ask to retry the command when upgrading from a 2.1 root [#7058 @kit-ty-kate - fix #7057]
+  * `opam init --reinit` now regenerate the list of valid switches, fix switch internal data (cache, config, packages) [#7068 @kit-ty-kate - fix #7066]
 
 ## Config report
 

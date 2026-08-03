@@ -1019,6 +1019,21 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.1 }, (roots { i-am-sys-compiler.1 }) => ["i-am-sys-compiler"]
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Inferred invariant: from base packages { i-am-compiler.2 }, (roots { i-am-compiler.2 }) => ["i-am-compiler" {>= "2"}]
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Inferred invariant: from base packages { i-am-sys-compiler.2 }, (roots { i-am-sys-compiler.2 }) => ["i-am-sys-compiler"]
+STATE                           Switch state loaded in 0.000s
 ### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}
@@ -1042,7 +1057,7 @@ depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["${BASEDIR}" "sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1074,6 +1089,16 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, ro switch state
@@ -1165,6 +1190,19 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, rw switch state
@@ -1240,6 +1278,16 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, rw switch state
@@ -1382,6 +1430,18 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 Update done.
 ### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
@@ -1406,7 +1466,7 @@ depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["${BASEDIR}" "sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -1441,6 +1501,16 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, ro switch state
@@ -1534,6 +1604,19 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, rw switch state
@@ -1611,6 +1694,16 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 Update done, please now retry your command.
 # Return code 10 #
 ### # ro global state, ro repo state, rw switch state
@@ -1754,6 +1847,18 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 Update done.
 ### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
@@ -1778,7 +1883,7 @@ depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["${BASEDIR}" "sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -2095,6 +2200,18 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 ### opam switch --short
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 ${BASEDIR}
@@ -2118,7 +2235,7 @@ depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["${BASEDIR}" "sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -2456,6 +2573,18 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables | grep -v eval-variables:
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
@@ -2463,7 +2592,7 @@ depext: true
 depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["${BASEDIR}" "sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -2821,6 +2950,18 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
@@ -2829,7 +2970,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["${BASEDIR}" "sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -3177,6 +3318,18 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
@@ -3185,7 +3338,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["${BASEDIR}" "sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -3533,6 +3686,18 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
@@ -3541,7 +3706,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default"]
+installed-switches: ["${BASEDIR}" "sw-sys-comp" "sw-comp" "default"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"
@@ -3591,6 +3756,16 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
 Update done.
 ### test -f OPAM/repo/default.tar.gz
 # Return code 1 #
@@ -3863,6 +4038,22 @@ RSTATE                          loaded opam files from repo default in 0.000s
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/default
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-sys-comp
+STATE                           Definition missing for installed package i-am-another-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-package.2, copying from repo
+STATE                           Definition missing for installed package i-am-sys-compiler.1, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ sw-comp
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ default
+STATE                           Definition missing for installed package i-am-sys-compiler.2, copying from repo
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ this-internal-error
+[ERROR] No config file found for switch this-internal-error. Switch broken?
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+STATE                           Switch state loaded in 0.000s
 ### opam-cat $OPAMROOT/config | '"${OPAMROOTVERSION}"' -> "current" | grep -v sys-pkg-manager-cmd | grep -v global-variables
 default-compiler: ["i-am-sys-compiler" "i-am-compiler"]
 default-invariant: ["i-am-sys-compiler"]
@@ -3871,7 +4062,7 @@ depext-cannot-install: false
 depext-run-installs: true
 download-jobs: 3
 eval-variables: [sys-comp-version ["sh" "-c" "echo $OPAMSYSCOMP"] "comp version"]
-installed-switches: ["sw-sys-comp" "sw-comp" "default" "${BASEDIR}/why-did-you-delete-me" "this-internal-error"]
+installed-switches: ["${BASEDIR}" "sw-sys-comp" "sw-comp" "default" "this-internal-error"]
 opam-root-version: current
 opam-version: "2.0"
 repositories: "default"

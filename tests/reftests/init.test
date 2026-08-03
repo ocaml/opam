@@ -566,10 +566,40 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
-GSTATE                          Cleaning switch list: removed /void/woosh
+GSTATE                          Cleaning switch list: removed ${BASEDIR}/woosh
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/REPO
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+GSTATE                          Fixing switch list: removed ${BASEDIR}/empty-dir
+FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+STATE                           LOAD-SWITCH-STATE @ normal
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Read ${BASEDIR}/OPAM/normal/.opam-switch/switch-config in 0.000s
+CACHE(installed)                Loaded ${BASEDIR}/OPAM/normal/.opam-switch/packages/cache in 0.000s
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/normal/.opam-switch/switch-config atomically in 0.000s
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ corrupted
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Read ${BASEDIR}/OPAM/corrupted/.opam-switch/switch-config in 0.000s
+CACHE(installed)                Bad installed cache: ...
+CACHE(installed)                Invalid installed cache, removing
+CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/corrupted/.opam-switch/packages/cache ...
+CACHE(installed)                ${BASEDIR}/OPAM/corrupted/.opam-switch/packages/cache written in 0.000s
+STATE                           Definition missing for installed package ta.1, copying from repo
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/corrupted/.opam-switch/switch-config atomically in 0.000s
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/corrupted/.opam-switch/switch-config atomically in 0.000s
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}/real-local
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+CACHE(installed)                Loaded ${BASEDIR}/real-local/_opam/.opam-switch/packages/cache in 0.000s
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+FILE(switch-config)             Wrote ${BASEDIR}/real-local/_opam/.opam-switch/switch-config atomically in 0.000s
+STATE                           Switch state loaded in 0.000s
 ### # check that everything was fixed
 ### head OPAM/config
 opam-version: "2.0"
@@ -579,12 +609,14 @@ installed-switches: [
   "normal"
   "corrupted"
   "${BASEDIR}/real-local"
-  "${BASEDIR}/woosh"
-  "${BASEDIR}/empty-dir"
 ]
+switch: "normal"
+download-jobs: 3
 ### grep synopsis OPAM/corrupted/.opam-switch/switch-config
-# Return code 1 #
+synopsis: "corrupted"
 ### test -f OPAM/corrupted/.opam-switch/packages/ta.1/opam
-# Return code 1 #
 ### opam-cache installed corrupted
-No cache
+=> pina.1 <=
+opam-version: "2.0"
+name: "pina"
+version: "1"

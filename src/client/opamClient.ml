@@ -1674,6 +1674,13 @@ let reinit ?(init_config=OpamInitDefaults.init_config()) ~interactive
     OpamRepositoryCommand.update_with_auto_upgrade rt
       (OpamRepositoryName.Map.keys rt.repos_definitions)
   in
+  (* Sanitize switch list *)
+  let gt = OpamGlobalState.fix_switch_list gt in
+  (* Load each switch to make sure their cache and switch config
+     are up-to-date *)
+  List.iter (fun sw ->
+      OpamSwitchState.drop (OpamSwitchState.load `Lock_write gt rt sw))
+    (OpamFile.Config.installed_switches gt.config);
   OpamRepositoryState.drop rt
 
 let has_space s = String.contains s ' '
