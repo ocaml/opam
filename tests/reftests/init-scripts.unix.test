@@ -58,7 +58,7 @@ if ( -f '${BASEDIR}/root/opam-init/variables.csh' ) source '${BASEDIR}/root/opam
 ### cat root/opam-init/init.cmd
 if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-init/variables.cmd" >NUL 2>NUL
 ### cat root/opam-init/init.ps1
-if Test-Path "${BASEDIR}/root/opam-init/variables.ps1" { . "${BASEDIR}/root/opam-init/variables.ps1" *> $null }
+if (Test-Path "${BASEDIR}/root/opam-init/variables.ps1") { . "${BASEDIR}/root/opam-init/variables.ps1" *> $null }
 ### : Variables scripts :
 ### cat root/opam-init/variables.sh | grep -v man | grep -v MANPATH
 test -z "${OPAM_SWITCH_PREFIX:+x}" || return 0

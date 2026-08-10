@@ -17,6 +17,7 @@ users)
 ## Plugins
 
 ## Init
+  * [BUG] Fix invalid PowerShell syntax in generated init scripts [@flandia]
 
 ## Config report
 

@@ -1073,7 +1073,7 @@ let source root shell f =
   | SH_cmd ->
     Printf.sprintf "if exist \"%s\" call \"%s\" >NUL 2>NUL\n" fname fname
   | SH_pwsh _ ->
-    Printf.sprintf "if Test-Path \"%s\" { . \"%s\" *> $null }\n" fname fname
+    Printf.sprintf "if (Test-Path \"%s\") { . \"%s\" *> $null }\n" fname fname
 
 let if_interactive_script shell t e =
   let ielse else_opt = match else_opt with
