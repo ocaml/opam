@@ -370,7 +370,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
            {|opam list|};
            {|opam config report|};
           ]))
-    ++ only_on Windows (run "Test (reftests)" ["bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}"])
+    ++ only_on Windows (run "Test (reftests)" ["PATH='/cygdrive/c/Program Files/PowerShell/7':$PATH bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}"])
     ++ end_job f
 
 let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macOS_job:_ ?section runner ~oc ~workflow f =

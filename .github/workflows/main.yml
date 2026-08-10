@@ -245,7 +245,7 @@ jobs:
         opam list || exit /b 1
         opam config report || exit /b 1
     - name: Test (reftests)
-      run: bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}
+      run: PATH='/cygdrive/c/Program Files/PowerShell/7':$PATH bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}
 
   Build-macOS:
     runs-on: macos-latest

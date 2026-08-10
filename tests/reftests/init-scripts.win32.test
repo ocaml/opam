@@ -60,6 +60,7 @@ if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-in
 ### cat root/opam-init/init.ps1
 if (Test-Path "${BASEDIR}/root/opam-init/variables.ps1") { . "${BASEDIR}/root/opam-init/variables.ps1" *> $null }
 ### powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File root/opam-init/init.ps1
+### pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File root/opam-init/init.ps1
 ### : Variables scripts :
 ### cat root/opam-init/variables.sh | grep -v man | grep -v MANPATH
 test -z "${OPAM_SWITCH_PREFIX:+x}" || return 0
