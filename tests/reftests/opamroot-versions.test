@@ -3568,6 +3568,36 @@ STATE                           Switch state loaded in 0.000s
 i-am-package      2           One-line description
 i-am-sys-compiler 2           One-line description
 ### rm -rf _opam
+### :V:8:f: reinit from 2.2 with OPAMREPOTARRING=1
+### ocaml generate.ml 2.2
+### tar czf OPAM/repo/default.tar.gz default
+### rm -r OPAM/repo/default
+### opam init --reinit --bypass-checks --no-setup | "${OPAMROOTVERSION}($|,)" -> "current" | grep -v Cygwin
+No configuration file found, using built-in defaults.
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+[WARNING] Removing global switch 'this-internal-error' as it no longer exists
+FMT_UPG                         Hard config upgrade, from 2.2 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version current which can't be reverted.
+You may want to back it up before going further.
+
+Perform the update and continue? [Y/n] y
+Upgrading the internal repository format for 'default'...
+Format upgrade done.
+
+<><> Rerunning init and update ><><><><><><><><><><><><><><><><><><><><><><><><>
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
+RSTATE                          No cache found
+RSTATE                          loaded opam files from repo default in 0.000s
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/default
+Update done, please now retry your command.
+# Return code 10 #
+### test -f OPAM/repo/default.tar.gz
+# Return code 1 #
+### test -d OPAM/repo/default
+### rm -rf _opam
 ### :V:9:a: From 2.6~alpha root, global
 ### ocaml generate.ml 2.6~alpha
 ### # ro global state
