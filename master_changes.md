@@ -100,6 +100,7 @@ users)
 ## Internal: Windows
 
 ## Test
+  * patchDiff: fix random git related failures [#7069 @kit-ty-kate - fix #7037]
 
 ## Benchmarks
 
