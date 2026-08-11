@@ -1060,6 +1060,8 @@ REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "init" "--initial-branch=main"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "gc.autoDetach" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "maintenance.autoDetach" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
@@ -1114,6 +1116,8 @@ REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "init" "--initial-branch=main"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "gc.autoDetach" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "maintenance.autoDetach" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
@@ -1236,6 +1240,8 @@ REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "init" "--initial-branch=main"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "gc.autoDetach" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "maintenance.autoDetach" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"
@@ -1287,6 +1293,8 @@ REPOSITORY                      update changes from git+file://${BASEDIR}/CHG
 Processing  1/1: [changes: git]
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "init" "--initial-branch=main"
 - Initialized empty Git repository in ${BASEDIR}/OPAM/repo/changes/.git/
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "gc.autoDetach" "false"
++ git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "maintenance.autoDetach" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "diff.noprefix" "false"
 + git "-C" "${BASEDIR}/OPAM/repo/changes" "config" "--local" "core.autocrlf" "false"

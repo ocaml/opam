@@ -373,6 +373,28 @@ end
 
 module Env : sig
 
+  (** {3 Raw array functions} *)
+
+  type raw = string array
+
+  (** Same as {!Unix.environment} *)
+  val raw_env: unit -> raw
+
+  (** [get_from_array array key] returns the value of the first element
+      of [array] associated with [key]. Returns [None] if nothing was found. *)
+  val get_from_array: raw -> string -> string option
+
+  (** [add_and_replace array (key, value)] returns a fresh array containing
+      at least [key=value] and [array] where all the elements matching [key]
+      will be replaced by [key=value] as well.
+
+      This makes sure any applications will always associate [key] with [value]
+      as per POSIX.1-2024:
+      > If more than one string in an environment of a process has the same name,
+      > the consequences are undefined.
+      https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap08.html *)
+  val add_and_replace: raw -> (string * string) -> raw
+
   (** {3 Generic functions} *)
 
   (** Remove from a c-separated list of string the ones with the given prefix *)
@@ -436,7 +458,6 @@ module Env : sig
   val getopt_full: Name.t -> Name.t * string option
 
   val list: unit -> (Name.t * string) list
-  val raw_env: unit -> string array
 
   (** [cyg_env ~env ~cygbin ~git_location] returns [env] environment with its
       PATH variable updated with [git_location] and [cygbin] at the beginning,

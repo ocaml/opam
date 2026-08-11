@@ -237,6 +237,8 @@ SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1
 Processing  1/1: [bar.1: git]
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "init" "--initial-branch=main"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "gc.autoDetach" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "maintenance.autoDetach" "false"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "diff.noprefix" "false"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/bar.1" "config" "--local" "core.autocrlf" "false"
@@ -296,6 +298,8 @@ SYSTEM                          mkdir ${OPAMTMP}
 SYSTEM                          mkdir ${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1
 Processing  1/1: [qux.1: git]
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "init" "--initial-branch=main"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "gc.autoDetach" "false"
++ git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "maintenance.autoDetach" "false"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "fetch.prune" "false"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "diff.noprefix" "false"
 + git "-C" "${BASEDIR}/OPAM/download/.opam-switch/sources/qux.1" "config" "--local" "core.autocrlf" "false"
