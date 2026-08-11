@@ -109,6 +109,7 @@ users)
 ### Tests
 
 ### Engine
+  * Stop the testsuite from generating files containing CRLF [#7071 @kit-ty-kate]
 
 ## Github Actions
 

@@ -31,7 +31,7 @@ let _ =
   in
   let name = Filename.concat opamroot "config" in
   let content = get_files Sys.argv.(1) in
-  let fd = open_out name in
+  let fd = open_out_bin name in
   List.iter (fun l -> output_string fd (l^"\n")) content;
   close_out fd
 ### rm -rf "$OPAMROOT"
