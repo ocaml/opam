@@ -58,7 +58,7 @@ if ( $?prompt ) then
 endif
 
 if ( -f '${BASEDIR}/root/opam-init/variables.csh' ) source '${BASEDIR}/root/opam-init/variables.csh' >& /dev/null
-### tcsh -f -n root/opam-init/init.csh
+### tcsh -f -c 'source root/opam-init/init.csh'
 ### cat root/opam-init/init.cmd
 if exist "${BASEDIR}/root/opam-init/variables.cmd" call "${BASEDIR}/root/opam-init/variables.cmd" >NUL 2>NUL
 ### cat root/opam-init/init.ps1
