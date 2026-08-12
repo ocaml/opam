@@ -94,6 +94,7 @@ users)
 ## Shell
 
 ## Internal
+  * Add level 4 debug output of the patch operations during a load from diff [#7072 @kit-ty-kate]
 
 ## Internal: Unix
 

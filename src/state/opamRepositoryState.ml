@@ -287,6 +287,8 @@ let load_opams_from_diff repo diffs rt =
       (OpamConsole.colorise `blue (OpamRepositoryName.to_string repo.repo_name));
   log ~level:3 "load repo %a from diff"
     (slog OpamRepositoryName.to_string) repo.repo_name;
+  log ~level:4 "Applying the following diff operations:\n%a"
+    (Format.pp_print_list Patch.pp_operation) diffs;
   let existing_opams =
     OpamRepositoryName.Map.find repo.repo_name rt.repo_opams
   in
