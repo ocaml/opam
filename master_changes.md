@@ -18,6 +18,7 @@ users)
 
 ## Init
   * [BUG] Fix invalid PowerShell syntax in generated init scripts [@flandia]
+  * Do not make `opam init --reinit` ask to retry the command when upgrading from a 2.1 root [#7058 @kit-ty-kate - fix #7057]
 
 ## Config report
 
@@ -95,17 +96,20 @@ users)
 ## Shell
 
 ## Internal
+  * Add level 4 debug output of the patch operations during a load from diff [#7072 @kit-ty-kate]
 
 ## Internal: Unix
 
 ## Internal: Windows
 
 ## Test
+  * patchDiff: fix random git related failures [#7069 @kit-ty-kate - fix #7037]
 
 ## Benchmarks
 
 ## Reftests
 ### Tests
+  * Add a test showing `opam init --reinit` upgrading from pre opam 2.6 `OPAMREPOTARRING=1` (aka. opam 2.1's default) [#7058 @kit-ty-kate]
 
 ### Engine
 

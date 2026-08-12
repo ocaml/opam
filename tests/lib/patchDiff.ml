@@ -333,6 +333,8 @@ let git_cmds ~dir repo_root commands error_msg =
         let args =
           "-c"::"user.email=you@example.com"::
           "-c"::"user.name=Your Name"::
+          "-c"::"gc.autoDetach=false"::
+          "-c"::"maintenance.autoDetach=false"::
           args
         in
         OpamSystem.make_command ~env:(OpamGit.env ()) "git"
