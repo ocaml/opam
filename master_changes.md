@@ -111,6 +111,7 @@ users)
   * Add a test showing `opam init --reinit` upgrading from pre opam 2.6 `OPAMREPOTARRING=1` (aka. opam 2.1's default) [#7058 @kit-ty-kate]
 
 ### Engine
+  * Stop the testsuite from generating files containing CRLF [#7071 @kit-ty-kate]
 
 ## Github Actions
 

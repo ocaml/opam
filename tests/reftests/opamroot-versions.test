@@ -42,7 +42,7 @@ let _ =
        ])
   in
   List.iter (fun (name, content) ->
-      let fd = open_out name in
+      let fd = open_out_bin name in
       List.iter (fun l -> output_string fd (l^"\n")) content;
       close_out fd)
     (files @ errs)
@@ -490,7 +490,7 @@ let files = [
 ]
 let _ =
   List.iter (fun (name, content) ->
-      let fd = open_out name in
+      let fd = open_out_bin name in
       List.iter (fun l -> output_string fd (l^"\n")) content;
       close_out fd)
     (List.map (fun (n,c) -> "default/"^n, c) files)
@@ -665,7 +665,7 @@ let _ =
   let write dir (name, content) =
     let name = Filename.concat dir name in
     mkdir_p (Filename.dirname name);
-    let fd = open_out name in
+    let fd = open_out_bin name in
     List.iter (fun l -> output_string fd (l^"\n")) content;
     close_out fd
   in
