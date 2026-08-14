@@ -32,6 +32,7 @@ users)
 ## UI
 
 ## Switch
+  * Add debug log when switch list is fixed [#7068 @rjbou]
 
 ## Config
 

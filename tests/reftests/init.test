@@ -566,6 +566,7 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
 GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+GSTATE                          Cleaning switch list: removed /void/woosh
 
 <><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [default] no changes from file://${BASEDIR}/REPO
