@@ -109,6 +109,7 @@ users)
 ## Reftests
 ### Tests
   * Add a test showing `opam init --reinit` upgrading from pre opam 2.6 `OPAMREPOTARRING=1` (aka. opam 2.1's default) [#7058 @kit-ty-kate]
+  * Add `opam init --reinit` regenerating cache & fixing switch test [#7068 @rjbou]
 
 ### Engine
   * Stop the testsuite from generating files containing CRLF [#7071 @kit-ty-kate]
