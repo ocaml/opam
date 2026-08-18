@@ -245,7 +245,7 @@ jobs:
         opam list || exit /b 1
         opam config report || exit /b 1
     - name: Test (reftests)
-      run: bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}
+      run: PATH='/cygdrive/c/Program Files/PowerShell/7':$PATH bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}
 
   Build-macOS:
     runs-on: macos-latest
@@ -302,8 +302,8 @@ jobs:
     steps:
     - name: Checkout tree
       uses: actions/checkout@v7
-    - name: Install bubblewrap
-      run: sudo apt install bubblewrap
+    - name: Install test dependencies
+      run: sudo apt install bubblewrap fish tcsh zsh
     - name: Disable AppArmor
       run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
     - name: src_ext/archives and opam-repository Cache
@@ -357,8 +357,8 @@ jobs:
       OPAM_TEST: 1
       GITHUB_PR_USER: ${{ github.event.pull_request.user.login }}
     steps:
-    - name: Install gnu coreutils
-      run: brew install coreutils gpatch rsync
+    - name: Install test dependencies
+      run: brew install coreutils fish gpatch rsync tcsh zsh
     - name: Checkout tree
       uses: actions/checkout@v7
     - name: src_ext/archives and opam-repository Cache
