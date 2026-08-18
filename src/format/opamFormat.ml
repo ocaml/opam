@@ -808,8 +808,7 @@ module I = struct
       List.filter_map
         (fun (field,ppa) ->
            match snd (ppa.print acc) with
-           | None | Some ({ pelem = List { pelem = []; _}; _}
-                         | { pelem = Group { pelem = []; _}; _}) -> None
+           | None -> None
            | Some value ->
              Some (nullify_pos @@ Variable (nullify_pos field, value)))
         ppas
