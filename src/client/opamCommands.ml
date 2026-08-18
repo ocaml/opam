@@ -3102,12 +3102,11 @@ let switch cli =
       in
       if is_new_switch then
         with_repos_rt gt cli repos @@ fun (repos, rt) ->
-        let synopsis = "Import from " ^ Filename.basename filename in
         let (), gt =
           OpamGlobalState.with_write_lock gt @@ fun gt ->
           let gt, st =
             OpamSwitchCommand.create gt ~rt
-              ~synopsis ?repos ~invariant:OpamFormula.Empty
+              ?repos ~invariant:OpamFormula.Empty
               ~update_config:(not no_switch)
               switch
             @@ fun st ->
