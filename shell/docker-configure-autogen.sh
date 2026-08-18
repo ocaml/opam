@@ -6,7 +6,7 @@ set -euo pipefail
 
 dockerfile=$(mktemp)
 cat > "$dockerfile" << EOF
-FROM ubuntu:22.04
+FROM ubuntu:26.04
 RUN apt-get update && apt-get install -yy make autoconf git
 COPY --chown=0:0 .git /mnt/.git
 WORKDIR /mnt
