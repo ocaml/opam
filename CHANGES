@@ -64,7 +64,7 @@ are not marked). Those prefixed with "(+)" are new command/option (since
     [#6910 #6597 @NathanReb @kit-ty-kate]
   * Do not fail on directories named `opam` when scanning the `packages`
     directory of a repository during `opam repo add` or `opam init`
-    (worked on subsequent `opam update`) [#6941 @kit-ty-kate @rjbou]
+    (worked on subsequent `opam update`) [#6995 @kit-ty-kate @rjbou]
   * Added return 0 for zsh/bash/sh/fish to prevent leaking error codes
     [#6930 @ta2005]
   * Fix the filename check used when parsing arguments to allow `/` to be
