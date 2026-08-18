@@ -172,6 +172,7 @@ FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-sw
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-repo/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.zsh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
@@ -585,6 +586,7 @@ FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.zsh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
@@ -1238,6 +1240,7 @@ FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.zsh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
@@ -1943,6 +1946,7 @@ FILE(switch-config)             Wrote ${BASEDIR}/OPAM/install-from-version-pin/.
 FILE(environment)               Wrote ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.zsh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
@@ -2342,6 +2346,7 @@ FILE(switch-state)              Wrote ${BASEDIR}/OPAM/package-switch/.opam-switc
 FILE(environment)               Wrote ${BASEDIR}/OPAM/package-switch/.opam-switch/environment atomically in 0.000s
 FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.sh
+SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.zsh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.csh
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.fish
 SYSTEM                          write ${BASEDIR}/OPAM/opam-init/variables.ps1
