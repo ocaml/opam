@@ -86,9 +86,9 @@ let create_empty_switch gt ?synopsis ?repos ?invariant switch =
     OpamGlobalState.write gt;
     gt
   with e ->
+    OpamStd.Exn.finalise e @@ fun () ->
     if not (OpamConsole.debug ()) then
-      OpamFilename.rmdir switch_dir;
-    raise e
+      OpamFilename.rmdir switch_dir
 
 let write_selections st =
   if not OpamStateConfig.(!r.dryrun) then

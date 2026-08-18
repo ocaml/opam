@@ -106,7 +106,7 @@ let fetch_from_cache =
           else (hit, f :: misses))
         (None, []) checksums
     with
-    | None, _ -> raise Not_found
+    | None, _ -> raise_notrace Not_found
     | Some hit_file, miss_files ->
       if List.for_all
           (fun ck -> OpamHash.check_file (OpamFilename.to_string hit_file) ck)
@@ -573,8 +573,8 @@ let update repo repo_root =
     Done `No_changes
   | (Update_full _ | Update_patch _) as upd ->
     OpamProcess.Job.catch (fun exn ->
-        cleanup_repo_update upd;
-        raise exn)
+        OpamStd.Exn.finalise exn @@ fun () ->
+        cleanup_repo_update upd)
     @@ fun () ->
     validate_repo_update repo repo_root upd @@+ function
     | false ->

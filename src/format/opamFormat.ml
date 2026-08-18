@@ -728,10 +728,10 @@ module I = struct
                                   "name" dict) then None else
                         match OpamStd.List.assoc String.equal "name" dict with
                         | `String s -> Some s
-                        | _ -> raise Not_found
+                        | _ -> raise_notrace Not_found
                       in Some (s, o)
                     end
-                  | _ -> raise Not_found
+                  | _ -> raise_notrace Not_found
                 with Not_found -> None
               end
             | _ -> None

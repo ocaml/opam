@@ -321,7 +321,7 @@ let template nv =
         with
         | [name], [email] ->
           Some [Printf.sprintf "%s <%s>" name email]
-        | _ -> raise Not_found
+        | _ -> raise_notrace Not_found
       with e -> OpamStd.Exn.fatal e; None
     in
     match from_git with
@@ -1252,7 +1252,7 @@ let lint_file ?check_extra_files ?check_upstream ?handle_dirname filename =
       try
         let f = OpamFile.Syntax.of_channel filename ic in
         close_in ic; f
-      with e -> close_in ic; raise e
+      with e -> OpamStd.Exn.finalise e (fun () -> close_in ic)
     with OpamSystem.File_not_found _ ->
       OpamConsole.error_and_exit `Bad_arguments "File %s not found"
         (OpamFile.to_string filename)

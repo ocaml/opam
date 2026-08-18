@@ -201,7 +201,7 @@ module VCS : OpamVCS.VCS = struct
     let rref = remote_ref repo_url in
     let patch_file = OpamSystem.temp_file ~auto_clean: false "git-diff" in
     let finalise () = OpamSystem.remove_file patch_file in
-    OpamProcess.Job.catch (fun e -> finalise (); raise e) @@ fun () ->
+    OpamProcess.Job.catch (fun e -> OpamStd.Exn.finalise e finalise) @@ fun () ->
     git repo_root [ "add"; "." ] @@> fun r ->
     (* Git diff is to the working dir, but doesn't work properly for
        unregistered directories. *)

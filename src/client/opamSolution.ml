@@ -924,22 +924,22 @@ let parallel_apply t
     OpamConsole.msg "Done.\n";
     t, OK successful
   | `Exception (OpamStd.Sys.Exit _ | Sys.Break as e) ->
+    OpamStd.Exn.finalise e @@ fun () ->
     OpamConsole.msg "Aborting.\n";
-    raise e
   | `Exception (OpamSolver.ActionGraph.Parallel.Cyclic cycles as e) ->
+    OpamStd.Exn.finalise e @@ fun () ->
     OpamConsole.error "Cycles found during dependency resolution:\n%s"
       (OpamStd.Format.itemize
          (OpamStd.List.concat_map (OpamConsole.colorise `yellow " -> ")
             OpamSolver.Action.to_string)
          cycles);
-    raise e
   | `Exception (OpamSystem.Process_error _ | Unix.Unix_error _ as e) ->
+    OpamStd.Exn.finalise e @@ fun () ->
     OpamConsole.error "Actions cancelled because of a system error:";
     OpamConsole.errmsg "%s\n" (Printexc.to_string e);
-    raise e
   | `Exception e ->
+    OpamStd.Exn.finalise e @@ fun () ->
     OpamConsole.error "Actions cancelled because of %s" (Printexc.to_string e);
-    raise e
   | `Error err ->
     match err with
     | Aborted -> t, err

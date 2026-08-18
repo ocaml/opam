@@ -402,7 +402,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
             else if Sys.file_exists (cmd ^ ".exe") then
               cmd ^ ".exe"
             else
-              raise Exit in
+              raise_notrace Exit in
           let actual_image, args =
             let c = open_in actual_command in
             set_binary_mode_in c true;
@@ -429,7 +429,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
                   cmd, OpamStd.Option.map_default (fun arg -> arg::args) args arg
                 with Not_found ->
                   (* Script interpreter isn't available - fall back *)
-                  raise Exit
+                  raise_notrace Exit
               end else begin
                 close_in c;
                 actual_command, args
@@ -437,7 +437,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
             with End_of_file ->
               close_in c;
               (* A two-byte image can't be executable! *)
-              raise Exit in
+              raise_notrace Exit in
           (*Printf.eprintf "Final deduction: %s -> %s\n%!" cmd actual_image;*)
           actual_image, args
         with Exit ->
@@ -452,10 +452,11 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
         env
         stdin_fd stdout_fd stderr_fd
     with e ->
+      OpamStd.Exn.finalise e @@ fun () ->
       close_stdin  ();
       close_stdout ();
       close_stderr ();
-      raise e in
+  in
   close_stdin  ();
   close_stdout ();
   close_stderr ();
@@ -702,7 +703,7 @@ let safe_wait fallback_pid f x =
       | r -> r
   in
   try let r = aux () in cleanup (); r
-  with e -> cleanup (); raise e
+  with e -> OpamStd.Exn.finalise e cleanup
 
 let wait p =
   set_verbose_process p;
@@ -763,11 +764,11 @@ let run command =
   in
   let p = run_background command in
   try wait p with e ->
-    match (try dontwait p with _ -> raise e) with
+    OpamStd.Exn.finalise e @@ fun () ->
+    match dontwait p with
     | None -> (* still running *)
       (try interrupt p with Unix.Unix_error _ -> ());
-      raise e
-    | _ -> raise e
+    | Some _ | exception _ -> ()
 
 let is_failure r = r.r_code <> 0 || r.r_signal <> None
 
@@ -904,9 +905,9 @@ module Job = struct
         let k =
           try cont r
           with e ->
+            OpamStd.Exn.finalise e @@ fun () ->
             cleanup r;
             OpamConsole.clear_status ();
-            raise e
         in
         cleanup r;
         OpamConsole.clear_status ();
@@ -938,7 +939,7 @@ module Job = struct
       | Done x -> fin (); Done x
       | Run (cmd,cont) ->
         Run (cmd, fun r -> finally fin (fun () -> cont r))
-    with e -> fin (); raise e
+    with e -> OpamStd.Exn.finalise e fin
 
   let of_list ?(keep_going=false) l =
     let rec aux err = function
