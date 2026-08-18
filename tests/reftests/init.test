@@ -508,3 +508,115 @@ Switch initialisation failed: clean up? ('n' will leave the switch partially ins
 [NOTE] Opam has been initialised, but the initial switch creation failed.
        Use opam switch create default --formula '["fail-compiler" {= "1"} | "ocaml" {>= "4.10"}]' to get started.
 # Return code 31 #
+### :V: Reinit fixing switches list, and internal state of switch
+### rm -rf $OPAMROOT
+### <pkg:pina.1>
+opam-version: "2.0"
+### <pkg:ta.1>
+opam-version: "2.0"
+### opam init --no-setup --bypass-checks default REPO/ --bare | grep -v Cygwin
+No configuration file found, using built-in defaults.
+
+<><> Fetching repository information ><><><><><><><><><><><><><><><><><><><><><>
+[default] Initialised
+### # create some switches
+### opam switch create normal --empty
+### opam switch create ./real-local --empty
+### opam switch create corrupted --empty
+### opam install pina ta
+The following actions will be performed:
+=== install 2 packages
+  - install pina 1
+  - install ta   1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pina.1
+-> installed ta.1
+Done.
+### opam sw normal
+### # corrupt installed opams cache
+### cp REPO/repo OPAM/corrupted/.opam-switch/packages/cache
+### # add in config file non existing local switches
+### mkdir -p empty-dir/_opam
+### <new-config.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat > OPAM/config << EOF
+opam-version: "2.0"
+opam-root-version: "2.6~alpha"
+repositories: "default"
+installed-switches: [
+  "normal"
+  "corrupted"
+  "${basedir}/real-local"
+  "${basedir}/woosh"
+  "${basedir}/empty-dir"
+]
+switch: "normal"
+EOF
+### sh new-config.sh
+### # corrupt switch-config by removing synopsis
+### sed -i.bak '/synopsis/d' OPAM/corrupted/.opam-switch/switch-config
+### # remove ta.1 definition from switch
+### rm -r OPAM/corrupted/.opam-switch/packages/ta.1
+### OPAMDEBUG=-5 OPAMDEBUGSECTIONS="CACHE(installed) FILE(switch-config) STATE GSTATE FILE(config)"
+### opam init --reinit --no-setup --bypass-checks | 'Bad installed cache: .*' -> 'Bad installed cache: ...'
+No configuration file found, using built-in defaults.
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+GSTATE                          Cleaning switch list: removed ${BASEDIR}/woosh
+
+<><> Updating repositories ><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+GSTATE                          Fixing switch list: removed ${BASEDIR}/empty-dir
+FILE(config)                    Wrote ${BASEDIR}/OPAM/config atomically in 0.000s
+STATE                           LOAD-SWITCH-STATE @ normal
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Read ${BASEDIR}/OPAM/normal/.opam-switch/switch-config in 0.000s
+CACHE(installed)                Loaded ${BASEDIR}/OPAM/normal/.opam-switch/packages/cache in 0.000s
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/normal/.opam-switch/switch-config atomically in 0.000s
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ corrupted
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Read ${BASEDIR}/OPAM/corrupted/.opam-switch/switch-config in 0.000s
+CACHE(installed)                Bad installed cache: ...
+CACHE(installed)                Invalid installed cache, removing
+CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/corrupted/.opam-switch/packages/cache ...
+CACHE(installed)                ${BASEDIR}/OPAM/corrupted/.opam-switch/packages/cache written in 0.000s
+STATE                           Definition missing for installed package ta.1, copying from repo
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/corrupted/.opam-switch/switch-config atomically in 0.000s
+FILE(switch-config)             Wrote ${BASEDIR}/OPAM/corrupted/.opam-switch/switch-config atomically in 0.000s
+STATE                           Switch state loaded in 0.000s
+STATE                           LOAD-SWITCH-STATE @ ${BASEDIR}/real-local
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+FILE(switch-config)             Read ${BASEDIR}/real-local/_opam/.opam-switch/switch-config in 0.000s
+CACHE(installed)                Loaded ${BASEDIR}/real-local/_opam/.opam-switch/packages/cache in 0.000s
+STATE                           Inferred invariant: from base packages {}, (roots {}) => []
+FILE(switch-config)             Wrote ${BASEDIR}/real-local/_opam/.opam-switch/switch-config atomically in 0.000s
+STATE                           Switch state loaded in 0.000s
+### # check that everything was fixed
+### head OPAM/config
+opam-version: "2.0"
+opam-root-version: "2.6~alpha"
+repositories: "default"
+installed-switches: [
+  "normal"
+  "corrupted"
+  "${BASEDIR}/real-local"
+]
+switch: "normal"
+download-jobs: 3
+### grep synopsis OPAM/corrupted/.opam-switch/switch-config
+synopsis: "corrupted"
+### test -f OPAM/corrupted/.opam-switch/packages/ta.1/opam
+### opam-cache installed corrupted
+=> pina.1 <=
+opam-version: "2.0"
+name: "pina"
+version: "1"

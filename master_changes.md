@@ -18,6 +18,7 @@ users)
 
 ## Init
   * Do not make `opam init --reinit` ask to retry the command when upgrading from a 2.1 root [#7058 @kit-ty-kate - fix #7057]
+  * `opam init --reinit` now regenerate the list of valid switches, fix switch internal data (cache, config, packages) [#7068 @kit-ty-kate - fix #7066]
 
 ## Config report
 
@@ -32,6 +33,7 @@ users)
 ## UI
 
 ## Switch
+  * Add debug log when switch list is fixed [#7068 @rjbou]
 
 ## Config
 
@@ -109,6 +111,7 @@ users)
 ## Reftests
 ### Tests
   * Add a test showing `opam init --reinit` upgrading from pre opam 2.6 `OPAMREPOTARRING=1` (aka. opam 2.1's default) [#7058 @kit-ty-kate]
+  * Add `opam init --reinit` regenerating cache & fixing switch test [#7068 @rjbou]
 
 ### Engine
   * Stop the testsuite from generating files containing CRLF [#7071 @kit-ty-kate]

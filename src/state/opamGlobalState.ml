@@ -14,7 +14,7 @@ open OpamFilename.Op
 
 open OpamStateTypes
 
-let log fmt = OpamConsole.log "GSTATE" fmt
+let log ?level fmt = OpamConsole.log ?level "GSTATE" fmt
 let slog = OpamConsole.slog
 
 let load_config lock_kind global_lock root =
@@ -53,6 +53,10 @@ let load_config lock_kind global_lock root =
   config
 
 let inferred_from_system = "Inferred from system"
+let string_of_removed_switches ~orig:switches0 switches =
+  OpamStd.Format.pretty_list (List.filter_map (fun sw ->
+      if OpamStd.List.mem OpamSwitch.equal sw switches then None
+      else Some (OpamSwitch.to_string sw)) switches0)
 
 let load lock_kind =
   let root = OpamStateConfig.(!r.root_dir) in
@@ -83,13 +87,22 @@ let load lock_kind =
          load with best-effort (read-only)"
       (OpamVersion.to_string (OpamFile.Config.opam_root_version config))
       (OpamVersion.to_string (OpamFile.Config.root_version));
+  let switches0 = OpamFile.Config.installed_switches config in
   let switches =
     List.filter
-      (fun sw -> not (OpamSwitch.is_external sw) ||
-                 OpamFilename.exists_dir (OpamSwitch.get_root root sw))
-      (OpamFile.Config.installed_switches config)
+      (fun sw ->
+         not (OpamSwitch.is_external sw) ||
+         OpamFilename.exists_dir (OpamSwitch.get_root root sw))
+      switches0
   in
-  let config = OpamFile.Config.with_installed_switches switches config in
+  let config =
+    if OpamCompat.List.equal OpamSwitch.equal switches0 switches then
+      config
+    else
+      (log ~level:4 "Cleaning switch list: removed %a"
+         (slog (string_of_removed_switches ~orig:switches0)) switches;
+       OpamFile.Config.with_installed_switches switches config)
+  in
   let global_variables =
     List.fold_left (fun acc (v,value) ->
         OpamVariable.Map.add v
@@ -217,18 +230,22 @@ let fix_switch_list gt =
       else sw::known_switches0
   in
   let known_switches = List.filter (switch_exists gt) known_switches in
-  if known_switches = known_switches0 then gt else
-  let config =
-    OpamFile.Config.with_installed_switches known_switches gt.config
-  in
-  let gt = { gt with config } in
-  if not OpamCoreConfig.(!r.safe_mode)
-  && OpamSystem.get_lock_flag gt.global_lock = `Lock_write then
-    try
-      snd @@ with_write_lock ~dontblock:true gt @@ fun gt ->
-      write gt, gt
-    with OpamSystem.Locked -> gt
-  else gt
+  if OpamCompat.List.equal OpamSwitch.equal known_switches known_switches0 then
+    gt
+  else
+    (log ~level:4 "Fixing switch list: removed %a"
+       (slog (string_of_removed_switches ~orig:known_switches0)) known_switches;
+     let config =
+       OpamFile.Config.with_installed_switches known_switches gt.config
+     in
+     let gt = { gt with config } in
+     if not OpamCoreConfig.(!r.safe_mode)
+     && OpamSystem.get_lock_flag gt.global_lock = `Lock_write then
+       try
+         snd @@ with_write_lock ~dontblock:true gt @@ fun gt ->
+         write gt, gt
+       with OpamSystem.Locked -> gt
+     else gt)
 
 let is_root_read_only gt =
   OpamFilename.is_dir_read_only gt.root
