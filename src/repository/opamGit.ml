@@ -15,8 +15,8 @@ open OpamProcess.Job.Op
 (* let log fmt = OpamConsole.log "GIT" fmt *)
 
 let git_env = [|
-  "GIT_CONFIG_GLOBAL="^Filename.null;
-  "GIT_CONFIG_SYSTEM="^Filename.null;
+  "GIT_CONFIG_GLOBAL=/dev/null";
+  "GIT_CONFIG_SYSTEM=/dev/null";
 |]
 
 let env () =
