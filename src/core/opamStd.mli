@@ -259,6 +259,12 @@ module String : sig
       ordered next to each other (still considered not equal though) *)
   val compare_case: string -> string -> int
 
+  (** Case insensitive version of [String.compare] *)
+  val case_insensitive_compare: string -> string -> int
+
+  (** Case insensitive version of [String.equal] *)
+  val case_insensitive_equal: string -> string -> bool
+
   (** {3 Manipulation} *)
 
   val strip: string -> string

@@ -643,6 +643,29 @@ module OpamString = struct
     let len = OpamCompat.Int.min (String.length s1) (String.length s2) in
     compare_case_aux len s1 s2 0
 
+  let rec case_insensitive_compare_aux ~len ~s1 ~s2 i =
+    if i < (len : int) then
+      let cmp =
+        Char.compare (Char.lowercase_ascii s1.[i]) (Char.lowercase_ascii s2.[i])
+      in
+      if cmp < 0 then -1
+      else if cmp > 0 then 1
+      else
+        case_insensitive_compare_aux ~len ~s1 ~s2 (i+1)
+    else
+      let l1 = String.length s1 and l2 = String.length s2 in
+      if l1 < (l2 : int) then -1
+      else if l1 > (l2 : int) then 1
+      else 0
+
+  let case_insensitive_compare s1 s2 =
+    let len = OpamCompat.Int.min (String.length s1) (String.length s2) in
+    case_insensitive_compare_aux ~len ~s1 ~s2 0
+
+  let case_insensitive_equal s1 s2 =
+    let l1 = String.length s1 and l2 = String.length s2 in
+    Int.equal l1 l2 && case_insensitive_compare s1 s2 = 0
+
   let is_prefix_of ~from ~full s =
     let length_s = String.length s in
     let length_full = String.length full in
@@ -705,10 +728,15 @@ module Env = struct
 
       let compare =
         if Sys.win32 then
-          fun l r ->
-            String.(compare (lowercase_ascii l) (lowercase_ascii r))
+          OpamString.case_insensitive_compare
         else
           String.compare
+
+      let equal =
+        if Sys.win32 then
+          OpamString.case_insensitive_equal
+        else
+          String.equal
     end
 
     type t = string
@@ -718,15 +746,9 @@ module Env = struct
     let of_json = M.of_json
     let to_json = M.to_json
     let compare = M.compare
+    let equal = M.equal
 
-    let equal =
-      if Sys.win32 then
-        fun l r ->
-          String.(equal (lowercase_ascii l) (lowercase_ascii r))
-      else
-        String.equal
-
-    let equal_string = equal
+    let equal_string = M.equal
 
     module Set = Set.Make(M)
     module Map = Map.Make(M)
