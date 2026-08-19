@@ -75,6 +75,7 @@ users)
 
 ## VCS
   * Add support for using git repositories owned by another local user [#6980 @kit-ty-kate - fix #6963]
+  * Use `/dev/null` on both Unix and Windows when setting `GIT_CONFIG_*` (NUL is not accepted in Git-for-Windows 2.56.0.windows.1) [#7085 @kit-ty-kate]
 
 ## Build
   * Upgrade the autoconf generated files (`configure`) to autoconf 2.72 [#7052 @kit-ty-kate]
