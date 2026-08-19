@@ -714,10 +714,16 @@ module Env = struct
 
       let compare =
         if Sys.win32 then
-          fun l r ->
-            String.(compare (lowercase_ascii l) (lowercase_ascii r))
+          OpamString.compare_case
         else
           String.compare
+
+      let equal =
+        if Sys.win32 then
+          fun l r ->
+            OpamString.compare_case l r = 0
+        else
+          String.equal
     end
 
     type t = string
@@ -727,15 +733,9 @@ module Env = struct
     let of_json = M.of_json
     let to_json = M.to_json
     let compare = M.compare
+    let equal = M.equal
 
-    let equal =
-      if Sys.win32 then
-        fun l r ->
-          String.(equal (lowercase_ascii l) (lowercase_ascii r))
-      else
-        String.equal
-
-    let equal_string = equal
+    let equal_string = M.equal
 
     module Set = Set.Make(M)
     module Map = Map.Make(M)
