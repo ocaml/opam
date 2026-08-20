@@ -58,9 +58,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => write)
 
@@ -117,11 +117,11 @@ SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-
 FILE(opam)                      Read packages/main-repo/main-repo.2/opam (out of ${BASEDIR}/OPAM/repo/default) in 0.000s
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
-SYSTEM                          rm ${BASEDIR}/OPAM/repo/state-magicv.cache
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => write)
-CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
-CACHE(repository)               ${BASEDIR}/OPAM/repo/state-magicv.cache written in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (write => none)
+SYSTEM                          rm ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => write)
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache written in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (write => none)
 SYSTEM                          LOCK  (none => none)
 Now run 'opam upgrade' to apply any package updates.
@@ -134,9 +134,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/lib
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/lib/stublibs
@@ -187,9 +187,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/packages/cache (none => read)
@@ -271,9 +271,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-state in 0.000s
@@ -361,9 +361,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-state in 0.000s
@@ -463,9 +463,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-repo/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-repo/.opam-switch/switch-state in 0.000s
@@ -547,9 +547,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/lib
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/lib/stublibs
@@ -599,9 +599,9 @@ FILE(opam)                      Read ${BASEDIR}/main-ppin/main-ppin.opam in 0.00
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/packages/cache (none => read)
@@ -638,9 +638,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state in 0.000s
@@ -718,9 +718,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state in 0.000s
@@ -818,9 +818,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state in 0.000s
@@ -884,9 +884,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state in 0.000s
@@ -918,9 +918,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 [ERROR] No compiler matching `install-from-path-pin-combined--empty' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
@@ -931,9 +931,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state in 0.000s
@@ -1006,9 +1006,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state in 0.000s
@@ -1105,9 +1105,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/switch-state in 0.000s
@@ -1200,9 +1200,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/lib
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/lib/stublibs
@@ -1254,9 +1254,9 @@ FILE(opam)                      Read ${BASEDIR}/main-gpin/main-gpin.opam in 0.00
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/packages/cache (none => read)
@@ -1303,9 +1303,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state in 0.000s
@@ -1389,9 +1389,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state in 0.000s
@@ -1502,9 +1502,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state in 0.000s
@@ -1572,9 +1572,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state in 0.000s
@@ -1606,9 +1606,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 [ERROR] No compiler matching `install-from-git-pin-combined--empty' found, use `opam switch list-available' to see what is available, or use `--packages' to select packages explicitly.
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (write => none)
@@ -1619,9 +1619,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state in 0.000s
@@ -1706,9 +1706,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state in 0.000s
@@ -1818,9 +1818,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/switch-state in 0.000s
@@ -1911,9 +1911,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/lib
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/lib/stublibs
@@ -1962,9 +1962,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/packages/cache (none => read)
@@ -1986,9 +1986,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-state in 0.000s
@@ -2055,9 +2055,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-state in 0.000s
@@ -2153,9 +2153,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-state in 0.000s
@@ -2226,9 +2226,9 @@ FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/lock (none => write)
 FILE(switch-config)             Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-config in 0.000s
 FILE(switch-state)              Read ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/switch-state in 0.000s
@@ -2264,9 +2264,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/lib
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/lib/stublibs
@@ -2363,9 +2363,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          mkdir ${BASEDIR}/void
 SYSTEM                          mkdir ${BASEDIR}/void/_opam
 SYSTEM                          mkdir ${BASEDIR}/void/_opam/lib
@@ -2413,9 +2413,9 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => write)
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/lib
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/lib/stublibs

@@ -934,7 +934,7 @@ The following actions will be performed:
 -> installed foo.2
 -> installed un.2
 Done.
-### :V:3: installed packages cache
+### :V:3:a: installed packages cache
 ### opam-cache installed cache
 => un.2 <=
 opam-version: "2.0"
@@ -973,6 +973,7 @@ opam-version: "2.0"
 name: "foo"
 version: "2"
 ### opam-cache installed cache inexistent
+Empty selection
 ### opam switch create cache2 --empty
 ### opam-cache installed cache2
 Empty cache
@@ -1049,6 +1050,34 @@ name: "baz"
 version: "1"
 extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
 ### opam-cache repo inexistent
+Empty selection
+### :V:3:c: Invalid installed cache
+### opam switch create cache4 --empty
+### opam install foo
+The following actions will be performed:
+=== install 1 package
+  - install foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam-cache installed cache4
+=> foo.1 <=
+opam-version: "2.0"
+name: "foo"
+version: "1"
+extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
+### sh -c 'echo XXX > OPAM/cache4/.opam-switch/packages/cache'
+### opam-cache installed cache4
+Invalid cache
+### opam-cache installed cache4
+Invalid cache
+### :V:3:d: Invalid repo cache
+### sh -c 'echo XXX > OPAM/repo/state-${MAGICV}.cache'
+### opam-cache repo un
+Invalid cache
+### opam-cache repo un
+Invalid cache
 ### :V:4: unset
 ### env | grep REFTEST_UNSET
 ### REFTEST_UNSET=test

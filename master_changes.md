@@ -114,9 +114,14 @@ users)
 ### Tests
   * Add a test showing `opam init --reinit` upgrading from pre opam 2.6 `OPAMREPOTARRING=1` (aka. opam 2.1's default) [#7058 @kit-ty-kate]
   * Add `opam init --reinit` regenerating cache & fixing switch test [#7068 @rjbou]
+  * Update reftest test for cache [#7092 @rjbou]
 
 ### Engine
   * Stop the testsuite from generating files containing CRLF [#7071 @kit-ty-kate]
+  * Add an automatic replace for opam magic version, and an environment variable `$MAGICV` to refer to it [#7092 @rjbou]
+  * When printing caches, differentiate file not found & invalid cache printing [#7092 @rjbou]
+  * When printing caches, add a printing when packages selection is empty [#7092 @rjbou]
+  * When printing caches, ensure that the operation is a no-op on cache file [#7092 @rjbou]
 
 ## Github Actions
 
