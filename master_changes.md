@@ -119,6 +119,7 @@ users)
   * Stop the testsuite from generating files containing CRLF [#7071 @kit-ty-kate]
   * Add an automatic replace for opam magic version, and an environment variable `$MAGICV` to refer to it [#7092 @rjbou]
   * When printing caches, differentiate file not found & invalid cache printing [#7092 @rjbou]
+  * When printing caches, add a printing when packages selection is empty [#7092 @rjbou]
 
 ## Github Actions
 

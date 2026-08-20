@@ -1248,14 +1248,17 @@ let run_test ?(vars=[]) ~opam t =
                           | None -> false)
                         cache
                   in
-                  let files =
-                    OpamPackage.Map.fold (fun pkg opam files ->
-                        let name = OpamPackage.to_string pkg in
-                        let content = OpamFile.OPAM.write_to_string opam in
-                        (name, content)::files)
-                      cache []
-                  in
-                  print_file ~filters:(filter @ common_filters dir) files)
+                  if OpamPackage.Map.is_empty cache then
+                    print_string "Empty selection\n"
+                  else
+                    let files =
+                      OpamPackage.Map.fold (fun pkg opam files ->
+                          let name = OpamPackage.to_string pkg in
+                          let content = OpamFile.OPAM.write_to_string opam in
+                          (name, content)::files)
+                        cache []
+                    in
+                    print_file ~filters:(filter @ common_filters dir) files)
            | `repo ->
              (let root = OpamFilename.Dir.of_string opamroot in
               let cachefile = OpamPath.state_cache root in
@@ -1282,18 +1285,23 @@ let run_test ?(vars=[]) ~opam t =
                                  (OpamPackage.version nv) vs
                              | None -> false))
                         cache
+                      |> OpamRepositoryName.Map.filter (fun _ nvs ->
+                          not (OpamPackage.Map.is_empty nvs))
                   in
-                  let files =
-                    OpamRepositoryName.Map.fold (fun reponame pkgmap files->
-                        let pre = OpamRepositoryName.to_string reponame in
-                        OpamPackage.Map.fold (fun pkg opam files ->
-                            let name = pre ^ ":" ^ OpamPackage.to_string pkg in
-                            let content = OpamFile.OPAM.write_to_string opam in
-                            (name, content)::files)
-                          pkgmap files)
-                      cache []
-                  in
-                  print_file ~filters:(filter @ common_filters dir) files));
+                  if OpamRepositoryName.Map.is_empty cache then
+                    print_string "Empty selection\n"
+                  else
+                    let files =
+                      OpamRepositoryName.Map.fold (fun reponame pkgmap files->
+                          let pre = OpamRepositoryName.to_string reponame in
+                          OpamPackage.Map.fold (fun pkg opam files ->
+                              let name = pre ^ ":" ^ OpamPackage.to_string pkg in
+                              let content = OpamFile.OPAM.write_to_string opam in
+                              (name, content)::files)
+                            pkgmap files)
+                        cache []
+                    in
+                    print_file ~filters:(filter @ common_filters dir) files));
           vars
         | Run {env; cmd; args; filter; output; unordered; sort} ->
           let silent = output <> None || unordered in

@@ -973,6 +973,7 @@ opam-version: "2.0"
 name: "foo"
 version: "2"
 ### opam-cache installed cache inexistent
+Empty selection
 ### opam switch create cache2 --empty
 ### opam-cache installed cache2
 Empty cache
@@ -1049,6 +1050,7 @@ name: "baz"
 version: "1"
 extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
 ### opam-cache repo inexistent
+Empty selection
 ### :V:3:c: Invalid installed cache
 ### opam switch create cache4 --empty
 ### opam install foo
