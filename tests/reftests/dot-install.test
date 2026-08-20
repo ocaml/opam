@@ -252,8 +252,8 @@ touch
 ### opam install no-specified-dir | '[0-9]{14}' -> "now"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (read => none)
@@ -311,8 +311,8 @@ added: [
 ### opam remove  no-specified-dir | '[0-9]{14}' -> "now" | grep -v "were already removed" | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (read => none)
@@ -426,8 +426,8 @@ hallo
 ### opam install eskape
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (read => none)
@@ -511,8 +511,8 @@ Done.
 ### opam install eskape --strict | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (write => none)
@@ -601,8 +601,8 @@ hellow
 ### opam install eskape-rel-dotdot-exists | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (read => none)
@@ -688,8 +688,8 @@ hellow
 ### opam install eskape-rel-middotdot-notexists | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (read => none)
@@ -788,8 +788,8 @@ hellow
 ### opam install realeskape-rel-middotdot-notexists | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (read => none)
@@ -874,8 +874,8 @@ hellow
 ### opam install eskape-abs | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (none => read)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-magicv.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => read)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (read => none)

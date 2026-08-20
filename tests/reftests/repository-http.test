@@ -228,7 +228,7 @@ OPAM/repo
 OPAM/repo/http-repo.tar.gz
 OPAM/repo/lock
 OPAM/repo/repos-config
-OPAM/repo/state-magicv.cache
+OPAM/repo/state-${MAGICV}.cache
 ### mkdir OPAM/repo/http-repo
 ### tar xf OPAM/repo/http-repo.tar.gz -C OPAM/repo/http-repo
 ### rm OPAM/repo/http-repo.tar.gz

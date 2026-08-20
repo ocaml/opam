@@ -19,10 +19,11 @@ some content
 ### : Internal repository storage as archive or plain directory :
 ### opam switch create tarring --empty
 ### opam update -vv | grep '^\+'
-### ls $OPAMROOT/repo | grep -v "cache"
+### ls $OPAMROOT/repo
 default
 lock
 repos-config
+state-${MAGICV}.cache
 ### opam install foo.1 -vv | grep '^\+' | sed-cmd test
 + test "-f" "bar" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.1)
 ### opam repository add plain ./REPO --this-switch
@@ -38,11 +39,12 @@ some content
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update default | grep TAR
 TAR                             creating archive ${BASEDIR}/OPAM/repo/default.tar.gz from ${BASEDIR}/OPAM/repo/default
 TAR                             creating archive ${BASEDIR}/OPAM/repo/default.tar.gz.new from ${BASEDIR}/REPO
-### ls $OPAMROOT/repo | grep -v "cache"
+### ls $OPAMROOT/repo
 default.tar.gz
 lock
 plain
 repos-config
+state-${MAGICV}.cache
 ### opam install foo.2 -vv | grep '^\+' | sed-cmd test tar
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.2)
 ### opam repository remove default --all
@@ -56,10 +58,11 @@ some content
 ### opam repository add tarred ./REPO --this-switch
 [tarred] Initialised
 ### : New tarred repositories does not change already unchanged existing ones
-### ls $OPAMROOT/repo | grep -v "cache"
+### ls $OPAMROOT/repo
 lock
 plain
 repos-config
+state-${MAGICV}.cache
 tarred.tar.gz
 ### opam install foo.3 -vv | grep '^\+' | sed-cmd test
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.3)
@@ -78,9 +81,10 @@ TAR                             creating archive ${BASEDIR}/OPAM/repo/tarred.tar
 ### mkdir tarred-ext
 ### tar xf OPAM/repo/tarred.tar.gz -C tarred-ext
 ### diff -ru ./tarred-ext REPO
-### ls $OPAMROOT/repo | grep -v "cache"
+### ls $OPAMROOT/repo
 lock
 repos-config
+state-${MAGICV}.cache
 tarred.tar.gz
 ### : From tarred repo to plain repo (tarred)
 ### OPAMREPOSITORYTARRING=0
@@ -94,9 +98,10 @@ some content
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${BASEDIR}/OPAM/repo/tarred"
 ### opam install foo.5 -vv | grep '^\+' | sed-cmd test
 + test "-f" "quux" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.5)
-### ls $OPAMROOT/repo | grep -v "cache"
+### ls $OPAMROOT/repo
 lock
 repos-config
+state-${MAGICV}.cache
 tarred
 ### ls $OPAMROOT/repo/tarred
 packages
@@ -113,7 +118,7 @@ some content
 ### opam update --debug-level=-3 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.5/opam in 0.000s
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -121,8 +126,8 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/tarred/repo in 0.000s
 FILE(opam)                      Read packages/foo/foo.4/opam (out of ${BASEDIR}/OPAM/repo/tarred) in 0.000s
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
-CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
-CACHE(repository)               ${BASEDIR}/OPAM/repo/state-magicv.cache written in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache written in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam install foo.4
 The following actions will be performed:
@@ -133,10 +138,10 @@ The following actions will be performed:
 -> removed   foo.5
 -> installed foo.4
 Done.
-### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-magicv"
+### opam update --debug-level=-3
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.4/opam in 0.000s
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -169,10 +174,10 @@ some content
 ### sh hash.sh REPO2 bar.1
 ### opam repository add repo2 ./REPO2 --this-switch
 [repo2] Initialised
-### opam update --debug-level=-3 | "state-[0-9A-Z]{8}" -> "state-magicv"
+### opam update --debug-level=-3
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.1/opam in 0.000s
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -195,7 +200,7 @@ some content
 ### opam update --debug-level=-3 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [repo2] synchronised from file://${BASEDIR}/REPO2
@@ -203,8 +208,8 @@ FILE(repo)                      Read ${BASEDIR}/OPAM/repo/repo2/repo in 0.000s
 FILE(opam)                      Read packages/bar/bar.2/opam (out of ${BASEDIR}/OPAM/repo/repo2) in 0.000s
 [tarred] no changes from file://${BASEDIR}/REPO
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
-CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
-CACHE(repository)               ${BASEDIR}/OPAM/repo/state-magicv.cache written in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache written in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam install bar.2
 The following actions will be performed:
@@ -230,7 +235,7 @@ some content
 ### opam update --debug-level=-3 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
-CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
+CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/bar.2/opam in 0.000s
 FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packages/foo.1/opam in 0.000s
 
@@ -242,8 +247,8 @@ FILE(opam)                      Read packages/foo/foo.6/opam (out of ${BASEDIR}/
 [tarred] synchronised from file://${BASEDIR}/REPO
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/tarred/repo in 0.000s
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
-CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-magicv.cache ...
-CACHE(repository)               ${BASEDIR}/OPAM/repo/state-magicv.cache written in 0.000s
+CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache ...
+CACHE(repository)               ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache written in 0.000s
 Now run 'opam upgrade' to apply any package updates.
 ### opam install bar.3 foo.6 | unordered
 The following actions will be performed:

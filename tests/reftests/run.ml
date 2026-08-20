@@ -92,6 +92,8 @@ let base_env =
     "GIT_CONFIG_VALUE_0", "always";
   ]
 
+let opam_magicv = OpamVersion.magic ()
+
 (* See [opamprocess.safe_wait] *)
 let rec waitpid pid =
   match Unix.waitpid [] pid with
@@ -688,6 +690,8 @@ let common_filters ?opam dir =
       str "opam-";
       rep1 (alt [xdigit; char '-'])],
     Sed "${OPAMTMP}";
+    str opam_magicv,
+    Sed "${MAGICV}";
     (* We need this sed to ensure that the line containing 'packages' is
        rewritten with the good dir sep replacements *)
     extra_packages_dirs "packages";
@@ -709,12 +713,6 @@ let common_filters ?opam dir =
       str ".export";
     ],
     Sed "state-today.export";
-    seq [
-      str "state-";
-      repn xdigit 8 (Some 8);
-      str ".cache";
-    ],
-    Sed "state-magicv.cache";
     with_hexa_twice "log",
     Sed "log-xxx";
     with_hexa_twice "patch",
@@ -990,6 +988,7 @@ let run_test ?(vars=[]) ~opam t =
     "OPAMROOT", opamroot;
     "BASEDIR", dir;
     "PATH", Sys.getenv "PATH";
+    "MAGICV", opam_magicv;
   ] @ vars
   in
   if t.repo_hash = no_opam_repo then

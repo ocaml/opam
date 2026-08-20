@@ -80,7 +80,7 @@ Processing  2/3: [foo: sh build.sh]
 - CLI                             Parsing CLI version 2.0
 - GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 - RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
-- CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
+- CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
 - RSTATE                          Cache found
 - STATE                           LOAD-SWITCH-STATE @ internals-debian
 - CACHE(installed)                Loaded ${BASEDIR}/OPAM/internals-debian/.opam-switch/packages/cache in 0.000s
@@ -133,7 +133,7 @@ Processing  2/3: [foo: sh build.sh]
 - CLI                             Parsing CLI version 2.0
 - GSTATE                          LOAD-GLOBAL-STATE @ ${BASEDIR}/OPAM
 - RSTATE                          LOAD-REPOSITORY-STATE @ ${BASEDIR}/OPAM
-- CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-magicv.cache in 0.000s
+- CACHE(repository)               Loaded ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache in 0.000s
 - RSTATE                          Cache found
 - STATE                           LOAD-SWITCH-STATE @ internals-suse
 - CACHE(installed)                Loaded ${BASEDIR}/OPAM/internals-suse/.opam-switch/packages/cache in 0.000s
