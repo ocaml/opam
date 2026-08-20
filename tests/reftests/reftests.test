@@ -1071,13 +1071,13 @@ extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
 ### opam-cache installed cache4
 Invalid cache
 ### opam-cache installed cache4
-No cache
+Invalid cache
 ### :V:3:d: Invalid repo cache
 ### sh -c 'echo XXX > OPAM/repo/state-${MAGICV}.cache'
 ### opam-cache repo un
 Invalid cache
 ### opam-cache repo un
-No cache
+Invalid cache
 ### :V:4: unset
 ### env | grep REFTEST_UNSET
 ### REFTEST_UNSET=test

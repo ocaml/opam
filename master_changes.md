@@ -120,6 +120,7 @@ users)
   * Add an automatic replace for opam magic version, and an environment variable `$MAGICV` to refer to it [#7092 @rjbou]
   * When printing caches, differentiate file not found & invalid cache printing [#7092 @rjbou]
   * When printing caches, add a printing when packages selection is empty [#7092 @rjbou]
+  * When printing caches, ensure that the operation is a no-op on cache file [#7092 @rjbou]
 
 ## Github Actions
 

@@ -1218,6 +1218,14 @@ let run_test ?(vars=[]) ~opam t =
                     nvs)
               OpamPackage.Name.Map.empty nvs
           in
+          let save_and_restore file k =
+            let tmpdir = OpamFilename.mk_tmp_dir () in
+            let backup = OpamFilename.Op.(tmpdir // "cache-backup") in
+            OpamFilename.copy ~src:file ~dst:backup;
+            k ();
+            OpamFilename.copy ~src:backup ~dst:file;
+            OpamFilename.rmdir tmpdir
+          in
           (match kind with
            | `installed ->
              (let cachefile =
@@ -1228,6 +1236,7 @@ let run_test ?(vars=[]) ~opam t =
               if not (OpamFilename.exists cachefile) then
                 print_string "No cache\n"
               else
+                save_and_restore cachefile @@ fun () ->
                 let cache =
                   OpamSwitchState.Installed_cache.load cachefile
                 in
@@ -1265,6 +1274,7 @@ let run_test ?(vars=[]) ~opam t =
               if not (OpamFilename.exists cachefile) then
                 print_string "No cache\n"
               else
+                save_and_restore cachefile @@ fun () ->
                 let cache =
                   OpamRepositoryState.Cache.load root
                 in
