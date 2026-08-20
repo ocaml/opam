@@ -1067,13 +1067,13 @@ version: "1"
 extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
 ### sh -c 'echo XXX > OPAM/cache4/.opam-switch/packages/cache'
 ### opam-cache installed cache4
-No cache
+Invalid cache
 ### opam-cache installed cache4
 No cache
 ### :V:3:d: Invalid repo cache
 ### sh -c 'echo XXX > OPAM/repo/state-${MAGICV}.cache'
 ### opam-cache repo un
-No cache
+Invalid cache
 ### opam-cache repo un
 No cache
 ### :V:4: unset

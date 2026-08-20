@@ -1220,71 +1220,80 @@ let run_test ?(vars=[]) ~opam t =
           in
           (match kind with
            | `installed ->
-             (let cache =
-                OpamSwitchState.Installed_cache.load
-                  (OpamPath.Switch.installed_opams_cache
-                     (OpamFilename.Dir.of_string opamroot)
-                     (OpamSwitch.of_string switch))
-              in
-              match cache with
-              | None -> print_string "No cache\n"
-              | Some cache when OpamPackage.Map.is_empty cache ->
-                print_string "Empty cache\n"
-              | Some cache ->
-                let cache =
-                  if OpamPackage.Name.Map.is_empty nvs then cache else
-                    OpamPackage.Map.filter (fun nv _ ->
-                        let n = OpamPackage.name nv in
-                        match OpamPackage.Name.Map.find_opt n nvs with
-                        | Some vs ->
-                          OpamPackage.Version.Set.is_empty vs
-                          || OpamPackage.Version.Set.mem
-                            (OpamPackage.version nv) vs
-                        | None -> false)
-                      cache
-                in
-                let files =
-                  OpamPackage.Map.fold (fun pkg opam files ->
-                      let name = OpamPackage.to_string pkg in
-                      let content = OpamFile.OPAM.write_to_string opam in
-                      (name, content)::files)
-                    cache []
-                in
-                print_file ~filters:(filter @ common_filters dir) files)
-           | `repo ->
-             (let cache =
-                OpamRepositoryState.Cache.load
+             (let cachefile =
+                OpamPath.Switch.installed_opams_cache
                   (OpamFilename.Dir.of_string opamroot)
+                  (OpamSwitch.of_string switch)
               in
-              match cache with
-              | None -> print_string "No cache\n"
-              | Some (_, cache, _) when OpamRepositoryName.Map.is_empty cache ->
-                print_string "Empty cache\n"
-              | Some (_, cache, _) ->
+              if not (OpamFilename.exists cachefile) then
+                print_string "No cache\n"
+              else
                 let cache =
-                  if OpamPackage.Name.Map.is_empty nvs then cache else
-                    OpamRepositoryName.Map.map
-                      (OpamPackage.Map.filter (fun nv _ ->
-                           let n = OpamPackage.name nv in
-                           match OpamPackage.Name.Map.find_opt n nvs with
-                           | Some vs ->
-                             OpamPackage.Version.Set.is_empty vs
-                             || OpamPackage.Version.Set.mem
-                               (OpamPackage.version nv) vs
-                           | None -> false))
-                      cache
+                  OpamSwitchState.Installed_cache.load cachefile
                 in
-                let files =
-                  OpamRepositoryName.Map.fold (fun reponame pkgmap files->
-                      let pre = OpamRepositoryName.to_string reponame in
-                      OpamPackage.Map.fold (fun pkg opam files ->
-                          let name = pre ^ ":" ^ OpamPackage.to_string pkg in
-                          let content = OpamFile.OPAM.write_to_string opam in
-                          (name, content)::files)
-                        pkgmap files)
-                    cache []
+                match cache with
+                | None -> print_string "Invalid cache\n"
+                | Some cache when OpamPackage.Map.is_empty cache ->
+                  print_string "Empty cache\n"
+                | Some cache ->
+                  let cache =
+                    if OpamPackage.Name.Map.is_empty nvs then cache else
+                      OpamPackage.Map.filter (fun nv _ ->
+                          let n = OpamPackage.name nv in
+                          match OpamPackage.Name.Map.find_opt n nvs with
+                          | Some vs ->
+                            OpamPackage.Version.Set.is_empty vs
+                            || OpamPackage.Version.Set.mem
+                              (OpamPackage.version nv) vs
+                          | None -> false)
+                        cache
+                  in
+                  let files =
+                    OpamPackage.Map.fold (fun pkg opam files ->
+                        let name = OpamPackage.to_string pkg in
+                        let content = OpamFile.OPAM.write_to_string opam in
+                        (name, content)::files)
+                      cache []
+                  in
+                  print_file ~filters:(filter @ common_filters dir) files)
+           | `repo ->
+             (let root = OpamFilename.Dir.of_string opamroot in
+              let cachefile = OpamPath.state_cache root in
+              if not (OpamFilename.exists cachefile) then
+                print_string "No cache\n"
+              else
+                let cache =
+                  OpamRepositoryState.Cache.load root
                 in
-                print_file ~filters:(filter @ common_filters dir) files));
+                match cache with
+                | None -> print_string "Invalid cache\n"
+                | Some (_, cache, _) when OpamRepositoryName.Map.is_empty cache ->
+                  print_string "Empty cache\n"
+                | Some (_, cache, _) ->
+                  let cache =
+                    if OpamPackage.Name.Map.is_empty nvs then cache else
+                      OpamRepositoryName.Map.map
+                        (OpamPackage.Map.filter (fun nv _ ->
+                             let n = OpamPackage.name nv in
+                             match OpamPackage.Name.Map.find_opt n nvs with
+                             | Some vs ->
+                               OpamPackage.Version.Set.is_empty vs
+                               || OpamPackage.Version.Set.mem
+                                 (OpamPackage.version nv) vs
+                             | None -> false))
+                        cache
+                  in
+                  let files =
+                    OpamRepositoryName.Map.fold (fun reponame pkgmap files->
+                        let pre = OpamRepositoryName.to_string reponame in
+                        OpamPackage.Map.fold (fun pkg opam files ->
+                            let name = pre ^ ":" ^ OpamPackage.to_string pkg in
+                            let content = OpamFile.OPAM.write_to_string opam in
+                            (name, content)::files)
+                          pkgmap files)
+                      cache []
+                  in
+                  print_file ~filters:(filter @ common_filters dir) files));
           vars
         | Run {env; cmd; args; filter; output; unordered; sort} ->
           let silent = output <> None || unordered in
