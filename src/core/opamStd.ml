@@ -741,14 +741,52 @@ module Env = struct
     module Map = Map.Make(M)
   end
 
+  type raw = string array
+
+  let raw_env = Unix.environment
+
+  let env_starts_with =
+    if Sys.win32 then
+      fun ~prefix x ->
+        let prefix = String.lowercase_ascii prefix in
+        let x = String.lowercase_ascii x in
+        OpamCompat.String.starts_with ~prefix x
+    else
+      OpamCompat.String.starts_with
+
+  let get_from_array env key =
+    let prefix = key ^ "=" in
+    let prefix_len = String.length prefix in
+    let exception Found of string in
+    try
+      for i = 0 to Array.length env - 1 do
+        let x = env.(i) in
+        if env_starts_with ~prefix x then
+          raise_notrace (Found x)
+      done;
+      None
+    with Found x ->
+      Some (String.sub x prefix_len (String.length x - prefix_len))
+
+  let add_and_replace env (key, value) =
+    let prefix = key ^ "=" in
+    let elem = prefix ^ value in
+    (* We always append [elem] to the environment instead of setting inplace
+       to avoid the double copy as we need to copy once anyway *)
+    let env = Array.append env [|elem|] in
+    for i = 0 to Array.length env - 2 do
+      let x = env.(i) in
+      if env_starts_with ~prefix x then
+        env.(i) <- elem;
+    done;
+    env
+
   let to_list env =
     List.rev_map (fun s ->
         match OpamString.cut_at s '=' with
         | None   -> s, ""
         | Some p -> p)
       (Array.to_list env)
-
-  let raw_env = Unix.environment
 
   let list =
     let lazy_env = lazy (to_list (raw_env ())) in

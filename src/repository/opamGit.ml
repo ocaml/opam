@@ -14,13 +14,49 @@ open OpamProcess.Job.Op
 
 (* let log fmt = OpamConsole.log "GIT" fmt *)
 
-let git_env = [|
-  "GIT_CONFIG_GLOBAL="^Filename.null;
-  "GIT_CONFIG_SYSTEM="^Filename.null;
-|]
+let git_env = [
+  "GIT_CONFIG_GLOBAL", Filename.null;
+  "GIT_CONFIG_SYSTEM", Filename.null;
+]
 
-let env () =
-  Array.append git_env (OpamProcess.default_env ())
+let git_config = [
+  "gc.autoDetach", "false";
+  "maintenance.autoDetach", "false";
+]
+
+let env =
+  let env = lazy begin
+    let env = OpamProcess.default_env () in
+    let env = List.fold_left OpamStd.Env.add_and_replace env git_env in
+    let config_count_name = "GIT_CONFIG_COUNT" in
+    let old_config_count =
+      let open OpamStd.Option.Op in
+      (OpamStd.Env.get_from_array env config_count_name >>= int_of_string_opt)
+      +! 0
+    in
+    let config_key_prefix = "GIT_CONFIG_KEY_" in
+    let config_value_prefix = "GIT_CONFIG_VALUE_" in
+    let new_config_count = old_config_count + List.length git_config in
+    let env =
+      OpamStd.Env.add_and_replace env
+        (config_count_name, Int.to_string new_config_count)
+    in
+    let rec aux env n = function
+      | [] -> env
+      | (key, value)::xs ->
+        let env =
+          OpamStd.Env.add_and_replace env
+            (config_key_prefix ^ Int.to_string n, key)
+        in
+        let env =
+          OpamStd.Env.add_and_replace env
+            (config_value_prefix ^ Int.to_string n, value)
+        in
+        aux env (n + 1) xs
+    in
+    aux env old_config_count git_config
+  end in
+  fun () -> Lazy.force env
 
 module VCS : OpamVCS.VCS = struct
 
@@ -45,6 +81,12 @@ module VCS : OpamVCS.VCS = struct
     OpamFilename.mkdir repo_root;
     OpamProcess.Job.of_list [
       git repo_root [ "init"; "--initial-branch=main" ];
+      (* Disable detachable jobs to avoid race conditions.
+         For example while building a package, if the user build steps
+         calls git they might end up spawning a maintenance job which would
+         then interfere with the removal of the build directory later. *)
+      git repo_root [ "config" ; "--local" ; "gc.autoDetach"; "false"];
+      git repo_root [ "config" ; "--local" ; "maintenance.autoDetach"; "false"];
       (* Enforce this option, it can break our use of git if set *)
       git repo_root [ "config" ; "--local" ; "fetch.prune"; "false"];
       (* We reset diff.noprefix to ensure we get a `-p1` patch and avoid <https://github.com/ocaml/opam/issues/3627>. *)

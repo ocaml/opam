@@ -72,6 +72,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * Disable git gc/maintenance on repositories opam maintains [#7073 @kit-ty-kate - partially fix #7031]
 
 ## Build
 
@@ -134,3 +135,5 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamStd.Env`: Add the `raw = string array` type alias [#7073 @kit-ty-kate]
+  * `OpamStd.Env`: Add the `get_from_array` and `add_and_replace` functions [#7073 @kit-ty-kate]
