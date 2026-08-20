@@ -538,7 +538,10 @@ let make_command
     ?verbose ?env ?name ?text ?metadata ?allow_stdin ?stdout
     ?dir ?(resolve_path=true)
     cmd args =
-  let env = match env with None -> OpamProcess.default_env () | Some e -> e in
+  let env = match env with
+    | None -> Lazy.force OpamProcess.default_env
+    | Some e -> e
+  in
   let name = log_file name in
   let verbose =
     OpamStd.Option.default OpamCoreConfig.(!r.verbose_level >= 2) verbose
@@ -557,7 +560,10 @@ let make_command
 
 let run_process
     ?verbose ?env ~name ?metadata ?dir ?stdout ?allow_stdin command =
-  let env = match env with None -> OpamProcess.default_env () | Some e -> e in
+  let env = match env with
+    | None -> Lazy.force OpamProcess.default_env
+    | Some e -> e
+  in
   let chrono = OpamConsole.timer () in
   match command with
   | []          -> invalid_arg "run_process"

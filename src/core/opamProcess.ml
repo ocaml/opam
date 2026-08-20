@@ -12,14 +12,12 @@
 let log ?level fmt =
   OpamConsole.log "PROC" ?level fmt
 
-let default_env =
-  let f () = lazy (
-    let env = OpamStd.Env.raw_env () in
-    match OpamCoreConfig.(!r.cygbin) with
-    | Some cygbin -> OpamStd.Env.cyg_env ~env ~cygbin ~git_location:OpamCoreConfig.(!r.git_location)
-    | None -> env
-  ) in
- fun () -> Lazy.force (f ())
+let default_env = lazy (
+  let env = OpamStd.Env.raw_env () in
+  match OpamCoreConfig.(!r.cygbin) with
+  | Some cygbin -> OpamStd.Env.cyg_env ~env ~cygbin ~git_location:OpamCoreConfig.(!r.git_location)
+  | None -> env
+)
 
 let cygwin_create_process_env prog args env fd1 fd2 fd3 =
   (*
@@ -303,7 +301,7 @@ let string_of_info ?(color=`yellow) info =
   Buffer.contents b
 
 let resolve_command ?env ?dir name =
-  let env = match env with None -> default_env () | Some e -> e in
+  let env = match env with None -> Lazy.force default_env | Some e -> e in
   match OpamStd.Sys.resolve_command ~env ?dir name with
   | `Cmd cmd -> Some cmd
   | `Denied | `Not_found -> None
@@ -362,7 +360,7 @@ let create ?info_file ?env_file ?(allow_stdin=not Sys.win32) ?stdout_file ?stder
       else tee f
   in
   let env = match env with
-    | None   -> default_env ()
+    | None   -> Lazy.force default_env
     | Some e -> e in
   let time = Unix.gettimeofday () in
 
@@ -525,7 +523,7 @@ let run_background command =
   in
   let verbose = is_verbose_command command in
   let allow_stdin = OpamStd.Option.default false allow_stdin in
-  let env = match env with Some e -> e | None -> default_env () in
+  let env = match env with Some e -> e | None -> Lazy.force default_env in
   let file ext = match name with
     | None -> None
     | Some n ->

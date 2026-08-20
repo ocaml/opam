@@ -225,7 +225,7 @@ type 'a job = 'a Job.Op.job
 
 (** Current environment. On Windows, Cygwin installation binary path and git
     location path may be added to PATH. **)
-val default_env : unit -> string array
+val default_env : string array Lazy.t
 
 (** As {!OpamStd.Sys.resolve_command}, except the default for [~env] is
     {!default_env}. *)

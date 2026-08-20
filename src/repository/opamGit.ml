@@ -19,8 +19,9 @@ let git_env = [|
   "GIT_CONFIG_SYSTEM="^Filename.null;
 |]
 
-let env () =
-  Array.append git_env (OpamProcess.default_env ())
+let env = lazy (
+  Array.append git_env (Lazy.force OpamProcess.default_env)
+)
 
 module VCS : OpamVCS.VCS = struct
 
@@ -38,7 +39,7 @@ module VCS : OpamVCS.VCS = struct
        of git will need to change, as altering PATH could select a different
        Git *)
     fun ?verbose ?stdout args ->
-      let env = env () in
+      let env = Lazy.force env in
       OpamSystem.make_command ~env ?verbose ?stdout "git" ("-C"::dir::args)
 
   let init repo_root repo_url =

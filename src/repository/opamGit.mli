@@ -15,7 +15,7 @@
     used to make git calls more reproducible.
     Note however that it cannot be used if you need values from the global git
     configs (e.g. /etc/gitconfig or ~/.gitconfig) *)
-val env : unit -> string array
+val env : string array Lazy.t
 
 module VCS: OpamVCS.VCS
 
