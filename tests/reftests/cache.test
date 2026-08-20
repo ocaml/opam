@@ -1,5 +1,5 @@
 N0REP0
-### :: Installed Cache update on action failure
+### :I: Installed Cache update on action failure
 ### : Origin
 ### : upgrades from 2.2 to 2.3 can trigger issues where a repository forgot to
 ### : add the missing extra-files field, opam tells the user they should
@@ -316,4 +316,94 @@ version: "1"
 => always-here.1 <=
 opam-version: "2.0"
 name: "always-here"
+version: "1"
+### :II: Invalid cache file automatic update, with and without safe mode
+### opam switch create safe-cache --empty
+### <pkg:im-here.1>
+opam-version:"2.0"
+### opam install im-here
+The following actions will be performed:
+=== install 1 package
+  - install im-here 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed im-here.1
+Done.
+### <invalidate.ml>
+let () =
+  let dir = Sys.argv.(1) in
+  Array.iter (fun file ->
+      if file = "cache" then
+        let file = Filename.concat dir file in
+        (* open the file with its content intact and [pos_out oc = 0] *)
+        let oc = open_out_gen [Open_wronly; Open_binary] 0 file in
+        (* Reset the magic section at the beginning of the file (8 chars) *)
+        output_string oc "00000000";
+        close_out oc)
+    (Sys.readdir dir)
+### :II:1: with safe mode
+### opam-cache installed safe-cache
+=> im-here.1 <=
+opam-version: "2.0"
+name: "im-here"
+version: "1"
+### ocaml invalidate.ml ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages
+### opam-cache installed safe-cache
+Invalid cache
+### OPAMDEBUGSECTIONS="CACHE(installed) SYSTEM" OPAMDEBUG=-5 opam list -s --installed --safe
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache (none => read)
+CACHE(installed)                Bad installed cache: incompatible magic string "00000000" (expected "${MAGICV}").
+SYSTEM                          LOCK ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache (read => none)
+CACHE(installed)                Invalid installed cache, removing
+CACHE(installed)                Running in safe mode, not upgrading the installed cache
+im-here
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### opam-cache installed safe-cache
+Invalid cache
+### :II:2: without safe mode
+### opam reinstall im-here
+The following actions will be performed:
+=== recompile 1 package
+  - recompile im-here 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   im-here.1
+-> installed im-here.1
+Done.
+### opam-cache installed safe-cache
+=> im-here.1 <=
+opam-version: "2.0"
+name: "im-here"
+version: "1"
+### ocaml invalidate.ml ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages
+### opam-cache installed safe-cache
+Invalid cache
+### opam-cache installed safe-cache
+Invalid cache
+### OPAMDEBUGSECTIONS="CACHE(installed) SYSTEM" OPAMDEBUG=-5 opam list -s --installed
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (none => read)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache (read => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache (none => read)
+CACHE(installed)                Bad installed cache: incompatible magic string "00000000" (expected "${MAGICV}").
+SYSTEM                          LOCK ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache (read => none)
+CACHE(installed)                Invalid installed cache, removing
+SYSTEM                          rm ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache
+SYSTEM                          LOCK ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache (none => write)
+CACHE(installed)                Writing the installed cache to ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache ...
+CACHE(installed)                ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache written in 0.000s
+SYSTEM                          LOCK ${BASEDIR}/OPAM/safe-cache/.opam-switch/packages/cache (write => none)
+im-here
+SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
+### opam-cache installed safe-cache
+=> im-here.1 <=
+opam-version: "2.0"
+name: "im-here"
 version: "1"
