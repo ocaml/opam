@@ -337,7 +337,7 @@ let git_cmds ~dir repo_root commands error_msg =
           "-c"::"maintenance.autoDetach=false"::
           args
         in
-        OpamSystem.make_command ~env:(OpamGit.env ()) "git"
+        OpamSystem.make_command ~env:(Lazy.force OpamGit.env) "git"
           ("-C"::(OpamFilename.Dir.to_string repo_root)::args))
       commands
   in
