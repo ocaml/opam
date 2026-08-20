@@ -122,6 +122,7 @@ users)
   * When printing caches, differentiate file not found & invalid cache printing [#7092 @rjbou]
   * When printing caches, add a printing when packages selection is empty [#7092 @rjbou]
   * When printing caches, ensure that the operation is a no-op on cache file [#7092 @rjbou]
+  * Fix the regexp matching on temporary files [#7094 @kit-ty-kate]
 
 ## Github Actions
 
