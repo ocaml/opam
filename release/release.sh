@@ -27,7 +27,8 @@ cd "$DIR"
 LC_ALL=C
 CWD=$(pwd)
 JOBS=$(sysctl -n hw.ncpu)
-SSH="sshpass -ppassword ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+SSH="./ssh-auto.sh password 240 ssh"
+SSH_FASTFAIL="./ssh-auto.sh password 5 ssh"
 
 OUTDIR="out/$TAG"
 mkdir -p "$OUTDIR"
@@ -36,11 +37,10 @@ windows_build() {
   local port=$1
   local image=$2
 
-  if ! ${SSH} -p "${port}" opam@localhost cd; then
+  if ! ${SSH_FASTFAIL} -p "${port}" opam@localhost cd; then
     qemu-img convert -O raw "./${image}.qcow2" "./${image}.raw"
     # NOTE: -machine q35 seems to be required to avoid random but recurring crashes
     "qemu-system-x86_64" -drive "file=./${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -m 6G -smp "${JOBS}" -machine q35 &
-    sleep 240
   fi
 
   # Disable Windows Defender before anything else (makes the build process faster)
@@ -69,10 +69,9 @@ qemu_build() {
   local make=$4
   local arch=$5
 
-  if ! ${SSH} -p "${port}" root@localhost true; then
+  if ! ${SSH_FASTFAIL} -p "${port}" root@localhost true; then
       qemu-img convert -O raw "./qemu-base-images/${image}.qcow2" "./qemu-base-images/${image}.raw"
       "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -machine q35 -m 2G -smp "${JOBS}" &
-      sleep 60
   fi
   ${SSH} -p "${port}" root@localhost "${install}"
   make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR="opam-release-$TAG"
