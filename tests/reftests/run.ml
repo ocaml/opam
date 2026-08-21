@@ -648,13 +648,14 @@ let common_filters ?opam dir =
       [str dir; str (OpamSystem.back_to_forward dir); str (OpamSystem.apply_cygpath dir)]
     else
       [str dir] in
-  let with_hexa_twice prefix =
+  let opam_temp_basename prefix =
+    (* Sync with OpamSystem.temp_basename *)
     seq [
       str prefix;
       char '-';
-      repn xdigit 3 (Some 9);
+      repn digit 1 (Some 19); (* 19 is max number of digit from Int.max_int *)
       char '-';
-      repn xdigit 3 (Some 9);
+      repn xdigit 6 (Some 6);
     ]
   in
   let extra_packages_dirs d =
@@ -713,9 +714,9 @@ let common_filters ?opam dir =
       str ".export";
     ],
     Sed "state-today.export";
-    with_hexa_twice "log",
+    opam_temp_basename "log",
     Sed "log-xxx";
-    with_hexa_twice "patch",
+    opam_temp_basename "patch",
     Sed "patch-xxx";
     (* rsync output
        Linux

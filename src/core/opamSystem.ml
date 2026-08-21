@@ -74,6 +74,7 @@ let rec real_path p =
     | x -> real_path dirname / x
 
 let temp_basename prefix =
+  (* Sync with tests/reftests/run.ml *)
   Printf.sprintf "%s-%d-%06x" prefix (OpamStubs.getpid ()) (Random.int 0xFFFFFF)
 
 let temp_name ?dir ?(prefix="opam") () =
