@@ -1,5 +1,8 @@
 .SHELLFLAGS := -eu$(if $(shell (set -o pipefail 2>/dev/null > /dev/null && echo yes)),o pipefail) $(.SHELLFLAGS)
 
+export SOURCE_DATE_EPOCH=0
+export LC_ALL=C
+
 TAG = master
 VERSION = $(shell git describe $(TAG))
 OPAM_VERSION = $(subst -,~,$(VERSION))

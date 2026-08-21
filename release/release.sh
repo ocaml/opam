@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -uex
 
+export LC_ALL=C
+
 unset $(env | cut -d= -f1 | grep -Fvx HOME | grep -Fvx PWD | grep -Fvx USER | grep -Fvx SHELL | grep -Fvx TERM)
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin
 
@@ -24,7 +26,6 @@ fi
 DIR=$(dirname $0)
 cd "$DIR"
 
-LC_ALL=C
 CWD=$(pwd)
 JOBS=$(sysctl -n hw.ncpu)
 SSH="./ssh-auto.sh password 240 ssh"
