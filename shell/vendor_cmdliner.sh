@@ -1,23 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 
 set -euo pipefail
 
 cd src/core/cmdliner
-rm -rf *.ml *.mli dune
+rm -rf *.ml *.mli dune tool
 
+trap "rm -rf tmp-vendor" EXIT
 git clone https://github.com/dbuenzli/cmdliner tmp-vendor
-git -C tmp-vendor switch --detach v1.3.0
+git -C tmp-vendor switch --detach v2.1.1
 
 mv tmp-vendor/src/*.{ml,mli} .
-rm -rf tmp-vendor
+mkdir -p tool
+mv tmp-vendor/src/tool/*.ml tool/
 
-mv cmdliner.ml opamCmdliner.ml
-mv cmdliner.mli opamCmdliner.mli
-rm cmdliner_exit.ml{,i}
-
-cat > dune << EOF
-(library
- (name opamCmdliner)
- (public_name opam-core.cmdliner)
- (flags :standard -w -27-32-35-50))
-EOF
+for f in patches/*.patch; do
+  git apply "$f"
+done

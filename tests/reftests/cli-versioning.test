@@ -11,7 +11,9 @@ flags: compiler
 ### opam option depext=false
 Set to 'false' the field depext in global configuration
 ### opam switch install cli-versioning --empty | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
-opam: install was removed in version 2.1 of the opam CLI, but version CURRENTMAJOR has been requested. Use create instead or set OPAMCLI environment variable to 2.0.
+opam: install was removed in version 2.1 of the opam CLI, but version CURRENTMAJOR has
+      been requested. Use create instead or set OPAMCLI environment variable
+      to 2.0.
 # Return code 2 #
 ### OPAMCLI=2.0 opam switch install cli-versioning --empty
 [WARNING] OPAMNODEPEXTS was ignored because CLI 2.0 was requested and it was introduced in 2.1.
@@ -24,7 +26,8 @@ The following actions would be performed:
 === install 1 package
   - install baz 2
 ### OPAMCLI=2.0 opam install baz --assume-depexts
-opam: --assume-depexts was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+opam: --assume-depexts was added in version 2.1 of the opam CLI, but version
+      2.0 has been requested, which is older.
 # Return code 2 #
 ### opam config set cli version
 [WARNING] set was deprecated in version 2.1 of the opam CLI. Use opam var instead or set OPAMCLI environment variable to 2.0.
@@ -54,7 +57,8 @@ No solution found, exiting
 No solution found, exiting
 # Return code 20 #
 ### OPAMCLI=2.0 opam install baz.2 --update-invariant
-opam: --update-invariant was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+opam: --update-invariant was added in version 2.1 of the opam CLI, but
+      version 2.0 has been requested, which is older.
 # Return code 2 #
 ### opam install baz.2 --update-invariant
 The following actions would be performed:
@@ -66,27 +70,32 @@ The following actions would be performed:
 === install 1 package
   - install baz 2
 ### opam install baz.2 --unlock-base | "${OPAMMAJORVERSION}" -> "CURRENTMAJOR"
-opam: --unlock-base was removed in version 2.1 of the opam CLI, but version CURRENTMAJOR has been requested. Use --update-invariant instead or set OPAMCLI environment variable to 2.0.
+opam: --unlock-base was removed in version 2.1 of the opam CLI, but version
+      CURRENTMAJOR has been requested. Use --update-invariant instead or set OPAMCLI
+      environment variable to 2.0.
 # Return code 2 #
 ### # opam option uses mk_command_ret
 ### opam option foo
 [ERROR] No option named 'foo' found. Use 'opam option [--global]' to list them
 # Return code 2 #
 ### OPAMCLI=2.0 opam option foo
-opam: option was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+opam: option was added in version 2.1 of the opam CLI, but version 2.0 has
+      been requested, which is older.
 # Return code 2 #
 ### opam option foo --global
 [ERROR] Field or section foo not found
 # Return code 5 #
 ### OPAMCLI=2.0 opam option foo --global
-opam: --global was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+opam: --global was added in version 2.1 of the opam CLI, but version 2.0 has
+      been requested, which is older.
 # Return code 2 #
 ### # opam lock uses mk_command
 ### opam lock foo
 [ERROR] No package matching foo
 # Return code 5 #
 ### OPAMCLI=2.0 opam lock foo
-opam: lock was added in version 2.1 of the opam CLI, but version 2.0 has been requested, which is older.
+opam: lock was added in version 2.1 of the opam CLI, but version 2.0 has been
+      requested, which is older.
 # Return code 2 #
 ### # Check for build test env
 ### # Note: you must have an installed opam with cli version enabled to pass these tests
