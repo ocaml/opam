@@ -3,6 +3,28 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.6.0~beta1:
+* Do not make `opam init --reinit` ask to retry the command when upgrading
+  from a 2.1 root [#7058 @kit-ty-kate - fix #7057]
+* `opam init --reinit` now regenerate the list of valid switches, fix switch
+  internal data (cache, config, packages) [#7068 @kit-ty-kate - fix #7066]
+* Stop resetting debuglevel to 0 in safe mode [#7091 @kit-ty-kate - fix #7000]
+* Disable git gc/maintenance on repositories opam maintains
+  [#7073 @kit-ty-kate - partially fix #7031]
+* Respect safe mode when encountering an outdated cache file
+  [#7067 @kit-ty-kate - fix #7066]
+* Add debug log when switch list is fixed [#7068 @rjbou]
+* Add level 4 debug output of the patch operations during a load from diff
+  [#7072 @kit-ty-kate]
+* Improve and extend the testsuite
+  [#7069 #7058 #7068 #7092 #7067 @rjbou @kit-ty-kate]
+* Improve and extend the test infrastructure
+  [#7071 #7092 #7094 #7033 @rjbou @kit-ty-kate]
+* API changes in `opam-core`:
+  * `OpamStd.Env`: Add the `raw = string array` type alias [#7073 @kit-ty-kate]
+  * `OpamStd.Env`: Add the `get_from_array` and `add_and_replace` functions
+    [#7073 @kit-ty-kate]
+
 2.6.0~alpha1:
 * (*) The shell env hook will now update the current bin path in `PATH` in
   place instead of always prioritising opam's path over every other one

@@ -13,14 +13,10 @@ users)
 ## Version
 
 ## Global CLI
-  * Stop resetting debuglevel to 0 in safe mode [#7091 @kit-ty-kate - fix #7000]
-  * Respect safe mode when encountering an outdated cache file [#7067 @kit-ty-kate - fix #7066]
 
 ## Plugins
 
 ## Init
-  * Do not make `opam init --reinit` ask to retry the command when upgrading from a 2.1 root [#7058 @kit-ty-kate - fix #7057]
-  * `opam init --reinit` now regenerate the list of valid switches, fix switch internal data (cache, config, packages) [#7068 @kit-ty-kate - fix #7066]
 
 ## Config report
 
@@ -35,7 +31,6 @@ users)
 ## UI
 
 ## Switch
-  * Add debug log when switch list is fixed [#7068 @rjbou]
 
 ## Config
 
@@ -74,7 +69,6 @@ users)
 ## Sandbox
 
 ## VCS
-  * Disable git gc/maintenance on repositories opam maintains [#7073 @kit-ty-kate - partially fix #7031]
 
 ## Build
 
@@ -83,7 +77,6 @@ users)
 ## Release scripts
 
 ## Install script
-  * Add `2.6.0~alpha1` to the install scripts [#7047 @kit-ty-kate]
 
 ## Admin
 
@@ -100,34 +93,21 @@ users)
 ## Shell
 
 ## Internal
-  * Add level 4 debug output of the patch operations during a load from diff [#7072 @kit-ty-kate]
 
 ## Internal: Unix
 
 ## Internal: Windows
 
 ## Test
-  * patchDiff: fix random git related failures [#7069 @kit-ty-kate - fix #7037]
 
 ## Benchmarks
 
 ## Reftests
 ### Tests
-  * Add a test showing `opam init --reinit` upgrading from pre opam 2.6 `OPAMREPOTARRING=1` (aka. opam 2.1's default) [#7058 @kit-ty-kate]
-  * Add `opam init --reinit` regenerating cache & fixing switch test [#7068 @rjbou]
-  * Update reftest test for cache [#7092 @rjbou]
-  * Add a test showing the behaviour of opam when encountering an invalid cache file [#7067 @kit-ty-kate]
 
 ### Engine
-  * Stop the testsuite from generating files containing CRLF [#7071 @kit-ty-kate]
-  * Add an automatic replace for opam magic version, and an environment variable `$MAGICV` to refer to it [#7092 @rjbou]
-  * When printing caches, differentiate file not found & invalid cache printing [#7092 @rjbou]
-  * When printing caches, add a printing when packages selection is empty [#7092 @rjbou]
-  * When printing caches, ensure that the operation is a no-op on cache file [#7092 @rjbou]
-  * Fix the regexp matching on temporary files [#7094 @kit-ty-kate]
 
 ## Github Actions
-  * Ensure a better availability of the `micro_httpd` dependency [#7033 @kit-ty-kate]
 
 ## Doc
 
@@ -145,5 +125,3 @@ users)
 ## opam-format
 
 ## opam-core
-  * `OpamStd.Env`: Add the `raw = string array` type alias [#7073 @kit-ty-kate]
-  * `OpamStd.Env`: Add the `get_from_array` and `add_and_replace` functions [#7073 @kit-ty-kate]
