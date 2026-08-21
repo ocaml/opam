@@ -287,20 +287,88 @@ let install_compiler
     (Success result);
   OpamSwitchAction.write_selections t;
   t
+let switch_consistent gt switch =
+  let switch_dir = OpamPath.Switch.root gt.root switch in
+  match OpamFilename.dir_is_empty switch_dir with
+  | Some true ->
+    (* Directory exists and is empty *)
+    (* TODO: Verify whether the switch path is not pointing to internal opam
+       directories *)
+    (* if OpamFilename.dir_starts_with switch_dir gt.root then
+       ()
+       else *)
+    (* Opam path, list verify if we are not removing one of those. *)
+    (*     OpamFilename.rmdir_cleanup switch_dir;
+    *)     `Empty
+  | Some false ->
+    (* Directory exists and is not empty - verify it to be a valid switch *)
+    (try
+       match OpamFile.Switch_config.read_opt
+               (OpamPath.Switch.switch_config gt.root switch) with
+       | Some _ ->
+         (match OpamFile.SwitchSelections.read_opt
+                  (OpamPath.Switch.selections gt.root switch) with
+           Some (switch_selections:switch_selections) ->
+           if OpamPackage.Set.for_all (fun p_pinned -> (* verify code wise if it's the case. *)
+               let name = OpamPackage.name p_pinned in
+               OpamFilename.exists_dir
+                 (OpamPath.Switch.Overlay.package gt.root switch name)
+             ) switch_selections.sel_pinned then
+             if OpamFilename.exists_dir
+                 (OpamPath.Switch.install_dir gt.root switch)
+             && OpamPackage.Set.for_all (
+                  fun p_installed ->
+                    (* TODO: Maybe keep only changes check? *)
+                    (* TODO: there is a file in /packages/ *)
+                    (* verify code wise if it's the case. OpamPath.overlay *)
+                    OpamFilename.exists_dir
+                      (OpamPath.Switch.installed_package_dir gt.root switch p_installed)
+                    ||
+                    OpamFile.exists (OpamPath.Switch.install gt.root switch
+                                       (OpamPackage.name p_installed))
+                    || OpamFile.exists (OpamPath.Switch.changes gt.root switch
+                                          (OpamPackage.name p_installed))
+                ) switch_selections.sel_installed then
+               (* Have both errors shown, and fail then. *)
+               `Valid_switch
+               (* fixup, mettre dans global state, switch-config il faut qu'il soit là.
+                  sans me soucier. *)
+             else
+               `IO_Error "Some packages are not properly installed."
+           else
+             `IO_Error "Some pinned packages have their files broken.\n ";
+         | None -> `IO_Error "switch-state is missing.")
+       | None -> `IO_Error "switch-config is missing."
+     with e ->
+       (* TODO: Files are broken, fixup? how to recover from here *)
+       ( `IO_Error (Printf.sprintf "Failed to read files: %s\n" (Printexc.to_string e))))
+  | None -> `Not_found
 
 let create
     gt ~rt ?synopsis ?repos ~update_config ~invariant switch post =
   let update_config = update_config && not (OpamSwitch.is_external switch) in
-  let comp_dir = OpamPath.Switch.root gt.root switch in
+  let switch_dir = OpamPath.Switch.root gt.root switch in
   let simulate = OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) in
   if OpamGlobalState.switch_exists gt switch then
     OpamConsole.error_and_exit `Bad_arguments
       "There already is an installed switch named %s"
       (OpamSwitch.to_string switch);
-  if Sys.file_exists (OpamFilename.Dir.to_string comp_dir) then
-    OpamConsole.error_and_exit `Bad_arguments
-      "Directory %S already exists, please choose a different name"
-      (OpamFilename.Dir.to_string comp_dir);
+  let switch_dir_str = OpamFilename.Dir.to_string switch_dir in
+  if Sys.file_exists switch_dir_str then
+    OpamConsole.error
+      "The directory %S already exists, but it doesn't appear to be a \
+       valid OPAM switch.\n" switch_dir_str;
+  let warning =
+    (OpamConsole.colorise `yellow
+       (Printf.sprintf"Warning: proceeding will permanently erase all the \
+                       contents of:\n         %s\n" switch_dir_str))
+  in
+  let prompt = "Would you like to overwrite this directory and create a new switch?" in
+  if OpamConsole.confirm "%s\n%s" warning prompt then
+    OpamFilename.rmdir switch_dir
+  else
+    OpamConsole.error_and_exit `Aborted
+      "Switch installation was aborted by the user.";
   let gt, st =
     if not simulate then
       let gt =

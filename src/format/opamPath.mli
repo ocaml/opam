@@ -38,6 +38,7 @@ val redirected: t -> OpamFilename.t
     and {i ~/.opamrc}). More general (lower priority) first. *)
 val init_config_files: unit -> OpamFile.InitConfig.t OpamFile.t list
 
+
 (** Lock for updates on the main config file (write lock when changes to
     switches, repositories lists are expected. No lock needed otherwise) *)
 val config_lock: t -> filename
@@ -387,3 +388,8 @@ module Builddir: sig
   val config: dirname -> package -> OpamFile.Dot_config.t OpamFile.t
 
 end
+
+val internal_paths : t -> switch -> dirname list
+
+(** Check if a directory path is internal  *)
+val is_internal_path : t -> dirname -> bool
