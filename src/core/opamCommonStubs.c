@@ -23,9 +23,11 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/resource.h>
 
 #else
 
+#include <windows.h>
 #include <io.h>
 #include <sysinfoapi.h>
 
@@ -69,6 +71,35 @@ CAMLprim value opam_nproc(value _unit) {
 #else
   return caml_copy_nativeint(sysconf(_SC_NPROCESSORS_ONLN));
 #endif
+}
+
+CAMLprim value opam_total_ram(value _unit) {
+  int64_t total_mem = 0;
+#ifdef _WIN32
+  MEMORYSTATUSEX statex;
+  statex.dwLength = sizeof(statex);
+  if (GlobalMemoryStatusEx(&statex) == 0)
+    return caml_copy_int64(0);
+  total_mem = statex.ullTotalPhys;
+#else
+  struct rlimit rlim;
+  if (getrlimit(RLIMIT_AS, &rlim) == 0) {
+    if (rlim.rlim_max != RLIM_INFINITY)
+      total_mem = rlim.rlim_max;
+    if (rlim.rlim_cur != RLIM_INFINITY)
+      total_mem = rlim.rlim_cur;
+  }
+  if (total_mem == 0) {
+    long pagesize = sysconf(_SC_PAGESIZE);
+    long phys_pages = sysconf(_SC_PHYS_PAGES);
+    if (pagesize == -1 || phys_pages == -1)
+      return caml_copy_int64(0);
+    total_mem = (int64_t)phys_pages * (int64_t)pagesize;
+  }
+#endif
+  int64_t one_KB = 1024;
+  int64_t one_MB = one_KB * one_KB;
+  return caml_copy_int64(total_mem / one_MB);
 }
 
 /* This is done here as it simplifies the dune file */
