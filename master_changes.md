@@ -77,6 +77,7 @@ users)
 ## Release scripts
 
 ## Install script
+  * Add `2.6.0~beta1` [#7099 @kit-ty-kate]
 
 ## Admin
 
