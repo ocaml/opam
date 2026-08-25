@@ -1,0 +1,4 @@
+node_modules/
+.agentic/
+*.tsbuildinfo
+bun.lockb

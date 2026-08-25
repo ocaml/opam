@@ -1,0 +1,32 @@
+{
+  // A strict chain: each agent starts from the previous one's handoff.
+  "version": 1,
+  "name": "docs-pipeline",
+  "description": "Outline, draft, then fact-check a document, one agent per stage",
+  "concurrency": 1,
+  "maxTurns": 20,
+  "vars": {
+    "subject": "the public API of this package",
+    "target": "docs/api.md"
+  },
+  "agents": [
+    {
+      "id": "outline",
+      "role": "outliner",
+      "permissionMode": "plan",
+      "prompt": "Read the code and produce an outline for documentation of {{vars.subject}}. Sections and one line each on what belongs in them. Do not write any files."
+    },
+    {
+      "id": "draft",
+      "role": "writer",
+      "dependsOn": ["outline"],
+      "prompt": "Write {{vars.target}} documenting {{vars.subject}}, following this outline:\n\n{{outputs.outline}}\n\nEvery claim must come from the code. Write the file, then summarise what you wrote."
+    },
+    {
+      "id": "factcheck",
+      "role": "fact checker",
+      "dependsOn": ["draft"],
+      "prompt": "{{vars.target}} was just written:\n\n{{outputs.draft}}\n\nCheck every factual claim in that file against the code. Fix the ones that are wrong and delete the ones you cannot verify. End with what you changed."
+    }
+  ]
+}

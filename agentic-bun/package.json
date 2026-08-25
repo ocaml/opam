@@ -1,0 +1,27 @@
+{
+  "name": "agentic-bun",
+  "version": "0.1.0",
+  "description": "Multi-agent orchestration framework for Claude Code agents spawned from `ollama launch claude`",
+  "type": "module",
+  "module": "src/index.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "bin": {
+    "agentic": "bin/agentic.ts"
+  },
+  "files": ["src", "bin", "examples", "README.md", "SPEC.md"],
+  "scripts": {
+    "agentic": "bun run bin/agentic.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit && bun test"
+  },
+  "keywords": ["agents", "multi-agent", "ollama", "claude-code", "bun", "orchestration"],
+  "license": "MIT",
+  "engines": { "bun": ">=1.1.0" },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.6.0"
+  }
+}

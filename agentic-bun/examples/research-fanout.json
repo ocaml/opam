@@ -1,0 +1,42 @@
+{
+  // Four agents read the same codebase from different angles, one merges them.
+  // Read-only: every agent runs in `plan` permission mode.
+  "version": 1,
+  "name": "research-fanout",
+  "description": "Understand an unfamiliar codebase from four angles at once",
+  "concurrency": 4,
+  "permissionMode": "plan",
+  "maxTurns": 20,
+  "vars": {
+    "question": "How does this project handle configuration and where does it come from?"
+  },
+  "agents": [
+    {
+      "id": "entrypoints",
+      "role": "entry points",
+      "prompt": "Question:\n\n{{vars.question}}\n\nAnswer it by tracing the entry points: binaries, main functions, CLI wiring. Cite file:line. Do not modify anything."
+    },
+    {
+      "id": "dataflow",
+      "role": "data flow",
+      "prompt": "Question:\n\n{{vars.question}}\n\nAnswer it by following the data: which structures carry it, where it is read and written. Cite file:line. Do not modify anything."
+    },
+    {
+      "id": "tests",
+      "role": "tests",
+      "prompt": "Question:\n\n{{vars.question}}\n\nAnswer it from the tests: what the suite asserts about this area tells you what the intended behaviour is. Cite file:line. Do not modify anything."
+    },
+    {
+      "id": "docs",
+      "role": "docs and history",
+      "prompt": "Question:\n\n{{vars.question}}\n\nAnswer it from documentation, comments and git history. Note anywhere the docs and the code disagree. Do not modify anything."
+    },
+    {
+      "id": "synthesis",
+      "role": "synthesiser",
+      "dependsOn": ["entrypoints", "dataflow", "tests", "docs"],
+      "outputKey": "answer",
+      "prompt": "Question:\n\n{{vars.question}}\n\nFour agents investigated in parallel.\n\n--- entry points ---\n{{outputs.entrypoints}}\n\n--- data flow ---\n{{outputs.dataflow}}\n\n--- tests ---\n{{outputs.tests}}\n\n--- docs and history ---\n{{outputs.docs}}\n\nWrite one answer. Where they contradict each other, check the code yourself and say which is right. Drop anything none of them supported with a file reference."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  // Implement, review from three angles in parallel, then apply the findings.
+  // Run: agentic run examples/review-fleet.json --var task="..." --cwd /path/to/repo
+  "version": 1,
+  "name": "review-fleet",
+  "description": "Implement a change, review it in parallel, apply the real findings",
+  "concurrency": 3,
+  "permissionMode": "acceptEdits",
+  "maxTurns": 30,
+  "vars": {
+    "task": "Add input validation to the config loader and cover it with tests"
+  },
+  "agents": [
+    {
+      "id": "implement",
+      "role": "implementer",
+      "prompt": "Implement this task in the current repository:\n\n{{vars.task}}\n\nFollow the conventions already in the code. When you are done, end your reply with a list of every file you changed and one line on why."
+    },
+    {
+      "id": "review_correctness",
+      "role": "reviewer: correctness",
+      "dependsOn": ["implement"],
+      "permissionMode": "plan",
+      "prompt": "A change was just made for this task:\n\n{{vars.task}}\n\nThe implementer reported:\n\n{{outputs.implement}}\n\nRead the actual files and review for correctness only: wrong logic, unhandled cases, broken assumptions. Give file:line for each finding. If there is nothing real, reply NO FINDINGS."
+    },
+    {
+      "id": "review_tests",
+      "role": "reviewer: tests",
+      "dependsOn": ["implement"],
+      "permissionMode": "plan",
+      "prompt": "A change was just made for this task:\n\n{{vars.task}}\n\nThe implementer reported:\n\n{{outputs.implement}}\n\nReview the tests only: what behaviour is untested, which tests would still pass if the code were wrong. Run the test suite if there is one. If there is nothing real, reply NO FINDINGS."
+    },
+    {
+      "id": "review_style",
+      "role": "reviewer: fit",
+      "dependsOn": ["implement"],
+      "permissionMode": "plan",
+      "prompt": "A change was just made for this task:\n\n{{vars.task}}\n\nThe implementer reported:\n\n{{outputs.implement}}\n\nReview only how well the change fits the surrounding code: naming, structure, duplication, comment density. No praise, no restating the diff. If there is nothing real, reply NO FINDINGS."
+    },
+    {
+      "id": "fix",
+      "role": "fixer",
+      "dependsOn": ["review_correctness", "review_tests", "review_style"],
+      "prompt": "Original task:\n\n{{vars.task}}\n\nThree reviews came back.\n\n--- correctness ---\n{{outputs.review_correctness}}\n\n--- tests ---\n{{outputs.review_tests}}\n\n--- fit ---\n{{outputs.review_style}}\n\nApply the findings that are genuinely correct. Ignore the ones that are wrong, duplicated or out of scope, and end with a short list of what you ignored and why."
+    }
+  ]
+}

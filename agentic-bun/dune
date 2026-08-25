@@ -1,0 +1,4 @@
+; This directory holds the Agentic Bun Framework (TypeScript / Bun).
+; It contains no OCaml sources; tell dune not to descend into it so that
+; node_modules/, .agentic/ and friends never end up in the opam build graph.
+(data_only_dirs *)
