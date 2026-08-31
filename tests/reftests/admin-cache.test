@@ -104,10 +104,10 @@ sh analysi.sh amet  sha256 $MT_SHA256
 sh analysi.sh amet  sha512 $MT_SHA512
 ### : create cache :
 ### opam admin cache | unordered
-[dolor.1] synchronised (file://${BASEDIR}/arch-dolor.tgz)
-[ipsum.1] synchronised (file://${BASEDIR}/arch-ipsum.tgz)
-[sit.1] synchronised (file://${BASEDIR}/arch-sit.tgz)
 [amet.1] synchronised (file://${BASEDIR}/arch-amet.tgz)
+[sit.1] synchronised (file://${BASEDIR}/arch-sit.tgz)
+[ipsum.1] synchronised (file://${BASEDIR}/arch-ipsum.tgz)
+[dolor.1] synchronised (file://${BASEDIR}/arch-dolor.tgz)
 Adding cache to ${BASEDIR}/repo...
 Done.
 ### :::::::::::::::::::::::::::
@@ -179,9 +179,9 @@ amet : sha512 : exists
 ### :::::::::::::::::::::::::::::::::::::::::::
 ### rm -rf cache
 ### opam admin cache | unordered
-[ipsum.1] synchronised (file://${BASEDIR}/arch-ipsum.tgz)
-[dolor.1] synchronised (file://${BASEDIR}/arch-dolor.tgz)
 [sit.1] synchronised (file://${BASEDIR}/arch-sit.tgz)
+[dolor.1] synchronised (file://${BASEDIR}/arch-dolor.tgz)
+[ipsum.1] synchronised (file://${BASEDIR}/arch-ipsum.tgz)
 [amet.1] synchronised (file://${BASEDIR}/arch-amet.tgz)
 Done.
 ### sh cache-analysi.sh
@@ -218,9 +218,9 @@ amet : md5 : exists, link to sha512 (absent)
 amet : sha256 : exists, link to sha512 (absent)
 amet : sha512 : not found
 ### opam admin cache | unordered
-[dolor.1] synchronised (file://${BASEDIR}/arch-dolor.tgz)
 [ipsum.1] synchronised (file://${BASEDIR}/arch-ipsum.tgz)
 [sit.1] synchronised (file://${BASEDIR}/arch-sit.tgz)
+[dolor.1] synchronised (file://${BASEDIR}/arch-dolor.tgz)
 [amet.1] synchronised (file://${BASEDIR}/arch-amet.tgz)
 Done.
 ### sh cache-analysi.sh
@@ -266,10 +266,10 @@ url.src:      file://${BASEDIR}/arch-sit.tgz
 url.checksum: sha256=+st-sha256+
 ### rm -rf cache
 ### opam admin cache | unordered
+[amet.1] synchronised (file://${BASEDIR}/arch-amet.tgz)
 [dolor.1] synchronised (file://${BASEDIR}/arch-dolor.tgz)
 [ipsum.1] synchronised (file://${BASEDIR}/arch-ipsum.tgz)
 [sit.1] synchronised (file://${BASEDIR}/arch-sit.tgz)
-[amet.1] synchronised (file://${BASEDIR}/arch-amet.tgz)
 Done.
 ### sh cache-analysi.sh
 ipsum : md5 : exists

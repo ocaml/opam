@@ -159,12 +159,12 @@ The following actions will be performed:
   - upgrade   bar 1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   foo.1
--> removed   bar.1
--> installed bar.2
 + echo "bar" (CWD=${BASEDIR}/OPAM/verbose-on/.opam-switch/build/bar.2)
 - bar
 -> compiled  bar.2
+-> removed   foo.1
+-> removed   bar.1
+-> installed bar.2
 -> installed foo.1
 Done.
 ### : with OPAMVERBOSEON environment variable

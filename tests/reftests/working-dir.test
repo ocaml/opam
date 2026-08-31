@@ -217,11 +217,11 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 + test "-f" "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
 + cat "newfile.txt" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/ongoing.dev)
-+ test "-f" "present" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/qux.4)
--> retrieved qux.4  (file://${BASEDIR}/qux)
 - new!
 -> compiled  ongoing.dev
 -> installed ongoing.dev
+-> retrieved qux.4  (file://${BASEDIR}/qux)
++ test "-f" "present" (CWD=${BASEDIR}/OPAM/working-dir/.opam-switch/build/qux.4)
 -> compiled  qux.4
 -> installed qux.4
 Done.

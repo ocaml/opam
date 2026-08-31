@@ -352,9 +352,9 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved quuux.dev  (file://${BASEDIR}/quux)
+-> installed quuux.dev
 -> removed   quux.dev6
 -> installed quux.dev7
--> installed quuux.dev
 Done.
 ### <quux/files/fichier>
 content

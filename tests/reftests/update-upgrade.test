@@ -260,10 +260,10 @@ The following actions will be performed:
   - upgrade s-foo 5 to 6
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   quux.dev
 -> removed   s-foo.5
--> installed quux.dev2
 -> installed s-foo.6
+-> removed   quux.dev
+-> installed quux.dev2
 Done.
 ### <quux/files/fichier>
 content

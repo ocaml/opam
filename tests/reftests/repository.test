@@ -243,9 +243,9 @@ FILE(opam)                      Read ${BASEDIR}/OPAM/tarring/.opam-switch/packag
 [repo2] synchronised from file://${BASEDIR}/REPO2
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/repo2/repo in 0.000s
 FILE(opam)                      Read packages/bar/bar.3/opam (out of ${BASEDIR}/OPAM/repo/repo2) in 0.000s
-FILE(opam)                      Read packages/foo/foo.6/opam (out of ${BASEDIR}/OPAM/repo/tarred) in 0.000s
 [tarred] synchronised from file://${BASEDIR}/REPO
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/tarred/repo in 0.000s
+FILE(opam)                      Read packages/foo/foo.6/opam (out of ${BASEDIR}/OPAM/repo/tarred) in 0.000s
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s
 CACHE(repository)               Writing the repository cache to ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache ...
 CACHE(repository)               ${BASEDIR}/OPAM/repo/state-${MAGICV}.cache written in 0.000s
@@ -671,8 +671,8 @@ opam-version: "2.0"
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [repo] synchronised from file://${BASEDIR}/REPO
-opam-file                       opam-version "5.0" unsupported on packages/bad-opam-version/bad-opam-version.2/opam (out of ${BASEDIR}/OPAM/repo/repo). Added as dummy unavailable package.
 opam-file                       opam-version "5.0" unsupported on packages/bad-opam-version/bad-opam-version.3/opam (out of ${BASEDIR}/OPAM/repo/repo). Added as dummy unavailable package.
+opam-file                       opam-version "5.0" unsupported on packages/bad-opam-version/bad-opam-version.2/opam (out of ${BASEDIR}/OPAM/repo/repo). Added as dummy unavailable package.
 [versions] synchronised from file://${BASEDIR}/VRS
 Now run 'opam upgrade' to apply any package updates.
 ### opam list -A --all-versions -s

@@ -31,8 +31,8 @@ ${BASEDIR}/OPAM/undef-prefix
 Switch invariant: ["foo" "bar"]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed bar.1
 -> installed foo.1
+-> installed bar.1
 Done.
 ### # switch propagation to opam calls in build
 ### opam switch create undef-switch --empty

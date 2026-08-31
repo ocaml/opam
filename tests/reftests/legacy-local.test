@@ -1130,12 +1130,12 @@ P3.1~weird-version.test
 P4.3
 ### opam install P4.2 --yes | unordered
 The following actions will be performed:
-=== downgrade 2 packages
-  - downgrade P1 2 to 1               [required by P4] I ll always bother you displaying this message
-  - downgrade P4 3 to 2
 === recompile 2 packages
   - recompile P2 1                    [uses P1]
   - recompile P3 1~weird-version.test [uses P1]
+=== downgrade 2 packages
+  - downgrade P1 2 to 1               [required by P4] I ll always bother you displaying this message
+  - downgrade P4 3 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved P1.1  (cached)
@@ -1292,8 +1292,8 @@ The following actions will be performed:
 -> retrieved P3.1~weird-version.test  (cached)
 -> retrieved P4.3  (cached)
 -> installed P1.1
--> installed P2.1
 -> installed P3.1~weird-version.test
+-> installed P2.1
 -> installed P4.3
 Done.
 

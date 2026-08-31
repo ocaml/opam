@@ -797,6 +797,8 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [patches: patch] applying to-not-apply.patch
+Processing  2/3: [patches: grep ploplop]
++ grep "ploplop" "some-content" (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/patches.1)
 [ERROR] The compilation of patches.1 failed at "grep ploplop some-content".
 
 
@@ -808,8 +810,6 @@ The following actions will be performed:
 +- 
 - No changes have been performed
 '${OPAM} install patches -v' failed.
-Processing  2/3: [patches: grep ploplop]
-+ grep "ploplop" "some-content" (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/build/patches.1)
 # Return code 31 #
 ### :IV:1:b: reinstall ::::
 ### <pkg:patches.1>
@@ -1116,10 +1116,10 @@ something
 The following actions will be performed:
 === remove 1 package
   - remove remove 1
-Processing  2/2: [remove: true]
-+ true (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/remove/remove.1)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/2: [remove: true]
++ true (CWD=${BASEDIR}/OPAM/self-package-variable/.opam-switch/remove/remove.1)
 -> removed   remove.1
 Done.
 ### :IV:6: depends :::

@@ -357,8 +357,8 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 ### find OPAM/rem-dir/lib | unordered
 OPAM/rem-dir/lib
 OPAM/rem-dir/lib/shared
-OPAM/rem-dir/lib/stublibs
 OPAM/rem-dir/lib/toplevel
+OPAM/rem-dir/lib/stublibs
 ### OPAMDEBUG=0
 ### unset OPAMDEBUGSECTIONS
 ### : Escapability
@@ -624,17 +624,17 @@ SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/
 [WARNING] At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/eskape-rel-dotdot-exists.install:5:14-5:28::
           Path '../../a-file' contains '..', its use is discouraged
 [WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/eskape-rel-dotdot-exists.install, some fields have been ignored:
-SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file -> ${BASEDIR}/OPAM/escapability/a-file (644)
-SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file -> ${BASEDIR}/OPAM/escapability/a-file (644)
-SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file -> ${BASEDIR}/OPAM/escapability/a-file (644)
             - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/eskape-rel-dotdot-exists.install:11:14-11:28::
               ../../a-file is not an absolute filename.
+
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/lib/eskape-rel-dotdot-exists
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file -> ${BASEDIR}/OPAM/escapability/a-file (644)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share/eskape-rel-dotdot-exists
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file -> ${BASEDIR}/OPAM/escapability/a-file (644)
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc/eskape-rel-dotdot-exists
-
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-dotdot-exists.1/a-file -> ${BASEDIR}/OPAM/escapability/a-file (644)
 -> installed eskape-rel-dotdot-exists.1
 SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-dotdot-exists.1
@@ -713,20 +713,20 @@ SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/
 [WARNING] At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/eskape-rel-middotdot-notexists.install:8:13-8:35::
           Path 'tmp/../middle/a-file' contains '..', its use is discouraged
 [WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/eskape-rel-middotdot-notexists.install, some fields have been ignored:
-SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/bin/middle
-SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/bin/middle/a-file (755)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/lib/eskape-rel-middotdot-notexists/middle
-SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/lib/eskape-rel-middotdot-notexists/middle/a-file (644)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists/middle
-SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists/middle/a-file (644)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc/eskape-rel-middotdot-notexists/middle
-SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/etc/eskape-rel-middotdot-notexists/middle/a-file (644)
-SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/lib/eskape-rel-middotdot-notexists
-SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists
-SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc/eskape-rel-middotdot-notexists
             - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/eskape-rel-middotdot-notexists.install:14:13-14:35::
               tmp/../middle/a-file is not an absolute filename.
 
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/bin/middle
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/bin/middle/a-file (755)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/lib/eskape-rel-middotdot-notexists
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/lib/eskape-rel-middotdot-notexists/middle
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/lib/eskape-rel-middotdot-notexists/middle/a-file (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists/middle
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/share/eskape-rel-middotdot-notexists/middle/a-file (644)
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc/eskape-rel-middotdot-notexists
+SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/etc/eskape-rel-middotdot-notexists/middle
+SYSTEM                          install ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape-rel-middotdot-notexists.1/a-file -> ${BASEDIR}/OPAM/escapability/etc/eskape-rel-middotdot-notexists/middle/a-file (644)
 -> installed eskape-rel-middotdot-notexists.1
 SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape-rel-middotdot-notexists.1
@@ -813,6 +813,9 @@ SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/
 [WARNING] At ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1/realeskape-rel-middotdot-notexists.install:8:13-8:44::
           Path 'tmp/../../../../middle/a-file' contains '..', its use is discouraged
 [WARNING] Errors in ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1/realeskape-rel-middotdot-notexists.install, some fields have been ignored:
+            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1/realeskape-rel-middotdot-notexists.install:14:13-14:44::
+              tmp/../../../../middle/a-file is not an absolute filename.
+
 [ERROR] package realeskape-rel-middotdot-notexists attempted to install a file outside allowed destination directories: ${BASEDIR}/OPAM/escapability/bin/tmp/../../../middle/a-file -> ${BASEDIR}/OPAM/middle/a-file.
 [WARNING] At ${BASEDIR}/OPAM/escapability/.opam-switch/install/realeskape-rel-middotdot-notexists.install:2:15-2:46::
           Path 'tmp/../../../../middle/a-file' contains '..', its use is discouraged
@@ -830,6 +833,8 @@ SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/doc/realeskap
 SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/install/realeskape-rel-middotdot-notexists.install
 
 .install file escaping allowed directories
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => write)
+SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (write => none)
 
 
 <><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -837,11 +842,6 @@ SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/ins
 | - install realeskape-rel-middotdot-notexists 1
 +- 
 - No changes have been performed
-            - At ${BASEDIR}/OPAM/escapability/.opam-switch/build/realeskape-rel-middotdot-notexists.1/realeskape-rel-middotdot-notexists.install:14:13-14:44::
-              tmp/../../../../middle/a-file is not an absolute filename.
-
-SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => write)
-SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (write => none)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/lock (write => none)
 SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/backup/state-today.export
 SYSTEM                          LOCK ${BASEDIR}/OPAM/repo/lock (none => none)

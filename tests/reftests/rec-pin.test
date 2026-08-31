@@ -94,40 +94,40 @@ Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version d
 ### opam pin  --recursive pinnes | unordered
 This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [Y/n] y
 [NOTE] Package root_g does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-a_p does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-a-i_g does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-a-i-j_g does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-a-k_p does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-b_g does not exist in opam repositories registered in the current switch.
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version dev)
+[NOTE] Package root-a_p does not exist in opam repositories registered in the current switch.
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version dev)
+[NOTE] Package root-a-i_g does not exist in opam repositories registered in the current switch.
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version dev)
+[NOTE] Package root-a-i-j_g does not exist in opam repositories registered in the current switch.
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version dev)
+[NOTE] Package root-a-k_p does not exist in opam repositories registered in the current switch.
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version dev)
+[NOTE] Package root-b_g does not exist in opam repositories registered in the current switch.
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version dev)
--> retrieved root-a-k_p.dev  (directory /a/k in file://${BASEDIR}/pinnes)
--> retrieved root-a_p.dev  (directory /a in file://${BASEDIR}/pinnes)
 
 The following actions will be performed:
 === install 6 packages
+  - install root-a-i-j_g dev (pinned)
   - install root-a-i_g   dev (pinned)
   - install root-a-k_p   dev (pinned)
   - install root-a_p     dev (pinned)
   - install root-b_g     dev (pinned)
   - install root_g       dev (pinned)
-  - install root-a-i-j_g dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> retrieved root_g.dev  (no changes)
--> installed root_g.dev
--> installed root-a_p.dev
--> retrieved root-a-i_g.dev  (no changes)
--> installed root-a-i_g.dev
 -> retrieved root-a-i-j_g.dev  (no changes)
 -> installed root-a-i-j_g.dev
+-> retrieved root-a-i_g.dev  (no changes)
+-> installed root-a-i_g.dev
+-> retrieved root-a-k_p.dev  (directory /a/k in file://${BASEDIR}/pinnes)
 -> installed root-a-k_p.dev
+-> retrieved root-a_p.dev  (directory /a in file://${BASEDIR}/pinnes)
+-> installed root-a_p.dev
 -> retrieved root-b_g.dev  (no changes)
 -> installed root-b_g.dev
+-> retrieved root_g.dev  (no changes)
+-> installed root_g.dev
 Done.
 ### opam list --all --installed --columns=name,installed-files --normalise
 # Packages matching: any & installed
@@ -139,12 +139,12 @@ root-a_p     ${BASEDIR}/OPAM/devnull/lib/root-a_p ${BASEDIR}/OPAM/devnull/lib/ro
 root-b_g     ${BASEDIR}/OPAM/devnull/lib/root-b_g ${BASEDIR}/OPAM/devnull/lib/root-b_g/root-b_g.t
 root_g       ${BASEDIR}/OPAM/devnull/lib/root_g ${BASEDIR}/OPAM/devnull/lib/root_g/root_g.t
 ### opam remove --recursive ./pinnes | unordered
+Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version dev)
 Ok, root-b_g is no longer pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version dev)
 Ok, root-a_p is no longer pinned to directory /a in file://${BASEDIR}/pinnes (version dev)
 Ok, root-a-k_p is no longer pinned to directory /a/k in file://${BASEDIR}/pinnes (version dev)
 Ok, root-a-i_g is no longer pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version dev)
 Ok, root-a-i-j_g is no longer pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version dev)
-Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version dev)
 The following actions will be performed:
 === remove 6 packages
   - remove root-a-i-j_g dev
@@ -155,12 +155,12 @@ The following actions will be performed:
   - remove root_g       dev
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   root_g.dev
--> removed   root-a_p.dev
--> removed   root-a-i_g.dev
 -> removed   root-a-i-j_g.dev
+-> removed   root-a-i_g.dev
 -> removed   root-a-k_p.dev
+-> removed   root-a_p.dev
 -> removed   root-b_g.dev
+-> removed   root_g.dev
 Done.
 ### opam list -s
 ### opam pin
@@ -185,12 +185,12 @@ root_g.dev    git  git+file://${BASEDIR}/pinnes#master  (at HASH)
 ### opam install ./pinnes --subpath a | unordered
 [NOTE] Package root-a_p does not exist in opam repositories registered in the current switch.
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version dev)
--> retrieved root-a_p.dev  (directory /a in file://${BASEDIR}/pinnes)
 The following actions will be performed:
 === install 1 package
   - install root-a_p dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-a_p.dev  (directory /a in file://${BASEDIR}/pinnes)
 -> installed root-a_p.dev
 Done.
 ### opam list -s
@@ -202,12 +202,12 @@ root_g.dev      git    git+file://${BASEDIR}/pinnes#master       (at HASH)
 ### opam install ./pinnes --subpath b | unordered
 [NOTE] Package root-b_g does not exist in opam repositories registered in the current switch.
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version dev)
--> retrieved root-b_g.dev  (directory /b in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
   - install root-b_g dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-b_g.dev  (directory /b in git+file://${BASEDIR}/pinnes#master)
 -> installed root-b_g.dev
 Done.
 ### opam list -s
@@ -221,12 +221,12 @@ root_g.dev      git    git+file://${BASEDIR}/pinnes#master                  (at 
 ### opam install ./pinnes --subpath a/i | unordered
 [NOTE] Package root-a-i_g does not exist in opam repositories registered in the current switch.
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version dev)
--> retrieved root-a-i_g.dev  (directory /a/i in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
   - install root-a-i_g dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-a-i_g.dev  (directory /a/i in git+file://${BASEDIR}/pinnes#master)
 -> installed root-a-i_g.dev
 Done.
 ### opam list -s
@@ -242,12 +242,12 @@ root_g.dev        git    git+file://${BASEDIR}/pinnes#master                    
 ### opam install ./pinnes --subpath a/i/j | unordered
 [NOTE] Package root-a-i-j_g does not exist in opam repositories registered in the current switch.
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version dev)
--> retrieved root-a-i-j_g.dev  (directory /a/i/j in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
   - install root-a-i-j_g dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-a-i-j_g.dev  (directory /a/i/j in git+file://${BASEDIR}/pinnes#master)
 -> installed root-a-i-j_g.dev
 Done.
 ### opam list -s
@@ -265,12 +265,12 @@ root_g.dev          git    git+file://${BASEDIR}/pinnes#master                  
 ### opam install ./pinnes --subpath a/k | unordered
 [NOTE] Package root-a-k_p does not exist in opam repositories registered in the current switch.
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version dev)
--> retrieved root-a-k_p.dev  (directory /a/k in file://${BASEDIR}/pinnes)
 The following actions will be performed:
 === install 1 package
   - install root-a-k_p dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-a-k_p.dev  (directory /a/k in file://${BASEDIR}/pinnes)
 -> installed root-a-k_p.dev
 Done.
 ### opam list -s
@@ -320,31 +320,31 @@ version: "2"
 ### opam upgrade | unordered
 The following actions will be performed:
 === downgrade 6 packages
+  - downgrade root-a-i-j_g dev to 2 (pinned) [no longer available]
   - downgrade root-a-i_g   dev to 2 (pinned) [no longer available]
   - downgrade root-a-k_p   dev to 2 (pinned) [no longer available]
   - downgrade root-a_p     dev to 2 (pinned) [no longer available]
   - downgrade root-b_g     dev to 2 (pinned) [no longer available]
   - downgrade root_g       dev to 2 (pinned) [no longer available]
-  - downgrade root-a-i-j_g dev to 2 (pinned) [no longer available]
--> retrieved root-a-k_p.2  (directory /a/k in file://${BASEDIR}/pinnes)
--> retrieved root-a_p.2  (directory /a in file://${BASEDIR}/pinnes)
--> installed root_g.2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   root_g.dev
--> removed   root-a_p.dev
--> installed root-a_p.2
--> retrieved root-a-i_g.2  (no changes)
--> removed   root-a-i_g.dev
--> installed root-a-i_g.2
 -> retrieved root-a-i-j_g.2  (no changes)
 -> removed   root-a-i-j_g.dev
 -> installed root-a-i-j_g.2
+-> retrieved root-a-i_g.2  (no changes)
+-> removed   root-a-i_g.dev
+-> installed root-a-i_g.2
+-> retrieved root-a-k_p.2  (directory /a/k in file://${BASEDIR}/pinnes)
 -> removed   root-a-k_p.dev
 -> installed root-a-k_p.2
+-> retrieved root-a_p.2  (directory /a in file://${BASEDIR}/pinnes)
+-> removed   root-a_p.dev
+-> installed root-a_p.2
 -> retrieved root-b_g.2  (no changes)
 -> removed   root-b_g.dev
+-> removed   root_g.dev
 -> installed root-b_g.2
+-> installed root_g.2
 Done.
 ### <pinnes/a/i/new>
 hej
@@ -366,19 +366,19 @@ The following actions will be performed:
   - recompile root-a-k_p 2 (pinned) [upstream or system changes]
   - recompile root-a_p   2 (pinned) [upstream or system changes]
   - recompile root_g     2 (pinned) [upstream or system changes]
--> retrieved root-a-k_p.2  (no changes)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   root_g.2
--> installed root_g.2
--> retrieved root-a_p.2  (no changes)
--> removed   root-a_p.2
--> installed root-a_p.2
 -> retrieved root-a-i_g.2  (no changes)
 -> removed   root-a-i_g.2
 -> installed root-a-i_g.2
+-> retrieved root-a-k_p.2  (no changes)
 -> removed   root-a-k_p.2
 -> installed root-a-k_p.2
+-> retrieved root-a_p.2  (no changes)
+-> removed   root-a_p.2
+-> removed   root_g.2
+-> installed root-a_p.2
+-> installed root_g.2
 Done.
 ### opam list -s
 root-a-i-j_g
@@ -641,47 +641,47 @@ Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version l
 ### opam pin  --recursive pinnes | unordered
 This will pin the following packages: root_g, root-a_p, root-a-i_g, root-a-i-j_g, root-a-k_p, root-b_g. Continue? [Y/n] y
 [NOTE] Package root_g does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-a_p does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-a-i_g does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-a-i-j_g does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-a-k_p does not exist in opam repositories registered in the current switch.
-[NOTE] Package root-b_g does not exist in opam repositories registered in the current switch.
 root_g is now pinned to git+file://${BASEDIR}/pinnes#master (version l1)
+[NOTE] Package root-a_p does not exist in opam repositories registered in the current switch.
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version l1)
+[NOTE] Package root-a-i_g does not exist in opam repositories registered in the current switch.
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version l1)
+[NOTE] Package root-a-i-j_g does not exist in opam repositories registered in the current switch.
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version l1)
+[NOTE] Package root-a-k_p does not exist in opam repositories registered in the current switch.
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version l1)
+[NOTE] Package root-b_g does not exist in opam repositories registered in the current switch.
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version l1)
--> retrieved root-a-k_p.l1  (directory /a/k in file://${BASEDIR}/pinnes)
--> retrieved root-a_p.l1  (directory /a in file://${BASEDIR}/pinnes)
 
 The following actions will be performed:
 === install 6 packages
+  - install root-a-i-j_g l1 (pinned)
   - install root-a-i_g   l1 (pinned)
   - install root-a-k_p   l1 (pinned)
   - install root-a_p     l1 (pinned)
   - install root-b_g     l1 (pinned)
   - install root_g       l1 (pinned)
-  - install root-a-i-j_g l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> installed root_g.l1
--> installed root-a_p.l1
--> retrieved root-a-i_g.l1  (no changes)
--> installed root-a-i_g.l1
 -> retrieved root-a-i-j_g.l1  (no changes)
 -> installed root-a-i-j_g.l1
+-> retrieved root-a-i_g.l1  (no changes)
+-> installed root-a-i_g.l1
+-> retrieved root-a-k_p.l1  (directory /a/k in file://${BASEDIR}/pinnes)
 -> installed root-a-k_p.l1
+-> retrieved root-a_p.l1  (directory /a in file://${BASEDIR}/pinnes)
+-> installed root-a_p.l1
 -> retrieved root-b_g.l1  (no changes)
 -> installed root-b_g.l1
+-> installed root_g.l1
 Done.
 ### opam remove --recursive ./pinnes | unordered
+Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version l1)
 Ok, root-b_g is no longer pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version l1)
 Ok, root-a_p is no longer pinned to directory /a in file://${BASEDIR}/pinnes (version l1)
 Ok, root-a-k_p is no longer pinned to directory /a/k in file://${BASEDIR}/pinnes (version l1)
 Ok, root-a-i_g is no longer pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version l1)
 Ok, root-a-i-j_g is no longer pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version l1)
-Ok, root_g is no longer pinned to git+file://${BASEDIR}/pinnes#master (version l1)
 The following actions will be performed:
 === remove 6 packages
   - remove root-a-i-j_g l1
@@ -692,12 +692,12 @@ The following actions will be performed:
   - remove root_g       l1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   root_g.l1
--> removed   root-a_p.l1
--> removed   root-a-i_g.l1
 -> removed   root-a-i-j_g.l1
+-> removed   root-a-i_g.l1
 -> removed   root-a-k_p.l1
+-> removed   root-a_p.l1
 -> removed   root-b_g.l1
+-> removed   root_g.l1
 Done.
 ### opam list -s
 ### opam pin
@@ -719,12 +719,12 @@ root_g.l1    git  git+file://${BASEDIR}/pinnes#master  (at HASH)
 ### opam install ./pinnes --subpath a | unordered
 [NOTE] Package root-a_p does not exist in opam repositories registered in the current switch.
 root-a_p is now subpath-pinned to directory /a in file://${BASEDIR}/pinnes (version l1)
--> retrieved root-a_p.l1  (directory /a in file://${BASEDIR}/pinnes)
 The following actions will be performed:
 === install 1 package
   - install root-a_p l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-a_p.l1  (directory /a in file://${BASEDIR}/pinnes)
 -> installed root-a_p.l1
 Done.
 ### opam list -s
@@ -736,12 +736,12 @@ root_g.l1      git    git+file://${BASEDIR}/pinnes#master       (at HASH)
 ### opam install ./pinnes --subpath b | unordered
 [NOTE] Package root-b_g does not exist in opam repositories registered in the current switch.
 root-b_g is now subpath-pinned to directory /b in git+file://${BASEDIR}/pinnes#master (version l1)
--> retrieved root-b_g.l1  (directory /b in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
   - install root-b_g l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-b_g.l1  (directory /b in git+file://${BASEDIR}/pinnes#master)
 -> installed root-b_g.l1
 Done.
 ### opam list -s
@@ -755,12 +755,12 @@ root_g.l1      git    git+file://${BASEDIR}/pinnes#master                  (at H
 ### opam install ./pinnes --subpath a/i | unordered
 [NOTE] Package root-a-i_g does not exist in opam repositories registered in the current switch.
 root-a-i_g is now subpath-pinned to directory /a/i in git+file://${BASEDIR}/pinnes#master (version l1)
--> retrieved root-a-i_g.l1  (directory /a/i in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
   - install root-a-i_g l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-a-i_g.l1  (directory /a/i in git+file://${BASEDIR}/pinnes#master)
 -> installed root-a-i_g.l1
 Done.
 ### opam list -s
@@ -776,12 +776,12 @@ root_g.l1        git    git+file://${BASEDIR}/pinnes#master                    (
 ### opam install ./pinnes --subpath a/i/j | unordered
 [NOTE] Package root-a-i-j_g does not exist in opam repositories registered in the current switch.
 root-a-i-j_g is now subpath-pinned to directory /a/i/j in git+file://${BASEDIR}/pinnes#master (version l1)
--> retrieved root-a-i-j_g.l1  (directory /a/i/j in git+file://${BASEDIR}/pinnes#master)
 The following actions will be performed:
 === install 1 package
   - install root-a-i-j_g l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-a-i-j_g.l1  (directory /a/i/j in git+file://${BASEDIR}/pinnes#master)
 -> installed root-a-i-j_g.l1
 Done.
 ### opam list -s
@@ -799,12 +799,12 @@ root_g.l1          git    git+file://${BASEDIR}/pinnes#master                   
 ### opam install ./pinnes --subpath a/k | unordered
 [NOTE] Package root-a-k_p does not exist in opam repositories registered in the current switch.
 root-a-k_p is now subpath-pinned to directory /a/k in file://${BASEDIR}/pinnes (version l1)
--> retrieved root-a-k_p.l1  (directory /a/k in file://${BASEDIR}/pinnes)
 The following actions will be performed:
 === install 1 package
   - install root-a-k_p l1 (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved root-a-k_p.l1  (directory /a/k in file://${BASEDIR}/pinnes)
 -> installed root-a-k_p.l1
 Done.
 ### opam list -s
@@ -869,6 +869,8 @@ The following actions will be performed:
   - upgrade root-a_p     l1 to l2 (pinned)
   - upgrade root-b_g     l1 to l2 (pinned)
   - upgrade root_g       l1 to l2 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved root-a-i-j_g.l2  (no changes)
 -> removed   root-a-i-j_g.l1
 -> installed root-a-i-j_g.l2
@@ -876,9 +878,9 @@ The following actions will be performed:
 -> removed   root-a-i_g.l1
 -> installed root-a-i_g.l2
 -> retrieved root-a-k_p.l2  (directory /a/k in file://${BASEDIR}/pinnes)
--> retrieved root-a_p.l2  (directory /a in file://${BASEDIR}/pinnes)
 -> removed   root-a-k_p.l1
 -> installed root-a-k_p.l2
+-> retrieved root-a_p.l2  (directory /a in file://${BASEDIR}/pinnes)
 -> removed   root-a_p.l1
 -> installed root-a_p.l2
 -> retrieved root-b_g.l2  (no changes)
@@ -887,8 +889,6 @@ The following actions will be performed:
 -> installed root-b_g.l2
 -> installed root_g.l2
 Done.
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ### <pinnes/a/i/new>
 hej
 ### <pinnes/a/k/new>
@@ -909,6 +909,8 @@ The following actions will be performed:
   - recompile root-a-k_p l2 (pinned) [upstream or system changes]
   - recompile root-a_p   l2 (pinned) [upstream or system changes]
   - recompile root_g     l2 (pinned) [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved root-a-i_g.l2  (no changes)
 -> removed   root-a-i_g.l2
 -> installed root-a-i_g.l2
@@ -921,8 +923,6 @@ The following actions will be performed:
 -> installed root-a_p.l2
 -> installed root_g.l2
 Done.
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 ### opam list -s
 root-a-i-j_g
 root-a-i_g

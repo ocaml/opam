@@ -1320,25 +1320,18 @@ let run_test ?(vars=[]) ~opam t =
             run_cmd ~opam ~dir ~vars:(vars @ env) ~filter ~silent ~sort cmd args
           in
           (if unordered then
-             (* print lines from Result, but respecting order from Expect *)
-             let rec diffl acc r e =
-               let expect_has rl =
-                 let matching = List.filter (( = ) rl) in
-                 List.length (matching e) > List.length (matching acc)
-               in
-               match r, e with
-               | r, el::e when OpamStd.List.mem String.equal el acc ->
-                 print_endline el; diffl (list_remove el acc) r e
-               | rl::r, el::e ->
-                 if rl = el then (print_endline el; diffl acc r e)
-                 else if expect_has rl then diffl (rl::acc) r (el :: e)
-                 else (print_endline rl; diffl acc r (el :: e))
-               | [], _::el ->
-                 diffl acc [] el
-               | r, [] ->
-                 assert (acc = []); List.iter print_endline r
+             let rec is_equivalent r e = match r, e with
+               | [], [] -> true
+               | [], _::_ | _::_, [] -> false
+               | rl::r, (_::_ as e) ->
+                 match OpamStd.List.pick (String.equal rl) e with
+                 | None, _ -> false
+                 | Some _, e -> is_equivalent r e
              in
-             diffl [] (String.split_on_char '\n' r) out);
+             if is_equivalent (String.split_on_char '\n' r) out then
+               List.iter print_endline out
+             else
+               print_endline r);
           Option.iter (Printf.printf "# Return code %d #\n") errcode;
           (match output with
            | None -> vars

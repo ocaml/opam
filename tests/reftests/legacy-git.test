@@ -1168,12 +1168,12 @@ The following actions will be performed:
 -> retrieved P1.1  (no changes)
 -> retrieved P2.1  (no changes)
 -> retrieved P3.1~weird-version.test  (no changes)
--> retrieved P4.3  (git+file://${BASEDIR}/GIT/P4)
 -> removed   P4.1
 -> removed   P2.1
 -> removed   P3.1~weird-version.test
 -> removed   P1.1
 -> installed P1.1
+-> retrieved P4.3  (git+file://${BASEDIR}/GIT/P4)
 -> installed P2.1
 -> installed P3.1~weird-version.test
 -> installed P4.3

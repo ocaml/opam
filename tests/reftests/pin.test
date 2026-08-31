@@ -636,9 +636,9 @@ nip-git2.ved^file://${BASEDIR}/lot_of_pkgs
 ### opam pin add nip-git2.ved^file://${BASEDIR}/lot_of_pkgs nip-git3.ved^file://${BASEDIR}/lot_of_pkgs | unordered
 This will pin the following packages: nip-git2, nip-git3. Continue? [Y/n] y
 [NOTE] Package nip-git2 does not exist in opam repositories registered in the current switch.
-[NOTE] Package nip-git3 does not exist in opam repositories registered in the current switch.
 [nip-git2.ved] synchronised (no changes)
 nip-git2 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
+[NOTE] Package nip-git3 does not exist in opam repositories registered in the current switch.
 [nip-git3.ved] synchronised (no changes)
 nip-git3 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
 
@@ -655,9 +655,9 @@ Done.
 ### sh -c 'opam pin add $(opam pin scan ./lot_of_pkgs --normalise | grep path | sed "s/\\r//g") ' | unordered
 This will pin the following packages: nip-path3, nip-path2. Continue? [Y/n] y
 [NOTE] Package nip-path3 does not exist in opam repositories registered in the current switch.
-[NOTE] Package nip-path2 does not exist in opam repositories registered in the current switch.
 [nip-path3.ved] synchronised (no changes)
 nip-path3 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
+[NOTE] Package nip-path2 does not exist in opam repositories registered in the current switch.
 [nip-path2.ved] synchronised (no changes)
 nip-path2 is now pinned to file://${BASEDIR}/lot_of_pkgs (version ved)
 
