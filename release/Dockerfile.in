@@ -3,27 +3,16 @@ FROM ghcr.io/kit-ty-kate/alpine:%TARGET_TAG%
 #    docker run --rm --privileged multiarch/qemu-user-static:register --reset
 LABEL Description="opam release builds" Vendor="OCamlPro" Version="1.0"
 
-RUN apk add gcc g++ make coreutils openssl
+RUN apk add gcc g++ make coreutils openssl patch
 
 RUN addgroup -S opam && adduser -S opam -G opam -s /bin/sh
-
-ADD https://github.com/ocaml/ocaml/archive/refs/tags/%OCAMLV%.tar.gz /root/
-
-WORKDIR /root
-RUN tar xzf %OCAMLV%.tar.gz
-WORKDIR ocaml-%OCAMLV%
-RUN sed -i 's/gnueabi/*eabi/' configure
-RUN sed -i 's/musl/musl*/' configure
-RUN ./configure %CONF% -prefix /usr/local
-RUN make "-j$(nproc)" && make install && rm -rf /root/ocaml-%OCAMLV% /root/ocaml-%OCAMLV%.tar.gz
-
-RUN apk add patch
 
 ENV PATH /usr/local/bin:/usr/bin:/bin
 USER opam
 WORKDIR /home/opam/
 CMD { tar xz && \
       cd opam-full-${VERSION} && \
+      make compiler && \
       ./configure --with-vendored-deps --with-mccs && \
       echo "(${LINKING})" > src/client/linking.sexp && \
       make opam-stripped ; \

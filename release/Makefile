@@ -8,12 +8,6 @@ VERSION = $(shell git describe $(TAG))
 OPAM_VERSION = $(subst -,~,$(VERSION))
 GIT_URL = ..
 
-OCAMLV = 4.14.2
-FLEXDLLV = 0.44
-# currently hardcoded in Dockerfile.in
-OCAML_URL = https://github.com/ocaml/ocaml/archive/refs/tags/$(OCAMLV).tar.gz
-FLEXDLL_URL = https://github.com/ocaml/flexdll/archive/refs/tags/$(FLEXDLLV).tar.gz
-
 ALPINE_VERSION = 3.21
 
 HOST_OS = $(shell uname -s | tr A-Z a-z | sed -e 's/_.*//' -e 's/darwin/macos/' -e 's/cygwin/windows/')
@@ -46,21 +40,20 @@ $(OUTDIR)/opam-full-$(VERSION).tar.gz:
 	rm -rf "$(OUTDIR)/opam-full-$(VERSION)"
 
 build/Dockerfile.x86_64-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/x86_64-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e 's/%TARGET_TAG%/x86_64-v$(ALPINE_VERSION)/g' $^ >$@
 build/Dockerfile.i686-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/x86-v$(ALPINE_VERSION)/g' -e 's/%CONF%/-build i586-alpine-linux-musl/g' $^ >$@
+	mkdir -p build && sed -e 's/%TARGET_TAG%/x86-v$(ALPINE_VERSION)/g' $^ >$@
 
-# Need to lie about gnueabihf instead of musleabihf, because of a ./configure bug
 build/Dockerfile.armhf-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/armv7-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e 's/%TARGET_TAG%/armhf-v$(ALPINE_VERSION)/g' $^ >$@
 build/Dockerfile.arm64-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/arm64-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e 's/%TARGET_TAG%/arm64-v$(ALPINE_VERSION)/g' $^ >$@
 build/Dockerfile.ppc64le-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/ppc64le-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e 's/%TARGET_TAG%/ppc64le-v$(ALPINE_VERSION)/g' $^ >$@
 build/Dockerfile.s390x-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/s390x-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e 's/%TARGET_TAG%/s390x-v$(ALPINE_VERSION)/g' $^ >$@
 build/Dockerfile.riscv64-linux: Dockerfile.in
-	mkdir -p build && sed -e "s/%OCAMLV%/$(OCAMLV)/g" -e 's/%TARGET_TAG%/riscv64-v$(ALPINE_VERSION)/g' -e 's/%CONF%//g' $^ >$@
+	mkdir -p build && sed -e 's/%TARGET_TAG%/riscv64-v$(ALPINE_VERSION)/g' $^ >$@
 
 
 build/%.image: build/Dockerfile.%
@@ -106,7 +99,6 @@ EXPORTS_netbsd = \
 CPATH=/usr/local/include: \
 LIBRARY_PATH=/usr/local/lib: \
 
-EXTRA_CONFIGURE_ARGS_windows = --host=x86_64-w64-mingw32 --with-flexdll
 EXTRA_OPAM_CONFIGURE_ARGS_windows = --with-cygwin-setup
 
 %: opam-$(VERSION)-%
@@ -116,28 +108,9 @@ opam-$(VERSION)-%: $(OUTDIR)/opam-$(VERSION)-%
 
 # host: opam-$(VERSION)-$(HOST)
 
-# Build for the local host. Containerised builds, below, are preferred, but not always available
-build/$(HOST).env:
-	mkdir -p build/$(HOST)
-	cd build/$(HOST) && curl -OL $(OCAML_URL)
-	cd build/$(HOST) && tar xzf $(OCAMLV).tar.gz
-	cd build/$(HOST)/ocaml-$(OCAMLV) && curl -OL $(FLEXDLL_URL)
-	cd build/$(HOST)/ocaml-$(OCAMLV) && tar xzf $(shell basename "$(FLEXDLL_URL)")
-	cd build/$(HOST)/ocaml-$(OCAMLV) && rmdir flexdll && mv "flexdll-$(FLEXDLLV)" flexdll
-	unset MAKEFLAGS MAKEOVERRIDES && \
-	  cd build/$(HOST)/ocaml-$(OCAMLV) && \
-	  ./configure --prefix "$(shell pwd)/build/$(HOST)" \
-	    --disable-debug-runtime --disable-debugger --disable-instrumented-runtime \
-	    --disable-ocamldoc --disable-stdlib-manpages --disable-ocamltest \
-	    $(EXTRA_CONFIGURE_ARGS_$(HOST_OS)) && \
-	  $(MAKE) -j$(JOBS) && \
-	  $(MAKE) install
-	rm -rf build/$(HOST)/ocaml-$(OCAMLV) build/$(HOST)/$(OCAMLV).tar.gz
-	touch $@
-
 # Actually builds $(OUTDIR)/opam-$(VERSION)-$(HOST), but we don't want to override the
 # rule that goes through a container
-host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
+host: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	rm -rf build/opam-full-$(VERSION)
 	cd build && tar xzf ../$<
 	( export \
@@ -146,6 +119,7 @@ host: $(OUTDIR)/opam-full-$(VERSION).tar.gz build/$(HOST).env
 	    $(EXPORTS_$(HOST_OS)); \
 	  cd build/opam-full-$(VERSION) && \
 	  unset MAKEFLAGS MAKEOVERRIDES && \
+	  make compiler && \
 	  ./configure --with-vendored-deps --with-mccs \
 	    $(EXTRA_OPAM_CONFIGURE_ARGS_$(HOST_OS)) && \
 	  echo "$(call LINKING,$(HOST_OS))" >src/client/linking.sexp && \
@@ -179,7 +153,7 @@ remote: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	$(SSH) "$(REMOTE)" "mkdir -p $(REMOTE_DIR)/$(OUTDIR)"
 	$(SCP) Makefile "$(REMOTE):$(REMOTE_DIR)/"
 	$(SCP) "$^" "$(REMOTE):$(REMOTE_DIR)/$^"
-	$(SSH) "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)"'
+	$(SSH) "$(REMOTE)" 'sh -c "cd $(REMOTE_DIR) && ulimit -s 8192 && $(REMOTE_MAKE) host TAG=$(TAG) VERSION=$(VERSION)"'
 	$(SCP) "$(REMOTE):$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 SSH_USER = root
@@ -188,12 +162,12 @@ qemu: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	$(SSH) -p "$(QEMU_PORT)" $(SSH_USER)@localhost "$(REMOTE_SHELL) -c \"mkdir -p $(REMOTE_DIR)/$(OUTDIR)\""
 	$(SCP) -P "$(QEMU_PORT)" Makefile "$(SSH_USER)@localhost:$(REMOTE_DIR)/"
 	$(SCP) -P "$(QEMU_PORT)" "$^" "$(SSH_USER)@localhost:$(REMOTE_DIR)/$^"
-	$(SSH) -p "$(QEMU_PORT)" $(SSH_USER)@localhost "$(REMOTE_SHELL) -c \"cd $(REMOTE_DIR) && $(ULIMIT) $(REMOTE_MAKE) host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV)\""
+	$(SSH) -p "$(QEMU_PORT)" $(SSH_USER)@localhost "$(REMOTE_SHELL) -c \"cd $(REMOTE_DIR) && $(ULIMIT) $(REMOTE_MAKE) host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION)\""
 	$(SCP) -P "$(QEMU_PORT)" "$(SSH_USER)@localhost:$(REMOTE_DIR)/$(OUTDIR)/opam-$(VERSION)*" "$(OUTDIR)/"
 
 macos-local: $(OUTDIR)/opam-full-$(VERSION).tar.gz
 	LOCAL_RELEASE_DIR=$(shell mktemp -d); \
           mkdir -p "$${LOCAL_RELEASE_DIR}/${OUTDIR}" && \
           cp Makefile "$^" "$${LOCAL_RELEASE_DIR}" && \
-          cd "$${LOCAL_RELEASE_DIR}" && ulimit -s 8192 && arch -arch $(MACOS_ARCH) make host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) OCAMLV=$(OCAMLV) && \
+          cd "$${LOCAL_RELEASE_DIR}" && ulimit -s 8192 && arch -arch $(MACOS_ARCH) make host JOBS=$(JOBS) TAG=$(TAG) VERSION=$(VERSION) && \
           cp $${LOCAL_RELEASE_DIR}/$(OUTDIR)/opam-$(VERSION)* "$(GIT_URL)/release/$(OUTDIR)/"
