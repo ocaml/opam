@@ -355,7 +355,10 @@ let get_obsolete univ opams =
   let revdeps_map = (* pkg -> set *)
     PkgMap.fold (fun pkg ->
         PkgSet.fold (fun d ->
-            PkgMap.update d (PkgSet.add pkg) PkgSet.empty))
+            PkgMap.update d
+              (function
+                | None -> Some (PkgSet.singleton pkg)
+                | Some s -> Some (PkgSet.add pkg s))))
       simple_deps PkgMap.empty
   in
   let aggregates =

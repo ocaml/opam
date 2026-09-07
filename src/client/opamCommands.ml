@@ -1598,7 +1598,9 @@ let config cli =
                            (fun u -> OpamUrl.string_of_backend u.OpamUrl.backend)
                            (OpamFile.OPAM.get_url opam)
                      in
-                     OpamStd.String.Map.update kind succ 0 acc)
+                     OpamStd.String.Map.update kind
+                       (function None -> Some 1 | Some i -> Some (i + 1))
+                       acc)
                    state.pinned OpamStd.String.Map.empty
                in
                String.concat ", "

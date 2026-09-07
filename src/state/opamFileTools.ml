@@ -414,7 +414,10 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
           match last with
           | Some last ->
             if compare last elem = 0 then
-              Some elem, OpamStd.String.Map.update (to_str elem) ((+) 1) 1 dbl
+              Some elem,
+              OpamStd.String.Map.update (to_str elem)
+                (function None -> Some 2 | Some i -> Some (i + 1))
+                dbl
             else
               Some elem, dbl
           | None -> Some elem, dbl)

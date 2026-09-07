@@ -183,8 +183,8 @@ let list_all rt ~short =
         let n_repos = List.length repos in
         let acc,_ =
           List.fold_left (fun (acc,i) repo ->
-              OpamRepositoryName.Map.update repo
-                (fun s -> (Some sw, (i, n_repos))::s) [] acc,
+              let elm = (Some sw, (i, n_repos)) in
+              OpamRepositoryName.Map.add_to_list repo elm acc,
               i + 1)
             (acc,1) repos
         in acc)

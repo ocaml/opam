@@ -326,7 +326,7 @@ let packages_of_atoms ?(disj=false) pkgset atoms =
   let ffilter = if disj then List.exists else List.for_all in
   let by_name =
     List.fold_left (fun acc (n,_ as atom) ->
-        OpamPackage.Name.Map.update n (fun a -> atom::a) [] acc)
+        OpamPackage.Name.Map.add_to_list n atom acc)
       OpamPackage.Name.Map.empty atoms
   in
   OpamPackage.Name.Map.fold (fun name atoms acc ->

@@ -250,8 +250,8 @@ let upgrade_t
                              OpamFormula.check_version_formula formula
                                (OpamPackage.version unopt_pkg)
                           then
-                            OpamPackage.Map.update unopt_pkg
-                              (List.cons (installed_pkg, formula)) [] map
+                            OpamPackage.Map.add_to_list unopt_pkg
+                              (installed_pkg, formula) map
                           else map
                        ) map conflicts_formula
                  ) set map
@@ -278,8 +278,8 @@ let upgrade_t
                               not (OpamFormula.check_version_formula formula
                                      (OpamPackage.version unopt_pkg))
                            then
-                             OpamPackage.Map.update unopt_pkg
-                               (List.cons (latest_pkg, formula)) [] map
+                             OpamPackage.Map.add_to_list unopt_pkg
+                               (latest_pkg, formula) map
                            else map
                         ) map depends_formula
                    ) unopt map

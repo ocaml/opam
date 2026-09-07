@@ -207,7 +207,7 @@ let package_files_to_cache repo_root cache_dir cache_urls
         in
         error_opt @@| function
         | Some m ->
-          OpamPackage.Map.update nv (fun l -> m::l) [] errors
+          OpamPackage.Map.add_to_list nv m errors
         | None ->
           Stdlib.Option.iter (fun link_dir ->
               let name =

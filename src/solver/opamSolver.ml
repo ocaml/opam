@@ -283,8 +283,9 @@ let opam2cudf_map universe version_map packages =
     in
     OpamPackage.Set.fold (fun nv ->
         OpamPackage.Map.update nv
-          (fun deps -> OpamFormula.ands [unav_dep; deps])
-          OpamFormula.Empty)
+          (function
+            | None -> Some unav_dep
+            | Some deps -> Some (OpamFormula.ands [unav_dep; deps])))
       (universe.u_installed -- Lazy.force universe.u_available)
       depends_map
   in

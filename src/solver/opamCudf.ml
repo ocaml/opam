@@ -478,12 +478,18 @@ let strong_and_weak_deps u deps =
       let by_name =
         Set.fold (fun p ->
             OpamStd.String.Map.update
-              p.Cudf.package (Set.add p) Set.empty)
+              p.Cudf.package
+              (function
+                | None -> Some (Set.singleton p)
+                | Some s -> Some (Set.add p s)))
           set names
       in
       if OpamStd.String.Map.is_singleton by_name then
         let name, versions = OpamStd.String.Map.choose by_name in
-        OpamStd.String.Map.update name (Set.inter versions) versions
+        OpamStd.String.Map.update name
+          (function
+            | None -> Some versions
+            | Some s -> Some (Set.inter versions s))
           strong_deps,
         OpamStd.String.Map.remove name weak_deps
       else
@@ -936,7 +942,13 @@ let extract_explanations packages cudfnv2opam reasons : explanation list =
           let seen = Set.add pkg seen in
           Set.fold (fun dep (seen, ct_chains) ->
               let chain = CS.map (fun c -> dep :: c) parent_chain in
-              let ct_chains = Map.update dep (CS.union chain) CS.empty ct_chains in
+              let ct_chains =
+                Map.update dep
+                  (function
+                    | None -> Some chain
+                    | Some c -> Some (CS.union chain c))
+                  ct_chains
+              in
               aux seen ct_chains
             ) dependencies (seen, ct_chains)
         ) ct_chains
@@ -1381,7 +1393,10 @@ let compute_conflicts univ packages =
   let open Set.Op in
   let to_map set =
     Set.fold (fun p ->
-        OpamStd.String.Map.update p.Cudf.package (Set.add p) Set.empty)
+        OpamStd.String.Map.update p.Cudf.package
+          (function
+            | None -> Some (Set.singleton p)
+            | Some s -> Some (Set.add p s)))
       set OpamStd.String.Map.empty
   in
   let direct_conflicts p =
@@ -2014,7 +2029,10 @@ let trim_actions univ req g =
   let post_dependencies_map =
     let packages_actions =
       ActionGraph.fold_vertex (fun a ->
-          Map.update (action_contents a) (Action.Set.add a) Action.Set.empty)
+          Map.update (action_contents a)
+            (function
+              | None -> Some (Action.Set.singleton a)
+              | Some s -> Some (Action.Set.add a s)))
         g Map.empty
     in
     let univ =

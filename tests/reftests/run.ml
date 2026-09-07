@@ -1209,8 +1209,9 @@ let run_test ?(vars=[]) ~opam t =
                   let n = OpamPackage.name nv in
                   let v = OpamPackage.version nv in
                   OpamPackage.Name.Map.update n
-                    (OpamPackage.Version.Set.add v)
-                    (OpamPackage.Version.Set.singleton v)
+                    (function
+                      | Some s -> Some (OpamPackage.Version.Set.add v s)
+                      | None -> Some (OpamPackage.Version.Set.singleton v))
                     nvs
                 | None ->
                   OpamPackage.Name.Map.add

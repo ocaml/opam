@@ -111,12 +111,19 @@ let infer_switch_invariant_raw
     OpamPackage.Set.fold (fun nv dmap ->
         let deps = resolve_deps nv in
         let dmap =
-          OpamPackage.Map.update nv ((++) deps) OpamPackage.Set.empty dmap
+          OpamPackage.Map.update nv
+            (function
+              | None -> Some deps
+              | Some d -> Some (deps ++ d))
+            dmap
         in
         let dmap =
           OpamPackage.Set.fold (fun d dmap ->
-              OpamPackage.Map.update d (OpamPackage.Set.add nv)
-                OpamPackage.Set.empty dmap)
+              OpamPackage.Map.update d
+                (function
+                  | None -> Some (OpamPackage.Set.singleton nv)
+                  | Some s -> Some (OpamPackage.Set.add nv s))
+                dmap)
             deps dmap
         in
         dmap)
@@ -876,7 +883,10 @@ let get_conflicts_t env packages opams_map =
     OpamPackage.Map.fold (fun nv opam acc ->
         List.fold_left (fun acc cc ->
             OpamPackage.Name.Map.update cc
-              (OpamPackage.Set.add nv) OpamPackage.Set.empty acc)
+              (function
+                | None -> Some (OpamPackage.Set.singleton nv)
+                | Some s -> Some (OpamPackage.Set.add nv s))
+              acc)
           acc
           (OpamFile.OPAM.conflict_class opam))
       opams_map
@@ -1524,9 +1534,8 @@ let reverse_dependencies st ~build ~post =
                  (OpamFormula.packages base depends_formula) []
              in
              List.fold_left (fun rev_deps rev_nv ->
-                 OpamStd.IntMap.update rev_nv
-                   (fun l -> Hashtbl.hash nv :: l)
-                   [] rev_deps)
+                 let hash = Hashtbl.hash nv in
+                 OpamStd.IntMap.add_to_list rev_nv hash rev_deps)
                rev_deps depends)
            base_depends OpamStd.IntMap.empty
        in
