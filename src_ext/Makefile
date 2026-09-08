@@ -10,8 +10,17 @@ endif
 
 PATCH ?= patch
 
-URL_ocaml = https://github.com/ocaml/ocaml/archive/refs/tags/4.14.4.tar.gz
-MD5_ocaml = 92d7bd721302001ceb9aa19819712c8b
+# approximate detection of 64bit OSs
+IS_64BIT_OS = $(shell ((test "$$(getconf LONG_BIT)" = 64 || (uname -mp | grep -q 64) || (file "$$(realpath /bin/sh)" | grep -q " 64-bit ")) 2>/dev/null && echo yes || echo no))
+
+URL_ocaml4 = https://github.com/ocaml/ocaml/archive/refs/tags/4.14.4.tar.gz
+MD5_ocaml4 = 92d7bd721302001ceb9aa19819712c8b
+
+URL_ocaml5 = https://github.com/ocaml/ocaml/archive/refs/tags/5.5.1.tar.gz
+MD5_ocaml5 = f317bfe988b731ab205e3b9d04cfb684
+
+URL_ocaml = $(if $(IS_64BIT_OS),$(URL_ocaml5),$(URL_ocaml4))
+MD5_ocaml = $(if $(IS_64BIT_OS),$(MD5_ocaml5),$(MD5_ocaml4))
 
 URL_flexdll = https://github.com/ocaml/flexdll/archive/0.44.tar.gz
 MD5_flexdll = 08731d2a5d6465cf7080a14e43e0752e
@@ -101,7 +110,7 @@ clone: $(DUNE_CLONE) $(SRC_EXTS:=.stamp) | ext-ignore
 archives: $(DUNE_CLONE:.stamp=.download) $(SRC_EXTS:=.download)
 	@true
 
-cache-archives: $(SRC_EXTS:=.cache) mccs.cache dune-local.cache ocaml.cache flexdll.cache
+cache-archives: $(SRC_EXTS:=.cache) mccs.cache dune-local.cache ocaml4.cache ocaml5.cache flexdll.cache
 	@
 
 has-archives: $(addprefix archives/, $(notdir $(URL_ocaml)) $(notdir $(URL_flexdll)) $(ARCHIVES))
