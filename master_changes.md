@@ -26,6 +26,9 @@ users)
 ## Install
 
 ## Build (package)
+  * Fix empty argument handling when calling a Cygwin binary [#7128 @kit-ty-kate - fix #6714]
+  * Fix handling of arguments containing a backslash followed by double-quote when calling a Cygwin binary [#7128 @kit-ty-kate]
+  * Fix handling of arguments containing a double-quote as first character when calling a Cygwin binary [#7128 @kit-ty-kate]
 
 ## Remove
 
@@ -107,6 +110,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test checking that empty arguments are correctly handled [#7128 @kit-ty-kate]
 
 ### Engine
 
@@ -129,3 +133,6 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamProcess.create_process_env`: Fix empty argument handling when calling a Cygwin binary [#7128 @kit-ty-kate - fix #6714]
+  * Fix handling of arguments containing a backslash followed by double-quote when calling a Cygwin binary [#7128 @kit-ty-kate]
+  * Fix handling of arguments containing a double-quote as first character when calling a Cygwin binary [#7128 @kit-ty-kate]

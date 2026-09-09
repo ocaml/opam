@@ -1911,25 +1911,25 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:pin.test} %{read-lines:testing-env}))))
 
 (rule
- (alias reftest-process-output.unix)
- (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (alias reftest-process-output)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
-  (diff process-output.unix.test process-output.unix.out)))
+  (diff process-output.test process-output.out)))
 
 (alias
  (name reftest)
- (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
- (deps (alias reftest-process-output.unix)))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-process-output)))
 
 (rule
- (targets process-output.unix.out)
+ (targets process-output.out)
  (deps root-N0REP0)
- (enabled_if (and (= %{os_type} "Unix") (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (package opam)
  (action
   (with-stdout-to
    %{targets}
-   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:process-output.unix.test} %{read-lines:testing-env}))))
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:process-output.test} %{read-lines:testing-env}))))
 
 (rule
  (alias reftest-rebuild)

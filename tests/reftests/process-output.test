@@ -32,3 +32,36 @@ Processing  3/3: [process: true with]
 + true "with" "option" (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
 -> installed process.1
 Done.
+### : Check that empty argument are correctly handled
+### : as well as double-quotes and backslashes.
+### : Calling cygwin binaries on windows quotes arguments using a custom method
+### : see OpamProcess.cygwin_create_process_env
+### <pkg:process.1>
+opam-version: "2.0"
+build: [
+  ["printf" ""]
+  ["echo" "a" "" "b"]
+  ["echo" "\"x'\""]
+  ["printf" "%s" "\\\\\\\""]
+]
+### opam install process -vv -y | sed-cmd printf echo | no-replace
+The following actions will be performed:
+=== recompile 1 package
+  - recompile process 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/4: [process: printf]
++ printf "" (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
+Processing  2/4: [process: echo a]
++ echo "a" "" "b" (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
+- a  b
+Processing  2/4: [process: echo "x'"]
++ echo "\"x'\"" (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
+- "x'"
+Processing  2/4: [process: printf %s]
++ printf "%s" "\\\\\\\"" (CWD=${BASEDIR}/OPAM/outputs/.opam-switch/build/process.1)
+- \\\"
+-> compiled  process.1
+-> removed   process.1
+-> installed process.1
+Done.

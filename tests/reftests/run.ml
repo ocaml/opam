@@ -144,11 +144,11 @@ let escape_regexps s =
     ) s;
   Buffer.contents buf
 
-let str_replace_path ?escape ?(wrap_whole_path=true) whichway filters s =
+let str_replace_path ?escape ?(wrap_whole_path=true) ?(no_replace=false) whichway filters s =
   let s =
     match escape with
-    | Some `Unescape -> Re.(replace_string (compile @@ str "\\\\") ~by:"\\" s)
-    | Some (`Backslashes | `Regexps) | None -> s
+    | Some `Unescape when not no_replace -> Re.(replace_string (compile @@ str "\\\\") ~by:"\\" s)
+    | Some (`Backslashes | `Regexps | `Unescape) | None -> s
   in
   let escape_backslashes =
     match escape with
@@ -185,7 +185,7 @@ let filters_of_var =
 
 let command
     ?(allowed_codes = [0]) ?(vars=[]) ?(silent=false) ?(filter=[]) ?(sort=false)
-    ?(background=false)
+    ?(background=false) ?(no_replace=false)
     cmd args =
   let env =
     Array.of_list @@
@@ -222,7 +222,7 @@ let command
     match input_line ic with
     | s ->
       let s =
-        str_replace_path ~escape:`Unescape OpamSystem.back_to_forward filter s
+        str_replace_path ~escape:`Unescape ~no_replace OpamSystem.back_to_forward filter s
       in
       if s = "\\c" then filter_output out_buf ic
       else
@@ -329,7 +329,8 @@ type command =
              filter: filter;
              output: string option;
              unordered: bool;
-             sort: bool;}
+             sort: bool;
+             no_replace: bool; }
   | Set_os of string
   | Http_server
   | Export of (string * [`eq | `pluseq | `eqplus] * string) list
@@ -441,21 +442,23 @@ module Parse = struct
           failwith (Printf.sprintf "Bad POSIX regexp: %s" re)
       in
       let rec get_args_rewr acc = function
-        | [] -> List.rev acc, false, false, [], None
+        | [] -> List.rev acc, false, false, false, [], None
         | ("|"|">$") :: _ as rewr ->
-          let rec get_rewr (unordered, sort, acc) = function
+          let rec get_rewr (unordered, sort, no_replace, acc) = function
             | "|" :: re :: "->" :: str :: r ->
-              get_rewr (unordered, sort, (posix_re re, Sed (get_str str)) :: acc) r
+              get_rewr (unordered, sort, no_replace, (posix_re re, Sed (get_str str)) :: acc) r
             | "|" :: "grep" :: "-v" :: re :: r ->
-              get_rewr (unordered, sort, (posix_re re, GrepV) :: acc) r
+              get_rewr (unordered, sort, no_replace, (posix_re re, GrepV) :: acc) r
             | "|" :: "grep" :: re :: r ->
-              get_rewr (unordered, sort, (posix_re re, Grep) :: acc) r
+              get_rewr (unordered, sort, no_replace, (posix_re re, Grep) :: acc) r
             | "|" :: "sort" :: r ->
               if acc <> [] then
                 Printf.printf "Warning: sort should appear _before_ any filters\n%!";
-              get_rewr (unordered, true, acc) r
+              get_rewr (unordered, true, no_replace, acc) r
             | "|" :: "unordered" :: r ->
-              get_rewr (true, sort, acc) r
+              get_rewr (true, sort, no_replace, acc) r
+            | "|" :: "no-replace" :: r ->
+              get_rewr (unordered, sort, true, acc) r
             | "|" :: "sed-cmd" :: cmd :: r ->
               let sandbox cmd =
                 (* Sandbox prefix
@@ -524,7 +527,7 @@ module Parse = struct
                 | cmd :: r -> aux cmd r acc
               in
               let acc, r = aux cmd r acc in
-              get_rewr (unordered, sort, acc) r
+              get_rewr (unordered, sort, no_replace, acc) r
             | "|" :: "sed-hash" :: hash :: r ->
               let length = String.length hash in
               if hash.[0] <> '$'
@@ -536,7 +539,7 @@ module Parse = struct
                    "Bad 'sed-hash' argument (%s), expecting a environment \
                     variable beginning with '$' or a hash of 32, 64, \
                     or 128 characters" hash;
-                 unordered, sort, List.rev acc, None)
+                 unordered, sort, no_replace, List.rev acc, None)
               else
                 let name, r =
                   match r with
@@ -562,22 +565,22 @@ module Parse = struct
                 let acc = (pre_hash, Sed ("/pre/"^name))::acc in
                 let acc = (re_hash, Sed name)::acc in
                 let acc = (pre, Sed "/pre")::acc in
-                get_rewr (unordered, sort, acc) r
+                get_rewr (unordered, sort, no_replace, acc) r
             | ">$" :: output :: [] ->
-              unordered, sort, List.rev acc, Some (get_str output)
+              unordered, sort, no_replace, List.rev acc, Some (get_str output)
             | [] ->
-              unordered, sort, List.rev acc, None
+              unordered, sort, no_replace, List.rev acc, None
             | r ->
               Printf.printf
                 "Bad rewrite %S, expecting '| RE -> STR' or '>$ VAR'\n%!"
                 (String.concat " " r);
-              unordered, sort, List.rev acc, None
+              unordered, sort, no_replace, List.rev acc, None
           in
-          let unordered, sort, rewr, out = get_rewr (false, false, []) rewr in
-          List.rev acc, unordered, sort, rewr, out
+          let unordered, sort, no_replace, rewr, out = get_rewr (false, false, false, []) rewr in
+          List.rev acc, unordered, sort, no_replace, rewr, out
         | arg :: r -> get_args_rewr (arg :: acc) r
       in
-      let args, unordered, sort, rewr, output = get_args_rewr [] args in
+      let args, unordered, sort, no_replace, rewr, output = get_args_rewr [] args in
       match cmd with
       | Some "opam-cat" ->
         Opamfile { files = args; filter = rewr; }
@@ -633,6 +636,7 @@ module Parse = struct
           output;
           unordered;
           sort;
+          no_replace;
         }
       | None ->
         Export varbinds
@@ -759,7 +763,7 @@ let common_filters ?opam dir =
    | None -> []
    | Some opam -> [ str opam.as_seen_in_opam, Sed "${OPAM}" ])
 
-let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) ?(sort=false) cmd args =
+let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) ?(sort=false) ?(no_replace=false) cmd args =
   let filter = filter @ common_filters ~opam dir in
   let var_filters = filters_of_var vars in
   let cmd = if cmd = "opam" then opam.as_called else cmd in
@@ -774,7 +778,7 @@ let run_cmd ~opam ~dir ?(vars=[]) ?(filter=[]) ?(silent=false) ?(sort=false) cmd
         Parse.get_str expanded)
       args
   in
-  try command ~vars ~filter ~silent ~sort cmd args, None
+  try command ~vars ~filter ~silent ~sort ~no_replace cmd args, None
   with Command_failure (n,_, out) -> out, Some n
 
 let write_file ~path ~contents =
@@ -1314,10 +1318,10 @@ let run_test ?(vars=[]) ~opam t =
                     in
                     print_file ~filters:(filter @ common_filters dir) files));
           vars
-        | Run {env; cmd; args; filter; output; unordered; sort} ->
+        | Run {env; cmd; args; filter; output; unordered; sort; no_replace} ->
           let silent = output <> None || unordered in
           let r, errcode =
-            run_cmd ~opam ~dir ~vars:(vars @ env) ~filter ~silent ~sort cmd args
+            run_cmd ~opam ~dir ~vars:(vars @ env) ~filter ~silent ~sort ~no_replace cmd args
           in
           (if unordered then
              (* print lines from Result, but respecting order from Expect *)
