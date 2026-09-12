@@ -35,6 +35,7 @@ users)
 ## UI
   * Improve the way unhandled exceptions are displayed during interactive questions [#7138 @kit-ty-kate]
   * Stop showing the "Running as root" warning on Haiku [#7138 @kit-ty-kate]
+  * Work around bugs/quirks in Haiku's implementation of termios [#7138 @kit-ty-kate]
 
 ## Switch
 

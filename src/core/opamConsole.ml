@@ -716,12 +716,76 @@ let header_error fmt =
         ) fmt
     ) fmt
 
+(* Some platforms such as Haiku do support termios but have specific quirks.
+   This record is here to abstract over functions needing special care. *)
+type termios_support = {
+
+  (* Does the OS support termios *)
+  os_supports_termios : bool;
+
+  (* Wrapper around Unix.tcflush *)
+  tcflush : Unix.file_descr -> Unix.flush_queue -> unit;
+
+  (* Wrapper around Unix.tcsetattr {attr with c_echonl=true} if required.
+     On some platforms (Haiku), their current interpretation of POSIX.1 is that
+     ECHONL is required even if ECHO is set, however the POSIX.1-2024 standard
+     says:
+
+     > If ECHONL and ICANON are set, the <newline> character shall be echoed
+     > even if ECHO is not set.
+
+     The interpretation of most Unix systems is that if ECHO is set,
+     ECHONL should not be needed.
+
+     Thus we wrap an extra Unix.tcsetattr with c_echonl=true of the platforms
+     and situations that need it.
+
+     See https://dev.haiku-os.org/ticket/20343 *)
+  echonl : 'a. (unit -> 'a) -> 'a;
+}
+
+let tcsetattr ~tcflush ~cont set =
+  let attr = Unix.tcgetattr Unix.stdin in
+  let reset () =
+    Unix.tcsetattr Unix.stdin TCSAFLUSH attr;
+    tcflush Unix.stdin Unix.TCIFLUSH;
+  in
+  OpamStd.Exn.finally reset @@ fun () ->
+  Unix.tcsetattr Unix.stdin TCSAFLUSH (set attr);
+  tcflush Unix.stdin Unix.TCIFLUSH;
+  cont ()
+
+let termios_support = lazy begin
+  match OpamStd.Sys.os () with
+  | Linux | Darwin | FreeBSD | OpenBSD | NetBSD | DragonFly
+  | Unix | Other _ ->
+    let echonl f = f () in
+    {os_supports_termios = true; tcflush = Unix.tcflush; echonl}
+  | Win32 | Cygwin ->
+    let tcflush _ _ = () in
+    let echonl f = f () in
+    (* TODO: We do not know how to support these platforms at the moment *)
+    {os_supports_termios = false; tcflush; echonl}
+  | Haiku ->
+    (* TODO: Remove when https://dev.haiku-os.org/ticket/20341 is fixed *)
+    let tcflush _ _ = () in
+    (* TODO: Remove when https://dev.haiku-os.org/ticket/20343 is fixed *)
+    let echonl cont =
+      tcsetattr ~tcflush ~cont (fun attr -> {attr with c_echonl = true})
+    in
+    {os_supports_termios = true; tcflush; echonl}
+end
+
 (* Reads a single char from the user when possible, a line otherwise *)
 let short_user_input ~prompt ?default ?on_eof f =
   let on_eof = OpamStd.Option.Op.(on_eof ++ default) in
   let prompt () = print_string prompt; flush stdout in
   try
-    if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin || Lazy.force dumb_term) then
+    let {os_supports_termios; tcflush; echonl} = Lazy.force termios_support in
+    let is_not_interactive =
+      not OpamStd.Sys.tty_out || not os_supports_termios || Lazy.force dumb_term
+    in
+    if is_not_interactive then
       let rec loop () =
         prompt ();
         let input = match String.lowercase_ascii (read_line ()) with
@@ -732,7 +796,7 @@ let short_user_input ~prompt ?default ?on_eof f =
         | Some a -> a
         | None -> loop ()
       in
-      loop ()
+      echonl loop
     else
     let () = prompt () in
     let buf = Bytes.create 3 in
@@ -756,16 +820,8 @@ let short_user_input ~prompt ?default ?on_eof f =
         | Some a -> print_endline i; a
         | None -> loop ()
     in
-    let attr = Unix.tcgetattr Unix.stdin in
-    let reset () =
-      Unix.tcsetattr Unix.stdin TCSAFLUSH attr;
-      Unix.tcflush Unix.stdin TCIFLUSH;
-    in
-    OpamStd.Exn.finally reset @@ fun () ->
-    Unix.tcsetattr Unix.stdin TCSAFLUSH
-      {attr with c_vmin = 1; c_icanon = false; c_echo = false};
-    Unix.tcflush Unix.stdin TCIFLUSH;
-    loop ()
+    tcsetattr ~tcflush ~cont:loop @@ fun attr ->
+    {attr with c_vmin = 1; c_icanon = false; c_echo = false}
   with
   | End_of_file ->
     begin match on_eof with
@@ -819,6 +875,8 @@ let read fmt =
   Printf.ksprintf (fun s ->
       formatted_msg "%s " s;
       if OpamCoreConfig.(answer_is ~name:None `ask && not !r.safe_mode) then (
+        let {echonl; _} = Lazy.force termios_support in
+        echonl @@ fun () ->
         try match read_line () with
           | "" -> None
           | s  -> Some s
