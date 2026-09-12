@@ -99,7 +99,10 @@ let global_options cli =
       OpamStd.Option.default false (OpamClientConfig.E.rootisok ())
     in
     if not (options.safe_mode || root_is_ok) &&
-       Unix.getuid () = 0 then
+       (* Haiku is a single-user OS for the moment.
+          TODO: remove if it ever changes.
+          See https://dev.haiku-os.org/wiki/FutureHaiku/Features#Unscheduled *)
+       Unix.getuid () = 0 && OpamStd.Sys.os () <> Haiku then
       OpamConsole.warning "Running as root is not recommended";
     {options with cli = fst cli}, self_upgrade_status
   in

@@ -34,6 +34,7 @@ users)
 
 ## UI
   * Improve the way unhandled exceptions are displayed during interactive questions [#7138 @kit-ty-kate]
+  * Stop showing the "Running as root" warning on Haiku [#7138 @kit-ty-kate]
 
 ## Switch
 
@@ -118,6 +119,7 @@ users)
   * Deduplicate some depexts related code in `OpamSwitchState` [#7157 @kit-ty-kate]
 
 ## Internal: Unix
+  * Add explicit support for Haiku [#7138 @kit-ty-kate]
 
 ## Internal: Windows
 
