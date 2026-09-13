@@ -657,9 +657,10 @@ let export rt ?(freeze=false) ?(full=false)
   | None   -> OpamFile.SwitchExport.write_to_channel stdout export
   | Some f -> OpamFile.SwitchExport.write f export
 
-let show () =
-  OpamConsole.msg "%s\n"
-    (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
+let show gt =
+  let switch = OpamStateConfig.get_switch () in
+  OpamSwitchState.check_installed gt switch;
+  OpamConsole.msg "%s\n" (OpamSwitch.to_string switch)
 
 let reinstall init_st =
   let switch = init_st.switch in
