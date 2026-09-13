@@ -32,6 +32,7 @@ users)
 ## UI
 
 ## Switch
+  * Fail when `opam switch show` is given a switch that isn't installed [#7139 @Abhayindia - fix #7075]
 
 ## Config
 
@@ -122,10 +123,12 @@ users)
 
 # API updates
 ## opam-client
+  * `OpamSwitchCommand.show`: now takes a global state and fails if the switch isn't installed [#7139 @Abhayindia - fix #7075]
 
 ## opam-repository
 
 ## opam-state
+  * `OpamSwitchState.check_installed`: new function, errors out if the given switch isn't installed. Extracted from `OpamSwitchState.load` [#7139 @Abhayindia - fix #7075]
 
 ## opam-solver
 
