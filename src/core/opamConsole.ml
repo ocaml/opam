@@ -720,6 +720,17 @@ let header_error fmt =
 let short_user_input ~prompt ?default ?on_eof f =
   let on_eof = OpamStd.Option.Op.(on_eof ++ default) in
   let prompt () = print_string prompt; flush stdout in
+  let tcsetattr ~tcflush ~cont set =
+    let attr = Unix.tcgetattr Unix.stdin in
+    let reset () =
+      Unix.tcsetattr Unix.stdin TCSAFLUSH attr;
+      tcflush Unix.stdin Unix.TCIFLUSH;
+    in
+    OpamStd.Exn.finally reset @@ fun () ->
+    Unix.tcsetattr Unix.stdin TCSAFLUSH (set attr);
+    tcflush Unix.stdin Unix.TCIFLUSH;
+    cont ()
+  in
   try
     let os_supports_termios, tcflush, echonl =
       match OpamStd.Sys.os () with
@@ -732,16 +743,8 @@ let short_user_input ~prompt ?default ?on_eof f =
         (* TODO: Remove when https://dev.haiku-os.org/ticket/20341 is fixed *)
         let tcflush _ _ = () in
         (* TODO: Remove when https://dev.haiku-os.org/ticket/20343 is fixed *)
-        let echonl f =
-          let attr = Unix.tcgetattr Unix.stdin in
-          let reset () =
-            Unix.tcsetattr Unix.stdin TCSAFLUSH attr;
-            tcflush Unix.stdin Unix.TCIFLUSH;
-          in
-          OpamStd.Exn.finally reset @@ fun () ->
-          Unix.tcsetattr Unix.stdin TCSAFLUSH {attr with c_echonl = true};
-          tcflush Unix.stdin Unix.TCIFLUSH;
-          f ()
+        let echonl cont =
+          tcsetattr ~tcflush ~cont (fun attr -> {attr with c_echonl = true})
         in
         true, tcflush, echonl
     in
@@ -784,16 +787,8 @@ let short_user_input ~prompt ?default ?on_eof f =
         | Some a -> print_endline i; a
         | None -> loop ()
     in
-    let attr = Unix.tcgetattr Unix.stdin in
-    let reset () =
-      Unix.tcsetattr Unix.stdin TCSAFLUSH attr;
-      tcflush Unix.stdin TCIFLUSH;
-    in
-    OpamStd.Exn.finally reset @@ fun () ->
-    Unix.tcsetattr Unix.stdin TCSAFLUSH
-      {attr with c_vmin = 1; c_icanon = false; c_echo = false};
-    tcflush Unix.stdin TCIFLUSH;
-    loop ()
+    tcsetattr ~tcflush ~cont:loop @@ fun attr ->
+    {attr with c_vmin = 1; c_icanon = false; c_echo = false}
   with
   | End_of_file ->
     begin match on_eof with
