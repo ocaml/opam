@@ -496,6 +496,7 @@ module Sys : sig
           | DragonFly
           | Cygwin
           | Win32
+          | Haiku
           | Unix
           | Other of string
 
