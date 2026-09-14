@@ -13,6 +13,7 @@
 
 val complete : string
 val complete_zsh : string
+val complete_ps1 : string
 val prompt : string
 val bwrap : string
 val sandbox_exec : string
