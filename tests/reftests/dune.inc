@@ -2457,6 +2457,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-set.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-switch-show)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff switch-show.test switch-show.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-switch-show)))
+
+(rule
+ (targets switch-show.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:switch-show.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-tree)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

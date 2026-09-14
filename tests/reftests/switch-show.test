@@ -1,0 +1,13 @@
+N0REP0
+### # Test that "opam switch show" fails on a switch that isn't installed
+### opam switch create foo --empty
+### opam switch show
+foo
+### opam switch --switch bar show
+[ERROR] The selected switch bar is not installed.
+# Return code 2 #
+### OPAMSWITCH=bar opam switch show
+[ERROR] The selected switch bar is not installed. Please fix the value of the OPAMSWITCH environment variable, or use the '--switch <name>' flag
+# Return code 50 #
+### opam switch --switch foo show
+foo
