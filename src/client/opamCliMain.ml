@@ -13,6 +13,8 @@ open OpamCmdliner
 open OpamStateTypes
 open OpamTypesBase
 
+let log fmt = OpamConsole.log "MAIN" fmt
+
 exception InvalidCLI of OpamCLIVersion.Sourced.t
 
 (* [InvalidFlagContent (flag_name, Some (invalid_value, expected_value))] *)
@@ -437,7 +439,15 @@ let rec main_catch_all f =
     in
     exit exit_code
 
+let set_gc_params total_ram =
+  let two_GB = 2048L in
+  if total_ram > 0L && (total_ram : int64) < two_GB then begin
+    log "Low end machine detected. Setting the GC to work harder";
+    Gc.set {(Gc.get ()) with space_overhead = 20};
+  end
+
 let run () =
+  set_gc_params (OpamStubs.total_ram ());
   Stdlib.Option.iter OpamVersion.set_git OpamGitVersion.version;
   OpamSystem.init ();
   OpamArg.preinit_opam_env_variables ();
