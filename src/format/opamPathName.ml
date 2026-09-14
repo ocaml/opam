@@ -26,6 +26,8 @@ let opamswitch_d = ".opam-switch"
 
 let config_f = "config"
 let opam_f = OpamRepositoryPathName.opam_f
+let legacy_url_f = OpamRepositoryPathName.legacy_url_f
+let legacy_descr_f = OpamRepositoryPathName.legacy_descr_f
 let lock_f = "lock"
 let environment_f = "environment"
 
