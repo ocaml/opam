@@ -1453,7 +1453,7 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) ~to_show st
   | Freebsd -> [pm, "install"::yes ["-y"] packages], None
   | Gentoo -> [pm, yes ~no:["-a"] [] packages], None
   | Homebrew ->
-    [pm, "install"::packages], (* NOTE: Does not have any interactive mode *)
+    [pm, "install"::yes ~no:["--ask"] ["--no-ask"] packages],
     Some (["HOMEBREW_NO_AUTO_UPDATE","yes"])
   | Macports ->
     let packages = (* Separate variants from their packages *)
