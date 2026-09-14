@@ -117,6 +117,7 @@ users)
   * The Hygiene workflow has been upgraded to Ubuntu 26.04 [#7052 @kit-ty-kate]
 
 ## Doc
+  * Document how opam chooses the default compiler during `opam init` and `opam switch create` [#6778 @kit-ty-kate - fix #6407]
 
 ## Security fixes
 
