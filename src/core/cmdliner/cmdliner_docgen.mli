@@ -4,8 +4,9 @@
   ---------------------------------------------------------------------------*)
 
 val pp_man :
+  env:(string -> string option) ->
   errs:Format.formatter -> Cmdliner_manpage.format -> Format.formatter ->
-  Cmdliner_info.Eval.t -> unit
+  Cmdliner_def.Eval.t -> unit
 
-val pp_plain_synopsis :
-  errs:Format.formatter -> Format.formatter -> Cmdliner_info.Eval.t -> unit
+val styled_usage_synopsis :
+  errs:Format.formatter -> Cmdliner_def.Eval.t -> string
