@@ -1878,10 +1878,14 @@ let install cli =
        the required system dependencies, without affecting the opam switch \
        state or installing opam packages."
   in
+  let no_lint =
+    mk_flag ~cli cli_original ["no-lint"]
+      "Don't output linting warnings or errors when reading from files"
+  in
   let install
       global_options build_options add_to_roots deps_only ignore_conflicts
-      restore destdir assume_built check recurse subpath depext_only formula
-      download_only atoms_or_locals () =
+      restore destdir assume_built check recurse subpath depext_only no_lint
+      formula download_only atoms_or_locals () =
     apply_global_options cli global_options;
     apply_build_options cli build_options;
     if atoms_or_locals = [] && not restore && formula = OpamFormula.Empty then
@@ -1921,7 +1925,8 @@ let install cli =
     if formula = OpamFormula.Empty && atoms_or_locals = [] then `Ok () else
     let st, atoms =
       OpamAuxCommands.autopin
-        st ~recurse ?subpath ~quiet:check ~simulate:(deps_only||check||depext_only)
+        st ~recurse ?subpath ~quiet:(check||no_lint)
+        ~simulate:(deps_only||check||depext_only)
         ?locked:OpamStateConfig.(!r.locked) atoms_or_locals
     in
     if formula = OpamFormula.Empty && atoms = [] then
@@ -1960,7 +1965,7 @@ let install cli =
     Term.(const install $global_options cli $build_options cli
           $add_to_roots $deps_only $ignore_conflicts $restore $destdir
           $assume_built cli $check $recurse cli $subpath cli $depext_only
-          $formula_flag cli $download_only $atom_or_local_list)
+          $no_lint $formula_flag cli $download_only $atom_or_local_list)
 
 (* REMOVE *)
 let remove_doc = "Remove a list of packages."
