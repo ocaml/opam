@@ -117,6 +117,7 @@ users)
   * The Hygiene workflow has been upgraded to Ubuntu 26.04 [#7052 @kit-ty-kate]
 
 ## Doc
+  * Document how to create a switch with some OCaml compiler configure-time options [#6777 @kit-ty-kate - fix #6645]
 
 ## Security fixes
 

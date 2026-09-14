@@ -121,6 +121,18 @@ or set of opam packages.
 Creating a new switch requires re-compiling OCaml, unless you use the
 `ocaml-system` package, that relies on the global OCaml installation.
 
+When using the default [opam-repository](https://github.com/ocaml/opam-repository/),
+if you want to tweak the configuration of the compiler, you can switch to the option variant with:
+```
+opam switch create <name> ocaml-variants.<ocaml-version>+options <option_list>...
+```
+
+where `<option_list>` is a space-separated list of `ocaml-option-*` packages.
+For instance, to create a switch with OCaml 5.4.0 with both `flambda` and `no-flat-float-array` enabled:
+```
+opam switch create 5.4.0+flambda+nffa ocaml-variants.5.4.0+options ocaml-option-flambda ocaml-option-no-flat-float-array
+```
+
 ### opam pin
 
 This command allows one to pin a package to a specific version, but has been
