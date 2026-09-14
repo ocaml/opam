@@ -79,10 +79,6 @@ module type MAP = sig
   (** @raise Failure in case the element is already present *)
   val safe_add: key -> 'a -> 'a t -> 'a t
 
-  (** [update k f zero map] updates the binding of [k] in [map] using function
-      [f], applied to the current value bound to [k] or [zero] if none *)
-  val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
-
   (** [map_reduce f op t] applies [f] to every binding of [t] and combines the
       results using associative operator [op].
       @raise Invalid_argument on an empty map if [default] is not defined *)

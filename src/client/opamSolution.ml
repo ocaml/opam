@@ -497,8 +497,10 @@ let parallel_apply t
                  when OpamFilename.is_archive
                      (OpamFilename.of_string url.OpamUrl.path) ->
                  OpamUrl.Map.update url
-                   (OpamPackage.Set.add nv)
-                   OpamPackage.Set.empty url_nvs
+                   (function
+                     | None -> Some (OpamPackage.Set.singleton nv)
+                     | Some s -> Some (OpamPackage.Set.add nv s))
+                   url_nvs
                | _ -> url_nvs)
             | None -> url_nvs)
           sources_needed OpamUrl.Map.empty
@@ -737,7 +739,7 @@ let parallel_apply t
       in
       let same_inplace_source =
         OpamPackage.Map.fold (fun nv dir acc ->
-            OpamFilename.Dir.Map.update dir (fun l -> nv::l) [] acc)
+            OpamFilename.Dir.Map.add_to_list dir nv acc)
           inplace OpamFilename.Dir.Map.empty |>
         OpamFilename.Dir.Map.values
       in

@@ -141,7 +141,7 @@ let def_packages ctx (_preamble, universe, _request) =
           List.fold_left (fun (rem, map) -> function
               | (name, _) :: r as disj
                 when List.for_all (fun (n1, _) -> n1 = name) r ->
-                rem, SM.update name (fun conj -> disj :: conj) [] map
+                rem, SM.add_to_list name disj map
               | disj -> disj :: rem, map)
             ([], SM.empty)
             pkg.Cudf.depends

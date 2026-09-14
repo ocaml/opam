@@ -41,7 +41,6 @@ module type MAP = sig
   val is_singleton: 'a t -> bool
   val of_list: (key * 'a) list -> 'a t
   val safe_add: key -> 'a -> 'a t -> 'a t
-  val update: key -> ('a -> 'a) -> 'a -> 'a t -> 'a t
   val map_reduce:
     ?default:'b -> (key -> 'a -> 'b) -> ('b -> 'b -> 'b) -> 'a t -> 'b
 end
@@ -362,10 +361,6 @@ module Map = struct
       if mem k map
       then failwith (Printf.sprintf "duplicate entry %s" (O.to_string k))
       else add k v map
-
-    let update k f zero map =
-      let v = try find k map with Not_found -> zero in
-      add k (f v) map
 
     let map_reduce ?default f op t =
       match choose_opt t with

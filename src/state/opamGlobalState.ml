@@ -132,23 +132,25 @@ let load lock_kind =
     List.fold_left (fun acc (v, cmd, doc) ->
         OpamVariable.Map.update v
           (fun previous_value ->
-             (lazy
-               (try
-                  let ret =
-                    OpamSystem.read_command_output
-                      ~env:(Lazy.force env)
-                      ~allow_stdin:false
-                      cmd
-                  in
-                  Some (S (OpamStd.String.strip (String.concat "\n" ret)))
-                with e ->
-                  OpamStd.Exn.fatal e;
-                  log "Failed to evaluate global variable %a: %a"
-                    (slog OpamVariable.to_string) v
-                    (slog Printexc.to_string) e;
-                  Lazy.force (fst previous_value))),
-             doc)
-          (lazy None, "")
+             Some
+               ((lazy
+                  (try
+                     let ret =
+                       OpamSystem.read_command_output
+                         ~env:(Lazy.force env)
+                         ~allow_stdin:false
+                         cmd
+                     in
+                     Some (S (OpamStd.String.strip (String.concat "\n" ret)))
+                   with e ->
+                     OpamStd.Exn.fatal e;
+                     log "Failed to evaluate global variable %a: %a"
+                       (slog OpamVariable.to_string) v
+                       (slog Printexc.to_string) e;
+                     match previous_value with
+                     | None -> None
+                     | Some (v, _doc) -> Lazy.force v)),
+                doc))
           acc)
       global_variables eval_variables
   in

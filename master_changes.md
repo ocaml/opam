@@ -132,3 +132,4 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamStd.Map.update`: was changed to the stdlib version which has a more flexible API and has better performances [#7130 @NathanReb - fix #4915]
