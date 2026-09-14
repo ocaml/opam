@@ -4,13 +4,10 @@
   ---------------------------------------------------------------------------*)
 
 module Manpage = Cmdliner_manpage
-module Term = struct
-  include Cmdliner_term
-  include Cmdliner_term_deprecated
-end
+module Term = Cmdliner_term
 module Cmd = struct
-  module Exit = Cmdliner_info.Exit
-  module Env = Cmdliner_info.Env
+  module Exit = Cmdliner_def.Exit
+  module Env = Cmdliner_def.Env
   include Cmdliner_cmd
   include Cmdliner_eval
 end
