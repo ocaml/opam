@@ -33,7 +33,7 @@ depends: [
   "opam-format" {= version}
   "mccs" {>= "1.1+17"}
   "dose3" {>= "6.1"}
-  "cudf" {>= "0.7"}
+  "cudf" {>= "0.11~rc1"}
   "opam-0install-cudf" {>= "0.5.0"}
 ]
 depopts: [
