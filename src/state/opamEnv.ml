@@ -1233,7 +1233,7 @@ let write_dynamic_init_scripts st =
   try
     if OpamStateConfig.is_newer_than_self
         ~lock_kind:`Lock_write st.switch_global then
-      raise OpamSystem.Locked;
+      raise_notrace OpamSystem.Locked;
     OpamFilename.with_flock_upgrade `Lock_write ~dontblock:true
       st.switch_global.global_lock
     @@ fun _ ->

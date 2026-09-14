@@ -76,7 +76,7 @@ module Make (VCS: VCS) = struct
         let tmpdir = OpamRepositoryRoot.Dir.quarantine repo_root in
         OpamRepositoryRoot.Dir.copy ~src:repo_root ~dst:tmpdir;
         OpamProcess.Job.catch
-          (fun e -> OpamRepositoryRoot.Dir.remove tmpdir; raise e)
+          (fun e -> OpamStd.Exn.finalise e (fun () -> OpamRepositoryRoot.Dir.remove tmpdir))
         @@ fun () ->
         VCS.reset_tree (OpamRepositoryRoot.Dir.to_dir tmpdir) repo_url
         @@| fun () ->

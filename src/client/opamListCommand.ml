@@ -599,7 +599,7 @@ let detail_printer ?prettify ?normalise ?(sort=false) installed st nv =
          | "url.swhid" ->
            (match OpamFile.(OPAM.url opam >>= URL.swhid) with
             | Some f -> OpamTypesBase.nullify_pos (String (OpamSWHID.to_string f))
-            | None -> raise Not_found)
+            | None -> raise_notrace Not_found)
          | "url.mirrors" ->
            OpamFile.(OPAM.with_url_opt
                        (OPAM.url opam >>| URL.with_swhid_opt None)

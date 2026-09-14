@@ -742,13 +742,13 @@ let short_user_input ~prompt ?default ?on_eof f =
         match
           (* Some keystrokes, e.g. arrows, can return 3 chars *)
           let nr = read stdin buf 0 3 in
-          if nr < 1 then raise End_of_file
+          if nr < 1 then raise_notrace End_of_file
           else String.uncapitalize_ascii (Bytes.sub_string buf 0 nr)
         with
         | "\n" -> default
         | s -> Some s
         | exception Unix.Unix_error (Unix.EINTR,_,_) -> None
-        | exception Unix.Unix_error _ -> raise End_of_file
+        | exception Unix.Unix_error _ -> raise_notrace End_of_file
       in
       match input with
       | None -> loop ()
@@ -827,7 +827,7 @@ let read fmt =
         | End_of_file ->
           msg "\n";
           None
-        | Sys.Break as e -> msg "\n"; raise e
+        | Sys.Break as e -> OpamStd.Exn.finalise e (fun () -> msg "\n")
       ) else
         None
     ) fmt
@@ -994,11 +994,10 @@ let menu ?default ?unsafe_yes ?yes ~no ~options fmt =
     | `all_no, _, _ -> print_string prompt; select no
     | _, _, _ ->
       let default_ref = ref default in
-      let change_selection =
-        fun opt ->
-          rollback_terminal nlines; (* restore cursor pos *)
-          default_ref := opt;
-          raise Exit
+      let change_selection opt =
+        rollback_terminal nlines; (* restore cursor pos *)
+        default_ref := opt;
+        raise_notrace Exit
       in
       try
         short_user_input ~prompt ~default:default_s ~on_eof:no_s @@ function

@@ -54,7 +54,7 @@ let upgrade_depexts_to_2_0_beta5 filename depexts =
     function
     | FAnd (f1, f2) -> FAnd (transform_filter f1, transform_filter f2)
     | FString s -> transform_tag s
-    | _ -> raise Exit (* the filter is already in the new format if it
+    | _ -> raise_notrace Exit (* the filter is already in the new format if it
                          contains anything else *)
   in
   List.filter_map
@@ -393,7 +393,7 @@ let from_1_1_to_1_2 ~on_the_fly:_ root config =
                            OpamPackage.Name.to_string name // "opam")
           in
           match OpamFile.OPAM.version_opt (OpamFile.OPAM.read f) with
-          | None -> raise Not_found
+          | None -> raise_notrace Not_found
           | Some v -> v
         with e ->
           OpamStd.Exn.fatal e;
@@ -734,7 +734,7 @@ let from_1_3_dev6_to_1_3_dev7 ~on_the_fly:_ root conf =
               Option.iter (fun src ->
                   OpamFilename.copy_dir ~src ~dst:(dstdir / "files"))
                 (OpamFilename.opt_dir (srcdir / "files"))
-            | None -> raise Not_found
+            | None -> raise_notrace Not_found
           with Not_found ->
             OpamFile.OPAM.write (OpamFile.make (dstdir // "opam"))
               (OpamFile.OPAM.create nv)
@@ -1199,7 +1199,7 @@ let cond_hard_upg_2_6_alpha root _conf =
                   String.equal (OpamFilename.Unix.to_string rfile)
                     OpamRepositoryPathName.repo_f
                 in
-                raise (Found (is_package || is_repo)))
+                raise_notrace (Found (is_package || is_repo)))
               () tgz;
             false
           with Found is_repo_or_package_dir -> not is_repo_or_package_dir))

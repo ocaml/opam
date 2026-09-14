@@ -81,7 +81,7 @@ let cached_digest =
     try
       let csize, cmtime, digest = Hashtbl.find item_cache f in
       if csize = size && mtime = cmtime then Digest.to_hex digest
-      else raise Not_found
+      else raise_notrace Not_found
     with Not_found ->
       let digest = Digest.file f in
       Hashtbl.replace item_cache f (size, mtime, digest);

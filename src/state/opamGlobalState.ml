@@ -22,8 +22,8 @@ let load_config lock_kind global_lock root =
     match OpamStateConfig.load ~lock_kind root with
     | Some c -> c
     | exception (OpamPp.Bad_version _ as e) ->
+      OpamStd.Exn.finalise e @@ fun () ->
       OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates ~global_lock root;
-      raise e
     | None ->
       if OpamFilename.exists (root // "aliases") then
         OpamFile.Config.(with_opam_version (OpamVersion.of_string "1.1") empty)
@@ -79,8 +79,8 @@ let load lock_kind =
   let config, global_state_to_upgrade =
     try load_config lock_kind global_lock root
     with OpamFormatUpgrade.Upgrade_done _ as e ->
+      OpamStd.Exn.finalise e @@ fun () ->
       OpamSystem.funlock config_lock;
-      raise e
   in
   if OpamStateConfig.is_newer config && lock_kind <> `Lock_write then
     log "root version (%s) is greater than running binary's (%s); \

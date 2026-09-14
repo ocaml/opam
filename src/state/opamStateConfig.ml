@@ -380,11 +380,12 @@ let local_switch_exists root switch =
   | None -> false
   | Some conf -> conf.OpamFile.Switch_config.opam_root = Some root
   | exception (OpamPp.Bad_version _ as e) ->
+    let bt = Printexc.get_raw_backtrace () in
     match OpamFile.Config.raw_root_version (OpamPath.config root) with
-    | None -> raise e
+    | None -> Printexc.raise_with_backtrace e bt
     | Some _ ->
       match downgrade_2_1_switch f with
-      | None -> raise e
+      | None -> Printexc.raise_with_backtrace e bt
       | Some conf ->
         if conf.OpamFile.Switch_config.opam_root = Some root then
           (OpamFile.Switch_config.write f conf; true)

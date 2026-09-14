@@ -94,7 +94,7 @@ module Tgz = struct
     if exists t then
       let empty =
         try
-          fold (fun _ _ _ -> raise Exit) true t
+          fold (fun _ _ _ -> raise_notrace Exit) true t
         with Exit -> false
       in
       Some empty
@@ -227,7 +227,7 @@ let delayed_read_repo = function
       try
         Tgz.fold (fun () fname content ->
             if OpamFilename.Unix.equal fname repo then
-              raise (Found content))
+              raise_notrace (Found content))
           () (Tgz.to_file tgz);
         None
       with Found content -> Some content
