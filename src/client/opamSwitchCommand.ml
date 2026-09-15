@@ -295,13 +295,20 @@ let create
   let simulate = OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show) in
   if OpamGlobalState.switch_exists gt switch then
     OpamConsole.error_and_exit `Bad_arguments
-      "There already is an installed switch named %s"
+      "There already is an installed switch named %s.\n\
+      Please see https://opam.ocaml.org/doc/FAQ.html#switch-already-present"
       (OpamSwitch.to_string switch);
   if Sys.file_exists (OpamFilename.Dir.to_string comp_dir) then
-    OpamConsole.error_and_exit `Bad_arguments
-      "Directory %S already exists, please choose a different name"
-      (OpamFilename.Dir.to_string comp_dir);
-  let gt, st =
+    if not (OpamFilename.dir_is_empty comp_dir) then
+      OpamConsole.error_and_exit `Bad_arguments
+        "Directory %S already exists, please choose a different name"
+        (OpamFilename.Dir.to_string comp_dir)
+    else
+    if not (OpamConsole.confirm
+              "Directory %S exitst and is empty, remove it?") then
+      OpamConsole.error_and_exit `Aborted "Remove %S directory and recreate switch"
+    else
+    let gt, st =
     if not simulate then
       let gt =
         OpamSwitchAction.create_empty_switch gt ?synopsis ?repos ~invariant
