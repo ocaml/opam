@@ -1205,6 +1205,10 @@ let cond_hard_upg_2_6_alpha root _conf =
           with Found is_repo_or_package_dir -> not is_repo_or_package_dir))
     repos
 
+let v2_6 = OpamVersion.of_string "2.6"
+
+let from_2_6_alpha_to_2_6 ~on_the_fly:_ _ conf = conf, gtc_none
+
 (* To add an upgrade layer
    * If it is a light upgrade, returns as second element if the repo or switch
      need an light upgrade with `gtc_*` values.
@@ -1304,6 +1308,7 @@ let upgrades root_version root config =
       v2_2_beta,   from_2_2_alpha_to_2_2_beta,     None;
       v2_2,        from_2_2_beta_to_2_2,           None;
       v2_6_alpha,  from_2_2_to_2_6_alpha,          Some cond_hard_upg_2_6_alpha;
+      v2_6,        from_2_6_alpha_to_2_6,          None;
     ]
   in
   (* First we filter the unneeded upgrades *)
