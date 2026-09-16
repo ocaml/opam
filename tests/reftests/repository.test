@@ -1503,6 +1503,7 @@ No configuration file found, using built-in defaults.
 ### opam switch create empty --empty
 ### sed -i.bak 's/opam-root-version.*/opam-root-version: "2.2"/' OPAM/config
 ### sh -c "rm OPAM/repo/*.cache"
+### opam option opam-root-version --global | '"' -> '' >$ OPAMROOTVERSION
 ### OPAMDEBUGSECTIONS="TAR FMT_UPG RSTATE" OPAMDEBUG=-5 OPAMYES=1 OPAMVERBOSE=2
 ### head -2 OPAM/config
 opam-version: "2.0"
@@ -1511,11 +1512,11 @@ opam-root-version: "2.2"
 ### tar tf OPAM/repo/old-tarred.tar.gz | grep repo
 old-tarred/repo
 ### # We need to grep over SUCCESS because of sandbox re enabled on format upgrade reinit, see #6968
-### opam repo add empty-r ./empty-repo | sed-cmd tar | grep -v SUCCESS | grep -v 'cygpath\.exe' | grep -v 'cygwin'
+### opam repo add empty-r ./empty-repo | sed-cmd tar | grep -v SUCCESS | grep -v 'cygpath\.exe' | grep -v 'cygwin' | "${OPAMROOTVERSION}($|,)" -> "current"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 TAR                             Open archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz
-FMT_UPG                         Hard config upgrade, from 2.2 to 2.6~alpha
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version 2.6~alpha, which can't be reverted.
+FMT_UPG                         Hard config upgrade, from 2.2 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version current which can't be reverted.
 You may want to back it up before going further.
 
 Perform the update and continue? [Y/n] y
@@ -1589,11 +1590,11 @@ opam-root-version: "2.2"
 ### cp old-tarred.tar.gz OPAM/repo/old-tarred.tar.gz
 ### tar tf OPAM/repo/old-tarred.tar.gz | grep repo
 old-tarred/repo
-### opam update | sed-cmd tar | grep -v SUCCESS | grep -v 'cygpath\.exe' | grep -v 'cygwin'
+### opam update | sed-cmd tar | grep -v SUCCESS | grep -v 'cygpath\.exe' | grep -v 'cygwin' | "${OPAMROOTVERSION}($|,)" -> "current"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 TAR                             Open archive ${BASEDIR}/OPAM/repo/old-tarred.tar.gz
-FMT_UPG                         Hard config upgrade, from 2.2 to 2.6~alpha
-This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version 2.6~alpha, which can't be reverted.
+FMT_UPG                         Hard config upgrade, from 2.2 to current
+This version of opam requires an update to the layout of ${BASEDIR}/OPAM from version 2.2 to version current which can't be reverted.
 You may want to back it up before going further.
 
 Perform the update and continue? [Y/n] y

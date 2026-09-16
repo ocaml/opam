@@ -542,7 +542,7 @@ Done.
 basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 cat > OPAM/config << EOF
 opam-version: "2.0"
-opam-root-version: "2.6~alpha"
+opam-root-version: "$OPAMROOTVERSION"
 repositories: "default"
 installed-switches: [
   "normal"
@@ -601,9 +601,9 @@ STATE                           Inferred invariant: from base packages {}, (root
 FILE(switch-config)             Wrote ${BASEDIR}/real-local/_opam/.opam-switch/switch-config atomically in 0.000s
 STATE                           Switch state loaded in 0.000s
 ### # check that everything was fixed
-### head OPAM/config
+### head OPAM/config | '"${OPAMROOTVERSION}"' -> "current"
 opam-version: "2.0"
-opam-root-version: "2.6~alpha"
+opam-root-version: current
 repositories: "default"
 installed-switches: [
   "normal"
