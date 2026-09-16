@@ -58,6 +58,10 @@ on:
     branches:
       - 'master'
       - '2.**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 |} name;
   if env <> [] then begin
     output_char oc '\n';

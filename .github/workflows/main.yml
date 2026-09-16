@@ -22,6 +22,10 @@ on:
       - 'master'
       - '2.**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   OPAMBSVERSION: 2.1.0
   OPAMBSROOT: ~/.cache/.opam.cached
