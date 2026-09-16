@@ -13,8 +13,8 @@ MD5_re = 03f4a83100cb9229a796b85c698076e1
 URL_ocamlgraph = https://github.com/backtracking/ocamlgraph/releases/download/2.2.0/ocamlgraph-2.2.0.tbz
 MD5_ocamlgraph = 3195404bc06fce560d5336d7614028bc
 
-URL_cudf = https://gitlab.com/irill/cudf/-/archive/v0.10/cudf-v0.10.tar.gz
-MD5_cudf = ed8fea314d0c6dc0d8811ccf860c53dd
+URL_cudf = https://gitlab.com/irill/cudf/-/archive/v0.11-rc1/cudf-v0.11-rc1.tar.gz
+MD5_cudf = aedc2a222085bd8284bf2b8f91bbeae6
 
 URL_dose3 = https://gitlab.com/irill/dose3/-/archive/7.0.0/dose3-7.0.0.tar.gz
 MD5_dose3 = bc99cbcea8fca29dca3ebbee54be45e1
