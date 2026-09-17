@@ -555,7 +555,7 @@ let main oc : unit =
     ("OPAMBSROOT", "~/.cache/.opam.cached");
     ("OPAM12CACHE", "~/.cache/opam1.2/cache");
     ("OPAM_REPO", "https://github.com/ocaml/opam-repository.git");
-    ("OPAM_TEST_REPO_SHA", "3c53726ac7d00556b0751d22e904b9153d9e7b89");
+    ("OPAM_TEST_REPO_SHA", "7779d764314a71c463cd4055e14e9bde15d99025");
     ("OPAM_REPO_SHA", "3c53726ac7d00556b0751d22e904b9153d9e7b89");
     ("SOLVER", "");
     (* Cygwin configuration *)
