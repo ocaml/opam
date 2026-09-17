@@ -199,7 +199,7 @@ let fuzzy_name t name =
   in
   match OpamPackage.Set.find_opt match_name t.packages with
   | None -> name
-  | Some match_ -> match_.name
+  | Some pkg -> pkg.name
 
 let sanitize_atom_list ?(permissive=false) ?(installed=false) t atoms =
   let atoms = List.map (fun (name,cstr) -> fuzzy_name t name, cstr) atoms in
