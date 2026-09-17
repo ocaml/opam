@@ -262,9 +262,7 @@ let depexts st nv =
   let package_opam = OpamPackage.Map.find nv st.opams in
   OpamFileTools.opams_depexts ~env (OpamPackage.Map.singleton nv package_opam)
 
-let load lock_kind gt rt switch =
-  let chrono = OpamConsole.timer () in
-  log "LOAD-SWITCH-STATE %@ %a" (slog OpamSwitch.to_string) switch;
+let check_installed gt switch =
   if not (OpamGlobalState.switch_exists gt switch) then
     (log "The switch %a does not appear to be installed according to %a"
        (slog OpamSwitch.to_string) switch
@@ -283,7 +281,11 @@ let load lock_kind gt rt switch =
      | `Env ->
        " Please fix the value of the OPAMSWITCH environment variable, or use \
         the '--switch <name>' flag")
-  else
+
+let load lock_kind gt rt switch =
+  let chrono = OpamConsole.timer () in
+  log "LOAD-SWITCH-STATE %@ %a" (slog OpamSwitch.to_string) switch;
+  check_installed gt switch;
   let gt = OpamGlobalState.fix_switch_list gt in
   let lock =
     OpamFilename.flock lock_kind (OpamPath.Switch.lock gt.root switch)

@@ -3160,7 +3160,8 @@ let switch cli =
       OpamSwitchState.drop @@ OpamSwitchCommand.reinstall st;
       `Ok ()
     | Some `current, [] ->
-      OpamSwitchCommand.show ();
+      OpamGlobalState.with_ `Lock_none @@ fun gt ->
+      OpamSwitchCommand.show gt;
       `Ok ()
     | Some `default "-", [] when OpamCLIVersion.Op.(cli @>= cli2_2) ->
       OpamGlobalState.with_ `Lock_write @@ fun gt ->
