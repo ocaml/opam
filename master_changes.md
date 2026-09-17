@@ -119,6 +119,7 @@ users)
   * auto-cancel unreachable jobs in PRs [#7147 @kit-ty-kate]
 
 ## Doc
+  * Update the documentation about the latest opam release [#7150 @kit-ty-kate]
 
 ## Security fixes
 
