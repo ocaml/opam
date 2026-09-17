@@ -16,7 +16,7 @@ let select_packages atom_locs st =
     OpamAuxCommands.simulate_autopin ~quiet:true ~for_view:true st atom_locs
   in
   let packages =
-    OpamFormula.packages_of_atoms OpamPackage.Set.Op.(st.packages ++ st.installed) atoms
+    OpamFormula.packages_of_atoms st.packages atoms
   in
   if OpamPackage.Set.is_empty packages then
     OpamConsole.error_and_exit `Not_found "No package matching %s"
