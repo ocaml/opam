@@ -197,22 +197,15 @@ let fuzzy_name t name =
   let match_name nv =
     lname = String.lowercase_ascii (OpamPackage.name_to_string nv)
   in
-  let matches =
-    OpamPackage.Set.union
-      (OpamPackage.Set.filter match_name t.installed)
-      (OpamPackage.Set.filter match_name t.packages)
-  in
-  let names = OpamPackage.names_of_packages matches in
-  match OpamPackage.Name.Set.elements names with
-  | [name] -> name
-  | _ -> name
+  match OpamPackage.Set.find_opt match_name t.packages with
+  | None -> name
+  | Some pkg -> pkg.name
 
 let sanitize_atom_list ?(permissive=false) ?(installed=false) t atoms =
   let atoms = List.map (fun (name,cstr) -> fuzzy_name t name, cstr) atoms in
   let open OpamPackage.Set.Op in
   if permissive then
-    check_availability ~permissive t
-      (t.packages ++ t.installed) atoms
+    check_availability ~permissive t t.packages atoms
   else
     check_availability t
       (if installed then t.installed ++ Lazy.force t.available_packages

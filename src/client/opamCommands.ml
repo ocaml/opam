@@ -787,9 +787,8 @@ let list ?(force_search=false) cli =
     then
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
-    let all = OpamPackage.Set.union st.packages st.installed in
     let results =
-      OpamListCommand.filter ~base:all st filter
+      OpamListCommand.filter ~base:st.packages st filter
     in
     if not no_depexts && not silent &&
        OpamFormula.exists OpamListCommand.uses_depexts state_selector then

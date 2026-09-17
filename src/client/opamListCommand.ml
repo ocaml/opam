@@ -13,7 +13,6 @@ open OpamParserTypes.FullPos
 open OpamTypes
 open OpamStateTypes
 open OpamStd.Op
-open OpamPackage.Set.Op
 
 let log fmt = OpamConsole.log "LIST" fmt
 let slog = OpamConsole.slog
@@ -153,7 +152,7 @@ let get_opam st nv =
 let packages_of_atoms st atoms =
   atoms |>
   OpamSolution.sanitize_atom_list ~permissive:true st |>
-  OpamFormula.packages_of_atoms (st.packages ++ st.installed)
+  OpamFormula.packages_of_atoms st.packages
 
 let package_dependencies st tog nv =
   get_opam st nv |>
@@ -165,7 +164,7 @@ let package_dependencies st tog nv =
 
 let atom_dependencies st tog atoms =
   atoms |>
-  OpamFormula.packages_of_atoms (st.packages ++ st.installed) |> fun pkgs ->
+  OpamFormula.packages_of_atoms st.packages |> fun pkgs ->
   OpamPackage.Set.fold (fun nv acc ->
       OpamFormula.ors [acc; package_dependencies st tog nv])
     pkgs OpamFormula.Empty
@@ -414,12 +413,12 @@ let apply_selector ~base st = function
 
 let rec filter ~base st = function
   | Empty -> base
-  | Atom select -> base %% apply_selector ~base st select
+  | Atom select -> OpamPackage.Set.Op.(base %% apply_selector ~base st select)
   | Block b -> filter ~base st b
   | And (a, b) ->
     let base = filter ~base st a in
     filter ~base st b
-  | Or (a, b) -> filter ~base st a ++ filter ~base st b
+  | Or (a, b) -> OpamPackage.Set.Op.(filter ~base st a ++ filter ~base st b)
 
 type output_format =
   | Name
@@ -723,6 +722,7 @@ let display st format packages =
       OpamPackage.Name.Set.fold (fun name ->
           let pkgs = OpamPackage.packages_of_name packages name in
           let nv =
+            let open OpamPackage.Set.Op in
             let get = OpamPackage.Set.max_elt in
             try get (pkgs %% st.installed) with Not_found ->
             try get (pkgs %% st.pinned) with Not_found ->
@@ -792,8 +792,7 @@ let print_depexts =
 let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
     ?(all_versions=false) ?(sort=false) atoms =
   let packages =
-    OpamFormula.packages_of_atoms ~disj:all_versions
-      (st.packages ++ st.installed) atoms
+    OpamFormula.packages_of_atoms ~disj:all_versions st.packages atoms
   in
   let atoms, missing_atoms =
     List.partition (fun (n,_) -> OpamPackage.has_name packages n) atoms
@@ -906,6 +905,7 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
          OpamPackage.Set.iter output_package nvs)
       else
         (let choose =
+           let open OpamPackage.Set.Op in
            try OpamPackage.Set.choose (nvs %% st.pinned) with Not_found ->
            try OpamPackage.Set.choose (nvs %% st.installed) with Not_found ->
            try OpamPackage.Set.max_elt (nvs %% Lazy.force st.available_packages)
