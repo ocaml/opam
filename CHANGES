@@ -3,6 +3,10 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.6.0:
+* Bump `opam-root-version` to 2.6 [#7146 @kit-ty-kate]
+* Improve and extend the testsuite [#7146 @kit-ty-kate @rjbou]
+
 2.6.0~rc1:
 * Fix a 2.6 performance regression where tar.gz repositories were read
   entirely twice per package installed [#7131 @kit-ty-kate]
