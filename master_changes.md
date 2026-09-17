@@ -82,6 +82,7 @@ users)
 
 ## Install script
   * Add opam 2.6.0\~rc1 to the install scripts [#7135 @kit-ty-kate]
+  * Add opam 2.6.0 to the install scripts [#7150 @kit-ty-kate]
 
 ## Admin
 
@@ -118,6 +119,7 @@ users)
   * auto-cancel unreachable jobs in PRs [#7147 @kit-ty-kate]
 
 ## Doc
+  * Update the documentation about the latest opam release [#7150 @kit-ty-kate]
 
 ## Security fixes
 
