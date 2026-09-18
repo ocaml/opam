@@ -18,6 +18,7 @@ users)
 ## Plugins
 
 ## Init
+ * [BUG] Shell integration: properly handle filenames starting with tilde [#5803 @ElectreAAS, fixes #5801]
 
 ## Config report
 
