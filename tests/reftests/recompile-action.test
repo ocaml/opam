@@ -40,23 +40,17 @@ build: [["echo" "depa reinstalled!"]]
 ### : We can see the package is now pending reinstallation
 ### opam reinstall --list-pending
 depa.1
-### : We now install foo.2, which does not depend on depa. Yet here, it will
-### : still trigger the reinstallation, because we do not use `requested` to
-### : determine which packages to reinstall but a larger set that contains all
-### : versions of packages appearing in the request.
+### : We now install foo.2, which does not depend on depa. As expected, depa
+### : is not reinstalled
 ### opam install foo.2
 The following actions will be performed:
-=== recompile 1 package
-  - recompile depa 1      [upstream or system changes]
 === install 1 package
-  - install   depb 1      [required by foo]
+  - install depb 1      [required by foo]
 === upgrade 1 package
-  - upgrade   foo  1 to 2
+  - upgrade foo  1 to 2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   foo.1
--> removed   depa.1
--> installed depa.1
 -> installed depb.1
 -> installed foo.2
 Done.
