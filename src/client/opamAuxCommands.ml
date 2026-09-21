@@ -346,11 +346,6 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
      'show' requests that use a write lock.*)
   (* assert (not (for_view &&
    *              OpamSystem.get_lock_flag st.switch_lock = `Lock_write)); *)
-  let local_names =
-    List.fold_left (fun set nf ->
-        OpamPackage.Name.Set.add nf.pin_name set)
-      OpamPackage.Name.Set.empty to_pin
-  in
   let local_opams =
     List.fold_left (fun map pin ->
         let { pin_name = name;
@@ -378,18 +373,6 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
       OpamPackage.Map.empty to_pin
   in
   let local_packages = OpamPackage.keys local_opams in
-  let pinned =
-    if for_view then
-      (* For `opam show`, to display local files instead of the stored on, we
-         need to have on the pinned set only the new simulated pinned ones instead
-         of really pinned ones. *)
-      let open OpamPackage.Set.Op in
-      st.pinned
-      -- OpamPackage.packages_of_names st.pinned
-        (OpamPackage.names_of_packages local_packages)
-      ++ local_packages
-    else st.pinned
-  in
   let overwrote_opams =
     if for_view then OpamPackage.Map.empty else
       OpamPackage.Map.filter_map (fun nv opam ->
@@ -399,36 +382,16 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
              None)
         st.opams
   in
-  let st = {
-    st with
-    opams =
-      OpamPackage.Map.union (fun _ o -> o) st.opams local_opams;
-    packages =
-      OpamPackage.Set.union st.packages local_packages;
-    available_packages = lazy (
-      OpamPackage.Set.union
-        (OpamPackage.Set.filter
-           (fun nv -> not (OpamPackage.Name.Set.mem nv.name local_names))
-           (Lazy.force st.available_packages))
-        (OpamSwitchState.compute_available_packages
-           st.switch_global st.switch st.switch_config ~pinned
-           ~opams:local_opams)
-    );
-    reinstall = lazy (
-      let open OpamPackage.Set.Op in
-      let installed_pinned = local_packages %% st.installed in
-      OpamPackage.Set.fold (fun pkg reinstall ->
-          let old_opam = OpamPackage.Map.find pkg st.installed_opams in
-          let new_opam = OpamPackage.Map.find pkg local_opams in
-          if OpamFile.OPAM.effectively_equal old_opam new_opam then
-            reinstall
-          else
-            OpamPackage.Set.add pkg reinstall)
-        installed_pinned (Lazy.force st.reinstall)
-    );
-    pinned;
-    overwrote_opams;
-  } in
+  let st =
+    let aux =
+      if for_view then
+        OpamSwitchState.update_pin
+      else
+        OpamSwitchState.update_package_metadata
+    in
+    OpamPackage.Map.fold aux local_opams st
+  in
+  let st = { st with overwrote_opams } in
   st, local_packages
 
 let simulate_pinned_atoms pins atoms =
@@ -534,7 +497,6 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
     with OpamPinCommand.Aborted ->
       OpamStd.Sys.exit_because `Aborted
   in
-  let st = OpamSwitchState.update_sys_packages pins st in
   let _result, st, _updated =
     if simulate then false, st, OpamPackage.Set.empty else
     let already_pinned =

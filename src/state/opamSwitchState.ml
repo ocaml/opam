@@ -1268,25 +1268,42 @@ let unavailable_reason st ?(default="") atom =
     default
 
 let update_package_metadata nv opam st =
-  { st with
-    opams = OpamPackage.Map.add nv opam st.opams;
-    packages = OpamPackage.Set.add nv st.packages;
-    available_packages = lazy (
-      if OpamFilter.eval_to_bool ~default:false
-          (OpamPackageVar.resolve_switch_raw ~package:nv
-             st.switch_global st.switch st.switch_config)
-          (OpamFile.OPAM.available opam)
-      then OpamPackage.Set.add nv (Lazy.force st.available_packages)
-      else OpamPackage.Set.remove nv (Lazy.force st.available_packages)
-    );
-    reinstall = lazy
-      (match OpamPackage.Map.find_opt nv st.installed_opams with
-       | Some inst ->
-         if OpamFile.OPAM.effectively_equal inst opam
-         then OpamPackage.Set.remove nv (Lazy.force st.reinstall)
-         else OpamPackage.Set.add nv (Lazy.force st.reinstall)
-       | _ -> Lazy.force st.reinstall);
-  }
+  let st =
+    { st with
+      opams = OpamPackage.Map.add nv opam st.opams;
+      packages = OpamPackage.Set.add nv st.packages;
+      available_packages = lazy (
+        if OpamFilter.eval_to_bool ~default:false
+            (OpamPackageVar.resolve_switch_raw ~package:nv
+               st.switch_global st.switch st.switch_config)
+            (OpamFile.OPAM.available opam)
+        then OpamPackage.Set.add nv (Lazy.force st.available_packages)
+        else OpamPackage.Set.remove nv (Lazy.force st.available_packages)
+      );
+      reinstall = lazy
+        (match OpamPackage.Map.find_opt nv st.installed_opams with
+         | Some inst ->
+           if OpamFile.OPAM.effectively_equal inst opam
+           then OpamPackage.Set.remove nv (Lazy.force st.reinstall)
+           else OpamPackage.Set.add nv (Lazy.force st.reinstall)
+         | _ -> Lazy.force st.reinstall);
+    }
+  in
+  if not OpamStateConfig.(!r.depexts) ||
+     OpamSysPkg.Set.is_empty (depexts st nv) then
+    st
+  else
+    let sys_packages = lazy (
+      OpamPackage.Map.union (fun _ n -> n)
+        (Lazy.force st.sys_packages)
+        (depexts_status_of_packages st
+           (OpamPackage.Set.singleton nv))
+    ) in
+    let available_packages = lazy (
+      OpamPackage.Set.filter (fun nv -> depexts_unavailable st nv = None)
+        (Lazy.force st.available_packages)
+    ) in
+    { st with sys_packages; available_packages }
 
 let remove_package_metadata nv st =
   { st with
@@ -1294,6 +1311,8 @@ let remove_package_metadata nv st =
     packages = OpamPackage.Set.remove nv st.packages;
     available_packages =
       lazy (OpamPackage.Set.remove nv (Lazy.force st.available_packages));
+    sys_packages =
+      lazy (OpamPackage.Map.remove nv (Lazy.force st.sys_packages));
   }
 
 let update_pin nv opam st =
@@ -1307,58 +1326,7 @@ let update_pin nv opam st =
   let available_packages = lazy (
     OpamPackage.filter_name_out (Lazy.force st.available_packages) nv.name
   ) in
-  let st =
-    update_package_metadata nv opam { st with pinned; available_packages }
-  in
-  if not OpamStateConfig.(!r.depexts)
-  || OpamSysPkg.Set.is_empty (depexts st nv)
-  then st else
-  let sys_packages = lazy (
-    OpamPackage.Map.union (fun _ n -> n)
-      (Lazy.force st.sys_packages)
-      (depexts_status_of_packages st
-         (OpamPackage.Set.singleton nv))
-  ) in
-  let available_packages = lazy (
-    OpamPackage.Set.filter (fun nv -> depexts_unavailable st nv = None)
-      (Lazy.force st.available_packages)
-  ) in
-  { st with sys_packages; available_packages }
-
-let update_sys_packages pkgs st =
-  let depexts_s =
-    OpamPackage.Set.fold (fun p acc ->
-        OpamSysPkg.Set.Op.(depexts st p ++ acc))
-      pkgs OpamSysPkg.Set.empty
-  in
-  if OpamSysPkg.Set.is_empty depexts_s then
-    st
-  else
-    (* Check if an update is to be made *)
-    let update_depexts () =
-      let sys_packages = lazy (
-        OpamPackage.Map.union (fun _ x -> x)
-          (Lazy.force st.sys_packages)
-          (depexts_status_of_packages st pkgs)
-      ) in
-      { st with sys_packages }
-    in
-    match st.switch_repos.repos_syspkgs_available with
-    | None -> update_depexts ()
-    | Some (family, availability) ->
-      if OpamSysInteract.same_os_family family
-          ~env:st.switch_global.global_variables then
-        match availability with
-        | OpamSysPkg.Available available_pkgs ->
-          if OpamSysPkg.Set.is_empty available_pkgs
-          || not (OpamSysPkg.Set.subset depexts_s available_pkgs)
-          then
-            update_depexts ()
-          else
-            st
-        | Suppose_available -> st
-      else
-        update_depexts ()
+  update_package_metadata nv opam { st with pinned; available_packages }
 
 let do_backup lock st = match lock with
   | `Lock_write ->
