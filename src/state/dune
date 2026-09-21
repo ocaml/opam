@@ -3,7 +3,6 @@
   (public_name opam-state)
   (libraries   opam-repository re spdx_licenses patch)
   (synopsis    "OCaml Package Manager instance management library")
-  (modules_without_implementation OpamStateTypes)
   (modules     :standard)
   (flags       (:standard
                (:include ../ocaml-flags-standard.sexp)

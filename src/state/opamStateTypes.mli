@@ -133,7 +133,7 @@ type +'lock repos_state = {
 
 
 (** State of a given switch: options, available and installed packages, etc.*)
-type +'lock switch_state = {
+type +'lock switch_state = private {
   switch_lock: OpamSystem.lock;
 
   switch_global: unlocked global_state;
@@ -248,3 +248,54 @@ type pinned_opam = {
   pinned_subpath: subpath option;
   pinned_url: url;
 }
+
+module Abs : sig
+  val create_switch_state :
+    switch_global:unlocked global_state ->
+    switch_repos:unlocked repos_state ->
+    switch_lock:OpamSystem.lock ->
+    switch:OpamTypes.switch ->
+    switch_invariant:OpamTypes.formula ->
+    compiler_packages:OpamTypes.package_set ->
+    switch_config:OpamFile.Switch_config.t ->
+    repos_package_index:OpamFile.OPAM.t OpamTypes.package_map ->
+    installed_opams:OpamFile.OPAM.t OpamTypes.package_map ->
+    installed:OpamTypes.package_set ->
+    pinned:OpamTypes.package_set ->
+    installed_roots:OpamTypes.package_set ->
+    opams:OpamFile.OPAM.t OpamTypes.package_map ->
+    conf_files:OpamFile.Dot_config.t OpamTypes.name_map ->
+    packages:OpamTypes.package_set ->
+    available_packages:OpamTypes.package_set Lazy.t ->
+    sys_packages:OpamTypes.sys_pkg_status OpamTypes.package_map Lazy.t ->
+    reinstall:OpamTypes.package_set Lazy.t ->
+    invalidated:OpamTypes.package_set Lazy.t ->
+    overwrote_opams:(bool * OpamFile.OPAM.t) OpamTypes.package_map ->
+    'a switch_state
+
+  val with_switch_lock : 'a switch_state -> OpamSystem.lock -> 'b switch_state
+
+  val add_package :
+    resolve_switch_raw:(?package:OpamPackage.Map.key ->
+                        unlocked global_state ->
+                        OpamTypes.switch ->
+                        OpamFile.Switch_config.t ->
+                        OpamFilter.env) ->
+    'a switch_state ->
+    package ->
+    OpamFile.OPAM.t ->
+    'a switch_state
+
+  val remove_package : 'a switch_state -> package -> 'a switch_state
+
+  val add_pinned :
+    resolve_switch_raw:(?package:OpamPackage.Map.key ->
+                        unlocked global_state ->
+                        OpamTypes.switch ->
+                        OpamFile.Switch_config.t ->
+                        OpamFilter.env) ->
+    'a switch_state ->
+    package ->
+    OpamFile.OPAM.t ->
+    'a switch_state
+end
