@@ -1,0 +1,62 @@
+N0REP0
+### :I: OpamSwitchState.universe takes a requested argument. requested is a set
+### : of packages. For historical reasons, it used to build a potentially larger
+### : set of packages when preparing the solver universe to determine where to
+### : apply with-test and the likes and which packages to reinstall.
+### : This is a costly operation and also happens to lead to potentially unwanted
+### : operations.
+### :
+### : Here we define 2 version of a package foo. foo.1 depends on depa and foo.2
+### : depends on depb.
+### <pkg:depa.1>
+opam-version: "2.0"
+build: [["echo" "depa installed!"]]
+### <pkg:depb.1>
+opam-version: "2.0"
+build: [["echo" "depb installed!"]]
+### <pkg:foo.1>
+opam-version: "2.0"
+depends: [ "depa" ]
+### <pkg:foo.2>
+opam-version: "2.0"
+depends: [ "depb" ]
+### OPAMYES=1
+### opam switch create bar --empty
+### : We install foo.1 which logically requires depa.1 to be installed
+### opam install foo.1
+The following actions will be performed:
+=== install 2 packages
+  - install depa 1 [required by foo]
+  - install foo  1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed depa.1
+-> installed foo.1
+Done.
+### : We then update depa.1
+### <pkg:depa.1>
+opam-version: "2.0"
+build: [["echo" "depa reinstalled!"]]
+### : We can see the package is now pending reinstallation
+### opam reinstall --list-pending
+depa.1
+### : We now install foo.2, which does not depend on depa. Yet here, it will
+### : still trigger the reinstallation, because we do not use `requested` to
+### : determine which packages to reinstall but a larger set that contains all
+### : versions of packages appearing in the request.
+### opam install foo.2
+The following actions will be performed:
+=== recompile 1 package
+  - recompile depa 1      [upstream or system changes]
+=== install 1 package
+  - install   depb 1      [required by foo]
+=== upgrade 1 package
+  - upgrade   foo  1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> removed   depa.1
+-> installed depa.1
+-> installed depb.1
+-> installed foo.2
+Done.

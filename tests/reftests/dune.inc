@@ -1995,6 +1995,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:rec-pin.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-recompile-action)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff recompile-action.test recompile-action.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-recompile-action)))
+
+(rule
+ (targets recompile-action.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:recompile-action.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-reftests)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
