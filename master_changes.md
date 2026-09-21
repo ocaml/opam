@@ -104,6 +104,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
 
 ### Engine
 

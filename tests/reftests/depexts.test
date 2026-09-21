@@ -710,3 +710,250 @@ opam believes some required external dependencies are missing. opam can:
 Installing test-poll-pkg-pin.dev.
 -> installed test-poll-pkg-pin.dev
 Done.
+### :IX: making sure explicitly requesting a package with depexts work correctly
+### unset OPAMDEBUGSECTIONS OPAMDEBUG OPAMDRYRUN
+### :IX:1: repository and local packages both with the same depexts
+### :::::: depext available and not installed
+### <pkg:test-poll-pkg.1>
+opam-version: "2.0"
+depexts: ["poll-sys-dep"]
+### <pin:test-poll-pkg-pin/test-poll-pkg-pin.opam>
+opam-version: "2.0"
+depexts: ["poll-sys-dep"]
+### opam-set-os dummy-success::poll-sys-dep
+Added '[os-family "dummy-success::poll-sys-dep" "Set through 'opam var'"]' to field global-variables in global configuration
+### :IX:1:a: Source pin with opam pin
+### opam switch create pin-repo-local-same-depext --empty
+### opam pin ./test-poll-pkg-pin | sed-cmd echo
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+
+The following system packages will first need to be installed:
+    poll-sys-dep
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "poll-sys-dep"
+- poll-sys-dep
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test-poll-pkg-pin.dev  (file://${BASEDIR}/test-poll-pkg-pin)
+-> installed test-poll-pkg-pin.dev
+Done.
+### :IX:1:b: Autopin with opam install
+### opam switch create autopin-repo-local-same-depext --empty
+### opam install ./test-poll-pkg-pin | sed-cmd echo
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+
+The following system packages will first need to be installed:
+    poll-sys-dep
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "poll-sys-dep"
+- poll-sys-dep
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test-poll-pkg-pin.dev  (file://${BASEDIR}/test-poll-pkg-pin)
+-> installed test-poll-pkg-pin.dev
+Done.
+### :IX:1:c: Autopin with opam install and deps only
+### opam switch create deps-only-autopin-repo-local-same-depext --empty
+### opam install --deps ./test-poll-pkg-pin | sed-cmd echo
+Nothing to do.
+### :IX:1:d: Install repo package with deps only
+### opam switch create deps-only-repo-local-same-depext --empty
+### opam install --deps test-poll-pkg.1 | sed-cmd echo
+Nothing to do.
+### :IX:2: repository and local packages with different depexts
+### :::::: we test only the autopin and pin paths because the
+### :::::: repository path hasn't changed
+### :::::: depext available and not installed
+### <pin:test-poll-pkg-pin/test-poll-pkg-pin.opam>
+opam-version: "2.0"
+depexts: ["local-poll-sys-dep"]
+### opam-set-os dummy-success::local-poll-sys-dep
+Added '[os-family "dummy-success::local-poll-sys-dep" "Set through 'opam var'"]' to field global-variables in global configuration
+### :IX:2:a: Source pin with opam pin
+### opam switch create pin-repo-local-diff-depext --empty
+### opam pin ./test-poll-pkg-pin | sed-cmd echo
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+
+The following system packages will first need to be installed:
+    local-poll-sys-dep
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "local-poll-sys-dep"
+- local-poll-sys-dep
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test-poll-pkg-pin.dev  (file://${BASEDIR}/test-poll-pkg-pin)
+-> installed test-poll-pkg-pin.dev
+Done.
+### :IX:2:b: Autopin with opam install
+### opam switch create autopin-repo-local-diff-depext --empty
+### opam install ./test-poll-pkg-pin | sed-cmd echo
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+
+The following system packages will first need to be installed:
+    local-poll-sys-dep
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "local-poll-sys-dep"
+- local-poll-sys-dep
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test-poll-pkg-pin.dev  (file://${BASEDIR}/test-poll-pkg-pin)
+-> installed test-poll-pkg-pin.dev
+Done.
+### :IX:2:c: Autopin with opam install and deps only
+### opam switch create deps-only-autopin-repo-local-diff-depext --empty
+### opam install --deps ./test-poll-pkg-pin | sed-cmd echo
+
+The following system packages will first need to be installed:
+    local-poll-sys-dep
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
+opam believes some required external dependencies are missing. opam can:
+> 1. Run echo to install them (may need root/sudo access)
+  2. Display the recommended echo command and wait while you run it manually (e.g. in another terminal)
+  3. Continue anyway, and, upon success, permanently register that this external dependency is present, but not detectable
+  4. Abort the installation
+
+[1/2/3/4] 1
+
++ echo "local-poll-sys-dep"
+- local-poll-sys-dep
+Nothing to do.
+### :IX:3: repository and local packages with no available depexts
+### opam-set-os dummy-success::empty
+Added '[os-family "dummy-success::empty" "Set through 'opam var'"]' to field global-variables in global configuration
+### :IX:3:a: Source pin with opam pin
+### opam switch create pin-repo-local-unavail-depext --empty
+### opam pin ./test-poll-pkg-pin | sed-cmd echo
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+[WARNING] These additional system packages are required, but not available on your system: local-poll-sys-dep
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test-poll-pkg-pin.dev  (file://${BASEDIR}/test-poll-pkg-pin)
+-> installed test-poll-pkg-pin.dev
+Done.
+### :IX:3:b: Autopin with opam install
+### opam switch create autopin-repo-local-unavail-depext --empty
+### opam install ./test-poll-pkg-pin | sed-cmd echo
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+[WARNING] These additional system packages are required, but not available on your system: local-poll-sys-dep
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test-poll-pkg-pin.dev  (file://${BASEDIR}/test-poll-pkg-pin)
+-> installed test-poll-pkg-pin.dev
+Done.
+### :IX:3:c: Autopin with opam install and deps only
+### opam switch create deps-only-autopin-repo-local-unavail-depext --empty
+### opam install --deps ./test-poll-pkg-pin | sed-cmd echo
+[WARNING] These additional system packages are required, but not available on your system: local-poll-sys-dep
+Nothing to do.
+### :IX:3:d: Install repo package with deps only
+### opam switch create deps-only-repo-local-unavail-depext --empty
+### opam install --deps test-poll-pkg.1 | sed-cmd echo
+[WARNING] These additional system packages are required, but not available on your system: poll-sys-dep
+Nothing to do.
+### :IX:4: repository and local packages with installed depexts
+### opam-set-os dummy-success:*:*:
+Added '[os-family "dummy-success:*:*:" "Set through 'opam var'"]' to field global-variables in global configuration
+### :IX:4:a: Source pin with opam pin
+### opam switch create pin-repo-local-installed-depext --empty
+### opam pin ./test-poll-pkg-pin | sed-cmd echo
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test-poll-pkg-pin.dev  (file://${BASEDIR}/test-poll-pkg-pin)
+-> installed test-poll-pkg-pin.dev
+Done.
+### :IX:4:b: Autopin with opam install
+### opam switch create autopin-repo-local-installed-depext --empty
+### opam install ./test-poll-pkg-pin | sed-cmd echo
+[NOTE] Package test-poll-pkg-pin does not exist in opam repositories registered in the current switch.
+test-poll-pkg-pin is now pinned to file://${BASEDIR}/test-poll-pkg-pin (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install test-poll-pkg-pin dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved test-poll-pkg-pin.dev  (file://${BASEDIR}/test-poll-pkg-pin)
+-> installed test-poll-pkg-pin.dev
+Done.
+### :IX:4:c: Autopin with opam install and deps only
+### opam switch create deps-only-autopin-repo-local-installed-depext --empty
+### opam install --deps ./test-poll-pkg-pin | sed-cmd echo
+Nothing to do.
+### :IX:4:d: Install repo package with deps only
+### opam switch create deps-only-repo-local-installed-depext --empty
+### opam install --deps test-poll-pkg.1 | sed-cmd echo
+Nothing to do.
