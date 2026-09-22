@@ -956,18 +956,18 @@ let undefined_filter_variable nv v =
     (OpamVariable.Full.to_string v) (OpamPackage.to_string nv)
 
 let package_env_t st ~force_dev_deps ~test ~doc ~dev_setup
-    ~requested_allpkgs ?(err_undefined=true) nv v =
+    ~requested ?(err_undefined=true) nv v =
   if OpamStd.List.mem OpamVariable.Full.equal
       v OpamPackageVar.predefined_depends_variables then
     match OpamVariable.Full.to_string v with
     | "dev" ->
       Some (B (force_dev_deps || is_dev_package st nv))
     | "with-test" ->
-      Some (B (test && OpamPackage.Set.mem nv requested_allpkgs))
+      Some (B (test && OpamPackage.Set.mem nv requested))
     | "with-doc" ->
-      Some (B (doc && OpamPackage.Set.mem nv requested_allpkgs))
+      Some (B (doc && OpamPackage.Set.mem nv requested))
     | "with-dev-setup" ->
-      Some (B (dev_setup && OpamPackage.Set.mem nv requested_allpkgs))
+      Some (B (dev_setup && OpamPackage.Set.mem nv requested))
     | _ -> None (* Computation delayed to the solver *)
   else
   let r = OpamPackageVar.resolve_switch ~package:nv st v in
@@ -976,7 +976,7 @@ let package_env_t st ~force_dev_deps ~test ~doc ~dev_setup
   r
 
 let get_dependencies_t st ~force_dev_deps ~test ~doc ~dev_setup
-    ~requested_allpkgs deps opams =
+    ~requested deps opams =
   let filter_undefined nv =
     let warn_undefined v =
       if not (OpamStd.List.mem OpamVariable.Full.equal
@@ -1005,7 +1005,7 @@ let get_dependencies_t st ~force_dev_deps ~test ~doc ~dev_setup
   OpamPackage.Map.mapi (fun nv opam ->
       OpamFilter.partial_filter_formula
         (package_env_t st ~force_dev_deps ~test ~doc
-           ~dev_setup ~requested_allpkgs ~err_undefined:false nv)
+           ~dev_setup ~requested ~err_undefined:false nv)
         (deps opam)
       |> filter_undefined nv) opams
 
@@ -1018,19 +1018,15 @@ let universe st
     ~requested
     user_action =
   let chrono = OpamConsole.timer () in
-  let names = OpamPackage.names_of_packages requested in
-  let requested_allpkgs =
-    OpamPackage.packages_of_names st.packages names
-  in
   let env =
     package_env_t st
       ~force_dev_deps ~test ~doc ~dev_setup
-      ~requested_allpkgs
+      ~requested
   in
   let get_deps =
     get_dependencies_t st
       ~force_dev_deps ~test ~doc ~dev_setup
-      ~requested_allpkgs
+      ~requested
   in
   let u_depends =
     let depend =
@@ -1075,7 +1071,7 @@ let universe st
       |> OpamFormula.packages st.packages
     in
     let requested_deps =
-      OpamPackage.Set.fixpoint resolve_deps requested_allpkgs
+      OpamPackage.Set.fixpoint resolve_deps requested
     in
     requested_deps %% Lazy.force st.reinstall ++
     match reinstall with
@@ -1463,7 +1459,7 @@ let dependencies_t st base_deps_compute deps_compute
     let get_deps =
       get_dependencies_t st
         ~force_dev_deps:false ~test:false ~doc:false
-        ~dev_setup:false ~requested_allpkgs:packages
+        ~dev_setup:false ~requested:packages
     in
     let opams =
       OpamPackage.Set.fold (fun pkg opams ->
