@@ -15,14 +15,14 @@ Done.
 ### opam pin
 ### opam list --all-versions -s --installed dry-pin
 ### opam pin --dry-run ./dry-pin
+[NOTE] Package dry-pin does not exist in opam repositories registered in the current switch.
 dry-pin is now pinned to file://${BASEDIR}/dry-pin (version dev)
 
 The following actions will be simulated:
-=== recompile 1 package
-  - recompile dry-pin dev (pinned)
+=== install 1 package
+  - install dry-pin dev (pinned)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   dry-pin.dev
 Installing dry-pin.dev.
 -> installed dry-pin.dev
 Done.
