@@ -293,10 +293,13 @@ val patch: allow_unclean:bool ->
   [`Patch_file of t | `Patch_diffs of Patch.t list ] -> Dir.t ->
   (Patch.operation list, exn) result
 
-(** [parse_patch ~dir patch_file] processes and parses a patch file.
+(** [parse_patch ~translate patch_file] parses a patch file.
     Returns the parsed patch diffs or raises an exception if the patch file
-    doesn't exist or can't be parsed. *)
-val parse_patch : dir:Dir.t -> t -> Patch.t list
+    doesn't exist or can't be parsed.
+
+    @param translate is the target base directory used for the optional
+    CRLF processing (see {!OpamPatch.translate_patch}). *)
+val parse_patch : translate:Dir.t option -> t -> Patch.t list
 
 (** Create an empty file *)
 val touch: t -> unit
