@@ -695,13 +695,14 @@ let import st ?deps_only filename =
   let importfile =
     try OpamFile.SwitchExport.read_from_string ?filename import_str
     with OpamPp.Bad_format _ as e ->
+      let bt = Printexc.get_raw_backtrace () in
       log "Error loading export file, trying the old file format";
       try
         let selections = OpamFile.LegacyState.read_from_string import_str in
         { OpamFile.SwitchExport.selections;
           extra_files = OpamHash.Map.empty;
           overlays = OpamPackage.Name.Map.empty }
-      with e1 -> OpamStd.Exn.fatal e1; raise e
+      with e1 -> OpamStd.Exn.fatal e1; Printexc.raise_with_backtrace e bt
   in
   import_t ?deps_only importfile st
 
@@ -765,7 +766,7 @@ let guess_compiler_invariant ?repos rt strings =
           if OpamPackage.Set.exists (OpamFormula.check atom)
               (OpamPackage.packages_of_name packages name)
           then OpamFormula.ands [acc; Atom atom]
-          else raise Not_found
+          else raise_notrace Not_found
         with Failure _ | Not_found ->
         try
           let v = OpamPackage.Version.of_string str in
@@ -778,7 +779,7 @@ let guess_compiler_invariant ?repos rt strings =
             if OpamPackage.Set.is_empty candidates then
               let avoided_candidates = filter removed_compiler_packages in
               if OpamPackage.Set.is_empty avoided_candidates then
-                raise Not_found
+                raise_notrace Not_found
               else
                 (if not (OpamPackage.Set.is_singleton avoided_candidates) then
                    OpamConsole.note

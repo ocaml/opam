@@ -201,14 +201,14 @@ let really_download
   OpamProcess.Job.catch
     (function
       | Failure s as e ->
+        OpamStd.Exn.finalise e @@ fun () ->
         OpamSystem.remove tmp_dst;
         if not quiet then OpamConsole.error "%s" s;
-        raise e
       | e ->
+        OpamStd.Exn.finalise e @@ fun () ->
         OpamSystem.remove tmp_dst;
         OpamStd.Exn.fatal e;
-        log "Could not download file at %s." (OpamUrl.to_string url);
-        raise e)
+        log "Could not download file at %s." (OpamUrl.to_string url))
   @@ fun () ->
   download_command ~compress ?checksum ~url ~dst:tmp_dst ()
   @@+ fun () ->

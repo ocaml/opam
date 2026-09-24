@@ -124,7 +124,7 @@ module Json = struct
     | `A jsons ->
       begin try
           let get = function
-            | None -> raise Not_found
+            | None -> raise_notrace Not_found
             | Some v -> v
           in
           Some (List.map (fun json -> get (elem_of_json json)) jsons)

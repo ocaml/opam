@@ -703,8 +703,8 @@ module Attribute = struct
             if not (OpamStd.List.mem_assoc String.equal "perm" dict) then None
             else match OpamStd.List.assoc String.equal "perm" dict with
               | `String hash ->
-                (try Some (int_of_string hash) with _ -> raise Not_found)
-              | _ -> raise Not_found
+                (try Some (int_of_string hash) with _ -> raise_notrace Not_found)
+              | _ -> raise_notrace Not_found
           in
           Some { base; md5; perm }
         with Not_found -> None

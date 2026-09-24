@@ -435,24 +435,24 @@ module MakeGraph (X: VERTEX) = struct
           let vertices_json =
             match OpamStd.List.assoc String.equal "vertices" dict with
             | `O vertices -> vertices
-            | _ -> raise Not_found in
+            | _ -> raise_notrace Not_found in
           let edges_json =
             match OpamStd.List.assoc String.equal "edges" dict with
             | `A edges -> edges
-            | _ -> raise Not_found in
+            | _ -> raise_notrace Not_found in
           let vertex_map =
             let vertex_of_json (ij, vj) =
-              let i = try int_of_string ij with _ -> raise Not_found in
+              let i = try int_of_string ij with _ -> raise_notrace Not_found in
               let v = match X.of_json vj with
-                  | None -> raise Not_found
+                  | None -> raise_notrace Not_found
                   | Some v -> v in
               (i, v) in
             List.map vertex_of_json vertices_json
           in
           let edges =
             let int_of_jsonstring = function
-              | `String s -> (try int_of_string s with _ -> raise Not_found)
-              | _ -> raise Not_found in
+              | `String s -> (try int_of_string s with _ -> raise_notrace Not_found)
+              | _ -> raise_notrace Not_found in
             let find kj =
               OpamStd.List.assoc Int.equal (int_of_jsonstring kj) vertex_map
             in
@@ -462,7 +462,7 @@ module MakeGraph (X: VERTEX) = struct
                 let label = () in
                 let dst = find (OpamStd.List.assoc String.equal "dst" dict) in
                 E.create src label dst
-              | _ -> raise Not_found
+              | _ -> raise_notrace Not_found
             in List.map edge_of_json edges_json
           in
           Some (build (List.map snd vertex_map) edges)
