@@ -10,14 +10,18 @@ type term_escape =
   | `Help of Cmdliner_manpage.format * string option ]
 
 type 'a parser =
-  Cmdliner_info.Eval.t -> Cmdliner_cline.t ->
+  Cmdliner_def.Eval.t -> Cmdliner_def.Cline.t ->
   ('a, [ `Parse of string | term_escape ]) result
 (** Type type for command line parser. given static information about
     the command line and a command line to parse returns an OCaml value. *)
 
-type 'a t = Cmdliner_info.Arg.Set.t * 'a parser
+type +'a t = 'a Cmdliner_def.Term.t
 (** The type for terms. The list of arguments it can parse and the parsing
     function that does so. *)
+
+val make : Cmdliner_def.Arg_info.Set.t -> 'a parser -> 'a t
+val argset : 'a t -> Cmdliner_def.Arg_info.Set.t
+val parser : 'a t -> 'a parser
 
 val const : 'a -> 'a t
 val app : ('a -> 'b) t -> 'a t -> 'b t
@@ -41,3 +45,4 @@ val cli_parse_result' : ('a, string) result t -> 'a t
 val main_name : string t
 val choice_names : string list t
 val with_used_args : 'a t -> ('a * string list) t
+val env : (string -> string option) t

@@ -1,0 +1,20 @@
+diff --git c/src/core/cmdliner/cmdliner.ml i/src/core/cmdliner/opamCmdliner.ml
+similarity index 100%
+rename from src/core/cmdliner/cmdliner.ml
+rename to src/core/cmdliner/opamCmdliner.ml
+diff --git c/src/core/cmdliner/cmdliner.mli i/src/core/cmdliner/opamCmdliner.mli
+similarity index 100%
+rename from src/core/cmdliner/cmdliner.mli
+rename to src/core/cmdliner/opamCmdliner.mli
+diff --git c/src/core/cmdliner/tool/cmdliner_main.ml i/src/core/cmdliner/tool/opamCmdliner_tool.ml
+similarity index 99%
+rename from src/core/cmdliner/tool/cmdliner_main.ml
+rename to src/core/cmdliner/tool/opamCmdliner_tool.ml
+index e42ac0d92..1cf473fd0 100644
+--- c/src/core/cmdliner/tool/cmdliner_main.ml
++++ i/src/core/cmdliner/tool/opamCmdliner_tool.ml
+@@ -1,3 +1,4 @@
++module Cmdliner = OpamCmdliner
+ (*---------------------------------------------------------------------------
+    Copyright (c) 2025 The cmdliner programmers. All rights reserved.
+    SPDX-License-Identifier: ISC
