@@ -716,12 +716,54 @@ let header_error fmt =
         ) fmt
     ) fmt
 
+type termios_support = {
+  os_supports_termios : bool;
+  tcflush : Unix.file_descr -> Unix.flush_queue -> unit;
+  echonl : 'a. (unit -> 'a) -> 'a;
+}
+
+let tcsetattr ~tcflush ~cont set =
+  let attr = Unix.tcgetattr Unix.stdin in
+  let reset () =
+    Unix.tcsetattr Unix.stdin TCSAFLUSH attr;
+    tcflush Unix.stdin Unix.TCIFLUSH;
+  in
+  OpamStd.Exn.finally reset @@ fun () ->
+  Unix.tcsetattr Unix.stdin TCSAFLUSH (set attr);
+  tcflush Unix.stdin Unix.TCIFLUSH;
+  cont ()
+
+let termios_support = lazy begin
+  match OpamStd.Sys.os () with
+  | Linux | Darwin | FreeBSD | OpenBSD | NetBSD | DragonFly
+  | Unix | Other _ ->
+    let echonl f = f () in
+    {os_supports_termios = true; tcflush = Unix.tcflush; echonl}
+  | Win32 | Cygwin ->
+    let tcflush _ _ = () in
+    let echonl f = f () in
+    (* TODO: We do not know how to support these platforms at the moment *)
+    {os_supports_termios = false; tcflush; echonl}
+  | Haiku ->
+    (* TODO: Remove when https://dev.haiku-os.org/ticket/20341 is fixed *)
+    let tcflush _ _ = () in
+    (* TODO: Remove when https://dev.haiku-os.org/ticket/20343 is fixed *)
+    let echonl cont =
+      tcsetattr ~tcflush ~cont (fun attr -> {attr with c_echonl = true})
+    in
+    {os_supports_termios = true; tcflush; echonl}
+end
+
 (* Reads a single char from the user when possible, a line otherwise *)
 let short_user_input ~prompt ?default ?on_eof f =
   let on_eof = OpamStd.Option.Op.(on_eof ++ default) in
   let prompt () = print_string prompt; flush stdout in
   try
-    if OpamStd.Sys.(not tty_out || os () = Win32 || os () = Cygwin || Lazy.force dumb_term) then
+    let {os_supports_termios; tcflush; echonl} = Lazy.force termios_support in
+    let is_not_interactive =
+      not OpamStd.Sys.tty_out || not os_supports_termios || Lazy.force dumb_term
+    in
+    if is_not_interactive then
       let rec loop () =
         prompt ();
         let input = match String.lowercase_ascii (read_line ()) with
@@ -732,16 +774,15 @@ let short_user_input ~prompt ?default ?on_eof f =
         | Some a -> a
         | None -> loop ()
       in
-      loop ()
+      echonl loop
     else
-    let open Unix in
-    prompt ();
+    let () = prompt () in
     let buf = Bytes.create 3 in
     let rec loop () =
       let input =
         match
           (* Some keystrokes, e.g. arrows, can return 3 chars *)
-          let nr = read stdin buf 0 3 in
+          let nr = Unix.read Unix.stdin buf 0 3 in
           if nr < 1 then raise End_of_file
           else String.uncapitalize_ascii (Bytes.sub_string buf 0 nr)
         with
@@ -758,26 +799,19 @@ let short_user_input ~prompt ?default ?on_eof f =
         | Some a -> print_endline i; a
         | None -> loop ()
     in
-    let attr = tcgetattr stdin in
-    let reset () =
-      tcsetattr stdin TCSAFLUSH attr;
-      tcflush stdin TCIFLUSH;
-    in
-    OpamStd.Exn.finally reset @@ fun () ->
-    tcsetattr stdin TCSAFLUSH
-      {attr with c_icanon = false; c_echo = false};
-    tcflush stdin TCIFLUSH;
-    loop ()
+    tcsetattr ~tcflush ~cont:loop @@ fun attr ->
+    {attr with c_vmin = 1; c_icanon = false; c_echo = false}
   with
-  | Sys.Break as e -> OpamStd.Exn.finalise e (fun () -> msg "\n")
-  | Unix.Unix_error _ | End_of_file ->
-    match on_eof with
+  | End_of_file ->
+    begin match on_eof with
     | None -> OpamStd.Exn.finalise End_of_file (fun () -> msg "\n")
     | Some d ->
       msg "%s\n" d;
       match f d with
       | Some a -> a
       | None -> assert false
+    end
+  | e -> OpamStd.Exn.finalise e (fun () -> msg "\n")
 
 let pause fmt =
   if OpamStd.Sys.tty_in then
@@ -820,6 +854,8 @@ let read fmt =
   Printf.ksprintf (fun s ->
       formatted_msg "%s " s;
       if OpamCoreConfig.(answer_is ~name:None `ask && not !r.safe_mode) then (
+        let {echonl; _} = Lazy.force termios_support in
+        echonl @@ fun () ->
         try match read_line () with
           | "" -> None
           | s  -> Some s
