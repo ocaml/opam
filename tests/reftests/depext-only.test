@@ -132,3 +132,77 @@ The following system packages will first need to be installed:
 ### OPAMVAR_os_family=dummy-success::something-else opam install foo --depext-only
 [ERROR] Package foo depends on the unavailable system package 'sys-foo'. You can use `--no-depexts' to attempt installation anyway.
 # Return code 5 #
+### : :II:1
+### : Test that depexts only works correctly and only install depexts of new packages
+### <pkg:to-update.1>
+opam-version: "2.0"
+depexts: ["ext-to-update-1"]
+### <pkg:to-update.2>
+opam-version: "2.0"
+depexts: ["ext-to-update-2"]
+### <pkg:to-remove.1>
+opam-version: "2.0"
+depexts: ["ext-to-remove"]
+### <pkg:to-install.1>
+opam-version: "2.0"
+depexts: ["ext-to-install"]
+depends: ["to-install-dep" "already-installed-dep"]
+conflicts: ["to-remove"]
+### <pkg:to-install-dep.1>
+opam-version: "2.0"
+depexts: ["ext-to-install-dep"]
+### <pkg:already-installed-dep.1>
+opam-version: "2.0"
+depexts: ["ext-already-installed-dep"]
+### <pkg:to-reinstall.1>
+opam-version: "2.0"
+depexts: ["ext-to-reinstall-1"]
+### unset OPAMDEBUGSECTIONS OPAMDEBUG OPAMDRYRUN
+### opam switch create --empty depexts-only
+### OPAMYES=1
+### opam-set-os dummy-success
+Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
+### : here we first install to-update.1, to-remove.1, to-reinstall.1 and
+### : already-installed-dep.1, voluntarily passing --no-depexts so their
+### : respective depexts are not installed but the packages are.
+### opam install to-update.1 to-remove.1 to-reinstall.1 already-installed-dep.1 --no-depexts
+The following actions will be performed:
+=== install 4 packages
+  - install already-installed-dep 1
+  - install to-reinstall          1
+  - install to-remove             1
+  - install to-update             1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed already-installed-dep.1
+-> installed to-reinstall.1
+-> installed to-remove.1
+-> installed to-update.1
+Done.
+### <pkg:to-reinstall.1>
+opam-version: "2.0"
+depexts: ["ext-to-reinstall-2"]
+### opam reinstall --list-pending
+[WARNING] Opam packages already-installed-dep.1, to-reinstall.1, to-remove.1 and to-update.1 depend on the following system packages that are no longer installed: ext-already-installed-dep ext-to-reinstall-2 ext-to-remove ext-to-update-1
+to-reinstall.1
+to-remove.1
+to-update.1
+already-installed-dep.1
+### : We then try to install to-update.2 and to-install.1 with --depext-only.
+### : The solution will contain the removal of to-remove.1 because of the conflict with c.1
+### : and to-update.1 will be upgraded to to-update.2.
+### : Since we modified the metadata of to-reinstall.1, it should be listed for reinstall.
+### : The command should only install depexts for new packages in the solution, i.e.
+### : depexts of to-update.2, to-install.1, to-install-dep.1 and already-installed-dep.1
+### : which is already installed but in the solution dependency cone and needs its
+### : depexts installed.
+### opam install to-update.2 to-install.1 --depext-only | sed-cmd echo
+[WARNING] Opam packages already-installed-dep.1, to-reinstall.1, to-remove.1 and to-update.1 depend on the following system packages that are no longer installed: ext-already-installed-dep ext-to-reinstall-2 ext-to-remove ext-to-update-1
+
+The following system packages will first need to be installed:
+    ext-already-installed-dep ext-to-install ext-to-install-dep ext-to-remove ext-to-update-1 ext-to-update-2
+
+<><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
+
++ echo "ext-already-installed-dep" "ext-to-install" "ext-to-install-dep" "ext-to-remove" "ext-to-update-1" "ext-to-update-2"
+- ext-already-installed-dep ext-to-install ext-to-install-dep ext-to-remove ext-to-update-1 ext-to-update-2
