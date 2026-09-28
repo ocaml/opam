@@ -200,9 +200,9 @@ already-installed-dep.1
 [WARNING] Opam packages already-installed-dep.1, to-reinstall.1, to-remove.1 and to-update.1 depend on the following system packages that are no longer installed: ext-already-installed-dep ext-to-reinstall-2 ext-to-remove ext-to-update-1
 
 The following system packages will first need to be installed:
-    ext-already-installed-dep ext-to-install ext-to-install-dep ext-to-remove ext-to-update-1 ext-to-update-2
+    ext-already-installed-dep ext-to-install ext-to-install-dep ext-to-update-2
 
 <><> Handling external dependencies <><><><><><><><><><><><><><><><><><><><><><>
 
-+ echo "ext-already-installed-dep" "ext-to-install" "ext-to-install-dep" "ext-to-remove" "ext-to-update-1" "ext-to-update-2"
-- ext-already-installed-dep ext-to-install ext-to-install-dep ext-to-remove ext-to-update-1 ext-to-update-2
++ echo "ext-already-installed-dep" "ext-to-install" "ext-to-install-dep" "ext-to-update-2"
+- ext-already-installed-dep ext-to-install ext-to-install-dep ext-to-update-2
