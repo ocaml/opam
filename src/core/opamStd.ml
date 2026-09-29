@@ -37,7 +37,7 @@ module type MAP = sig
   val of_json: 'a OpamJson.decoder -> 'a t OpamJson.decoder
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
-  val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
+  val strict_union : ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
   val is_singleton: 'a t -> bool
   val of_list: (key * 'a) list -> 'a t
   val safe_add: key -> 'a -> 'a t -> 'a t
@@ -308,12 +308,8 @@ module Map = struct
     let keys map =
       List.rev (M.fold (fun k _ acc -> k :: acc) map [])
 
-    let union f m1 m2 =
-      M.merge (fun _ a b -> match a, b with
-          | Some _ as s, None | None, (Some _ as s) -> s
-          | Some v1, Some v2 -> Some (f v1 v2)
-          | None, None -> assert false)
-        m1 m2
+    let strict_union f m1 m2 =
+      union (fun _key v1 v2 -> Some (f v1 v2)) m1 m2
 
     let is_singleton s =
       not (is_empty s) &&

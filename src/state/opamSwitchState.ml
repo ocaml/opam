@@ -379,7 +379,7 @@ let load lock_kind gt rt switch =
     OpamRepositoryState.build_index rt (repos_list_raw rt switch_config)
   in
   let opams =
-    OpamPackage.Map.union (fun _ x -> x) repos_package_index pinned_opams
+    OpamPackage.Map.strict_union (fun _ x -> x) repos_package_index pinned_opams
   in
   let available_packages =
     lazy (compute_available_and_pinned_packages gt switch switch_config
@@ -388,7 +388,7 @@ let load lock_kind gt rt switch =
   let opams =
     (* Keep definitions of installed packages, but lowest priority, and after
        computing availability *)
-    OpamPackage.Map.union (fun _ x -> x) installed_opams opams
+    OpamPackage.Map.strict_union (fun _ x -> x) installed_opams opams
   in
   let packages = OpamPackage.keys opams in
   let installed_without_def =
@@ -1324,7 +1324,7 @@ let update_pin nv opam st =
   || OpamSysPkg.Set.is_empty (depexts st nv)
   then st else
   let sys_packages = lazy (
-    OpamPackage.Map.union (fun _ n -> n)
+    OpamPackage.Map.strict_union (fun _ n -> n)
       (Lazy.force st.sys_packages)
       (depexts_status_of_packages st
          (OpamPackage.Set.singleton nv))
@@ -1347,7 +1347,7 @@ let update_sys_packages pkgs st =
     (* Check if an update is to be made *)
     let update_depexts () =
       let sys_packages = lazy (
-        OpamPackage.Map.union (fun _ x -> x)
+        OpamPackage.Map.strict_union (fun _ x -> x)
           (Lazy.force st.sys_packages)
           (depexts_status_of_packages st pkgs)
       ) in
@@ -1479,7 +1479,7 @@ let dependencies_t st base_deps_compute deps_compute
       let depopts =
         OpamPackage.Map.filter_map filter u_depopts
       in
-      OpamPackage.Map.union (fun d d' -> OpamFormula.And (d, d'))
+      OpamPackage.Map.strict_union (fun d d' -> OpamFormula.And (d, d'))
         depopts depends
     else
       depends

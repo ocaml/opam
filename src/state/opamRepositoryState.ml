@@ -535,7 +535,7 @@ let build_index rt repo_list =
   List.fold_left (fun acc repo_name ->
       try
         let repo_opams = OpamRepositoryName.Map.find repo_name rt.repo_opams in
-        OpamPackage.Map.union (fun a _ -> a) acc repo_opams
+        OpamPackage.Map.strict_union (fun a _ -> a) acc repo_opams
       with Not_found ->
         (* A repo is unavailable, error should have been already reported *)
         acc)

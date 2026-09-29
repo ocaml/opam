@@ -208,7 +208,7 @@ let update_sys_available_cache ?(force=false) rt =
           OpamTypesBase.filter_equal filter1 filter2
         in
         OpamRepositoryName.Map.fold (fun _ opams acc ->
-            OpamPackage.Map.union (fun x y ->
+            OpamPackage.Map.strict_union (fun x y ->
                 let depexts_x = OpamFile.OPAM.depexts x in
                 let depexts_y = OpamFile.OPAM.depexts y in
                 if OpamCompat.List.equal depexts_equal depexts_x depexts_y then

@@ -51,7 +51,7 @@ let to_string t =
 let to_summary_string t =
   let freq_table =
     SM.fold (fun _ change ->
-        SM.union (+) (SM.singleton (string_of_change ~full:false change) 1))
+        SM.strict_union (+) (SM.singleton (string_of_change ~full:false change) 1))
       t
       SM.empty
   in

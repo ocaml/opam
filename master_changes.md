@@ -141,3 +141,5 @@ users)
 
 ## opam-core
   * `OpamStd.Map.update`: was changed to the stdlib version which has a more flexible API and has better performances [#7130 @NathanReb - fix #4915]
+  * `OpamStd.Map.union`: was changed to the stdlib version which has a more flexible API and has better performances [#7170, @NathanReb]
+  * `OpamStd.Map.strict_union`: added as a replacement for the previous custom `union` API in `OpamStd` but based on `Stdlib`'s `union` for better performances [#7170, @NathanReb]

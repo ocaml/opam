@@ -21,7 +21,7 @@ let package_file_changes st packages =
       in
       match OpamFile.Changes.read_opt f with
       | None -> acc
-      | Some ch -> OpamStd.String.Map.union (fun _ x -> x) acc ch)
+      | Some ch -> OpamStd.String.Map.strict_union (fun _ x -> x) acc ch)
     packages
     OpamStd.String.Map.empty
 
@@ -402,7 +402,7 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
   let st = {
     st with
     opams =
-      OpamPackage.Map.union (fun _ o -> o) st.opams local_opams;
+      OpamPackage.Map.strict_union (fun _ o -> o) st.opams local_opams;
     packages =
       OpamPackage.Set.union st.packages local_packages;
     available_packages = lazy (
