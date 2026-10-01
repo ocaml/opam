@@ -11,6 +11,10 @@
 
 (** Git repository backend (based on {!OpamVCS}) *)
 
+exception Git_error of {cmd : string; output : string list; verbose : bool}
+
+val register_printer : unit -> unit
+
 (** Returns [OpamProcess.default_env] + some git specific environment variables
     used to make git calls more reproducible.
     Note however that it cannot be used if you need values from the global git
