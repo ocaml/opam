@@ -63,6 +63,7 @@ users)
 ## Opamfile
 
 ## External dependencies
+  * Fix the depexts installation on `opam install --deps` when the system packages already exist in a repository [#7158 @kit-ty-kate - fix #7153]
 
 ## Format upgrade
 
@@ -104,6 +105,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
 
 ### Engine
 
@@ -119,6 +121,7 @@ users)
 ## opam-repository
 
 ## opam-state
+  * `OpamSwitchState.update_sys_packages` (new in 2.6.0) was removed in favour of the already existing `update_package_metadata` or `update_pin` functions [#7158 @kit-ty-kate]
 
 ## opam-solver
 
