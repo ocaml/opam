@@ -57,14 +57,14 @@ MD5_menhir = e993231085db95ab011ffe0cd606d9dd
 URL_patch = https://github.com/hannesm/patch/releases/download/v3.1.2/patch-3.1.2.tbz
 MD5_patch = 64838d4076de9825d2046e00d0684789
 
-URL_checkseum = https://github.com/mirage/checkseum/releases/download/v0.5.3/checkseum-0.5.3.tbz
-MD5_checkseum = 432aa95f12a8eb2bbf298362c9c441e7
+URL_checkseum = https://github.com/mirage/checkseum/releases/download/v0.5.4/checkseum-0.5.4.tbz
+MD5_checkseum = 7759bc5b0a465d4836ed299c79639c41
 
 URL_optint = https://github.com/mirage/optint/releases/download/v0.3.0/optint-0.3.0.tbz
 MD5_optint = 46cc1b8bd00872529ac01407f908d389
 
-URL_decompress = https://github.com/mirage/decompress/releases/download/v1.5.3/decompress-1.5.3.tbz
-MD5_decompress = 6c22cdd6368a6c66fbcae2944578fdd7
+URL_decompress = https://github.com/mirage/decompress/releases/download/v1.6.1/decompress-1.6.1.tbz
+MD5_decompress = 2abfce01abf29c4f1ebe68be0a76559d
 
 URL_tar = https://github.com/mirage/ocaml-tar/releases/download/v3.5.0/tar-3.5.0.tbz
 MD5_tar = 06026fdb95a4a6c85a19177887351175
