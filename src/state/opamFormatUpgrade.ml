@@ -140,8 +140,8 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
       | FAnd (f1,f2) ->
         let deps1, cflt1, f1 = aux f1 in
         let deps2, cflt2, f2 = aux f2 in
-        (NMap.union (fun d1 d2 -> OpamFormula.ands [d1; d2]) deps1 deps2,
-         NMap.union (fun c1 c2 -> OpamFormula.ors [c1; c2]) cflt1 cflt2,
+        (NMap.strict_union (fun d1 d2 -> OpamFormula.ands [d1; d2]) deps1 deps2,
+         NMap.strict_union (fun c1 c2 -> OpamFormula.ors [c1; c2]) cflt1 cflt2,
          match f1, f2 with
          | Some f1, Some f2 -> Some (FAnd (f1, f2))
          | None, f | f, None -> f)
@@ -152,8 +152,8 @@ let opam_file_from_1_2_to_2_0 ?filename opam =
           OpamConsole.error "Unconvertible 'available:' disjunction in %s"
             filename
         in
-        (NMap.union (fun d1 d2 -> OpamFormula.ors [d1; d2]) deps1 deps2,
-         NMap.union (fun c1 c2 -> OpamFormula.ands [c1; c2]) cflt1 cflt2,
+        (NMap.strict_union (fun d1 d2 -> OpamFormula.ors [d1; d2]) deps1 deps2,
+         NMap.strict_union (fun c1 c2 -> OpamFormula.ands [c1; c2]) cflt1 cflt2,
          match f1, f2 with
          | Some f1, Some f2 -> Some (FOr (f1,f2))
          | None, None -> None

@@ -66,11 +66,11 @@ module type MAP = sig
   val keys: 'a t -> key list
   val values: 'a t -> 'a list
 
-  (** A key will be in the union of [m1] and [m2] if it is appears
+  (** A key will be in the strict union of [m1] and [m2] if it is appears
       either [m1] or [m2], with the corresponding value. If a key
       appears in both [m1] and [m2], then the resulting value is built
       using the function given as argument. *)
-  val union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
+  val strict_union: ('a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
 
   val is_singleton: 'a t -> bool
 

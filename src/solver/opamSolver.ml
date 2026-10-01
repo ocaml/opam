@@ -308,7 +308,7 @@ let opam2cudf_map universe version_map packages =
   fun ~depopts ~build ~post ->
     let all_depends_map =
       if depopts then
-        OpamPackage.Map.union (fun d dopts -> OpamFormula.(ands [d; dopts]))
+        OpamPackage.Map.strict_union (fun d dopts -> OpamFormula.(ands [d; dopts]))
           depends_map depopts_map
       else depends_map
     in

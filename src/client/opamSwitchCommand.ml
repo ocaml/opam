@@ -616,7 +616,7 @@ let export rt ?(freeze=false) ?(full=false)
           selections.sel_pinned
       in
       if not full then overlays else
-        OpamPackage.Map.union (fun a _ -> a) overlays
+        OpamPackage.Map.strict_union (fun a _ -> a) overlays
         @@ read_opams (fun nv -> OpamFile.OPAM.read_opt
                           (OpamPath.Switch.installed_opam root switch nv))
           (selections.sel_installed -- selections.sel_pinned)

@@ -181,7 +181,7 @@ let lock_opam ~only_direct ~keep_local st opam =
            ~unavailable:false st installed
          -- all_depends)
         |> map_of_set (`other_dep typ)
-        |> OpamPackage.Map.union (fun _v _o -> `other_dep typ) depends_map
+        |> OpamPackage.Map.strict_union (fun _v _o -> `other_dep typ) depends_map
     else
       (OpamConsole.msg "Not all dependencies of %s are satisfied, not \
                         including these: %s\n"
@@ -210,10 +210,10 @@ let lock_opam ~only_direct ~keep_local st opam =
     in
     OpamPackage.Map.(
       depends_map
-      |> union f dev_depends_map
-      |> union f test_depends_map
-      |> union f doc_depends_map
-      |> union f dev_setup_depends_map
+      |> strict_union f dev_depends_map
+      |> strict_union f test_depends_map
+      |> strict_union f doc_depends_map
+      |> strict_union f dev_setup_depends_map
     )
   in
   (* formulas *)

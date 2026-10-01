@@ -284,7 +284,7 @@ let cache_command cli =
     let errors =
       OpamParallel.reduce ~jobs
         ~nil:OpamPackage.Map.empty
-        ~merge:(OpamPackage.Map.union (fun a _ -> a))
+        ~merge:(OpamPackage.Map.strict_union (fun a _ -> a))
         ~command:(package_files_to_cache repo_root cache_dir cache_urls
                     ~recheck ?link)
         (List.sort (fun (nv1,_) (nv2,_) ->

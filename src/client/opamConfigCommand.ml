@@ -875,7 +875,7 @@ let global_allowed_fields, global_allowed_sections =
         Config.with_depext_bypass (Config.depext_bypass Config.empty);
         "sys-pkg-manager-cmd", Modifiable (
             (fun nc c -> Config.with_sys_pkg_manager_cmd
-                (OpamStd.String.Map.union (fun nc _c -> nc)
+                (OpamStd.String.Map.strict_union (fun nc _c -> nc)
                 (Config.sys_pkg_manager_cmd nc) (Config.sys_pkg_manager_cmd c)) c),
             (fun nc c ->
                let to_remove = OpamStd.String.Map.keys (Config.sys_pkg_manager_cmd nc) in
@@ -1148,7 +1148,7 @@ let vars_list_global gt =
       OpamPackageVar.global_variable_names
   in
   let all_global_vars =
-    OpamVariable.Map.union (fun _ x -> x)
+    OpamVariable.Map.strict_union (fun _ x -> x)
       all_global_vars
       (OpamVariable.Map.map snd gt.global_variables)
   in

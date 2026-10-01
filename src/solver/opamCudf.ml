@@ -498,7 +498,7 @@ let strong_and_weak_deps u deps =
           (fun name _ -> not (OpamStd.String.Map.mem name strong_deps))
           by_name
       in
-      strong_deps, OpamStd.String.Map.union Set.inter weak_deps by_name)
+      strong_deps, OpamStd.String.Map.strict_union Set.inter weak_deps by_name)
     (OpamStd.String.Map.empty, OpamStd.String.Map.empty)
     deps
 
@@ -546,7 +546,7 @@ let rec_strong_dependency_map u deps =
           SM.add name ps
             (OpamStd.Option.default SM.empty common_strong_deps)
         in
-        seen, SM.union Set.inter acc strong_deps)
+        seen, SM.strict_union Set.inter acc strong_deps)
       strong_deps (seen, SM.empty)
   in
   snd (aux Map.empty deps)
@@ -1891,7 +1891,7 @@ let compute_root_causes g requested reinstall available =
       causes
     in
     let start = Map.fold (fun k _ acc -> Set.add k acc) roots Set.empty in
-    let acc = Map.union (fun a _ -> a) acc roots in
+    let acc = Map.strict_union (fun a _ -> a) acc roots in
     Set.fold (aux start 1) start acc
   in
   (* Compute the roots of the action given a condition *)
@@ -1915,7 +1915,7 @@ let compute_root_causes g requested reinstall available =
             not (OpamPackage.Set.mem (cudf2opam p) available)
           | _ -> false)
     in
-    get_causes causes (Map.union (fun a _ -> a)  roots roots2) in
+    get_causes causes (Map.strict_union (fun a _ -> a)  roots roots2) in
   let causes =
     (* Compute causes for changed no longer available packages *)
     let roots =
