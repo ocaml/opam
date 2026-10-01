@@ -72,6 +72,8 @@ users)
 ## VCS
 
 ## Build
+  * Upgrade to checkseum 0.5.4 [#7172 @kit-ty-kate]
+  * Upgrade to decompress 1.6.1 [#7172 @kit-ty-kate]
 
 ## Infrastructure
 
