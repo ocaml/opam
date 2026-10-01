@@ -25,6 +25,8 @@ users)
 
 ## Install
 
+  * Fix a bug where `opam install --depext-only` would try to install depexts of packages that needed to be removed or upgraded [#7166, @NathanReb]
+
 ## Build (package)
 
 ## Remove
