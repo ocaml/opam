@@ -14,6 +14,10 @@
 open OpamTypes
 open OpamStateTypes
 
+(** Fails with an error message if the given switch isn't installed. The exit
+    code and hint depend on where the switch name came from. *)
+val check_installed: 'a global_state -> switch -> unit
+
 val load:
   'a lock -> 'b global_state -> 'c repos_state -> switch -> 'a switch_state
 

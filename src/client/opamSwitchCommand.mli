@@ -85,8 +85,8 @@ val set_invariant_raw:
 val set_invariant:
   ?force:bool -> rw switch_state -> formula -> rw switch_state
 
-(** Display the current compiler switch. *)
-val show: unit -> unit
+(** Display the current compiler switch, failing if it isn't installed. *)
+val show: 'a global_state -> unit
 
 (** List all the available compiler switches. *)
 val list: 'a global_state -> print_short:bool -> unit
