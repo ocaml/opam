@@ -56,7 +56,24 @@ The following actions will be performed:
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] Could not synchronize ${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1 from "git+file://${BASEDIR}/use-submodule":
-        "git -C ${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1 submodule update --init --recursive" exited with code 1
+        Command "git -C ${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1 submodule update --init --recursive" failed:
+        Submodule 'vendor' (file://${BASEDIR}/submodule) registered for path 'vendor'
+        Cloning into '${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1/vendor'...
+        fatal: '${BASEDIR}/submodule' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+        fatal: clone of 'file://${BASEDIR}/submodule' into submodule path '${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1/vendor' failed
+        Failed to clone 'vendor'. Retry scheduled
+        Cloning into '${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1/vendor'...
+        fatal: '${BASEDIR}/submodule' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+        fatal: clone of 'file://${BASEDIR}/submodule' into submodule path '${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1/vendor' failed
+        Failed to clone 'vendor' a second time, aborting
 [ERROR] Failed to get sources of submodule.1: git+file://${BASEDIR}/use-submodule
 
 OpamSolution.Fetch_fail("git+file://${BASEDIR}/use-submodule")
