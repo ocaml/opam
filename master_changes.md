@@ -74,6 +74,8 @@ users)
 ## Build
   * Upgrade the autoconf generated files (`configure`) to autoconf 2.72 [#7052 @kit-ty-kate]
   * Upgrade to cudf 0.11\~rc1 [#7145 @kit-ty-kate]
+  * Upgrade to checkseum 0.5.4 [#7172 @kit-ty-kate]
+  * Upgrade to decompress 1.6.1 [#7172 @kit-ty-kate]
 
 ## Infrastructure
 
