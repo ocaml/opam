@@ -34,13 +34,12 @@ let load_switch_config ~lock_kind gt switch =
        (OpamSwitch.to_string switch);
      OpamFile.Switch_config.empty)
 
-let filter_available_packages gt switch switch_config ~opams =
-  OpamPackage.keys @@
-    OpamPackage.Map.filter (fun package opam ->
-        OpamFilter.eval_to_bool ~default:false
-          (OpamPackageVar.resolve_switch_raw ~package gt switch switch_config)
-          (OpamFile.OPAM.available opam))
-      opams
+let filter_available_package gt switch switch_config package opam set =
+  if OpamFilter.eval_to_bool ~default:false
+      (OpamPackageVar.resolve_switch_raw ~package gt switch switch_config)
+      (OpamFile.OPAM.available opam)
+  then OpamPackage.Set.add package set
+  else OpamPackage.Set.remove package set
 
 let compute_available_and_pinned_packages gt switch switch_config ~pinned ~opams =
   (* remove all versions of pinned packages, but the pinned-to version *)
@@ -52,7 +51,11 @@ let compute_available_and_pinned_packages gt switch switch_config ~pinned ~opams
          OpamPackage.Set.mem nv pinned)
       opams
   in
-  (filter_available_packages gt switch switch_config ~opams, pinned)
+  let opams =
+    OpamPackage.Map.fold (filter_available_package gt switch switch_config)
+      opams OpamPackage.Set.empty
+  in
+  (opams, pinned)
 
 let compute_available_packages gt switch switch_config ~pinned ~opams =
   fst @@ compute_available_and_pinned_packages gt switch switch_config ~pinned ~opams
@@ -434,8 +437,8 @@ let load lock_kind gt rt switch =
     | None ->
       let available_packages =
         let lazy (available_packages, pinned) = available_packages in
-        OpamPackage.Set.union available_packages @@
-          filter_available_packages gt switch switch_config ~opams:pinned
+        OpamPackage.Map.fold (filter_available_package gt switch switch_config)
+          pinned available_packages
       in
       let invariant =
         infer_switch_invariant_raw
@@ -1283,12 +1286,8 @@ let update_package_metadata nv opam st =
       opams = OpamPackage.Map.add nv opam st.opams;
       packages = OpamPackage.Set.add nv st.packages;
       available_packages = lazy (
-        if OpamFilter.eval_to_bool ~default:false
-            (OpamPackageVar.resolve_switch_raw ~package:nv
-               st.switch_global st.switch st.switch_config)
-            (OpamFile.OPAM.available opam)
-        then OpamPackage.Set.add nv (Lazy.force st.available_packages)
-        else OpamPackage.Set.remove nv (Lazy.force st.available_packages)
+        filter_available_package st.switch_global st.switch st.switch_config
+          nv opam (Lazy.force st.available_packages)
       );
       reinstall = lazy
         (match OpamPackage.Map.find_opt nv st.installed_opams with
