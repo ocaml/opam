@@ -70,9 +70,17 @@ qemu_build() {
   local make=$4
   local arch=$5
 
+  case "$arch" in
+  x86_64) qemu_flags="-machine q35";;
+  aarch64) qemu_flags="-bios /opt/homebrew/share/qemu/edk2-aarch64-code.fd -machine virt -cpu max -device qemu-xhci -device virtio-gpu-pci -device usb-kbd";;
+  *)
+    echo "Architecture '$arch' is unsupported."
+    exit 1;;
+  esac
+
   if ! ${SSH_FASTFAIL} -p "${port}" root@localhost true; then
       qemu-img convert -O raw "./qemu-base-images/${image}.qcow2" "./qemu-base-images/${image}.raw"
-      "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" -machine q35 -m 2G -smp "${JOBS}" &
+      "qemu-system-${arch}" -drive "file=./qemu-base-images/${image}.raw,format=raw" -nic "user,hostfwd=tcp::${port}-:22" ${qemu_flags} -m 2G -smp "${JOBS}" &
   fi
   ${SSH} -p "${port}" root@localhost "${install}"
   make TAG="$TAG" JOBS="${JOBS}" qemu QEMU_PORT="${port}" REMOTE_MAKE="${make}" REMOTE_DIR="opam-release-$TAG"
@@ -94,3 +102,6 @@ make JOBS="${JOBS}" TAG="$TAG" riscv64-linux
 [ -f "${OUTDIR}/opam-$TAG-x86_64-openbsd" ] || qemu_build 9999 OpenBSD-7.7-amd64 "pkg_add gmake curl bzip2" gmake x86_64
 [ -f "${OUTDIR}/opam-$TAG-x86_64-freebsd" ] || qemu_build 9998 FreeBSD-14.3-RELEASE-amd64 "env IGNORE_OSVERSION=yes pkg install -y gmake curl bzip2" gmake x86_64
 [ -f "${OUTDIR}/opam-$TAG-x86_64-windows.exe" ] || windows_build 9997 Windows-10-x86_64
+[ -f "${OUTDIR}/opam-$TAG-arm64-netbsd" ] || qemu_build 9995 NetBSD-11.0-aarch64 "pkgin -y install gmake curl bzip2" gmake aarch64
+[ -f "${OUTDIR}/opam-$TAG-arm64-openbsd" ] || qemu_build 9994 OpenBSD-7.9-arm64 "pkg_add gmake curl bzip2" gmake aarch64
+[ -f "${OUTDIR}/opam-$TAG-arm64-freebsd" ] || qemu_build 9993 FreeBSD-15.1-RELEASE-aarch64 "env IGNORE_OSVERSION=yes pkg install -y gmake curl bzip2" gmake aarch64
