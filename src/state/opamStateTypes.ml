@@ -162,6 +162,9 @@ module Abs = struct
     }
 
   let remove_package st nv =
+    (* TODO: this looks wrong
+       e.g. remove one package from a repo shadowing the same one from a different repo.
+       We should use st.repos_package_index *)
     { st with
       opams = OpamPackage.Map.remove nv st.opams;
       packages = OpamPackage.Set.remove nv st.packages;
@@ -177,6 +180,10 @@ module Abs = struct
       OpamPackage.filter_name_out (Lazy.force st.available_packages) nv.name
     ) in
     add_package ~resolve_switch_raw { st with pinned; available_packages } nv opam
+
+  let remove_pinned st nv =
+    (* TODO: this should be homologous to add_pinned but it's clearly not *)
+    { st with pinned = OpamPackage.Set.remove nv st.pinned }
 
   let update_gt st gt =
     let rt = { st.switch_repos with repos_global = gt } in
@@ -204,4 +211,21 @@ module Abs = struct
     in
     let compiler_packages = compute_invariant_packages st in
     { st with compiler_packages }
+
+  let update_conf_files st conf_files =
+    (* TODO: this looks wrong *)
+    { st with conf_files }
+
+  let update_config switch_config st =
+    { st with switch_config }
+
+  let update_available st available_packages =
+    (* TODO: this looks wrong *)
+    { st with available_packages }
+
+  let update_invariant st switch_invariant =
+    let switch_config =
+      { st.switch_config with invariant = Some switch_invariant }
+    in
+    { st with switch_invariant; switch_config }
 end

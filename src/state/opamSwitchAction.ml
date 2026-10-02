@@ -175,7 +175,6 @@ let remove_metadata st packages =
     packages
 
 let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
-  let open OpamStd.Option.Op in
   let old_selections = OpamSwitchState.selections st in
   let reinstall0 = Lazy.force st.reinstall in
   let st =
@@ -213,7 +212,10 @@ let add_to_installed st ?(root=false) nv =
     OpamFile.Dot_config.safe_read
       (OpamPath.Switch.config st.switch_global.root st.switch nv.name)
   in
-  let st = { st with conf_files = OpamPackage.Name.Map.add nv.name conf st.conf_files } in
+  let st =
+    OpamStateTypes.Abs.update_conf_files st
+      (OpamPackage.Name.Map.add nv.name conf st.conf_files)
+  in
   if not OpamStateConfig.(!r.dryrun) then (
     install_metadata st nv;
     if OpamFile.OPAM.env opam <> [] &&
@@ -241,4 +243,5 @@ let remove_from_installed ?(keep_as_root=false) st nv =
   then
     (* note: don't remove_metadata just yet *)
     OpamEnv.write_dynamic_init_scripts st;
-  { st with conf_files = OpamPackage.Name.Map.remove nv.name st.conf_files }
+  OpamStateTypes.Abs.update_conf_files st
+    (OpamPackage.Name.Map.remove nv.name st.conf_files)

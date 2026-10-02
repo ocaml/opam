@@ -368,7 +368,9 @@ let parallel_apply t
       let add_conf conf = OpamPackage.Name.Map.add nv.name conf t.conf_files in
       OpamStd.Option.map_default add_conf t.conf_files conf
     in
-    t_ref := OpamSwitchAction.add_to_installed {t with conf_files} ~root nv;
+    t_ref :=
+      OpamSwitchAction.add_to_installed
+        (OpamStateTypes.Abs.update_conf_files t conf_files) ~root nv;
     let missing_depexts =
       (* Turns out these depexts weren't needed after all. Remember that and
          make the bypass permanent. *)
@@ -425,14 +427,13 @@ let parallel_apply t
                (OpamSysPkg.Set.elements spkgs)));
        bypass_ref := bypass;
        invariant_ref := invariant;
-       let switch_config =
-         {!t_ref.switch_config with
-          invariant = Some invariant; depext_bypass = bypass }
-       in
-       t_ref := {!t_ref with switch_invariant = invariant; switch_config};
+       t_ref :=
+         OpamStateTypes.Abs.update_config
+           { !t_ref.switch_config with depext_bypass = bypass }
+           (OpamStateTypes.Abs.update_invariant !t_ref invariant);
        if not OpamStateConfig.(!r.dryrun) then
          OpamSwitchAction.install_switch_config t.switch_global.root t.switch
-           switch_config)
+           !t_ref.switch_config)
   in
 
   let remove_from_install ?keep_as_root nv =
@@ -899,11 +900,11 @@ let parallel_apply t
             | _ -> OpamFormula.Empty)
           t.switch_invariant
       in
-      let switch_config = {t.switch_config with invariant = Some invariant} in
+      let t = OpamStateTypes.Abs.update_invariant t invariant in
       if not OpamStateConfig.(!r.dryrun) then
         OpamSwitchAction.install_switch_config t.switch_global.root t.switch
-          switch_config;
-      {t with switch_invariant = invariant; switch_config}
+          t.switch_config;
+      t
     else t
   in
   if t.switch_invariant <> original_invariant then

@@ -299,6 +299,8 @@ module Abs : sig
     OpamFile.OPAM.t ->
     'a switch_state
 
+  val remove_pinned : 'a switch_state -> package -> 'a switch_state
+
   val update_gt : 'a switch_state -> unlocked global_state -> 'a switch_state
 
   val update_reinstall : 'a switch_state -> package_set Lazy.t -> 'a switch_state
@@ -311,4 +313,12 @@ module Abs : sig
     ?pinned:package_set ->
     'a switch_state ->
     'a switch_state
+
+  val update_conf_files : 'a switch_state -> OpamFile.Dot_config.t name_map -> 'a switch_state
+
+  val update_config : OpamFile.Switch_config.t -> 'a switch_state -> 'a switch_state
+
+  val update_available : 'a switch_state -> package_set Lazy.t -> 'a switch_state
+
+  val update_invariant : 'a switch_state -> OpamFormula.t -> 'a switch_state
 end
