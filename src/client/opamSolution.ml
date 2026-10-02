@@ -581,11 +581,8 @@ let parallel_apply t
       OpamPackage.Set.Op.(minimal_install ++ not_yet_removed ++ installed)
     in
     let t =
-      { !t_ref with
-        installed = visible_installed;
-        conf_files = OpamPackage.Name.Map.filter
-            (fun name _ -> OpamPackage.Set.exists (fun pkg -> OpamPackage.Name.equal name pkg.name) visible_installed)
-            !t_ref.conf_files; }
+      OpamStateTypes.Abs.update_installed_plus_conf_files !t_ref
+        visible_installed
     in
     let source_dir nv =
       let opam = OpamSwitchState.opam t nv in
@@ -1092,7 +1089,7 @@ let simulate_new_state state t =
         | `Build _ | `Fetch _ -> installed
       )
       t state.installed in
-  { state with installed }
+  OpamStateTypes.Abs.update_installed_only state installed
 
 let dry_run state solution =
   simulate_new_state state (OpamSolver.get_atomic_action_graph solution)
@@ -1351,7 +1348,7 @@ let install_sys_packages_t ~propagate_st ~map_sysmap ~confirm env config
 let install_depexts ?(force_depext=false) ?(confirm=true) t
     ~pkg_to_install ~pkg_installed =
   let map_sysmap f t =
-    let sys_packages =
+    let sys_packages = lazy (
       OpamPackage.Set.fold (fun nv sys_map ->
           match OpamPackage.Map.find_opt nv sys_map with
           | Some status ->
@@ -1362,8 +1359,8 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t
           | None -> sys_map)
         pkg_to_install
         (Lazy.force t.sys_packages)
-    in
-    { t with sys_packages = lazy sys_packages }
+    ) in
+    OpamStateTypes.Abs.update_sys_pkgs t sys_packages
   in
   let confirm =
     confirm && not (OpamSysInteract.Cygwin.is_internal t.switch_global.config)
@@ -1416,9 +1413,9 @@ let apply ?ask t ~requested ?print_requested ?add_roots
     let action_graph = OpamSolver.get_atomic_action_graph solution in
     let new_state = simulate_new_state t action_graph in
     let new_state0 =
-      { new_state with installed =
-                         OpamPackage.Set.union new_state.installed
-                           (OpamPackage.keys skip) }
+      OpamStateTypes.Abs.update_installed_only new_state
+        (OpamPackage.Set.union new_state.installed
+           (OpamPackage.keys skip))
     in
     OpamPackage.Set.iter
       (fun p ->

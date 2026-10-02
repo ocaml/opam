@@ -260,11 +260,12 @@ let install_compiler
   let t =
     let base_comp =
       OpamSwitchState.compute_invariant_packages
-        { t with installed = t.installed
-                             -- (OpamSolver.removed_packages solution)
-                             ++ (OpamSolver.new_packages solution) }
+        (OpamStateTypes.Abs.update_installed_only t
+           (t.installed
+            -- (OpamSolver.removed_packages solution)
+            ++ (OpamSolver.new_packages solution)))
     in
-    { t with compiler_packages = base_comp }
+    OpamStateTypes.Abs.update_compilers t base_comp
   in
   let skip =
     if deps_only then

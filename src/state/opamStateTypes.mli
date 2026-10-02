@@ -314,6 +314,12 @@ module Abs : sig
     'a switch_state ->
     'a switch_state
 
+  val update_installed_only : 'a switch_state -> package_set -> 'a switch_state
+
+  val update_installed_plus_conf_files : 'a switch_state -> package_set -> 'a switch_state
+
+  val update_installed_roots : 'a switch_state -> package_set -> 'a switch_state
+
   val update_conf_files : 'a switch_state -> OpamFile.Dot_config.t name_map -> 'a switch_state
 
   val update_config : OpamFile.Switch_config.t -> 'a switch_state -> 'a switch_state
@@ -321,4 +327,12 @@ module Abs : sig
   val update_available : 'a switch_state -> package_set Lazy.t -> 'a switch_state
 
   val update_invariant : 'a switch_state -> OpamFormula.t -> 'a switch_state
+
+  val update_overwrote : 'a switch_state -> (bool * OpamFile.OPAM.t) package_map -> 'a switch_state
+
+  val update_compilers : 'a switch_state -> package_set -> 'a switch_state
+
+  val update_sys_pkgs : 'a switch_state -> sys_pkg_status package_map Lazy.t -> 'a switch_state
+
+  val pin_overwrotes : 'a switch_state -> 'a switch_state
 end

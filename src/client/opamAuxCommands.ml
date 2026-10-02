@@ -391,7 +391,7 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
     in
     OpamPackage.Map.fold aux local_opams st
   in
-  let st = { st with overwrote_opams } in
+  let st = OpamStateTypes.Abs.update_overwrote st overwrote_opams in
   st, local_packages
 
 let simulate_pinned_atoms pins atoms =

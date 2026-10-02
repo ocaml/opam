@@ -212,6 +212,26 @@ module Abs = struct
     let compiler_packages = compute_invariant_packages st in
     { st with compiler_packages }
 
+  let update_installed_only st installed =
+    (* TODO: this looks wrong *)
+    { st with installed }
+
+  let update_installed_roots st installed_roots =
+    (* TODO: this looks wrong *)
+    { st with installed_roots }
+
+  let update_installed_plus_conf_files st installed =
+    (* TODO: this looks better than update_installed_only,
+       why isn't this the default? *)
+    let conf_files =
+      OpamPackage.Name.Map.filter (fun name _ ->
+          OpamPackage.Set.exists (fun pkg ->
+              OpamPackage.Name.equal name pkg.name)
+            installed)
+        st.conf_files
+    in
+    { st with installed; conf_files }
+
   let update_conf_files st conf_files =
     (* TODO: this looks wrong *)
     { st with conf_files }
@@ -228,4 +248,25 @@ module Abs = struct
       { st.switch_config with invariant = Some switch_invariant }
     in
     { st with switch_invariant; switch_config }
+
+  let update_overwrote st overwrote_opams =
+    (* TODO: this looks wrong *)
+    { st with overwrote_opams }
+
+  let update_compilers st compiler_packages =
+    (* TODO: this looks wrong *)
+    { st with compiler_packages }
+
+  let update_sys_pkgs st sys_packages =
+    (* TODO: this looks wrong *)
+    { st with sys_packages }
+
+  let pin_overwrotes st =
+    let opams, pinned =
+      OpamPackage.Map.fold (fun nv (was_pinned, opam) (opams, pinned) ->
+          OpamPackage.Map.add nv opam opams,
+          if was_pinned then pinned else OpamPackage.Set.remove nv pinned)
+        st.overwrote_opams (st.opams, st.pinned)
+    in
+    { st with opams; pinned; overwrote_opams = OpamPackage.Map.empty }
 end

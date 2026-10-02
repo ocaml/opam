@@ -4493,7 +4493,8 @@ let lock cli =
     let st =
       (* Suppose the packages are installed to avoid errors on mutual
          dependencies *)
-      { st with installed = OpamPackage.Set.union st.installed packages }
+      OpamStateTypes.Abs.update_installed_only st
+        (OpamPackage.Set.union st.installed packages)
     in
     let pkg_done =
       OpamPackage.Set.fold (fun nv msgs ->
