@@ -185,11 +185,10 @@ let remove gt ?(confirm = true) switch =
   else gt
 
 let set_invariant_raw st invariant =
-  let switch_config = {st.switch_config with invariant = Some invariant} in
-  let st = {st with switch_invariant = invariant; switch_config } in
+  let st = OpamStateTypes.Abs.update_invariant st invariant in
   if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
     OpamSwitchAction.install_switch_config st.switch_global.root st.switch
-      switch_config;
+      st.switch_config;
   st
 
 let install_compiler
@@ -255,7 +254,7 @@ let install_compiler
       if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
         OpamSwitchAction.install_switch_config t.switch_global.root t.switch
           switch_config;
-      { t with switch_config }
+      OpamStateTypes.Abs.update_config switch_config t
     else t
   in
   let t =

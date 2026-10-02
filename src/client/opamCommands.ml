@@ -776,9 +776,10 @@ let list ?(force_search=false) cli =
     let st =
       let open OpamFile.Switch_config in
       let conf = st.switch_config in
-      { st with switch_config =
-        { conf with variables =
-          conf.variables @ List.map (fun (var, v) -> var, S v) vars } }
+      OpamStateTypes.Abs.update_config
+        { conf with
+          variables = conf.variables @ List.map (fun (var, v) -> var, S v) vars }
+        st
     in
     if not depexts &&
        not format.OpamListCommand.short &&
