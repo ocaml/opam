@@ -298,4 +298,6 @@ module Abs : sig
     package ->
     OpamFile.OPAM.t ->
     'a switch_state
+
+  val update_gt : 'a switch_state -> unlocked global_state -> 'a switch_state
 end

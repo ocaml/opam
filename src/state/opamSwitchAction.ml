@@ -134,8 +134,7 @@ let set_current_switch gt st =
   let config = OpamFile.Config.with_switch st.switch gt.config in
   let gt = { gt with config } in
   OpamGlobalState.write gt;
-  let rt = { st.switch_repos with repos_global = gt } in
-  let st = { st with switch_global = gt; switch_repos = rt } in
+  let st = OpamStateTypes.Abs.update_gt st gt in
   OpamEnv.write_dynamic_init_scripts st;
   st
 

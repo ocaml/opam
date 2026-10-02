@@ -177,4 +177,8 @@ module Abs = struct
       OpamPackage.filter_name_out (Lazy.force st.available_packages) nv.name
     ) in
     add_package ~resolve_switch_raw { st with pinned; available_packages } nv opam
+
+  let update_gt st gt =
+    let rt = { st.switch_repos with repos_global = gt } in
+    { st with switch_global = gt; switch_repos = rt }
 end
