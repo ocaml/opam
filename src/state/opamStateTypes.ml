@@ -181,4 +181,27 @@ module Abs = struct
   let update_gt st gt =
     let rt = { st.switch_repos with repos_global = gt } in
     { st with switch_global = gt; switch_repos = rt }
+
+  let update_reinstall st reinstall =
+    (* TODO: this looks wrong *)
+    { st with reinstall }
+
+  let update_installed ~compute_invariant_packages ?installed ?installed_roots ?reinstall ?pinned st =
+    (* TODO: this looks wrong *)
+    let open OpamStd.Option.Op in
+    let open OpamPackage.Set.Op in
+    let installed = installed +! st.installed in
+    let reinstall = lazy (
+      (reinstall +! Lazy.force st.reinstall) %% installed
+    ) in
+    let st =
+      { st with
+        installed;
+        installed_roots = installed_roots +! st.installed_roots;
+        reinstall;
+        pinned = pinned +! st.pinned;
+      }
+    in
+    let compiler_packages = compute_invariant_packages st in
+    { st with compiler_packages }
 end

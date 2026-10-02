@@ -300,4 +300,15 @@ module Abs : sig
     'a switch_state
 
   val update_gt : 'a switch_state -> unlocked global_state -> 'a switch_state
+
+  val update_reinstall : 'a switch_state -> package_set Lazy.t -> 'a switch_state
+
+  val update_installed :
+    compute_invariant_packages:('a switch_state -> package_set) ->
+    ?installed:package_set ->
+    ?installed_roots:package_set ->
+    ?reinstall:package_set ->
+    ?pinned:package_set ->
+    'a switch_state ->
+    'a switch_state
 end
