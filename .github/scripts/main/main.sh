@@ -159,26 +159,19 @@ if [ "$OPAM_TEST" = "1" ]; then
   # test if an upgrade is needed
   need-upgrade
 
+  (set +x ; echo -en "::group::opam-tests\r") 2>/dev/null
   # Note: these tests require a "system" compiler and will use the one in $OPAMBSROOT
   opam exec -- make tests
+  (set +x ; echo -en "::endgroup::opam-tests\r") 2>/dev/null
 
   make distclean
-
-  # Compile and run opam-rt
-  (set +x ; echo -en "::group::opam-rt\r") 2>/dev/null
-  prepare_project "https://github.com/ocaml-opam/opam-rt" "opam-rt"
-
-  # opam lib pins defined in opam-rt are ignored as there is a local pin
-  opam pin . -yn --ignore-pin-depends
-  opam install opam-rt --deps-only opam-devel
-  opam exec -- make || { opam reinstall opam-client -y; opam exec -- make; }
-  (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
 
   # Test https://github.com/ocaml/opam/issues/6963
   # Done here instead of reftests because sudo/root access is required
   # This test makes sure that opam is able to handle git repositories
   # with different owner uid, which is forbidden by git since CVE-2022-24765
   # https://github.blog/open-source/git/git-security-vulnerability-announced
+  (set +x ; echo -en "::group::opam-git-dir-access\r") 2>/dev/null
   testdir=/tmp/opam-test-6963
   git init "$testdir"
   cat > "$testdir/opam" << EOF
@@ -195,6 +188,17 @@ EOF
     exit 1
   fi
   opam install -y "$testdir"
+  (set +x ; echo -en "::endgroup::opam-git-dir-access\r") 2>/dev/null
+
+  # Compile opam-rt
+  (set +x ; echo -en "::group::opam-rt\r") 2>/dev/null
+  prepare_project "https://github.com/ocaml-opam/opam-rt" "opam-rt"
+
+  # opam lib pins defined in opam-rt are ignored as there is a local pin
+  opam pin . -yn --ignore-pin-depends
+  opam install opam-rt --deps-only opam-devel
+  opam exec -- make || { opam reinstall opam-client -y; opam exec -- make; }
+  (set +x ; echo -en "::endgroup::opam-rt\r") 2>/dev/null
 fi
 
 test_project () {
