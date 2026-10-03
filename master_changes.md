@@ -24,6 +24,7 @@ users)
 ## Actions
 
 ## Install
+  * Create symlinks atomically through a temporary name and `rename`, fixing a "File exists" failure when two opam processes populate the download cache at the same time [#7147 @Abhayindia - fix #5739]
 
 ## Build (package)
 
