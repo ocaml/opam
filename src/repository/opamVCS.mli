@@ -21,8 +21,13 @@ module type VCS = sig
   (** Test whether the given repository is correctly initialized. *)
   val exists: dirname -> bool
 
-  (** Init a repository. *)
-  val init: dirname -> url -> unit OpamProcess.job
+  (** Init a repository.
+      If [for_source] is set to true, opam-specific VCS configuration
+      will be avoided. *)
+  val init: ?for_source:bool -> dirname -> url -> unit OpamProcess.job
+  
+  (** Clone a repository. *)
+  val clone: ?full_fetch:bool -> dirname -> url -> unit OpamProcess.job
 
   (** Fetch changes from upstream. This is supposed to put the changes
       in a staging area.
