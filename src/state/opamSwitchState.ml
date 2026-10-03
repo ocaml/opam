@@ -657,17 +657,18 @@ let load lock_kind gt rt switch =
     Lazy.force sys_packages_changed
     -- Lazy.force available_packages
   ) in
-  let st = {
-    switch_global = (gt :> unlocked global_state);
-    switch_repos = (rt :> unlocked repos_state);
-    switch_lock = lock;
-    switch; switch_invariant; compiler_packages; switch_config;
-    repos_package_index; installed_opams;
-    installed; pinned; installed_roots;
-    opams; conf_files;
-    packages; available_packages; sys_packages; reinstall; invalidated;
-    overwrote_opams = OpamPackage.Map.empty;
-  } in
+  let st =
+    OpamStateTypes.Abs.create_switch_state
+      ~switch_global:(gt :> unlocked global_state)
+      ~switch_repos:(rt :> unlocked repos_state)
+      ~switch_lock:lock
+      ~switch ~switch_invariant ~compiler_packages ~switch_config
+      ~repos_package_index ~installed_opams
+      ~installed ~pinned ~installed_roots
+      ~opams ~conf_files
+      ~packages ~available_packages ~sys_packages ~reinstall ~invalidated
+      ~overwrote_opams:OpamPackage.Map.empty
+  in
   log "Switch state loaded in %.3fs" (chrono ());
   st
 
@@ -688,31 +689,30 @@ let load_virtual ?repos_list ?(avail_default=true) gt rt =
       opams
     |> OpamPackage.keys
   ) in
-  {
-    switch_global = (gt :> unlocked global_state);
-    switch_repos = (rt :> unlocked repos_state);
-    switch_lock = OpamSystem.lock_none;
-    switch = OpamSwitch.unset;
-    switch_invariant = OpamFormula.Empty;
-    compiler_packages = OpamPackage.Set.empty;
-    switch_config = {
+  OpamStateTypes.Abs.create_switch_state
+    ~switch_global:(gt :> unlocked global_state)
+    ~switch_repos:(rt :> unlocked repos_state)
+    ~switch_lock:OpamSystem.lock_none
+    ~switch:OpamSwitch.unset
+    ~switch_invariant:OpamFormula.Empty
+    ~compiler_packages:OpamPackage.Set.empty
+    ~switch_config:{
       OpamFile.Switch_config.empty
       with OpamFile.Switch_config.repos = Some repos_list;
-    };
-    installed = OpamPackage.Set.empty;
-    installed_opams = OpamPackage.Map.empty;
-    pinned = OpamPackage.Set.empty;
-    installed_roots = OpamPackage.Set.empty;
-    repos_package_index = opams;
-    opams;
-    conf_files = OpamPackage.Name.Map.empty;
-    packages;
-    sys_packages = lazy OpamPackage.Map.empty;
-    available_packages;
-    reinstall = lazy OpamPackage.Set.empty;
-    invalidated = lazy (OpamPackage.Set.empty);
-    overwrote_opams = OpamPackage.Map.empty;
-  }
+    }
+    ~installed:OpamPackage.Set.empty
+    ~installed_opams:OpamPackage.Map.empty
+    ~pinned:OpamPackage.Set.empty
+    ~installed_roots:OpamPackage.Set.empty
+    ~repos_package_index:opams
+    ~opams
+    ~conf_files:OpamPackage.Name.Map.empty
+    ~packages
+    ~sys_packages:(lazy OpamPackage.Map.empty)
+    ~available_packages
+    ~reinstall:(lazy OpamPackage.Set.empty)
+    ~invalidated:(lazy OpamPackage.Set.empty)
+    ~overwrote_opams:OpamPackage.Map.empty
 
 let selections st =
   { sel_installed = st.installed;
@@ -735,11 +735,11 @@ let with_write_lock ?dontblock st f =
        and cannot be written to";
   let ret, st =
     OpamFilename.with_flock_upgrade `Lock_write ?dontblock st.switch_lock
-    @@ fun _ -> f ({ st with switch_lock = st.switch_lock } : rw switch_state)
+    @@ fun _ -> f (OpamStateTypes.Abs.with_switch_lock st st.switch_lock : rw switch_state)
     (* We don't actually change the field value, but this makes restricting the
        phantom lock type possible*)
   in
-  ret, { st with switch_lock = st.switch_lock }
+  ret, OpamStateTypes.Abs.with_switch_lock st st.switch_lock
 
 let opam st nv = OpamPackage.Map.find nv st.opams
 
@@ -1217,7 +1217,7 @@ let unavailable_reason_raw st (name, vformula) =
                    avail) then
       `Unavailable
         (Printf.sprintf "%s'%s'"
-           (if OpamPackage.Set.cardinal candidates = 1 then ": "
+           (if OpamPackage.Set.is_singleton candidates then ": "
             else ", e.g. ")
            (OpamFilter.to_string avail))
     else if OpamPackage.has_name
@@ -1278,65 +1278,15 @@ let unavailable_reason st ?(default="") atom =
     default
 
 let update_package_metadata nv opam st =
-  let st =
-    { st with
-      opams = OpamPackage.Map.add nv opam st.opams;
-      packages = OpamPackage.Set.add nv st.packages;
-      available_packages = lazy (
-        if OpamFilter.eval_to_bool ~default:false
-            (OpamPackageVar.resolve_switch_raw ~package:nv
-               st.switch_global st.switch st.switch_config)
-            (OpamFile.OPAM.available opam)
-        then OpamPackage.Set.add nv (Lazy.force st.available_packages)
-        else OpamPackage.Set.remove nv (Lazy.force st.available_packages)
-      );
-      reinstall = lazy
-        (match OpamPackage.Map.find_opt nv st.installed_opams with
-         | Some inst ->
-           if OpamFile.OPAM.effectively_equal inst opam
-           then OpamPackage.Set.remove nv (Lazy.force st.reinstall)
-           else OpamPackage.Set.add nv (Lazy.force st.reinstall)
-         | _ -> Lazy.force st.reinstall);
-    }
-  in
-  if not OpamStateConfig.(!r.depexts) ||
-     OpamSysPkg.Set.is_empty (depexts st nv) then
-    st
-  else
-    let sys_packages = lazy (
-      OpamPackage.Map.strict_union (fun _ n -> n)
-        (Lazy.force st.sys_packages)
-        (depexts_status_of_packages st
-           (OpamPackage.Set.singleton nv))
-    ) in
-    let available_packages = lazy (
-      OpamPackage.Set.filter (fun nv -> depexts_unavailable st nv = None)
-        (Lazy.force st.available_packages)
-    ) in
-    { st with sys_packages; available_packages }
+  OpamStateTypes.Abs.add_package st nv opam
+    ~resolve_switch_raw:OpamPackageVar.resolve_switch_raw
 
 let remove_package_metadata nv st =
-  { st with
-    opams = OpamPackage.Map.remove nv st.opams;
-    packages = OpamPackage.Set.remove nv st.packages;
-    available_packages =
-      lazy (OpamPackage.Set.remove nv (Lazy.force st.available_packages));
-    sys_packages =
-      lazy (OpamPackage.Map.remove nv (Lazy.force st.sys_packages));
-  }
+  OpamStateTypes.Abs.remove_package st nv
 
 let update_pin nv opam st =
-  let version =
-    OpamStd.Option.default nv.version (OpamFile.OPAM.version_opt opam)
-  in
-  let nv = OpamPackage.create nv.name version in
-  let pinned =
-    OpamPackage.Set.add nv (OpamPackage.filter_name_out st.pinned nv.name)
-  in
-  let available_packages = lazy (
-    OpamPackage.filter_name_out (Lazy.force st.available_packages) nv.name
-  ) in
-  update_package_metadata nv opam { st with pinned; available_packages }
+  OpamStateTypes.Abs.add_pinned st nv opam
+    ~resolve_switch_raw:OpamPackageVar.resolve_switch_raw
 
 let do_backup lock st = match lock with
   | `Lock_write ->

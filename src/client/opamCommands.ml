@@ -776,9 +776,10 @@ let list ?(force_search=false) cli =
     let st =
       let open OpamFile.Switch_config in
       let conf = st.switch_config in
-      { st with switch_config =
-        { conf with variables =
-          conf.variables @ List.map (fun (var, v) -> var, S v) vars } }
+      OpamStateTypes.Abs.update_config
+        { conf with
+          variables = conf.variables @ List.map (fun (var, v) -> var, S v) vars }
+        st
     in
     if not depexts &&
        not format.OpamListCommand.short &&
@@ -4492,7 +4493,8 @@ let lock cli =
     let st =
       (* Suppose the packages are installed to avoid errors on mutual
          dependencies *)
-      { st with installed = OpamPackage.Set.union st.installed packages }
+      OpamStateTypes.Abs.update_installed_only st
+        (OpamPackage.Set.union st.installed packages)
     in
     let pkg_done =
       OpamPackage.Set.fold (fun nv msgs ->
