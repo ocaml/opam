@@ -316,6 +316,8 @@ module Abs : sig
 
   val update_installed_only : 'a switch_state -> package_set -> 'a switch_state
 
+  val update_reinstall_only : 'a switch_state -> package_set Lazy.t -> 'a switch_state
+
   val update_installed_plus_conf_files : 'a switch_state -> package_set -> 'a switch_state
 
   val update_installed_roots : 'a switch_state -> package_set -> 'a switch_state
@@ -324,9 +326,11 @@ module Abs : sig
 
   val update_config : OpamFile.Switch_config.t -> 'a switch_state -> 'a switch_state
 
-  val update_available : 'a switch_state -> package_set Lazy.t -> 'a switch_state
+  val update_invariant_and_config : 'a switch_state -> OpamFile.Switch_config.t -> 'a switch_state
 
   val update_invariant : 'a switch_state -> OpamFormula.t -> 'a switch_state
+
+  val update_available : 'a switch_state -> package_set Lazy.t -> 'a switch_state
 
   val update_overwrote : 'a switch_state -> (bool * OpamFile.OPAM.t) package_map -> 'a switch_state
 
@@ -334,5 +338,18 @@ module Abs : sig
 
   val update_sys_pkgs : 'a switch_state -> sys_pkg_status package_map Lazy.t -> 'a switch_state
 
+  val update_name_and_available : 'a switch_state -> switch -> package_set Lazy.t -> 'a switch_state
+
+  val import :
+    'a switch_state ->
+    available_packages:OpamTypes.package_set Lazy.t ->
+    packages:OpamTypes.package_set ->
+    compiler_packages:OpamTypes.package_set ->
+    pinned:OpamTypes.package_set ->
+    opams:OpamFile.OPAM.t OpamTypes.package_map ->
+    'a switch_state
+
   val pin_overwrotes : 'a switch_state -> 'a switch_state
+
+  val empty_installed : 'a switch_state -> 'a switch_state
 end

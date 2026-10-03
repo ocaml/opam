@@ -216,6 +216,10 @@ module Abs = struct
     (* TODO: this looks wrong *)
     { st with installed }
 
+  let update_reinstall_only st reinstall =
+    (* TODO: this looks wrong *)
+    { st with reinstall }
+
   let update_installed_roots st installed_roots =
     (* TODO: this looks wrong *)
     { st with installed_roots }
@@ -239,15 +243,24 @@ module Abs = struct
   let update_config switch_config st =
     { st with switch_config }
 
-  let update_available st available_packages =
-    (* TODO: this looks wrong *)
-    { st with available_packages }
+  let update_invariant_and_config st switch_config =
+    (* TODO: should this simply be in update_config by default? *)
+    let switch_invariant =
+      match switch_config.OpamFile.Switch_config.invariant with
+      | None -> assert false (* TODO *)
+      | Some invariant -> invariant
+    in
+    { st with switch_invariant; switch_config }
 
   let update_invariant st switch_invariant =
     let switch_config =
       { st.switch_config with invariant = Some switch_invariant }
     in
     { st with switch_invariant; switch_config }
+
+  let update_available st available_packages =
+    (* TODO: this looks wrong *)
+    { st with available_packages }
 
   let update_overwrote st overwrote_opams =
     (* TODO: this looks wrong *)
@@ -261,6 +274,19 @@ module Abs = struct
     (* TODO: this looks wrong *)
     { st with sys_packages }
 
+  let update_name_and_available st switch available_packages =
+    (* TODO: this looks wrong *)
+    { st with switch; available_packages }
+
+  let import st ~available_packages ~packages ~compiler_packages ~pinned ~opams =
+    (* TODO: this looks wrong *)
+    { st with
+      available_packages;
+      packages;
+      compiler_packages;
+      pinned;
+      opams }
+
   let pin_overwrotes st =
     let opams, pinned =
       OpamPackage.Map.fold (fun nv (was_pinned, opam) (opams, pinned) ->
@@ -269,4 +295,11 @@ module Abs = struct
         st.overwrote_opams (st.opams, st.pinned)
     in
     { st with opams; pinned; overwrote_opams = OpamPackage.Map.empty }
+
+  let empty_installed st =
+    (* TODO: what is the purpose on this??! *)
+    { st with
+      installed = OpamPackage.Set.empty;
+      installed_roots = OpamPackage.Set.empty;
+      reinstall = Lazy.from_val OpamPackage.Set.empty }
 end
