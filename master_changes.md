@@ -60,6 +60,7 @@ users)
 ## Clean
 
 ## Env
+  * Detect an interactive shell with `case $- in *i*)` rather than `[ -t 0 ]` in the sh/bash init script, so the hooks are sourced when stdin is not a tty, e.g. under VSCode remote ssh [#7146 @Abhayindia - fix #6606]
 
 ## Opamfile
 
