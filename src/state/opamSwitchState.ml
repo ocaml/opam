@@ -681,12 +681,13 @@ let load_virtual ?repos_list ?(avail_default=true) gt rt =
   in
   let packages = OpamPackage.keys opams in
   let available_packages = lazy (
-    OpamPackage.Map.filter (fun _ opam ->
-        OpamFilter.eval_to_bool ~default:avail_default
-          (OpamPackageVar.resolve_global gt)
-          (OpamFile.OPAM.available opam))
-      opams
-    |> OpamPackage.keys
+    OpamPackage.Map.fold (fun nv opam set ->
+        if OpamFilter.eval_to_bool ~default:avail_default
+            (OpamPackageVar.resolve_global gt)
+            (OpamFile.OPAM.available opam)
+        then OpamPackage.Set.add nv set
+        else set)
+      opams OpamPackage.Set.empty
   ) in
   {
     switch_global = (gt :> unlocked global_state);

@@ -730,14 +730,15 @@ let get_compiler_packages ?repos rt =
     | Some r -> r
   in
   let package_index = OpamRepositoryState.build_index rt repos in
-  OpamPackage.Map.filter
-    (fun _ opam ->
-       OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
-       OpamFilter.eval_to_bool ~default:false
-         (OpamPackageVar.resolve_global rt.repos_global)
-         (OpamFile.OPAM.available opam))
-    package_index
-  |> OpamPackage.keys
+  OpamPackage.Map.fold
+    (fun nv opam set ->
+       if OpamFile.OPAM.has_flag Pkgflag_Compiler opam &&
+          OpamFilter.eval_to_bool ~default:false
+            (OpamPackageVar.resolve_global rt.repos_global)
+            (OpamFile.OPAM.available opam)
+       then OpamPackage.Set.add nv set
+       else set)
+    package_index OpamPackage.Set.empty
 
 let guess_compiler_invariant ?repos rt strings =
   let repos = match repos with
