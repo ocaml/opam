@@ -389,10 +389,14 @@ let rec main_catch_all f =
           (Printexc.to_string e);
         OpamConsole.errmsg "%s" (OpamStd.Exn.pretty_backtrace e);
         OpamStd.Sys.get_exit_code `Internal_error
-      | OpamGit.Git_error _ as exn ->
+      | OpamGit.Git_error _ ->
         OpamConsole.errmsg "%s %s"
           (OpamConsole.colorise `red "[ERROR]")
-          (Printexc.to_string exn);
+          (Printexc.to_string e);
+        OpamConsole.note
+          "Note that opam ignores local git configuration files. \
+           You can configure git via the GIT_CONFIG_COUNT, GIT_CONFIG_KEY_<n> \
+           and GIT_CONFIG_VALUE_<n> environment variables.";
         OpamConsole.errmsg "%s" (OpamStd.Exn.pretty_backtrace e);
         OpamStd.Sys.get_exit_code `Internal_error
       | Sys.Break

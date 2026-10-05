@@ -34,7 +34,7 @@ let print_git_error ~cmd  ~output ~verbose =
     else
       String.concat "\n" (":"::output)
   in
-  Printf.sprintf "Command %S failed%s" cmd output
+  Printf.sprintf "Command %S failed%s\n" cmd output
 
 let register_printer () =
   Printexc.register_printer
@@ -259,7 +259,7 @@ module VCS : OpamVCS.VCS = struct
     else
       clean repo_root @@+ fun () ->
       if OpamFilename.exists (repo_root // ".gitmodules") then
-        git repo_root [ "submodule"; "update"; "--init"; "--recursive" ]
+        git repo_root [ "submodule"; "update"; "--init"; "--recursive"]
         @@> fun r ->
         raise_on_git_error r;
         Done ()
@@ -297,7 +297,7 @@ module VCS : OpamVCS.VCS = struct
                      (Option.to_list subpath))
     @@> function
     | { OpamProcess.r_code = 0; _ } ->
-      git repo_root ["submodule"; "status"; "--recursive"] @@> fun r ->
+      git repo_root ["submodule"; "status"; "--recursive" ] @@> fun r ->
       if r.r_code = 0 &&
          (* NOTE: We check the first character of each lines of the output
             to verify that every submodules are in their expected state.

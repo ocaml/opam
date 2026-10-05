@@ -74,6 +74,7 @@ The following actions will be performed:
         and the repository exists.
         fatal: clone of 'file://${BASEDIR}/submodule' into submodule path '${BASEDIR}/OPAM/submodule/.opam-switch/sources/submodule.1/vendor' failed
         Failed to clone 'vendor' a second time, aborting
+
 [ERROR] Failed to get sources of submodule.1: git+file://${BASEDIR}/use-submodule
 
 OpamSolution.Fetch_fail("git+file://${BASEDIR}/use-submodule")

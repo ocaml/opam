@@ -314,6 +314,7 @@ first  --
 
         Please make sure you have the correct access rights
         and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -327,6 +328,7 @@ first  --
 
         Please make sure you have the correct access rights
         and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -363,6 +365,7 @@ first  --
 
         Please make sure you have the correct access rights
         and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -376,6 +379,7 @@ first  --
 
         Please make sure you have the correct access rights
         and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -500,6 +504,7 @@ first  --
 
         Please make sure you have the correct access rights
         and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -513,6 +518,7 @@ first  --
 
         Please make sure you have the correct access rights
         and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -549,6 +555,7 @@ first  --
 
         Please make sure you have the correct access rights
         and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -562,6 +569,7 @@ first  --
 
         Please make sure you have the correct access rights
         and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
