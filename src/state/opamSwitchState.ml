@@ -170,10 +170,15 @@ let infer_switch_invariant st =
     st.switch_global st.switch st.switch_config st.opams
     st.packages compiler_packages st.installed_roots available_packages
 
-module Installed_cache = OpamCached.Make(struct
-    type t = OpamFile.OPAM.t OpamPackage.Map.t
-    let name = "installed"
-  end)
+module Installed_cache = struct
+  include OpamCached.Make(struct
+      type t = OpamFile.OPAM.t OpamPackage.Map.t
+      let name = "installed"
+    end)
+  let save fname cache =
+    if not OpamStateConfig.(!r.dryrun) then
+      save fname cache
+end
 
 let depexts_status_of_packages_raw
     syspkgs_available ~depexts
@@ -456,7 +461,7 @@ let load lock_kind gt rt switch =
       let switch_config =
         {switch_config with invariant = Some invariant; opam_version}
       in
-      if lock_kind = `Lock_write then
+      if lock_kind = `Lock_write && not OpamStateConfig.(!r.dryrun) then
         OpamFile.Switch_config.write
           (OpamPath.Switch.switch_config gt.root switch)
           switch_config;
