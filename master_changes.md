@@ -134,6 +134,7 @@ users)
 
 ## Doc
   * Update the documentation about the latest opam release [#7150 @kit-ty-kate]
+  * Document the Git environment variables in the FAQ [#7187 @kit-ty-kate @MisterDA - fix #7152]
 
 ## Security fixes
 
