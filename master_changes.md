@@ -71,6 +71,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * Add support for using git repositories owned by another local user [#6980 @kit-ty-kate - fix #6963]
 
 ## Build
   * Upgrade the autoconf generated files (`configure`) to autoconf 2.72 [#7052 @kit-ty-kate]
@@ -126,6 +127,7 @@ users)
   * auto-cancel unreachable jobs in PRs [#7147 @kit-ty-kate]
   * Always start CI runs by an `apt update` [#7156 @kit-ty-kate]
   * Update the opam-repository SHA to the latest commit [#7145 @kit-ty-kate]
+  * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
 
 ## Doc
   * Update the documentation about the latest opam release [#7150 @kit-ty-kate]
@@ -136,6 +138,7 @@ users)
 ## opam-client
 
 ## opam-repository
+  * `OpamGit`: git calls now will all carry git config `safe.directory=.` (current directory) [#6980 @kit-ty-kate - fix #6963]
 
 ## opam-state
   * `OpamSwitchState.update_sys_packages` (new in 2.6.0) was removed in favour of the already existing `update_package_metadata` or `update_pin` functions [#7158 @kit-ty-kate]
