@@ -11,64 +11,7 @@
 
 open OpamTypes
 
-type rw = [ `Lock_write ]
-
-type ro = [ `Lock_read | rw ]
-
-type unlocked = [ `Lock_none | ro ]
-
-type +'a lock = [< unlocked > `Lock_write ] as 'a
-
-type gt_variables =
-  (variable_contents option Lazy.t * string) OpamVariable.Map.t
-
-type gt_changes = { gtc_repo: bool; gtc_switch: bool }
-
-type +'lock global_state = {
-  global_lock: OpamSystem.lock;
-  lock: OpamSystem.lock;
-  root: OpamPath.t;
-  config: OpamFile.Config.t;
-  global_variables: gt_variables;
-  global_state_to_upgrade: gt_changes;
-} constraint 'lock = 'lock lock
-
-
-type os_dummy_test_setup = {
-  osd_install: bool;
-  osd_installed: [ `all | `none | `set of OpamSysPkg.Set.t];
-  osd_available: [ `all | `none | `set of OpamSysPkg.Set.t];
-}
-
-type os_family =
-  | Alpine
-  | Altlinux
-  | Arch
-  | Centos
-  | Cygwin
-  | Debian
-  | Dummy of os_dummy_test_setup
-  | Freebsd
-  | Gentoo
-  | Homebrew
-  | Macports
-  | Msys2
-  | Netbsd
-  | Nix
-  | Openbsd
-  | Suse
-
-type repo_syspkgs_available = (os_family * OpamSysPkg.availability_mode) option
-
-type +'lock repos_state = {
-  repos_lock: OpamSystem.lock;
-  repos_global: unlocked global_state;
-  repositories: repository repository_name_map;
-  repos_definitions: OpamFile.Repo.t repository_name_map;
-  repo_opams: OpamFile.OPAM.t package_map repository_name_map;
-  repos_syspkgs_available : repo_syspkgs_available;
-
-} constraint 'lock = 'lock lock
+include OpamStateTypesCommon
 
 type +'lock switch_state = {
   switch_lock: OpamSystem.lock;
@@ -92,32 +35,6 @@ type +'lock switch_state = {
   invalidated: package_set Lazy.t;
   overwrote_opams: (bool * OpamFile.OPAM.t) package_map;
 } constraint 'lock = 'lock lock
-
-type provenance = [ `Env | `Command_line | `Default ]
-
-type 'url _topin_opamfile = {
-  pin_file: OpamFile.OPAM.t OpamFile.t;
-  pin_locked: string option;
-  pin_subpath: subpath option;
-  pin_url: 'url;
-}
-type ('name, 'url) _topin_name_and_opamfile = {
-  pin_name: 'name;
-  pin: 'url _topin_opamfile;
-}
-
-type name_and_file = (name, unit) _topin_name_and_opamfile
-type name_and_file_w_url = (name, url) _topin_name_and_opamfile
-type nameopt_and_file = (name option, unit) _topin_name_and_opamfile
-type nameopt_and_file_w_url = (name option, url) _topin_name_and_opamfile
-
-type pinned_opam = {
-  pinned_name : name;
-  pinned_version : version option;
-  pinned_opam : OpamFile.OPAM.t option;
-  pinned_subpath: subpath option;
-  pinned_url: url;
-}
 
 module Abs = struct
   let create_switch_state ~switch_global ~switch_repos ~switch_lock

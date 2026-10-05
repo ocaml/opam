@@ -10,6 +10,8 @@
                (:include ../ocaml-context-flags.sexp)))
   (wrapped     false))
 
+(rule (action (copy# opamStateTypesCommon.ml opamStateTypesCommon.mli)))
+
 (rule
   (targets opamScript.ml)
   (deps    ../../shell/crunch.ml (glob_files shellscripts/*.*sh))
