@@ -515,7 +515,7 @@ let parse_update fv =
       | ("=" | "=="), None -> `Revert
       | ("+=" | "-="), None -> raise (Invalid_argument "parse_update: rhs needed")
       | _, _ -> raise (Invalid_argument "parse_update: illegal operator")
-    with Not_found ->  raise (Invalid_argument "parse_update: operator needed")
+    with Not_found -> raise (Invalid_argument "parse_update: operator needed")
   in
   var, value
 
@@ -757,8 +757,8 @@ let with_switch ~display gt lock_kind st k =
           match OpamStateConfig.Switch.read_opt ~lock_kind gt switch with
           | Some c -> c
           | exception (OpamPp.Bad_version _ as e) ->
+            OpamStd.Exn.finalise e @@ fun () ->
             OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates gt.root;
-            raise e
           | None -> OpamFile.Switch_config.empty
         else
           OpamStateConfig.Switch.safe_load ~lock_kind gt switch

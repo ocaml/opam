@@ -183,7 +183,7 @@ let build_id st opam =
     match OpamFile.OPAM.url opam with
     | Some urlf when OpamFile.URL.checksum urlf = [] ->
       (* no fixed source: build-id undefined *)
-      raise Exit
+      raise_notrace Exit
     | _ ->
       let hash_map, deps_hashes =
         OpamPackage.Set.fold (fun nv (hash_map, hashes) ->
@@ -234,7 +234,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | None ->
       let var = OpamVariable.Full.variable v in
       try match OpamVariable.Map.find var local with
-        | None -> raise Exit (* Variable explicitly undefined *)
+        | None -> raise_notrace Exit (* Variable explicitly undefined *)
         | some -> some
       with Not_found -> None
   in
@@ -246,7 +246,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       | OpamVariable.Full.Global -> assert false
       | OpamVariable.Full.Package n -> n
       | OpamVariable.Full.Self ->
-        match pkgname with Some n -> n | None -> raise Exit
+        match pkgname with Some n -> n | None -> raise_notrace Exit
     in
     let opam = (* ensure opam, if not None, corresponds to name *)
       match opam_arg with

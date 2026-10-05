@@ -207,7 +207,7 @@ let load_raw_opams_and_aux_from_tgz _repo_name tgz =
         try
           OpamFilename.Unix.Dir.Map.iter (fun dir value ->
               if OpamFilename.Unix.starts_with dir filename then
-                raise (Found (dir, value))) acc;
+                raise_notrace (Found (dir, value))) acc;
           acc
         with Found (key, value) ->
           let fo, co, map = value in

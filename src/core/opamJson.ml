@@ -21,7 +21,7 @@ type 'a decoder = t -> 'a option
 let of_string ?encoding str =
   let dec d = match Jsonm.decode d with
     | `Lexeme l -> l
-    | `Error _ -> raise Exit
+    | `Error _ -> raise_notrace Exit
     | `End | `Await -> assert false
   in
   let rec value v k d = match v with

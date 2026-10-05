@@ -25,9 +25,9 @@ let load_switch_config ~lock_kind gt switch =
   match OpamStateConfig.Switch.read_opt ~lock_kind gt switch with
   | Some c -> c
   | exception (OpamPp.Bad_version _ as e) ->
+    OpamStd.Exn.finalise e @@ fun () ->
     OpamFormatUpgrade.hard_upgrade_from_2_1_intermediates
       ~global_lock:gt.global_lock gt.root;
-    raise e
   | None ->
     (OpamConsole.error
        "No config file found for switch %s. Switch broken?"
