@@ -87,6 +87,7 @@ type result = {
   r_stdout   : string list; (** Content of stdout dump file *)
   r_stderr   : string list; (** Content of stderr dump file *)
   r_cleanup  : string list; (** List of files to clean-up *)
+  r_verbose  : bool;        (** Whether the command output was shown already *)
 }
 
 (** [run command] synchronously call the command [command.cmd] with
