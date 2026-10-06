@@ -70,6 +70,7 @@ users)
 ## Sandbox
 
 ## VCS
+  * Add support for using git repositories owned by another local user [#6980 @kit-ty-kate - fix #6963]
 
 ## Build
   * Upgrade to checkseum 0.5.4 [#7172 @kit-ty-kate]
@@ -112,6 +113,7 @@ users)
 ### Engine
 
 ## Github Actions
+  * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
 
 ## Doc
 
@@ -121,6 +123,7 @@ users)
 ## opam-client
 
 ## opam-repository
+  * `OpamGit`: git calls now will all carry git config `safe.directory=.` (current directory) [#6980 @kit-ty-kate - fix #6963]
 
 ## opam-state
   * `OpamSwitchState.update_sys_packages` (new in 2.6.0) was removed in favour of the already existing `update_package_metadata` or `update_pin` functions [#7158 @kit-ty-kate]
