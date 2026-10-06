@@ -437,3 +437,20 @@ We don't recommend using it in day-to-day use of opam in the shell, because
 you'll be typing more and you won't get to notice exciting new features! If the
 behaviour of a command or option is altered, and you write something which in no
 longer valid, opam will try to tell you what the new command should look like.
+
+---
+
+#### 🐫  Why does my `git://` repository not work?
+
+GitHub [disabled](https://github.blog/2021-09-01-improving-git-protocol-security-github/)
+support for the `git://` protocol because it is unencrypted.
+
+---
+
+#### 🐫  Why isn't opam taking into account the Git settings I need to fetch my repository?
+
+Since opam 2.6.0, global Git settings are no longer taken into account.
+However, the Git environment variables `GIT_CONFIG_COUNT`,
+`GIT_CONFIG_KEY_<n>` and `GIT_CONFIG_VALUE_<n>` are supported.
+
+See [git-scm.com/docs/git-config#ENVIRONMENT](https://git-scm.com/docs/git-config#ENVIRONMENT).
