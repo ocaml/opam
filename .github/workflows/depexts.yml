@@ -22,39 +22,15 @@ defaults:
     shell: bash
 
 env:
-  OPAMVERSION: 2.5.2
   OPAM_REPO: https://github.com/ocaml/opam-repository.git
   OPAM_REPO_SHA: 3c79a939b221caf909b254fdff9616f8c0266e4f
 
 jobs:
-  opam-cache:
-    runs-on: ubuntu-latest
-    steps:
-    - name: opam binary cache
-      id: binary
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
-    - name: Retrieve opam binary
-      if: steps.binary.outputs.cache-hit != 'true'
-      run: |
-        rm -rf binary
-        mkdir -p binary
-        wget https://github.com/ocaml/opam/releases/download/$OPAMVERSION/opam-$OPAMVERSION-x86_64-linux -q -O binary/opam
-        chmod +x binary/opam
-
   depexts-alpine:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh alpine
@@ -63,16 +39,10 @@ jobs:
       id: depexts-alpine
 
   depexts-altlinux:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh altlinux
@@ -81,16 +51,10 @@ jobs:
       id: depexts-altlinux
 
   depexts-archlinux:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh archlinux
@@ -99,16 +63,10 @@ jobs:
       id: depexts-archlinux
 
   depexts-centos:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh centos
@@ -117,16 +75,10 @@ jobs:
       id: depexts-centos
 
   depexts-debian:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh debian
@@ -135,16 +87,10 @@ jobs:
       id: depexts-debian
 
   depexts-fedora:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh fedora
@@ -153,16 +99,10 @@ jobs:
       id: depexts-fedora
 
   depexts-gentoo:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh gentoo
@@ -171,16 +111,10 @@ jobs:
       id: depexts-gentoo
 
   depexts-opensuse:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh opensuse
@@ -189,16 +123,10 @@ jobs:
       id: depexts-opensuse
 
   depexts-oraclelinux:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh oraclelinux
@@ -207,16 +135,10 @@ jobs:
       id: depexts-oraclelinux
 
   depexts-nix:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh nix
@@ -225,16 +147,10 @@ jobs:
       id: depexts-nix
 
   depexts-ubuntu:
-    needs: opam-cache
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v7
-    - name: opam binary cache
-      uses: actions/cache@v6
-      with:
-        path: binary/opam
-        key: binary-${{ env.OPAMVERSION }}
     - name: generate action
       run: |
         bash .github/scripts/depexts/generate-actions.sh ubuntu
