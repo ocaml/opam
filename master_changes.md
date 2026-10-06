@@ -63,19 +63,14 @@ users)
 ## Opamfile
 
 ## External dependencies
-  * Fix the depexts installation on `opam install --deps` when the system packages already exist in a repository [#7158 @kit-ty-kate - fix #7153]
 
 ## Format upgrade
 
 ## Sandbox
 
 ## VCS
-  * Add support for using git repositories owned by another local user [#6980 @kit-ty-kate - fix #6963]
-  * Use `/dev/null` on both Unix and Windows when setting `GIT_CONFIG_*` (NUL is not accepted in Git-for-Windows 2.56.0.windows.1) [#7085 @kit-ty-kate]
 
 ## Build
-  * Upgrade to checkseum 0.5.4 [#7172 @kit-ty-kate]
-  * Upgrade to decompress 1.6.1 [#7172 @kit-ty-kate]
 
 ## Infrastructure
 
@@ -109,12 +104,10 @@ users)
 
 ## Reftests
 ### Tests
-  * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
 
 ### Engine
 
 ## Github Actions
-  * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
 
 ## Doc
 
@@ -124,10 +117,8 @@ users)
 ## opam-client
 
 ## opam-repository
-  * `OpamGit`: git calls now will all carry git config `safe.directory=.` (current directory) [#6980 @kit-ty-kate - fix #6963]
 
 ## opam-state
-  * `OpamSwitchState.update_sys_packages` (new in 2.6.0) was removed in favour of the already existing `update_package_metadata` or `update_pin` functions [#7158 @kit-ty-kate]
 
 ## opam-solver
 

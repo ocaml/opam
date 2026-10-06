@@ -3,6 +3,25 @@ repositories (changes that are automatically handled by the format upgrade tools
 are not marked). Those prefixed with "(+)" are new command/option (since
 2.1.0~alpha2).
 
+2.6.1:
+* Fix the depexts installation on `opam install --deps` when the system
+  packages already exist in a repository [#7158 @kit-ty-kate - fix #7153]
+* Add support for using git repositories owned by another local user
+  [#6980 @kit-ty-kate - fix #6963]
+* Use `/dev/null` on both Unix and Windows when setting `GIT_CONFIG_*`
+  (NUL is not accepted in Git-for-Windows 2.56.0.windows.1)
+  [#7085 @kit-ty-kate]
+* Upgrade the "lockfile" with checkseum.0.5.4 and decompress.1.6.1
+  [#7172 @kit-ty-kate]
+* Improve and extend the testsuite [#7158 #6980 @kit-ty-kate @rjbou]
+* API changes in `opam-repository`:
+  * `OpamGit`: git calls now will all carry git config `safe.directory=.`
+    (current directory) [#6980 @kit-ty-kate - fix #6963]
+* API changes in `opam-state`:
+  * `OpamSwitchState.update_sys_packages` (new in 2.6.0) was removed in favour
+    of the already existing `update_package_metadata` or `update_pin` functions
+    [#7158 @kit-ty-kate]
+
 2.6.0:
 * Bump `opam-root-version` to 2.6 [#7146 @kit-ty-kate]
 * Improve and extend the testsuite [#7146 @kit-ty-kate @rjbou]
