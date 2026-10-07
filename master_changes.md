@@ -127,6 +127,7 @@ users)
 ### Tests
   * Add an exhaustive test showing the behaviour of the `conflicts` field [#7127 @kit-ty-kate]
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
+  * Add test for 'etc_root' and 'etcexec_root' `.install` fields [#3958 @rjbou]
 
 ### Engine
 
