@@ -264,7 +264,8 @@ The following actions will be performed:
 Done.
 ### opam pin add ./nip-path2 --kind git | sed-cmd git | " 128.*" -> " 128"
 [ERROR] Command "git -C ${BASEDIR}/nip-path2 ls-files" failed:
-"git -C ${BASEDIR}/nip-path2 ls-files" exited with code 128
+fatal: not a git repository (or any of the parent directories): .git
+[NOTE] Note that opam ignores local git configuration files. You can configure git via the GIT_CONFIG_COUNT, GIT_CONFIG_KEY_<n> and GIT_CONFIG_VALUE_<n> environment variables.
 # Return code 99 #
 ### : auto
 ### opam pin add ./nip-git3 --kind auto

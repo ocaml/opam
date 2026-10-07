@@ -12,6 +12,37 @@
 open OpamFilename.Op
 open OpamProcess.Job.Op
 
+exception Git_error of {cmd : string; output : string list; verbose : bool}
+
+(* Works under the assumption that the git commands stdout and stderr are
+   redirected to the same file. *)
+let git_error r =
+  if r.OpamProcess.r_signal = Some Sys.sigint then raise Sys.Break
+  else
+    let cmd = List.assoc "command" r.r_info  in
+    raise (Git_error {cmd; output = r.r_stdout; verbose = r.r_verbose})
+
+let raise_on_git_error r =
+  if OpamProcess.is_failure r then
+    raise (git_error r)
+
+let print_git_error ~cmd  ~output ~verbose =
+  let output =
+    if verbose then
+      (* output was already shown *)
+      ""
+    else
+      String.concat "\n" (":"::output)
+  in
+  Printf.sprintf "Command %S failed%s\n" cmd output
+
+let register_printer () =
+  Printexc.register_printer
+    (function
+      | Git_error {cmd; output; verbose} ->
+        Some (print_git_error ~cmd ~output ~verbose)
+      | _ -> None)
+
 (* let log fmt = OpamConsole.log "GIT" fmt *)
 
 let git_env = [
@@ -107,7 +138,7 @@ module VCS : OpamVCS.VCS = struct
       git repo_root [ "remote"; "add"; "origin"; OpamUrl.base_url repo_url ];
     ] @@+ function
     | None -> Done ()
-    | Some (_,err) -> OpamSystem.process_error err
+    | Some (_cmd,r) -> git_error r
 
   let remote_ref url =
     match url.OpamUrl.hash with
@@ -118,7 +149,7 @@ module VCS : OpamVCS.VCS = struct
     (match subpath with
      | Some sp ->
        git repo_root [ "config"; "--local"; "core.sparseCheckout"; "true" ]
-       @@> fun r -> OpamSystem.raise_on_process_error r;
+       @@> fun r -> raise_on_git_error r;
        OpamFilename.write (repo_root / ".git" / "info" // "sparse-checkout")
          (OpamFilename.SubPath.normalised_string sp);
        Done()
@@ -130,7 +161,7 @@ module VCS : OpamVCS.VCS = struct
        if not (OpamFilename.exists_dir dir) then
          (OpamFilename.mkdir dir;
           git dir [ "init"; "--bare" ] @@> fun r ->
-          OpamSystem.raise_on_process_error r;
+          raise_on_git_error r;
           Done (Some dir))
        else Done (Some dir)
      | _ -> Done None)
@@ -169,7 +200,7 @@ module VCS : OpamVCS.VCS = struct
          Also, remove the [--update-shallow] option in case git is so old that
          it didn't exist yet, as that is not needed in the general case *)
       git repo_root [ "fetch" ; "-q" ] @@> fun r ->
-      OpamSystem.raise_on_process_error r;
+      raise_on_git_error r;
       (* retry to fetch the specific branch *)
       git repo_root [ "fetch" ; "-q"; origin; refspec ] @@> fun r ->
       if OpamProcess.check_success_and_cleanup r then Done ()
@@ -187,7 +218,7 @@ module VCS : OpamVCS.VCS = struct
          else
            (* check if the commit exists *)
            (git repo_root [ "fetch"; "-q" ] @@> fun r ->
-            OpamSystem.raise_on_process_error r;
+            raise_on_git_error r;
             git repo_root [ "show"; "-s"; "--format=%H"; branch ] @@> fun r ->
             if OpamProcess.check_success_and_cleanup r then
               failwith "Commit found, but unreachable: enable uploadpack.allowReachableSHA1InWant on server"
@@ -200,7 +231,7 @@ module VCS : OpamVCS.VCS = struct
                   try again after your first commit"
       | { OpamProcess.r_code = 0; OpamProcess.r_stdout = _::_; _ } ->
         failwith (Printf.sprintf "Branch %s not found" branch)
-      | _ -> OpamSystem.process_error error
+      | _ -> git_error error
 
   let revision repo_root =
     git repo_root ~verbose:false [ "rev-parse"; "HEAD" ] @@>
@@ -208,7 +239,7 @@ module VCS : OpamVCS.VCS = struct
     if r.OpamProcess.r_code = 128 then
       (OpamProcess.cleanup ~force:true r; Done None)
     else
-      (OpamSystem.raise_on_process_error r;
+      (raise_on_git_error r;
        match r.OpamProcess.r_stdout with
        | []      -> Done None
        | full::_ ->
@@ -217,7 +248,7 @@ module VCS : OpamVCS.VCS = struct
   let clean repo_root =
     git repo_root [ "clean"; "-fdx" ]
     @@> fun r ->
-    OpamSystem.raise_on_process_error r;
+    raise_on_git_error r;
     Done ()
 
   let reset_tree repo_root repo_url =
@@ -229,9 +260,9 @@ module VCS : OpamVCS.VCS = struct
     else
       clean repo_root @@+ fun () ->
       if OpamFilename.exists (repo_root // ".gitmodules") then
-        git repo_root [ "submodule"; "update"; "--init"; "--recursive" ]
+        git repo_root [ "submodule"; "update"; "--init"; "--recursive"]
         @@> fun r ->
-        OpamSystem.raise_on_process_error r;
+        raise_on_git_error r;
         Done ()
       else Done ()
 
@@ -248,7 +279,7 @@ module VCS : OpamVCS.VCS = struct
     git repo_root [ "add"; "." ] @@> fun r ->
     (* Git diff is to the working dir, but doesn't work properly for
        unregistered directories. *)
-    OpamSystem.raise_on_process_error r;
+    raise_on_git_error r;
     (* We also reset diff.noprefix here to handle already existing repo. *)
     git repo_root ~stdout:patch_file [ "-c" ; "diff.noprefix=false" ; "diff" ; "--text" ; "--no-ext-diff" ; "-R" ; "-p" ; rref; "--" ]
     @@> fun r ->
@@ -267,7 +298,7 @@ module VCS : OpamVCS.VCS = struct
                      (Option.to_list subpath))
     @@> function
     | { OpamProcess.r_code = 0; _ } ->
-      git repo_root ["submodule"; "status"; "--recursive"] @@> fun r ->
+      git repo_root ["submodule"; "status"; "--recursive" ] @@> fun r ->
       if r.r_code = 0 &&
          (* NOTE: We check the first character of each lines of the output
             to verify that every submodules are in their expected state.
@@ -281,11 +312,11 @@ module VCS : OpamVCS.VCS = struct
       else (OpamProcess.cleanup ~force:true r; Done false)
     | { OpamProcess.r_code = 1; _ } as r ->
       OpamProcess.cleanup ~force:true r; Done false
-    | r -> OpamSystem.process_error r
+    | r -> git_error r
 
   let versioned_files repo_root =
     git repo_root ~verbose:false [ "ls-files" ] @@> fun r ->
-    OpamSystem.raise_on_process_error r;
+    raise_on_git_error r;
     Done (List.map OpamSystem.forward_to_back r.OpamProcess.r_stdout)
 
   let vc_dir repo_root = OpamFilename.Op.(repo_root / ".git")
@@ -303,7 +334,7 @@ module VCS : OpamVCS.VCS = struct
       match subpath with
       | None -> []
       | Some dir -> ["--" ; OpamFilename.SubPath.to_string dir]
-      in
+    in
     git dir ([ "diff"; "--no-ext-diff"; "--quiet" ; "HEAD" ] @ subpath)
     @@> function
     | { OpamProcess.r_code = 0; _ } ->
@@ -318,11 +349,11 @@ module VCS : OpamVCS.VCS = struct
       )
     | { OpamProcess.r_code = 1; _ } as r ->
       OpamProcess.cleanup ~force:true r; Done true
-    | r -> OpamSystem.process_error r
+    | r -> git_error r
 
   let modified_files repo_root =
     git repo_root ~verbose:false [ "status" ; "--short" ] @@> fun r ->
-    OpamSystem.raise_on_process_error r;
+    raise_on_git_error r;
     let files =
       List.filter_map (fun line ->
           match OpamStd.String.split line ' ' with
@@ -371,7 +402,7 @@ module VCS : OpamVCS.VCS = struct
            Done None
        | { OpamProcess.r_code = 1; _ } ->
          Done None
-       | r -> OpamSystem.process_error r)
+       | r -> git_error r)
     | None -> Done None
 
   let get_remote_url ?hash repo_root =
@@ -400,7 +431,7 @@ module VCS : OpamVCS.VCS = struct
       (* When subcommands such as add, rename, and remove can’t find the remote
          in question, the exit status is 2 *)
       -> Done None
-    | r -> OpamSystem.process_error r
+    | r -> git_error r
 
 end
 
