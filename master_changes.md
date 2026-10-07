@@ -88,6 +88,7 @@ users)
 ## Release scripts
   * Make x86\_32 binaries take full advantage of i686 [#7120 @kit-ty-kate]
   * Ensure arm32 binaries are really armhf as advertised instead of armv7 [#7120 @kit-ty-kate]
+  * Enhance the release documentation with mentions of macOS 27 and IRC [#7194 @kit-ty-kate]
 
 ## Install script
   * Add opam 2.6.0\~rc1 to the install scripts [#7135 @kit-ty-kate]
