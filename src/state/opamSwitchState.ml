@@ -257,10 +257,16 @@ let depexts_unavailable_raw sys_packages nv =
     Some s_not_found
   | _ -> None
 
+let depexts_raw gt ~switch ~switch_config ~opams nv =
+  let env var =
+    OpamPackageVar.resolve_switch_raw ~package:nv gt switch switch_config var
+  in
+  let opam = OpamPackage.Map.find nv opams in
+  OpamFileTools.opams_depexts ~env (OpamPackage.Map.singleton nv opam)
+
 let depexts st nv =
-  let env v = OpamPackageVar.resolve_switch ~package:nv st v in
-  let package_opam = OpamPackage.Map.find nv st.opams in
-  OpamFileTools.opams_depexts ~env (OpamPackage.Map.singleton nv package_opam)
+  depexts_raw st.switch_global
+    ~switch:st.switch ~switch_config:st.switch_config ~opams:st.opams nv
 
 let load lock_kind gt rt switch =
   let chrono = OpamConsole.timer () in
@@ -336,16 +342,13 @@ let load lock_kind gt rt switch =
           in
           let nv = OpamPackage.create nv.name version in
           let o = OpamFile.OPAM.with_version version o in
-          let env = OpamPackageVar.resolve_switch_raw ~package:nv gt switch
-              switch_config
+          let opams = OpamPackage.Map.add nv o opams in
+          let depexts = depexts_raw gt ~switch ~switch_config ~opams nv in
+          let pinned_depexts =
+            if OpamSysPkg.Set.is_empty depexts then pinned_depexts else
+              OpamPackage.Set.add nv pinned_depexts
           in
-          let depexts =
-            OpamFileTools.opams_depexts ~env (OpamPackage.Map.singleton nv o)
-          in
-          OpamPackage.Set.add nv pinned,
-          OpamPackage.Map.add nv o opams,
-          if OpamSysPkg.Set.is_empty depexts then pinned_depexts else
-          OpamPackage.Set.add nv pinned_depexts
+          OpamPackage.Set.add nv pinned, opams, pinned_depexts
       )
       pinned OpamPackage.(Set.empty, Map.empty, Set.empty)
   in
@@ -561,13 +564,7 @@ let load lock_kind gt rt switch =
         ~recompute_available:pinned_depexts rt.repos_syspkgs_available
         gt.config switch_config ~env:gt.global_variables
         (Lazy.force available_packages)
-        ~depexts:(fun package ->
-            let env =
-              OpamPackageVar.resolve_switch_raw ~package gt switch switch_config
-            in
-            let package_opam = OpamPackage.Map.find package opams in
-            OpamFileTools.opams_depexts ~env
-              (OpamPackage.Map.singleton package package_opam))
+        ~depexts:(depexts_raw gt ~switch ~switch_config ~opams)
     )
   in
   let available_packages =
