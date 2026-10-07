@@ -142,9 +142,6 @@ ENV OPAMROOT=/opam/root
 ENV OPAMYES=1
 ENV OPAMCONFIRMLEVEL=unsafe-yes
 ENV OPAMPRECISETRACKING=1
-ENV GIT_CONFIG_COUNT=1
-ENV GIT_CONFIG_KEY_0=safe.directory
-ENV GIT_CONFIG_VALUE_0=*
 COPY opam /usr/bin/opam
 RUN echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
 # Retrieve opam repo
