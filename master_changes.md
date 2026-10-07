@@ -112,6 +112,7 @@ users)
   * Remove unecessary set union operations `packages ++ installed` since `installed` is included in `packages` [#7148 @NathanReb]
   * Rewrite inefficient package set <-> map operations [#7159 @NathanReb]
   * Remove unnecessary set operations in `OpamSwitchSate.universe` [#7154 @NathanReb]
+  * Bump opam-root-version from 2.6\~alpha to 2.6 [#7151 @kit-ty-kate @rjbou]
 
 ## Internal: Unix
 
@@ -134,6 +135,7 @@ users)
   * Always start CI runs by an `apt update` [#7156 @kit-ty-kate]
   * Update the opam-repository SHA to the latest commit [#7145 @kit-ty-kate]
   * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
+  * Bump the opam version used to 2.6.0 [#7151 @kit-ty-kate @rjbou]
 
 ## Doc
   * Update the documentation about the latest opam release [#7150 @kit-ty-kate]
