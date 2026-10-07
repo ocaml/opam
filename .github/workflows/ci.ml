@@ -559,7 +559,7 @@ let empty_job ~oc ~workflow f
 
 let main oc : unit =
   let env = [
-    ("OPAMBSVERSION", "2.6.0");
+    ("OPAMBSVERSION", "2.6.1");
     ("OPAMBSROOT", "~/.cache/.opam.cached");
     ("OPAM12CACHE", "~/.cache/opam1.2/cache");
     ("OPAM_REPO", "https://github.com/ocaml/opam-repository.git");

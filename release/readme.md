@@ -52,7 +52,7 @@
 * update the link to the discuss post in the blog post
 * update the link to the blog post in the release note
 * on stable releases, copy the blog entry from opam.ocaml.org for https://github.com/ocaml/ocaml.org/tree/main/data/changelog/releases/opam
-* announce the release on the OCaml Discord server
+* announce the release on #opam (IRC / Discord)
 
 ## After release
 
@@ -64,11 +64,30 @@
 ---
 
 ## Device requirements
-* Mac M1 or above with Rosetta2
+* Mac M1 or above with Rosetta2, macOS 26.\* and XCode Command Line Tools 26.\* (see section below)
 * >=70GB of disk space free
 * brew dependencies: git >= 2.40.0, git-lfs, gpg, qemu>=8.1.0 (avoid qemu 9.1.x, see https://gitlab.com/qemu-project/qemu/-/issues/2581), docker>=24.0.0, sshpass
 * opam repo with the tag fetched
 * Have the secret key available
+
+## Side note on macOS >= 27 / Command Line Tools >= 27
+
+Starting with macOS 27, system binaries are no longer "Universal" binaries (containing both arm64e and x86\_64)
+and thus cannot be used to cross compile macOS/x86\_64 binaries.
+
+Previous versions of macOS (supporting x86\_64 machines) are still supported by Apple for another 2 years
+so we should aim to build them until then. Thus we are forced to stay on macOS 26 to run the release script.
+
+Similarly to macOS 27, Command Line Tools 27 also drops "Universal" binaries.
+Given that Command Line Tools releases and macOS releases are decoupled
+(macOS will happily tell you to upgrade to Command Line Tools 27 even if you're still on macOS 26),
+users of the release script must be careful to **not upgrade** to Command Line Tools 27 (also displayed as "XCode")
+
+If you made a mistake and installed Command Line Tools 27, you can downgrade by going to https://developer.apple.com/
+`Downloads --> More` and select the latest version of Command Line Tools 26 (e.g. 26.6) and install it by hand.
+
+Spacial care should be also taken when upgrading Homebrew as some packages may stop offering Universal binaries,
+in case these are ever necessary.
 
 ## Side note on "reproducibility"
 

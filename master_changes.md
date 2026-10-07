@@ -88,6 +88,7 @@ users)
 ## Release scripts
   * Make x86\_32 binaries take full advantage of i686 [#7120 @kit-ty-kate]
   * Ensure arm32 binaries are really armhf as advertised instead of armv7 [#7120 @kit-ty-kate]
+  * Enhance the release documentation with mentions of macOS 27 and IRC [#7194 @kit-ty-kate]
 
 ## Install script
   * Add opam 2.6.0\~rc1 to the install scripts [#7135 @kit-ty-kate]
@@ -136,10 +137,10 @@ users)
   * Always start CI runs by an `apt update` [#7156 @kit-ty-kate]
   * Update the opam-repository SHA to the latest commit [#7145 @kit-ty-kate]
   * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
-  * Bump the opam version used to 2.6.0 [#7151 @kit-ty-kate @rjbou]
+  * Bump the opam version used to 2.6.1 [#7151 #7194 @kit-ty-kate @rjbou]
 
 ## Doc
-  * Update the documentation about the latest opam release [#7150 @kit-ty-kate]
+  * Update the documentation about the latest opam release [#7150 #7194 @kit-ty-kate]
   * Document the Git environment variables in the FAQ [#7187 @kit-ty-kate @MisterDA - fix #7152]
 
 ## Security fixes

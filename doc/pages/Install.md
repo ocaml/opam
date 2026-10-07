@@ -146,9 +146,9 @@ Sources of the latest stable version of opam are available on Github:
 You can also download the full archives, including opam dependencies (these
 don't require any extra downloads):
 
-* [2.6.0](https://github.com/ocaml/opam/releases/download/2.6.0/opam-full-2.6.0.tar.gz)
- - MD5: ac08accc66a0c425e8059d6d74f48563
- - SHA512: 947324166aa6e6d05671fc40531f6d6d0a3e403cdc816aef81dc4fccc48e1936b0f4ca3819442463247496eff9643f403a0b14530872cc24a20b470ce8025919
+* [2.6.1](https://github.com/ocaml/opam/releases/download/2.6.1/opam-full-2.6.1.tar.gz)
+ - MD5: 7b9a501ecabc197d06adeb141d739f0b
+ - SHA512: 9425c2129f5b42477b4bafbb53c134724f48091d9972cda85e6d4f94966253f9c9e648f3cd884c0a638662c1696efe8ca7618db5361fa663027dca7db0e6290a
 
 
 Follow the instructions in the included
