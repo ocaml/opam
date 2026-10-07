@@ -139,7 +139,7 @@ users)
   * Bump the opam version used to 2.6.0 [#7151 @kit-ty-kate @rjbou]
 
 ## Doc
-  * Update the documentation about the latest opam release [#7150 @kit-ty-kate]
+  * Update the documentation about the latest opam release [#7150 #7194 @kit-ty-kate]
   * Document the Git environment variables in the FAQ [#7187 @kit-ty-kate @MisterDA - fix #7152]
 
 ## Security fixes
