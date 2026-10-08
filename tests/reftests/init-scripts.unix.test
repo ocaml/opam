@@ -28,11 +28,13 @@ variables.ps1
 variables.sh
 ### : Init scripts :
 ### cat root/opam-init/init.sh
-if [ -t 0 ]; then
+case $- in
+  *i*)
   test -r '${BASEDIR}/root/opam-init/complete.sh' && . '${BASEDIR}/root/opam-init/complete.sh' > /dev/null 2> /dev/null || true
 
   test -r '${BASEDIR}/root/opam-init/env_hook.sh' && . '${BASEDIR}/root/opam-init/env_hook.sh' > /dev/null 2> /dev/null || true
-fi
+  ;;
+esac
 
 test -r '${BASEDIR}/root/opam-init/variables.sh' && . '${BASEDIR}/root/opam-init/variables.sh' > /dev/null 2> /dev/null || true
 ### cat root/opam-init/init.zsh
