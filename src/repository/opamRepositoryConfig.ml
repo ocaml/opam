@@ -62,7 +62,7 @@ let default = {
         match os with
         | FreeBSD | DragonFly -> [curl; "fetch", `Default]
         | OpenBSD | NetBSD -> [curl; "ftp", `Default]
-        | Linux | Darwin | Cygwin | Win32
+        | Linux | Darwin | Cygwin | Win32 | Haiku
         | Unix | Other _ -> [curl; "wget", `Default]
       in
       let cmd, kind =

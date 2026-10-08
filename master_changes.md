@@ -33,6 +33,9 @@ users)
 ## Remove
 
 ## UI
+  * Improve the way unhandled exceptions are displayed during interactive questions [#7138 @kit-ty-kate]
+  * Stop showing the "Running as root" warning on Haiku [#7138 @kit-ty-kate]
+  * Work around bugs/quirks in Haiku's implementation of termios [#7138 @kit-ty-kate]
 
 ## Switch
 
@@ -117,6 +120,7 @@ users)
   * Deduplicate some depexts related code in `OpamSwitchState` [#7157 @kit-ty-kate]
 
 ## Internal: Unix
+  * Add explicit support for Haiku [#7138 @kit-ty-kate]
 
 ## Internal: Windows
 
@@ -160,6 +164,7 @@ users)
 
 ## opam-core
   * `OpamStd.Env.Name.{equal,compare}`: Improve the performance [#7086 @kit-ty-kate]
+  * `OpamConsole.{pause,confirm,menu}`: Fix a deadlock on some rare platforms [#7138 @kit-ty-kate]
   * `OpamStd.Map.update`: was changed to the stdlib version which has a more flexible API and has better performances [#7130 @NathanReb - fix #4915]
   * `OpamStd.Map.union`: was changed to the stdlib version which has a more flexible API and has better performances [#7170, @NathanReb]
   * `OpamStd.Map.strict_union`: added as a replacement for the previous custom `union` API in `OpamStd` but based on `Stdlib`'s `union` for better performances [#7170, @NathanReb]

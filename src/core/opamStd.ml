@@ -964,6 +964,7 @@ module OpamSys = struct
     | DragonFly
     | Cygwin
     | Win32
+    | Haiku
     | Unix
     | Other of string
 
@@ -978,6 +979,7 @@ module OpamSys = struct
           | "OpenBSD"   -> OpenBSD
           | "NetBSD"    -> NetBSD
           | "DragonFly" -> DragonFly
+          | "Haiku"     -> Haiku
           | _           -> Unix
         end
       | "Win32"  -> Win32
