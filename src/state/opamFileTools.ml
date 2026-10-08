@@ -407,22 +407,14 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
     && url_archive = Some true
   in
   let check_upstream = check_upstream && is_url_archive in
-  let check_double compare to_str lst =
+  let check_double to_str lst =
     let double =
-      List.sort compare lst
-      |> List.fold_left (fun (last, dbl) elem ->
-          match last with
-          | Some last ->
-            if compare last elem = 0 then
-              Some elem,
+      List.fold_left (fun dbl elem ->
               OpamStd.String.Map.update (to_str elem)
-                (function None -> Some 2 | Some i -> Some (i + 1))
-                dbl
-            else
-              Some elem, dbl
-          | None -> Some elem, dbl)
-        (None, OpamStd.String.Map.empty)
-      |> snd
+                (function None -> Some 1 | Some i -> Some (i + 1))
+                dbl)
+       OpamStd.String.Map.empty lst
+       |> OpamStd.String.Map.filter (fun _ occ -> occ > 1)
     in
     if OpamStd.String.Map.is_empty double then false, None else
       true,
@@ -1048,7 +1040,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
            vars)
        (vars <> []));
     (let has_double, detail =
-       check_double OpamFilename.Base.compare OpamFilename.Base.to_string
+       check_double OpamFilename.Base.to_string
          (match OpamFile.OPAM.extra_files t with
           | Some extra_files -> List.map fst extra_files
           | None -> [])
@@ -1058,7 +1050,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
        ?detail
        has_double);
     (let has_double, detail =
-       check_double OpamHash.compare_kind OpamHash.string_of_kind
+       check_double OpamHash.string_of_kind
          (match OpamFile.OPAM.url t with
           | Some url ->
             List.map OpamHash.kind (OpamFile.URL.checksum url)
@@ -1073,9 +1065,7 @@ let t_lint ?check_extra_files ?(check_upstream=false) ?(all=false) t =
            basename,
            OpamFile.URL.checksum url
            |> List.rev_map OpamHash.kind
-           |> check_double
-             OpamHash.compare_kind
-             OpamHash.string_of_kind)
+           |> check_double OpamHash.string_of_kind)
        |> List.fold_left (fun (has_double, details) (basename, (double, detail)) ->
            let has_double = has_double || double in
            let details =
