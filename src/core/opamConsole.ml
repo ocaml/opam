@@ -734,14 +734,13 @@ let short_user_input ~prompt ?default ?on_eof f =
       in
       loop ()
     else
-    let open Unix in
-    prompt ();
+    let () = prompt () in
     let buf = Bytes.create 3 in
     let rec loop () =
       let input =
         match
           (* Some keystrokes, e.g. arrows, can return 3 chars *)
-          let nr = read stdin buf 0 3 in
+          let nr = Unix.read Unix.stdin buf 0 3 in
           if nr < 1 then raise End_of_file
           else String.uncapitalize_ascii (Bytes.sub_string buf 0 nr)
         with
@@ -758,15 +757,15 @@ let short_user_input ~prompt ?default ?on_eof f =
         | Some a -> print_endline i; a
         | None -> loop ()
     in
-    let attr = tcgetattr stdin in
+    let attr = Unix.tcgetattr Unix.stdin in
     let reset () =
-      tcsetattr stdin TCSAFLUSH attr;
-      tcflush stdin TCIFLUSH;
+      Unix.tcsetattr Unix.stdin TCSAFLUSH attr;
+      Unix.tcflush Unix.stdin TCIFLUSH;
     in
     OpamStd.Exn.finally reset @@ fun () ->
-    tcsetattr stdin TCSAFLUSH
+    Unix.tcsetattr Unix.stdin TCSAFLUSH
       {attr with c_icanon = false; c_echo = false};
-    tcflush stdin TCIFLUSH;
+    Unix.tcflush Unix.stdin TCIFLUSH;
     loop ()
   with
   | Sys.Break as e -> OpamStd.Exn.finalise e (fun () -> msg "\n")
