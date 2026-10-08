@@ -37,6 +37,11 @@ depends: [
   "other"
 ]
 depexts: ["some-depext"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
 ### opam-set-os dummy-success
 Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
@@ -444,6 +449,11 @@ synopsis: "Test pkg please ignore"
 depends: [ "dep-lib" ]
 ### <pkg:dep-lib.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### git -C abort-install init -q --initial-branch=master
 ### git -C abort-install config core.autocrlf false
 ### git -C abort-install add abort-install.opam

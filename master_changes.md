@@ -133,9 +133,10 @@ users)
 ### Tests
   * Add an exhaustive test showing the behaviour of the `conflicts` field [#7127 @kit-ty-kate]
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
-  * Untie reftests test cases from previous tests (less inherited context) [#7207 @rjbou]
+  * Untie reftests test cases from previous tests (less inherited context) [#7207 @rjbou - fix #7133]
 
 ### Engine
+  * No longer implicitly run `opam update default` on `<pkg:>` helper, it needs to be done explicitly in test file [#7207 @rjbou]
 
 ## Github Actions
   * The Hygiene workflow has been upgraded to Ubuntu 26.04 [#7052 @kit-ty-kate]

@@ -119,6 +119,11 @@ print_endline "youhou i'm installed!"
 opam-version: "2.0"
 ### <pkg:pkg-bin.1:pkg-bin.install>
 bin: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-bin
 The following actions will be performed:
 === install 1 package
@@ -164,6 +169,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-bin.1:pkg-bin.install>
 bin: [ "installed-bin" {"installed-bin.bin"} ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-bin
 The following actions will be performed:
 === install 1 package
@@ -209,6 +219,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-bin.1:pkg-bin.install>
 bin: [ "?finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-bin
 The following actions will be performed:
 === install 1 package
@@ -253,6 +268,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-bin.1:pkg-bin.install>
 bin: [ "finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-bin
 The following actions will be performed:
 === install 1 package
@@ -288,6 +308,11 @@ Some files in ${BASEDIR}/OPAM/sw-bin/.opam-switch/install/pkg-bin.install couldn
 opam-version: "2.0"
 ### <pkg:pkg-bin.1:pkg-bin.install>
 bin: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-bin
 The following actions will be performed:
 === install 1 package
@@ -339,6 +364,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-sbin.1:pkg-sbin.install>
 sbin: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-sbin
 The following actions will be performed:
 === install 1 package
@@ -384,6 +414,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-sbin.1:pkg-sbin.install>
 sbin: [ "installed-bin" {"installed-bin.sbin"} ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-sbin
 The following actions will be performed:
 === install 1 package
@@ -429,6 +464,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-sbin.1:pkg-sbin.install>
 sbin: [ "?finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-sbin
 The following actions will be performed:
 === install 1 package
@@ -473,6 +513,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-sbin.1:pkg-sbin.install>
 sbin: [ "finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-sbin
 The following actions will be performed:
 === install 1 package
@@ -508,6 +553,11 @@ Some files in ${BASEDIR}/OPAM/sw-sbin/.opam-switch/install/pkg-sbin.install coul
 opam-version: "2.0"
 ### <pkg:pkg-sbin.1:pkg-sbin.install>
 sbin: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-sbin
 The following actions will be performed:
 === install 1 package
@@ -559,6 +609,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-stublibs.1:pkg-stublibs.install>
 stublibs: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-stublibs
 The following actions will be performed:
 === install 1 package
@@ -604,6 +659,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-stublibs.1:pkg-stublibs.install>
 stublibs: [ "installed-bin" {"installed-bin.stublibs"} ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-stublibs
 The following actions will be performed:
 === install 1 package
@@ -649,6 +709,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-stublibs.1:pkg-stublibs.install>
 stublibs: [ "?finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-stublibs
 The following actions will be performed:
 === install 1 package
@@ -693,6 +758,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-stublibs.1:pkg-stublibs.install>
 stublibs: [ "finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-stublibs
 The following actions will be performed:
 === install 1 package
@@ -728,6 +798,11 @@ Some files in ${BASEDIR}/OPAM/sw-stublibs/.opam-switch/install/pkg-stublibs.inst
 opam-version: "2.0"
 ### <pkg:pkg-stublibs.1:pkg-stublibs.install>
 stublibs: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-stublibs
 The following actions will be performed:
 === install 1 package
@@ -779,6 +854,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-libexec.1:pkg-libexec.install>
 libexec: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec
 The following actions will be performed:
 === install 1 package
@@ -825,6 +905,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-libexec.1:pkg-libexec.install>
 libexec: [ "installed-bin" {"installed-bin.libexec"} ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec
 The following actions will be performed:
 === install 1 package
@@ -871,6 +956,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-libexec.1:pkg-libexec.install>
 libexec: [ "?finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec
 The following actions will be performed:
 === install 1 package
@@ -918,6 +1008,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-libexec.1:pkg-libexec.install>
 libexec: [ "finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec
 The following actions will be performed:
 === install 1 package
@@ -954,6 +1049,11 @@ Some files in ${BASEDIR}/OPAM/sw-libexec/.opam-switch/install/pkg-libexec.instal
 opam-version: "2.0"
 ### <pkg:pkg-libexec.1:pkg-libexec.install>
 libexec: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec
 The following actions will be performed:
 === install 1 package
@@ -1005,6 +1105,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
 libexec_root: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec_root
 The following actions will be performed:
 === install 1 package
@@ -1049,6 +1154,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
 libexec_root: [ "installed-bin" {"installed-bin.libexec_root"} ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec_root
 The following actions will be performed:
 === install 1 package
@@ -1093,6 +1203,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
 libexec_root: [ "?finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec_root
 The following actions will be performed:
 === install 1 package
@@ -1137,6 +1252,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
 libexec_root: [ "finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec_root
 The following actions will be performed:
 === install 1 package
@@ -1172,6 +1292,11 @@ Some files in ${BASEDIR}/OPAM/sw-libexec_root/.opam-switch/install/pkg-libexec_r
 opam-version: "2.0"
 ### <pkg:pkg-libexec_root.1:pkg-libexec_root.install>
 libexec_root: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-libexec_root
 The following actions will be performed:
 === install 1 package
@@ -1222,6 +1347,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-rootexec.1:pkg-rootexec.install>
 rootexec: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-rootexec
 The following actions will be performed:
 === install 1 package
@@ -1267,6 +1397,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-rootexec.1:pkg-rootexec.install>
 rootexec: [ "installed-bin" {"installed-bin.rootexec"} ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-rootexec
 The following actions will be performed:
 === install 1 package
@@ -1312,6 +1447,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-rootexec.1:pkg-rootexec.install>
 rootexec: [ "?finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-rootexec
 The following actions will be performed:
 === install 1 package
@@ -1356,6 +1496,11 @@ Done.
 opam-version: "2.0"
 ### <pkg:pkg-rootexec.1:pkg-rootexec.install>
 rootexec: [ "finst" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-rootexec
 The following actions will be performed:
 === install 1 package
@@ -1391,6 +1536,11 @@ Some files in ${BASEDIR}/OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.inst
 opam-version: "2.0"
 ### <pkg:pkg-rootexec.1:pkg-rootexec.install>
 rootexec: [ "installed-bin" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUG=-5 opam install pkg-rootexec
 The following actions will be performed:
 === install 1 package

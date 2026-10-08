@@ -66,6 +66,11 @@ opam-version: "2.0"
 depends: [ "ocaml" {= "4.10.0" & post} ]
 flags: compiler
 conflict-class: "ocaml-core-compiler"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :---:
 ### :I: Default compiler selection
 ### :I:1: No system compiler
@@ -514,6 +519,9 @@ Switch initialisation failed: clean up? ('n' will leave the switch partially ins
 opam-version: "2.0"
 ### <pkg:ta.1>
 opam-version: "2.0"
+### opam update default
+[ERROR] Opam has not been initialised, please run `opam init'
+# Return code 50 #
 ### opam init --no-setup --bypass-checks default REPO/ --bare | grep -v Cygwin
 No configuration file found, using built-in defaults.
 

@@ -11,6 +11,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:qux.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pin:tolock/tolock.opam>
 opam-version: "2.0"
 depends: [ "foo" "bar" ]
@@ -452,6 +457,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:dep-corge.4>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create interdep --empty
 ### <pin:interlock/foo.opam>
 version: "pinned"
@@ -1338,6 +1348,11 @@ opam-version: "2.0"
 ### <pkg:distant-x.1>
 opam-version: "2.0"
 depends: [ "local-one" "local-two" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create locality --empty
 ### opam pin ./local-one -n
 [NOTE] Package local-one does not exist in opam repositories registered in the current switch.
@@ -1407,6 +1422,11 @@ Ok, with-nope is no longer pinned to file://${BASEDIR}/with-nope (version dev)
 opam-version: "2.0"
 ### <pkg:dep.2>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pin:disjunction/disjunction.opam>
 opam-version: "2.0"
 depends: ["dep" {= "1" | = "2"}]

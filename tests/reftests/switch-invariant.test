@@ -1,11 +1,16 @@
 N0REP0
+### OPAMYES=1
 ### <pkg:foo.1>
 opam-version: "2.0"
 ### <repo2/repo>
 opam-version: "2.0"
 ### <repo2/packages/bar/bar.1/opam>
 opam-version: "2.0"
-### OPAMYES=1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam repository add --dont-select non-default ./repo2
 [non-default] Initialised
 ### opam update --all
@@ -50,6 +55,11 @@ depends: [ "bar" { = version } ]
 opam-version: "2.0"
 flags: compiler
 depends: [ "bar" { = version } ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create tonotupgrade baz.1
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -71,6 +81,11 @@ depends: [ "bar" ]
 opam-version: "2.0"
 flags: compiler
 depends: [ "bar" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create tonupgrade baz.1
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>

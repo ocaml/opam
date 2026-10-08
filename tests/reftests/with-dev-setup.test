@@ -1,4 +1,5 @@
 N0REP0
+### OPAMYES=1
 ### <pkg:a.1>
 opam-version: "2.0"
 depends: [ "b" "tool" {with-dev-setup} ]
@@ -11,7 +12,11 @@ post-messages:
 opam-version: "2.0"
 ### <pkg:tool.1>
 opam-version: "2.0"
-### OPAMYES=1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create tooling --empty
 ### opam install a
 The following actions will be performed:

@@ -1,4 +1,6 @@
 N0REP0
+### OPAMYES=1
+### OCAMLRUNPARAM=b
 ### <pkg:a.1>
 opam-version: "2.0"
 flags: compiler
@@ -21,8 +23,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:g.1>
 opam-version: "2.0"
-### OPAMYES=1
-### OCAMLRUNPARAM=b
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create display --empty
 ### opam install b a
 The following actions will be performed:
@@ -97,6 +102,11 @@ Switch display and all its packages will be wiped. Are you sure? [Y/n] y
 opam-version: "2.0"
 # force dependency for reproducibility
 depends: "d"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create display --empty
 ### opam install d
 The following actions will be performed:

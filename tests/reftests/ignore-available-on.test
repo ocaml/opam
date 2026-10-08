@@ -3,6 +3,11 @@ N0REP0
 ### <pkg:unavail.1>
 opam-version: "2.0"
 available: false
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :I: Unavailable package
 ### :I:1: Install
 ### :I:1:a: - without ignore-available-on
@@ -23,6 +28,11 @@ Done.
 ### <pkg:unavail.2>
 opam-version: "2.0"
 available: false
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :I:2:a: - upgrade all without ignore-available-on
 ### opam upgrade --show
 The following actions would be performed:
@@ -80,6 +90,11 @@ Done.
 ### <pkg:avail.1>
 opam-version: "2.0"
 depends: "unavail"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :II:1: Install
 ### :II:1:a: - without ignore-available-on
 ### opam install avail
@@ -111,6 +126,11 @@ Done.
 ### <pkg:avail.2>
 opam-version: "2.0"
 depends: "unavail"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :II:2:a: - without ignore-available-on
 ### opam upgrade avail
 [ERROR] Package conflict!

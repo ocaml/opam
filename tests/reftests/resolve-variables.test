@@ -6,6 +6,11 @@ opam-version: "2.0"
 ### <pkg:foo.1>
 opam-version: "2.0"
 depends: "d" {> build}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install foo
 [WARNING] Undefined filter variable build in dependencies of foo.1
 The following actions will be performed:
@@ -18,6 +23,11 @@ Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 depends: "d" {build}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create resolving2 --empty
 ### opam install foo
 The following actions will be performed:
@@ -32,6 +42,11 @@ Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 depends: "d" {> "1" & > build}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create resolving3 --empty
 ### opam install foo
 [WARNING] Undefined filter variable build in dependencies of foo.1
@@ -45,6 +60,11 @@ Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 depends: "d" {> undef}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create resolving4 --empty
 ### opam install foo
 [WARNING] Undefined filter variable undef in dependencies of foo.1
@@ -58,6 +78,11 @@ Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 depends: "d" {undef}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create resolving5 --empty
 ### opam install foo
 The following actions will be performed:
@@ -70,6 +95,11 @@ Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 depends: "d" {> defin}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create resolving6 --empty
 ### OPAMVAR_defin=2 opam install foo
 The following actions will be performed:

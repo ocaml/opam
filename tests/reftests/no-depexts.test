@@ -8,6 +8,11 @@ depexts: [ "dont-check-me" ]
 ### <pkg:dpx.1>
 opam-version: "2.0"
 depexts: [ "check-me" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam option depext
 true
 ### :I: via config

@@ -13,6 +13,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:ba_z.3>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create --empty encode-cudf
 ### opam install bar foo
 [ERROR] Package conflict!

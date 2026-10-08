@@ -688,6 +688,11 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### <pkg:lint.2:more-file-good-md5>
 and there is content!
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam lint --package lint.1
 <default>/lint.1: Errors.
              error 53: Mismatching 'extra-files:' field: "more-file-bad-md5"
@@ -1245,7 +1250,7 @@ extra-files:[
 ]
 EOF
 ### sh hash.sh
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO

@@ -44,8 +44,7 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### opam list --all
 # Packages matching: any
-# Name # Installed # Synopsis
-foo    --
+# No matches found
 ### :II:3: extrafile file in repo
 ### rm -rf REPO/packages
 ### opam switch create reftests-pkg-xfile --empty
@@ -829,6 +828,11 @@ install:
   [
     [ "true" ]
   ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam-cat pkg.opam
 build: ["false"]
 install: [["true"]]
@@ -923,6 +927,11 @@ synopsis: "syn-bar"
 ### <pkg:baz.1>
 opam-version: "2.0"
 synopsis: "syn-baz"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <OPER/repo>
 opam-version: "2.0"
 ### <OPER/packages/foo/foo.2/opam>

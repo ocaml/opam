@@ -80,6 +80,11 @@ synopsis:
 "some synopsis"
 description:
 "some description"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create eff-eq --empty
 ### opam var --global some-filter=false
 Added '[some-filter "false" "Set through 'opam var'"]' to field global-variables in global configuration

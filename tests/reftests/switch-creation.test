@@ -13,6 +13,11 @@ build: ["sh" "./prefix"]
 install: ["cp" "pref" "%{lib}%/prefix"]
 ### <pkg:baz.1:prefix>
 opam var prefix --safe > pref
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### # switch not undefined for opam calls in build, on build creation
 ### opam switch create undef-prefix baz
 
@@ -72,6 +77,11 @@ depends: "ocaml-base-compiler" {= version} | "ocaml-system" {= version}
 ### <pkg:reverse-ocaml.5.3.0>
 opam-version: "2.0"
 depends: "ocaml-system" {= version} | "ocaml-base-compiler" {= version}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create 5.3.0
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -148,6 +158,11 @@ flags: compiler
 ### <pkg:ocaml-system.4.14.0>
 opam-version: "2.0"
 flags: [compiler deprecated]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create deprecated 4.14.0
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -191,6 +206,11 @@ depends: [
   | "ocaml-system" {>= "5.4.0~" & < "5.4.1~"}
 ]
 flags: [ conf avoid-version ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create 5.4.0~alpha1
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -256,6 +276,11 @@ depends: [
   | "ocaml-system" {>= "5.4.0~" & < "5.4.1~"}
 ]
 flags: [ conf avoid-version ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch remove 5.4.0~alpha1 -y
 Switch 5.4.0~alpha1 and all its packages will be wiped. Are you sure? [Y/n] y
 ### opam switch create 5.4.0~alpha1

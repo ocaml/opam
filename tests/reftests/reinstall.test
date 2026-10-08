@@ -5,6 +5,11 @@ opam-version: "2.0"
 depends: ["b"]
 ### <pkg:b.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create default --empty
 ### opam install -y a
 The following actions will be performed:
@@ -22,6 +27,10 @@ opam-version: "2.0"
 synopsis: "test"
 flags: verbose
 depends: ["b"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
 ### opam upgrade --show
 Already up-to-date.
 Nothing to do.
@@ -30,6 +39,11 @@ Nothing to do.
 opam-version: "2.0"
 flags: plugin
 depends: ["b"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show
 The following actions would be performed:
 === recompile 1 package
@@ -38,6 +52,11 @@ The following actions would be performed:
 ### <pkg:a.1>
 opam-version: "2.0"
 depends: ["b" {= version}]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show
 Already up-to-date.
 Nothing to do.
@@ -46,6 +65,11 @@ Nothing to do.
 opam-version: "2.0"
 build: ["opam" "var" "switch"]
 depends: ["b" {= version}]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade -y --verbose | sed-cmd opam
 The following actions will be performed:
 === recompile 1 package
@@ -64,6 +88,11 @@ Done.
 opam-version: "2.0"
 build: ["opam" "var" "switch"]
 depends: ["b" {= "2"}]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show
 The following actions would be performed:
 === remove 1 package
@@ -78,6 +107,11 @@ opam-version: "2.0"
 depends: ["c"]
 ### <pkg:c.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show
 The following actions would be performed:
 === recompile 2 packages
@@ -88,6 +122,11 @@ The following actions would be performed:
 ### :::::: Check that reinstalling a non-installed package is equivalent to installing it
 ### <pkg:d.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall d --cudf=reinstall --show --yes
 d is not installed. Install it? [Y/n] y
 The following actions would be performed:
@@ -129,6 +168,11 @@ The following actions would be performed:
 ### <pkg:e.1>
 opam-version: "2.0"
 depends: ["d"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall e --yes --show
 e is not installed. Install it? [Y/n] y
 The following actions would be performed:
@@ -159,6 +203,11 @@ build: [
 depends: "g"
 ### <pkg:h.1:h.install>
 bin: ["h-true.bin"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install h --yes
 The following actions will be performed:
 === install 3 packages
@@ -189,6 +238,11 @@ build: [
 depends: "f"
 ### <pkg:g.1:g.install>
 bin: ["g-false.bin"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall g --yes --cudf=graph
 The following actions will be performed:
 === recompile 2 packages

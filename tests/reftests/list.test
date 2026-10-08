@@ -21,6 +21,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:other-choice.4>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create deps --empty
 ### opam list --required-by top --recursive --all-versions --short
 choice.1
@@ -40,6 +45,11 @@ opam-version: "2.0"
 depends: "should"
 ### <pkg:should.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam list --required-by top --recursive --all-versions --short
 choice.1
 other-choice.1
@@ -56,6 +66,11 @@ opam-version: "2.0"
 ### <pkg:package.2>
 opam-version: "2.0"
 available: arch = "arm64"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam list --latests-only --all-versions --short
 choice.1
 other-choice.4
@@ -110,6 +125,11 @@ depends: "consectetur"
 ### <pkg:elit.2>
 opam-version: "2.0"
 depends: "adipiscing"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam list --depends-on sit --recursive --short --all-versions
 adipiscing.2
 amet.2

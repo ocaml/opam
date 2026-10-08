@@ -1066,9 +1066,6 @@ let run_test ?(vars=[]) ~opam t =
                write_file ~path:opam_path ~contents
           );
           print_string contents;
-          let _ : string * int option =
-            run_cmd ~opam ~dir ~vars ~silent:true "opam" ["update"; "default"]
-          in
           vars
         | Pin_file_content path ->
           let open OpamParserTypes.FullPos in

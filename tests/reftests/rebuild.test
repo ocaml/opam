@@ -20,7 +20,7 @@ url {
 }
 EOF
 ### sh mkurl.sh source-orig
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
@@ -39,11 +39,10 @@ Done.
 opam-version: "2.0"
 build: [ "test" "-f" "something" ]
 ### sh mkurl.sh source-rpl
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 Already up-to-date.
 Nothing to do.
@@ -67,7 +66,7 @@ extra-source "i-am-extra-source" {
 }
 EOF
 ### sh mkxsrc.sh original
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
@@ -85,11 +84,10 @@ Done.
 opam-version: "2.0"
 install: [ "test" "-f" "i-am-extra-source" ]
 ### sh mkxsrc.sh replacement
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 Already up-to-date.
 Nothing to do.

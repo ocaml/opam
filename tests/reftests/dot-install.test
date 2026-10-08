@@ -1,4 +1,5 @@
 N0REP0
+### OPAMYES=1
 ### <cat.ml>
 #directory "+str";;
 #load "str.cma"
@@ -64,7 +65,11 @@ hellow
 bonjour
 ### <pkg:lot-of-files.~dev:dosiero>
 saluton
-### OPAMYES=1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create inst --empty
 ### OPAMPRECISETRACKING=1 OPAMDEBUGSECTIONS="TRACK ACTION" OPAMDEBUG=-1
 ### opam install nodot
@@ -248,6 +253,11 @@ lib_root: [
 share: [ "a-file" ]
 ### <pkg:no-specified-dir.1:a-file>
 touch
+### OPAMDEBUG=0 opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMDEBUGSECTIONS="SYSTEM TRACK" OPAMDEBUG=-5
 ### opam install no-specified-dir | '[0-9]{14}' -> "now"
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -426,10 +436,11 @@ bonjour
 saluton
 ### <pkg:eskape.1:good>
 hallo
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] no changes from file://${BASEDIR}/REPO
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create escapability --empty
 ### OPAMDEBUGSECTIONS="SYSTEM" OPAMDEBUG=-5
 ### opam install eskape
@@ -613,6 +624,11 @@ misc: [
 ]
 ### <pkg:eskape-rel-dotdot-exists.1:a-file>
 hellow
+### OPAMDEBUG=0 opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install eskape-rel-dotdot-exists | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
@@ -703,6 +719,11 @@ misc: [
 ]
 ### <pkg:eskape-rel-middotdot-notexists.1:a-file>
 hellow
+### OPAMDEBUG=0 opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install eskape-rel-middotdot-notexists | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
@@ -806,6 +827,11 @@ misc: [
 ]
 ### <pkg:realeskape-rel-middotdot-notexists.1:a-file>
 hellow
+### OPAMDEBUG=0 opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install realeskape-rel-middotdot-notexists | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
@@ -899,6 +925,11 @@ share: [
 ]
 ### <pkg:eskape-abs.1:a-file>
 hellow
+### OPAMDEBUG=0 opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install eskape-abs | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
