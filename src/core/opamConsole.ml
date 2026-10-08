@@ -768,15 +768,16 @@ let short_user_input ~prompt ?default ?on_eof f =
     Unix.tcflush Unix.stdin TCIFLUSH;
     loop ()
   with
-  | Sys.Break as e -> OpamStd.Exn.finalise e (fun () -> msg "\n")
   | Unix.Unix_error _ | End_of_file ->
-    match on_eof with
+    begin match on_eof with
     | None -> OpamStd.Exn.finalise End_of_file (fun () -> msg "\n")
     | Some d ->
       msg "%s\n" d;
       match f d with
       | Some a -> a
       | None -> assert false
+    end
+  | e -> OpamStd.Exn.finalise e (fun () -> msg "\n")
 
 let pause fmt =
   if OpamStd.Sys.tty_in then

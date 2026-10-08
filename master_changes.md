@@ -33,6 +33,7 @@ users)
 ## Remove
 
 ## UI
+  * Improve the way unhandled exceptions are displayed during interactive questions [#7138 @kit-ty-kate]
 
 ## Switch
 
