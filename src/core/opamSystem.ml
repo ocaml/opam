@@ -641,13 +641,19 @@ let copy_file_t ?(with_log=true) src dst =
   log ~level:(log_for_file_management with_log) "copy %s -> %s" src dst;
   copy_file_aux ~src ~dst ()
 
+let symlink_atomic src dst =
+  let tmp = temp_name ~dir:(Filename.dirname dst) ~prefix:"opam-link" () in
+  Unix.symlink src tmp;
+  try Unix.rename tmp dst
+  with e -> (try Unix.unlink tmp with Unix.Unix_error _ -> ()); raise e
+
 let rec link_t ~except_vcs ?(with_log=true) src dst =
   mkdir (Filename.dirname dst);
   if file_or_symlink_exists dst then
     remove_file dst;
   try
     log ~level:(log_for_file_management with_log) "ln -s %s %s" src dst;
-    Unix.symlink src dst
+    symlink_atomic src dst
   with Unix.Unix_error (Unix.EXDEV, _, _) ->
     (* Fall back to copy if symlinks are not supported *)
     let src =
@@ -1081,7 +1087,7 @@ let link src dst =
   if Unix.has_symlink () then
     try
       log "ln -s %s %s" src dst;
-      Unix.symlink src dst
+      symlink_atomic src dst
     with Unix.Unix_error (Unix.EXDEV, _, _) ->
       fallback ()
   else (
