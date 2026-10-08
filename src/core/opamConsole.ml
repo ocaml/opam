@@ -764,7 +764,7 @@ let short_user_input ~prompt ?default ?on_eof f =
     in
     OpamStd.Exn.finally reset @@ fun () ->
     Unix.tcsetattr Unix.stdin TCSAFLUSH
-      {attr with c_icanon = false; c_echo = false};
+      {attr with c_vmin = 1; c_icanon = false; c_echo = false};
     Unix.tcflush Unix.stdin TCIFLUSH;
     loop ()
   with
