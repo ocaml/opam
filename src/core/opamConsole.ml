@@ -747,7 +747,6 @@ let short_user_input ~prompt ?default ?on_eof f =
         | "\n" -> default
         | s -> Some s
         | exception Unix.Unix_error (Unix.EINTR,_,_) -> None
-        | exception Unix.Unix_error _ -> raise End_of_file
       in
       match input with
       | None -> loop ()
@@ -768,7 +767,7 @@ let short_user_input ~prompt ?default ?on_eof f =
     Unix.tcflush Unix.stdin TCIFLUSH;
     loop ()
   with
-  | Unix.Unix_error _ | End_of_file ->
+  | End_of_file ->
     begin match on_eof with
     | None -> OpamStd.Exn.finalise End_of_file (fun () -> msg "\n")
     | Some d ->
