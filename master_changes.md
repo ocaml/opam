@@ -169,3 +169,4 @@ users)
   * `OpamStd.Map.union`: was changed to the stdlib version which has a more flexible API and has better performances [#7170, @NathanReb]
   * `OpamStd.Map.strict_union`: added as a replacement for the previous custom `union` API in `OpamStd` but based on `Stdlib`'s `union` for better performances [#7170, @NathanReb]
   * `OpamStd.String.case_insensitive_{compare,equal}` were added [#7086 @kit-ty-kate]
+  * `OpamStd.Set.to_string`: Improve performance [#7198 @NathanReb]
