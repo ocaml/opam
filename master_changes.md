@@ -27,6 +27,7 @@ users)
 
   * Fix a bug triggering unnecessary reinstallation of packages not directly involved in the solution [#7154 @NathanReb]
   * Fix a bug where `opam install --depext-only` would try to install depexts of packages that needed to be removed or upgraded [#7166, @NathanReb]
+  * Add `etc_root` and `etcexec_root` sections to `.install` files to files at `etc` root directory [#3958 @hongchangwu @rjbou]
 
 ## Build (package)
 
@@ -101,6 +102,7 @@ users)
 ## Admin
 
 ## Opam installer
+  * Support `etc_root` and `etcexec_root` in `opam-installer` [#3958 @hongchangwu @rjbou]
 
 ## State
 
@@ -132,6 +134,7 @@ users)
 ### Tests
   * Add an exhaustive test showing the behaviour of the `conflicts` field [#7127 @kit-ty-kate]
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
+  * Add test for 'etc_root' and 'etcexec_root' `.install` fields [#3958 @rjbou]
 
 ### Engine
 

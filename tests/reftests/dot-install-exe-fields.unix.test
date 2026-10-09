@@ -8,7 +8,7 @@ N0REP0
 ### :   * non existing filename : [ "non-existing-filename" ]
 ### :   * default install with binary not as exe (-x) : [ "filename" ]
 ### :
-### : Fields are : bin, sbin, stublibs, libexec, libexec_root
+### : Fields are : bin, sbin, stublibs, libexec, libexec_root, rootexec, etcexec_root
 ### : Non executable fields are tested in dot-install-exec-fields.*.test
 ### :
 ### : For each package, there is no install target. The only side effect is
@@ -1430,4 +1430,229 @@ Done.
 ### opam-cat OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes
 # OPAM/sw-rootexec/.opam-switch/install/pkg-rootexec.changes not found
 ### ocaml cat.ml sw-rootexec pkg-rootexec
+==> No 'installed-bin' found
+### ::::::::::::::::::::::::::
+### :VII: Field 'etcexec_root'
+### ::::::::::::::::::::::::::
+### mkdir -p REPO/packages/pkg-etcexec_root/pkg-etcexec_root.1/files
+### cp installed-bin REPO/packages/pkg-etcexec_root/pkg-etcexec_root.1/files/installed-bin
+### opam switch create sw-etcexec_root --empty
+### :VII:1: No defined destination path
+### <pkg:pkg-etcexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-etcexec_root.1:pkg-etcexec_root.install>
+etcexec_root: [ "installed-bin" ]
+### OPAMDEBUG=-5 opam install pkg-etcexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-etcexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-etcexec_root.1
+ACTION                          prepare_package_source: pkg-etcexec_root.1 at ${BASEDIR}/OPAM/sw-etcexec_root/.opam-switch/build/pkg-etcexec_root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-etcexec_root.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-etcexec_root/etc
+TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etcexec_root.1: 2 items (addition: 2)
+-> installed pkg-etcexec_root.1
+Done.
+### opam-cat OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes | sed-hash $BINMD5 hash
+added: ["etc" {"D"} "etc/installed-bin" {"F:+hash+"}]
+opam-version: "2.0"
+### ocaml cat.ml sw-etcexec_root pkg-etcexec_root
+==> ${BASEDIR}/OPAM/sw-etcexec_root/etc/installed-bin (+x)
+### OPAMDEBUG=-5 opam remove pkg-etcexec_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-etcexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-etcexec_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-etcexec_root.1: files etc/installed-bin were already removed
+-> removed   pkg-etcexec_root.1
+ACTION                          Cleaning up artefacts of pkg-etcexec_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes
+# OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes not found
+### ocaml cat.ml sw-etcexec_root pkg-etcexec_root
+==> No 'installed-bin' found
+### :VII:2: Specify destination path
+### <pkg:pkg-etcexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-etcexec_root.1:pkg-etcexec_root.install>
+etcexec_root: [ "installed-bin" {"installed-bin.etcexec_root"} ]
+### OPAMDEBUG=-5 opam install pkg-etcexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-etcexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-etcexec_root.1
+ACTION                          prepare_package_source: pkg-etcexec_root.1 at ${BASEDIR}/OPAM/sw-etcexec_root/.opam-switch/build/pkg-etcexec_root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-etcexec_root.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-etcexec_root/etc
+TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etcexec_root.1: 2 items (addition: 2)
+-> installed pkg-etcexec_root.1
+Done.
+### opam-cat OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes | sed-hash $BINMD5 hash
+added: ["etc" {"D"} "etc/installed-bin.etcexec_root" {"F:+hash+"}]
+opam-version: "2.0"
+### ocaml cat.ml sw-etcexec_root pkg-etcexec_root
+==> ${BASEDIR}/OPAM/sw-etcexec_root/etc/installed-bin.etcexec_root (+x)
+### OPAMDEBUG=-5 opam remove pkg-etcexec_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-etcexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-etcexec_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-etcexec_root.1: files etc/installed-bin.etcexec_root were already removed
+-> removed   pkg-etcexec_root.1
+ACTION                          Cleaning up artefacts of pkg-etcexec_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes
+# OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes not found
+### ocaml cat.ml sw-etcexec_root pkg-etcexec_root
+==> No 'installed-bin' found
+### :VII:3: Non existing filename, with optional argument
+### <pkg:pkg-etcexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-etcexec_root.1:pkg-etcexec_root.install>
+etcexec_root: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-etcexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-etcexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-etcexec_root.1
+ACTION                          prepare_package_source: pkg-etcexec_root.1 at ${BASEDIR}/OPAM/sw-etcexec_root/.opam-switch/build/pkg-etcexec_root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-etcexec_root.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-etcexec_root/etc
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-etcexec_root/.opam-switch/build/pkg-etcexec_root.1/finst is not present and optional.
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etcexec_root.1: 1 items (addition: 1)
+-> installed pkg-etcexec_root.1
+Done.
+### opam-cat OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes
+added: "etc" {"D"}
+opam-version: "2.0"
+### ocaml cat.ml sw-etcexec_root pkg-etcexec_root
+==> No 'installed-bin' found
+### OPAMDEBUG=-5 opam remove pkg-etcexec_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-etcexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-etcexec_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-etcexec_root.1
+ACTION                          Cleaning up artefacts of pkg-etcexec_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes
+# OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes not found
+### ocaml cat.ml sw-etcexec_root pkg-etcexec_root
+==> No 'installed-bin' found
+### :VII:4: Non existing filename
+### <pkg:pkg-etcexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-etcexec_root.1:pkg-etcexec_root.install>
+etcexec_root: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-etcexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-etcexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-etcexec_root.1
+ACTION                          prepare_package_source: pkg-etcexec_root.1 at ${BASEDIR}/OPAM/sw-etcexec_root/.opam-switch/build/pkg-etcexec_root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-etcexec_root.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-etcexec_root/etc
+[ERROR] Installation of pkg-etcexec_root.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-etcexec_root/.opam-switch/build/pkg-etcexec_root.1/finst to ${BASEDIR}/OPAM/sw-etcexec_root/etc
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-etcexec_root 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes
+# OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes not found
+### ocaml cat.ml sw-etcexec_root pkg-etcexec_root
+==> No 'installed-bin' found
+### :VII:5: Default install with no executable bit
+### chmod -x REPO/packages/pkg-etcexec_root/pkg-etcexec_root.1/files/installed-bin
+### <pkg:pkg-etcexec_root.1>
+opam-version: "2.0"
+### <pkg:pkg-etcexec_root.1:pkg-etcexec_root.install>
+etcexec_root: [ "installed-bin" ]
+### OPAMDEBUG=-5 opam install pkg-etcexec_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-etcexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-etcexec_root.1
+ACTION                          prepare_package_source: pkg-etcexec_root.1 at ${BASEDIR}/OPAM/sw-etcexec_root/.opam-switch/build/pkg-etcexec_root.1
+TRACK                           before install: 1 elements scanned in 0.000s
+ACTION                          Installing pkg-etcexec_root.1.
+
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etcexec_root.1: 1 items (addition: 1)
+-> installed pkg-etcexec_root.1
+Done.
+### opam-cat OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes | sed-hash $BINMD5 hash
+added: "etc/installed-bin" {"F:+hash+"}
+opam-version: "2.0"
+### ocaml cat.ml sw-etcexec_root pkg-etcexec_root
+==> ${BASEDIR}/OPAM/sw-etcexec_root/etc/installed-bin (+x)
+### OPAMDEBUG=-5 opam remove pkg-etcexec_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-etcexec_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-etcexec_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-etcexec_root.1: files etc/installed-bin were already removed
+-> removed   pkg-etcexec_root.1
+ACTION                          Cleaning up artefacts of pkg-etcexec_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes
+# OPAM/sw-etcexec_root/.opam-switch/install/pkg-etcexec_root.changes not found
+### ocaml cat.ml sw-etcexec_root pkg-etcexec_root
 ==> No 'installed-bin' found
