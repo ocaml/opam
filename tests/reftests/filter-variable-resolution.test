@@ -50,6 +50,7 @@ build: [
   [ "grep" "ploplop" "some-content" ]
   [ "grep" "bloblob" "some-content" ]
 ]
+### update-xf patches.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -352,6 +353,7 @@ build: [
   [ "grep" "ploplop" "some-content" ]
   [ "grep" "bloblob" "some-content" ]
 ]
+### update-xf patches.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -614,6 +616,7 @@ opam-version: "2.0"
 ### <pkg:v.1:v.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf v.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -657,6 +660,7 @@ build: [
   [ "grep" "ploplop" "some-content" ]
   [ "grep" "bloblob" "some-content" ]
 ]
+### update-xf patches.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -951,6 +955,7 @@ build: [
 ### <pkg:patches.1:patches.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf patches.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -981,6 +986,7 @@ Processing  2/3: [patches: grep ploplop]
 ### :IV:1:b: reinstall ::::
 ### <pkg:patches.1>
 opam-version: "2.0"
+### update-xf patches.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1006,6 +1012,7 @@ build: [
   [ "grep" "ploplop" "some-content" ]
   [ "grep" "bloblob" "some-content" ]
 ]
+### update-xf patches.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1042,6 +1049,7 @@ build: [
 ### <pkg:build.1:build.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf build.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1071,6 +1079,7 @@ Processing  2/3: [build: false]
 ### :IV:2:b: reinstall ::::
 ### <pkg:build.1>
 opam-version: "2.0"
+### update-xf build.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1092,6 +1101,7 @@ build: [
   [ "true" { ?_:smtg } ]
   [ "false" { !?_:smtg } ]
 ]
+### update-xf build.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1124,14 +1134,15 @@ install: [
   [ "true" { ?_:smtg } ]
   [ "false" { !?_:smtg } ]
 ]
+### <pkg:install.1:install.config>
+opam-version: "2.0"
+variables { smtg: "something" }
+### update-xf install.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
-### <pkg:install.1:install.config>
-opam-version: "2.0"
-variables { smtg: "something" }
 ### :IV:3:a: first install ::::
 ### opam install install -v | sed-cmd false | unordered
 The following actions will be performed:
@@ -1156,6 +1167,7 @@ Processing  3/3: [install: false]
 ### :IV:3:b: reinstall ::::
 ### <pkg:install.1>
 opam-version: "2.0"
+### update-xf install.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1177,6 +1189,7 @@ install: [
   [ "true" { ?_:smtg } ]
   [ "false" { !?_:smtg } ]
 ]
+### update-xf install.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1219,6 +1232,7 @@ run-test: [
 ### <pkg:runtest.1:runtest.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf runtest.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1248,6 +1262,7 @@ Processing  2/3: [runtest: false]
 ### :IV:4:b: reinstall ::::
 ### <pkg:runtest.1>
 opam-version: "2.0"
+### update-xf runtest.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1269,6 +1284,7 @@ run-test: [
   [ "true" { ?_:smtg } ]
   [ "false" { !?_:smtg } ]
 ]
+### update-xf runtest.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1304,6 +1320,7 @@ remove: [
 ### <pkg:remove.1:remove.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf remove.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1359,6 +1376,7 @@ depends: [
 ### <pkg:depends.1:depends.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf depends.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1373,6 +1391,7 @@ The following actions would be performed:
 ### :IV:6:b: reinstall ::::
 ### <pkg:depends.1>
 opam-version: "2.0"
+### update-xf depends.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1394,6 +1413,7 @@ depends: [
  "foo" { ?_:smtg }
  "undefined-smtg" { !?_:smtg }
 ]
+### update-xf depends.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1423,6 +1443,7 @@ depopts: [
 ### <pkg:depopts.1:depopts.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf depopts.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1467,6 +1488,7 @@ conflicts: [
 ### <pkg:conflicts.1:conflicts.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf conflicts.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1520,6 +1542,7 @@ The following actions would be performed:
 ### :IV:8:b: reinstall ::::
 ### <pkg:conflicts.1>
 opam-version: "2.0"
+### update-xf conflicts.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1541,6 +1564,7 @@ conflicts: [
   "baz" { ?_:smtg }
   "undefined-smtg" { !?_:smtg }
 ]
+### update-xf conflicts.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1570,6 +1594,7 @@ messages: [
 ### <pkg:msg.1:msg.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf msg.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1587,6 +1612,7 @@ Done.
 ### :IV:9:b: reinstall ::::
 ### <pkg:msg.1>
 opam-version: "2.0"
+### update-xf msg.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1608,6 +1634,7 @@ messages: [
   "Hej!" { ?_:smtg }
   ">>smtg is undefined<<" { !?_:smtg }
 ]
+### update-xf msg.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1631,6 +1658,7 @@ post-messages: [
 ### <pkg:post-msg.1:post-msg.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf post-msg.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1651,6 +1679,7 @@ Done.
 ### :IV:10:b: reinstall ::::
 ### <pkg:post-msg.1>
 opam-version: "2.0"
+### update-xf post-msg.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1672,6 +1701,7 @@ post-messages: [
   "Bye!" { ?_:smtg }
   ">>smtg is undefined<<" { !?_:smtg }
 ]
+### update-xf post-msg.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1695,6 +1725,7 @@ available: [ ?_:smtg ]
 ### <pkg:avail.1:avail.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf avail.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1707,6 +1738,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### :IV:11:b: reinstall ::::
 ### <pkg:avail.1>
 opam-version: "2.0"
+### update-xf avail.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -1725,6 +1757,7 @@ something
 ### <pkg:avail.1>
 opam-version: "2.0"
 available: [ ?_:smtg ]
+### update-xf avail.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>

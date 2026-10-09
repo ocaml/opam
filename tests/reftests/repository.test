@@ -1,21 +1,10 @@
 N0REP0
-### <hash.sh>
-set -ue
-repo=$1
-nv=$2
-n=`echo "$nv" | cut -f1 -d.`
-path=$repo/packages/$n/$nv
-echo "extra-files:[" >> "$path/opam"
-for file in `ls "$path/files"`; do
-  echo "  [\"$file\" \"md5=`openssl md5 "$path/files/$file" | cut -f2 -d' '`\"]" >> "$path/opam"
-done
-echo   "]" >> "$path/opam"
 ### <REPO/packages/foo/foo.1/opam>
 opam-version: "2.0"
 build: ["test" "-f" "bar"]
 ### <REPO/packages/foo/foo.1/files/bar>
 some content
-### sh hash.sh REPO foo.1
+### update-xf foo.1
 ### : Internal repository storage as archive or plain directory :
 ### opam switch create tarring --empty
 ### opam update -vv | grep '^\+'
@@ -35,7 +24,7 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.2/files/baz>
 some content
-### sh hash.sh REPO foo.2
+### update-xf foo.2
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update default | grep TAR
 TAR                             creating archive ${BASEDIR}/OPAM/repo/default.tar.gz from ${BASEDIR}/OPAM/repo/default
 TAR                             creating archive ${BASEDIR}/OPAM/repo/default.tar.gz.new from ${BASEDIR}/REPO
@@ -59,7 +48,7 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.3/files/baz>
 some content
-### sh hash.sh REPO foo.3
+### update-xf foo.3
 ### opam repository add tarred ./REPO --this-switch
 [tarred] Initialised
 ### : New tarred repositories does not change already unchanged existing ones
@@ -78,7 +67,7 @@ opam-version: "2.0"
 build: ["test" "-f" "baz"]
 ### <REPO/packages/foo/foo.4/files/baz>
 some content
-### sh hash.sh REPO foo.4
+### update-xf foo.4
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update -vv | grep '^(\+|TAR)' | sed-cmd tar
 TAR                             creating archive ${BASEDIR}/OPAM/repo/tarred.tar.gz.new from ${BASEDIR}/REPO
 TAR                             Open archive ${BASEDIR}/OPAM/repo/tarred.tar.gz
@@ -103,7 +92,7 @@ opam-version: "2.0"
 build: ["test" "-f" "quux"]
 ### <REPO/packages/foo/foo.5/files/quux>
 some content
-### sh hash.sh REPO foo.5
+### update-xf foo.5
 ### opam update -vv | grep '^\+' | sed-cmd tar
 + tar "xfz" "${BASEDIR}/OPAM/repo/tarred.tar.gz" "-C" "${BASEDIR}/OPAM/repo/tarred"
 ### opam install foo.5 -vv | grep '^\+' | sed-cmd test
@@ -123,7 +112,7 @@ opam-version: "2.0"
 build: ["test" "-f" "rab"]
 ### <REPO/packages/foo/foo.4/files/rab>
 some content
-### sh hash.sh REPO foo.4
+### update-xf foo.4
 ### OPAMDEBUGSECTIONS="FILE(opam) FILE(repo) FILE(repos-config)  CACHE(repository)"
 ### opam update --debug-level=-3 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
@@ -181,7 +170,7 @@ opam-version: "2.0"
 build: ["test" "-f" "oof"]
 ### <REPO2/packages/bar/bar.1/files/oof>
 some content
-### sh hash.sh REPO2 bar.1
+### update-xf REPO2 bar.1
 ### opam repository add repo2 ./REPO2 --this-switch
 [repo2] Initialised
 ### opam update --debug-level=-3
@@ -206,7 +195,7 @@ opam-version: "2.0"
 build: ["test" "-f" "oof"]
 ### <REPO2/packages/bar/bar.2/files/oof>
 some content
-### sh hash.sh REPO2 bar.2
+### update-xf REPO2 bar.2
 ### opam update --debug-level=-3 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
@@ -235,13 +224,13 @@ opam-version: "2.0"
 build: ["test" "-f" "rab"]
 ### <REPO/packages/foo/foo.6/files/rab>
 some content
-### sh hash.sh REPO foo.6
+### update-xf foo.6
 ### <REPO2/packages/bar/bar.3/opam>
 opam-version: "2.0"
 build: ["test" "-f" "oof"]
 ### <REPO2/packages/bar/bar.3/files/oof>
 some content
-### sh hash.sh REPO2 bar.3
+### update-xf REPO2 bar.3
 ### opam update --debug-level=-3 | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 FILE(repos-config)              Read ${BASEDIR}/OPAM/repo/repos-config in 0.000s
@@ -1037,7 +1026,7 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <CHG/packages/yan/yan.1/files/nay>
 un
-### sh hash.sh CHG yan.1
+### update-xf CHG yan.1
 ### opam switch create format-change --empty
 ### OPAMREPOSITORYTARRING=1
 ### OPAMDEBUGSECTIONS="TAR RSTATE REPOSITORY REPO_BACKEND UPDATE" OPAMDEBUG=-3 OPAMVERBOSE=2
@@ -1117,7 +1106,7 @@ Done.
 opam-version: "2.0"
 ### <CHG/packages/sin/sin.2/files/nis>
 deux
-### sh hash.sh CHG sin.2
+### update-xf CHG sin.2
 ### git -C ./CHG add packages
 ### git -C ./CHG commit -qm "sin"
 ### opam update | sed-cmd git tar | grep -v "HEAD is now"
@@ -1203,7 +1192,7 @@ Done.
 opam-version: "2.0"
 ### <CHG/packages/krad/krad.3/files/dark>
 trois
-### sh hash.sh CHG krad.3
+### update-xf CHG krad.3
 ### rm OPAM/repo/changes.tar.gz
 ### mv changes OPAM/repo/changes
 ### opam update
@@ -1307,7 +1296,7 @@ Done.
 opam-version: "2.0"
 ### <CHG/packages/okkoz/okkoz.4/files/okkoz>
 quatre
-### sh hash.sh CHG okkoz.4
+### update-xf CHG okkoz.4
 ### git -C ./CHG add packages
 ### git -C ./CHG commit -qm "okkoz"
 ### rm -r OPAM/repo/changes/.git
@@ -1392,7 +1381,7 @@ Done.
 opam-version: "2.0"
 ### <CHG/packages/semmus/semmus.5/files/summes>
 cinq
-### sh hash.sh CHG semmus.5
+### update-xf CHG semmus.5
 ### rm -r OPAM/repo/changes
 ### mv changes OPAM/repo/
 ### opam update

@@ -95,56 +95,90 @@ license: "MIT"
 dev-repo: "hg+https://pkg@op.am"
 bug-reports: "https://nobug"
 build: ["false"]
-### :II:6: extra-files management
-### :II:6:a: opamfile then extrafile
+### :II:6: extra-files management, update-xf command
+### :II:6:a: full args
 ### <pkg:bar.1>
 opam-version: "2.0"
 ### cat REPO/packages/bar/bar.1/opam
 opam-version: "2.0"
 ### <pkg:bar.1:xf-bar>
 I'm an extra file
+### update-xf REPO bar.1
 ### cat REPO/packages/bar/bar.1/opam
 opam-version: "2.0"
 extra-files: ["xf-bar" "md5=dbaf1ea561686374373dc7d154f3a0ff"]
-### :II:6:b: extrafile then opamfile
+### :II:6:b: default repo
 ### <pkg:baz.1:xf-baz>
 I'm an another extra file
 ### test -f REPO/packages/baz/baz.1/opam
 # Return code 1 #
 ### <pkg:baz.1>
 opam-version: "2.0"
+### update-xf baz.1
 ### cat REPO/packages/baz/baz.1/opam
 opam-version: "2.0"
 extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
-### :II:6:c: redefinie opamfile
-### <pkg:qux.1>
+### :II:6:c: more packages
+### <pkg:qux-1.1>
 opam-version: "2.0"
-### cat REPO/packages/qux/qux.1/opam
+### cat REPO/packages/qux-1/qux-1.1/opam
 opam-version: "2.0"
-### <pkg:qux.1:xf-qux>
+### <pkg:qux-1.1:xf-qux>
 I'm yet another extra file
-### cat REPO/packages/qux/qux.1/opam
+### <pkg:qux-2.1>
+opam-version: "2.0"
+### update-xf REPO qux-1.1 qux-2.1
+### cat REPO/packages/qux-1/qux-1.1/opam
 opam-version: "2.0"
 extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
-### <pkg:qux.1>
+### cat REPO/packages/qux-2/qux-2.1/opam
 opam-version: "2.0"
-### cat REPO/packages/qux/qux.1/opam
+### :II:6:c: another repo
+### <ANOTHER/packages/qux-3/qux-3.1/opam>
+opam-version: "2.0"
+### <ANOTHER/packages/qux-3/qux-3.1/files/xf-qux>
+I'm yet another extra file
+### update-xf ANOTHER qux-3.1
+### :II!6:d: no option, default repo and all packages
+### <pkg:qux-4.1>
+opam-version: "2.0"
+### <pkg:qux-4.1:xf-qux>
+I'm yet another extra file
+### <pkg:qux-5.1>
+opam-version: "2.0"
+### <pkg:qux-5.1:xf-qux>
+I'm yet another extra file
+### <pkg:qux-1.1:xf-qux-1>
+I'm not the same
+### update-xf
+### cat REPO/packages/qux-1/qux-1.1/opam
+opam-version: "2.0"
+extra-files: [
+  ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
+  ["xf-qux-1" "md5=c65e936711d8fbedf5eae6937fcfbdda"]
+]
+### cat REPO/packages/qux-4/qux-4.1/opam
 opam-version: "2.0"
 extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
-### :II:6:d: redefinie extrafile
+### cat REPO/packages/qux-5/qux-5.1/opam
+opam-version: "2.0"
+extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
+### :II:6:e: redefinie extrafile
 ### <pkg:corge.1:xf-corge>
 I'm an yet another another extra file
 ### <pkg:corge.1>
 opam-version: "2.0"
+### update-xf REPO corge.1
 ### cat REPO/packages/corge/corge.1/opam
 opam-version: "2.0"
 extra-files: ["xf-corge" "md5=d419630b165e4f2a1ad55d26c9b19e40"]
 ### <pkg:corge.1:xf-corge>
 I'm the final one
+### update-xf REPO corge.1
 ### cat REPO/packages/corge/corge.1/opam
 opam-version: "2.0"
 extra-files: ["xf-corge" "md5=71e14bfb95ec10cb60f3b6cafd908a08"]
-### :II:6:e: opamfile contains already extrafile defined
+### :II:6:f: opamfile contains already extrafile defined
 ### <pkg:grault.1>
 opam-version: "2.0"
 extra-files: [ "file" "md5=00000000000000000000000000000000" ]
@@ -153,6 +187,7 @@ opam-version: "2.0"
 extra-files: [ "file" "md5=00000000000000000000000000000000" ]
 ### <pkg:grault.1:xf-grault>
 It was not the final in the end
+### update-xf REPO grault.1
 ### cat REPO/packages/grault/grault.1/opam
 opam-version: "2.0"
 extra-files: [
@@ -161,6 +196,7 @@ extra-files: [
 ]
 ### <pkg:grault.1:xf-grault2>
 I'm the real final!
+### update-xf REPO grault.1
 ### cat REPO/packages/grault/grault.1/opam
 opam-version: "2.0"
 extra-files: [
@@ -168,6 +204,15 @@ extra-files: [
   ["xf-grault" "md5=9fd8d4d58e5fd899478b03ab24a11d00"]
   ["xf-grault2" "md5=5c1ff559ac6490338d362978c058f44a"]
 ]
+### :II:7:g: Inexistant / errors
+### update-xf REPO not-found.1
+# Return Error updating extra files: opam file not found for package not-found.1: REPO/packages/not-found/not-found.1/opam
+### update-xf NOTFOUND foo.1
+# Return Error updating extra files: Repository ./NOTFOUND not found
+### <YETANOTHER/garbage>
+nope
+### update-xf YETANOTHER
+# Return Error updating extra files: Empty packages list, malformed repository ./YETANOTHER?
 ### ###################
 ### :III: Environment variables
 ### ###################

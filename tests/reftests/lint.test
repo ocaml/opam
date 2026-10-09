@@ -688,6 +688,7 @@ dev-repo: "hg+https://to@li.nt"
 bug-reports: "https://nobug"
 ### <pkg:lint.2:more-file-good-md5>
 and there is content!
+### update-xf lint.2
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>

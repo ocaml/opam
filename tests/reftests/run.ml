@@ -314,6 +314,10 @@ type command =
       string * string (* name * version *)
       * [ `opam
         | `files of string (* file name *) ]
+  | Update_extrafiles of {
+      xf_repo : string option;
+      xf_pkgs : string list;
+    }
   | Pin_file_content of string
   | Opamfile of { files: string list;
                   filter: filter; }
@@ -609,6 +613,22 @@ module Parse = struct
         in
         Cache { kind; switch; nvs; filter = rewr; }
       | Some "http-server" -> Http_server
+      | Some "update-xf" ->
+        (let usage () = "Usage: update-xf <repo-path>? <name.version>*" in
+         match args with
+         | [] -> Update_extrafiles {xf_repo = None; xf_pkgs = [] }
+         | repo::[] when not (String.contains repo '.') ->
+           Update_extrafiles {xf_repo = Some repo; xf_pkgs = [] }
+         | x::_ when String.contains x '.' ->
+           if List.for_all (fun x -> String.contains x '.') args then
+             Update_extrafiles {xf_repo = None; xf_pkgs = args }
+           else
+             failwith (usage ())
+         | repo::nvs ->
+           if List.for_all (fun x -> String.contains x '.') nvs then
+             Update_extrafiles {xf_repo = Some repo; xf_pkgs = nvs }
+           else
+             failwith (usage ()))
       | Some cmd ->
         let env, plus =
           List.fold_left (fun (env,plus) (v,op,value) ->
@@ -1006,6 +1026,10 @@ let run_test ?(vars=[]) ~opam t =
        "sys-ocaml-version=4.08.0"]
   in
   print_endline (String.concat " " (t.repo_hash::t.tags));
+  let opam_path repo name version =
+    Printf.sprintf "%s/packages/%s/%s.%s/opam"
+      repo name name version
+  in
   let _vars =
     List.fold_left (fun vars (cmd, out) ->
         print_string cmd_prompt;
@@ -1019,53 +1043,86 @@ let run_test ?(vars=[]) ~opam t =
           vars
         | Repo_pkg_file_contents (name, version, repo_file) ->
           let contents = String.concat "\n" out ^ "\n" in
-          let opam_path =
-            Printf.sprintf "%s/packages/%s/%s.%s/opam"
-              default_repo name name version
-          in
+          let opam_path = opam_path default_repo name version in
           let file_path file =
             Printf.sprintf "%s/packages/%s/%s.%s/files/%s"
               default_repo name name version file
           in
           (match repo_file with
-           | `opam ->
-             let contents =
-               try
-                 (* update with extra files if found *)
-                 let files =
-                   Filename.concat (Filename.dirname opam_path)
-                     OpamRepositoryPathName.files_d
-                   |> Sys.readdir
-                   |> Array.to_list
-                   |> List.filter (fun f ->
-                       not (Sys.is_directory (file_path f)))
-                 in
-                 match files with
-                 | [] -> contents
-                 | _ ->
-                   let opamfile = OpamParser.FullPos.string contents opam_path in
-                   List.fold_left (fun opamfile file ->
-                       add_extra_files (file_path file) opamfile file)
-                     opamfile files
-                   |> OpamPrinter.FullPos.opamfile
-               with Sys_error _ -> contents
-             in
-             (* and write opam file *)
-             write_file ~path:opam_path ~contents;
+           | `opam -> write_file ~path:opam_path ~contents
            | `files file ->
-             (* first update the given file *)
              let fpath = file_path file in
-             write_file ~path:fpath ~contents;
-             (* then update the opam file *)
-             if Sys.file_exists opam_path then
-               let opamfile = OpamParser.FullPos.file opam_path in
-               let contents =
-                 add_extra_files fpath opamfile file
-                 |> OpamPrinter.FullPos.opamfile
-               in
-               write_file ~path:opam_path ~contents
+             write_file ~path:fpath ~contents
           );
           print_string contents;
+          vars
+        | Update_extrafiles {xf_repo; xf_pkgs} ->
+          (let error fmt =
+             Printf.printf ("# Return Error updating extra files: "^^fmt^^"\n")
+           in
+           let (/) = Filename.concat in
+           let repo = Option.value ~default:default_repo xf_repo in
+           if not (Sys.file_exists repo) then
+             error "Repository ./%s not found" repo
+           else
+             let pkgs = match xf_pkgs with
+               | _::_ -> xf_pkgs
+               | [] ->
+                 try
+                   let packages = repo / "packages" in
+                   let names = Sys.readdir packages in
+                   Array.fold_left (fun pkgs name ->
+                       let named = packages / name in
+                       let nvs = Sys.readdir named in
+                       Array.fold_left (fun pkgs nv ->
+                           let opam = named / nv / "opam" in
+                           if Sys.file_exists opam && not (Sys.is_directory opam) then
+                             nv::pkgs
+                           else pkgs)
+                         pkgs nvs)
+                     [] names
+                 with Sys_error _ -> []
+             in
+             (match pkgs with
+             | [] -> error "Empty packages list, malformed repository ./%s?" repo
+             | _ -> ());
+             List.iter (fun pkg ->
+                 let name, version =
+                   match OpamStd.String.cut_at pkg '.' with
+                   | Some (name, version) -> name, version
+                   | None ->
+                     failwith ("update-xf argument not a package name.version scheme: "^pkg)
+                 in
+                 let opam_path = opam_path repo name version in
+                 (* update with extra files if found *)
+                 let files_dir =
+                   (Filename.dirname opam_path) / OpamRepositoryPathName.files_d
+                 in
+                 if not (Sys.file_exists opam_path) then
+                   error "opam file not found for package %s.%s: %s"
+                     name version opam_path
+                 else
+                 if not (Sys.file_exists files_dir) then () else
+                   let file_path = Filename.concat files_dir in
+                   let files =
+                     Sys.readdir files_dir
+                     |> Array.to_list
+                     |> List.filter (fun f -> not (Sys.is_directory (file_path f)))
+                     |> List.sort String.compare
+                   in
+                   match files with
+                   | [] -> ()
+                   | _ ->
+                     let opamfile = OpamParser.FullPos.file opam_path in
+                     let contents =
+                       List.fold_left (fun opamfile file ->
+                           add_extra_files (file_path file) opamfile file)
+                         opamfile files
+                       |> OpamPrinter.FullPos.opamfile
+                     in
+                     (* and write opam file *)
+                     write_file ~path:opam_path ~contents)
+               pkgs);
           vars
         | Pin_file_content path ->
           let open OpamParserTypes.FullPos in

@@ -13,6 +13,7 @@ build: ["sh" "./prefix"]
 install: ["cp" "pref" "%{lib}%/prefix"]
 ### <pkg:baz.1:prefix>
 opam var prefix --safe > pref
+### update-xf baz.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -206,6 +207,7 @@ depends: [
   | "ocaml-system" {>= "5.4.0~" & < "5.4.1~"}
 ]
 flags: [ conf avoid-version ]
+### update-xf
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>

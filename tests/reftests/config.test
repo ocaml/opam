@@ -63,6 +63,7 @@ depends: "compiler"
 ### <pkg:meta-compiler.1:meta-compiler.config>
 opam-version: "2.0"
 variables { compvar: "something" }
+### update-xf meta-compiler.1
 ### <pkg:compiler.1>
 opam-version: "2.0"
 depends: [

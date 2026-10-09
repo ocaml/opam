@@ -65,6 +65,7 @@ hellow
 bonjour
 ### <pkg:lot-of-files.~dev:dosiero>
 saluton
+### update-xf
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -253,6 +254,7 @@ lib_root: [
 share: [ "a-file" ]
 ### <pkg:no-specified-dir.1:a-file>
 touch
+### update-xf no-specified-dir.1
 ### OPAMDEBUG=0 opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -277,10 +279,10 @@ The following actions will be performed:
 SYSTEM                          rmdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1
 SYSTEM                          scan files recursively (except_vcs: false) in ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install
-SYSTEM                          write ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/no-specified-dir.install
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file
 SYSTEM                          write ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/a-file
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install
+SYSTEM                          write ${BASEDIR}/OPAM/rem-dir/.opam-switch/build/no-specified-dir.1/no-specified-dir.install
 TRACK                           before install: 2 elements scanned in 0.000s
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/lib/another/somedir
@@ -295,10 +297,10 @@ SYSTEM                          rm ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1
 SYSTEM                          scan files recursively (except_vcs: false) in ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files
 SYSTEM                          mkdir ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install
-SYSTEM                          write ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/no-specified-dir.install
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/a-file
 SYSTEM                          write ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/a-file
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/no-specified-dir/no-specified-dir.1/files/no-specified-dir.install
+SYSTEM                          write ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/no-specified-dir.1/files/no-specified-dir.install
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (none => write)
 SYSTEM                          LOCK ${BASEDIR}/OPAM/rem-dir/.opam-switch/packages/cache (write => none)
 Done.
@@ -436,6 +438,7 @@ bonjour
 saluton
 ### <pkg:eskape.1:good>
 hallo
+### update-xf eskape.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -461,14 +464,14 @@ The following actions will be performed:
 SYSTEM                          rmdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1
 SYSTEM                          scan files recursively (except_vcs: false) in ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/eskape.install
-SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/a-file
 SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/a-file
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/fichier
-SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/fichier
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/dosiero
 SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/dosiero
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/eskape.install
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/fichier
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/fichier
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/good
 SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/good
 [WARNING] At ${BASEDIR}/OPAM/escapability/.opam-switch/build/eskape.1/eskape.install:39:15-39:29::
@@ -500,14 +503,14 @@ SYSTEM                          rm ${BASEDIR}/OPAM/escapability/.opam-switch/pac
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape.1
 SYSTEM                          scan files recursively (except_vcs: false) in ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files
 SYSTEM                          mkdir ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape.1/files
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/eskape.install
-SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape.1/files/eskape.install
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/a-file
 SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape.1/files/a-file
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/fichier
-SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape.1/files/fichier
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/dosiero
 SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape.1/files/dosiero
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/eskape.install
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape.1/files/eskape.install
+SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/fichier
+SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape.1/files/fichier
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/eskape/eskape.1/files/good
 SYSTEM                          write ${BASEDIR}/OPAM/escapability/.opam-switch/packages/eskape.1/files/good
 SYSTEM                          LOCK ${BASEDIR}/OPAM/escapability/.opam-switch/packages/cache (none => write)
@@ -624,6 +627,7 @@ misc: [
 ]
 ### <pkg:eskape-rel-dotdot-exists.1:a-file>
 hellow
+### update-xf eskape-rel-dotdot-exists.1
 ### OPAMDEBUG=0 opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -719,6 +723,7 @@ misc: [
 ]
 ### <pkg:eskape-rel-middotdot-notexists.1:a-file>
 hellow
+### update-xf eskape-rel-middotdot-notexists.1
 ### OPAMDEBUG=0 opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -827,6 +832,7 @@ misc: [
 ]
 ### <pkg:realeskape-rel-middotdot-notexists.1:a-file>
 hellow
+### update-xf realeskape-rel-middotdot-notexists.1
 ### OPAMDEBUG=0 opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -925,6 +931,7 @@ share: [
 ]
 ### <pkg:eskape-abs.1:a-file>
 hellow
+### update-xf eskape-abs.1
 ### OPAMDEBUG=0 opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>

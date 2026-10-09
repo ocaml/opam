@@ -46,6 +46,7 @@ build: [
   ["grep" "ploplop" "bar"]
   ["grep" "ploplop" "baz"]
 ]
+### update-xf pat-sub.0.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>

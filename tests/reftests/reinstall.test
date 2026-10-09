@@ -203,6 +203,7 @@ build: [
 depends: "g"
 ### <pkg:h.1:h.install>
 bin: ["h-true.bin"]
+### update-xf g.1 h.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
@@ -238,6 +239,7 @@ build: [
 depends: "f"
 ### <pkg:g.1:g.install>
 bin: ["g-false.bin"]
+### update-xf g.1
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
