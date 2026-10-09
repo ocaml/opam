@@ -226,8 +226,9 @@ module Set = struct
       fold (fun x acc -> f x :: acc) set []
 
     let to_string s =
-      if S.cardinal s > max_print then
-        Printf.sprintf "%d elements" (S.cardinal s)
+      let cardinal = S.cardinal s in
+      if cardinal > max_print then
+        Printf.sprintf "%d elements" cardinal
       else
         let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
         OpamList.to_string (fun x -> x) (List.rev l)
