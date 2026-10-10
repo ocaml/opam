@@ -5,16 +5,15 @@
 
 (** Command lines. *)
 
-type t
+val is_opt : string -> bool
+val has_complete_prefix : string -> bool
+val get_token_to_complete : string -> string
+
+(** {1:cli Command lines} *)
 
 val create :
-  ?peek_opts:bool -> Cmdliner_info.Arg.Set.t -> string list ->
-  (t, string * t) result
-
-val opt_arg : t -> Cmdliner_info.Arg.t -> (int * string * (string option)) list
-val pos_arg : t -> Cmdliner_info.Arg.t -> string list
-val actual_args : t -> Cmdliner_info.Arg.t -> string list
-(** Actual command line arguments from the command line *)
-
-val is_opt : string -> bool
-val deprecated_msgs : t -> string list
+  ?peek_opts:bool -> legacy_prefixes:bool -> for_completion:bool ->
+  Cmdliner_def.Arg_info.Set.t -> string list ->
+  [ `Ok of Cmdliner_def.Cline.t
+  | `Complete of Cmdliner_def.Complete.t * Cmdliner_def.Cline.t
+  | `Error of string * Cmdliner_def.Cline.t ]
