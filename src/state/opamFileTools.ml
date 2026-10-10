@@ -1378,10 +1378,10 @@ let add_aux_files_t ?dir_label ?dir ?(files_subdir_hashes=false) opam xfs =
       | None -> OpamFilename.Dir.to_string
     in
     let url_file : OpamFile.URL_legacy.t OpamFile.t =
-      OpamFile.make (dir // "url")
+      OpamFile.make (dir // OpamRepositoryPathName.legacy_url_f)
     in
     let descr_file : OpamFile.Descr_legacy.t OpamFile.t =
-      OpamFile.make (dir // "descr")
+      OpamFile.make (dir // OpamRepositoryPathName.legacy_descr_f)
     in
     let files_dir = OpamFilename.Op.(dir / OpamRepositoryPathName.files_d) in
     let try_read (type a) (module R: OpamFile.IO_FILE with type t = a)
@@ -1531,9 +1531,10 @@ let get_extrafiles ~repo_root dir =
     then aux map file
     else map
   in
+  let open OpamFilename.Op in
   let map = OpamFilename.Unix.Map.empty in
-  let map = add_file_if_exists map OpamFilename.Op.(dir // "url") in
-  let map = add_file_if_exists map OpamFilename.Op.(dir // "descr") in
+  let map = add_file_if_exists map (dir // OpamPathName.legacy_url_f) in
+  let map = add_file_if_exists map (dir // OpamPathName.legacy_descr_f) in
   let files_dir = OpamFilename.Op.(dir / OpamPathName.files_d) in
   List.fold_left aux map (OpamFilename.rec_files files_dir)
 
