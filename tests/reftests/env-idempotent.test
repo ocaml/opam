@@ -32,5 +32,5 @@ User configuration:
 ### # Simulate nuking a root entirely
 ### opam switch create fake2 --empty --root root
 ### rm -rf root/fake2
-### bash bash-lc.sh "'$OPAMBIN' exec --root root --switch=fake -- env" | grep -v MANPATH | grep /root/fake2/ | '=.*' -> ''
+### bash bash-lc.sh "'$OPAMBIN' exec --root root --switch=fake -- env" | grep -v MANPATH | grep -v XDG_DATA_DIRS | grep /root/fake2/ | '=.*' -> ''
 PATH
