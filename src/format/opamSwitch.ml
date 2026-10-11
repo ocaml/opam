@@ -20,20 +20,21 @@ let is_external s =
 let external_dirname = "_opam"
 
 let check s =
-  if String.compare s "" = 0 &&
-    let re =
-      Re.(compile @@
-          seq [
-            bol;
-            opt @@ seq [ wordc ; char ':'; set "/\\" ];
-            rep @@ diff any @@ set "<>!`$():";
-            eol
-          ])
-    in
-    (try
-       let _ : Re.Group.t = Re.exec re s in
-       true
-     with Not_found -> false) then
+  if s = "" ||
+     let re =
+       Re.(compile @@
+           seq [
+             bol;
+             opt @@ seq [ wordc ; char ':'; set "/\\" ];
+             rep @@ diff any @@ set "<>!`$():";
+             eol
+           ])
+     in
+     (try
+        let _ : Re.Group.t = Re.exec re s in
+        false
+      with Not_found -> true)
+  then
     failwith (Printf.sprintf "Invalid character in switch name %S" s);
   s
 
