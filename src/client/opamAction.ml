@@ -817,7 +817,7 @@ let remove_package_aux
     let remove_files_and_dir dst_fn files =
       let dir = dst_fn root t.switch t.switch_config name in
       remove_files (fun _ _ _ -> dir) files;
-      if OpamFilename.rec_files dir = [] then OpamFilename.rmdir dir
+      if OpamFilename.dir_is_empty dir = Some true then OpamFilename.rmdir dir
     in
 
     log "Removing files from .install";
