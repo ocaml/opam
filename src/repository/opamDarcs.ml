@@ -28,11 +28,30 @@ module VCS = struct
     | None -> fun cmd -> cmd
     | Some t -> fun cmd -> cmd @ [ "-t"; t ]
 
-  let init repo_root _repo_url =
+  let init ?for_source:_ repo_root _repo_url =
     OpamFilename.mkdir repo_root;
     darcs repo_root [ "init" ]
     @@> fun r ->
     OpamSystem.raise_on_process_error r;
+    Done ()
+
+  let clone ?full_fetch:_ repo_root url =
+    let repo_str =
+      match OpamUrl.local_dir url with
+      | Some path -> OpamFilename.Dir.to_string path
+      | None -> OpamUrl.base_url url
+    in
+    OpamFilename.with_tmp_dir_job @@ fun tmpdir ->
+    (* cannot clone directly into repo_root, so clone elsewhere and move *)
+    let repodir = tmpdir / "repo" in
+    darcs tmpdir [
+      "clone"; repo_str;
+      "--repodir"; OpamFilename.Dir.to_string repodir;
+      "--quiet"; "--lazy" ]
+    @@> fun r ->
+    OpamSystem.raise_on_process_error r;
+    OpamFilename.rmdir repo_root;
+    OpamFilename.move_dir ~src:repodir ~dst:repo_root;
     Done ()
 
   let vc_dir repo_root = repo_root / "_darcs"
