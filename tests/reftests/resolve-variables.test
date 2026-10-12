@@ -112,7 +112,7 @@ The following actions will be performed:
 -> installed foo.1
 Done.
 ### OPAMYES=1 OPAMSTRICT=1
-### <REPO2/packages/undef/undef.1/opam>
+### <pkg[REPO2]:undef.1>
 opam-version: "2.0"
 depends: "d" {?undefined-global & undefined-global != ""}
 ### <REPO2/repo>

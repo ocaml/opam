@@ -134,9 +134,9 @@ extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
 ### cat REPO/packages/qux-2/qux-2.1/opam
 opam-version: "2.0"
 ### :II:6:c: another repo
-### <ANOTHER/packages/qux-3/qux-3.1/opam>
+### <pkg[ANOTHER]:qux-3.1>
 opam-version: "2.0"
-### <ANOTHER/packages/qux-3/qux-3.1/files/xf-qux>
+### <pkg[ANOTHER]:qux-3.1:xf-qux>
 I'm yet another extra file
 ### update-xf ANOTHER qux-3.1
 ### :II!6:d: no option, default repo and all packages
@@ -979,11 +979,11 @@ synopsis: "syn-baz"
 Now run 'opam upgrade' to apply any package updates.
 ### <OPER/repo>
 opam-version: "2.0"
-### <OPER/packages/foo/foo.2/opam>
+### <pkg[OPER]:foo.2>
 opam-version: "2.0"
-### <OPER/packages/un/un.2/opam>
+### <pkg[OPER]:un.2>
 opam-version: "2.0"
-### <OPER/packages/deux/deux.2/opam>
+### <pkg[OPER]:deux.2>
 opam-version: "2.0"
 ### opam switch create cache --empty
 ### opam repository add oper ./OPER

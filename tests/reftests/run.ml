@@ -310,10 +310,12 @@ type filter = (Re.t * filt_sort) list
 
 type command =
   | File_contents of string
-  | Repo_pkg_file_contents of
-      string * string (* name * version *)
-      * [ `opam
-        | `files of string (* file name *) ]
+  | Repo_pkg_file_contents of {
+      name : string;
+      version : string;
+      repo : string option;
+      opam_or_files : [ `opam | `files of string ];
+    }
   | Update_extrafiles of {
       xf_repo : string option;
       xf_pkgs : string list;
@@ -382,11 +384,13 @@ module Parse = struct
 
   let re_package =
     seq [
-      str "<pkg:";
+      str "<pkg";
+      opt @@ seq [ char '['; group @@ rep @@ alt [ alnum; set "-_+.~/\\" ] ; char ']' ];
+      char ':';
       group @@ seq [ alpha; rep @@ alt [ alnum; set "_-+" ]];
       char '.';
       group @@ rep1 @@ alt [ alnum; set "-_+.~" ];
-      opt @@ seq [ char ':' ; group @@ rep1 @@ alt [ alnum; set "-_+.~" ] ];
+      opt @@ seq [ char ':' ; group @@ rep1 @@ diff any (char '>') ];
       char '>'
     ]
 
@@ -397,14 +401,16 @@ module Parse = struct
       else
         try
           let grs = exec (compile re_package) str in
-          let name = Group.get grs 1 in
-          let version = Group.get grs 2 in
-          Repo_pkg_file_contents
-            (name, version,
+          let repo = try Some (Group.get grs 1) with Not_found -> None in
+          let name = Group.get grs 2 in
+          let version = Group.get grs 3 in
+          let opam_or_files =
              try
-               let file = Group.get grs 3 in
+               let file = Group.get grs 4 in
                `files (file)
-             with Not_found -> `opam)
+             with Not_found -> `opam
+             in
+          Repo_pkg_file_contents { name; version; repo; opam_or_files }
         with Not_found ->
           File_contents (String.sub str 1 (String.length str - 2))
     else if str.[0] = ':' || str.[0] = '#' then
@@ -1041,14 +1047,15 @@ let run_test ?(vars=[]) ~opam t =
           write_file ~path ~contents;
           print_string contents;
           vars
-        | Repo_pkg_file_contents (name, version, repo_file) ->
+        | Repo_pkg_file_contents {name; version; repo; opam_or_files} ->
           let contents = String.concat "\n" out ^ "\n" in
-          let opam_path = opam_path default_repo name version in
+          let repo = Option.value ~default:default_repo repo in
+          let opam_path = opam_path repo name version in
           let file_path file =
             Printf.sprintf "%s/packages/%s/%s.%s/files/%s"
-              default_repo name name version file
+              repo name name version file
           in
-          (match repo_file with
+          (match opam_or_files with
            | `opam -> write_file ~path:opam_path ~contents
            | `files file ->
              let fpath = file_path file in
@@ -1084,8 +1091,8 @@ let run_test ?(vars=[]) ~opam t =
                  with Sys_error _ -> []
              in
              (match pkgs with
-             | [] -> error "Empty packages list, malformed repository ./%s?" repo
-             | _ -> ());
+              | [] -> error "Empty packages list, malformed repository ./%s?" repo
+              | _ -> ());
              List.iter (fun pkg ->
                  let name, version =
                    match OpamStd.String.cut_at pkg '.' with

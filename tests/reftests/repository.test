@@ -1,8 +1,8 @@
 N0REP0
-### <REPO/packages/foo/foo.1/opam>
+### <pkg:foo.1>
 opam-version: "2.0"
 build: ["test" "-f" "bar"]
-### <REPO/packages/foo/foo.1/files/bar>
+### <pkg:foo.1:bar>
 some content
 ### update-xf foo.1
 ### : Internal repository storage as archive or plain directory :
@@ -19,10 +19,10 @@ state-${MAGICV}.cache
 [plain] Initialised
 ### OPAMREPOSITORYTARRING=1
 ### : From plain repo to tarred repo (default)
-### <REPO/packages/foo/foo.2/opam>
+### <pkg:foo.2>
 opam-version: "2.0"
 build: ["test" "-f" "baz"]
-### <REPO/packages/foo/foo.2/files/baz>
+### <pkg:foo.2:baz>
 some content
 ### update-xf foo.2
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update default | grep TAR
@@ -43,10 +43,10 @@ state-${MAGICV}.cache
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.2)
 ### opam repository remove default --all
 ### : Add tarred repo (tarred)
-### <REPO/packages/foo/foo.3/opam>
+### <pkg:foo.3>
 opam-version: "2.0"
 build: ["test" "-f" "baz"]
-### <REPO/packages/foo/foo.3/files/baz>
+### <pkg:foo.3:baz>
 some content
 ### update-xf foo.3
 ### opam repository add tarred ./REPO --this-switch
@@ -62,10 +62,10 @@ tarred.tar.gz
 + test "-f" "baz" (CWD=${BASEDIR}/OPAM/tarring/.opam-switch/build/foo.3)
 ### opam repository remove plain --all
 ### : Update tarred repo (tarred)
-### <REPO/packages/foo/foo.4/opam>
+### <pkg:foo.4>
 opam-version: "2.0"
 build: ["test" "-f" "baz"]
-### <REPO/packages/foo/foo.4/files/baz>
+### <pkg:foo.4:baz>
 some content
 ### update-xf foo.4
 ### OPAMDEBUG=-1 OPAMDEBUGSECTIONS=TAR opam update -vv | grep '^(\+|TAR)' | sed-cmd tar
@@ -87,10 +87,10 @@ state-${MAGICV}.cache
 tarred.tar.gz
 ### : From tarred repo to plain repo (tarred)
 ### OPAMREPOSITORYTARRING=0
-### <REPO/packages/foo/foo.5/opam>
+### <pkg:foo.5>
 opam-version: "2.0"
 build: ["test" "-f" "quux"]
-### <REPO/packages/foo/foo.5/files/quux>
+### <pkg:foo.5:quux>
 some content
 ### update-xf foo.5
 ### opam update -vv | grep '^\+' | sed-cmd tar
@@ -107,10 +107,10 @@ packages
 repo
 ### diff -ru ./REPO $OPAMROOT/repo/tarred
 ### # Noop update with no changes
-### <REPO/packages/foo/foo.4/opam>
+### <pkg:foo.4>
 opam-version: "2.0"
 build: ["test" "-f" "rab"]
-### <REPO/packages/foo/foo.4/files/rab>
+### <pkg:foo.4:rab>
 some content
 ### update-xf foo.4
 ### OPAMDEBUGSECTIONS="FILE(opam) FILE(repo) FILE(repos-config)  CACHE(repository)"
@@ -165,10 +165,10 @@ Done.
 ### : behaviour with multi repo / on cache write
 ### <REPO2/repo>
 opam-version: "2.0"
-### <REPO2/packages/bar/bar.1/opam>
+### <pkg[REPO2]:bar.1>
 opam-version: "2.0"
 build: ["test" "-f" "oof"]
-### <REPO2/packages/bar/bar.1/files/oof>
+### <pkg[REPO2]:bar.1:oof>
 some content
 ### update-xf REPO2 bar.1
 ### opam repository add repo2 ./REPO2 --this-switch
@@ -190,10 +190,10 @@ The following actions will be performed:
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> installed bar.1
 Done.
-### <REPO2/packages/bar/bar.2/opam>
+### <pkg[REPO2]:bar.2>
 opam-version: "2.0"
 build: ["test" "-f" "oof"]
-### <REPO2/packages/bar/bar.2/files/oof>
+### <pkg[REPO2]:bar.2:oof>
 some content
 ### update-xf REPO2 bar.2
 ### opam update --debug-level=-3 | unordered
@@ -219,16 +219,16 @@ The following actions will be performed:
 -> removed   bar.1
 -> installed bar.2
 Done.
-### <REPO/packages/foo/foo.6/opam>
+### <pkg:foo.6>
 opam-version: "2.0"
 build: ["test" "-f" "rab"]
-### <REPO/packages/foo/foo.6/files/rab>
+### <pkg:foo.6:rab>
 some content
 ### update-xf foo.6
-### <REPO2/packages/bar/bar.3/opam>
+### <pkg[REPO2]:bar.3>
 opam-version: "2.0"
 build: ["test" "-f" "oof"]
-### <REPO2/packages/bar/bar.3/files/oof>
+### <pkg[REPO2]:bar.3:oof>
 some content
 ### update-xf REPO2 bar.3
 ### opam update --debug-level=-3 | unordered
@@ -264,16 +264,16 @@ Done.
 ### : Failing urls :
 ### <OPER/repo>
 opam-version: "2.0"
-### <OPER/packages/first/first.1/opam>
+### <pkg[OPER]:first.1>
 opam-version: "2.0"
 ### <OPER2/repo>
 opam-version: "2.0"
-### <OPER2/packages/second/second.2/opam>
+### <pkg[OPER2]:second.2>
 opam-version: "2.0"
 version: "2.2"
 ### <OPER3/repo>
 opam-version: "2.0"
-### <OPER3/packages/third/third.3/opam>
+### <pkg[OPER3]:third.3>
 opam-version: "2.0"
 ### opam repository add oper ./OPER --all --set-default
 [oper] Initialised
@@ -285,7 +285,7 @@ opam-version: "2.0"
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### <OPER/packages/fantom/fantom.0/opam>
+### <pkg[OPER]:fantom.0>
 opam-version: "2.0"
 ### opam repository set-url oper ./OPER4
 [ERROR] Could not update repository "oper": rsync error: Directory ${BASEDIR}/OPER4/ does not exist
@@ -430,16 +430,16 @@ Switch repos and all its packages will be wiped. Are you sure? [Y/n] y
 ### rm -rf OPER OPER2 OPER3
 ### <OPER/repo>
 opam-version: "2.0"
-### <OPER/packages/first/first.1/opam>
+### <pkg[OPER]:first.1>
 opam-version: "2.0"
 ### <OPER2/repo>
 opam-version: "2.0"
-### <OPER2/packages/second/second.2/opam>
+### <pkg[OPER2]:second.2>
 opam-version: "2.0"
 version: "2.2"
 ### <OPER3/repo>
 opam-version: "2.0"
-### <OPER3/packages/third/third.3/opam>
+### <pkg[OPER3]:third.3>
 opam-version: "2.0"
 ### opam repository add oper ./OPER --all --set-default
 [oper] Initialised
@@ -451,7 +451,7 @@ opam-version: "2.0"
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### <OPER/packages/fantom/fantom.0/opam>
+### <pkg[OPER]:fantom.0>
 opam-version: "2.0"
 ### opam repository set-url oper ./OPER4
 [ERROR] Could not update repository "oper": rsync error: Directory ${BASEDIR}/OPER4/ does not exist
@@ -590,7 +590,7 @@ first  --
 ### OPAMREPOSITORYTARRING=0
 ### <TMCS/repo>
 opam-version: "2.0"
-### <TMCS/packages/first/first.1/opam>
+### <pkg[TMCS]:first.1>
 opam-version: "2.0"
 ### git -C ./TMCS init -q
 ### git -C ./TMCS config core.autocrlf false
@@ -611,7 +611,7 @@ opam-version: "2.0"
 ### opam repository remove -a oper3 oper repo2 to-many-commits
 ### <VRS/repo>
 opam-version: "2.0"
-### <VRS/packages/good-opam-version/good-opam-version.1/opam>
+### <pkg[VRS]:good-opam-version.1>
 opam-version: "2.0"
 ### opam repository --this-switch add versions ./VRS
 [versions] Initialised
@@ -627,7 +627,7 @@ foo.6
 good-opam-version.1
 ### :: with opam strict
 ### OPAMSTRICT=1
-### <VRS/packages/bad-opam-version/bad-opam-version.1/opam>
+### <pkg[VRS]:bad-opam-version.1>
 opam-version: "5.0"
 some-field-that-do-not-exist: true
 ### opam update -a --debug-level=-1
@@ -658,13 +658,13 @@ In order to install or view information on this package, please upgrade your opa
 available: opam-version >= "5.0"
 ### :: without opam strict
 ### OPAMSTRICT=0
-### <REPO/packages/bad-opam-version/bad-opam-version.2/opam>
+### <pkg:bad-opam-version.2>
 opam-version: "5.0"
 some-field-that-do-not-exist: true
-### <REPO/packages/bad-opam-version/bad-opam-version.3/opam>
+### <pkg:bad-opam-version.3>
 opam-version: "5.0"
 GARBAGE
-### <VRS/packages/a/a.1/opam>
+### <pkg[VRS]:a.1>
 opam-version: "2.0"
 ### opam update -a --debug-level=-1 | unordered
 
@@ -736,7 +736,7 @@ This package uses opam 5.0 file format which opam CURRENTMAJOR cannot read.
 In order to install or view information on this package, please upgrade your opam installation to at least version 5.0."""
 available: opam-version >= "5.0"
 ### :: Parse errors
-### <VRS/packages/two-zero/two-zero.1/opam>
+### <pkg[VRS]:two-zero.1>
 opam-version: "2.0"
 GARBAGE
 ### opam update versions
@@ -750,7 +750,7 @@ GARBAGE
 [ERROR] No package matching two-zero found
 # Return code 5 #
 ### rm -r VRS/packages
-### <VRS/packages/two-one/two-one.1/opam>
+### <pkg[VRS]:two-one.1>
 opam-version: "2.1"
 GARBAGE
 ### opam update versions
@@ -765,7 +765,7 @@ Now run 'opam upgrade' to apply any package updates.
 [ERROR] No package matching two-one found
 # Return code 5 #
 ### rm -r VRS/packages
-### <VRS/packages/two-two/two-two.1/opam>
+### <pkg[VRS]:two-two.1>
 opam-version: "2.2"
 GARBAGE
 ### opam update versions
@@ -779,7 +779,7 @@ GARBAGE
 [ERROR] No package matching two-two found
 # Return code 5 #
 ### rm -r VRS/packages
-### <VRS/packages/two-three/two-three.1/opam>
+### <pkg[VRS]:two-three.1>
 opam-version: "2.3"
 GARBAGE
 ### opam update versions
@@ -798,7 +798,7 @@ GARBAGE
 ### opam repo remove --all repo versions
 ### <nourl/repo>
 opam-version: "2.0"
-### <nourl/packages/no/no.1/opam>
+### <pkg[nourl]:no.1>
 opam-version: "2.0"
 ### cat OPAM/repo/repos-config
 opam-version: "2.0"
@@ -821,7 +821,7 @@ repositories: [ "nourl" ]
               expected url
 
 # Repository # Url # Switches(rank)
-### <nourl/packages/yes/yes.1/opam>
+### <pkg[nourl]:yes.1>
 opam-version: "2.0"
 ### opam update nourl
 [WARNING] Errors in ${BASEDIR}/OPAM/repo/repos-config, some fields have been ignored:
@@ -893,7 +893,7 @@ oper3
 ### git -C GIT config core.autocrlf false
 ### <GIT/repo>
 opam-version: "2.0"
-### <GIT/packages/test/test.1/opam>
+### <pkg[GIT]:test.1>
 opam-version: "2.0"
 ### git -C GIT add -A
 ### git -C GIT commit -qm init
@@ -907,7 +907,7 @@ opam-version: "2.0"
 .git
 packages
 repo
-### <GIT/packages/test/test.2/opam>
+### <pkg[GIT]:test.2>
 opam-version: "2.0"
 ### git -C GIT add packages/test/test.2/opam
 ### git -C GIT commit -qm update
@@ -924,7 +924,7 @@ Now run 'opam upgrade' to apply any package updates.
 ..
 packages
 repo
-### <GIT/packages/test/test.3/opam>
+### <pkg[GIT]:test.3>
 opam-version: "2.0"
 ### rm -rf OPAM/log
 ### opam update test-git
@@ -951,7 +951,7 @@ repo
 ..
 packages
 repo
-### <GIT/packages/test/test.4/opam>
+### <pkg[GIT]:test.4>
 opam-version: "2.0"
 ### rm -rf OPAM/log
 ### rm -rf OPAM/repo/test-git/.git
@@ -972,7 +972,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam switch create opam-dir --empty
 ### <OPAM-DIR/repo>
 opam-version: "2.0"
-### <OPAM-DIR/packages/opam/opam.1/opam>
+### <pkg[OPAM-DIR]:opam.1>
 opam-version: "2.0"
 build: ["echo" "init"]
 ### opam repo add --this-switch opam-dir OPAM-DIR
@@ -989,7 +989,7 @@ Processing  2/3: [opam: echo init]
 -> compiled  opam.1
 -> installed opam.1
 Done.
-### <OPAM-DIR/packages/opam/opam.1/opam>
+### <pkg[OPAM-DIR]:opam.1>
 opam-version: "2.0"
 build: ["echo" "update"]
 ### opam update opam-dir
@@ -1022,9 +1022,9 @@ Done.
 ### opam repository remove oper oper3 test-git to-many-commits --all
 ### <CHG/repo>
 opam-version: "2.0"
-### <CHG/packages/yan/yan.1/opam>
+### <pkg[CHG]:yan.1>
 opam-version: "2.0"
-### <CHG/packages/yan/yan.1/files/nay>
+### <pkg[CHG]:yan.1:nay>
 un
 ### update-xf CHG yan.1
 ### opam switch create format-change --empty
@@ -1102,9 +1102,9 @@ Done.
 ### OPAMREPOSITORYTARRING=1
 ### cp changes.tar.gz OPAM/repo/changes.tar.gz
 ### rm -r OPAM/repo/changes
-### <CHG/packages/sin/sin.2/opam>
+### <pkg[CHG]:sin.2>
 opam-version: "2.0"
-### <CHG/packages/sin/sin.2/files/nis>
+### <pkg[CHG]:sin.2:nis>
 deux
 ### update-xf CHG sin.2
 ### git -C ./CHG add packages
@@ -1188,9 +1188,9 @@ TAR                             Open archive ${BASEDIR}/OPAM/repo/changes.tar.gz
 Done.
 ### :: git - local tarred * changes
 ### OPAMREPOSITORYTARRING=1
-### <CHG/packages/krad/krad.3/opam>
+### <pkg[CHG]:krad.3>
 opam-version: "2.0"
-### <CHG/packages/krad/krad.3/files/dark>
+### <pkg[CHG]:krad.3:dark>
 trois
 ### update-xf CHG krad.3
 ### rm OPAM/repo/changes.tar.gz
@@ -1292,9 +1292,9 @@ The following actions will be performed:
 Done.
 ### :: local dir - git * changes
 ### OPAMREPOSITORYTARRING=0
-### <CHG/packages/okkoz/okkoz.4/opam>
+### <pkg[CHG]:okkoz.4>
 opam-version: "2.0"
-### <CHG/packages/okkoz/okkoz.4/files/okkoz>
+### <pkg[CHG]:okkoz.4:okkoz>
 quatre
 ### update-xf CHG okkoz.4
 ### git -C ./CHG add packages
@@ -1377,9 +1377,9 @@ The following actions will be performed:
 Done.
 ### :: git - local dir * changes
 ### OPAMREPOSITORYTARRING=0
-### <CHG/packages/semmus/semmus.5/opam>
+### <pkg[CHG]:semmus.5>
 opam-version: "2.0"
-### <CHG/packages/semmus/semmus.5/files/summes>
+### <pkg[CHG]:semmus.5:summes>
 cinq
 ### update-xf CHG semmus.5
 ### rm -r OPAM/repo/changes
@@ -1421,7 +1421,7 @@ repositories: "changes" {"file://${BASEDIR}/CHG"}
 ### sh -c "test -d CHG/.git && rm -r CHG/.git || true"
 ### OPAMREPOSITORYTARRING=0
 ### cp changes.tar.gz OPAM/repo/changes.tar.gz
-### <CHG/packages/semmus/semmus.5/opam>
+### <pkg[CHG]:semmus.5>
 opam-version: "2.0"
 build: true
 ### opam update
@@ -1446,7 +1446,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### :: both exists - tarring
 ### OPAMREPOSITORYTARRING=1
 ### cp changes.tar.gz OPAM/repo/changes.tar.gz
-### <CHG/packages/semmus/semmus.5/opam>
+### <pkg[CHG]:semmus.5>
 opam-version: "2.0"
 build: false
 ### opam update

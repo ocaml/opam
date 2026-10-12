@@ -140,6 +140,7 @@ users)
   * No longer implicitly lookup for extra-files and update `extra-files:` with `<pkg:>` helper when defining an opam file [#7207 @rjbou]
   * No longer implicitly update opam `extra-files:` with `<pkg:>` helper when defining an extra-file [#7207 @rjbou]
   * Add `update-xf [repo] [pkg]` command to update opam `extra-files:` [#7207 @rjbou]
+  * Add optional repository argument to `<pkg:>` helper to specify a different repository [#7207 @rjbou]
 
 ## Github Actions
   * The Hygiene workflow has been upgraded to Ubuntu 26.04 [#7052 @kit-ty-kate]

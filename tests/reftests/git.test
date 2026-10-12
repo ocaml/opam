@@ -148,7 +148,7 @@ Generated lock files for:
 opam-version: "2.0"
 ### : NOTE: This file is large to make sure git doesn't suddenly decide
 ### : that having 'copy from' in the diff isn't worth it.
-### <GIT_REPO_DUP/packages/duplicate/duplicate.1/opam>
+### <pkg[GIT_REPO_DUP]:duplicate.1>
 opam-version: "2.0"
 post-messages: """
 aaa

@@ -1,6 +1,6 @@
 N0REP0
 ### :: Simple update
-### <REPO/packages/pkg/pkg.1/opam>
+### <pkg:pkg.1>
 opam-version: "2.0"
 ### opam update --verbose
 
@@ -56,13 +56,13 @@ EOF
 fi
 ### <REPO/repo>
 opam-version: "2.0"
-### <REPO/packages/foo/foo.1/opam>
+### <pkg:foo.1>
 opam-version: "2.0"
 synopsis: "Initial package"
-### <REPO/packages/bar/bar.1/opam>
+### <pkg:bar.1>
 opam-version: "2.0"
 synopsis: "Another package"
-### <REPO/packages/baz/baz.1/opam>
+### <pkg:baz.1>
 opam-version: "2.0"
 synopsis: "Third package"
 ### opam switch create repo-path-update --empty
@@ -73,7 +73,7 @@ bar
 baz
 foo
 ### :I:1: Simple file creation
-### <REPO/packages/newpkg/newpkg.1/opam>
+### <pkg:newpkg.1>
 opam-version: "2.0"
 synopsis: "New package created"
 ### opam update default
@@ -98,7 +98,7 @@ baz
 foo
 newpkg
 ### :I:3: File edit
-### <REPO/packages/foo/foo.1/opam>
+### <pkg:foo.1>
 opam-version: "2.0"
 synopsis: "Updated package"
 ### opam update default
@@ -144,10 +144,10 @@ version: "1"
 synopsis: "Third package"
 ### :I:6: extra-files
 ### opam switch create repo-path-update-x-files --empty --repo=default
-### <REPO/packages/qux/qux.1/opam>
+### <pkg:qux.1>
 opam-version: "2.0"
 ### :I:6:a: add extra-file with opam file
-### <REPO/packages/qux/qux.1/opam>
+### <pkg:qux.1>
 opam-version: "2.0"
 ### sh add-files.sh all REPO install qux.1
 ### OPAMDEBUGSECTIONS="opam-file" OPAMDEBUG=-3 opam update default | unordered
@@ -158,7 +158,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam show qux --field extra-files: | sed-hash $INSTALL_MD5 install-md5
 "qux.installl" "md5=+install-md5+"
 ### :I:6:b: change extra-file with opam file
-### <REPO/packages/qux/qux.1/opam>
+### <pkg:qux.1>
 opam-version: "2.0"
 ### sh add-files.sh all REPO another-install qux.1
 ### OPAMDEBUGSECTIONS="opam-file" OPAMDEBUG=-3 opam update default | unordered
@@ -169,7 +169,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam show qux --field extra-files: | sed-hash $AINSTALL_MD5 ainstall-md5
 "qux.installl" "md5=+ainstall-md5+"
 ### :I:6:c: remove extra-file with opam file
-### <REPO/packages/qux/qux.1/opam>
+### <pkg:qux.1>
 opam-version: "2.0"
 ### rm REPO/packages/qux/qux.1/files/qux.installl
 ### OPAMDEBUGSECTIONS="opam-file" OPAMDEBUG=-3 opam update default | unordered
@@ -180,7 +180,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam show qux --field extra-files:
 
 ### :I:6:d: add extra-file without opam file
-### <REPO/packages/qux/qux.1/opam>
+### <pkg:qux.1>
 opam-version: "2.0"
 ### cp install REPO/packages/qux/qux.1/files/qux.installl
 ### OPAMDEBUGSECTIONS="opam-file" OPAMDEBUG=-3 opam update default | unordered
@@ -192,7 +192,7 @@ opam-file                       Missing extra-files field for qux.installl for q
 ### opam show qux --field extra-files:
 
 ### :I:6:f: change extra-file without opam file
-### <REPO/packages/qux/qux.1/opam>
+### <pkg:qux.1>
 opam-version: "2.0"
 ### sh add-files.sh sha REPO install qux.1
 ### sh add-files.sh cp REPO another-install qux.1
@@ -206,7 +206,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam show qux --field extra-files: | sed-hash $INSTALL_MD5 install-md5
 "qux.installl" "md5=+install-md5+"
 ### :I:6:e: remove extra-file without opam file
-### <REPO/packages/qux/qux.1/opam>
+### <pkg:qux.1>
 opam-version: "2.0"
 ### sh add-files.sh sha REPO install qux.1
 ### rm REPO/packages/qux/qux.1/files/qux.installl
@@ -224,10 +224,10 @@ opam-file                       Missing expected extra files qux.installl at pac
 ### git -C GITREPO config core.autocrlf false
 ### <GITREPO/repo>
 opam-version: "2.0"
-### <GITREPO/packages/rename-pkg/rename-pkg.1/opam>
+### <pkg[GITREPO]:rename-pkg.1>
 opam-version: "2.0"
 synopsis: "Package to be renamed"
-### <GITREPO/packages/delete-pkg/delete-pkg.1/opam>
+### <pkg[GITREPO]:delete-pkg.1>
 opam-version: "2.0"
 synopsis: "Package to be deleted"
 ### git -C GITREPO add -A
@@ -262,7 +262,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam list --all --repo=git-test -s
 renamed-pkg
 ### :II:3: Git creation of new opam file
-### <GITREPO/packages/new-pkg/new-pkg.1/opam>
+### <pkg[GITREPO]:new-pkg.1>
 opam-version: "2.0"
 synopsis: "New package created"
 ### git -C GITREPO add packages/new-pkg/new-pkg.1/opam
@@ -281,7 +281,7 @@ renamed-pkg --          Package to be renamed
 ### :II:5: extra-files
 ### opam switch create repo-git-update-x-files --empty --repo=git-test
 ### :II:5:a: add extra-file with opam file
-### <GITREPO/packages/qux/qux.1/opam>
+### <pkg[GITREPO]:qux.1>
 opam-version: "2.0"
 ### sh add-files.sh all GITREPO install qux.1
 ### git -C GITREPO add -A
@@ -294,7 +294,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam show qux --field extra-files: | sed-hash $INSTALL_MD5 install-md5
 "qux.installl" "md5=+install-md5+"
 ### :II:5:b: change extra-file with opam file
-### <GITREPO/packages/qux/qux.1/opam>
+### <pkg[GITREPO]:qux.1>
 opam-version: "2.0"
 ### sh add-files.sh all GITREPO another-install qux.1
 ### git -C GITREPO add -A
@@ -307,7 +307,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam show qux --field extra-files: | sed-hash $AINSTALL_MD5 ainstall-md5
 "qux.installl" "md5=+ainstall-md5+"
 ### :II:5:c: remove extra-file with opam file
-### <GITREPO/packages/qux/qux.1/opam>
+### <pkg[GITREPO]:qux.1>
 opam-version: "2.0"
 ### git -C GITREPO rm -q packages/qux/qux.1/files/qux.installl
 ### git -C GITREPO add -A
@@ -320,7 +320,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam show qux --field extra-files:
 
 ### :II:5:d: add extra-file without opam file
-### <GITREPO/packages/qux/qux.1/opam>
+### <pkg[GITREPO]:qux.1>
 opam-version: "2.0"
 ### mkdir -p GITREPO/packages/qux/qux.1/files
 ### cp install GITREPO/packages/qux/qux.1/files/qux.installl
@@ -334,7 +334,7 @@ opam-file                       Missing extra-files field for qux.installl for q
 ### opam show qux --field extra-files:
 
 ### :II:5:f: change extra-file without opam file
-### <GITREPO/packages/qux/qux.1/opam>
+### <pkg[GITREPO]:qux.1>
 opam-version: "2.0"
 ### sh add-files.sh sha GITREPO install qux.1
 ### sh add-files.sh cp GITREPO another-install qux.1
@@ -349,7 +349,7 @@ Now run 'opam upgrade' to apply any package updates.
 ### opam show qux --field extra-files | sed-hash $INSTALL_MD5 install-md5
 "qux.installl" "md5=+install-md5+"
 ### :II:5:e: remove extra-file without opam file
-### <GITREPO/packages/qux/qux.1/opam>
+### <pkg[GITREPO]:qux.1>
 opam-version: "2.0"
 ### sh add-files.sh sha GITREPO install qux.1
 ### git -C GITREPO rm -qf packages/qux/qux.1/files/qux.installl
@@ -493,13 +493,13 @@ renamed-pkg
 ### :III: Incremental behavior
 ### <INCR_REPO/repo>
 opam-version: "2.0"
-### <INCR_REPO/packages/alpha/alpha.1/opam>
+### <pkg[INCR_REPO]:alpha.1>
 opam-version: "2.0"
 synopsis: "Alpha package"
-### <INCR_REPO/packages/beta/beta.1/opam>
+### <pkg[INCR_REPO]:beta.1>
 opam-version: "2.0"
 synopsis: "Beta package"
-### <INCR_REPO/packages/gamma/gamma.1/opam>
+### <pkg[INCR_REPO]:gamma.1>
 opam-version: "2.0"
 synopsis: "Gamma package"
 ### opam repository add incremental ./INCR_REPO --this-switch
@@ -509,7 +509,7 @@ alpha
 beta
 gamma
 ### :III:1: Modify one package - update should process only 1 file
-### <INCR_REPO/packages/gamma/gamma.1/opam>
+### <pkg[INCR_REPO]:gamma.1>
 opam-version: "2.0"
 synopsis: "Gamma package - UPDATED"
 ### OPAMDEBUGSECTIONS="REPO_BACKEND FILE(opam)" OPAMDEBUG=-3 opam update incremental | unordered
@@ -523,7 +523,7 @@ FILE(opam)                      Read packages/gamma/gamma.1/opam (out of ${BASED
 ### opam show gamma.1 --field synopsis
 Gamma package - UPDATED
 ### :III:2: Add a new package - update should process only 1 new file
-### <INCR_REPO/packages/delta/delta.1/opam>
+### <pkg[INCR_REPO]:delta.1>
 opam-version: "2.0"
 synopsis: "Delta package - NEW"
 ### OPAMDEBUGSECTIONS="REPO_BACKEND FILE(opam)" OPAMDEBUG=-3 opam update incremental | unordered
@@ -555,12 +555,12 @@ alpha
 delta
 gamma
 ### :III:4: Multi-operation
-### <INCR_REPO/packages/alpha/alpha.1/opam>
+### <pkg[INCR_REPO]:alpha.1>
 opam-version: "2.0"
 synopsis: "Alpha package - MODIFIED"
-### <INCR_REPO/packages/epsilon/epsilon.1/opam>
+### <pkg[INCR_REPO]:epsilon.1>
 opam-version: "2.0"
-### <INCR_REPO/packages/zeta/zeta.1/opam>
+### <pkg[INCR_REPO]:zeta.1>
 opam-version: "2.0"
 ### rm INCR_REPO/packages/delta/delta.1/opam
 ### OPAMDEBUGSECTIONS="REPO_BACKEND FILE(opam)" OPAMDEBUG=-3 opam update incremental | unordered
@@ -584,7 +584,7 @@ gamma
 zeta
 ### :III:6: Update extra-files
 ### rm -rf INCR_REPO/packages
-### <INCR_REPO/packages/eta/eta.1/opam>
+### <pkg[INCR_REPO]:eta.1>
 opam-version: "2.0"
 build: [ "test" "-f" "%{name}%.installl" ]
 ### opam update incremental
@@ -594,7 +594,7 @@ build: [ "test" "-f" "%{name}%.installl" ]
 Now run 'opam upgrade' to apply any package updates.
 ### :III:6:a: add extra-file with opam file
 ### opam switch create incr-repo-update-x-files-a --empty --repo=incremental
-### <INCR_REPO/packages/eta/eta.1/opam>
+### <pkg[INCR_REPO]:eta.1>
 opam-version: "2.0"
 build: [ "test" "-f" "%{name}%.installl" ]
 ### sh add-files.sh all INCR_REPO install eta.1
@@ -619,7 +619,7 @@ The following actions will be performed:
 Done.
 ### :III:6:b: change extra-file with opam file
 ### opam switch create incr-repo-update-x-files-b --empty --repo=incremental
-### <INCR_REPO/packages/eta/eta.1/opam>
+### <pkg[INCR_REPO]:eta.1>
 opam-version: "2.0"
 build: [ "test" "-f" "%{name}%.installl" ]
 ### sh add-files.sh all INCR_REPO another-install eta.1
@@ -644,7 +644,7 @@ The following actions will be performed:
 Done.
 ### :III:6:c: remove extra-file with opam file
 ### opam switch create incr-repo-update-x-files-c --empty --repo=incremental
-### <INCR_REPO/packages/eta/eta.1/opam>
+### <pkg[INCR_REPO]:eta.1>
 opam-version: "2.0"
 build: [ "test" "-f" "%{name}%.installl" ]
 ### rm INCR_REPO/packages/eta/eta.1/files/eta.installl
@@ -678,7 +678,7 @@ The following actions will be performed:
 # Return code 31 #
 ### :III:6:d: add extra-file without opam file
 ### opam switch create incr-repo-update-x-files-d --empty --repo=incremental
-### <INCR_REPO/packages/eta/eta.1/opam>
+### <pkg[INCR_REPO]:eta.1>
 opam-version: "2.0"
 build: [ "test" "-f" "%{name}%.installl" ]
 ### cp install INCR_REPO/packages/eta/eta.1/files/eta.installl
@@ -712,7 +712,7 @@ The following actions will be performed:
 # Return code 31 #
 ### :III:6:e: change extra-file without opam file
 ### opam switch create incr-repo-update-x-files-e --empty --repo=incremental
-### <INCR_REPO/packages/eta/eta.1/opam>
+### <pkg[INCR_REPO]:eta.1>
 opam-version: "2.0"
 build: [ "test" "-f" "%{name}%.installl" ]
 ### sh add-files.sh sha INCR_REPO install eta.1
@@ -749,7 +749,7 @@ eta.1: Bad hash for extra-file
 # Return code 31 #
 ### :III:6:f: remove extra-file without opam file
 ### opam switch create incr-repo-update-x-files-f --empty --repo=incremental
-### <INCR_REPO/packages/eta/eta.1/opam>
+### <pkg[INCR_REPO]:eta.1>
 opam-version: "2.0"
 build: [ "test" "-f" "%{name}%.installl" ]
 ### sh add-files.sh sha INCR_REPO install eta.1
@@ -784,7 +784,7 @@ eta.1: Missing extra-file for
 - No changes have been performed
 # Return code 31 #
 ### :IV:1: Version-equivalent rename
-### <INCR_REPO/packages/some-pkg/some-pkg.00/opam>
+### <pkg[INCR_REPO]:some-pkg.00>
 opam-version: "2.0"
 ### opam update
 
@@ -806,9 +806,9 @@ The following actions would be performed:
 === install 1 package
   - install some-pkg 0
 ### :IV:2: Multiple version-equivalent renames in one batch
-### <INCR_REPO/packages/pkg-a/pkg-a.00/opam>
+### <pkg[INCR_REPO]:pkg-a.00>
 opam-version: "2.0"
-### <INCR_REPO/packages/pkg-b/pkg-b.1.00/opam>
+### <pkg[INCR_REPO]:pkg-b.1.00>
 opam-version: "2.0"
 ### opam update
 
@@ -833,7 +833,7 @@ The following actions would be performed:
   - install pkg-a 0
   - install pkg-b 1.0
 ### :IV:3: Git repo version-equivalent rename
-### <GITREPO/packages/git-pkg/git-pkg.00/opam>
+### <pkg[GITREPO]:git-pkg.00>
 opam-version: "2.0"
 ### git -C GITREPO add -A
 ### git -C GITREPO commit -qm "add git-pkg.00"
@@ -857,7 +857,7 @@ The following actions would be performed:
 ### opam switch create git-version-switch --empty
 ### <GITREPO/repo>
 opam-version: "2.0"
-### <GITREPO/packages/pkg-foo/pkg-foo.1.0.0~alpha1/opam>
+### <pkg[GITREPO]:pkg-foo.1.0.0~alpha1>
 opam-version: "2.0"
 ### git -C GITREPO add -A
 ### git -C GITREPO commit -qm "initial: pkg-foo.1.0.0~alpha1"
@@ -872,9 +872,9 @@ The following actions will be performed:
 -> installed pkg-foo.1.0.0~alpha1
 Done.
 ### :IV:4: Version equivalent rename involved in a conflict
-### <GITREPO/packages/lib-foo/lib-foo.1.0.0~alpha1/opam>
+### <pkg[GITREPO]:lib-foo.1.0.0~alpha1>
 opam-version: "2.0"
-### <GITREPO/packages/pkg-foo/pkg-foo.1.0.0~alpha2~pre00/opam>
+### <pkg[GITREPO]:pkg-foo.1.0.0~alpha2~pre00>
 opam-version: "2.0"
 depends: [ "lib-foo" {= "1.0.0~alpha2~pre00"} ]
 ### git -C GITREPO add -A
@@ -889,7 +889,7 @@ depends: [ "lib-foo" {= "1.0.0~alpha2~pre00"} ]
 
 No solution found, exiting
 # Return code 20 #
-### <GITREPO/packages/pkg-foo/pkg-foo.1.0.0~alpha2~pre0/opam>
+### <pkg[GITREPO]:pkg-foo.1.0.0~alpha2~pre0>
 opam-version: "2.0"
 depends: [ "lib-foo" {= "1.0.0~alpha1"} ]
 ### git -C GITREPO rm -r packages/pkg-foo/pkg-foo.1.0.0~alpha2~pre00
@@ -910,9 +910,9 @@ The following actions would be performed:
 opam-version: "2.0"
 ### <DREPO/packages/uno/uno.1>
 opam-version: "2.0"
-### <DREPO/packages/due/due.1/opam>
+### <pkg[DREPO]:due.1>
 opam-version: "2.0"
-### <DREPO/packages/due/due.1/files/archivio>
+### <pkg[DREPO]:due.1:archivio>
 Am I a file ?
 ### <add-xf.sh>
 set -eu
@@ -960,11 +960,11 @@ Processing  2/3: [due: test archivio]
 Done.
 ### :V:1: Update repository with changes File -> Dir
 ### rm DREPO/packages/uno/uno.1 DREPO/packages/due/due.1/files/archivio
-### <DREPO/packages/uno/uno.1/opam>
+### <pkg[DREPO]:uno.1>
 opam-version: "2.0"
-### <DREPO/packages/due/due.1/opam>
+### <pkg[DREPO]:due.1>
 opam-version: "2.0"
-### <DREPO/packages/due/due.1/files/archivio/interno>
+### <pkg[DREPO]:due.1:archivio/interno>
 Am I a file ?
 ### sh add-xf.sh due.1 archivio/interno
 ### opam switch create update-file-dir --empty
@@ -991,9 +991,9 @@ Done.
 ### rm -r DREPO/packages/uno/uno.1 DREPO/packages/due/due.1/files/archivio
 ### <DREPO/packages/uno/uno.1>
 opam-version: "2.0"
-### <DREPO/packages/due/due.1/opam>
+### <pkg[DREPO]:due.1>
 opam-version: "2.0"
-### <DREPO/packages/due/due.1/files/archivio>
+### <pkg[DREPO]:due.1:archivio>
 Am I a file ?
 ### sh add-xf.sh due.1 archivio
 ### opam switch create update-dir-file --empty
