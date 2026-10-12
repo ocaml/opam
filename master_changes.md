@@ -133,6 +133,7 @@ users)
 ### Tests
   * Add an exhaustive test showing the behaviour of the `conflicts` field [#7127 @kit-ty-kate]
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
+  * Untie reftests test cases from previous tests (less inherited context) [#7207 @rjbou]
 
 ### Engine
 

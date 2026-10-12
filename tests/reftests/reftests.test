@@ -33,7 +33,8 @@ and some content
 ### <some/directory/file>
 and still some content
 ### :II:2: package file in repo, and repository update
-### opam switch create reftests --empty
+### rm -rf REPO/packages
+### opam switch create reftests-pkg --empty
 ### opam list --all
 # Packages matching: any
 # No matches found
@@ -46,6 +47,10 @@ opam-version: "2.0"
 # Name # Installed # Synopsis
 foo    --
 ### :II:3: extrafile file in repo
+### rm -rf REPO/packages
+### opam switch create reftests-pkg-xfile --empty
+### <pkg:foo.1>
+opam-version: "2.0"
 ### <pkg:foo.1:xfile>
 i'm with package foo
 ### cat REPO/packages/foo/foo.1/files/xfile
@@ -829,7 +834,8 @@ build: ["false"]
 install: [["true"]]
 opam-version: "2.0"
 ### :V:2: json-cat
-### opam switch create empty --empty --json=opam.json
+### rm -rf REPO/packages
+### opam switch create json-cat --empty --json=opam.json
 ### json-cat opam.json
 {
   "opam-version": "currentv",
@@ -837,11 +843,13 @@ opam-version: "2.0"
     "${OPAM}",
     "switch",
     "create",
-    "empty",
+    "json-cat",
     "--empty",
     "--json=opam.json"
   ]
 }
+### <pkg:foo.1>
+opam-version: "2.0"
 ### opam install foo --json=opam.json
 The following actions will be performed:
 === install 1 package
@@ -859,7 +867,7 @@ Done.
     "foo",
     "--json=opam.json"
   ],
-  "switch": "empty",
+  "switch": "json-cat",
   "request": {
     "action": "install",
     "install": [
@@ -904,6 +912,17 @@ Done.
   ]
 }
 ### :V:3: Cache cat
+### rm -rf REPO/packages
+### opam switch create cache-cat --empty
+### <pkg:foo.1>
+opam-version: "2.0"
+synopsis: "syn-foo"
+### <pkg:bar.1>
+opam-version: "2.0"
+synopsis: "syn-bar"
+### <pkg:baz.1>
+opam-version: "2.0"
+synopsis: "syn-baz"
 ### <OPER/repo>
 opam-version: "2.0"
 ### <OPER/packages/foo/foo.2/opam>
@@ -952,12 +971,12 @@ version: "2"
 opam-version: "2.0"
 name: "baz"
 version: "1"
-extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+synopsis: "syn-baz"
 => bar.1 <=
 opam-version: "2.0"
 name: "bar"
 version: "1"
-extra-files: ["xf-bar" "md5=dbaf1ea561686374373dc7d154f3a0ff"]
+synopsis: "syn-bar"
 ### opam-cache installed cache foo
 => foo.2 <=
 opam-version: "2.0"
@@ -995,40 +1014,21 @@ version: "2"
 opam-version: "2.0"
 name: "deux"
 version: "2"
-=> default:qux.1 <=
-opam-version: "2.0"
-name: "qux"
-version: "1"
-extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
-=> default:grault.1 <=
-opam-version: "2.0"
-name: "grault"
-version: "1"
-extra-files: [
-  ["file" "md5=00000000000000000000000000000000"]
-  ["xf-grault" "md5=9fd8d4d58e5fd899478b03ab24a11d00"]
-  ["xf-grault2" "md5=5c1ff559ac6490338d362978c058f44a"]
-]
 => default:foo.1 <=
 opam-version: "2.0"
 name: "foo"
 version: "1"
-extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
-=> default:corge.1 <=
-opam-version: "2.0"
-name: "corge"
-version: "1"
-extra-files: ["xf-corge" "md5=71e14bfb95ec10cb60f3b6cafd908a08"]
+synopsis: "syn-foo"
 => default:baz.1 <=
 opam-version: "2.0"
 name: "baz"
 version: "1"
-extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+synopsis: "syn-baz"
 => default:bar.1 <=
 opam-version: "2.0"
 name: "bar"
 version: "1"
-extra-files: ["xf-bar" "md5=dbaf1ea561686374373dc7d154f3a0ff"]
+synopsis: "syn-bar"
 ### opam-cache repo foo
 => oper:foo.2 <=
 opam-version: "2.0"
@@ -1038,7 +1038,7 @@ version: "2"
 opam-version: "2.0"
 name: "foo"
 version: "1"
-extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
+synopsis: "syn-foo"
 ### opam-cache repo un baz
 => oper:un.2 <=
 opam-version: "2.0"
@@ -1048,7 +1048,7 @@ version: "2"
 opam-version: "2.0"
 name: "baz"
 version: "1"
-extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+synopsis: "syn-baz"
 ### opam-cache repo inexistent
 Empty selection
 ### :V:3:c: Invalid installed cache
@@ -1066,7 +1066,7 @@ Done.
 opam-version: "2.0"
 name: "foo"
 version: "1"
-extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
+synopsis: "syn-foo"
 ### sh -c 'echo XXX > OPAM/cache4/.opam-switch/packages/cache'
 ### opam-cache installed cache4
 Invalid cache
@@ -1088,7 +1088,7 @@ REFTEST_UNSET=test
 REFTEST_UNSET=
 ### unset REFTEST_UNSET
 ### env | grep REFTEST_UNSET
-### :V:4: opam-set-os
+### :V:5: opam-set-os
 ### opam var --global os-distribution=void
 Added '[os-distribution "void" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam var --global os-family=void
