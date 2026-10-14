@@ -147,7 +147,7 @@ module Make (G : G) = struct
         (nslots: (S.t * int) list) (* number of free slots *)
         (results: 'b M.t)
         (running: (OpamProcess.t * 'a * string option) M.t)
-        (ready: S.t)
+        (ready: S.t option)
       =
       let get_slots nslots n =
         List.filter (fun (pool, _) -> S.mem n pool) nslots
@@ -164,46 +164,6 @@ module Make (G : G) = struct
             else pool, slots)
           nslots
       in
-      let run_seq_command nslots ready n = function
-        | Done r ->
-          log "Job %a finished" (slog (string_of_int @* V.hash)) n;
-          let results = M.add n r results in
-          let running = M.remove n running in
-          if not (M.is_empty running) then
-            print_status (M.cardinal results) running;
-          let nslots = release_slot nslots n in
-          let ready =
-            if is_failure r then
-              S.empty
-            else
-              ready ++
-              S.filter
-                (fun n ->
-                   not (M.mem n running) &&
-                   not (M.mem n results) &&
-                   List.for_all (fun n -> M.mem n results) (G.pred g n) &&
-                   List.for_all (fun (_, slots) -> slots > 0)
-                     (get_slots nslots n))
-                (List.fold_left (fun acc (pool, slots) ->
-                     if slots = 1 then acc ++ pool else acc)
-                    (S.of_list (G.succ g n))
-                    (get_slots nslots n))
-          in
-          loop nslots results running ready
-        | Run (cmd, cont) ->
-          log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
-            (slog OpamProcess.string_of_command) cmd;
-          let p =
-            if dry_run then OpamProcess.dry_run_background cmd
-            else OpamProcess.run_background cmd
-          in
-          let running =
-            M.add n (p, cont, OpamProcess.text_of_command cmd) running
-          in
-          print_status (M.cardinal results) running;
-          loop nslots results running ready
-      in
-
       let fail node error =
         log "Exception while computing job %a: %a"
           (slog (string_of_int @* V.hash)) node
@@ -249,76 +209,121 @@ module Make (G : G) = struct
             g [] in
         raise (Errors (M.keys results, List.rev errors, List.rev remaining))
       in
+      let run_seq_command nslots ready n = function
+        | Done r ->
+          log "Job %a finished" (slog (string_of_int @* V.hash)) n;
+          let results = M.add n r results in
+          let running = M.remove n running in
+          if not (M.is_empty running) then
+            print_status (M.cardinal results) running;
+          let nslots = release_slot nslots n in
+          let ready =
+            match ready with
+            | None -> None
+            | Some _ when is_failure r -> None
+            | Some ready ->
+              Some (
+                ready ++
+                S.filter
+                  (fun n ->
+                     not (M.mem n running) &&
+                     not (M.mem n results) &&
+                     List.for_all (fun n -> M.mem n results) (G.pred g n) &&
+                     List.for_all (fun (_, slots) -> slots > 0)
+                       (get_slots nslots n))
+                  (List.fold_left (fun acc (pool, slots) ->
+                       if slots = 1 then acc ++ pool else acc)
+                      (S.of_list (G.succ g n))
+                      (get_slots nslots n)))
+          in
+          loop nslots results running ready
+        | Run (cmd, cont) ->
+          log "Next task in job %a: %a" (slog (string_of_int @* V.hash)) n
+            (slog OpamProcess.string_of_command) cmd;
+          let p =
+            if dry_run then OpamProcess.dry_run_background cmd
+            else OpamProcess.run_background cmd
+          in
+          let running =
+            M.add n (p, cont, OpamProcess.text_of_command cmd) running
+          in
+          print_status (M.cardinal results) running;
+          loop nslots results running ready
+      in
 
-      if M.is_empty running && S.is_empty ready then
-        results
-      else if
-        not (S.is_empty ready) &&
-        List.exists (fun (_, slots) -> slots > 0) nslots
-      then
-        (* Start a new process *)
-        let n = S.choose ready in
-        log "Starting job %a (worker %a): %a"
-          (slog (string_of_int @* V.hash)) n
-          (slog
-             (fun pools ->
-                let slots = get_slots nslots n in
-                OpamStd.List.concat_map " " (fun (pool, jobs) ->
-                    let nslots =
-                      OpamStd.List.assoc_opt S.equal pool slots
-                    in
-                  Printf.sprintf "%s/%d"
-                    (match nslots with
-                     | None -> "-"
-                     | Some n -> string_of_int (jobs - n + 1))
-                    jobs)
-                  pools))
-          pools
-          (slog V.to_string) n;
-        let pred = G.pred g n in
-        let pred = List.map (fun n -> n, M.find n results) pred in
-        let cmd = try command ~pred n with e -> fail n e in
-        let nslots = take_slot nslots n in
-        let ready =
-          List.fold_left
-            (fun acc (pool, slots) ->
-               if slots = 0 then acc -- pool else acc)
-            (S.remove n ready)
-            (get_slots nslots n)
-        in
-        run_seq_command nslots ready n cmd
-      else (
-        (* Wait for a process to end *)
-        if not !gc_compacted then
-          (gc_compact ();
-           gc_compacted := true);
-        let processes =
-          M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running []
-        in
-        let process, result =
-          if dry_run then
-            OpamProcess.dry_wait_one (List.map fst processes)
-          else try match processes with
-            | [p,_] -> p, OpamProcess.wait p
-            | _ -> OpamProcess.wait_one (List.map fst processes)
-            with e -> fail (fst (snd (List.hd processes))) e
-        in
-        let n,cont = OpamStd.(List.assoc Compare.equal process processes) in
-        log "Collected task for job %a (ret:%d)"
-          (slog (string_of_int @* V.hash)) n result.OpamProcess.r_code;
-        let next =
-          try cont result with e ->
-            OpamProcess.cleanup result;
-            fail n e in
-        OpamProcess.cleanup result;
-        run_seq_command nslots ready n next)
+      match ready with
+      | None -> results
+      | Some ready ->
+        if M.is_empty running && S.is_empty ready then
+          results
+        else if
+          not (S.is_empty ready) &&
+          List.exists (fun (_, slots) -> slots > 0) nslots
+        then
+          (* Start a new process *)
+          let n = S.choose ready in
+          log "Starting job %a (worker %a): %a"
+            (slog (string_of_int @* V.hash)) n
+            (slog
+               (fun pools ->
+                  let slots = get_slots nslots n in
+                  OpamStd.List.concat_map " " (fun (pool, jobs) ->
+                      let nslots =
+                        OpamStd.List.assoc_opt S.equal pool slots
+                      in
+                      Printf.sprintf "%s/%d"
+                        (match nslots with
+                         | None -> "-"
+                         | Some n -> string_of_int (jobs - n + 1))
+                        jobs)
+                    pools))
+            pools
+            (slog V.to_string) n;
+          let pred = G.pred g n in
+          let pred = List.map (fun n -> n, M.find n results) pred in
+          let cmd = try command ~pred n with e -> fail n e in
+          let nslots = take_slot nslots n in
+          let ready =
+            Some (
+              List.fold_left
+                (fun acc (pool, slots) ->
+                   if slots = 0 then acc -- pool else acc)
+                (S.remove n ready)
+                (get_slots nslots n))
+          in
+          run_seq_command nslots ready n cmd
+        else (
+          (* Wait for a process to end *)
+          if not !gc_compacted then
+            (gc_compact ();
+             gc_compacted := true);
+          let processes =
+            M.fold (fun n (p,x,_) acc -> (p,(n,x)) :: acc) running []
+          in
+          let process, result =
+            if dry_run then
+              OpamProcess.dry_wait_one (List.map fst processes)
+            else try match processes with
+              | [p,_] -> p, OpamProcess.wait p
+              | _ -> OpamProcess.wait_one (List.map fst processes)
+              with e -> fail (fst (snd (List.hd processes))) e
+          in
+          let n,cont = OpamStd.(List.assoc Compare.equal process processes) in
+          log "Collected task for job %a (ret:%d)"
+            (slog (string_of_int @* V.hash)) n result.OpamProcess.r_code;
+          let next =
+            try cont result with e ->
+              OpamProcess.cleanup result;
+              fail n e in
+          OpamProcess.cleanup result;
+          run_seq_command nslots (Some ready) n next)
     in
     let roots =
       G.fold_vertex
         (fun n roots -> if G.in_degree g n = 0 then S.add n roots else roots)
         g S.empty
     in
-    let r = loop pools M.empty M.empty roots in
+    let r = loop pools M.empty M.empty (Some roots) in
     OpamConsole.clear_status ();
     r
 
