@@ -228,6 +228,7 @@ module Make (G : G) = struct
         in
         (try
            List.iter (fun _ ->
+               (* TODO: insert a sigkill here in failfast mode *)
                let _ : OpamProcess.t * OpamProcess.result =
                  OpamProcess.wait_one pend
                in ())
@@ -498,7 +499,7 @@ let iter ~jobs ~command ?dry_run l =
   let command ~pred:_ i = command a.(i) in
   IntGraph.Parallel.iter ~jobs ~command ?dry_run g
 
-let map ~jobs ~command ?dry_run l =
+let map ~jobs ~command ?dry_run ?(failfast=false) l =
   let a = Array.of_list l in
   let g = flat_graph_of_array a in
   let command ~pred:_ i = command a.(i) in

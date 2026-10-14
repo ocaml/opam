@@ -756,6 +756,7 @@ let parallel_apply t
           ~jobs:(Lazy.force OpamStateConfig.(!r.jobs))
           ~command:job
           ~dry_run:OpamStateConfig.(!r.dryrun)
+          ~failfast:OpamClientConfig.(!r.failfast)
           ~pools
           action_graph
       in

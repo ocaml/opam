@@ -76,6 +76,7 @@ module type SIG = sig
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
     ?dry_run:bool ->
+    ?failfast:bool ->
     ?pools:((G.V.t list * int) list) ->
     G.t ->
     (G.V.t * 'a) list
