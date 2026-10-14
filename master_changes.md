@@ -133,6 +133,7 @@ users)
 ### Tests
   * Add an exhaustive test showing the behaviour of the `conflicts` field [#7127 @kit-ty-kate]
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
+  * Add reftests for unavailability reason on unsolvable request in `unavailable-reason.test` [#7206 @NathanReb]
 
 ### Engine
 

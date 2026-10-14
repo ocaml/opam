@@ -2499,6 +2499,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:tree.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-unavailable-reason)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff unavailable-reason.test unavailable-reason.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-unavailable-reason)))
+
+(rule
+ (targets unavailable-reason.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:unavailable-reason.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-unhelpful-conflicts-001)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
