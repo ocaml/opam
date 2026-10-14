@@ -2994,9 +2994,9 @@ let switch cli =
         else OpamListCommand.([ Name; Version; Synopsis; ])
       in
       let order nv1 nv2 =
-        if OpamPackage.Version.equal nv1.version nv2.version
-        then OpamPackage.Name.compare nv1.name nv2.name
-        else OpamPackage.Version.compare nv1.version nv2.version
+        match OpamPackage.Version.compare nv1.version nv2.version with
+        | 0 -> OpamPackage.Name.compare nv1.name nv2.name
+        | cmp -> cmp
       in
       OpamListCommand.display st
         {OpamListCommand.default_package_listing_format
