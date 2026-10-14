@@ -42,11 +42,12 @@ exception Errors of int list * (int * exn) list * int list
 val iter: jobs:int -> command:('a -> unit OpamProcess.job) -> ?dry_run:bool ->
   'a list -> unit
 
-val map: jobs:int -> command:('a -> 'b OpamProcess.job) -> ?dry_run:bool ->
+val map: jobs:int -> command:('a -> 'b OpamProcess.job) ->
+  is_failure:('b -> bool) -> ?dry_run:bool ->
   'a list -> 'b list
 
 val reduce: jobs:int -> command:('a -> 'b OpamProcess.job) ->
-  merge:('b -> 'b -> 'b) -> nil:'b -> ?dry_run:bool ->
+  is_failure:('b -> bool) -> merge:('b -> 'b -> 'b) -> nil:'b -> ?dry_run:bool ->
   'a list -> 'b
 
 (** More complex parallelism with dependency graphs *)
@@ -64,7 +65,7 @@ module type SIG = sig
       list of job results on direct predecessors of [v]. *)
   val iter:
     jobs:int ->
-    command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    command:(pred:(G.V.t * unit) list -> G.V.t -> unit OpamProcess.job) ->
     ?dry_run:bool ->
     ?pools:((G.V.t list * int) list) ->
     G.t ->
@@ -75,8 +76,8 @@ module type SIG = sig
   val map:
     jobs:int ->
     command:(pred:(G.V.t * 'a) list -> G.V.t -> 'a OpamProcess.job) ->
+    is_failure:('a -> bool) ->
     ?dry_run:bool ->
-    ?failfast:bool ->
     ?pools:((G.V.t list * int) list) ->
     G.t ->
     (G.V.t * 'a) list
