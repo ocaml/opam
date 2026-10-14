@@ -7,7 +7,7 @@ N0REP0
 ### :   * optional install : [ "?non-existing-filename" ]
 ### :   * non existing filename : [ "non-existing-filename" ]
 ### :
-### : Fields are : lib, misc, toplevel, share, share_root, etc, doc, man, lib_root,
+### : Fields are : lib, misc, toplevel, share, share_root, etc, doc, man, lib_root, root, etc_root
 ### : Executable fields are tested in dot-install-exec-fields.*.test
 ### :
 ### : For each package, there is no install target. The only side effect is
@@ -1836,12 +1836,12 @@ Some files in ${BASEDIR}/OPAM/sw-lib_root/.opam-switch/install/pkg-lib_root.inst
 ### ocaml cat.ml sw-lib_root pkg-lib_root
 ==> No 'installed-file' found
 ### :::::::::::::::::::::::::
-### :V: Field 'root'
+### :IX: Field 'root'
 ### :::::::::::::::::::::::::
 ### mkdir -p REPO/packages/pkg-root/pkg-root.1/files
 ### cp installed-file REPO/packages/pkg-root/pkg-root.1/files/installed-file
 ### opam switch create sw-root --empty
-### :V:1: No defined destination path
+### :IX:1: No defined destination path
 ### <pkg:pkg-root.1>
 opam-version: "2.0"
 ### <pkg:pkg-root.1:pkg-root.install>
@@ -1886,7 +1886,7 @@ Done.
 # OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
 ### ocaml cat.ml sw-root pkg-root
 ==> No 'installed-file' found
-### :V:2: Specify destination path
+### :IX:2: Specify destination path
 ### <pkg:pkg-root.1>
 opam-version: "2.0"
 ### <pkg:pkg-root.1:pkg-root.install>
@@ -1931,7 +1931,7 @@ Done.
 # OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
 ### ocaml cat.ml sw-root pkg-root
 ==> No 'installed-file' found
-### :V:3: Non existing filename, with optional argument
+### :IX:3: Non existing filename, with optional argument
 ### <pkg:pkg-root.1>
 opam-version: "2.0"
 ### <pkg:pkg-root.1:pkg-root.install>
@@ -1975,7 +1975,7 @@ Done.
 # OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
 ### ocaml cat.ml sw-root pkg-root
 ==> No 'installed-file' found
-### :V:4: Non existing filename
+### :IX:4: Non existing filename
 ### <pkg:pkg-root.1>
 opam-version: "2.0"
 ### <pkg:pkg-root.1:pkg-root.install>
@@ -2017,8 +2017,8 @@ Nothing to do.
 # OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
 ### ocaml cat.ml sw-root pkg-root
 ==> No 'installed-file' found
-### :V:5: Target path is checked
-### :V:5:a: Begins with '.opam-switch'
+### :IX:5: Target path is checked
+### :IX:5:a: Begins with '.opam-switch'
 ### <pkg:pkg-root.1>
 opam-version: "2.0"
 ### <pkg:pkg-root.1:pkg-root.install>
@@ -2067,7 +2067,7 @@ Done.
 # OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
 ### ocaml cat.ml sw-root pkg-root
 ==> No 'installed-file' found
-### :V:5:b: Forbidden '.opam-switch' in another layer of path
+### :IX:5:b: Forbidden '.opam-switch' in another layer of path
 ### <pkg:pkg-root.1>
 opam-version: "2.0"
 ### <pkg:pkg-root.1:pkg-root.install>
@@ -2113,4 +2113,183 @@ Done.
 ### opam-cat OPAM/sw-root/.opam-switch/install/pkg-root.changes
 # OPAM/sw-root/.opam-switch/install/pkg-root.changes not found
 ### ocaml cat.ml sw-root pkg-root
+==> No 'installed-file' found
+### :::::::::::::::::::::::::
+### :X: Field 'etc_root'
+### :::::::::::::::::::::::::
+### mkdir -p REPO/packages/pkg-etc_root/pkg-etc_root.1/files
+### cp installed-file REPO/packages/pkg-etc_root/pkg-etc_root.1/files/installed-file
+### opam switch create sw-etc_root --empty
+### :X:1: No defined destination path
+### <pkg:pkg-etc_root.1>
+opam-version: "2.0"
+### <pkg:pkg-etc_root.1:pkg-etc_root.install>
+etc_root: [ "installed-file" ]
+### OPAMDEBUG=-5 opam install pkg-etc_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-etc_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-etc_root.1
+ACTION                          prepare_package_source: pkg-etc_root.1 at ${BASEDIR}/OPAM/sw-etc_root/.opam-switch/build/pkg-etc_root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-etc_root.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-etc_root/etc
+TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etc_root.1: 2 items (addition: 2)
+-> installed pkg-etc_root.1
+Done.
+### opam-cat OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes
+added: ["etc" {"D"} "etc/installed-file" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+opam-version: "2.0"
+### ocaml cat.ml sw-etc_root pkg-etc_root
+==> ${BASEDIR}/OPAM/sw-etc_root/etc/installed-file
+### OPAMDEBUG=-5 opam remove pkg-etc_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-etc_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-etc_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-etc_root.1: files etc/installed-file were already removed
+-> removed   pkg-etc_root.1
+ACTION                          Cleaning up artefacts of pkg-etc_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes
+# OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes not found
+### ocaml cat.ml sw-etc_root pkg-etc_root
+==> No 'installed-file' found
+### :X:2: Specify destination path
+### <pkg:pkg-etc_root.1>
+opam-version: "2.0"
+### <pkg:pkg-etc_root.1:pkg-etc_root.install>
+etc_root: [ "installed-file" {"installed-file.etc_root"} ]
+### OPAMDEBUG=-5 opam install pkg-etc_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-etc_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-etc_root.1
+ACTION                          prepare_package_source: pkg-etc_root.1 at ${BASEDIR}/OPAM/sw-etc_root/.opam-switch/build/pkg-etc_root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-etc_root.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-etc_root/etc
+TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etc_root.1: 2 items (addition: 2)
+-> installed pkg-etc_root.1
+Done.
+### opam-cat OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes
+added: ["etc" {"D"} "etc/installed-file.etc_root" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+opam-version: "2.0"
+### ocaml cat.ml sw-etc_root pkg-etc_root
+==> ${BASEDIR}/OPAM/sw-etc_root/etc/installed-file.etc_root
+### OPAMDEBUG=-5 opam remove pkg-etc_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-etc_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-etc_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+TRACK                           While removing pkg-etc_root.1: files etc/installed-file.etc_root were already removed
+-> removed   pkg-etc_root.1
+ACTION                          Cleaning up artefacts of pkg-etc_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes
+# OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes not found
+### ocaml cat.ml sw-etc_root pkg-etc_root
+==> No 'installed-file' found
+### :X:3: Non existing filename, with optional argument
+### <pkg:pkg-etc_root.1>
+opam-version: "2.0"
+### <pkg:pkg-etc_root.1:pkg-etc_root.install>
+etc_root: [ "?finst" ]
+### OPAMDEBUG=-5 opam install pkg-etc_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-etc_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-etc_root.1
+ACTION                          prepare_package_source: pkg-etc_root.1 at ${BASEDIR}/OPAM/sw-etc_root/.opam-switch/build/pkg-etc_root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-etc_root.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-etc_root/etc
+ACTION                          Not installing ${BASEDIR}/OPAM/sw-etc_root/.opam-switch/build/pkg-etc_root.1/finst is not present and optional.
+TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etc_root.1: 1 items (addition: 1)
+-> installed pkg-etc_root.1
+Done.
+### opam-cat OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes
+added: "etc" {"D"}
+opam-version: "2.0"
+### ocaml cat.ml sw-etc_root pkg-etc_root
+==> No 'installed-file' found
+### OPAMDEBUG=-5 opam remove pkg-etc_root
+The following actions will be performed:
+=== remove 1 package
+  - remove pkg-etc_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          Removing pkg-etc_root.1
+ACTION                          Removing files from .install
+ACTION                          Removing the misc files
+-> removed   pkg-etc_root.1
+ACTION                          Cleaning up artefacts of pkg-etc_root.1
+ACTION                          Removing the local metadata
+Done.
+### opam-cat OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes
+# OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes not found
+### ocaml cat.ml sw-etc_root pkg-etc_root
+==> No 'installed-file' found
+### :X:4: Non existing filename
+### <pkg:pkg-etc_root.1>
+opam-version: "2.0"
+### <pkg:pkg-etc_root.1:pkg-etc_root.install>
+etc_root: [ "finst" ]
+### OPAMDEBUG=-5 opam install pkg-etc_root
+The following actions will be performed:
+=== install 1 package
+  - install pkg-etc_root 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
+ACTION                          download_package: pkg-etc_root.1
+ACTION                          prepare_package_source: pkg-etc_root.1 at ${BASEDIR}/OPAM/sw-etc_root/.opam-switch/build/pkg-etc_root.1
+TRACK                           before install: 0 elements scanned in 0.000s
+ACTION                          Installing pkg-etc_root.1.
+
+ACTION                          creating ${BASEDIR}/OPAM/sw-etc_root/etc
+[ERROR] Installation of pkg-etc_root.1 failed
+
+Some files in ${BASEDIR}/OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.install couldn't be installed:
+  - ${BASEDIR}/OPAM/sw-etc_root/.opam-switch/build/pkg-etc_root.1/finst to ${BASEDIR}/OPAM/sw-etc_root/etc
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - install pkg-etc_root 1
++- 
+- No changes have been performed
+# Return code 31 #
+### opam-cat OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes
+# OPAM/sw-etc_root/.opam-switch/install/pkg-etc_root.changes not found
+### ocaml cat.ml sw-etc_root pkg-etc_root
 ==> No 'installed-file' found
