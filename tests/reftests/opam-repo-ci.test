@@ -36,7 +36,7 @@ url {
 }
 EOF
 ### sh add-url.sh
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO

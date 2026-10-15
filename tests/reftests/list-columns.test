@@ -1,0 +1,1442 @@
+N0REP0
+### : We test here `opam list --column` output content
+### :  with predefined columns, raw field, etc.
+### :  There is a test for each field
+### OPAMYES=1
+### :: Setup
+### ::: local package to pin 'from-pin'
+### mkdir local-sources
+### <local-sources/from-pin.opam>
+opam-version: "2.0"
+### git -C ./local-sources init -q --initial-branch=not-a-tree
+### git -C ./local-sources config core.autocrlf false
+### git -C ./local-sources add -A
+### git -C ./local-sources commit -qm "init"
+### git -C ./local-sources log --pretty=%H >$ GITHASH
+### :::::::::::::::
+### :I: Predefined columns and theirs field (with ':') counterpart
+### :::::::::::::::
+### :I:1:a: Column 'name'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### <local-sources/named-pin.opam>
+opam-version: "2.0"
+name: "named-pin"
+### git -C local-sources add named-pin.opam
+### git -C local-sources commit -qm  "new pkg"
+### opam switch create name --empty
+### opam pin -n ./local-sources
+This will pin the following packages: from-pin, named-pin. Continue? [Y/n] y
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+[NOTE] Package named-pin does not exist in opam repositories registered in the current switch.
+named-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### opam list -A named-pin from-pin from-repo --columns=name,name
+# Packages matching: (name-match(named-pin) | name-match(from-pin) | name-match(from-repo)) & any
+# Name    # Name
+from-pin  from-pin
+from-repo from-repo
+named-pin named-pin
+### :I:1:b: Field 'name'
+### opam list -A named-pin from-pin from-repo --columns=name,name:
+# Packages matching: (name-match(named-pin) | name-match(from-pin) | name-match(from-repo)) & any
+# Name    # Name
+from-pin  "from-pin"
+from-repo "from-repo"
+named-pin "named-pin"
+### : cleanup
+### git -C local-sources reset --hard $GITHASH -q
+### opam switch remove name
+Switch name and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:2:a: Column 'version'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
+### opam switch create version --empty
+### <local-sources/versionned-pin.opam>
+opam-version: "2.0"
+version: "1.2.3"
+### git -C local-sources add versionned-pin.opam
+### git -C local-sources commit -qm  "new pkg"
+### opam pin -n ./local-sources
+This will pin the following packages: from-pin, versionned-pin. Continue? [Y/n] y
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+[NOTE] Package versionned-pin does not exist in opam repositories registered in the current switch.
+versionned-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version 1.2.3)
+### opam list -A versionned-pin from-pin from-repo --columns=name,version
+# Packages matching: (name-match(versionned-pin) | name-match(from-pin) | name-match(from-repo)) & any
+# Name         # Version
+from-pin       dev
+from-repo      1
+versionned-pin 1.2.3
+### :I:2:b: Field 'version'
+### opam list -A versionned-pin from-pin from-repo --columns=name,version:
+# Packages matching: (name-match(versionned-pin) | name-match(from-pin) | name-match(from-repo)) & any
+# Name         # Version
+from-pin       "dev"
+from-repo      "1"
+versionned-pin "1.2.3"
+### : cleanup
+### git -C local-sources reset --hard $GITHASH -q
+### opam switch remove version
+Switch version and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:3:a: Column 'package'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
+### <local-sources/packaged-pin.opam>
+opam-version: "2.0"
+version: "1.2.3"
+name: "packaged"
+### git -C local-sources add packaged-pin.opam
+### git -C local-sources commit -qm "new pkg"
+### opam switch create package --empty
+### opam pin -n ./local-sources
+This will pin the following packages: from-pin, packaged-pin. Continue? [Y/n] y
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+[NOTE] Package packaged-pin does not exist in opam repositories registered in the current switch.
+packaged-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version 1.2.3)
+### opam list -A packaged-pin from-pin from-repo --columns=name,package
+# Packages matching: (name-match(packaged-pin) | name-match(from-pin) | name-match(from-repo)) & any
+# Name       # Package
+from-pin     from-pin.dev
+from-repo    from-repo.1
+packaged-pin packaged-pin.1.2.3
+### :I:3:b: Field ''
+### opam list -A packaged-pin from-pin from-repo --columns=name,package:
+# Packages matching: (name-match(packaged-pin) | name-match(from-pin) | name-match(from-repo)) & any
+# Name       # Package
+from-pin
+from-repo
+packaged-pin
+### : cleanup
+### git -C local-sources reset --hard $GITHASH -q
+### opam switch remove package
+Switch package and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:4:a: Column 'synopsis'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+synopsis: "here i am"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,synopsis
+# Packages matching: name-match(from-repo) & any
+# Name    # Synopsis
+from-repo here i am
+### :I:4:b: Field 'synopsis'
+### opam list -A from-repo --columns=name,synopsis:
+# Packages matching: name-match(from-repo) & any
+# Name    # Synopsis
+from-repo "here i am"
+### rm -r REPO/packages
+### :I:5:a: Column 'synopsis-or-target'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+synopsis: "here i am"
+### <pkg:from-repo-no-syn.1>
+opam-version: "2.0"
+### <pkg:from-repo-git.1>
+opam-version: "2.0"
+### <git-url.sh>
+cat >> REPO/packages/from-repo-git/from-repo-git.1/opam << EOF
+url { src:"git+file://$BASEDIR/local-sources" }
+EOF
+### sh git-url.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### <local-sources/from-pin.opam>
+opam-version: "2.0"
+synopsis: "I am here too"
+### <local-sources/targeted-pin.opam>
+opam-version: "2.0"
+### git -C local-sources add targeted-pin.opam
+### git -C local-sources commit -qm "syn or tar"
+### opam switch create synopsis-or-target --empty
+### opam pin -n ./local-sources
+This will pin the following packages: from-pin, targeted-pin. Continue? [Y/n] y
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+[NOTE] Package targeted-pin does not exist in opam repositories registered in the current switch.
+targeted-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### opam install from-repo-git
+The following actions will be performed:
+=== install 1 package
+  - install from-repo-git 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved from-repo-git.1  (git+file://${BASEDIR}/local-sources)
+-> installed from-repo-git.1
+Done.
+### opam list -A targeted-pin from-pin from-repo from-repo-no-syn from-repo-git --columns=name,synopsis-or-target
+# Packages matching: (name-match(targeted-pin) | name-match(from-pin) | name-match(from-repo) | name-match(from-repo-no-syn) | name-match(from-repo-git)) & any
+# Name           # Synopsis
+from-pin         pinned to version dev at git+file://${BASEDIR}/local-sources#not-a-tree
+from-repo        here i am
+from-repo-git
+from-repo-no-syn
+targeted-pin     pinned to version dev at git+file://${BASEDIR}/local-sources#not-a-tree
+### :I:5:b: Field 'synosis-or-target'
+### opam list -A targeted-pin from-pin from-repo from-repo-no-syn from-repo-git --columns=name,synopsis-or-target:
+# Packages matching: (name-match(targeted-pin) | name-match(from-pin) | name-match(from-repo) | name-match(from-repo-no-syn) | name-match(from-repo-git)) & any
+# Name           # Synopsis-or-target
+from-pin
+from-repo
+from-repo-git
+from-repo-no-syn
+targeted-pin
+### : cleanup
+### git -C local-sources reset --hard $GITHASH -q
+### opam switch remove synopsis-or-target
+Switch synopsis-or-target and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:6:a: Column 'description'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+description: "You need more words ?"
+### <pkg:from-repo-syn.1>
+opam-version: "2.0"
+synopsis: "here i am"
+### <pkg:from-repo-syn-descr.1>
+opam-version: "2.0"
+description: "You need more words ?"
+synopsis: "here i am"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo from-repo-syn from-repo-syn-descr --columns=name,description
+# Packages matching: (name-match(from-repo) | name-match(from-repo-syn) | name-match(from-repo-syn-descr)) & any
+# Name              # Description
+from-repo           You need more words ?
+from-repo-syn
+from-repo-syn-descr You need more words ?
+### :I:6:b: Field 'description'
+### opam list -A from-repo --columns=name,description:
+# Packages matching: name-match(from-repo) & any
+# Name    # Description
+from-repo "You need more words ?"
+### rm -r REPO/packages
+### :I:7:a: Column 'installed-versions'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### <pkg:from-repo.2>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create installed-versions-1 --empty
+### opam pin local-sources -n
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### opam install from-repo.1 from-pin
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[from-pin.dev] synchronised (no changes)
+
+The following actions will be performed:
+=== install 2 packages
+  - install from-pin  dev (pinned)
+  - install from-repo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved from-pin.dev  (no changes)
+-> installed from-pin.dev
+-> installed from-repo.1
+Done.
+### opam switch create installed-versions-2 --empty
+### opam pin local-sources -n --with-version 1.2.3
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version 1.2.3)
+### opam install from-repo.2
+The following actions will be performed:
+=== install 1 package
+  - install from-repo 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed from-repo.2
+Done.
+### opam list -A from-pin from-repo --columns=name,installed-version --switch installed-versions-1
+# Packages matching: (name-match(from-pin) | name-match(from-repo)) & any
+# Name    # Installed
+from-pin  dev
+from-repo 1
+### opam list -A from-pin from-repo --columns=name,installed-version --switch installed-versions-2
+# Packages matching: (name-match(from-pin) | name-match(from-repo)) & any
+# Name    # Installed
+from-pin  --
+from-repo 2
+### :I:7:b: Field 'installed-versions'
+### opam list -A from-pin from-repo --columns=name,installed-version:
+# Packages matching: (name-match(from-pin) | name-match(from-repo)) & any
+# Name    # Installed-version
+from-pin
+from-repo
+### : cleanup
+### opam switch remove installed-versions-1 installed-versions-2
+Switch installed-versions-1 and all its packages will be wiped. Are you sure? [Y/n] y
+Switch installed-versions-2 and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:8:a: Column 'pin'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### <pkg:version-pin.1>
+opam-version: "2.0"
+### <pin:archive-pin/opam>
+opam-version: "2.0"
+### tar czf archive-pin.tgz archive-pin
+### <url.sh>
+cat >> REPO/packages/version-pin/version-pin.1/opam << EOF
+url { src:"file://$BASEDIR/archive-pin.tgz"}
+EOF
+### sh url.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create pinned --empty
+### opam pin local-sources -n
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### opam pin archive-pin ./archive-pin.tgz -n
+[NOTE] Package archive-pin does not exist in opam repositories registered in the current switch.
+[archive-pin.dev] synchronised (file://${BASEDIR}/archive-pin.tgz)
+archive-pin is now pinned to file://${BASEDIR}/archive-pin.tgz (version dev)
+### opam pin version-pin 1 -n
+version-pin is now pinned to version 1
+### opam list -A from-pin version-pin archive-pin from-repo --columns=name,pin
+# Packages matching: (name-match(from-pin) | name-match(version-pin) | name-match(archive-pin) | name-match(from-repo)) & any
+# Name      # Pin
+archive-pin file://${BASEDIR}/archive-pin.tgz
+from-pin    git+file://${BASEDIR}/local-sources#not-a-tree
+from-repo
+version-pin file://${BASEDIR}/archive-pin.tgz
+### :I:8:b: Field 'pin'
+### opam list -A from-pin version-pin archive-pin from-repo --columns=name,pin:
+# Packages matching: (name-match(from-pin) | name-match(version-pin) | name-match(archive-pin) | name-match(from-repo)) & any
+# Name      # Pin
+archive-pin
+from-pin
+from-repo
+version-pin
+### : cleanup
+### opam switch remove pinned
+Switch pinned and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:9:b: Field 'source-hash'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### <pkg:from-repo-git.1>
+opam-version: "2.0"
+### <git-url.sh>
+cat >> REPO/packages/from-repo-git/from-repo-git.1/opam << EOF
+url { src:"git+file://$BASEDIR/local-sources" }
+EOF
+### sh git-url.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create source-hash --empty
+### opam pin local-sources -n
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### opam install from-repo from-repo-git
+The following actions will be performed:
+=== install 2 packages
+  - install from-repo     1
+  - install from-repo-git 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed from-repo.1
+-> retrieved from-repo-git.1  (git+file://${BASEDIR}/local-sources)
+-> installed from-repo-git.1
+Done.
+### opam list -A from-pin from-repo from-repo-git --columns=name,source-hash | sed-hash $GITHASH git-hash
+# Packages matching: (name-match(from-pin) | name-match(from-repo) | name-match(from-repo-git)) & any
+# Name        # Source hash
+from-pin      +git-hash+
+from-repo
+from-repo-git +git-hash+
+### :I:9:b: Field 'source-hash'
+### opam list -A from-pin from-repo --columns=name,source-hash:
+# Packages matching: (name-match(from-pin) | name-match(from-repo)) & any
+# Name    # Source-hash
+from-pin
+from-repo
+### : cleanup
+### opam switch remove source-hash
+Switch source-hash and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:10:a: Column 'opamfile'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create opamfile --empty
+### opam pin -n ./local-sources
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### opam list -A from-pin from-repo --columns=name,opam-file | sed-hash $MD5 hash
+# Packages matching: (name-match(from-pin) | name-match(from-repo)) & any
+# Name    # Metadata
+from-pin  opam-version: "2.0" name: "from-pin" version: "dev" url {   src:     "git+file://${BASEDIR}/local-sources#not-a-tree" }
+from-repo opam-version: "2.0" name: "from-repo" version: "1"
+### :I:10:b: Field 'opam-file'
+### opam list -A from-pin from-repo --columns=name,opam-file: | sed-hash $MD5 hash
+# Packages matching: (name-match(from-pin) | name-match(from-repo)) & any
+# Name    # Opam-file
+from-pin
+from-repo
+### : cleanup
+### opam switch remove opamfile
+Switch opamfile and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:11:a: Column 'all-installed-versions'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### <pkg:from-repo.2>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create all-installed-versions-1 --empty
+### opam pin local-sources -n
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### opam install from-repo.1 from-pin
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[from-pin.dev] synchronised (no changes)
+
+The following actions will be performed:
+=== install 2 packages
+  - install from-pin  dev (pinned)
+  - install from-repo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved from-pin.dev  (no changes)
+-> installed from-pin.dev
+-> installed from-repo.1
+Done.
+### opam switch create all-installed-versions-2 --empty
+### opam pin local-sources -n --with-version 4.5.6
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version 4.5.6)
+### opam install from-repo.2 from-pin
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[from-pin.4.5.6] synchronised (no changes)
+
+The following actions will be performed:
+=== install 2 packages
+  - install from-pin  4.5.6 (pinned)
+  - install from-repo 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved from-pin.4.5.6  (no changes)
+-> installed from-pin.4.5.6
+-> installed from-repo.2
+Done.
+### opam list -A from-pin from-repo --columns=name,all-installed-versions
+# Packages matching: (name-match(from-pin) | name-match(from-repo)) & any
+# Name    # Installed versions
+from-pin  4.5.6 [all-installed-versions-2]  dev [all-installed-versions-1]
+from-repo 1 [all-installed-versions-1]  2 [all-installed-versions-2]
+### :I:11:b: Field 'all-installed-versions'
+### opam list -A from-pin from-repo --columns=name,all-installed-versions:
+# Packages matching: (name-match(from-pin) | name-match(from-repo)) & any
+# Name    # All-installed-versions
+from-pin
+from-repo
+### : cleanup
+### opam switch remove all-installed-versions-1 all-installed-versions-2
+Switch all-installed-versions-1 and all its packages will be wiped. Are you sure? [Y/n] y
+Switch all-installed-versions-2 and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:12:a: Column 'available-versions'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### <pkg:from-repo.2>
+opam-version: "2.0"
+available: false
+### <pkg:from-repo.3>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,available-versions
+# Packages matching: name-match(from-repo) & any
+# Name    # Available versions
+from-repo 1  3
+### :I:12:b: Field 'available-versions'
+### opam list -A from-repo --columns=name,available-versions:
+# Packages matching: name-match(from-repo) & any
+# Name    # Available-versions
+from-repo
+### rm -r REPO/packages
+### :I:13:a: Column 'all-versions'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### <pkg:from-repo.2>
+opam-version: "2.0"
+### <pkg:from-repo.3>
+opam-version: "2.0"
+### <pkg:from-repo-pin.1>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create all-versions --empty
+### opam pin local-sources -n
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### <local-sources/from-repo-pin.opam>
+opam-version: "2.0"
+### git -C local-sources add from-repo-pin.opam
+### git -C local-sources commit -qm "new pkg"
+### opam pin from-repo-pin local-sources -n --with-version 1.2.3
+[from-repo-pin.1.2.3] synchronised (git+file://${BASEDIR}/local-sources#not-a-tree)
+[WARNING] Failed checks on from-repo-pin package definition from source at git+file://${BASEDIR}/local-sources#not-a-tree:
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+             error 57: Synopsis must not be empty
+           warning 68: Missing field 'license'
+from-repo-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version 1.2.3)
+### opam list -A from-pin from-repo from-repo-pin --columns=name,all-versions
+# Packages matching: (name-match(from-pin) | name-match(from-repo) | name-match(from-repo-pin)) & any
+# Name        # Versions
+from-pin      dev
+from-repo     1  2  3
+from-repo-pin 1  1.2.3
+### :I:13:b: Field 'all-versions'
+### opam list -A from-pin from-repo from-repo-pin --columns=name,all-versions:
+# Packages matching: (name-match(from-pin) | name-match(from-repo) | name-match(from-repo-pin)) & any
+# Name        # All-versions
+from-pin
+from-repo
+from-repo-pin
+### : cleanup
+### git -C local-sources reset --hard $GITHASH -q
+### opam switch remove all-versions
+Switch all-versions and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:13:a: Column 'repository'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### <pkg:from-both.1>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create repository --empty
+### opam pin local-sources -n
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### <OPER/repo>
+opam-version: "2.0"
+### <pkg[OPER]:from-oper.1>
+opam-version: "2.0"
+### <pkg[OPER]:from-both.1>
+opam-version: "2.0"
+### opam repo add oper ./OPER --this-switch
+[oper] Initialised
+### opam list -A from-pin from-repo from-oper from-both --columns=name,repository
+# Packages matching: (name-match(from-pin) | name-match(from-repo) | name-match(from-oper) | name-match(from-both)) & any
+# Name    # Repository
+from-both oper
+from-oper oper
+from-pin
+from-repo default
+### :I:13:b: Set ranks for priority
+### opam repo priority default 100
+### opam repo priority oper 1
+### opam list -A from-both --columns=name,repository
+# Packages matching: name-match(from-both) & any
+# Name    # Repository
+from-both oper
+### :I:13:c: Field 'repository'
+### opam list -A from-pin from-repo from-oper from-both --columns=name,repository:
+# Packages matching: (name-match(from-pin) | name-match(from-repo) | name-match(from-oper) | name-match(from-both)) & any
+# Name    # Repository
+from-both
+from-oper
+from-pin
+from-repo
+### : cleanup
+### opam repository remove oper --all
+### opam switch remove repository
+Switch repository and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages OPER
+### :I:14:a: Column 'installed-files'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+install: [
+[ "mkdir" "%{share}%" ]
+[ "touch" "%{share}%/i-am-installed" ]
+[ "touch" "%{lib}%/i-am-installed" ]
+]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create installed --empty
+### opam install from-repo
+The following actions will be performed:
+=== install 1 package
+  - install from-repo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed from-repo.1
+Done.
+### opam list -A from-repo --columns=name,installed-files
+# Packages matching: name-match(from-repo) & any
+# Name    # Installed files
+from-repo ${BASEDIR}/OPAM/installed/lib/i-am-installed ${BASEDIR}/OPAM/installed/share ${BASEDIR}/OPAM/installed/share/i-am-installed
+### :I:14:b: Field 'installed-files'
+### opam list -A from-repo --columns=name,installed-files:
+# Packages matching: name-match(from-repo) & any
+# Name    # Installed-files
+from-repo
+### : cleanup
+### opam switch remove installed
+Switch installed and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:15:a: Column 'vc-ref'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### <pkg:from-repo-git.1>
+opam-version: "2.0"
+### <git-url.sh>
+cat >> REPO/packages/from-repo-git/from-repo-git.1/opam << EOF
+url { src:"git+file://$BASEDIR/local-sources#$GITHASH" }
+EOF
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create vc-ref --empty
+### opam pin local-sources -n
+[NOTE] Package from-pin does not exist in opam repositories registered in the current switch.
+from-pin is now pinned to git+file://${BASEDIR}/local-sources#not-a-tree (version dev)
+### opam install from-repo-git
+The following actions will be performed:
+=== install 1 package
+  - install from-repo-git 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed from-repo-git.1
+Done.
+### opam list -A from-pin from-repo from-repo-git --columns=name,vc-ref
+# Packages matching: (name-match(from-pin) | name-match(from-repo) | name-match(from-repo-git)) & any
+# Name        # VC ref
+from-pin      not-a-tree
+from-repo
+from-repo-git
+### :I:15:b: Field 'vc-ref'
+### opam list -A from-pin from-repo from-repo-git --columns=name,vc-ref:
+# Packages matching: (name-match(from-pin) | name-match(from-repo) | name-match(from-repo-git)) & any
+# Name        # Vc-ref
+from-pin
+from-repo
+from-repo-git
+### : cleanup
+### opam switch remove vc-ref
+Switch vc-ref and all its packages will be wiped. Are you sure? [Y/n] y
+### rm -r REPO/packages
+### :I:16:a: Column 'depexts'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+depexts: "present"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,depexts
+# Packages matching: name-match(from-repo) & any
+# Name    # Depexts
+from-repo present
+### :I:16:b: Field 'depexts'
+### opam list -A from-repo --columns=name,depexts:
+# Packages matching: name-match(from-repo) & any
+# Name    # Depexts
+from-repo "present"
+### :I:16:c: Depexts not defined because of filter resolve to 'false'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+depexts: [ ["present"] ["wont-find"] {os = "undefined" } ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,depexts
+# Packages matching: name-match(from-repo) & any
+# Name    # Depexts
+from-repo present
+### :I:16:d: Field 'depexts' with filter resolving to 'false'
+### opam list -A from-repo --columns=name,depexts:
+# Packages matching: name-match(from-repo) & any
+# Name    # Depexts
+from-repo ["present"] ["wont-find"] {os = "undefined"}
+### :I:16:e: Depexts unavailable
+### OPAMNODEPEXTS=0
+### opam-set-os dummy-success:0:present:
+Added '[os-family "dummy-success:0:present:" "Set through 'opam var'"]' to field global-variables in global configuration
+### <pkg:from-repo.1>
+opam-version: "2.0"
+depexts: [ ["present"] ["unavailable"] ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam sw cr depexts-unavailable --empty
+### opam install from-repo
+[ERROR] Package from-repo depends on the unavailable system packages 'present' and 'unavailable'. You can use `--no-depexts' to attempt installation anyway.
+# Return code 5 #
+### opam list -A from-repo --columns=name,depexts
+# Packages matching: name-match(from-repo) & any
+# Name    # Depexts
+from-repo present unavailable
+### :I:16:f: Field 'depexts' when there is an unavailable depext
+### opam list -A from-repo --columns=name,depexts:
+# Packages matching: name-match(from-repo) & any
+# Name    # Depexts
+from-repo ["present"] ["unavailable"]
+### :::::::::::::::
+### : all fields
+### :::::::::::::::
+### :II:1: Field 'opam-version'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,opam-version:
+# Packages matching: name-match(from-repo) & any
+# Name    # Opam-version
+from-repo "2.0"
+### :II:2: Field 'synopsis' already tested
+### :II:3: Field 'description'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+description: "I'm not descriptive"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,description:
+# Packages matching: name-match(from-repo) & any
+# Name    # Description
+from-repo "I'm not descriptive"
+### :II:4: Field 'maintainer'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+maintainer: "maint@tain.er"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,maintainer:
+# Packages matching: name-match(from-repo) & any
+# Name    # Maintainer
+from-repo "maint@tain.er"
+### :II:5: Field 'authors'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+authors: "A. Uthors <au@tho.rs>"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,authors:
+# Packages matching: name-match(from-repo) & any
+# Name    # Authors
+from-repo "A. Uthors <au@tho.rs>"
+### :II:6: Field 'license'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+license: "MIT"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,license:
+# Packages matching: name-match(from-repo) & any
+# Name    # License
+from-repo "MIT"
+### :II:7: Field 'tags'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+tags: "4test"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,tags:
+# Packages matching: name-match(from-repo) & any
+# Name    # Tags
+from-repo "4test"
+### :II:8: Field 'homepage'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+homepage: "https://no.were"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,homepage:
+# Packages matching: name-match(from-repo) & any
+# Name    # Homepage
+from-repo "https://no.were"
+### :II:9: Field 'doc'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+doc: "https://no.doc"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,doc:
+# Packages matching: name-match(from-repo) & any
+# Name    # Doc
+from-repo "https://no.doc"
+### :II:10: Field 'bug-reports'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+bug-reports: "https://no.need"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,bug-reports:
+# Packages matching: name-match(from-repo) & any
+# Name    # Bug-reports
+from-repo "https://no.need"
+### :II:11: Field 'depends'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+depends: "unrelated"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,depends:
+# Packages matching: name-match(from-repo) & any
+# Name    # Depends
+from-repo "unrelated"
+### :II:12: Field 'depopts'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+depopts: "nothing"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,depopts:
+# Packages matching: name-match(from-repo) & any
+# Name    # Depopts
+from-repo "nothing"
+### :II:13: Field 'conflicts'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+conflicts: "peace"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,conflicts:
+# Packages matching: name-match(from-repo) & any
+# Name    # Conflicts
+from-repo "peace"
+### :II:14: Field 'conflit-class'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+conflict-class: "abolish"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,conflict-class:
+# Packages matching: name-match(from-repo) & any
+# Name    # Conflict-class
+from-repo "abolish"
+### :II:15: Field 'available'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+available: this-test
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,available:
+# Packages matching: name-match(from-repo) & any
+# Name    # Available
+from-repo this-test
+### :II:16: Field 'flags'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+flags: light-uninstall
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,flags:
+# Packages matching: name-match(from-repo) & any
+# Name    # Flags
+from-repo light-uninstall
+### :II:17: Field 'setenv'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+setenv: [ INSTALLEDVAR = "here"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,setenv:
+# Packages matching: name-match(from-repo) & any
+# Name    # Setenv
+from-repo INSTALLEDVAR = "here"
+### :II:18: Field 'build'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+build: [ "echo" "building... really" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,build:
+# Packages matching: name-match(from-repo) & any
+# Name    # Build
+from-repo "echo" "building... really"
+### :II:19: Field 'run-test'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+run-test: [ "echo" "running tests... really" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,run-test:
+# Packages matching: name-match(from-repo) & any
+# Name    # Run-test
+from-repo "echo" "running tests... really"
+### :II:20: Field 'install'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+install: [ "echo" "installing... really" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,install:
+# Packages matching: name-match(from-repo) & any
+# Name    # Install
+from-repo "echo" "installing... really"
+### :II:21: Field 'remove'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+remove: [ "echo" "removing... really" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,remove:
+# Packages matching: name-match(from-repo) & any
+# Name    # Remove
+from-repo "echo" "removing... really"
+### :II:22: Field 'subts'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+substs: "my-substs"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,substs:
+# Packages matching: name-match(from-repo) & any
+# Name    # Substs
+from-repo "my-substs"
+### :II:23: Field 'patches'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+patches: "my-patch"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,patches:
+# Packages matching: name-match(from-repo) & any
+# Name    # Patches
+from-repo "my-patch"
+### :II:24: Field 'build-env'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+build-env: [ BUILDVAR = "here too"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,build-env:
+# Packages matching: name-match(from-repo) & any
+# Name    # Build-env
+from-repo BUILDVAR = "here too"
+### :II:25: Field 'features'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+features: [ not-a-bug {"is"} {"a-feature"} ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,features:
+# Packages matching: name-match(from-repo) & any
+# Name    # Features
+from-repo not-a-bug {"is"} {"a-feature"}
+### :II:26: Field 'messages'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+messages: "Thanks for choosing me"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,messages:
+# Packages matching: name-match(from-repo) & any
+# Name    # Messages
+from-repo "Thanks for choosing me"
+### :II:27: Field 'post-messages'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+post-messages: "Thanks for installing me"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,post-messages:
+# Packages matching: name-match(from-repo) & any
+# Name    # Post-messages
+from-repo "Thanks for installing me"
+### rm -r REPO/packages
+### :II:28: Field 'depexts' already tested
+### :II:29: Field 'libraries'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+libraries: "uh"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,libraries:
+# Packages matching: name-match(from-repo) & any
+# Name    # Libraries
+from-repo "uh"
+### :II:30: Field 'syntax'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+syntax: "no-syntax"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,syntax:
+# Packages matching: name-match(from-repo) & any
+# Name    # Syntax
+from-repo "no-syntax"
+### :II:31: Field 'dev-repo'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+dev-repo: "git+https://he.re"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,dev-repo:
+# Packages matching: name-match(from-repo) & any
+# Name    # Dev-repo
+from-repo "git+https://he.re"
+### :II:32: Field 'pin-depends'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+pin-depends: [ "peace.1" "git+https://no.whe.re"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,pin-depends:
+# Packages matching: name-match(from-repo) & any
+# Name    # Pin-depends
+from-repo "peace.1" "git+https://no.whe.re"
+### :II:33: Field 'extra-files'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+### <pkg:from-repo.1:an-xfile>
+I want to believe
+### update-xf from-repo.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,extra-files:
+# Packages matching: name-match(from-repo) & any
+# Name    # Extra-files
+from-repo "an-xfile" "md5=dba482bd96498deade19f58c5c31122b"
+### :II:34: Section url
+### :II:34:a: Field 'url.src'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  src:"https://an.archi.ve/archive.tgz"
+  checksum:"md5=000000000000000000000000000000000"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,url.src:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.src
+from-repo "https://an.archi.ve/archive.tgz"
+### :II:34:b: Field 'url.checksum'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  src:"https://an.archi.ve/archive.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,url.checksum:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.checksum
+from-repo "md5=00000000000000000000000000000000"
+### :II:34:c: Field 'url.mirrors'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  src:"https://an.archi.ve/archive.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+  mirrors: "https://a.mirror"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,url.mirrors:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.mirrors
+from-repo "https://a.mirror"
+### :II:34:d: Field 'url.swhid'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  src:"https://an.archi.ve/archive.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+  mirrors:"https://swhid.opam.ocaml.org/swh:1:dir:0000000000000000000000000000000000000000"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,url.swhid:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.swhid
+from-repo "swh:1:dir:0000000000000000000000000000000000000000"
+### :II:34:e: Field 'url.archive'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  archive:"https://an.archi.ve/archive.tgz"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,url.src:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.src
+from-repo "https://an.archi.ve/archive.tgz"
+### :II:34:f: Field 'url.http'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  http:"https://an.archi.ve/archive.tgz"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam list -A from-repo --columns=name,url.src:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.src
+from-repo "https://an.archi.ve/archive.tgz"
+### :II:34:g: Field 'url.git'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  git:"https://g.it/url"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,url.src:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.src
+from-repo "git+https://g.it/url"
+### :II:34:h: Field 'url.darcs'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  darcs:"https://dar.cs/url"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,url.src:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.src
+from-repo "darcs+https://dar.cs/url"
+### :II:34:i: Field 'url.hg'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  hg:"https://hg.vcs/url"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,url.src:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.src
+from-repo "hg+https://hg.vcs/url"
+### :II:34:j: Field 'url.local'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+url {
+  local:"file:///tmp/local/pkg"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,url.src:
+# Packages matching: name-match(from-repo) & any
+# Name    # Url.src
+from-repo "file:///tmp/local/pkg"
+### :II:35: Section extra-sources
+### <pkg:from-repo.1>
+opam-version: "2.0"
+extra-source "one" {
+  src:"https://an.archi.ve/archive.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+extra-source "two" {
+  src:"https://an.other-archi.ve/archive.tgz"
+  checksum:"md5=00000000000000000000000000000000"
+}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### :II:35:a: Field 'extrafiles.src'
+### opam list -A from-repo --columns=name,extra-source(one).src:
+opam: option '--columns': Invalid columns specification:
+      'name,extra-source(one).src:'.
+Usage: opam list [--check] [--no-depexts] [--silent] [OPTION]… [PATTERNS]…
+Try 'opam list --help' or 'opam --help' for more information.
+# Return code 2 #
+### :II:35:b: Field 'extrafiles.checksum'
+### opam list -A from-repo --columns=name,extra-source(one).checksum:
+opam: option '--columns': Invalid columns specification:
+      'name,extra-source(one).checksum:'.
+Usage: opam list [--check] [--no-depexts] [--silent] [OPTION]… [PATTERNS]…
+Try 'opam list --help' or 'opam --help' for more information.
+# Return code 2 #
+### :II:35:c: several extra-files
+### opam list -A from-repo --columns=name,depexts:,extra-source(one).src:,extra-source(two).src:
+opam: option '--columns': Invalid columns specification:
+      'name,depexts:,extra-source(one).src:,extra-source(two).src:'.
+Usage: opam list [--check] [--no-depexts] [--silent] [OPTION]… [PATTERNS]…
+Try 'opam list --help' or 'opam --help' for more information.
+# Return code 2 #
+### :::::::::::::::
+### :: Deprecated fields
+### :::::::::::::::
+### :III:1: Field 'configure-style'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+configure-style: "i will be ignored"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,configure-style:
+# Packages matching: name-match(from-repo) & any
+# Name    # Configure-style
+from-repo
+### :III:2: Field 'ocaml-version'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+ocaml-version: [ = "3.12.0" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,ocaml-version:
+# Packages matching: name-match(from-repo) & any
+# Name    # Ocaml-version
+from-repo
+### :III:3: Field 'os'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+os: "reftest-os"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,os:
+# Packages matching: name-match(from-repo) & any
+# Name    # Os
+from-repo
+### :III:4: Field 'descr'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+descr: "Noooo"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,descr:
+# Packages matching: name-match(from-repo) & any
+# Name    # Descr
+from-repo
+### :III:5: Field 'extra-sources'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+extra-sources: [
+  "https://an.archi.ve/archive.tgz"
+  "md5=00000000000000000000000000000000"
+]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,extra-sources:
+# Packages matching: name-match(from-repo) & any
+# Name    # Extra-sources
+from-repo
+### :III:6: Field 'build-test'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+build-test: [ "old-test-cmd" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,build-test:
+# Packages matching: name-match(from-repo) & any
+# Name    # Build-test
+from-repo
+### :III:7: Field 'build-doc'
+### <pkg:from-repo.1>
+opam-version: "2.0"
+build-doc: [ "old-doc-cmd" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,build-doc:
+# Packages matching: name-match(from-repo) & any
+# Name    # Build-doc
+from-repo "old-doc-cmd"
+### :III:8: Field 'authors', deprecated, present as an alias
+### <pkg:from-repo.1>
+opam-version: "2.0"
+authors: "A. Uthors <au@tho.rs>"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam list -A from-repo --columns=name,author:
+# Packages matching: name-match(from-repo) & any
+# Name    # Author
+from-repo

@@ -10,6 +10,12 @@ url {
   src: "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
   checksum: "md5=c9c157af4229fbb45d3f59f0d6d75dbe"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Processing: [default: loading data]
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create download --empty
 ### opam install foo --download-only | grep -v "^+-" | ".*\(curl\|wget\).* \"--\"" -> 'curl-or-wget --' | sed-cmd tar
 The following actions will be performed:
@@ -175,7 +181,7 @@ url {
 }
 EOF
 ### sh mkurl.sh
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
@@ -222,7 +228,7 @@ url {
 }
 EOF
 ### sh mkurl.sh
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
@@ -259,6 +265,11 @@ url {
   src: "https://github.com/UnixJunkie/get_line/archive/v1.0.0.tar.gz"
   checksum: "md5=c9c157af4229fbb45d3f59f0d6d75dbe"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam clean -c
 Clearing cache of downloaded files
 ### opam install baz --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd wget tar | "${OPAMVERSION}" -> "current" | grep -v "state-.*.export"  | grep -v "OPAM[/\\]log"
@@ -288,6 +299,11 @@ opam-version: "2.0"
 url {
   src: "git+https://github.com/ocaml-opam/opam-depext"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install qux --download-only -vv --debug-level=-1 | grep -v "^+-" | sed-cmd git | grep -v "state-.*.export"
 The following actions will be performed:
 === install 1 package
@@ -323,6 +339,11 @@ opam-version: "2.0"
 url {
   src: "https://example.com/archive.tar.gz"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <fetch.sh>
 set -eu
 for arg in "$@"; do

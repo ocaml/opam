@@ -1,11 +1,11 @@
 N0REP0
 ### <REPO/repo>
 opam-version: "2.0"
-### <REPO/packages/first/first.1/opam>
+### <pkg:first.1>
 opam-version: "2.0"
-### <REPO/packages/first/first.1/files/fst/a-file>
+### <pkg:first.1:fst/a-file>
 I'm some content
-### <REPO/packages/first/first.1/files/fst/another-file>
+### <pkg:first.1:fst/another-file>
 I'm some content
 ### :I: Git updates
 ### git -C ./REPO init -q

@@ -1,11 +1,16 @@
 N0REP0
+### OPAMYES=1
 ### <pkg:i-am-compiler.1>
 opam-version: "2.0"
 flags: compiler
 ### <pkg:i-am-compiler.2>
 opam-version: "2.0"
 flags: compiler
-### OPAMYES=1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <OPAM/config>
 opam-version: "2.0"
 repositories: "default"

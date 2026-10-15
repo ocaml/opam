@@ -7,6 +7,11 @@ opam-version: "2.0"
 ### <pkg:c.1>
 opam-version: "2.0"
 depends: "a" | "b"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create default --empty
 ### opam install a b c
 The following actions will be performed:
@@ -41,6 +46,11 @@ available: false
 ### <pkg:w.1>
 opam-version: "2.0"
 depends: "z"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam remove z
 [NOTE] z is not installed.
 
@@ -60,6 +70,11 @@ opam-version: "2.0"
 build: "pwd"
 install: "pwd"
 remove: "pwd"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMVERBOSE=2
 ### :: remove installed package
 ### opam install p | sed-cmd pwd

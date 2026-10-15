@@ -1,16 +1,26 @@
 N0REP0
-### <pkg:a.2>
-opam-version: "2.0"
-flags: deprecated
 ### opam switch create default --empty
 ### OPAMFAKE=1
 ### OPAMYES=1
+### <pkg:a.2>
+opam-version: "2.0"
+flags: deprecated
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install a --show
 The following actions would be faked:
 === install 1 package
   - install a 2 (deprecated)
 ### <pkg:a.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install a
 The following actions will be faked:
 === install 1 package
@@ -24,6 +34,11 @@ Already up-to-date.
 Nothing to do.
 ### <pkg:a.1.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade a
 The following actions will be faked:
 === upgrade 1 package
@@ -34,6 +49,11 @@ Faking installation of a.1.1
 Done.
 ### <pkg:a.3>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade a
 The following actions will be faked:
 === upgrade 1 package
@@ -67,6 +87,11 @@ depends: "a"
 ### <pkg:b.2>
 opam-version: "2.0"
 depends: "a" {= "2"}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install b
 The following actions will be faked:
 === install 1 package
@@ -113,6 +138,11 @@ flags: deprecated
 ### <pkg:b.3>
 opam-version: "2.0"
 flags: deprecated
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 Everything as up-to-date as possible
 

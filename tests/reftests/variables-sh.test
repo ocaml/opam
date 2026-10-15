@@ -11,6 +11,11 @@ setenv: [
   [ EMPTY_TRAILING_APPEND =: "" ]
   [ EMPTY_REPLACE =+= "" ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install empty-setenv
 The following actions will be performed:
 === install 1 package

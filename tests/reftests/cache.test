@@ -14,6 +14,11 @@ N0REP0
 ### OPAMYES=1
 ### <pkg:always-here.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install always-here
 The following actions will be performed:
 === install 1 package
@@ -26,6 +31,11 @@ Done.
 ### <pkg:upgrade.1>
 opam-version: "2.0"
 build: "true"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install upgrade.1
 The following actions will be performed:
 === install 1 package
@@ -37,6 +47,11 @@ Done.
 ### <pkg:upgrade.1>
 opam-version: "2.0"
 build: "false"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === recompile 1 package
@@ -57,6 +72,11 @@ The following actions will be performed:
 ### <pkg:upgrade.1>
 opam-version: "2.0"
 build: "true"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam show --raw upgrade.1
 opam-version: "2.0"
 name: "upgrade"
@@ -106,6 +126,11 @@ Done.
 ### <pkg:upgrade.1>
 opam-version: "2.0"
 install: "true"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install upgrade
 The following actions will be performed:
 === install 1 package
@@ -127,6 +152,11 @@ version: "1"
 ### <pkg:upgrade.1>
 opam-version: "2.0"
 install: "false"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install upgrade | grep -v import
 The following actions will be performed:
 === recompile 1 package
@@ -159,6 +189,11 @@ No cache
 ### <pkg:upgrade.1>
 opam-version: "2.0"
 remove: "false"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install upgrade
 The following actions will be performed:
 === install 1 package
@@ -193,6 +228,11 @@ No cache
 ### ::: Remove on reinstall
 ### <pkg:upgrade.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install upgrade
 The following actions will be performed:
 === install 1 package
@@ -213,6 +253,11 @@ version: "1"
 ### <pkg:upgrade.1>
 opam-version: "2.0"
 remove: "false"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
 The following actions will be performed:
 === recompile 1 package
@@ -237,6 +282,11 @@ name: "always-here"
 version: "1"
 ### <pkg:upgrade.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade | grep -v "   #" | '^\[WARNING] package uninstall script failed at .*' -> '[WARNING] package uninstall script failed'
 The following actions will be performed:
 === recompile 1 package
@@ -269,6 +319,10 @@ The following actions will be performed:
 Done.
 ### <pkg:upgrade.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install upgrade
 The following actions will be performed:
 === install 1 package
@@ -289,6 +343,11 @@ version: "1"
 ### <pkg:upgrade.1>
 opam-version: "2.0"
 url { src:"/inexistent/path" }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install upgrade | '"C:/' -> '"/' | ' C:/' -> ' /'
 The following actions will be performed:
 === recompile 1 package
@@ -321,6 +380,11 @@ version: "1"
 ### opam switch create safe-cache --empty
 ### <pkg:im-here.1>
 opam-version:"2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install im-here
 The following actions will be performed:
 === install 1 package

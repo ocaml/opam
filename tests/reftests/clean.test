@@ -10,6 +10,11 @@ install: [
   [ "mkdir" "%{lib}%/things/" ]
   [ "cp" "second" "%{lib}%/things/second" ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMPRECISETRACKING=1 OPAMYES=1
 ### opam switch create clean --empty
 ### opam install things
