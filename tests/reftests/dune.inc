@@ -1470,6 +1470,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list-coinstallable.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-list-columns)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff list-columns.test list-columns.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-list-columns)))
+
+(rule
+ (targets list-columns.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:list-columns.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-list-large-dependencies)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) )))
  (action
