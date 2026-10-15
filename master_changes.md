@@ -38,7 +38,7 @@ users)
   * Work around bugs/quirks in Haiku's implementation of termios [#7138 @kit-ty-kate]
 
 ## Switch
-  * Create `share_dir` when a switch is created. [#7205 @mtelvers]
+  * Create `share_dir` and `etc_dir` when a switch is created. [#7205 @mtelvers]
 
 ## Config
 
