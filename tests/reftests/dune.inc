@@ -1680,6 +1680,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opam-repo-ci.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-opamfile-deprecated-fields)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff opamfile-deprecated-fields.test opamfile-deprecated-fields.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-opamfile-deprecated-fields)))
+
+(rule
+ (targets opamfile-deprecated-fields.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opamfile-deprecated-fields.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-opamroot-versions)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
