@@ -872,9 +872,6 @@ let conflicts_with st subset =
             (OpamFormula.verifies backwards_conflicts) subset
        with Not_found -> false))
 
-let remove_conflicts st subset pkgs =
-  pkgs -- conflicts_with st subset pkgs
-
 let get_conflicts_t env packages opams_map =
   let conflict_classes =
     OpamPackage.Map.fold (fun nv opam acc ->
@@ -1213,16 +1210,6 @@ let unavailable_reason_raw st (name, vformula) =
            (if OpamPackage.Set.cardinal candidates = 1 then ": "
             else ", e.g. ")
            (OpamFilter.to_string avail))
-    else if OpamPackage.has_name
-        (Lazy.force st.available_packages --
-         remove_conflicts st st.compiler_packages
-           (Lazy.force st.available_packages))
-        name then
-      `ConflictsBase
-    else if OpamPackage.has_name st.compiler_packages name &&
-            not OpamStateConfig.(!r.unlock_base) then
-      `ConflictsInvariant
-        (OpamFileTools.dep_formula_to_string st.switch_invariant)
     else
     match depexts_unavailable st (OpamPackage.Set.max_elt candidates) with
     | Some missing ->

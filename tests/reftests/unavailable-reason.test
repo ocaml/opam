@@ -1,0 +1,162 @@
+N0REP0
+### OPAMYES=1
+### :I: Conflicts with base
+### : This used to reported as an unavailable reason because the solver received
+### : a universe filtered from some packages.
+### <pkg:compiler.1>
+opam-version: "2.0"
+flags: compiler
+### <pkg:confl-with-compiler.1>
+opam-version: "2.0"
+conflicts: ["compiler" {= "1"}]
+### <pkg:a.1>
+opam-version: "2.0"
+depends: ["confl-with-compiler" {= "1"}]
+### opam switch create confl-with-compiler compiler.1
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["compiler" {= "1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed compiler.1
+Done.
+### opam install a.1
+[ERROR] Package conflict!
+  * Incompatible packages:
+    - (invariant) -> compiler
+    - a -> confl-with-compiler
+    You can temporarily relax the switch invariant with `--update-invariant'
+
+No solution found, exiting
+# Return code 20 #
+### :II: Conflicts with invariant
+### : This used to reported as an unavailable reason because the solver received
+### : a universe filtered from some packages.
+### <pkg:compiler.2>
+opam-version: "2.0"
+flags: compiler
+### <pkg:a.1>
+opam-version: "2.0"
+depends: ["compiler" {= "2"}]
+### opam switch create confl-with-invariant compiler.1
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["compiler" {= "1"}]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed compiler.1
+Done.
+### opam install a.1
+[ERROR] Package conflict!
+  * No agreement on the version of compiler:
+    - (invariant) -> compiler < 2
+    - a -> compiler >= 2
+    You can temporarily relax the switch invariant with `--update-invariant'
+
+No solution found, exiting
+# Return code 20 #
+### :III: Unknown package
+### <pkg:a.1>
+opam-version: "2.0"
+depends: ["b" {= "2"}]
+### opam install a.1
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a -> b
+    unknown package
+
+No solution found, exiting
+# Return code 20 #
+### :IV: Unknown version
+### <pkg:b.1>
+opam-version: "2.0"
+### opam install a.1
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a -> b >= 2
+    no matching version
+
+No solution found, exiting
+# Return code 20 #
+### :V: Pinned
+### <pkg:b.2>
+opam-version: "2.0"
+### opam pin add b 1
+b is now pinned to version 1
+
+The following actions will be performed:
+=== install 1 package
+  - install b 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
+Done.
+### opam install a.1
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a -> b >= 2
+    not available because the package is pinned to version 1
+
+No solution found, exiting
+# Return code 20 #
+### :V:tear down:
+### opam pin remove b
+Ok, b is no longer pinned locally (version 1)
+Nothing to do.
+### opam remove b
+The following actions will be performed:
+=== remove 1 package
+  - remove b 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   b.1
+Done.
+### :VI: Unavailable
+### <pkg:b.2>
+opam-version: "2.0"
+available: false
+### opam install a.1
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a -> b >= 2
+    unmet availability conditions: 'false'
+
+No solution found, exiting
+# Return code 20 #
+### :VII: Missing depext
+### <pkg:b.2>
+opam-version: "2.0"
+depexts: ["paf"]
+### OPAMNODEPEXTS=0
+### opam-set-os dummy-success:0:0
+Added '[os-family "dummy-success:0:0" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install a.1
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a -> b >= 2
+    depends on the unavailable system package 'paf'. Use `--no-depexts' to attempt installation anyway, or it is possible that a depext package name in the opam file is incorrect.
+
+No solution found, exiting
+# Return code 20 #
+### :VIII: No Definition
+### : This one is particularly tricky to trigger, not sure what kind of real life
+### : scenario it corresponds to.
+### <pkg:a.1>
+opam-version: "2.0"
+depends: ["b"]
+### opam pin add --no-action b 1
+b is now pinned to version 1
+### rm -r REPO/packages/b/b.1
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install a
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a -> b
+    no package definition found
+
+No solution found, exiting
+# Return code 20 #

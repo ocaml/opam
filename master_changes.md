@@ -119,6 +119,7 @@ users)
   * Bump opam-root-version from 2.6\~alpha to 2.6 [#7151 @kit-ty-kate @rjbou]
   * Deduplicate some depexts related code in `OpamSwitchState` [#7157 @kit-ty-kate]
   * Avoid redundant comparison during `opam switch list-available` [#7200 @kit-ty-kate]
+  * Remove dead code in `OpamSwitchState.unavailable_reason_raw` [#7206 @NathanReb]
 
 ## Internal: Unix
   * Add explicit support for Haiku [#7138 @kit-ty-kate]
@@ -133,6 +134,7 @@ users)
 ### Tests
   * Add an exhaustive test showing the behaviour of the `conflicts` field [#7127 @kit-ty-kate]
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
+  * Add reftests for unavailability reason on unsolvable request in `unavailable-reason.test` [#7206 @NathanReb]
 
 ### Engine
 
