@@ -119,6 +119,7 @@ users)
   * Bump opam-root-version from 2.6\~alpha to 2.6 [#7151 @kit-ty-kate @rjbou]
   * Deduplicate some depexts related code in `OpamSwitchState` [#7157 @kit-ty-kate]
   * Avoid redundant comparison during `opam switch list-available` [#7200 @kit-ty-kate]
+  * Remove dead code in `OpamSwitchState.unavailable_reason_raw` [#7206 @NathanReb]
 
 ## Internal: Unix
   * Add explicit support for Haiku [#7138 @kit-ty-kate]
