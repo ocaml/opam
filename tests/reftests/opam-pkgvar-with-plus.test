@@ -31,6 +31,11 @@ depopts: [
   "pkg1"
   "pkg2"
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create test --empty
 ### opam install --dry-run --verbose var-with-plus | sed-cmd echo | grep -v Processing
 The following actions will be simulated:

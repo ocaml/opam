@@ -124,6 +124,11 @@ extra-source "file" {
   src: "https://example.com/some/fake/extra/source"
   checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --fake test.1
 The following actions will be faked:
 === install 1 package
@@ -158,6 +163,11 @@ extra-source "file" {
   src: "https://example.com/some/fake/extra/source"
   checksum: "md5=6aef5a674977ebc5ec853dc4f85cf2bb"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --fake test.1
 The following actions will be faked:
 === recompile 1 package
@@ -178,6 +188,11 @@ url {
 extra-source "file" {
   src: "https://example.com/some/fake/extra/source"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --fake test.1
 The following actions will be faked:
 === recompile 1 package
@@ -220,6 +235,11 @@ opam-version: "2.0"
 depends: [ "a" { = "2" } ]
 ### <pkg:c.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create orig b.1
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -361,6 +381,11 @@ opam-version: "2.0"
 depends: "baz"
 ### <pkg:baz.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create for-deps foo.1
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>

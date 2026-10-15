@@ -20,6 +20,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:pkg-2.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch list-available
 # Listing available compilers from repositories: default
 # Name # Version # Synopsis
@@ -45,6 +50,11 @@ flags: [compiler deprecated]
 ### <pkg:comp-b.4>
 opam-version: "2.0"
 flags: compiler
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch list-available
 # Listing available compilers from repositories: default
 # Name # Version # Synopsis
@@ -124,6 +134,11 @@ flags: compiler
 ### <pkg:comp_c.2>
 opam-version: "2.0"
 flags: [compiler avoid-version]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch list-available "pkg-*"
 # Listing available compilers from repositories: default
 # No matches found

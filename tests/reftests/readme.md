@@ -32,16 +32,11 @@ output...
 
 - use `### <FILENAME>` followed by the content of the file, to create a file verbatim
 - use `### <pkg:NAME.VERSION>` followed by the content of an opam file, to
-  add this package to `default` repository in `./REPO`. This will also
-  implicitly run `opam update default`. Look for files in `files/` directory
-  and add 'extra-files:' field automatically.
-
-- use `### <pkg:NAME.VERSION:FILENAME>` followed by the content of the file, to add this
-  file as a extra-file of the given package in the `default` repository, and
-  implicitly run `opam update default`. Associated opam file updated
-  automatically with that file as an
-  'extra-files:'
-
+  add this opam file to `default` repository in `./REPO/NAME/NAME.VERSION/opam`.
+- use `### <pkg:NAME.VERSION:FILENAME>` followed by the content of the file, to
+  add this file as a extra-file of the given package in the `default`
+  repository, i.e. in `./REPO/NAME/NAME.VERSION/files/FILENAME`. See
+  `update-xf` command for `extra-files:` update.
 - use `### <pin:path>` followed by the content of an opam file, to have some 
   fields automatically filled to be able to pin it without lint errors
 
@@ -81,6 +76,10 @@ output...
   * `http-server` launches a minimal http server reachable via
     `http://localhost:$HTTPSERVERPORT`, serving `$BASEDIR`. It sets
     `HTTPSERVERPORT` to the chosen port.
+  * `update-xf [REPOSITORY] [PACKAGES]+` looks up for extra-files and updates
+    the `extra-files:` field of `PACKAGES` in repository `./REPOSITORY`. If
+    `REPOSITORY` is not given, the default is `./REPO`. If no `PACKAGES` is
+    given, it will update all packages.
 
 - if you need more shell power, create a script using <FILENAME> then run it.
   Or just use `sh -c`... but beware for compatibility.

@@ -8,6 +8,11 @@ build: [ "false" ]
 ### <pkg:comp.3>
 opam-version:"2.0"
 flags: compiler
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### rm -rf $OPAMROOT
 ### opam init -na default REPO --bare --bypass-checks --no-opamrc --json=out.json
 No configuration file found, using built-in defaults.
@@ -783,6 +788,11 @@ opam-version: "2.0"
 depends: [ "a" "k" {with-test} ]
 ### <pkg:k.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam tree a b c d e f g h i j --json=out.json
 The following actions are simulated:
 === install 11 packages

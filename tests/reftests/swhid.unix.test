@@ -11,6 +11,11 @@ url {
   src: "https://ygrek.org/p/release/ocaml-snappy/ocaml-snappy-0.1.2.tar.gz"
   checksum: "md5=039a77d9ffb9b22ab845df30436390c1"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create fallback --empty
 ### opam install snappy-ok
 The following actions will be performed:
@@ -29,6 +34,11 @@ url {
   src: "https://fake.exe/url.tar.gz"
   checksum: "md5=039a77d9ffb9b22ab845df30436390c1"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam option download-command=curl
 Set to 'curl' the field download-command in global configuration
 ### opam install snappy-ko | '"/.*curl' -> '"curl' | "${OPAMVERSION}" -> "current"
@@ -57,6 +67,11 @@ url {
   checksum: "md5=039a77d9ffb9b22ab845df30436390c1"
   mirrors: "https://swhid.opam.ocaml.org/swh:1:dir:9f2be900491e1dabfc027848204ae01aa88fc71d"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam option swh-fallback=false
 No modification in global configuration
 ### opam install snappy-swhid-dir -v | '"/.*curl' -> '"curl' | "${OPAMVERSION}" -> "current"
@@ -107,6 +122,11 @@ url {
   checksum: "md5=039a77d9ffb9b22ab845df30436390c1"
   mirrors: "https://swhid.opam.ocaml.org/swh:1:dir:0000000000000000000000000000000000000000"
 }
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install snappy-swhid-ko
 The following actions will be performed:
 === install 1 package

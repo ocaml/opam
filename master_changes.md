@@ -133,8 +133,15 @@ users)
 ### Tests
   * Add an exhaustive test showing the behaviour of the `conflicts` field [#7127 @kit-ty-kate]
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
+  * Untie reftests test cases from previous tests (less inherited context) [#7207 @rjbou - fix #7133]
+  * Add a complete test for `opam list --columns` with all columns & fields [#6855 @rjbou]
 
 ### Engine
+  * No longer implicitly run `opam update default` on `<pkg:>` helper, it needs to be done explicitly in test file [#7207 @rjbou]
+  * No longer implicitly lookup for extra-files and update `extra-files:` with `<pkg:>` helper when defining an opam file [#7207 @rjbou]
+  * No longer implicitly update opam `extra-files:` with `<pkg:>` helper when defining an extra-file [#7207 @rjbou]
+  * Add `update-xf [repo] [pkg]` command to update opam `extra-files:` [#7207 @rjbou]
+  * Add optional repository argument to `<pkg:>` helper to specify a different repository [#7207 @rjbou]
 
 ## Github Actions
   * The Hygiene workflow has been upgraded to Ubuntu 26.04 [#7052 @kit-ty-kate]

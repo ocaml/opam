@@ -1,4 +1,5 @@
 N0REP0
+### OPAMYES=1
 ### <pkg:foo.1>
 opam-version: "2.0"
 install: ["touch" "%{lib}%/foo.1"]
@@ -7,7 +8,11 @@ opam-version: "2.0"
 depends: "foo" {= "1"}
 ### <pkg:baz.1>
 opam-version: "2.0"
-### OPAMYES=1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create sw --empty
 ### opam install bar
 The following actions will be performed:
@@ -22,6 +27,11 @@ Done.
 ### <pkg:foo.1>
 opam-version: "2.0"
 available: false
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall foo
 [ERROR] foo: unmet availability conditions: 'false'
 # Return code 5 #
@@ -60,6 +70,11 @@ Cleaning up switch sw
 ### : replay the same sequence but with another version of `foo` present
 ### <pkg:foo.2>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show
 The following actions would be performed:
 === upgrade 1 package
@@ -69,6 +84,11 @@ The following actions would be performed:
 ### <pkg:bar.2>
 opam-version: "2.0"
 depends: "foo" {>= "1"}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show
 The following actions would be performed:
 === upgrade 2 packages

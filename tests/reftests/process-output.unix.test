@@ -14,6 +14,11 @@ install: [
   [ "true" ]
   [ "true" "with" "option" ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create outputs --empty
 ### opam install process -vv -y | sed-cmd true
 The following actions will be performed:

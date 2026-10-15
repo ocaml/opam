@@ -1,4 +1,5 @@
 N0REP0
+### OPAMYES=1
 ### <pkg:a.1>
 opam-version: "2.0"
 ### <pkg:b.1>
@@ -9,7 +10,11 @@ opam-version: "2.0"
 depends: "b"
 ### <pkg:d.1>
 opam-version: "2.0"
-### OPAMYES=1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### # should fail with a no switch error
 ### opam tree a
 [ERROR] No switch is currently set. Please use 'opam switch' to set or install a switch
@@ -76,6 +81,11 @@ opam-version: "2.0"
 ### <pkg:c.1>
 opam-version: "2.0"
 depends: [ "b" "a" "c-build" {build} ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam tree c
 c.1
 |-- a.1
@@ -84,6 +94,11 @@ c.1
 ### <pkg:e.1>
 opam-version: "2.0"
 depends: [ "a" "d" {<"2" & with-test}  "b" {post} ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install e --with-test
 The following actions will be performed:
 === install 2 packages
@@ -125,6 +140,11 @@ depends: [ "b" {>="1" & <"3"} ]
 ### <pkg:h.1>
 opam-version: "2.0"
 depends: [ "f" "g" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install h
 The following actions will be performed:
 === install 3 packages
@@ -176,6 +196,11 @@ depends: [
     & (!with-doc  | >= "1")
   }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install i
 The following actions will be performed:
 === install 1 package
@@ -209,6 +234,11 @@ opam-version: "2.0"
 depends: [ "a" "k" {with-test} ]
 ### <pkg:k.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install j
 The following actions will be performed:
 === install 1 package
@@ -248,6 +278,11 @@ opam-version: "2.0"
 depends: [ "a" "l-dev" {dev} ]
 ### <pkg:l-dev.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pin:l/l.opam>
 opam-version: "2.0"
 depends: [ "a" "l-dev" {dev} ]
@@ -325,6 +360,11 @@ l.1
 opam-version: "2.0"
 depends: [ "j" "d" {with-doc} ]
 # j depends on k with-test
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install m k --with-doc
 The following actions will be performed:
 === install 2 packages
@@ -464,6 +504,11 @@ k.1
 ### <pkg:j.1>
 opam-version: "2.0"
 depends: "a" {  os = "inexistant"}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install a
 The following actions will be performed:
 === install 1 package
@@ -504,6 +549,11 @@ e.1
 opam-version: "2.0"
 flags: compiler
 conflicts: "a"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create h
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -529,6 +579,11 @@ depends: "a"
 ### <pkg:i.2>
 opam-version: "2.0"
 depends: "b"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create extended-inputs --empty
 ### opam tree i
 The following actions are simulated:
@@ -645,6 +700,11 @@ installed-local-core.dev
 ### : different package version :
 ### <pkg:a.2>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam tree a.2
 The following actions are simulated:
 === recompile 4 packages
@@ -656,6 +716,10 @@ The following actions are simulated:
   - upgrade   a                    1 to 2
 
 a.2
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam list a
 # Packages matching: name-match(a) & (installed | available)
 # Package # Installed # Synopsis
@@ -671,6 +735,11 @@ a.2       1
 opam-version: "2.0"
 ### <pkg:miou.0.3.0>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pin:test/opam>
 opam-version: "2.0"
 depends: ["miou"]
@@ -703,6 +772,11 @@ opam-version: "2.0"
 ### <pkg:test.1>
 opam-version: "2.0"
 depends: ["miou"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install test
 The following actions will be performed:
 === install 2 packages

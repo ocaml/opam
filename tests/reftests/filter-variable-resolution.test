@@ -9,6 +9,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:undefined-smtg.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### ::::::::::::::::::::::
 ### :I: Global variable ::
 ### ::::::::::::::::::::::
@@ -45,6 +50,12 @@ build: [
   [ "grep" "ploplop" "some-content" ]
   [ "grep" "bloblob" "some-content" ]
 ]
+### update-xf patches.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install patches -v | sed-cmd grep | unordered
 The following actions will be performed:
 === install 1 package
@@ -68,6 +79,11 @@ build: [
   [ "true" { ?smtg } ]
   [ "false" { !?smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install build -v | sed-cmd true | unordered
 The following actions will be performed:
 === install 1 package
@@ -86,6 +102,11 @@ install: [
   [ "true" { ?smtg } ]
   [ "false" { !?smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install install -v | sed-cmd true | unordered
 The following actions will be performed:
 === install 1 package
@@ -103,6 +124,11 @@ run-test: [
   [ "true" { ?smtg } ]
   [ "false" { !?smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install runtest --with-test -v | sed-cmd true | unordered
 The following actions will be performed:
 === install 1 package
@@ -121,6 +147,11 @@ remove: [
   [ "true" { ?smtg } ]
   [ "false" { !?smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install remove
 The following actions will be performed:
 === install 1 package
@@ -146,6 +177,11 @@ depends: [
  "foo" { ?smtg }
  "undefined-smtg" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install depends --show
 The following actions would be performed:
 === install 2 packages
@@ -158,6 +194,11 @@ depopts: [
  "bar" { ?smtg }
  "undefined-smtg" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install depopts
 The following actions will be performed:
 === install 1 package
@@ -191,6 +232,11 @@ conflicts: [
   "baz" { ?smtg }
   "undefined-smtg" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install conflicts
 The following actions will be performed:
 === install 1 package
@@ -216,6 +262,11 @@ messages: [
   "Hej!" { ?smtg }
   ">>smtg is undefined<<" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install msg
 The following actions will be performed:
 === install 1 package
@@ -231,6 +282,11 @@ post-messages: [
   "Bye!" { ?smtg }
   ">>smtg is undefined<<" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install post-msg
 The following actions will be performed:
 === install 1 package
@@ -246,6 +302,11 @@ Done.
 ### <pkg:avail.1>
 opam-version: "2.0"
 available: [ ?smtg ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install avail
 The following actions will be performed:
 === install 1 package
@@ -292,6 +353,11 @@ build: [
   [ "grep" "ploplop" "some-content" ]
   [ "grep" "bloblob" "some-content" ]
 ]
+### update-xf patches.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install patches -v | sed-cmd grep | unordered
 The following actions will be performed:
 === install 1 package
@@ -315,6 +381,10 @@ build: [
   [ "true" { ?smtg } ]
   [ "false" { !?smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install build -v | sed-cmd true | unordered
 The following actions will be performed:
 === install 1 package
@@ -333,6 +403,10 @@ install: [
   [ "true" { ?smtg } ]
   [ "false" { !?smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install install -v | sed-cmd true | unordered
 The following actions will be performed:
 === install 1 package
@@ -350,6 +424,10 @@ run-test: [
   [ "true" { ?smtg } ]
   [ "false" { !?smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install runtest --with-test -v | sed-cmd true | unordered
 The following actions will be performed:
 === install 1 package
@@ -368,6 +446,10 @@ remove: [
   [ "true" { ?smtg } ]
   [ "false" { !?smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install remove
 The following actions will be performed:
 === install 1 package
@@ -393,6 +475,10 @@ depends: [
  "foo" { ?smtg }
  "undefined-smtg" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install depends --show
 The following actions would be performed:
 === install 2 packages
@@ -405,6 +491,10 @@ depopts: [
  "bar" { ?smtg }
  "undefined-smtg" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install depopts
 The following actions will be performed:
 === install 1 package
@@ -438,6 +528,10 @@ conflicts: [
   "baz" { ?smtg }
   "undefined-smtg" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install conflicts
 The following actions will be performed:
 === install 1 package
@@ -463,6 +557,10 @@ messages: [
   "Hej!" { ?smtg }
   ">>smtg is undefined<<" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install msg
 The following actions will be performed:
 === install 1 package
@@ -478,6 +576,10 @@ post-messages: [
   "Bye!" { ?smtg }
   ">>smtg is undefined<<" { !?smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install post-msg
 The following actions will be performed:
 === install 1 package
@@ -493,6 +595,10 @@ Done.
 ### <pkg:avail.1>
 opam-version: "2.0"
 available: [ ?smtg ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install avail
 The following actions will be performed:
 === install 1 package
@@ -510,6 +616,12 @@ opam-version: "2.0"
 ### <pkg:v.1:v.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf v.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install v
 The following actions will be performed:
 === install 1 package
@@ -548,6 +660,12 @@ build: [
   [ "grep" "ploplop" "some-content" ]
   [ "grep" "bloblob" "some-content" ]
 ]
+### update-xf patches.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install patches -v | sed-cmd grep | unordered
 The following actions will be performed:
 === install 1 package
@@ -571,6 +689,11 @@ build: [
   [ "true" { ?v:smtg } ]
   [ "false" { !?v:smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install build -v | sed-cmd true | unordered
 The following actions will be performed:
 === install 1 package
@@ -589,6 +712,11 @@ install: [
   [ "true" { ?v:smtg } ]
   [ "false" { !?v:smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install install -v | sed-cmd true | unordered
 The following actions will be performed:
 === install 1 package
@@ -606,6 +734,11 @@ run-test: [
   [ "true" { ?v:smtg } ]
   [ "false" { !?v:smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install runtest --with-test -v | sed-cmd true | unordered
 The following actions will be performed:
 === install 1 package
@@ -624,6 +757,11 @@ remove: [
   [ "true" { ?v:smtg } ]
   [ "false" { !?v:smtg } ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install remove
 The following actions will be performed:
 === install 1 package
@@ -649,6 +787,11 @@ depends: [
  "foo" { ?v:smtg }
  "undefined-smtg" { !?v:smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install depends --show
 The following actions would be performed:
 === install 2 packages
@@ -661,6 +804,11 @@ depopts: [
  "bar" { ?v:smtg }
  "undefined-smtg" { !?v:smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install depopts
 The following actions will be performed:
 === install 1 package
@@ -694,6 +842,11 @@ conflicts: [
   "baz" { ?v:smtg }
   "undefined-smtg" { !?v:smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install conflicts
 The following actions will be performed:
 === install 1 package
@@ -719,6 +872,10 @@ messages: [
   "Hej!" { ?v:smtg }
   ">>smtg is undefined<<" { !?v:smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
 ### opam install msg
 The following actions will be performed:
 === install 1 package
@@ -734,6 +891,10 @@ post-messages: [
   "Bye!" { ?v:smtg }
   ">>smtg is undefined<<" { !?v:smtg }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
 ### opam install post-msg
 The following actions will be performed:
 === install 1 package
@@ -749,6 +910,11 @@ Done.
 ### <pkg:avail.1>
 opam-version: "2.0"
 available: [ ?v:smtg ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install avail
 [ERROR] avail: unmet availability conditions: '?v:smtg'
 # Return code 5 #
@@ -789,6 +955,12 @@ build: [
 ### <pkg:patches.1:patches.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf patches.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:1:a: first install ::::
 ### opam install patches -v | sed-cmd grep | unordered
 The following actions will be performed:
@@ -814,6 +986,12 @@ Processing  2/3: [patches: grep ploplop]
 ### :IV:1:b: reinstall ::::
 ### <pkg:patches.1>
 opam-version: "2.0"
+### update-xf patches.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install patches
 The following actions will be performed:
 === install 1 package
@@ -834,6 +1012,12 @@ build: [
   [ "grep" "ploplop" "some-content" ]
   [ "grep" "bloblob" "some-content" ]
 ]
+### update-xf patches.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall patches -v | sed-cmd grep | unordered
 The following actions will be performed:
 === recompile 1 package
@@ -865,6 +1049,12 @@ build: [
 ### <pkg:build.1:build.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf build.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:2:a: first install ::::
 ### opam install build -v | sed-cmd false | unordered
 The following actions will be performed:
@@ -889,6 +1079,12 @@ Processing  2/3: [build: false]
 ### :IV:2:b: reinstall ::::
 ### <pkg:build.1>
 opam-version: "2.0"
+### update-xf build.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install build
 The following actions will be performed:
 === install 1 package
@@ -905,6 +1101,12 @@ build: [
   [ "true" { ?_:smtg } ]
   [ "false" { !?_:smtg } ]
 ]
+### update-xf build.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall build -v | sed-cmd false | unordered
 The following actions will be performed:
 === recompile 1 package
@@ -935,6 +1137,12 @@ install: [
 ### <pkg:install.1:install.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf install.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:3:a: first install ::::
 ### opam install install -v | sed-cmd false | unordered
 The following actions will be performed:
@@ -959,6 +1167,12 @@ Processing  3/3: [install: false]
 ### :IV:3:b: reinstall ::::
 ### <pkg:install.1>
 opam-version: "2.0"
+### update-xf install.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install install
 The following actions will be performed:
 === install 1 package
@@ -975,6 +1189,12 @@ install: [
   [ "true" { ?_:smtg } ]
   [ "false" { !?_:smtg } ]
 ]
+### update-xf install.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall install -v | sed-cmd false | grep -v import | unordered
 The following actions will be performed:
 === recompile 1 package
@@ -1012,6 +1232,12 @@ run-test: [
 ### <pkg:runtest.1:runtest.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf runtest.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:4:a: first install ::::
 ### opam install runtest --with-test -v | sed-cmd false | unordered
 The following actions will be performed:
@@ -1036,6 +1262,12 @@ Processing  2/3: [runtest: false]
 ### :IV:4:b: reinstall ::::
 ### <pkg:runtest.1>
 opam-version: "2.0"
+### update-xf runtest.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install runtest
 The following actions will be performed:
 === install 1 package
@@ -1052,6 +1284,12 @@ run-test: [
   [ "true" { ?_:smtg } ]
   [ "false" { !?_:smtg } ]
 ]
+### update-xf runtest.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install runtest --with-test -v | sed-cmd false | unordered
 The following actions will be performed:
 === recompile 1 package
@@ -1082,6 +1320,12 @@ remove: [
 ### <pkg:remove.1:remove.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf remove.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:5:a: first install ::::
 ### opam install remove
 The following actions will be performed:
@@ -1132,6 +1376,12 @@ depends: [
 ### <pkg:depends.1:depends.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf depends.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:6:a: first install ::::
 ### opam install depends --show
 The following actions would be performed:
@@ -1141,6 +1391,12 @@ The following actions would be performed:
 ### :IV:6:b: reinstall ::::
 ### <pkg:depends.1>
 opam-version: "2.0"
+### update-xf depends.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install depends
 The following actions will be performed:
 === install 1 package
@@ -1157,6 +1413,12 @@ depends: [
  "foo" { ?_:smtg }
  "undefined-smtg" { !?_:smtg }
 ]
+### update-xf depends.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall depends --show
 The following actions would be performed:
 === recompile 1 package
@@ -1181,6 +1443,12 @@ depopts: [
 ### <pkg:depopts.1:depopts.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf depopts.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:7:a: first install ::::
 ### opam install depopts
 The following actions will be performed:
@@ -1220,6 +1488,12 @@ conflicts: [
 ### <pkg:conflicts.1:conflicts.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf conflicts.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:8:a: first install ::::
 ### ::: conflicts before conflicted
 ### opam install conflicts
@@ -1268,6 +1542,12 @@ The following actions would be performed:
 ### :IV:8:b: reinstall ::::
 ### <pkg:conflicts.1>
 opam-version: "2.0"
+### update-xf conflicts.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install conflicts
 The following actions will be performed:
 === install 1 package
@@ -1284,6 +1564,12 @@ conflicts: [
   "baz" { ?_:smtg }
   "undefined-smtg" { !?_:smtg }
 ]
+### update-xf conflicts.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall conflicts --show
 The following actions would be performed:
 === recompile 1 package
@@ -1308,6 +1594,12 @@ messages: [
 ### <pkg:msg.1:msg.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf msg.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:9:a: first install ::::
 ### opam install msg
 The following actions will be performed:
@@ -1320,6 +1612,11 @@ Done.
 ### :IV:9:b: reinstall ::::
 ### <pkg:msg.1>
 opam-version: "2.0"
+### update-xf msg.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
 ### opam reinstall msg
 The following actions will be performed:
 === recompile 1 package
@@ -1337,6 +1634,11 @@ messages: [
   "Hej!" { ?_:smtg }
   ">>smtg is undefined<<" { !?_:smtg }
 ]
+### update-xf msg.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
 ### opam reinstall msg
 The following actions will be performed:
 === recompile 1 package
@@ -1356,6 +1658,12 @@ post-messages: [
 ### <pkg:post-msg.1:post-msg.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf post-msg.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:10:a: first install ::::
 ### opam install post-msg
 The following actions will be performed:
@@ -1371,6 +1679,11 @@ Done.
 ### :IV:10:b: reinstall ::::
 ### <pkg:post-msg.1>
 opam-version: "2.0"
+### update-xf post-msg.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
 ### opam reinstall post-msg
 The following actions will be performed:
 === recompile 1 package
@@ -1388,6 +1701,11 @@ post-messages: [
   "Bye!" { ?_:smtg }
   ">>smtg is undefined<<" { !?_:smtg }
 ]
+### update-xf post-msg.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
 ### opam reinstall post-msg
 The following actions will be performed:
 === recompile 1 package
@@ -1407,6 +1725,12 @@ available: [ ?_:smtg ]
 ### <pkg:avail.1:avail.config>
 opam-version: "2.0"
 variables { smtg: "something" }
+### update-xf avail.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:11:a: first install ::::
 ### opam install avail
 [ERROR] avail: unmet availability conditions: '?_:smtg'
@@ -1414,6 +1738,12 @@ variables { smtg: "something" }
 ### :IV:11:b: reinstall ::::
 ### <pkg:avail.1>
 opam-version: "2.0"
+### update-xf avail.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install avail
 The following actions will be performed:
 === install 1 package
@@ -1427,6 +1757,12 @@ something
 ### <pkg:avail.1>
 opam-version: "2.0"
 available: [ ?_:smtg ]
+### update-xf avail.1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam reinstall avail
 [ERROR] avail: unmet availability conditions: '?_:smtg'
 # Return code 5 #

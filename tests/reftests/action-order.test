@@ -15,6 +15,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:remove.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create order --empty
 ### opam install reinstall upgrade.1 downgrade remove
 The following actions will be performed:
@@ -34,6 +39,11 @@ Done.
 opam-version: "2.0"
 depends: ["install" "upgrade" {= "2"} "downgrade" {= "1"}]
 conflicts: "remove"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --show install reinstall
 [NOTE] Package reinstall is already installed (current version is 1).
 The following actions would be performed:
