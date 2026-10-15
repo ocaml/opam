@@ -44,6 +44,7 @@ users)
 ## Pin
 
 ## List
+  * No longer parse `opam list --columns=depexts(tags)", allowing query of extra-sources secions fields [#7209 @rjbou]
 
 ## Show
 

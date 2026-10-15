@@ -1311,25 +1311,19 @@ extra-source "two" {
 Now run 'opam upgrade' to apply any package updates.
 ### :II:35:a: Field 'extrafiles.src'
 ### opam list -A from-repo --columns=name,extra-source(one).src:
-opam: option '--columns': Invalid columns specification:
-      'name,extra-source(one).src:'.
-Usage: opam list [--check] [--no-depexts] [--silent] [OPTION]… [PATTERNS]…
-Try 'opam list --help' or 'opam --help' for more information.
-# Return code 2 #
+# Packages matching: name-match(from-repo) & any
+# Name    # Extra-source(one).src
+from-repo "https://an.archi.ve/archive.tgz"
 ### :II:35:b: Field 'extrafiles.checksum'
 ### opam list -A from-repo --columns=name,extra-source(one).checksum:
-opam: option '--columns': Invalid columns specification:
-      'name,extra-source(one).checksum:'.
-Usage: opam list [--check] [--no-depexts] [--silent] [OPTION]… [PATTERNS]…
-Try 'opam list --help' or 'opam --help' for more information.
-# Return code 2 #
+# Packages matching: name-match(from-repo) & any
+# Name    # Extra-source(one).checksum
+from-repo "md5=00000000000000000000000000000000"
 ### :II:35:c: several extra-files
 ### opam list -A from-repo --columns=name,depexts:,extra-source(one).src:,extra-source(two).src:
-opam: option '--columns': Invalid columns specification:
-      'name,depexts:,extra-source(one).src:,extra-source(two).src:'.
-Usage: opam list [--check] [--no-depexts] [--silent] [OPTION]… [PATTERNS]…
-Try 'opam list --help' or 'opam --help' for more information.
-# Return code 2 #
+# Packages matching: name-match(from-repo) & any
+# Name    # Depexts # Extra-source(one).src           # Extra-source(two).src
+from-repo           "https://an.archi.ve/archive.tgz" "https://an.other-archi.ve/archive.tgz"
 ### :::::::::::::::
 ### :: Deprecated fields
 ### :::::::::::::::
