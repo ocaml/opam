@@ -182,7 +182,7 @@ b is now pinned to version 1
 [ERROR] Package conflict!
   * Missing dependency:
     - a -> b
-
+    depends on the unavailable system package 'missing-depext'. Use `--no-depexts' to attempt installation anyway, or it is possible that a depext package name in the opam file is incorrect.
 
 No solution found, exiting
 # Return code 20 #
