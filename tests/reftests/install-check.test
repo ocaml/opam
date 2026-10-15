@@ -18,6 +18,11 @@ depends: "qux"
 opam-version: "2.0"
 ### <pkg:garply.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create check --empty
 ### opam install --check baz
 Missing dependencies:
@@ -79,6 +84,11 @@ depends: [
   "foo"
   ("grault" | "garply")
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --check top
 Missing dependencies:
 foo garply grault
@@ -142,6 +152,11 @@ depends: [
 ]
 ### <pkg:a.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --check test.1
 Missing dependencies:
 a does-no-exists
@@ -164,6 +179,11 @@ opam-version: "2.0"
 depends: [
   "a" {= "2"}
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --check test.2
 Missing dependencies:
 a
@@ -181,6 +201,11 @@ depends: [
 ]
 ### <pkg:b.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --fake a.3
 The following actions will be faked:
 === install 1 package
@@ -197,6 +222,11 @@ opam-version: "2.0"
 depends: [
   "b" {> "1"}
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --check test.3
 Missing dependencies:
 b
@@ -228,6 +258,11 @@ depends: [
   "ocaml"
   "dune"
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --check some-ocaml-pkg
 Missing dependencies:
 dune ocaml
@@ -274,6 +309,11 @@ opam-version: "2.0"
 depends: [
   "does-not-exist"
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install --check unknown-dep.1
 Missing dependencies:
 does-not-exist

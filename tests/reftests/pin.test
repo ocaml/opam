@@ -980,12 +980,21 @@ EOF
 ### sh add-pin-depends.sh
 ### <pkg:dep2.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pin:dep2/dep2.opam>
 opam-version: "2.0"
 ### <pin:dep3/dep3.opam>
 opam-version: "2.0"
 ### <pin:other/other.opam>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam pin ./dep1
 [NOTE] Package dep1 does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by dep1.dev:
@@ -1059,6 +1068,11 @@ Done.
 ### <pkg:simcomp.1>
 opam-version: "2.0"
 flags: compiler
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create simulate-pin simcomp
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -1079,6 +1093,11 @@ depends: "deps-sim" { = "1" }
 opam-version: "2.0"
 ### <pkg:deps-sim.2>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install ./sim --deps-only
 [ERROR] Package conflict!
   * Incompatible packages:
@@ -1096,6 +1115,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:dependency.3>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### mkdir pin-change
 ### git -C pin-change init -q --initial-branch=master
 ### git -C pin-change config core.autocrlf false
@@ -1181,6 +1205,11 @@ pin-change.dev  (uninstalled)  git  git+file://${BASEDIR}/pin-change#master  (at
 ### :C:f:1: Common case
 ### <pkg:dep-over.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pin:over/over.opam>
 opam-version: "2.0"
 depends: "dep-over"
@@ -1222,6 +1251,11 @@ opam-version: "2.0"
 ### <pin:over-locked/over-locked.opam>
 opam-version: "2.0"
 depends: "dep-over-locked"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install ./over-locked dep-over-locked.1
 [NOTE] Package over-locked does not exist in opam repositories registered in the current switch.
 over-locked is now pinned to file://${BASEDIR}/over-locked (version dev)
@@ -1296,6 +1330,11 @@ opam-version: "2.0"
 ### <pin:over-subpath/inner/over-subpath.opam>
 opam-version: "2.0"
 depends: "dep-over-subpath"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam pin ./over-subpath --subpath inner
 [NOTE] Package over-subpath does not exist in opam repositories registered in the current switch.
 over-subpath is now subpath-pinned to directory /inner in file://${BASEDIR}/over-subpath (version dev)
@@ -1336,6 +1375,11 @@ depends: "dep-over-epr"
 x-env-path-rewrite: [
   [ SOME_ENV ":" "target" ]
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam pin ./over-epr
 [NOTE] Package over-epr does not exist in opam repositories registered in the current switch.
 over-epr is now pinned to file://${BASEDIR}/over-epr (version dev)
@@ -1445,6 +1489,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:dep-reinst.3>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :C:h:1: Update opam file and install again
 ### # simulated pin test in simulated-pin:I:
 ### opam switch create reinst-1 --empty
@@ -1495,6 +1544,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:dep-test-reinst.2>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :C:i:1: Update opam file and install again
 ### opam switch create reinst-wt-1 --empty
 ### <pin:reinst/reinst.opam>
@@ -1545,6 +1599,11 @@ install: [
 The original one
 ### <tide/file2>
 The edited one
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :C:j:1: with pin edit
 ### opam switch create pin-edit --empty
 ### opam pin ./tide
@@ -1654,6 +1713,11 @@ opam-version: "2.0"
 ### <pkg:pkg.1>
 opam-version: "2.0"
 depends: "dep"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install pkg dep.1
 The following actions will be performed:
 === install 2 packages

@@ -30,7 +30,7 @@ url {
 }
 EOF
 ### sh mkurl.sh foo 1
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO

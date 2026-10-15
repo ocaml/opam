@@ -1,11 +1,16 @@
 N0REP0
-### <pkg:a.1>
-opam-version: "2.0"
-depexts: "depext-1"
 ### OPAMNODEPEXTS=0 OPAMCONFIRMLEVEL=unsafe-yes
 ### opam-set-os dummy-failure
 Added '[os-family "dummy-failure" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam switch create test --empty
+### <pkg:a.1>
+opam-version: "2.0"
+depexts: "depext-1"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :I: Erroneous package manager install is not blocking :
 ### opam install a | sed-cmd false
 The following actions will be performed:
@@ -43,6 +48,11 @@ Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-var
 ### <pkg:foo.1>
 opam-version: "2.0"
 depexts: ["depext-1" "depext-ok" "depext-unav" "depext-avail"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install foo | sed-cmd echo
 The following actions will be performed:
 === install 1 package
@@ -334,6 +344,11 @@ opam-version: "2.0"
 depexts: ["depext-ok" "depext-avail"]
 ### opam-set-os dummy-success:depext-ok:depext-avail
 Added '[os-family "dummy-success:depext-ok:depext-avail" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :III:1:a: normal install
 ### opam install bar | sed-cmd echo
 The following actions will be performed:
@@ -401,6 +416,11 @@ Done.
 ### <pkg:baz.1>
 opam-version: "2.0"
 depexts: ["depext-ok" "depext-unav"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam-set-os dummy-success:depext-ok:0
 Added '[os-family "dummy-success:depext-ok:0" "Set through 'opam var'"]' to field global-variables in global configuration
 ### :III:2:a: normal install
@@ -439,6 +459,11 @@ Reverted field depext-bypass in switch bypass
 ### <pkg:qux.1>
 opam-version: "2.0"
 depexts: ["depext-ok"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam-set-os dummy-success
 Added '[os-family "dummy-success" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam install qux | sed-cmd echo
@@ -508,6 +533,11 @@ Done.
 ### <pkg:comp.1>
 opam-version: "2.0"
 flags: compiler
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMVAR_os_family=unknown opam init ./REPO --root ./OPAM2 --no-setup --bypass-checks --compiler comp -y
 No configuration file found, using built-in defaults.
 
@@ -531,6 +561,13 @@ Done.
 Added '[os-family "unknown" "Set through 'opam var'"]' to field global-variables in global configuration
 ### <pkg:unkn.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+Now run 'opam upgrade' to apply any package updates.
 ### opam install unkn.1
 [NOTE] External dependency handling not supported for OS family 'unknown'.
        You can disable this check using 'opam option --global depext=false'
@@ -544,6 +581,13 @@ Done.
 ### <pkg:unkn.2>
 opam-version: "2.0"
 depexts: [ "depext" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+Now run 'opam upgrade' to apply any package updates.
 ### opam install unkn.2
 [NOTE] External dependency handling not supported for OS family 'unknown'.
        You can disable this check using 'opam option --global depext=false'
@@ -646,6 +690,13 @@ Set to 'true' the field depext in global configuration
 ### <pkg:test-poll-pkg.1>
 opam-version: "2.0"
 depexts: ["poll-sys-dep"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+[NOTE] External dependency handling not supported for OS family 'unknown'.
+       You can disable this check using 'opam option --global depext=false'
+Now run 'opam upgrade' to apply any package updates.
 ### opam-set-os dummy-success::poll-sys-dep
 Added '[os-family "dummy-success::poll-sys-dep" "Set through 'opam var'"]' to field global-variables in global configuration
 ### OPAMDEBUGSECTIONS=XSYS OPAMDEBUG=-3 OPAMDRYRUN=1
@@ -715,6 +766,10 @@ Done.
 ### <pkg:test-poll-pkg.1>
 opam-version: "2.0"
 depexts: ["poll-sys-dep"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### <pin:test-poll-pkg-pin/test-poll-pkg-pin.opam>
 opam-version: "2.0"
 depexts: ["poll-sys-dep"]

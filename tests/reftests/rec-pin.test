@@ -1227,7 +1227,7 @@ The following actions will be performed:
 -> installed subpath-vpin.2
 Done.
 ### :5: subpath use error
-### <REPO/packages/subpath-err/subpath-err.1/opam>
+### <pkg:subpath-err.1>
 opam-version: "2.0"
 url {
   src: "file:///a/path/subpath-err"

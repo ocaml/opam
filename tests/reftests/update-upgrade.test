@@ -1,11 +1,11 @@
 N0REP0
-### <REPO/packages/d-foo/d-foo.1/opam>
+### <pkg:d-foo.1>
 opam-version: "2.0"
-### <REPO/packages/d-bar/d-bar.1/opam>
+### <pkg:d-bar.1>
 opam-version: "2.0"
-### <REPO/packages/d-baz/d-baz.1/opam>
+### <pkg:d-baz.1>
 opam-version: "2.0"
-### <REPO2/packages/s-foo/s-foo.1/opam>
+### <pkg[REPO2]:s-foo.1>
 opam-version: "2.0"
 ### <REPO2/repo>
 opam-version: "2.0"
@@ -34,9 +34,9 @@ Done.
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [second] no changes from file://${BASEDIR}/REPO2
 [default] no changes from file://${BASEDIR}/REPO
-### <REPO/packages/d-foo/d-foo.2/opam>
+### <pkg:d-foo.2>
 opam-version: "2.0"
-### <REPO2/packages/s-foo/s-foo.2/opam>
+### <pkg[REPO2]:s-foo.2>
 opam-version: "2.0"
 ### opam update
 
@@ -56,9 +56,9 @@ The following actions will be performed:
 -> installed d-foo.2
 -> installed s-foo.2
 Done.
-### <REPO/packages/d-foo/d-foo.3/opam>
+### <pkg:d-foo.3>
 opam-version: "2.0"
-### <REPO2/packages/s-foo/s-foo.3/opam>
+### <pkg[REPO2]:s-foo.3>
 opam-version: "2.0"
 ### opam update default
 
@@ -74,9 +74,9 @@ The following actions will be performed:
 -> removed   d-foo.2
 -> installed d-foo.3
 Done.
-### <REPO/packages/d-foo/d-foo.4/opam>
+### <pkg:d-foo.4>
 opam-version: "2.0"
-### <REPO2/packages/s-foo/s-foo.4/opam>
+### <pkg[REPO2]:s-foo.4>
 opam-version: "2.0"
 ### opam update s-foo
 [WARNING] The following are not development packages (no dynamic or version controlled upstream) and can't be updated individually: s-foo.2
@@ -96,7 +96,7 @@ The following actions will be performed:
 -> removed   s-foo.2
 -> installed s-foo.4
 Done.
-### <REPO/packages/d-foo/d-foo.5/opam>
+### <pkg:d-foo.5>
 opam-version: "2.0"
 ### opam update --check
 
@@ -109,7 +109,7 @@ opam-version: "2.0"
 [second] no changes from file://${BASEDIR}/REPO2
 [default] no changes from file://${BASEDIR}/REPO
 # Return code 1 #
-### <REPO2/packages/s-foo/s-foo.5/opam>
+### <pkg[REPO2]:s-foo.5>
 opam-version: "2.0"
 ### opam update --upgrade
 
@@ -128,7 +128,7 @@ The following actions will be performed:
 -> installed d-foo.5
 -> installed s-foo.5
 Done.
-### <REPO2/packages/s-foo/s-foo.6/opam>
+### <pkg[REPO2]:s-foo.6>
 opam-version: "2.0"
 ### opam update --upgrade --check
 
@@ -377,7 +377,7 @@ Done.
 ### <pin:quux/quux.opam>
 opam-version: "2.0"
 version: "dev4"
-### <REPO/packages/d-foo/d-foo.6/opam>
+### <pkg:d-foo.6>
 opam-version: "2.0"
 ### opam update --repositories
 
@@ -394,7 +394,7 @@ The following actions will be performed:
 -> removed   d-foo.5
 -> installed d-foo.6
 Done.
-### <REPO2/packages/s-foo/s-foo.7/opam>
+### <pkg[REPO2]:s-foo.7>
 opam-version: "2.0"
 ### <pin:quux/quux.opam>
 opam-version: "2.0"

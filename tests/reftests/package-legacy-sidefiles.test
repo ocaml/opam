@@ -18,9 +18,9 @@ EOF
 ### :I:1: format upgrade a package in a repository
 ### <REPO/repo>
 opam-version: "1.2"
-### <REPO/packages/ocaml/ocaml.1/opam>
+### <pkg:ocaml.1>
 opam-version: "2.0"
-### <REPO/packages/pkg/pkg.1/opam>
+### <pkg:pkg.1>
 opam-version: "1.2"
 build: [
   ["test" "!" "-f" "standalone-file"]
@@ -29,9 +29,9 @@ build: [
 ]
 ### <REPO/packages/pkg/pkg.1/standalone-file>
 Some random unused file
-### <REPO/packages/pkg/pkg.1/files/some-extrafile>
+### <pkg:pkg.1:some-extrafile>
 here is an extra file
-### <REPO/packages/pkg/pkg.1/files/dir/some-other-extrafile>
+### <pkg:pkg.1:dir/some-other-extrafile>
 here is another extra file
 ### <REPO/packages/pkg/pkg.1/descr>
 Some descr
@@ -250,7 +250,7 @@ build: [
 ### rm -rf REPO
 ### <REPO/repo>
 opam-version: "2.0"
-### <REPO/packages/pkg/pkg.1/opam>
+### <pkg:pkg.1>
 opam-version: "2.0"
 build: [
   ["test" "!" "-f" "standalone-file"]
@@ -259,9 +259,9 @@ build: [
 ]
 ### <REPO/packages/pkg/pkg.1/standalone-file>
 Some random unused file
-### <REPO/packages/pkg/pkg.1/files/some-extrafile>
+### <pkg:pkg.1:some-extrafile>
 here is an extra file
-### <REPO/packages/pkg/pkg.1/files/dir/some-other-extrafile>
+### <pkg:pkg.1:dir/some-other-extrafile>
 here is another extra file
 ### <REPO/packages/pkg/pkg.1/descr>
 Some descr

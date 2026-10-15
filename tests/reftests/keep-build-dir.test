@@ -9,6 +9,11 @@ N0REP0
 ### <pkg:pkg-no-keep-build-dir.1>
 opam-version: "2.0"
 build: "true"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install pkg-no-keep-build-dir
 The following actions will be performed:
 === install 1 package
@@ -78,6 +83,7 @@ EOF
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pin:dev-no-keep-build-dir/dev-no-keep-build-dir.opam>
 opam-version: "2.0"
 build: "true"
@@ -189,6 +195,11 @@ Done.
 ### <pkg:pkg-keep-build-dir.1>
 opam-version: "2.0"
 build: "true"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install pkg-keep-build-dir
 The following actions will be performed:
 === install 1 package
@@ -262,6 +273,7 @@ EOF
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pin:dev-keep-build-dir/dev-keep-build-dir.opam>
 opam-version: "2.0"
 build: "true"
@@ -377,6 +389,10 @@ local-git-keep-build-dir.1
 ### <pkg:pkg-keep-build-dir.1>
 opam-version: "2.0"
 build: "true"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install pkg-keep-build-dir --keep-build-dir
 The following actions will be performed:
 === install 1 package
@@ -449,7 +465,7 @@ EOF
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
+[default] no changes from file://${BASEDIR}/REPO
 ### <pin:dev-keep-build-dir/dev-keep-build-dir.opam>
 opam-version: "2.0"
 build: "true"
@@ -481,8 +497,7 @@ EOF
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
+[default] no changes from file://${BASEDIR}/REPO
 ### <pin:vpin-keep-build-dir/vpin-keep-build-dir.opam>
 opam-version: "2.0"
 build: "true"
@@ -515,8 +530,7 @@ EOF
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install local-src-keep-build-dir --keep-build-dir
 The following actions will be performed:
 === install 1 package
@@ -546,8 +560,7 @@ EOF
 ### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
-[default] synchronised from file://${BASEDIR}/REPO
-Now run 'opam upgrade' to apply any package updates.
+[default] no changes from file://${BASEDIR}/REPO
 ### opam install local-git-keep-build-dir --keep-build-dir
 The following actions will be performed:
 === install 1 package

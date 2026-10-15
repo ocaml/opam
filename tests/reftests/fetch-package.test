@@ -55,7 +55,7 @@ url {
 dev-repo: "git+file://${basedir}/a-dev"
 EOF
 ### sh mkurl.sh
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO

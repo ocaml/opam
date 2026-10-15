@@ -33,7 +33,8 @@ and some content
 ### <some/directory/file>
 and still some content
 ### :II:2: package file in repo, and repository update
-### opam switch create reftests --empty
+### rm -rf REPO/packages
+### opam switch create reftests-pkg --empty
 ### opam list --all
 # Packages matching: any
 # No matches found
@@ -43,9 +44,12 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### opam list --all
 # Packages matching: any
-# Name # Installed # Synopsis
-foo    --
+# No matches found
 ### :II:3: extrafile file in repo
+### rm -rf REPO/packages
+### opam switch create reftests-pkg-xfile --empty
+### <pkg:foo.1>
+opam-version: "2.0"
 ### <pkg:foo.1:xfile>
 i'm with package foo
 ### cat REPO/packages/foo/foo.1/files/xfile
@@ -91,56 +95,90 @@ license: "MIT"
 dev-repo: "hg+https://pkg@op.am"
 bug-reports: "https://nobug"
 build: ["false"]
-### :II:6: extra-files management
-### :II:6:a: opamfile then extrafile
+### :II:6: extra-files management, update-xf command
+### :II:6:a: full args
 ### <pkg:bar.1>
 opam-version: "2.0"
 ### cat REPO/packages/bar/bar.1/opam
 opam-version: "2.0"
 ### <pkg:bar.1:xf-bar>
 I'm an extra file
+### update-xf REPO bar.1
 ### cat REPO/packages/bar/bar.1/opam
 opam-version: "2.0"
 extra-files: ["xf-bar" "md5=dbaf1ea561686374373dc7d154f3a0ff"]
-### :II:6:b: extrafile then opamfile
+### :II:6:b: default repo
 ### <pkg:baz.1:xf-baz>
 I'm an another extra file
 ### test -f REPO/packages/baz/baz.1/opam
 # Return code 1 #
 ### <pkg:baz.1>
 opam-version: "2.0"
+### update-xf baz.1
 ### cat REPO/packages/baz/baz.1/opam
 opam-version: "2.0"
 extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
-### :II:6:c: redefinie opamfile
-### <pkg:qux.1>
+### :II:6:c: more packages
+### <pkg:qux-1.1>
 opam-version: "2.0"
-### cat REPO/packages/qux/qux.1/opam
+### cat REPO/packages/qux-1/qux-1.1/opam
 opam-version: "2.0"
-### <pkg:qux.1:xf-qux>
+### <pkg:qux-1.1:xf-qux>
 I'm yet another extra file
-### cat REPO/packages/qux/qux.1/opam
+### <pkg:qux-2.1>
+opam-version: "2.0"
+### update-xf REPO qux-1.1 qux-2.1
+### cat REPO/packages/qux-1/qux-1.1/opam
 opam-version: "2.0"
 extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
-### <pkg:qux.1>
+### cat REPO/packages/qux-2/qux-2.1/opam
 opam-version: "2.0"
-### cat REPO/packages/qux/qux.1/opam
+### :II:6:c: another repo
+### <pkg[ANOTHER]:qux-3.1>
+opam-version: "2.0"
+### <pkg[ANOTHER]:qux-3.1:xf-qux>
+I'm yet another extra file
+### update-xf ANOTHER qux-3.1
+### :II!6:d: no option, default repo and all packages
+### <pkg:qux-4.1>
+opam-version: "2.0"
+### <pkg:qux-4.1:xf-qux>
+I'm yet another extra file
+### <pkg:qux-5.1>
+opam-version: "2.0"
+### <pkg:qux-5.1:xf-qux>
+I'm yet another extra file
+### <pkg:qux-1.1:xf-qux-1>
+I'm not the same
+### update-xf
+### cat REPO/packages/qux-1/qux-1.1/opam
+opam-version: "2.0"
+extra-files: [
+  ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
+  ["xf-qux-1" "md5=c65e936711d8fbedf5eae6937fcfbdda"]
+]
+### cat REPO/packages/qux-4/qux-4.1/opam
 opam-version: "2.0"
 extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
-### :II:6:d: redefinie extrafile
+### cat REPO/packages/qux-5/qux-5.1/opam
+opam-version: "2.0"
+extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
+### :II:6:e: redefinie extrafile
 ### <pkg:corge.1:xf-corge>
 I'm an yet another another extra file
 ### <pkg:corge.1>
 opam-version: "2.0"
+### update-xf REPO corge.1
 ### cat REPO/packages/corge/corge.1/opam
 opam-version: "2.0"
 extra-files: ["xf-corge" "md5=d419630b165e4f2a1ad55d26c9b19e40"]
 ### <pkg:corge.1:xf-corge>
 I'm the final one
+### update-xf REPO corge.1
 ### cat REPO/packages/corge/corge.1/opam
 opam-version: "2.0"
 extra-files: ["xf-corge" "md5=71e14bfb95ec10cb60f3b6cafd908a08"]
-### :II:6:e: opamfile contains already extrafile defined
+### :II:6:f: opamfile contains already extrafile defined
 ### <pkg:grault.1>
 opam-version: "2.0"
 extra-files: [ "file" "md5=00000000000000000000000000000000" ]
@@ -149,6 +187,7 @@ opam-version: "2.0"
 extra-files: [ "file" "md5=00000000000000000000000000000000" ]
 ### <pkg:grault.1:xf-grault>
 It was not the final in the end
+### update-xf REPO grault.1
 ### cat REPO/packages/grault/grault.1/opam
 opam-version: "2.0"
 extra-files: [
@@ -157,6 +196,7 @@ extra-files: [
 ]
 ### <pkg:grault.1:xf-grault2>
 I'm the real final!
+### update-xf REPO grault.1
 ### cat REPO/packages/grault/grault.1/opam
 opam-version: "2.0"
 extra-files: [
@@ -164,6 +204,15 @@ extra-files: [
   ["xf-grault" "md5=9fd8d4d58e5fd899478b03ab24a11d00"]
   ["xf-grault2" "md5=5c1ff559ac6490338d362978c058f44a"]
 ]
+### :II:7:g: Inexistant / errors
+### update-xf REPO not-found.1
+# Return Error updating extra files: opam file not found for package not-found.1: REPO/packages/not-found/not-found.1/opam
+### update-xf NOTFOUND foo.1
+# Return Error updating extra files: Repository ./NOTFOUND not found
+### <YETANOTHER/garbage>
+nope
+### update-xf YETANOTHER
+# Return Error updating extra files: Empty packages list, malformed repository ./YETANOTHER?
 ### ###################
 ### :III: Environment variables
 ### ###################
@@ -824,12 +873,18 @@ install:
   [
     [ "true" ]
   ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam-cat pkg.opam
 build: ["false"]
 install: [["true"]]
 opam-version: "2.0"
 ### :V:2: json-cat
-### opam switch create empty --empty --json=opam.json
+### rm -rf REPO/packages
+### opam switch create json-cat --empty --json=opam.json
 ### json-cat opam.json
 {
   "opam-version": "currentv",
@@ -837,11 +892,13 @@ opam-version: "2.0"
     "${OPAM}",
     "switch",
     "create",
-    "empty",
+    "json-cat",
     "--empty",
     "--json=opam.json"
   ]
 }
+### <pkg:foo.1>
+opam-version: "2.0"
 ### opam install foo --json=opam.json
 The following actions will be performed:
 === install 1 package
@@ -859,7 +916,7 @@ Done.
     "foo",
     "--json=opam.json"
   ],
-  "switch": "empty",
+  "switch": "json-cat",
   "request": {
     "action": "install",
     "install": [
@@ -904,13 +961,29 @@ Done.
   ]
 }
 ### :V:3: Cache cat
+### rm -rf REPO/packages
+### opam switch create cache-cat --empty
+### <pkg:foo.1>
+opam-version: "2.0"
+synopsis: "syn-foo"
+### <pkg:bar.1>
+opam-version: "2.0"
+synopsis: "syn-bar"
+### <pkg:baz.1>
+opam-version: "2.0"
+synopsis: "syn-baz"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <OPER/repo>
 opam-version: "2.0"
-### <OPER/packages/foo/foo.2/opam>
+### <pkg[OPER]:foo.2>
 opam-version: "2.0"
-### <OPER/packages/un/un.2/opam>
+### <pkg[OPER]:un.2>
 opam-version: "2.0"
-### <OPER/packages/deux/deux.2/opam>
+### <pkg[OPER]:deux.2>
 opam-version: "2.0"
 ### opam switch create cache --empty
 ### opam repository add oper ./OPER
@@ -952,12 +1025,12 @@ version: "2"
 opam-version: "2.0"
 name: "baz"
 version: "1"
-extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+synopsis: "syn-baz"
 => bar.1 <=
 opam-version: "2.0"
 name: "bar"
 version: "1"
-extra-files: ["xf-bar" "md5=dbaf1ea561686374373dc7d154f3a0ff"]
+synopsis: "syn-bar"
 ### opam-cache installed cache foo
 => foo.2 <=
 opam-version: "2.0"
@@ -995,40 +1068,21 @@ version: "2"
 opam-version: "2.0"
 name: "deux"
 version: "2"
-=> default:qux.1 <=
-opam-version: "2.0"
-name: "qux"
-version: "1"
-extra-files: ["xf-qux" "md5=ccacf3e9d1e3f473e093042aa309e9da"]
-=> default:grault.1 <=
-opam-version: "2.0"
-name: "grault"
-version: "1"
-extra-files: [
-  ["file" "md5=00000000000000000000000000000000"]
-  ["xf-grault" "md5=9fd8d4d58e5fd899478b03ab24a11d00"]
-  ["xf-grault2" "md5=5c1ff559ac6490338d362978c058f44a"]
-]
 => default:foo.1 <=
 opam-version: "2.0"
 name: "foo"
 version: "1"
-extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
-=> default:corge.1 <=
-opam-version: "2.0"
-name: "corge"
-version: "1"
-extra-files: ["xf-corge" "md5=71e14bfb95ec10cb60f3b6cafd908a08"]
+synopsis: "syn-foo"
 => default:baz.1 <=
 opam-version: "2.0"
 name: "baz"
 version: "1"
-extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+synopsis: "syn-baz"
 => default:bar.1 <=
 opam-version: "2.0"
 name: "bar"
 version: "1"
-extra-files: ["xf-bar" "md5=dbaf1ea561686374373dc7d154f3a0ff"]
+synopsis: "syn-bar"
 ### opam-cache repo foo
 => oper:foo.2 <=
 opam-version: "2.0"
@@ -1038,7 +1092,7 @@ version: "2"
 opam-version: "2.0"
 name: "foo"
 version: "1"
-extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
+synopsis: "syn-foo"
 ### opam-cache repo un baz
 => oper:un.2 <=
 opam-version: "2.0"
@@ -1048,7 +1102,7 @@ version: "2"
 opam-version: "2.0"
 name: "baz"
 version: "1"
-extra-files: ["xf-baz" "md5=9ac116bceba2bdf45065df19d26a6b64"]
+synopsis: "syn-baz"
 ### opam-cache repo inexistent
 Empty selection
 ### :V:3:c: Invalid installed cache
@@ -1066,7 +1120,7 @@ Done.
 opam-version: "2.0"
 name: "foo"
 version: "1"
-extra-files: ["xfile" "md5=f343d90d29f2632b7e5fcf8ee249d1b5"]
+synopsis: "syn-foo"
 ### sh -c 'echo XXX > OPAM/cache4/.opam-switch/packages/cache'
 ### opam-cache installed cache4
 Invalid cache
@@ -1088,7 +1142,7 @@ REFTEST_UNSET=test
 REFTEST_UNSET=
 ### unset REFTEST_UNSET
 ### env | grep REFTEST_UNSET
-### :V:4: opam-set-os
+### :V:5: opam-set-os
 ### opam var --global os-distribution=void
 Added '[os-distribution "void" "Set through 'opam var'"]' to field global-variables in global configuration
 ### opam var --global os-family=void

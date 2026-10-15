@@ -52,6 +52,8 @@ extra-source "x-source.$nv" {
 EOF
 done
 ### sh add-url.sh main-repo.1 main-repo.2
+### # we need to create it as it can be already create or not deepending on the platforms
+### mkdir -p OPAM/log
 ### opam update | unordered
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 SYSTEM                          LOCK ${BASEDIR}/OPAM/lock (none => read)
@@ -86,6 +88,9 @@ SYSTEM                          copy ${BASEDIR}/REPO/packages/main-repo/main-rep
 SYSTEM                          copy ${BASEDIR}/REPO/repo -> ${BASEDIR}/OPAM/repo/default.new/repo
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/repo
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/repo
+SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default/packages/main-repo
+SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2
+SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/opam
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default.new/packages/main-repo/main-repo.2/files/x-file.main-repo.2
@@ -102,20 +107,16 @@ SYSTEM                          rm ${BASEDIR}/OPAM/repo/default.new/repo
 [default] synchronised from file://${BASEDIR}/REPO
 SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
 SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
 SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
 SYSTEM                          write ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
 SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files
 SYSTEM                          mkdir ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files
 FILE(repo)                      Read ${BASEDIR}/OPAM/repo/default/repo in 0.000s
 Processing: [default: loading data]
 SYSTEM                          scan files recursively (except_vcs: false) in ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/opam
 FILE(opam)                      Read packages/main-repo/main-repo.2/opam (out of ${BASEDIR}/OPAM/repo/default) in 0.000s
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.2/files/x-file.main-repo.2
 SYSTEM                          scan files recursively (except_vcs: false) in ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files
-SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/opam
 FILE(opam)                      Read packages/main-repo/main-repo.1/opam (out of ${BASEDIR}/OPAM/repo/default) in 0.000s
 SYSTEM                          read ${BASEDIR}/OPAM/repo/default/packages/main-repo/main-repo.1/files/x-file.main-repo.1
 FILE(repos-config)              Wrote ${BASEDIR}/OPAM/repo/repos-config atomically in 0.000s

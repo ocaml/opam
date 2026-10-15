@@ -240,7 +240,7 @@ for p in `ls REPO/packages/*/*/opam`; do
   sed -i.bak "s/archive-sha256/$ARCHIVE_SHA256/" $p
 done
 ### sh update-hashes.sh
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO

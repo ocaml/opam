@@ -115,6 +115,11 @@ Done.
 ### : inplace & repo package
 ### <pkg:qux.u>
 opam-version:"2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam remove ongoing
 The following actions will be performed:
 === remove 1 package

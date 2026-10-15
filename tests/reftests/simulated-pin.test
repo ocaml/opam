@@ -11,6 +11,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:dep-reinst.3>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :I:1: Update opam file and install again
 ### opam switch create reinst-1 --empty
 ### <pin:reinst/reinst.opam>
@@ -103,6 +108,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:dep-test-reinst.3>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :II:1: Update opam file and install again
 ### opam switch create reinst-wt-1 --empty
 ### <pin:reinst/reinst.opam>
@@ -184,6 +194,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:fetch-dep.2>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### <pin:fetch/fetch.opam>
 opam-version: "2.0"
 version: "1"

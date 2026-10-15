@@ -21,6 +21,11 @@ opam-version: "2.0"
 depends: "c"
 build:   [ "test" "-d" c:lib ]
 remove:  [ "test" "-d" c:lib ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create system --empty
 ### : 1/ Install d
 ### opam install d
@@ -152,6 +157,11 @@ depends: "a"
 build:   [ "test" "-d" a:lib ]
 remove:  [ "test" "-d" a:lib ]
 install: [ "mkdir" _:lib ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install d
 The following actions will be performed:
 === install 3 packages
@@ -214,6 +224,11 @@ depends: "b"
 build: [ "test" "-d" b:lib ]
 remove: [ "test" "-d" b:lib ]
 install: [ "mkdir" _:lib ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade c
 The following actions will be performed:
 === recompile 1 package
@@ -290,6 +305,11 @@ Nothing to do.
 ### <pkg:a.2>
 opam-version: "2.0"
 install: [ "mkdir" _:lib ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show
 The following actions would be performed:
 === recompile 3 packages

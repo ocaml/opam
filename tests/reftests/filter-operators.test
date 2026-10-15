@@ -19,6 +19,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:error.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create operators --empty
 ### OPAMSHOW=1
 ### :: undefined ::
@@ -28,6 +33,11 @@ depends: [
   "ok"
   "a" { ?defin }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install undefined
 The following actions would be performed:
 === install 2 packages
@@ -45,6 +55,11 @@ depends: [
   "ok"
   "a" { ?(defined & undefined) }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMVAR_defined=something opam install undefined
 The following actions would be performed:
 === install 2 packages
@@ -62,6 +77,11 @@ depends: [
   "a" { undefined | true }
   "b" { undefined & false }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install undefined
 The following actions would be performed:
 === install 3 packages
@@ -72,6 +92,11 @@ The following actions would be performed:
 ### <pkg:not.1>
 opam-version: "2.0"
 depends: [ "ok" "a" { !bvar } ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMVAR_bvar=true opam install not
 The following actions would be performed:
 === install 2 packages
@@ -92,6 +117,11 @@ depends: [
   "ko" { true & false }
   "error" { false & false }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install and
 The following actions would be performed:
 === install 3 packages
@@ -107,6 +137,11 @@ depends: [
   "b" { true | false }
   "ko" { false | false }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install or
 The following actions would be performed:
 === install 4 packages
@@ -126,6 +161,11 @@ depends: [
   "c" { true = true }
   "ko-bool" { true = false }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install eq
 The following actions would be performed:
 === install 5 packages
@@ -146,6 +186,11 @@ depends: [
   "c" { true != false }
   "ko-bool" { true != true }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install neq
 The following actions would be performed:
 === install 5 packages
@@ -166,6 +211,11 @@ depends: [
   "c" { false < true }
   "ko-bool" { true < false }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install lt
 The following actions would be performed:
 === install 5 packages
@@ -186,6 +236,11 @@ depends: [
   "c" { false <= true & false <= false }
   "ko-bool" { true <= false }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install lteq
 The following actions would be performed:
 === install 5 packages
@@ -206,6 +261,11 @@ depends: [
   "c" { true > false }
   "ko-bool" { false > true }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install gt
 The following actions would be performed:
 === install 5 packages
@@ -226,6 +286,11 @@ depends: [
   "c" { true >= false & true >= true }
   "ko-bool" { false >= true }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install gteq
 The following actions would be performed:
 === install 5 packages
@@ -242,6 +307,11 @@ depends: [
   "a" { false & false | true }
   "ko" { false & (false | true) }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install comb
 The following actions would be performed:
 === install 3 packages
@@ -255,6 +325,11 @@ messages: [
   "this is a package"
   "with all defined variables" { a+b:var }
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMVAR_a_var=true OPAMVAR_b_var=false opam install pkg-comb
 The following actions would be performed:
 === install 1 package
@@ -273,6 +348,11 @@ opam-version:"2.0"
 post-messages: [
   "packages a & b are %{a+b:enable}%"
 ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### OPAMSHOW=0
 ### opam install pkg-comb-enable
 The following actions will be performed:
