@@ -150,6 +150,8 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/bin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/sbin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/doc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/man
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/share
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/etc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/install
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/.opam-switch/config
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-repo/man/man1
@@ -592,6 +594,8 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/sbin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/doc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/man
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/share
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/etc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/install
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/.opam-switch/config
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-path-pin-all/man/man1
@@ -1295,6 +1299,8 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/b
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/sbin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/doc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/man
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/share
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/etc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/install
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/.opam-switch/config
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-git-pin-all/man/man1
@@ -2056,6 +2062,8 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/b
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/sbin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/doc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/man
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/share
+SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/etc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/install
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/.opam-switch/config
 SYSTEM                          mkdir ${BASEDIR}/OPAM/install-from-version-pin/man/man1
@@ -2434,6 +2442,8 @@ SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/bin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/sbin
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/doc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/man
+SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/share
+SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/etc
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/.opam-switch/install
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/.opam-switch/config
 SYSTEM                          mkdir ${BASEDIR}/OPAM/package-switch/man/man1
@@ -2537,6 +2547,8 @@ SYSTEM                          mkdir ${BASEDIR}/void/_opam/bin
 SYSTEM                          mkdir ${BASEDIR}/void/_opam/sbin
 SYSTEM                          mkdir ${BASEDIR}/void/_opam/doc
 SYSTEM                          mkdir ${BASEDIR}/void/_opam/man
+SYSTEM                          mkdir ${BASEDIR}/void/_opam/share
+SYSTEM                          mkdir ${BASEDIR}/void/_opam/etc
 SYSTEM                          mkdir ${BASEDIR}/void/_opam/.opam-switch/install
 SYSTEM                          mkdir ${BASEDIR}/void/_opam/.opam-switch/config
 SYSTEM                          mkdir ${BASEDIR}/void/_opam/man/man1
@@ -2591,6 +2603,8 @@ SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/bin
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/sbin
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/doc
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/man
+SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/share
+SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/etc
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/.opam-switch/install
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/.opam-switch/config
 SYSTEM                          mkdir ${BASEDIR}/main-ppin/_opam/man/man1
