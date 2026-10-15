@@ -32,7 +32,7 @@ file="REPO/packages/$n/$n.$v/opam"
 basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
 echo "url { local: \"file://${basedir}/waste\" }" >> "$file"
 ### sh mkurl.sh
-### opam update
+### opam update default
 
 <><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
 [default] synchronised from file://${BASEDIR}/REPO

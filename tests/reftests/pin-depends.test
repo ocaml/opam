@@ -121,6 +121,11 @@ pin-dep.dev                rsync  file://${BASEDIR}/pin-dep
 ### :I:2: Dependent package present in repo
 ### <pkg:pin-dep.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create pin-deps-w-repo-empty --empty
 ### :I:2:a: Show
 ### opam install --show ./local-with-pin-deps
@@ -346,6 +351,11 @@ Switch ${BASEDIR}/local-with-pin-deps and all its packages will be wiped. Are yo
 ### :II:2: Dependency known
 ### <pkg:pin-dep.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :II:2:a: Answer no to pin depends install deps only
 ### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps --deps-only
 The following additional pinnings are required by local-with-pin-deps.dev:

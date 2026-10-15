@@ -54,6 +54,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:repeats.2>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install pkg
 The following actions will be performed:
 === install 2 packages
@@ -177,6 +182,11 @@ conflicts: [
 ]
 ### <pkg:dep-impossible.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install impossible
 [ERROR] Package conflict!
   * Incompatible packages:
@@ -196,6 +206,11 @@ conflicts: [
 opam-version: "2.0"
 ### <pkg:conj-conflict2.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install conjunction conj-conflict1 conj-conflict2
 [ERROR] In the opam file for conjunction.1 from repository default:
           - At packages/conjunction/conjunction.1/opam:2:0-4:1::
@@ -223,6 +238,11 @@ conflicts: [
 opam-version: "2.0"
 ### <pkg:disj-conflict2.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install disjunction disj-conflict1
 [ERROR] Package conflict!
   * Incompatible packages:

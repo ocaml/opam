@@ -1,4 +1,5 @@
 N0REP0
+### OPAMYES=1
 ### :I: OpamSwitchState.universe takes a requested argument. requested is a set
 ### : of packages. For historical reasons, it used to build a potentially larger
 ### : set of packages when preparing the solver universe to determine where to
@@ -20,7 +21,11 @@ depends: [ "depa" ]
 ### <pkg:foo.2>
 opam-version: "2.0"
 depends: [ "depb" ]
-### OPAMYES=1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create bar --empty
 ### : We install foo.1 which logically requires depa.1 to be installed
 ### opam install foo.1
@@ -37,6 +42,11 @@ Done.
 ### <pkg:depa.1>
 opam-version: "2.0"
 build: [["echo" "depa reinstalled!"]]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### : We can see the package is now pending reinstallation
 ### opam reinstall --list-pending
 depa.1

@@ -1048,8 +1048,7 @@ let opamlist_columns =
     Re.(compile @@ seq [
         start;
         group @@ seq [
-          rep @@ diff any (set ",(");
-          opt @@ seq [char '('; rep (diff any (char ')')); char ')'];
+          rep @@ diff any (set ",");
         ];
         alt [char ','; stop];
       ])

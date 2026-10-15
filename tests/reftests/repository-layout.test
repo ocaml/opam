@@ -2521,7 +2521,7 @@ Now run 'opam upgrade' to apply any package updates.
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
 ### # unrelated new package, it is just here to highlight the unrelated update of wrong-opamf-updated
-### <REPO/packages/another-good/another-good.1/opam>
+### <pkg:another-good.1>
 opam-version: "2.0"
 ### # we add change in opam.xxx
 ### sh -c "echo >> REPO/packages/wrong-opamf-updated/wrong-opamf-updated.1/opam.xxx"

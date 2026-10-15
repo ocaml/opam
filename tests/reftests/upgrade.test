@@ -1,4 +1,5 @@
 N0REP0
+### OPAMYES=1
 ### <pkg:foo.1>
 opam-version: "2.0"
 ### <pkg:bar.1>
@@ -11,7 +12,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 ### <pkg:baz.1>
 opam-version: "2.0"
-### OPAMYES=1
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create upgrading --empty
 ### opam install foo.1 bar.1 baz | unordered
 The following actions will be performed:
@@ -395,6 +400,11 @@ flags: avoid-version
 ### <pkg:avoid-version.3>
 opam-version: "2.0"
 flags: deprecated
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install avoid-version
 The following actions will be performed:
 === install 1 package
@@ -445,6 +455,11 @@ opam-version: "2.0"
 depends: "foo"
 ### <pkg:uninstalled.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show foo
 The following actions would be performed:
 === upgrade 1 package
@@ -517,6 +532,11 @@ The following actions would be performed:
 opam-version: "2.0"
 ### <pkg:dep.2>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :a: upgrade -a local package
 ### opam switch create downgrade-all-local --empty
 ### <pin:downgrade/opam>
@@ -670,6 +690,11 @@ The following actions would be performed:
 ### <pkg:pkg.1>
 opam-version: "2.0"
 depends: "dep" {= "2"}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install pkg
 The following actions will be performed:
 === install 2 packages
@@ -683,6 +708,11 @@ Done.
 ### <pkg:pkg.1>
 opam-version: "2.0"
 depends: "dep" {= "1"}
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade --show pkg
 The following actions would be performed:
 === recompile 1 package
@@ -727,6 +757,11 @@ Done.
 ### opam switch create no-recompile --empty
 ### <pkg:ocaml.5>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### : WARN: Do NOT use "<pin:...>" for the following line
 ### : See: https://github.com/ocaml/opam-file-format/issues/63
 ### <no-recompile/opam>

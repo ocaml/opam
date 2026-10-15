@@ -1,0 +1,327 @@
+N0REP0
+### : 
+### :I: Field 'configure-style'
+### :: it's a no-op since the beginning
+### <pkg:pkg-configure-style.1>
+opam-version: "2.0"
+configure-style: "i will be ignored"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create field-configure-style --empty
+### opam install pkg-configure-style
+The following actions will be performed:
+=== install 1 package
+  - install pkg-configure-style 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg-configure-style.1
+Done.
+### :II: ocaml-version
+### opam switch create field-ocaml-version --empty
+### :II:1: not avail
+### <pkg:pkg-ocaml-version.1>
+opam-version: "2.0"
+ocaml-version: [ = "3.12.0" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install pkg-ocaml-version
+[ERROR] pkg-ocaml-version: unmet availability conditions: 'ocaml-version = "3.12.0"'
+# Return code 5 #
+### :II:2: avail
+### opam var --global ocaml-version=3.12.0
+[WARNING] You are setting a variable that has the same name as a global option.
+          Did you mean to use `opam option` instead? You can revert this variable using: 'opam var ocaml-version= --global'
+
+Added '[ocaml-version "3.12.0" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install pkg-ocaml-version
+The following actions will be performed:
+=== install 1 package
+  - install pkg-ocaml-version 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg-ocaml-version.1
+Done.
+### opam var --global ocaml-version=
+[WARNING] You are setting a variable that has the same name as a global option.
+          Did you mean to use `opam option` instead? You can revert this variable using: 'opam var ocaml-version= --global'
+
+Removed variable ocaml-version in global configuration
+### :III: Field 'os'
+### <pkg:pkg-os.1>
+opam-version: "2.0"
+# compat section
+os: "reftest-os"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create field-os --empty
+### :III:1: not avail
+### opam install pkg-os
+[ERROR] pkg-os: unmet availability conditions: 'os = "reftest-os"'
+# Return code 5 #
+### :III:2: avail
+### opam var --global os=reftest-os
+Added '[os "reftest-os" "Set through 'opam var'"]' to field global-variables in global configuration
+### opam install pkg-os
+The following actions will be performed:
+=== install 1 package
+  - install pkg-os 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed pkg-os.1
+Done.
+### opam var --global os=
+Removed variable os in global configuration
+### :IV: Field 'descr'
+### opam switch create field-descr --empty
+### :IV:1: alone
+### <pkg:pkg-descr.1>
+opam-version: "2.0"
+descr: "I'm the obsolete field"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam show pkg-descr --field synopsis,description,descr,synopsis:,decription:,descr:
+synopsis    I'm the obsolete field
+description
+descr
+synopsis:   "I'm the obsolete field"
+decription:
+descr:
+### :IV:2: with description
+### <pkg:pkg-descr.1>
+opam-version: "2.0"
+descr: "I'm the obsolete field"
+description: "I'm the legit descr field"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam show pkg-descr --field synopsis,description,descr,synopsis:,decription:,descr:
+synopsis    I'm the obsolete field
+description
+descr
+synopsis:   "I'm the obsolete field"
+decription:
+descr:
+### :IV:3: with synopsis
+### <pkg:pkg-descr.1>
+opam-version: "2.0"
+descr: "I'm the obsolete field"
+synopsis: "I'm a synopsis"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam show pkg-descr --field synopsis,description,descr,synopsis:,decription:,descr:
+synopsis    I'm the obsolete field
+description
+descr
+synopsis:   "I'm the obsolete field"
+decription:
+descr:
+### :IV:4: with synopsis and description
+### <pkg:pkg-descr.1>
+opam-version: "2.0"
+descr: "I'm the obsolete field"
+synopsis: "I'm a synopsis"
+description: "I'm the legit descr field"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+### opam show pkg-descr --field synopsis,description,descr,synopsis:,decription:,descr:
+synopsis    I'm the obsolete field
+description
+descr
+synopsis:   "I'm the obsolete field"
+decription:
+descr:
+### :V: Field 'extra-sources'
+### opam switch create field-extra-sources --empty
+### :V:1: alone
+### <random-file>
+something here ?
+### <pkg:pkg-extra-sources.1>
+opam-version: "2.0"
+build: [ "test" "-f" "random-file" ]
+### <xs.sh>
+md5=$(openssl md5 random-file | cut -d' ' -f2)
+cat >> REPO/packages/pkg-extra-sources/pkg-extra-sources.1/opam << EOF
+extra-sources: [ "file://$BASEDIR/random-file" "md5=$md5" ]
+EOF
+### sh xs.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install pkg-extra-sources
+The following actions will be performed:
+=== install 1 package
+  - install pkg-extra-sources 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved pkg-extra-sources.1  (file://${BASEDIR}/random-file)
+-> installed pkg-extra-sources.1
+Done.
+### :V:2: with extra-sources section
+### <current-file>
+yes, there is something
+### <pkg:pkg-extra-sources-square.1>
+opam-version: "2.0"
+build: [
+  [ "test" "!" "-f" "random-file" ]
+  [ "test"  "-f" "current-file" ]
+]
+### <xs.sh>
+md5=$(openssl md5 random-file | cut -d' ' -f2)
+cat >> REPO/packages/pkg-extra-sources-square/pkg-extra-sources-square.1/opam << EOF
+extra-sources: [ "file://$BASEDIR/random-file" "md5=$md5" ]
+extra-source "current-file"  {
+  src:"file://$BASEDIR/current-file"
+  checksum: [ "md5=$md5" ]
+}
+EOF
+### sh xs.sh
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install pkg-extra-sources-square
+The following actions will be performed:
+=== install 1 package
+  - install pkg-extra-sources-square 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved pkg-extra-sources-square.1  (cached)
+-> installed pkg-extra-sources-square.1
+Done.
+### :VI: Field 'build-test'
+### opam switch create field-build-test --empty
+### :VI:1: alone
+### <pkg:pkg-build-test.1>
+opam-version: "2.0"
+build-test: [ "echo" "deprecated field" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install pkg-build-test -v -t | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install pkg-build-test 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [pkg-build-test: echo deprecated field]
++ echo "deprecated field" (CWD=${BASEDIR}/OPAM/field-build-test/.opam-switch/build/pkg-build-test.1)
+- deprecated field
+-> compiled  pkg-build-test.1
+-> installed pkg-build-test.1
+Done.
+### :VI:2: with runtest
+### <pkg:pkg-build-test-runtest.1>
+opam-version: "2.0"
+run-test: [ "echo" "valid field" ]
+build-test: [ "echo" "deprecated field" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install pkg-build-test-runtest -v -t | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install pkg-build-test-runtest 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [pkg-build-test-runtest: echo deprecated field]
++ echo "deprecated field" (CWD=${BASEDIR}/OPAM/field-build-test/.opam-switch/build/pkg-build-test-runtest.1)
+- deprecated field
+Processing  2/3: [pkg-build-test-runtest: echo valid field]
++ echo "valid field" (CWD=${BASEDIR}/OPAM/field-build-test/.opam-switch/build/pkg-build-test-runtest.1)
+- valid field
+-> compiled  pkg-build-test-runtest.1
+-> installed pkg-build-test-runtest.1
+Done.
+### :VI:3: with test in build
+### <pkg:pkg-build-test-build.1>
+opam-version: "2.0"
+build: [ "echo" {with-test} "valid field" {with-test} ]
+build-test: [ "echo" "deprecated field" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install pkg-build-test-build -v -t | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install pkg-build-test-build 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [pkg-build-test-build: echo valid field]
++ echo "valid field" (CWD=${BASEDIR}/OPAM/field-build-test/.opam-switch/build/pkg-build-test-build.1)
+- valid field
+Processing  2/3: [pkg-build-test-build: echo deprecated field]
++ echo "deprecated field" (CWD=${BASEDIR}/OPAM/field-build-test/.opam-switch/build/pkg-build-test-build.1)
+- deprecated field
+-> compiled  pkg-build-test-build.1
+-> installed pkg-build-test-build.1
+Done.
+### :VII: Field 'build-doc'
+### opam switch create field-build-doc --empty
+### :VII:1: alone
+### <pkg:pkg-build-doc.1>
+opam-version: "2.0"
+build-doc: [ "echo" "deprecated field" ]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install pkg-build-doc -v -dy | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install pkg-build-doc 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [pkg-build-doc: echo deprecated field]
++ echo "deprecated field" (CWD=${BASEDIR}/OPAM/field-build-doc/.opam-switch/build/pkg-build-doc.1)
+- deprecated field
+-> compiled  pkg-build-doc.1
+-> installed pkg-build-doc.1
+Done.
+### :VII:2: with doc in build
+### <pkg:pkg-build-doc-build.1>
+opam-version: "2.0"
+build: [ "echo" {with-doc} "valid field" {with-doc}]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam install pkg-build-doc-build -v -d | sed-cmd echo
+The following actions will be performed:
+=== install 1 package
+  - install pkg-build-doc-build 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Processing  2/3: [pkg-build-doc-build: echo valid field]
++ echo "valid field" (CWD=${BASEDIR}/OPAM/field-build-doc/.opam-switch/build/pkg-build-doc-build.1)
+- valid field
+-> compiled  pkg-build-doc-build.1
+-> installed pkg-build-doc-build.1
+Done.

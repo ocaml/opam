@@ -65,6 +65,11 @@ local-with-pin-deps.dev  (uninstalled)  rsync  file://${BASEDIR}/local-with-pin-
 ### :I:2: Dependent package present in repo
 ### <pkg:pin-dep.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create pin-deps-w-repo-empty-1 --empty
 ### :I:2:a: Show
 ### opam install --show ./local-with-pin-deps --ignore-pin-depends
@@ -172,6 +177,11 @@ The compiler switch ${BASEDIR}/local-with-pin-deps does not exist.
 ### :II:2: Dependency known
 ### <pkg:pin-dep.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :II:2:a: with deps-only
 ### OPAMAUTOANSWER=proceed-actions=yes opam switch create ./local-with-pin-deps --deps-only --ignore-pin-depends
 
@@ -286,6 +296,11 @@ local-with-pin-deps.dev  (uninstalled)  rsync  file://${BASEDIR}/local-with-pin-
 ### :III:2: Dependent package present in repo
 ### <pkg:pin-dep.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create pin-deps-w-repo-empty --empty
 ### :III:2:a: Show
 ### opam install --show ./local-with-pin-deps
@@ -393,6 +408,11 @@ The compiler switch ${BASEDIR}/local-with-pin-deps does not exist.
 ### :IV:2: Dependency known
 ### <pkg:pin-dep.1>
 opam-version: "2.0"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :IV:2:a: with deps-only
 ### OPAMAUTOANSWER=proceed-actions=yes opam switch create ./local-with-pin-deps --deps-only
 

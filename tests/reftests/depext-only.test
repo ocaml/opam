@@ -9,6 +9,11 @@ depexts: "sys-foo"
 ### <pkg:bar.1>
 opam-version: "2.0"
 depends: "foo"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### :I: Common usage
 ### :I:1: Direct depext
 ### opam switch create direct --empty
@@ -40,6 +45,11 @@ opam-version: "2.0"
 depends: "bar"
 depexts: "sys-baz"
 conflicts: "foo"
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam install baz --depext-only
 [ERROR] Package conflict!
   * Incompatible packages:
@@ -157,6 +167,11 @@ depexts: ["ext-already-installed-dep"]
 ### <pkg:to-reinstall.1>
 opam-version: "2.0"
 depexts: ["ext-to-reinstall-1"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
 ### opam switch create --empty depexts-only
 ### OPAMYES=1
 ### opam-set-os dummy-success
@@ -181,6 +196,10 @@ Done.
 ### <pkg:to-reinstall.1>
 opam-version: "2.0"
 depexts: ["ext-to-reinstall-2"]
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
 ### opam reinstall --list-pending
 [WARNING] Opam packages already-installed-dep.1, to-reinstall.1, to-remove.1 and to-update.1 depend on the following system packages that are no longer installed: ext-already-installed-dep ext-to-reinstall-2 ext-to-remove ext-to-update-1
 to-reinstall.1
