@@ -13,127 +13,10 @@
 
 open OpamTypes
 
-(** Client state *)
-
-(** Phantom types to indicate the locking state of a state, and allow or not
-    on-disk operations.
-
-    Note that each state load is itself locking enough to return a consistent
-    state: a read lock is only needed when the consistency of the actions depend
-    on the fact that the given state doesn't change during the run (e.g. an
-    update that depends on it). In particular, all query commands don't need a
-    read lock.
-
-    Subtyping is by guarantees given on the operations allowed, [rw] giving the
-    most and being the smallest type, so that it is safe to coerce
-    [(rw t :> ro t)].
-*)
-
-(** Phantom type for readwrite-locked state (ensures that there are no
-    concurrent reads or writes) *)
-type rw = [ `Lock_write ]
-
-(** Type for read-locked state (ensures that there are no concurrent writes) *)
-type ro = [ `Lock_read | rw ]
-
-(** Type for unlocked state (single file reads should still be ok) *)
-type unlocked = [ `Lock_none | ro ]
-
-(** The super-type for all lock types *)
-type +'a lock = [< unlocked > `Lock_write ] as 'a
-
-(** Type of global state global variables *)
-type gt_variables =
-  (variable_contents option Lazy.t * string) OpamVariable.Map.t
-
-type gt_changes = { gtc_repo: bool; gtc_switch: bool }
-
-(** Global state corresponding to an opam root and its configuration *)
-type +'lock global_state = {
-  global_lock: OpamSystem.lock;
-  (** Global config lock file *)
-
-  lock: OpamSystem.lock;
-  (** Global lock file *)
-
-  root: OpamPath.t;
-  (** The global opam root path (caution: this is stored here but some code may
-      rely on {!OpamStateConfig.root_dir} ; in other words, multiple root handling
-      isn't really supported at the moment) *)
-
-  config: OpamFile.Config.t;
-  (** The main configuration file. A note of caution: this corresponds to the
-      configuration as loaded from the file: to get the current options, which
-      may be overridden through the command-line or environment, see
-      OpamStateConfig *)
-
-  global_variables: gt_variables;
-  (** A map of variables that have been defined globally, e.g. through
-      `.opam/config`. They may need evaluation so are stored as lazy values.
-      The extra string is the supplied variable documentation *)
-
-  global_state_to_upgrade: gt_changes;
-  (** If the global config was upgraded on-the-fly, indicates if the either the repo or switch config
-    require the global config to be written (i.e. a hard upgrade to the global config) *)
-
-} constraint 'lock = 'lock lock
-
-
-(** OSes family for external dependencies system polling *)
-
-type os_dummy_test_setup = {
-  osd_install: bool;
-  osd_installed: [ `all | `none | `set of OpamSysPkg.Set.t];
-  osd_available: [ `all | `none | `set of OpamSysPkg.Set.t];
-}
-
-(* Please keep this alphabetically ordered, in the type definition, and in
-   its pattern matching *)
-type os_family =
-  | Alpine
-  | Altlinux
-  | Arch
-  | Centos
-  | Cygwin
-  | Debian
-  | Dummy of os_dummy_test_setup
-  | Freebsd
-  | Gentoo
-  | Homebrew
-  | Macports
-  | Msys2
-  | Netbsd
-  | Nix
-  | Openbsd
-  | Suse
-
-type repo_syspkgs_available = (os_family * OpamSysPkg.availability_mode) option
-
-(** State corresponding to the repo/ subdir: all available packages and
-    metadata, for each repository. *)
-type +'lock repos_state = {
-  repos_lock: OpamSystem.lock;
-
-  repos_global: unlocked global_state;
-
-  repositories: repository repository_name_map;
-  (** The list of repositories *)
-
-  repos_definitions: OpamFile.Repo.t repository_name_map;
-  (** The contents of each repo's [repo] file *)
-
-  repo_opams: OpamFile.OPAM.t package_map repository_name_map;
-  (** All opam files that can be found in the configured repositories *)
-
-  repos_syspkgs_available : repo_syspkgs_available;
-  (** All available system packages required by the repo's packages.
-      [None] when depext system is disabled or unavailable. *)
-
-} constraint 'lock = 'lock lock
-
+include module type of OpamStateTypesCommon
 
 (** State of a given switch: options, available and installed packages, etc.*)
-type +'lock switch_state = {
+type +'lock switch_state = private {
   switch_lock: OpamSystem.lock;
 
   switch_global: unlocked global_state;
@@ -211,40 +94,107 @@ type +'lock switch_state = {
      - the solver universe? *)
 } constraint 'lock = 'lock lock
 
-(** Command-line setting provenance *)
-type provenance = [ `Env          (** Environment variable *)
-                  | `Command_line (** Command line *)
-                  | `Default      (** Default value *)
-                  ]
+module Abs : sig
+  val create_switch_state :
+    switch_global:unlocked global_state ->
+    switch_repos:unlocked repos_state ->
+    switch_lock:OpamSystem.lock ->
+    switch:OpamTypes.switch ->
+    switch_invariant:OpamTypes.formula ->
+    compiler_packages:OpamTypes.package_set ->
+    switch_config:OpamFile.Switch_config.t ->
+    repos_package_index:OpamFile.OPAM.t OpamTypes.package_map ->
+    installed_opams:OpamFile.OPAM.t OpamTypes.package_map ->
+    installed:OpamTypes.package_set ->
+    pinned:OpamTypes.package_set ->
+    installed_roots:OpamTypes.package_set ->
+    opams:OpamFile.OPAM.t OpamTypes.package_map ->
+    conf_files:OpamFile.Dot_config.t OpamTypes.name_map ->
+    packages:OpamTypes.package_set ->
+    available_packages:OpamTypes.package_set Lazy.t ->
+    sys_packages:OpamTypes.sys_pkg_status OpamTypes.package_map Lazy.t ->
+    reinstall:OpamTypes.package_set Lazy.t ->
+    invalidated:OpamTypes.package_set Lazy.t ->
+    overwrote_opams:(bool * OpamFile.OPAM.t) OpamTypes.package_map ->
+    'a switch_state
 
-(** Pinned opam files informations *)
+  val with_switch_lock : 'a switch_state -> OpamSystem.lock -> 'b switch_state
 
-(**/**)
-(* Opam file to pin informations.
-   {!_topin_opamfile} and {!_topin_name_and_opamfile} are not meant to be used
-   directly ; use rather below defined types ;*)
-type 'url _topin_opamfile = {
-  pin_file: OpamFile.OPAM.t OpamFile.t;
-  pin_locked: string option;
-  pin_subpath: subpath option;
-  pin_url: 'url;
-}
-type ('name, 'url) _topin_name_and_opamfile = {
-  pin_name: 'name;
-  pin: 'url _topin_opamfile;
-}
-(**/**)
+  val add_package :
+    resolve_switch_raw:(?package:OpamPackage.Map.key ->
+                        unlocked global_state ->
+                        OpamTypes.switch ->
+                        OpamFile.Switch_config.t ->
+                        OpamFilter.env) ->
+    'a switch_state ->
+    package ->
+    OpamFile.OPAM.t ->
+    'a switch_state
 
-type name_and_file = (name, unit) _topin_name_and_opamfile
-type name_and_file_w_url = (name, url) _topin_name_and_opamfile
-type nameopt_and_file = (name option, unit) _topin_name_and_opamfile
-type nameopt_and_file_w_url = (name option, url) _topin_name_and_opamfile
+  val remove_package : 'a switch_state -> package -> 'a switch_state
 
-(* Pinned package informations *)
-type pinned_opam = {
-  pinned_name : name;
-  pinned_version : version option;
-  pinned_opam : OpamFile.OPAM.t option;
-  pinned_subpath: subpath option;
-  pinned_url: url;
-}
+  val add_pinned :
+    resolve_switch_raw:(?package:OpamPackage.Map.key ->
+                        unlocked global_state ->
+                        OpamTypes.switch ->
+                        OpamFile.Switch_config.t ->
+                        OpamFilter.env) ->
+    'a switch_state ->
+    package ->
+    OpamFile.OPAM.t ->
+    'a switch_state
+
+  val remove_pinned : 'a switch_state -> package -> 'a switch_state
+
+  val update_gt : 'a switch_state -> unlocked global_state -> 'a switch_state
+
+  val update_reinstall : 'a switch_state -> package_set Lazy.t -> 'a switch_state
+
+  val update_installed :
+    compute_invariant_packages:('a switch_state -> package_set) ->
+    ?installed:package_set ->
+    ?installed_roots:package_set ->
+    ?reinstall:package_set ->
+    ?pinned:package_set ->
+    'a switch_state ->
+    'a switch_state
+
+  val update_installed_only : 'a switch_state -> package_set -> 'a switch_state
+
+  val update_reinstall_only : 'a switch_state -> package_set Lazy.t -> 'a switch_state
+
+  val update_installed_plus_conf_files : 'a switch_state -> package_set -> 'a switch_state
+
+  val update_installed_roots : 'a switch_state -> package_set -> 'a switch_state
+
+  val update_conf_files : 'a switch_state -> OpamFile.Dot_config.t name_map -> 'a switch_state
+
+  val update_config : OpamFile.Switch_config.t -> 'a switch_state -> 'a switch_state
+
+  val update_invariant_and_config : 'a switch_state -> OpamFile.Switch_config.t -> 'a switch_state
+
+  val update_invariant : 'a switch_state -> OpamFormula.t -> 'a switch_state
+
+  val update_available : 'a switch_state -> package_set Lazy.t -> 'a switch_state
+
+  val update_overwrote : 'a switch_state -> (bool * OpamFile.OPAM.t) package_map -> 'a switch_state
+
+  val update_compilers : 'a switch_state -> package_set -> 'a switch_state
+
+  val update_sys_pkgs : 'a switch_state -> sys_pkg_status package_map Lazy.t -> 'a switch_state
+
+  val update_name_and_available : 'a switch_state -> switch -> package_set Lazy.t -> 'a switch_state
+
+  val import :
+    'a switch_state ->
+    available_packages:OpamTypes.package_set Lazy.t ->
+    packages:OpamTypes.package_set ->
+    compiler_packages:OpamTypes.package_set ->
+    pinned:OpamTypes.package_set ->
+    opams:OpamFile.OPAM.t OpamTypes.package_map ->
+    'a switch_state
+
+  val pin_overwrotes : 'a switch_state -> 'a switch_state
+
+  val empty_installed : 'a switch_state -> 'a switch_state
+end

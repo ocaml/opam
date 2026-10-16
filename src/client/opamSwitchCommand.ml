@@ -185,11 +185,10 @@ let remove gt ?(confirm = true) switch =
   else gt
 
 let set_invariant_raw st invariant =
-  let switch_config = {st.switch_config with invariant = Some invariant} in
-  let st = {st with switch_invariant = invariant; switch_config } in
+  let st = OpamStateTypes.Abs.update_invariant st invariant in
   if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
     OpamSwitchAction.install_switch_config st.switch_global.root st.switch
-      switch_config;
+      st.switch_config;
   st
 
 let install_compiler
@@ -255,17 +254,18 @@ let install_compiler
       if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
         OpamSwitchAction.install_switch_config t.switch_global.root t.switch
           switch_config;
-      { t with switch_config }
+      OpamStateTypes.Abs.update_config switch_config t
     else t
   in
   let t =
     let base_comp =
       OpamSwitchState.compute_invariant_packages
-        { t with installed = t.installed
-                             -- (OpamSolver.removed_packages solution)
-                             ++ (OpamSolver.new_packages solution) }
+        (OpamStateTypes.Abs.update_installed_only t
+           (t.installed
+            -- (OpamSolver.removed_packages solution)
+            ++ (OpamSolver.new_packages solution)))
     in
-    { t with compiler_packages = base_comp }
+    OpamStateTypes.Abs.update_compilers t base_comp
   in
   let skip =
     if deps_only then
@@ -318,13 +318,16 @@ let create
       let switch_config =
         OpamSwitchAction.gen_switch_config gt.root ?repos switch ~invariant
       in
-      let st = { st with switch_invariant = invariant; switch_config } in
+      let st = OpamStateTypes.Abs.update_invariant_and_config st switch_config in
       let available_packages =
         lazy (OpamSwitchState.compute_available_packages gt switch switch_config
                 ~pinned:OpamPackage.Set.empty
                 ~opams:st.opams)
       in
-      gt, { st with switch; available_packages }
+      let st =
+        OpamStateTypes.Abs.update_name_and_available st switch available_packages
+      in
+      (gt, st)
   in
   match post st with
   | ret, st ->
@@ -412,7 +415,7 @@ let import_t ?ask ?(deps_only=false) importfile t =
   let import_opams = importfile.OpamFile.SwitchExport.overlays in
 
   (* Check that pinned packages need reinstall *)
-  let to_reinstall =
+  let to_reinstall = lazy (
     OpamPackage.Name.Map.fold (fun name imported reinst ->
         try
           let pkg =
@@ -424,12 +427,9 @@ let import_t ?ask ?(deps_only=false) importfile t =
             reinst
           else OpamPackage.Set.add pkg reinst
         with Not_found -> reinst)
-      import_opams OpamPackage.Set.empty
-  in
-  let t =
-    { t with reinstall =
-               lazy OpamPackage.Set.Op.(Lazy.force t.reinstall ++ to_reinstall) }
-  in
+      import_opams (Lazy.force t.reinstall)
+  ) in
+  let t = OpamStateTypes.Abs.update_reinstall_only t to_reinstall in
 
   let opams =
     OpamPackage.Name.Map.fold (fun name opam opams ->
@@ -468,12 +468,12 @@ let import_t ?ask ?(deps_only=false) importfile t =
   in
 
   let t =
-    { t with
-      available_packages = lazy available;
-      packages;
-      compiler_packages;
-      pinned;
-      opams; }
+    OpamStateTypes.Abs.import t
+      ~available_packages:(Lazy.from_val available)
+      ~packages
+      ~compiler_packages
+      ~pinned
+      ~opams
   in
 
   let unavailable_version, unavailable =
@@ -675,12 +675,7 @@ let reinstall init_st =
   List.iter OpamFilename.remove (OpamFilename.files switch_root);
   OpamFilename.cleandir (OpamPath.Switch.config_dir gt.root switch);
   OpamFilename.cleandir (OpamPath.Switch.installed_opams gt.root switch);
-  let st =
-    { init_st with
-      installed = OpamPackage.Set.empty;
-      installed_roots = OpamPackage.Set.empty;
-      reinstall = lazy OpamPackage.Set.empty; }
-  in
+  let st = OpamStateTypes.Abs.empty_installed init_st in
   import_t { OpamFile.SwitchExport.
              selections = OpamSwitchState.selections init_st;
              extra_files = OpamHash.Map.empty;
