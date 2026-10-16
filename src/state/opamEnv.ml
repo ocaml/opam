@@ -1080,6 +1080,10 @@ let if_interactive_script shell t e =
     |  None -> ""
     | Some e -> Printf.sprintf "else\n  %s" e
   in
+  let ielse_case else_opt = match else_opt with
+    |  None -> ""
+    | Some e -> Printf.sprintf "  *)\n  %s  ;;\n" e
+  in
   let ielse_cmd else_opt = match else_opt with
     |  None -> ""
     | Some e -> Printf.sprintf ") else (\n  %s" e
@@ -1090,7 +1094,7 @@ let if_interactive_script shell t e =
   in
   match shell with
   | SH_sh| SH_bash ->
-    Printf.sprintf "if [ -t 0 ]; then\n  %s%sfi\n" t @@ ielse e
+    Printf.sprintf "case $- in\n  *i*)\n  %s  ;;\n%sesac\n" t @@ ielse_case e
   | SH_zsh ->
     Printf.sprintf "if [[ -o interactive ]]; then\n  %s%sfi\n" t @@ ielse e
   | SH_csh ->
