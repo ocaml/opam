@@ -1,0 +1,28 @@
+N0REP0
+### OPAMYES=1
+### opam switch create dry-pin --empty
+### <pin:dry-pin/dry-pin.opam>
+opam-version: "2.0"
+### opam install --dry-run ./dry-pin
+The following actions will be simulated:
+=== install 1 package
+  - install dry-pin dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing dry-pin.dev.
+-> installed dry-pin.dev
+Done.
+### opam pin
+### opam list --all-versions -s --installed dry-pin
+### opam pin --dry-run ./dry-pin
+[NOTE] Package dry-pin does not exist in opam repositories registered in the current switch.
+dry-pin is now pinned to file://${BASEDIR}/dry-pin (version dev)
+
+The following actions will be simulated:
+=== install 1 package
+  - install dry-pin dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Installing dry-pin.dev.
+-> installed dry-pin.dev
+Done.
