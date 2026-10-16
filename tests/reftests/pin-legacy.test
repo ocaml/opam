@@ -226,9 +226,8 @@ bar.dev    rsync             file://${BASEDIR}/bar
 foo.1      local definition
 qux.dev    rsync             file://${BASEDIR}/qux
 ### opam pin remove --all foo
-opam: opamMain.exe: Too many arguments.
-      Usage: opamMain.exe pin [OPTION]... remove PACKAGES...|TARGET
-      
+opam: opamMain.exe: Too many arguments. Usage: opamMain.exe pin [OPTION]...
+      remove PACKAGES...|TARGET
 # Return code 2 #
 ### opam pin remove --all
 Ok, qux is no longer pinned to file://${BASEDIR}/qux (version dev)
