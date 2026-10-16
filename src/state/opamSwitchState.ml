@@ -1178,46 +1178,46 @@ let not_found_message st (name, cstr) =
 (* Display a meaningful error for an unavailable package *)
 let unavailable_reason_raw st (name, vformula) =
   let candidates = OpamPackage.packages_of_name st.packages name in
-  let candidates =
-    OpamPackage.Set.filter
-      (fun nv -> OpamFormula.check_version_formula vformula nv.version)
-      candidates
-  in
-  if OpamPackage.Set.is_empty candidates then
-    (if OpamPackage.has_name st.packages name then `UnknownVersion
-     else `UnknownPackage)
+  if OpamPackage.Set.is_empty candidates then `UnknownPackage
   else
-  let nv =
-    try OpamPinned.package st name
-    with Not_found ->
-    match vformula with
-    | Atom (_, v) when
-        OpamPackage.Set.mem (OpamPackage.create name v) candidates ->
-      OpamPackage.create name v
-    | _ -> OpamPackage.max_version candidates name
-  in
-  match opam_opt st nv with
-  | None -> `NoDefinition
-  | Some opam ->
-    let avail = OpamFile.OPAM.available opam in
-    if not (OpamPackage.Set.mem nv candidates) then
-      `Pinned nv
-    else if not (OpamFilter.eval_to_bool ~default:false
-                   (OpamPackageVar.resolve_switch ~package:nv st)
-                   avail) then
-      `Unavailable
-        (Printf.sprintf "%s'%s'"
-           (if OpamPackage.Set.cardinal candidates = 1 then ": "
-            else ", e.g. ")
-           (OpamFilter.to_string avail))
+    let candidates =
+      OpamPackage.Set.filter
+        (fun nv -> OpamFormula.check_version_formula vformula nv.version)
+        candidates
+    in
+    if OpamPackage.Set.is_empty candidates then `UnknownVersion
     else
-    match depexts_unavailable st (OpamPackage.Set.max_elt candidates) with
-    | Some missing ->
-      let missing =
-        List.rev_map OpamSysPkg.to_string (OpamSysPkg.Set.elements missing)
+      let nv =
+        try OpamPinned.package st name
+        with Not_found ->
+        match vformula with
+        | Atom (_, v) when
+            OpamPackage.Set.mem (OpamPackage.create name v) candidates ->
+          OpamPackage.create name v
+        | _ -> OpamPackage.max_version candidates name
       in
-      `MissingDepexts missing
-    | None -> `Default
+      match opam_opt st nv with
+      | None -> `NoDefinition
+      | Some opam ->
+        let avail = OpamFile.OPAM.available opam in
+        if not (OpamPackage.Set.mem nv candidates) then
+          `Pinned nv
+        else if not (OpamFilter.eval_to_bool ~default:false
+                       (OpamPackageVar.resolve_switch ~package:nv st)
+                       avail) then
+          `Unavailable
+            (Printf.sprintf "%s'%s'"
+               (if OpamPackage.Set.cardinal candidates = 1 then ": "
+                else ", e.g. ")
+               (OpamFilter.to_string avail))
+        else
+          match depexts_unavailable st (OpamPackage.Set.max_elt candidates) with
+          | Some missing ->
+            let missing =
+              List.rev_map OpamSysPkg.to_string (OpamSysPkg.Set.elements missing)
+            in
+            `MissingDepexts missing
+          | None -> `Default
 
 (* Display a meaningful error for an unavailable package *)
 let unavailable_reason st ?(default="") atom =
