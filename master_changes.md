@@ -24,6 +24,7 @@ users)
 ## Actions
 
 ## Install
+  * Create symlinks atomically through a temporary name and `rename`, fixing a "File exists" failure when two opam processes populate the download cache at the same time [#7147 @Abhayindia - fix #5739]
 
   * Fix a bug triggering unnecessary reinstallation of packages not directly involved in the solution [#7154 @NathanReb]
   * Fix a bug where `opam install --depext-only` would try to install depexts of packages that needed to be removed or upgraded [#7166, @NathanReb]
