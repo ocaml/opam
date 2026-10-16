@@ -482,6 +482,7 @@ type result = {
   r_stdout   : string list;
   r_stderr   : string list;
   r_cleanup  : string list;
+  r_verbose  : bool;
 }
 
 let empty_result = {
@@ -492,6 +493,7 @@ let empty_result = {
   r_stdout = [];
   r_stderr = [];
   r_cleanup = [];
+  r_verbose = false;
 }
 
 (* XXX: the function might block for ever for some channels kinds *)
@@ -669,6 +671,7 @@ let exit_status p return =
     r_stdout   = stdout;
     r_stderr   = stderr;
     r_cleanup  = cleanup;
+    r_verbose  = p.p_verbose;
   }
 
 let safe_wait fallback_pid f x =

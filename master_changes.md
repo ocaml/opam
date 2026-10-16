@@ -14,6 +14,7 @@ users)
   * Bump version to `2.7.0~alpha1~dev` [#7064 @kit-ty-kate]
 
 ## Global CLI
+  * Always show failed git commands output regardless of --verbose [#7173 @NathanReb]
 
 ## Plugins
 
