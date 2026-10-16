@@ -661,31 +661,11 @@ let show () =
   OpamConsole.msg "%s\n"
     (OpamSwitch.to_string (OpamStateConfig.get_switch ()))
 
-let reinstall init_st =
-  let switch = init_st.switch in
+let reinstall st =
+  let switch = st.switch in
   log "reinstall switch=%a" (slog OpamSwitch.to_string) switch;
-  let gt = init_st.switch_global in
-
-  let switch_root = OpamPath.Switch.root gt.root switch in
-  let opam_subdir = OpamPath.Switch.meta gt.root switch in
-  let pkg_dirs =
-    List.filter ((<>) opam_subdir) (OpamFilename.dirs switch_root)
-  in
-  List.iter OpamFilename.cleandir pkg_dirs;
-  List.iter OpamFilename.remove (OpamFilename.files switch_root);
-  OpamFilename.cleandir (OpamPath.Switch.config_dir gt.root switch);
-  OpamFilename.cleandir (OpamPath.Switch.installed_opams gt.root switch);
-  let st =
-    { init_st with
-      installed = OpamPackage.Set.empty;
-      installed_roots = OpamPackage.Set.empty;
-      reinstall = lazy OpamPackage.Set.empty; }
-  in
-  import_t { OpamFile.SwitchExport.
-             selections = OpamSwitchState.selections init_st;
-             extra_files = OpamHash.Map.empty;
-             overlays = OpamPackage.Name.Map.empty; }
-    st
+  OpamClient.reinstall_t ~assume_built:false st
+    (OpamSolution.atoms_of_packages st.installed)
 
 let import st ?deps_only filename =
   let import_str = match filename with

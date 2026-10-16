@@ -28,10 +28,11 @@ roots: ["foo.1"]
 installed: ["foo.1"]
 ### opam switch reinstall reinstall
 The following actions will be performed:
-=== install 1 package
-  - install foo 1
+=== recompile 1 package
+  - recompile foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
 -> installed foo.1
 Done.
 ### opam exec -- foo
@@ -44,14 +45,13 @@ roots: ["foo.1"]
 installed: ["foo.1"]
 ### OPAMYES=0 opam switch reinstall reinstall
 The following actions will be performed:
-=== install 1 package
-  - install foo 1
+=== recompile 1 package
+  - recompile foo 1
 
-Proceed with 1 installation? [Y/n] n
+Proceed with 1 recompilation? [Y/n] n
 # Return code 10 #
 ### opam exec -- foo
-[ERROR] Command not found 'foo'
-# Return code 127 #
+yes i'm a here, it's amazing!
 ### opam switch export xp
 ### cat xp
 opam-version: "2.0"
@@ -88,11 +88,14 @@ roots: ["bar.1" "foo.1"]
 installed: ["bar.1" "foo.1"]
 ### opam switch reinstall broken-reinstall
 The following actions will be performed:
-=== install 1 package
-  - install bar 1
+=== recompile 2 packages
+  - recompile bar 1
+  - recompile foo 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 [ERROR] The compilation of bar.1 failed at "false".
+-> removed   foo.1
+-> installed foo.1
 
 
 
@@ -101,11 +104,12 @@ The following actions will be performed:
 +- The following actions failed
 | - build bar 1
 +- 
-- No changes have been performed
++- The following changes have been performed
+| - recompile foo 1
++- 
 # Return code 31 #
 ### opam exec -- foo
-[ERROR] Command not found 'foo'
-# Return code 127 #
+yes i'm a here, it's amazing!
 ### opam switch export xp
 ### cat xp
 opam-version: "2.0"
