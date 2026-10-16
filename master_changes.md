@@ -14,6 +14,7 @@ users)
   * Bump version to `2.7.0~alpha1~dev` [#7064 @kit-ty-kate]
 
 ## Global CLI
+  * Make error message for opam repo add more explicit [#7014 @yannl35133 - fix #6943]
 
 ## Plugins
 
