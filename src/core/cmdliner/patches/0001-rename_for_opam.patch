@@ -1,0 +1,11 @@
+Rename the main Cmdliner module into OpamCmdliner to avoid clashes
+for users of the opam libraries
+
+diff --git c/src/core/cmdliner/cmdliner.ml i/src/core/cmdliner/opamCmdliner.ml
+similarity index 100%
+rename from src/core/cmdliner/cmdliner.ml
+rename to src/core/cmdliner/opamCmdliner.ml
+diff --git c/src/core/cmdliner/cmdliner.mli i/src/core/cmdliner/opamCmdliner.mli
+similarity index 100%
+rename from src/core/cmdliner/cmdliner.mli
+rename to src/core/cmdliner/opamCmdliner.mli
