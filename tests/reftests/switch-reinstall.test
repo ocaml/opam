@@ -1,0 +1,118 @@
+N0REP0
+### OPAMYES=1 OPAMJOBS=1
+### <pkg:foo.1>
+opam-version: "2.0"
+install: [
+  ["cp" "foo" "%{bin}%/foo"]
+  ["chmod" "+x" "%{bin}%/foo"]
+]
+flags: compiler
+### <pkg:foo.1:foo>
+echo "yes i'm a here, it's amazing!"
+### : abort reinstall :
+### opam switch create reinstall foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam exec -- foo
+yes i'm a here, it's amazing!
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["foo.1"]
+installed: ["foo.1"]
+### opam switch reinstall reinstall
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   foo.1
+-> installed foo.1
+Done.
+### opam exec -- foo
+yes i'm a here, it's amazing!
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["foo.1"]
+installed: ["foo.1"]
+### OPAMYES=0 opam switch reinstall reinstall
+The following actions will be performed:
+=== recompile 1 package
+  - recompile foo 1
+
+Proceed with 1 recompilation? [Y/n] n
+# Return code 10 #
+### opam exec -- foo
+yes i'm a here, it's amazing!
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["foo.1"]
+installed: ["foo.1"]
+### : fail reinstall :
+### <pkg:bar.1>
+opam-version: "2.0"
+build: "false"
+### opam switch create broken-reinstall foo
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["foo"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed foo.1
+Done.
+### opam install bar --fake
+The following actions will be faked:
+=== install 1 package
+  - install bar 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+Faking installation of bar.1
+Done.
+### opam exec -- foo
+yes i'm a here, it's amazing!
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["bar.1" "foo.1"]
+installed: ["bar.1" "foo.1"]
+### opam switch reinstall broken-reinstall
+The following actions will be performed:
+=== recompile 2 packages
+  - recompile bar 1
+  - recompile foo 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+[ERROR] The compilation of bar.1 failed at "false".
+-> removed   foo.1
+-> installed foo.1
+
+
+
+
+<><> Error report <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
++- The following actions failed
+| - build bar 1
++- 
++- The following changes have been performed
+| - recompile foo 1
++- 
+# Return code 31 #
+### opam exec -- foo
+yes i'm a here, it's amazing!
+### opam switch export xp
+### cat xp
+opam-version: "2.0"
+compiler: ["foo.1"]
+roots: ["bar.1" "foo.1"]
+installed: ["bar.1" "foo.1"]
