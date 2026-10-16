@@ -1211,13 +1211,15 @@ let unavailable_reason_raw st (name, vformula) =
             else ", e.g. ")
            (OpamFilter.to_string avail))
     else
-    match depexts_unavailable st (OpamPackage.Set.max_elt candidates) with
+    match depexts_unavailable st nv with
     | Some missing ->
       let missing =
         List.rev_map OpamSysPkg.to_string (OpamSysPkg.Set.elements missing)
       in
       `MissingDepexts missing
-    | None -> `Default
+    | None ->
+      (* Should be unreachable *)
+      `Default
 
 (* Display a meaningful error for an unavailable package *)
 let unavailable_reason st ?(default="") atom =
