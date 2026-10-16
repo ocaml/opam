@@ -80,9 +80,11 @@ module Make (I : PATH_REPR) : PATH
   let files root prefix nv =
     packages root prefix nv / OpamRepositoryPathName.files_d
   let descr root prefix nv =
-    I.to_typed_file (packages root prefix nv // "descr")
+    I.to_typed_file
+      (packages root prefix nv // OpamRepositoryPathName.legacy_descr_f)
   let url root prefix nv =
-    I.to_typed_file (packages root prefix nv // "url")
+    I.to_typed_file
+      (packages root prefix nv // OpamRepositoryPathName.legacy_url_f)
 end
 
 (* Other paths *)
