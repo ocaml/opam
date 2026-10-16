@@ -126,6 +126,7 @@ users)
   * The vendor script for `opam-core.cmdliner` was upgraded to vendor cmdliner 2.1.1 [#6867 @BrianWard @kit-ty-kate]
   * The vendor cmdliner was patched to always allow legacy prefixes (1.x behaviour) [#6867 @BrianWard]
   * The vendor cmdliner was patched to allow newlines in `Error` (1.x behaviour) [#6867 @kit-ty-kate]
+  * Slightly speedup unknown package and unknown version detection when displaying conflict messages [#7214 @kit-ty-kate]
 
 ## Internal: Unix
   * Add explicit support for Haiku [#7138 @kit-ty-kate]
