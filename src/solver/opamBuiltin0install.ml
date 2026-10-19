@@ -25,7 +25,7 @@ let preemptive_check = false
 let default_criteria = {
   crit_default = "-changed,\
                   -count[avoid-version,solution]";
-  crit_upgrade = "-count[avoid-version,solution]";
+  crit_upgrade = "-down,-removed,-count[avoid-version,solution]";
   crit_fixup = "-count[avoid-version,solution]";
   crit_best_effort_prefix = None;
 }
@@ -62,7 +62,7 @@ let restricts (pkgs, constraints) (pkg, c) =
   in
   (pkgs, constraints)
 
-let create_spec ~drop_installed_packages universe request =
+let create_spec ~drop_installed_packages ~no_downgrade ~no_remove universe request =
   let spec = ([], []) in
   let spec = List.fold_left essential spec request.Cudf.install in
   let spec = List.fold_left essential spec request.Cudf.upgrade in
@@ -70,11 +70,17 @@ let create_spec ~drop_installed_packages universe request =
   Cudf.fold_packages_by_name (fun spec pkgname pkgs ->
       match List.find_opt (fun pkg -> pkg.Cudf.installed) pkgs with
       | Some {Cudf.keep = `Keep_version; version; _} -> essential spec (pkgname, Some (`Eq, version))
-      | Some {Cudf.keep = `Keep_package; _} -> essential spec (pkgname, None)
+      | Some {Cudf.keep = `Keep_package; version; _} ->
+        let c = if no_downgrade then Some (`Geq, version) else None in
+        essential spec (pkgname, c)
       | Some {Cudf.keep = `Keep_feature; _} -> assert false (* NOTE: Opam has no support for features *)
-      | Some {Cudf.keep = `Keep_none; _} ->
+      | Some {Cudf.keep = `Keep_none; version; _} ->
           if keep_installed ~drop_installed_packages request pkgname then
-            recommended spec (pkgname, None)
+            let c = if no_downgrade then Some (`Geq, version) else None in
+            if no_remove then
+              essential spec (pkgname, c)
+            else
+              recommended spec (pkgname, c)
           else
             spec
       | None -> spec
@@ -93,6 +99,8 @@ type options = {
   prefer_oldest : bool;
   handle_avoid_version : bool;
   prefer_installed : bool;
+  no_downgrade : bool;
+  no_remove : bool;
 }
 
 let parse_criteria criteria =
@@ -102,6 +110,8 @@ let parse_criteria criteria =
       prefer_oldest = false;
       handle_avoid_version = false;
       prefer_installed = false;
+      no_downgrade = false;
+      no_remove = false;
     }
   in
   let rec parse default (criteria : OpamCudfCriteria.criterion list) =
@@ -109,12 +119,16 @@ let parse_criteria criteria =
     | [] -> default
     | (Plus, Removed, None)::xs ->
       parse {default with drop_installed_packages = true} xs
+    | (Minus, Removed, None)::xs ->
+      parse {default with no_remove = true} xs
     | (Plus, Solution, Some "version-lag")::xs ->
       parse {default with prefer_oldest = true} xs
     | (Minus, Solution, Some "avoid-version")::xs ->
       parse {default with handle_avoid_version = true} xs
     | (Minus, Changed, None)::xs ->
       parse {default with prefer_installed = true} xs
+    | (Minus, Downgraded, None)::xs ->
+      parse {default with no_downgrade = true} xs
     | criterion::xs ->
       OpamConsole.warning
         "Criteria '%s' is not supported by the 0install solver"
@@ -129,11 +143,15 @@ let call ~criteria ?timeout:_ ?tolerance:_ (preamble, universe, request) =
     prefer_oldest;
     handle_avoid_version;
     prefer_installed;
+    no_downgrade;
+    no_remove;
   } =
     parse_criteria criteria
   in
   let timer = OpamConsole.timer () in
-  let pkgs, constraints = create_spec ~drop_installed_packages universe request in
+  let pkgs, constraints =
+    create_spec ~drop_installed_packages ~no_downgrade ~no_remove universe request
+  in
   let context =
     Opam_0install_cudf.create
       ~prefer_oldest ~handle_avoid_version ~prefer_installed
