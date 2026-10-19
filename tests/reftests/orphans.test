@@ -62,10 +62,9 @@ Cleaning up switch sw
 opam-version: "2.0"
 ### opam upgrade --show
 The following actions would be performed:
-=== upgrade 1 package
-  - upgrade foo 1 to 2
-=== remove 1 package
-  - remove  bar 1      [conflicts with foo]
+=== remove 2 packages
+  - remove bar 1 [uses foo]
+  - remove foo 1 [no longer available]
 ### <pkg:bar.2>
 opam-version: "2.0"
 depends: "foo" {>= "1"}
