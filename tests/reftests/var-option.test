@@ -186,9 +186,9 @@ i-got-the-variables:share ${BASEDIR}/OPAM/var-option/share/i-got-the-variables #
 i-got-the-variables:etc ${BASEDIR}/OPAM/var-option/etc/i-got-the-variables # Etc directory for this package
 i-got-the-variables:build ${BASEDIR}/OPAM/var-option/.opam-switch/build/i-got-the-variables.2.4.6 # Directory where the package was built
 i-got-the-variables:dev false # True if this is a development package
-### opam var i-got-the-variables:version=1 | '…' -> '...' | '`' -> "'"
+### opam var i-got-the-variables:version=1
 opam: variable setting needs a scope, use '--global' or '--switch <switch>'
-Usage: opam var [--global] [--package=PACKAGE] [OPTION]... [VAR[=[VALUE]]]
+Usage: opam var [--global] [--package=PACKAGE] [OPTION]… [VAR[=[VALUE]]]
 Try 'opam var --help' or 'opam --help' for more information.
 # Return code 2 #
 ### opam var i-got-the-variables:version=1 --switch var-option
@@ -206,9 +206,9 @@ Try 'opam var --help' or 'opam --help' for more information.
 ### opam var _:version --global
 [ERROR] Self variables (`_:`) are not valid here
 # Return code 2 #
-### opam var _:version=1 | '…' -> '...' | '`' -> "'"
+### opam var _:version=1
 opam: variable setting needs a scope, use '--global' or '--switch <switch>'
-Usage: opam var [--global] [--package=PACKAGE] [OPTION]... [VAR[=[VALUE]]]
+Usage: opam var [--global] [--package=PACKAGE] [OPTION]… [VAR[=[VALUE]]]
 Try 'opam var --help' or 'opam --help' for more information.
 # Return code 2 #
 ### opam var _:version=1 --switch var-option
@@ -787,9 +787,9 @@ ${BASEDIR}/OPAM
 true
 ### opam option depext --global
 true
-### opam var arch="somearch" | '…' -> '...' | '`' -> "'"
+### opam var arch="somearch"
 opam: variable setting needs a scope, use '--global' or '--switch <switch>'
-Usage: opam var [--global] [--package=PACKAGE] [OPTION]... [VAR[=[VALUE]]]
+Usage: opam var [--global] [--package=PACKAGE] [OPTION]… [VAR[=[VALUE]]]
 Try 'opam var --help' or 'opam --help' for more information.
 # Return code 2 #
 ### opam var arch="somearch" --global
