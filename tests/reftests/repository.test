@@ -308,15 +308,27 @@ opam-version: "2.0"
 first  --
 ### ::: rsync - git :::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": Command "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" failed:
+        fatal: '${BASEDIR}/OPER4' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git | "'.*OPER3'" -> "'/OPER3'"
+[ERROR] Could not update repository "oper": Command "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" failed:
+        fatal: '/OPER3' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -347,15 +359,27 @@ first  --
 first  --
 ### ::: git - git :::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": Command "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" failed:
+        fatal: '${BASEDIR}/OPER4' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git | "'.*OPER3'" -> "'/OPER3'"
+[ERROR] Could not update repository "oper": Command "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" failed:
+        fatal: '/OPER3' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -474,15 +498,27 @@ opam-version: "2.0"
 first  --
 ### :::: rsync - git ::::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": Command "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" failed:
+        fatal: '${BASEDIR}/OPER4' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git | "'.*OPER3'" -> "'/OPER3'"
+[ERROR] Could not update repository "oper": Command "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" failed:
+        fatal: '/OPER3' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
@@ -513,15 +549,27 @@ first  --
 first  --
 ### :::: git - git ::::
 ### opam repository set-url oper git+file://$BASEDIR/OPER4 | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+[ERROR] Could not update repository "oper": Command "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" failed:
+        fatal: '${BASEDIR}/OPER4' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://${BASEDIR}/OPER4 fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
 # Packages matching: from-repository(oper) & available
 # Name # Installed # Synopsis
 first  --
-### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git
-[ERROR] Could not update repository "oper": "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" exited with code 128
+### opam repository set-url oper git+file://./OPER3#unknownbranch | sed-cmd git | "'.*OPER3'" -> "'/OPER3'"
+[ERROR] Could not update repository "oper": Command "git -C ${BASEDIR}/OPAM/repo/oper fetch -q" failed:
+        fatal: '/OPER3' does not appear to be a git repository
+        fatal: Could not read from remote repository.
+
+        Please make sure you have the correct access rights
+        and the repository exists.
+
 [ERROR] Fetching repository oper with git+file://./OPER3#unknownbranch fails, reverting to git+file://${BASEDIR}/OPER
 # Return code 40 #
 ### opam list --available --repo=oper
