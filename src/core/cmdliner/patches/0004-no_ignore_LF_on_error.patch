@@ -1,0 +1,94 @@
+Fix \n support in `Error (false, "msg.\nextra details.")
+
+https://github.com/dbuenzli/cmdliner/issues/281
+
+diff --git a/src/core/cmdliner/cmdliner_base.ml b/src/core/cmdliner/cmdliner_base.ml
+index 840a8a325..737030b26 100644
+--- a/src/core/cmdliner/cmdliner_base.ml
++++ b/src/core/cmdliner/cmdliner_base.ml
+@@ -181,7 +181,7 @@ module Fmt = struct
+ 
+   let puterr ppf () = st [`Bold; `Fg `Red] ppf "Error"; char ppf ':'
+ 
+-  let styled_text ppf s =
++  let styled_text_aux ?(ign_LF=true) ppf s =
+     (* Detects ANSI escapes and prints them as 0 width. Collapses spaces
+        and newlines to single space except for blank lines which are
+        preserved. *)
+@@ -192,12 +192,12 @@ module Fmt = struct
+       | ' ' when i = max || s.[i+1] = ' ' || s.[i+1] = '\n' ->
+           loop ppf s (i + 1) max
+       | ' ' -> sp ppf (); loop ppf s (i + 1) max
+-      | '\n' when i = max || s.[i+1] = ' ' -> loop ppf s (i + 1) max
+-      | '\n' when s.[i+1] = '\n' ->
++      | '\n' when ign_LF && (i = max || s.[i+1] = ' ') -> loop ppf s (i + 1) max
++      | '\n' when ign_LF && s.[i+1] = '\n' ->
+           Format.pp_force_newline ppf ();
+           if i > 0 && s.[i-1] <> '\n' then Format.pp_force_newline ppf ();
+           loop ppf s (i + 1) max
+-      | '\n' -> sp ppf (); loop ppf s (i + 1) max
++      | '\n' when ign_LF -> sp ppf (); loop ppf s (i + 1) max
+       | c -> char ppf s.[i]; loop ppf s (i + 1) max
+       else begin
+         let k = ref (i + 2) in
+@@ -208,6 +208,8 @@ module Fmt = struct
+       end
+     in
+     loop ppf s 0 (String.length s - 1)
++
++  let styled_text ppf s = styled_text_aux ppf s
+ end
+ 
+ (* Converter (end-user) error messages *)
+diff --git a/src/core/cmdliner/cmdliner_base.mli b/src/core/cmdliner/cmdliner_base.mli
+index 59295082d..c9e737cca 100644
+--- a/src/core/cmdliner/cmdliner_base.mli
++++ b/src/core/cmdliner/cmdliner_base.mli
+@@ -30,6 +30,7 @@ module Fmt : sig
+   val string : string t
+   val indent : int t
+   val list : ?sep:unit t -> 'a t -> 'a list t
++  val styled_text_aux : ?ign_LF:bool -> string t
+   val styled_text : string t
+   val lines : string t
+   val tokens : spaces:bool -> string t
+diff --git a/src/core/cmdliner/cmdliner_eval.ml b/src/core/cmdliner/cmdliner_eval.ml
+index 1227899fb..e7c79c5d6 100644
+--- a/src/core/cmdliner/cmdliner_eval.ml
++++ b/src/core/cmdliner/cmdliner_eval.ml
+@@ -107,7 +107,7 @@ let do_result ~env help_ppf err_ppf eval = function
+     | `Error (usage, err) ->
+         (if usage
+          then Cmdliner_msg.pp_usage_and_err err_ppf eval ~err
+-         else Cmdliner_msg.pp_err err_ppf eval ~err);
++         else Cmdliner_msg.pp_err ~ign_LF:false err_ppf eval ~err);
+         Error `Term
+ 
+ let do_deprecated_msgs ~env err_ppf cl eval =
+diff --git a/src/core/cmdliner/cmdliner_msg.ml b/src/core/cmdliner/cmdliner_msg.ml
+index 877b53b29..d16575416 100644
+--- a/src/core/cmdliner/cmdliner_msg.ml
++++ b/src/core/cmdliner/cmdliner_msg.ml
+@@ -86,8 +86,8 @@ let exec_name ei = Cmdliner_def.Cmd_info.name (Cmdliner_def.Eval.main ei)
+ 
+ let pp_exec_msg ppf ei = Fmt.pf ppf "%s:" (exec_name ei)
+ 
+-let pp_err ppf ei ~err =
+-  Fmt.pf ppf "@[%a @[%a@]@]@." pp_exec_msg ei Fmt.styled_text err
++let pp_err ?ign_LF ppf ei ~err =
++  Fmt.pf ppf "@[%a @[%a@]@]@." pp_exec_msg ei (Fmt.styled_text_aux ?ign_LF) err
+ 
+ let pp_usage_and_err ppf ei ~err =
+   Fmt.pf ppf "@[Usage: @[%a@]@]@."
+diff --git a/src/core/cmdliner/cmdliner_msg.mli b/src/core/cmdliner/cmdliner_msg.mli
+index 455f092e0..7a286de4c 100644
+--- a/src/core/cmdliner/cmdliner_msg.mli
++++ b/src/core/cmdliner/cmdliner_msg.mli
+@@ -35,6 +35,7 @@ val pp_version : Cmdliner_def.Eval.t Cmdliner_base.Fmt.t
+ val pp_exec_msg : Cmdliner_def.Eval.t Cmdliner_base.Fmt.t
+ 
+ val pp_err :
++  ?ign_LF:bool ->
+   Format.formatter -> Cmdliner_def.Eval.t -> err:string -> unit
+ 
+ val pp_usage_and_err :

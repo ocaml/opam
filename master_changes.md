@@ -36,6 +36,7 @@ users)
   * Improve the way unhandled exceptions are displayed during interactive questions [#7138 @kit-ty-kate]
   * Stop showing the "Running as root" warning on Haiku [#7138 @kit-ty-kate]
   * Work around bugs/quirks in Haiku's implementation of termios [#7138 @kit-ty-kate]
+  * On command-line failures, usages are now displayed at the end [#6867 @WardBrian]
 
 ## Switch
 
@@ -120,6 +121,9 @@ users)
   * Deduplicate some depexts related code in `OpamSwitchState` [#7157 @kit-ty-kate]
   * Avoid redundant comparison during `opam switch list-available` [#7200 @kit-ty-kate]
   * Remove dead code in `OpamSwitchState.unavailable_reason_raw` [#7206 @NathanReb]
+  * The vendor script for `opam-core.cmdliner` was upgraded to vendor cmdliner 2.1.1 [#6867 @BrianWard @kit-ty-kate]
+  * The vendor cmdliner was patched to always allow legacy prefixes (1.x behaviour) [#6867 @BrianWard]
+  * The vendor cmdliner was patched to allow newlines in `Error` (1.x behaviour) [#6867 @kit-ty-kate]
 
 ## Internal: Unix
   * Add explicit support for Haiku [#7138 @kit-ty-kate]
@@ -167,6 +171,7 @@ users)
 ## opam-format
 
 ## opam-core
+  * `OpamCmdliner` was upgraded to version 2.1.1 [#6867 @BrianWard @kit-ty-kate]
   * `OpamStd.Env.Name.{equal,compare}`: Improve the performance [#7086 @kit-ty-kate]
   * `OpamConsole.{pause,confirm,menu}`: Fix a deadlock on some rare platforms [#7138 @kit-ty-kate]
   * `OpamStd.Map.update`: was changed to the stdlib version which has a more flexible API and has better performances [#7130 @NathanReb - fix #4915]
