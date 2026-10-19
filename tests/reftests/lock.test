@@ -1102,7 +1102,7 @@ The following additional pinnings are required by goblint.dev:
   - apron.v0.9.13 at git+https://github.com/antoinemine/apron.git#c852ebcc89e5cf4a5a3318e7c13c73e1756abb11
   - goblint-cil.1.8.2 at git+https://github.com/goblint/cil.git#a3c91aa6e8f946fec9a9a13361b051a73b12a65c
   - ppx_deriving.5.2.1 at git+https://github.com/ocaml-ppx/ppx_deriving.git#0a89b619f94cbbfc3b0fb3255ab4fe5bc77d32d6
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package apron does not exist in opam repositories registered in the current switch.
 [apron.v0.9.13] synchronised (no changes)
 [WARNING] Failed checks on apron package definition from source at git+https://github.com/antoinemine/apron.git#c852ebcc89e5cf4a5a3318e7c13c73e1756abb11:
@@ -1282,7 +1282,7 @@ The following additional pinnings are required by tolock.dev:
   - a-simple-dep.dev at git+file://${BASEDIR}/simple-dep
   - a-test-dep.dev at git+file://${BASEDIR}/test-dep
   - a-doc-dep.dev at git+file://${BASEDIR}/doc-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package a-simple-dep does not exist in opam repositories registered in the current switch.
 [a-simple-dep.dev] synchronised (no changes)
 a-simple-dep is now pinned to git+file://${BASEDIR}/simple-dep (version dev)

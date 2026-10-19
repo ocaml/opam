@@ -345,7 +345,7 @@ No solution found, exiting
 ### opam install --deps-only ./local-with-pin-deps
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package pin-dep does not exist in opam repositories registered in the current switch.
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
@@ -373,7 +373,7 @@ Done.
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package pin-dep does not exist in opam repositories registered in the current switch.
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
@@ -394,11 +394,11 @@ local-with-pin-deps.dev    rsync  file://${BASEDIR}/local-with-pin-deps
 pin-dep.dev                rsync  file://${BASEDIR}/pin-dep
 ### : Make sure pin-depends during switch creations are not pinned twice
 ### unset OPAMCONFIRMLEVEL
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
 
@@ -412,10 +412,10 @@ Switch invariant: ["ocaml" {>= "4.05.0"}]
 
 Switch initialisation failed: clean up? ('n' will leave the switch partially installed) [Y/n] y
 # Return code 20 #
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps --deps-only
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps --deps-only
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>

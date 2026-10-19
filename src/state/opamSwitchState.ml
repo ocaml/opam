@@ -1058,11 +1058,14 @@ let universe st
     (* Ignore reinstalls outside of the dependency cone of
        [requested_allpkgs] *)
     let resolve_deps nv =
-      OpamPackageVar.filter_depends_formula
-        ~build:true ~post:true ~default:true ~env:(env nv)
-        (OpamFormula.ands [ OpamPackage.Map.find nv u_depends;
-                            OpamPackage.Map.find nv u_depopts ])
-      |> OpamFormula.packages st.packages
+      if OpamPackage.Set.mem nv st.packages then
+        OpamPackageVar.filter_depends_formula
+          ~build:true ~post:true ~default:true ~env:(env nv)
+          (OpamFormula.ands [ OpamPackage.Map.find nv u_depends;
+                              OpamPackage.Map.find nv u_depopts ])
+        |> OpamFormula.packages st.packages
+      else
+        OpamPackage.Set.empty
     in
     let requested_deps =
       OpamPackage.Set.fixpoint resolve_deps requested
