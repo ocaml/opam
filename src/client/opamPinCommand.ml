@@ -424,7 +424,7 @@ let rec handle_pin_depends st nv opam =
               (OpamConsole.colorise `bold (OpamPackage.to_string nv))
               (OpamConsole.colorise `underline (OpamUrl.to_string url)))
           extra_pins);
-     if OpamConsole.confirm ~name:"install-pin-depends" "Pin and install them?" then
+     if OpamConsole.confirm ~name:"pin-pin-depends" "Pin them?" then
        (let extra_pins =
           fetch_all_pins st (List.map (fun (nv, u) ->
               { pinned_name = OpamPackage.name nv;

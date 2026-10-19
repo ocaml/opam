@@ -991,7 +991,7 @@ opam-version: "2.0"
 The following additional pinnings are required by dep1.dev:
   - dep2.2 at file://${BASEDIR}/dep2
   - dep3.2 at file://${BASEDIR}/dep3
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [dep2.2] synchronised (no changes)
 dep2 is now pinned to file://${BASEDIR}/dep2 (version 2)
 [NOTE] Package dep3 does not exist in opam repositories registered in the current switch.
@@ -1002,8 +1002,8 @@ dep1 is now pinned to file://${BASEDIR}/dep1 (version dev)
 The following actions will be performed:
 === install 3 packages
   - install dep1 dev (pinned)
-  - install dep2 2 (pinned)
-  - install dep3 2 (pinned)
+  - install dep2 2 (pinned)   [required by dep1]
+  - install dep3 2 (pinned)   [required by dep1]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved dep1.dev  (file://${BASEDIR}/dep1)
@@ -1036,7 +1036,7 @@ Done.
 [NOTE] Package dep1 is already pinned to file://${BASEDIR}/dep1 (version dev).
 The following additional pinnings are required by dep1.dev:
   - dep2.2 at file://${BASEDIR}/dep2
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [dep2.2] synchronised (no changes)
 dep2 is now pinned to file://${BASEDIR}/dep2 (version 2)
 dep1 is now pinned to file://${BASEDIR}/dep1 (version dev)
@@ -1045,7 +1045,7 @@ The following actions will be performed:
 === recompile 1 package
   - recompile dep1 dev (pinned)
 === upgrade 1 package
-  - upgrade   dep2 1 to 2 (pinned)
+  - upgrade   dep2 1 to 2 (pinned) [required by dep1]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> retrieved dep1.dev  (no changes)
@@ -1400,7 +1400,7 @@ opam-version: "2.0"
 [NOTE] Package pkg does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by pkg.dev:
   - pin-pkg.dev at file://${BASEDIR}/missing-opam
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package pin-pkg does not exist in opam repositories registered in the current switch.
 [pin-pkg.dev] synchronised (no changes)
 [ERROR] No valid package definition found for pin-pkg
@@ -1416,7 +1416,7 @@ depends: [
 [NOTE] Package pkg does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by pkg.dev:
   - pin-pkg.dev at file://${BASEDIR}/missing-opam
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package pin-pkg does not exist in opam repositories registered in the current switch.
 [pin-pkg.dev] synchronised (no changes)
 [ERROR] No valid package definition found for pin-pkg
@@ -1430,7 +1430,7 @@ opam-version: "2.0"
 [NOTE] Package pkg does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by pkg.dev:
   - pkg.dev at file://${BASEDIR}/missing-opam/empty-dir
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package pkg does not exist in opam repositories registered in the current switch.
 [pkg.dev] synchronised (no changes)
 [ERROR] No valid package definition found for pkg

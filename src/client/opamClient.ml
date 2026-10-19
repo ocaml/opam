@@ -2584,16 +2584,7 @@ let reinstall t ?(assume_built=false) names =
 module PIN = struct
   open OpamPinCommand
 
-  let post_pin_action st was_pinned names =
-    let names =
-      OpamPackage.Set.Op.(st.pinned -- was_pinned)
-      |> OpamPackage.names_of_packages
-      |> (fun s ->
-          List.fold_left
-            (fun s p -> OpamPackage.Name.Set.add p s)
-            s names)
-      |> OpamPackage.Name.Set.elements
-    in
+  let post_pin_action st names =
     try
       upgrade_t
         ~strict_upgrade:false ~auto_install:true ~ask:true ~terse:true
@@ -2626,7 +2617,6 @@ module PIN = struct
 
   let pin st name ?(edit=false) ?version ?(action=true) ?subpath ?locked target =
     try
-      let pinned = st.pinned in
       let st =
         match target with
         | `Source url -> source_pin st name ?version ~edit ?subpath ?locked (Some url)
@@ -2657,7 +2647,7 @@ module PIN = struct
           source_pin st name ?version ~edit ?locked (Some (get_upstream st name))
         | `None -> source_pin st name ?version ~edit ?locked None
       in
-      if action then (OpamConsole.msg "\n"; post_pin_action st pinned [name])
+      if action then (OpamConsole.msg "\n"; post_pin_action st [name])
       else st
     with
     | OpamPinCommand.Aborted -> OpamStd.Sys.exit_because `Aborted
@@ -2675,7 +2665,6 @@ module PIN = struct
          OpamStd.Sys.exit_because `Aborted
      | _ -> ());
     let pins = OpamPinCommand.fetch_all_pins st pins in
-    let pinned = st.pinned in
     let st =
       List.fold_left (fun st pin ->
           pre pin;
@@ -2692,11 +2681,10 @@ module PIN = struct
     in
     if action then
       (OpamConsole.msg "\n";
-       post_pin_action st pinned names)
+       post_pin_action st names)
     else st
 
   let edit st ?(action=true) ?version ?locked name =
-    let pinned = st.pinned in
     let st =
       if OpamPackage.has_name st.pinned name then
         edit st ?version name
@@ -2729,7 +2717,7 @@ module PIN = struct
         OpamConsole.error_and_exit `Not_found
           "Package is not pinned, and no existing version was supplied."
     in
-    if action then post_pin_action st pinned [name]
+    if action then post_pin_action st [name]
     else st
 
   let unpin st ?(action=true) names =
