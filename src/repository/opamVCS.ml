@@ -58,7 +58,7 @@ module Make (VCS: VCS) = struct
         | Some patch_file ->
           try
             let diffs =
-              OpamFilename.parse_patch ~dir:repo_root_dir patch_file
+              OpamFilename.parse_patch ~translate:(Some repo_root_dir) patch_file
             in
             OpamRepositoryBackend.Update_patch (patch_file, diffs)
           with exn -> Update_err exn

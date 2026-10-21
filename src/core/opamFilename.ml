@@ -469,8 +469,10 @@ let link ?(relative=false) ~target ~link =
   OpamSystem.link target (to_string link)
 [@@ocaml.warning "-16"]
 
-let parse_patch ~dir patch_file =
-  OpamPatch.parse_patch ~translate:(Some (Dir.to_string dir)) (to_string patch_file)
+let parse_patch ~translate patch_file =
+  OpamPatch.parse_patch
+    ~translate:(Option.map Dir.to_string translate)
+    (to_string patch_file)
 
 module PatchFS = struct
   type root = string
