@@ -76,6 +76,7 @@ users)
 ## Format upgrade
 
 ## Sandbox
+  * Fix a possible sandbox escape when the first argument of a command starts with a dash [#7161 @kit-ty-kate]
 
 ## VCS
   * Add support for using git repositories owned by another local user [#6980 @kit-ty-kate - fix #6963]

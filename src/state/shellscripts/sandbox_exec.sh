@@ -98,4 +98,4 @@ if ! command -v "$1" >/dev/null; then
     exit 10
 fi
 
-exec sandbox-exec -p "$POL" "$@"
+exec sandbox-exec -p "$POL" -- "$@"
