@@ -344,17 +344,24 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
         with e -> OpamStd.Exn.fatal e; None
     in
     let repo_opam =
-      let packages =
-        OpamPackage.Map.filter (fun nv _ -> nv.name = name) st.repos_package_index
-      in
-      (* get the latest version below v *)
-      match OpamPackage.Map.split nv packages with
-      | _, (Some opam), _ -> Some opam
-      | below, None, _ when not (OpamPackage.Map.is_empty below) ->
-        Some (snd (OpamPackage.Map.max_binding below))
-      | _, None, above when not (OpamPackage.Map.is_empty above) ->
-        Some (snd (OpamPackage.Map.min_binding above))
-      | _ -> None
+      match OpamPackage.Map.find_opt nv st.repos_package_index with
+      | Some _ as x -> x
+      | None ->
+        (* get the latest version below v *)
+        OpamPackage.Map.fold (fun pkg opam closest ->
+            if OpamPackage.Name.equal pkg.name name then
+              match closest with
+              | None -> Some (pkg, opam)
+              | Some (closest_pkg, _) ->
+                match OpamPackage.compare pkg nv with
+                | 0 -> assert false (* caught by the faster [find_opt] above *)
+                | n when n < 0 && OpamPackage.compare pkg closest_pkg > 0 ->
+                  Some (pkg, opam)
+                | _ -> closest
+            else
+              closest)
+          st.repos_package_index None
+        |> Option.map snd
     in
     (if working_dir then Done () else
        (match url.OpamUrl.hash with

@@ -79,12 +79,14 @@ let cudfnv2opam ?version_map ?cudf_universe (name,v) =
     let name = OpamPackage.Name.of_string (Dose_common.CudfAdd.decode name) in
     match version_map with
     | Some vmap ->
-      let nvset =
-        OpamPackage.Map.filter
-          (fun nv cv -> nv.name = name && cv = v)
-          vmap
-      in
-      fst (OpamPackage.Map.choose nvset)
+      let exception Found of OpamPackage.t in
+      (try
+         OpamPackage.Map.iter (fun nv cv ->
+             if OpamPackage.Name.equal nv.name name && Int.equal cv v then
+               raise (Found nv))
+           vmap;
+         raise Not_found
+       with Found nv -> nv)
     | None -> raise Not_found
 
 let string_of_package p =
