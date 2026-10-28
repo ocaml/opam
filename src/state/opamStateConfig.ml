@@ -110,7 +110,7 @@ let default = {
   dryrun = false;
   makecmd = lazy OpamStd.Sys.(
       match os () with
-      | FreeBSD | OpenBSD | NetBSD | DragonFly -> "gmake"
+      | FreeBSD | OpenBSD | NetBSD | DragonFly | Illumos -> "gmake"
       | _ -> "make"
     );
   ignore_constraints_on = OpamPackage.Name.Set.empty;

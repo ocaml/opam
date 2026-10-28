@@ -8,6 +8,7 @@
 /*                                                                        */
 /**************************************************************************/
 
+#include <termios.h>
 #include <sys/ioctl.h>
 
 CAMLprim value opam_stdout_ws_col(value _unit) {
