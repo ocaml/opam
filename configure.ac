@@ -475,10 +475,8 @@ AC_OUTPUT
 rm -f src/manifest/dune src/manifest/install.inc
 AS_IF([test "x${with_private_runtime}" != "xno"],[
   AS_IF([test ${WIN32} -eq 1 -a "x${CCOMP_TYPE}" = "xcc"],[
-    cd src/manifest
-    ${LN_S} -f dune-manifest dune
-    ${LN_S} -f install.${ARCH} install.inc
-    cd ../..
+    ${LN_S} -f src/manifest/dune-manifest src/manifest/dune || exit 1
+    ${LN_S} -f src/manifest/install.${ARCH} src/manifest/install.inc || exit 1
   ],[
     AC_MSG_WARN([--with-private-runtime ignored (not building on mingw)])
   ])
@@ -503,9 +501,9 @@ echo Manual pages will be installed in ${mandir}
 AS_IF([test "x${VENDORED}" = "xtrue"],[
   echo
   AS_ECHO(["Downloading vendored source dependencies..."])
-  ${MAKE} --no-print-directory -C src_ext SILENT=@ archives
+  ${MAKE} --no-print-directory -C src_ext SILENT=@ archives || exit 1
   AS_ECHO([done])
   AS_ECHO_N(["Extracting vendored source dependencies in src_ext/... "])
-  ${MAKE} --no-print-directory -C src_ext SILENT=@ clone
+  ${MAKE} --no-print-directory -C src_ext SILENT=@ clone || exit 1
   AS_ECHO([done])
 ])
