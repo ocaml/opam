@@ -1,4 +1,6 @@
-#!/bin/sh -e
+#!/bin/sh
+
+set -e
 
 GEN_CONFIG_ONLY=${GEN_CONFIG_ONLY:-0}
 TAR=${TAR:-tar}
