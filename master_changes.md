@@ -13,6 +13,7 @@ users)
 ## Version
 
 ## Global CLI
+  * Add cli version 2.6 [#7229 @mtelvers]
 
 ## Plugins
 
