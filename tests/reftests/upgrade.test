@@ -792,11 +792,11 @@ The following actions will be performed:
 Done.
 ### opam upgrade
 Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
-However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade dep.2"), which will ask permission to downgrade or uninstall the conflicting packages.
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade topin.2"), which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
 ### opam upgrade --verbose
 Everything as up-to-date as possible.
 The following newer versions couldn't be installed:
   - topin.2: not available because the package is pinned to version 1
-However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade dep.2"), which will ask permission to downgrade or uninstall the conflicting packages.
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade topin.2"), which will ask permission to downgrade or uninstall the conflicting packages.
 Nothing to do.
