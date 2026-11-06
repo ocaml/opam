@@ -71,10 +71,14 @@ users)
 ## VCS
 
 ## Build
+  * Add macOS 27 support to `make cold` and `make compiler` [#7232 @kit-ty-kate]
+  * Upgrade OCaml (`make cold` or `make compiler`) to 4.14.5 [#7232 @kit-ty-kate]
 
 ## Infrastructure
 
 ## Release scripts
+  * Add macOS 27 support [#7232 @kit-ty-kate]
+  * Upgrade OCaml to 4.14.5 [#7232 @kit-ty-kate]
 
 ## Install script
 
