@@ -43,6 +43,7 @@ users)
 ## Config
 
 ## Pin
+  * `opam upgrade` upgrades all the dev pins without updating sources [#7231 @Halbaroth]
 
 ## List
 

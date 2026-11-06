@@ -1715,6 +1715,16 @@ Done.
 ### git -C "$BASEDIR/nip-git" add foo
 ### git -C "$BASEDIR/nip-git" commit -qm "bang"
 ### opam upgrade
-Already up-to-date.
-Nothing to do.
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[nip-git.ved] synchronised (git+file://${BASEDIR}/nip-git#master)
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile nip-git ved (pinned) [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip-git.ved
+-> installed nip-git.ved
+Done.
 [[[Killing micro_httpd]]]
