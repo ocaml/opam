@@ -8,7 +8,7 @@ VERSION = $(shell git describe $(TAG))
 OPAM_VERSION = $(subst -,~,$(VERSION))
 GIT_URL = ..
 
-OCAMLV = 4.14.4
+OCAMLV = 4.14.5
 FLEXDLLV = 0.44
 # currently hardcoded in Dockerfile.in
 OCAML_URL = https://github.com/ocaml/ocaml/archive/refs/tags/$(OCAMLV).tar.gz
