@@ -86,6 +86,8 @@ users)
   * Upgrade to cudf 0.11\~rc1 [#7145 @kit-ty-kate]
   * Upgrade to checkseum 0.5.4 [#7172 @kit-ty-kate]
   * Upgrade to decompress 1.6.1 [#7172 @kit-ty-kate]
+  * Add macOS 27 support to `make cold` and `make compiler` [#7232 @kit-ty-kate]
+  * Upgrade OCaml (`make cold` or `make compiler`) to 4.14.5 [#7232 @kit-ty-kate]
 
 ## Infrastructure
 
@@ -93,6 +95,8 @@ users)
   * Make x86\_32 binaries take full advantage of i686 [#7120 @kit-ty-kate]
   * Ensure arm32 binaries are really armhf as advertised instead of armv7 [#7120 @kit-ty-kate]
   * Enhance the release documentation with mentions of macOS 27 and IRC [#7194 @kit-ty-kate]
+  * Add macOS 27 support [#7232 @kit-ty-kate]
+  * Upgrade OCaml to 4.14.5 [#7232 @kit-ty-kate]
 
 ## Install script
   * Add opam 2.6.0\~rc1 to the install scripts [#7135 @kit-ty-kate]
