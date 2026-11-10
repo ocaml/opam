@@ -14,7 +14,7 @@ community-maintained
 
 Note that the tool itself is not specific to OCaml at its core, and could be
 used for different systems using specific repositories (e.g. for the
-[Coq theorem prover](http://coq.io/opam/))
+[Coq theorem prover](https://rocq-prover.org/packages))
 
 ---
 
