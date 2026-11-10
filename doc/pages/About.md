@@ -12,7 +12,7 @@ At about the same time, Frederic Tuong, an intern from Inria, funded by the DORM
 [first OPAM packages](https://github.com/ocaml/opam-repository/commits/master?page=200) 
 one month later. Frederic and Thomas worked
 closely together in the following months to [demonstrate OPAM](https://www.youtube.com/watch?v=ivLqeRZJTGs) at the
-[OCaml Workshop 2012](http://oud.ocaml.org/2012/) where (almost) everyone was already using it!
+[OCaml Workshop 2012](https://web.archive.org/web/20160506232945/http://oud.ocaml.org/2012/) where (almost) everyone was already using it!
 Frederic started a PhD in Oct 2012 and left the OPAM team to focus on his studies. Roberto Di
 Cosmo and Pietro Abate, from IRILL, began helping Thomas at the end of 2012 to properly integrate their [Mancoosi](http://www.mancoosi.org/) tools (such as [CUDF](http://www.mancoosi.org/cudf/) and `dose`) so that OPAM could benefit from modern constraint solving tools and be able to automatically use the
 `aspcud` external solver if is available.

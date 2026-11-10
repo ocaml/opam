@@ -22,7 +22,7 @@ one automatically.
 
 The following CUDF solvers have been tested:
 
-- [aspcud](http://www.cs.uni-potsdam.de/wv/aspcud/) (recommended solution until opam 1.2.2)
+- [aspcud](https://potassco.org/aspcud/) (recommended solution until opam 1.2.2)
 - [packup](http://sat.inesc-id.pt/~mikolas/sw/packup/)
 - [mccs](http://www.i3s.unice.fr/~cpjm/misc/mccs.html) (a modified version of which is now being used as the built-in solver)
 - [p2Cudf](https://wiki.eclipse.org/Equinox/p2/CUDFResolver), which can be
