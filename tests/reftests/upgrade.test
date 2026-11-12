@@ -757,3 +757,46 @@ Done.
 ### opam upgrade
 Already up-to-date.
 Nothing to do.
+### ::::::::::::::::::::::::
+### : Make sure the message in `opam upgrade` is actually actionable
+### ::::::::::::::::::::::::
+### <pkg:dep.1>
+opam-version: "2.0"
+### <pkg:dep.2>
+opam-version: "2.0"
+### <pkg:topin.1>
+opam-version: "2.0"
+### <pkg:topin.2>
+opam-version: "2.0"
+### <pkg:invar.1>
+opam-version: "2.0"
+depends: "dep" {= "1"}
+### opam switch create invar
+
+<><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
+Switch invariant: ["invar"]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed dep.1
+-> installed invar.1
+Done.
+### opam pin add topin 1
+topin is now pinned to version 1
+
+The following actions will be performed:
+=== install 1 package
+  - install topin 1 (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed topin.1
+Done.
+### opam upgrade
+Everything as up-to-date as possible (run with --verbose to show unavailable upgrades).
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade topin.2"), which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
+### opam upgrade --verbose
+Everything as up-to-date as possible.
+The following newer versions couldn't be installed:
+  - topin.2: not available because the package is pinned to version 1
+However, you may "opam upgrade" these packages explicitly at these versions (e.g. "opam upgrade topin.2"), which will ask permission to downgrade or uninstall the conflicting packages.
+Nothing to do.
