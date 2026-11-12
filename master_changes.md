@@ -39,6 +39,7 @@ users)
   * On command-line failures, usages are now displayed at the end [#6867 @WardBrian]
 
 ## Switch
+  * Create `share_dir` and `etc_dir` when a switch is created. [#7205 @mtelvers]
 
 ## Config
 
