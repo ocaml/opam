@@ -123,7 +123,8 @@ Now run 'opam upgrade' to apply any package updates.
 ### : 7/ Upgrade
 ### opam upgrade
 The following actions will be performed:
-=== remove 3 packages
+=== remove 4 packages
+  - remove a 1
   - remove b 1 [no longer available]
   - remove c 1 [uses b]
   - remove d 1 [uses c]
@@ -132,9 +133,9 @@ The following actions will be performed:
 -> removed   d.1
 -> removed   c.1
 -> removed   b.1
+-> removed   a.1
 Done.
 ### opam list -sV
-a.1
 ### opam list -sA --roots
 ### : 8/ Attempt to reinstall d
 ### opam install d
@@ -154,12 +155,14 @@ remove:  [ "test" "-d" a:lib ]
 install: [ "mkdir" _:lib ]
 ### opam install d
 The following actions will be performed:
-=== install 3 packages
+=== install 4 packages
+  - install a 1 [required by b]
   - install b 1 [required by c]
   - install c 1 [required by d]
   - install d 1
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed a.1
 -> installed b.1
 -> installed c.1
 -> installed d.1
@@ -309,22 +312,19 @@ The following actions would be performed:
 Ok, b is no longer pinned locally (version 1)
 ### opam upgrade
 The following actions will be performed:
-=== upgrade 1 package
-  - upgrade a 1 to 2
-=== remove 3 packages
-  - remove  b 1      [no longer available]
-  - remove  c 2      [uses b]
-  - remove  d 1      [uses c]
+=== remove 4 packages
+  - remove a 1
+  - remove b 1 [no longer available]
+  - remove c 2 [uses b]
+  - remove d 1 [uses c]
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   d.1
 -> removed   c.2
 -> removed   b.1
 -> removed   a.1
--> installed a.2
 Done.
 ### opam list -sV
-a.2
 ### opam list -sA --roots
 ### : 15/ Remove that new version of a and upgrade
 ### rm -rf REPO/packages/a/a.2
@@ -334,21 +334,13 @@ a.2
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
 ### opam upgrade
-The following actions will be performed:
-=== downgrade 1 package
-  - downgrade a 2 to 1 [no longer available]
-
-<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   a.2
--> installed a.1
-Done.
+Already up-to-date.
+Nothing to do.
 ### opam list -sV
-a.1
 ### opam list -sA --roots
 ### : 16/ Upgrade again
 ### opam upgrade
 Already up-to-date.
 Nothing to do.
 ### opam list -sV
-a.1
 ### opam list -sA --roots

@@ -320,31 +320,31 @@ version: "2"
 ### opam upgrade | unordered
 The following actions will be performed:
 === downgrade 6 packages
+  - downgrade root-a-i-j_g dev to 2 (pinned) [no longer available]
   - downgrade root-a-i_g   dev to 2 (pinned) [no longer available]
   - downgrade root-a-k_p   dev to 2 (pinned) [no longer available]
   - downgrade root-a_p     dev to 2 (pinned) [no longer available]
   - downgrade root-b_g     dev to 2 (pinned) [no longer available]
   - downgrade root_g       dev to 2 (pinned) [no longer available]
-  - downgrade root-a-i-j_g dev to 2 (pinned) [no longer available]
+-> retrieved root-a-i-j_g.2  (no changes)
+-> installed root-a-i-j_g.2
+-> retrieved root-a-i_g.2  (no changes)
+-> installed root-a-i_g.2
 -> retrieved root-a-k_p.2  (directory /a/k in file://${BASEDIR}/pinnes)
+-> installed root-a-k_p.2
 -> retrieved root-a_p.2  (directory /a in file://${BASEDIR}/pinnes)
+-> installed root-a_p.2
+-> retrieved root-b_g.2  (no changes)
+-> installed root-b_g.2
 -> installed root_g.2
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 -> removed   root_g.dev
 -> removed   root-a_p.dev
--> installed root-a_p.2
--> retrieved root-a-i_g.2  (no changes)
 -> removed   root-a-i_g.dev
--> installed root-a-i_g.2
--> retrieved root-a-i-j_g.2  (no changes)
 -> removed   root-a-i-j_g.dev
--> installed root-a-i-j_g.2
 -> removed   root-a-k_p.dev
--> installed root-a-k_p.2
--> retrieved root-b_g.2  (no changes)
 -> removed   root-b_g.dev
--> installed root-b_g.2
 Done.
 ### <pinnes/a/i/new>
 hej
@@ -366,19 +366,19 @@ The following actions will be performed:
   - recompile root-a-k_p 2 (pinned) [upstream or system changes]
   - recompile root-a_p   2 (pinned) [upstream or system changes]
   - recompile root_g     2 (pinned) [upstream or system changes]
--> retrieved root-a-k_p.2  (no changes)
 
 <><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
--> removed   root_g.2
--> installed root_g.2
--> retrieved root-a_p.2  (no changes)
--> removed   root-a_p.2
--> installed root-a_p.2
 -> retrieved root-a-i_g.2  (no changes)
 -> removed   root-a-i_g.2
 -> installed root-a-i_g.2
+-> retrieved root-a-k_p.2  (no changes)
 -> removed   root-a-k_p.2
 -> installed root-a-k_p.2
+-> retrieved root-a_p.2  (no changes)
+-> removed   root-a_p.2
+-> removed   root_g.2
+-> installed root-a_p.2
+-> installed root_g.2
 Done.
 ### opam list -s
 root-a-i-j_g
