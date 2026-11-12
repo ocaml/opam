@@ -57,6 +57,7 @@ users)
 ## Exec
 
 ## Source
+  * Fix `opam source` not applying the patches of packages that have a `subpath`: they are now looked up and applied in the subpath directory, as when building [#7225 @Abhayindia]
 
 ## Lint
 
