@@ -28,31 +28,19 @@ let get_installed_atoms t atoms =
         packages, atom :: not_installed)
     ([],[]) atoms
 
-(* Check atoms for pinned packages, and update them. Returns the state that
-   may have been reloaded if there were changes *)
-let update_dev_packages_t ?autolock ?(only_installed=false) atoms t =
-  if OpamClientConfig.(!r.skip_dev_update) then t else
-  let working_dir = OpamClientConfig.(!r.working_dir || !r.inplace_build) in
+let update_set_of_dev_packages ?autolock ~only_installed to_update t =
   let to_update =
-    List.fold_left (fun to_update (name,_) ->
-        try
-          let nv = OpamPackage.package_of_name t.pinned name in
-          if OpamSwitchState.is_dev_package t nv &&
-             ( not only_installed ||
-               OpamPackage.Set.exists (fun nv -> nv.name = name) t.installed )
-          then
-            OpamPackage.Set.add nv to_update
-          else to_update
-        with Not_found -> to_update)
-      OpamPackage.Set.empty atoms
+    if only_installed then
+      OpamPackage.Set.filter (fun nv -> OpamPackage.Set.mem nv t.installed)
+        to_update
+    else
+      to_update
   in
+  let working_dir = OpamClientConfig.(!r.working_dir || !r.inplace_build) in
   if OpamPackage.Set.is_empty to_update then t else (
     OpamConsole.header_msg "Synchronising pinned packages";
     try
-      let working_dir =
-        if working_dir then Some (OpamSwitchState.packages_of_atoms t atoms)
-        else None
-      in
+      let working_dir = if working_dir then Some to_update else None in
       let _success, t, _pkgs =
         OpamUpdate.dev_packages t ?autolock ?working_dir to_update in
       OpamConsole.msg "\n";
@@ -62,6 +50,27 @@ let update_dev_packages_t ?autolock ?(only_installed=false) atoms t =
       OpamConsole.msg "\n";
       t
   )
+
+let update_all_dev_packages ?autolock ?(only_installed=false) t =
+  if OpamClientConfig.(!r.skip_dev_update) then t else
+    let to_update =
+      OpamPackage.Set.filter (fun nv -> OpamSwitchState.is_dev_package t nv)
+        t.pinned
+    in
+    update_set_of_dev_packages ?autolock ~only_installed to_update t
+
+(* Check atoms for pinned packages, and update them. Returns the state that
+   may have been reloaded if there were changes *)
+let update_dev_packages_t ?autolock ?(only_installed=false) atoms t =
+  if OpamClientConfig.(!r.skip_dev_update) then t else
+    let to_update =
+      List.fold_left (fun to_update (name, _) ->
+          match OpamPackage.package_of_name t.pinned name with
+          | exception Not_found -> to_update
+          | nv -> OpamPackage.Set.add nv to_update)
+        OpamPackage.Set.empty atoms
+    in
+    update_set_of_dev_packages ?autolock ~only_installed to_update t
 
 let compute_upgrade_t
     ?(strict_upgrade=true) ?(auto_install=false) ?(only_installed=false)
@@ -353,7 +362,7 @@ let upgrade_t
 
 let upgrade t ?formula ?check ?only_installed ~all names =
   let atoms = OpamSolution.sanitize_atom_list t names in
-  let t = update_dev_packages_t ~autolock:true ?only_installed atoms t in
+  let t = update_all_dev_packages ~autolock:true ?only_installed t in
   upgrade_t ?check ~strict_upgrade:(not all) ?only_installed ~all
     atoms ?formula t
 

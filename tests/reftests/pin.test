@@ -1697,4 +1697,34 @@ pinned-pkg is now pinned to git+file://${BASEDIR}/no-source-dir#master (version 
 ### rm -r OPAM/no-source-dir/.opam-switch/sources/pinned-pkg
 ### opam pin
 pinned-pkg.dev  (uninstalled)  git  git+file://${BASEDIR}/no-source-dir#master  (error while fetching current revision)
+### :C:k: opam upgrade does upgrade all the dev packages
+### opam switch create upgrade-all-dev-packages --empty
+### opam pin add nip-git git+file://$BASEDIR/nip-git
+[NOTE] Package nip-git does not exist in opam repositories registered in the current switch.
+[nip-git.dev] synchronised (git+file://${BASEDIR}/nip-git#master)
+nip-git is now pinned to git+file://${BASEDIR}/nip-git#master (version ved)
+
+The following actions will be performed:
+=== install 1 package
+  - install nip-git ved (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed nip-git.ved
+Done.
+### touch "$BASEDIR/nip-git/foo"
+### git -C "$BASEDIR/nip-git" add foo
+### git -C "$BASEDIR/nip-git" commit -qm "bang"
+### opam upgrade
+
+<><> Synchronising pinned packages ><><><><><><><><><><><><><><><><><><><><><><>
+[nip-git.ved] synchronised (git+file://${BASEDIR}/nip-git#master)
+
+The following actions will be performed:
+=== recompile 1 package
+  - recompile nip-git ved (pinned) [upstream or system changes]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   nip-git.ved
+-> installed nip-git.ved
+Done.
 [[[Killing micro_httpd]]]
