@@ -154,6 +154,7 @@ users)
 ## Doc
   * Update the documentation about the latest opam release [#7150 #7194 @kit-ty-kate]
   * Document the Git environment variables in the FAQ [#7187 @kit-ty-kate @MisterDA - fix #7152]
+  * Fix link to bubblewrap repository [#7237 @halbaroth]
 
 ## Security fixes
 
