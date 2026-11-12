@@ -14,6 +14,7 @@ users)
   * Bump version to `2.7.0~alpha1~dev` [#7064 @kit-ty-kate]
 
 ## Global CLI
+  * Add cli version 2.6 [#7229 @mtelvers]
 
 ## Plugins
 
