@@ -53,7 +53,7 @@ If only `OPAMCRITERIA` is set, it applies to all commands. If only `OPAMUPGRADEC
 The `opam` package manager is an instance of the approach described in the article "[A modular package manager architecture](http://dl.acm.org/citation.cfm?id=2401012)", which was one of the outcomes of the [Mancoosi](http://www.mancoosi.org) research project. This architecture relies on external dependency solvers for package managers, that communicate with the package manager front-end via the [CUDF format](http://www.mancoosi.org/cudf/).
 We have now several CUDF-compatible solvers, developed by a variety of research teams during the [MISC competitions](http://www.mancoosi.org/misc/) run yearly from 2010 to 2012:
 
-* [aspcud](http://www.cs.uni-potsdam.de/wv/aspcud/)
+* [aspcud](https://potassco.org/aspcud/)
 * [Mccs](http://www.i3s.unice.fr/~cpjm/misc/mccs.html)
 * [Packup](http://sat.inesc-id.pt/~mikolas/sw/packup/)
 * [P2Cudf](https://wiki.eclipse.org/Equinox/p2/CUDFResolver)
