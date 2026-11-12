@@ -89,7 +89,7 @@ doesn't affect the pinned package.
   build artefacts of given packages to an external prefix
 
 - __sandboxing__: on Linux and MacOS, all package commands will now be sandboxed by
-  default. The [`bubblewrap`](https://github.com/projectatomic/bubblewrap) tool
+  default. The [`bubblewrap`](https://github.com/containers/bubblewrap) tool
   is now required to this end on Linux, and the `sandbox_exec` command is used
   on MacOS. See [`faq entry`](FAQ.html#Why-does-opam-require-bwrap) for more details.
 

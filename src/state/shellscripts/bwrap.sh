@@ -8,7 +8,7 @@ shopt -s dotglob
 if ! command -v bwrap >/dev/null; then
     echo "The 'bwrap' command was not found. Install 'bubblewrap' on your system, or" >&2
     echo "disable sandboxing in ${OPAMROOT:-~/.opam}/config at your own risk." >&2
-    echo "See https://github.com/projectatomic/bubblewrap for bwrap details." >&2
+    echo "See https://github.com/containers/bubblewrap for bwrap details." >&2
     echo "For 'bwrap' use in opam, see the FAQ:" >&2
     echo "  https://opam.ocaml.org/doc/FAQ.html#Why-does-opam-require-bwrap" >&2
     exit 10
@@ -143,6 +143,6 @@ if ! command -v "$1" >/dev/null; then
     exit 10
 fi
 
-# Note: we assume $1 can be trusted, see https://github.com/projectatomic/bubblewrap/issues/259
+# Note: we assume $1 can be trusted, see https://github.com/containers/bubblewrap/issues/259
 # As of now we are compatible up to 0.1.8, '--' can be added here when we require >= 0.3.0
 exec bwrap "${ARGS[@]}" "$@"
