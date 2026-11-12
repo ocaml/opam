@@ -36,19 +36,17 @@ let select_packages atom_locs st =
         installed *)
      let packages =
        OpamPackage.Name.Set.fold (fun name acc ->
-           let pkgs = OpamPackage.packages_of_name packages name in
            let pkg, is_pinned =
-             let open OpamPackage.Set.Op in
-             let pinned = pkgs %% st.pinned in
-             if OpamPackage.Set.is_empty pinned then
-               pkgs %% st.installed, false
-             else pinned, true
+             match OpamPackage.Uniset.find_opt name st.pinned with
+             | None -> OpamPackage.Uniset.find_opt name st.installed, false
+             | pinned -> pinned, true
            in
            let nv =
-             match OpamPackage.Set.elements pkg with
-             | [nv] -> nv
-             | _ ->
-               (let nv = OpamPackage.Set.max_elt pkgs in
+             match pkg with
+             | Some nv -> nv
+             | None ->
+               (let pkgs = OpamPackage.packages_of_name packages name in
+                let nv = OpamPackage.Set.max_elt pkgs in
                 OpamConsole.note "Package %s is not installed nor pinned, generating lock \
                                   file for its latest version %s"
                   (OpamConsole.colorise `underline (OpamPackage.Name.to_string name))
@@ -85,7 +83,9 @@ let select_packages atom_locs st =
                (OpamPackageVar.all_depends ~depopts:false st opam)
            in
            let missing =
-             let installed_pkgs = OpamPackage.Set.union st.installed packages in
+             let installed_pkgs =
+               OpamPackage.Uniset.union_set st.installed packages
+             in
              List.filter (fun disj ->
                  List.for_all (fun (n,vc) ->
                      let pkgs = OpamPackage.packages_of_name installed_pkgs n in
@@ -104,8 +104,8 @@ let select_packages atom_locs st =
                    missing);
               acc)
            else
-             OpamPackage.Set.add nv acc)
-         names OpamPackage.Set.empty
+             OpamPackage.Uniset.add nv acc)
+         names OpamPackage.Uniset.empty
      in
      st, packages)
 
@@ -166,19 +166,24 @@ let lock_opam ~only_direct ~keep_local st opam =
   let default = select () in
   let select_depends typ selection =
     let depends = selection -- default in
-    let installed = depends %% st.installed in
-    let uninstalled =
-      OpamPackage.(Name.Set.diff
-                     (names_of_packages depends)
-                     (names_of_packages installed))
+    let installed = OpamPackage.Uniset.set_inter st.installed depends in
+    let not_installed =
+      OpamPackage.Name.Set.diff
+        (OpamPackage.names_of_packages depends)
+        (OpamPackage.Uniset.names installed)
     in
-    if OpamPackage.Name.Set.is_empty uninstalled then
-      let depends_map = map_of_set `other installed in
+    if OpamPackage.Name.Set.is_empty not_installed then
+      let depends_map =
+        OpamPackage.Uniset.fold
+          (fun nv -> OpamPackage.Map.add nv `other)
+          installed
+          OpamPackage.Map.empty
+      in
       if only_direct then depends_map
       else
         (OpamSwitchState.dependencies
            ~depopts:false ~build:true ~post:true ~installed:true
-           ~unavailable:false st installed
+           ~unavailable:false st (OpamPackage.Uniset.to_set installed)
          -- all_depends)
         |> map_of_set (`other_dep typ)
         |> OpamPackage.Map.strict_union (fun _v _o -> `other_dep typ) depends_map
@@ -187,7 +192,7 @@ let lock_opam ~only_direct ~keep_local st opam =
                         including these: %s\n"
          (OpamPackage.to_string nv)
          (OpamStd.List.concat_map ", " OpamPackage.Name.to_string
-            (OpamPackage.Name.Set.elements uninstalled));
+            (OpamPackage.Name.Set.elements not_installed));
        OpamPackage.Map.empty)
   in
   (* variables are set here as a string *)
@@ -262,11 +267,13 @@ let lock_opam ~only_direct ~keep_local st opam =
          ~build:true ~test:true ~doc:true ~dev_setup:true ~default:true
          ~post:false (OpamFile.OPAM.depopts opam))
   in
-  let installed_depopts = OpamPackage.Set.inter all_depopts st.installed in
+  let installed_depopts =
+    OpamPackage.Uniset.set_inter st.installed all_depopts
+  in
   let uninstalled_depopts =
-    OpamPackage.(Name.Set.diff
-                   (names_of_packages all_depopts)
-                   (names_of_packages installed_depopts))
+    OpamPackage.Name.Set.diff
+      (OpamPackage.names_of_packages all_depopts)
+      (OpamPackage.Uniset.names installed_depopts)
   in
   let conflicts =
     OpamFormula.ors

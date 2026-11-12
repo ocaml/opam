@@ -15,7 +15,7 @@ let log fmt = OpamConsole.log "AUXCMD" fmt
 let slog = OpamConsole.slog
 
 let package_file_changes st packages =
-  OpamPackage.Set.fold (fun nv acc ->
+  OpamPackage.Uniset.fold (fun nv acc ->
       let f =
         OpamPath.Switch.changes st.switch_global.root st.switch nv.name
       in
@@ -144,7 +144,7 @@ let name_and_dir_of_opam_file ?locked f =
 
 let resolve_locals_pinned st ?(recurse=false) ?subpath atom_or_local_list =
   let pinned_packages_of_dir st dir =
-    OpamPackage.Set.filter
+    OpamPackage.Uniset.filter
       (fun nv ->
          let open OpamStd.Option.Op in
          match subpath with
@@ -172,10 +172,10 @@ let resolve_locals_pinned st ?(recurse=false) ?subpath atom_or_local_list =
         | `Atom a -> a::acc
         | `Dirname d ->
           let pkgs = pinned_packages_of_dir st d in
-          if OpamPackage.Set.is_empty pkgs then
+          if OpamPackage.Uniset.is_empty pkgs then
             OpamConsole.warning "No pinned packages found at %s"
               (OpamFilename.Dir.to_string d);
-          List.rev_append (OpamSolution.atoms_of_packages pkgs) acc
+          List.rev_append (OpamSolution.atoms_of_packages_uset pkgs) acc
         | `Filename f ->
           OpamConsole.error_and_exit `Bad_arguments
             "This command doesn't support specifying a file name (%S)"
@@ -260,7 +260,7 @@ let autopin_aux st ?quiet ?recurse ?subpath ?locked
     resolve_locals ?quiet ?recurse ?subpath ?locked atom_or_local_list
   in
   if to_pin = [] then
-    atoms, to_pin, OpamPackage.Set.empty, OpamPackage.Set.empty
+    atoms, to_pin, OpamPackage.Uniset.empty, OpamPackage.Set.empty
   else
   let pinning_dirs =
     List.filter_map (function
@@ -277,7 +277,7 @@ let autopin_aux st ?quiet ?recurse ?subpath ?locked
     to_pin;
   let obsolete_pins =
     (* Packages not current but pinned to the same dirs *)
-    OpamPackage.Set.filter (fun nv ->
+    OpamPackage.Uniset.filter (fun nv ->
         not (List.exists (fun nf -> nf.pin_name = nv.name) to_pin) &&
         let primary_url =
           if recurse = Some true then
@@ -377,7 +377,7 @@ let simulate_local_pinnings ?quiet ?(for_view=false) st to_pin =
     if for_view then OpamPackage.Map.empty else
       OpamPackage.Map.filter_map (fun nv opam ->
           if OpamPackage.Set.mem nv local_packages then
-             Some (OpamPackage.Set.mem nv st.pinned, opam)
+             Some (OpamPackage.Uniset.mem nv st.pinned, opam)
            else
              None)
         st.opams
@@ -413,7 +413,7 @@ let simulate_autopin st ?quiet ?(for_view=false) ?locked ?recurse ?subpath
   in
   if to_pin = [] then st, atoms else
   let st =
-    OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
+    OpamPackage.Uniset.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
       obsolete_pins st
   in
   let st, pins = simulate_local_pinnings ?quiet ~for_view st to_pin in
@@ -447,17 +447,17 @@ let autopin st ?(simulate=false) ?quiet ?locked ?recurse ?subpath
   let atoms, to_pin, obsolete_pins, already_pinned_set =
     autopin_aux st ?quiet ?recurse ?subpath ?locked atom_or_local_list
   in
-  if to_pin = [] && OpamPackage.Set.is_empty obsolete_pins &&
+  if to_pin = [] && OpamPackage.Uniset.is_empty obsolete_pins &&
      OpamPackage.Set.is_empty already_pinned_set
   then st, atoms else
   let st =
     if simulate then
-      OpamPackage.Set.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
+      OpamPackage.Uniset.fold (fun nv st -> OpamPinCommand.unpin_one st nv)
         obsolete_pins st
     else
       OpamPinCommand.unpin st
         (OpamPackage.Name.Set.elements
-           (OpamPackage.names_of_packages obsolete_pins))
+           (OpamPackage.Uniset.names obsolete_pins))
   in
   let already_pinned_diff_url =
     (* is pinned but no in already pinned because not same url *)

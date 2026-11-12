@@ -411,7 +411,7 @@ let rec handle_pin_depends st nv opam =
   let extra_pins = OpamFile.OPAM.pin_depends opam in
   let extra_pins =
     List.filter (fun (nv, url) ->
-        not (OpamPackage.Set.mem nv st.pinned &&
+        not (OpamPackage.Uniset.mem nv st.pinned &&
              OpamSwitchState.primary_url st nv = Some url))
       extra_pins
   in
@@ -673,7 +673,7 @@ let pin_current st nv =
 (* pure *)
 let unpin_one st nv =
   let st =
-    { st with pinned = OpamPackage.Set.remove nv st.pinned }
+    { st with pinned = OpamPackage.Uniset.remove nv st.pinned }
   in
   (* Restore availability of other versions of this package from the repos *)
   let repo_package =
@@ -682,7 +682,7 @@ let unpin_one st nv =
   in
   let available_packages = lazy (
     OpamSwitchState.compute_available_packages
-      st.switch_global st.switch st.switch_config ~pinned:OpamPackage.Set.empty
+      st.switch_global st.switch st.switch_config ~pinned:OpamPackage.Uniset.empty
       ~opams:repo_package |>
     OpamPackage.Set.union
       (OpamPackage.Set.remove nv (Lazy.force st.available_packages))
@@ -728,7 +728,7 @@ let unpin st names =
 let list st ~short =
   log "pin_list";
   if short then
-    OpamPackage.Set.iter
+    OpamPackage.Uniset.iter
       (fun nv -> OpamConsole.msg "%s\n" (OpamPackage.name_to_string nv))
       st.pinned
   else
@@ -784,7 +784,7 @@ let list st ~short =
       [ OpamPackage.to_string nv;
         OpamConsole.colorise `red " (no definition found)" ]
   in
-  let table = List.map lines (OpamPackage.Set.elements st.pinned) in
+  let table = List.map lines (OpamPackage.Uniset.elements st.pinned) in
   OpamConsole.print_table stdout ~sep:"  " (OpamStd.Format.align_table table)
 
 (* Must not be contained in a package name, version, nor url *)

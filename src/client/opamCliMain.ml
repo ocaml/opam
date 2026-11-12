@@ -254,14 +254,14 @@ let check_and_run_external_commands () =
           else
             OpamPackage.Set.inter plugins (Lazy.force st.available_packages)
         in
-        let installed = OpamPackage.Set.inter plugins st.installed in
+        let installed = OpamPackage.Uniset.set_inter st.installed plugins in
         if OpamPackage.Set.is_empty candidates then (cli, argv)
-        else if not OpamPackage.Set.(is_empty installed) && cmd = None then
+        else if not OpamPackage.Uniset.(is_empty installed) && cmd = None then
           (OpamConsole.error
              "Plugin %s is already installed, but no %s command was found.\n\
               Try upgrading, and report to the package maintainer if \
               the problem persists."
-             (OpamPackage.to_string (OpamPackage.Set.choose installed))
+             (OpamPackage.to_string (OpamPackage.Uniset.choose installed))
              command;
            exit (OpamStd.Sys.get_exit_code `Package_operation_error))
         else if OpamPackage.Set.is_empty plugins then
@@ -285,7 +285,9 @@ let check_and_run_external_commands () =
               if cmd = None then
                 raise Not_found
               else
-                OpamPackage.package_of_name installed (OpamPackage.Name.of_string prefixed_name)
+                OpamPackage.Uniset.find
+                  (OpamPackage.Name.of_string prefixed_name)
+                  installed
             with Not_found ->
               try
                 OpamPackage.max_version plugins

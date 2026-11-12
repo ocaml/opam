@@ -131,7 +131,6 @@ type +'lock repos_state = {
 
 } constraint 'lock = 'lock lock
 
-
 (** State of a given switch: options, available and installed packages, etc.*)
 type +'lock switch_state = {
   switch_lock: OpamSystem.lock;
@@ -146,7 +145,7 @@ type +'lock switch_state = {
   switch_invariant: formula;
   (** Defines the "base" of the switch, e.g. what compiler is desired *)
 
-  compiler_packages: package_set;
+  compiler_packages: package_uniset;
   (** The packages that form the base of the current compiler. Normally equal to
       the subset of installed packages matching the invariant defined in
       switch_config *)
@@ -178,18 +177,18 @@ type +'lock switch_state = {
   available_packages: package_set Lazy.t;
   (** The set of available packages, filtered by their [available] field *)
 
-  pinned: package_set;
+  pinned: package_uniset;
   (** The set of pinned packages (their metadata, including pinning target, is
       in {!field:opams}) *)
 
-  installed: package_set;
+  installed: package_uniset;
   (** The set of all installed packages *)
 
   installed_opams: OpamFile.OPAM.t package_map;
   (** The cached metadata of installed packages (may differ from the metadata
       that is in {!field:opams} for updated packages) *)
 
-  installed_roots: package_set;
+  installed_roots: package_uniset;
   (** The set of packages explicitly installed by the user. Some of them may
       happen not to be installed at some point, but this indicates that the
       user would like them installed. *)

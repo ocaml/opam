@@ -29,7 +29,7 @@ let list gt ~print_short =
   let installed_switches =
     OpamGlobalState.fold_switches (fun sw sel acc ->
         let opams =
-          OpamPackage.Set.fold (fun nv acc ->
+          OpamPackage.Uniset.fold (fun nv acc ->
               match
                 OpamFile.OPAM.read_opt
                   (OpamPath.Switch.installed_opam gt.root sw nv)
@@ -43,7 +43,7 @@ let list gt ~print_short =
         in
         let comp =
           OpamPackage.Map.filter
-            (fun nv _ -> OpamPackage.Set.mem nv sel.sel_compiler)
+            (fun nv _ -> OpamPackage.Uniset.mem nv sel.sel_compiler)
             opams
           |> ifempty opams
         in
@@ -260,6 +260,7 @@ let install_compiler
   in
   let t =
     let base_comp =
+      let open OpamPackage.Uniset.Op in
       OpamSwitchState.compute_invariant_packages
         { t with installed = t.installed
                              -- (OpamSolver.removed_packages solution)
@@ -269,12 +270,13 @@ let install_compiler
   in
   let skip =
     if deps_only then
-      let pkgs =
-        OpamPackage.packages_of_names (OpamSolver.new_packages solution)
-          add_names
-      in
-      OpamPackage.Set.fold (fun nv map -> OpamPackage.Map.add nv nv map)
-        pkgs OpamPackage.Map.empty
+      let new_packages = OpamSolver.new_packages solution in
+      OpamPackage.Name.Set.fold
+        (fun name acc ->
+           match OpamPackage.Uniset.find_opt name new_packages with
+           | Some nv -> OpamPackage.Map.add nv nv acc
+           | None -> acc)
+        add_names OpamPackage.Map.empty
     else OpamPackage.Map.empty
   in
   let t, result =
@@ -321,7 +323,7 @@ let create
       let st = { st with switch_invariant = invariant; switch_config } in
       let available_packages =
         lazy (OpamSwitchState.compute_available_packages gt switch switch_config
-                ~pinned:OpamPackage.Set.empty
+                ~pinned:OpamPackage.Uniset.empty
                 ~opams:st.opams)
       in
       gt, { st with switch; available_packages }
@@ -441,10 +443,9 @@ let import_t ?ask ?(deps_only=false) importfile t =
   let packages = t.packages ++ OpamPackage.keys opams in
 
   let pinned =
-    let names = OpamPackage.names_of_packages import_sel.sel_pinned in
-    OpamPackage.Set.filter
-      (fun nv -> not (OpamPackage.Name.Set.mem nv.name names)) t.pinned ++
-    import_sel.sel_pinned
+    OpamPackage.Uniset.union
+      ~conflict:(fun _from_t from_import -> Some from_import)
+      t.pinned import_sel.sel_pinned
   in
 
   let available =
@@ -454,15 +455,16 @@ let import_t ?ask ?(deps_only=false) importfile t =
   in
 
   let compiler_packages, to_install =
-    if OpamPackage.Set.is_empty t.compiler_packages then
-      import_sel.sel_compiler %% available,
+    if OpamPackage.Uniset.is_empty t.compiler_packages then
+      OpamPackage.Uniset.set_inter import_sel.sel_compiler available,
       import_sel.sel_installed
     else
       t.compiler_packages,
-      import_sel.sel_installed -- import_sel.sel_compiler
+      OpamPackage.Uniset.diff import_sel.sel_installed import_sel.sel_compiler
   in
   let to_install =
     if deps_only then
+      let open OpamPackage.Uniset.Op in
       to_install -- (import_sel.sel_roots -- import_sel.sel_compiler)
     else to_install
   in
@@ -478,34 +480,37 @@ let import_t ?ask ?(deps_only=false) importfile t =
 
   let unavailable_version, unavailable =
     let available_names = OpamPackage.names_of_packages available in
-    OpamPackage.Set.partition
+    OpamPackage.Uniset.partition
       (fun nv -> OpamPackage.Name.Set.mem nv.name available_names)
-      (to_install -- available)
+      (OpamPackage.Uniset.set_diff to_install available)
   in
 
-  if not (OpamPackage.Set.is_empty unavailable_version) then
+  if not (OpamPackage.Uniset.is_empty unavailable_version) then
     OpamConsole.warning
       "These packages aren't available at the specified versions, \
        version constraints have been discarded:\n%s"
       (OpamStd.Format.itemize OpamPackage.to_string
-         (OpamPackage.Set.elements unavailable_version));
-  if not (OpamPackage.Set.is_empty unavailable) then
+         (OpamPackage.Uniset.elements unavailable_version));
+  if not (OpamPackage.Uniset.is_empty unavailable) then
     OpamConsole.warning
       "These packages are unavailable, they have been ignored from \
        the import file:\n%s"
       (OpamStd.Format.itemize OpamPackage.to_string
-         (OpamPackage.Set.elements unavailable));
+         (OpamPackage.Uniset.elements unavailable));
 
+  let to_install_avail = OpamPackage.Uniset.set_inter to_install available in
   let t, solution =
     let to_import =
-      OpamSolution.eq_atoms_of_packages (to_install %% available) @
-      OpamSolution.atoms_of_packages unavailable_version
+      OpamSolution.eq_atoms_of_packages_uset to_install_avail @
+      OpamSolution.atoms_of_packages_uset unavailable_version
     in
 
-    let add_roots = OpamPackage.names_of_packages import_sel.sel_roots in
-
+    let add_roots = OpamPackage.Uniset.names import_sel.sel_roots in
+    let requested =
+      OpamPackage.Uniset.(to_set (union to_install_avail unavailable_version))
+    in
     OpamSolution.resolve_and_apply ?ask t Import
-      ~requested:((to_install %% available) ++ unavailable_version)
+      ~requested
       ~add_roots
       (OpamSolver.request ~install:to_import ())
   in
@@ -514,7 +519,7 @@ let import_t ?ask ?(deps_only=false) importfile t =
   if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show))
   then begin
     (* Put imported overlays in place *)
-    OpamPackage.Set.iter (fun nv ->
+    OpamPackage.Uniset.iter (fun nv ->
         match OpamPackage.Name.Map.find_opt nv.name import_opams with
         | None -> ()
         | Some opam ->
@@ -594,12 +599,12 @@ let export rt ?(freeze=false) ?(full=false)
     let opams =
       let read_opams read pkgs =
         let src_dir nv =
-          if OpamPackage.Set.mem nv selections.sel_pinned then
+          if OpamPackage.Uniset.mem nv selections.sel_pinned then
             OpamPath.Switch.pinned_package root switch nv.name
           else
             OpamPath.Switch.sources root switch nv
         in
-        OpamPackage.Set.fold (fun nv map ->
+        OpamPackage.Uniset.fold (fun nv map ->
             match read nv with
             | Some opam ->
               let opam =
@@ -619,7 +624,7 @@ let export rt ?(freeze=false) ?(full=false)
         OpamPackage.Map.strict_union (fun a _ -> a) overlays
         @@ read_opams (fun nv -> OpamFile.OPAM.read_opt
                           (OpamPath.Switch.installed_opam root switch nv))
-          (selections.sel_installed -- selections.sel_pinned)
+          (OpamPackage.Uniset.diff selections.sel_installed selections.sel_pinned)
     in
     let overlays =
       OpamPackage.Map.fold (fun nv opam nmap ->
@@ -677,8 +682,8 @@ let reinstall init_st =
   OpamFilename.cleandir (OpamPath.Switch.installed_opams gt.root switch);
   let st =
     { init_st with
-      installed = OpamPackage.Set.empty;
-      installed_roots = OpamPackage.Set.empty;
+      installed = OpamPackage.Uniset.empty;
+      installed_roots = OpamPackage.Uniset.empty;
       reinstall = lazy OpamPackage.Set.empty; }
   in
   import_t { OpamFile.SwitchExport.

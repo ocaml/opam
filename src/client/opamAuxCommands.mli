@@ -18,12 +18,12 @@ open OpamStateTypes
     given switch, and copies the corresponding files to the same relative paths
     below the given prefix ; files that are not current according to the
     recorded package changes print warnings and aren't copied. *)
-val copy_files_to_destdir: 'a switch_state -> dirname -> package_set -> unit
+val copy_files_to_destdir: 'a switch_state -> dirname -> package_uniset -> unit
 
 (** Removes all files that may have been installed by {!copy_files_to_destdir};
     it's more aggressive than {!OpamDirTrack.revert} and doesn't check if the
     files are current. *)
-val remove_files_from_destdir: 'a switch_state -> dirname -> package_set -> unit
+val remove_files_from_destdir: 'a switch_state -> dirname -> package_uniset -> unit
 
 (** If the URL points to a local, version-controlled directory, qualify it by
     suffixing `#current-branch` if no branch/tag/hash was specified. *)

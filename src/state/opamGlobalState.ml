@@ -181,12 +181,12 @@ let switch_exists gt switch =
 
 let all_installed gt =
   fold_switches (fun _ sel acc ->
-      OpamPackage.Set.union acc sel.sel_installed)
+      OpamPackage.Uniset.union_set sel.sel_installed acc)
     gt  OpamPackage.Set.empty
 
 let all_installed_versions gt =
   fold_switches (fun switch sel acc ->
-      OpamPackage.Set.fold (fun nv acc ->
+      OpamPackage.Uniset.fold (fun nv acc ->
         OpamPackage.Map.add_to_list nv switch acc) sel.sel_installed acc)
     gt OpamPackage.Map.empty
 

@@ -71,6 +71,9 @@ type package = OpamPackage.t = private {
 (** Set of packages *)
 type package_set = OpamPackage.Set.t
 
+(** Set of packages that contains at most one version of a given package name. *)
+type package_uniset = OpamPackage.Uniset.t
+
 (** Map of packages *)
 type 'a package_map = 'a OpamPackage.Map.t
 
@@ -352,10 +355,10 @@ type switch_set = OpamSwitch.Set.t
 type 'a switch_map = 'a OpamSwitch.Map.t
 
 type switch_selections = {
-  sel_installed: package_set;
-  sel_roots: package_set;
-  sel_compiler: package_set;
-  sel_pinned: package_set;
+  sel_installed: package_uniset;
+  sel_roots: package_uniset;
+  sel_compiler: package_uniset;
+  sel_pinned: package_uniset;
 }
 
 

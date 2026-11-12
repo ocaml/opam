@@ -451,10 +451,10 @@ let from_1_2_to_1_3_dev2 ~on_the_fly:_ root config =
       let installed_roots_f = switch_dir // "installed.roots" in
       let pinned_f = switch_dir // "pinned" in
       let installed =
-        OpamFile.PkgList.safe_read (OpamFile.make installed_f)
+        OpamFile.PkgUList.safe_read (OpamFile.make installed_f)
       in
       let installed_roots =
-        OpamFile.PkgList.safe_read (OpamFile.make installed_roots_f)
+        OpamFile.PkgUList.safe_read (OpamFile.make installed_roots_f)
       in
       let pinned =
         OpamFile.Pinned_legacy.safe_read (OpamFile.make pinned_f)
@@ -478,8 +478,8 @@ let from_1_2_to_1_3_dev2 ~on_the_fly:_ root config =
       in
       let sel_pinned =
         OpamPackage.Name.Map.fold
-          (fun name (v,_) -> OpamPackage.Set.add (OpamPackage.create name v))
-          pinned OpamPackage.Set.empty
+          (fun name (v,_) -> OpamPackage.Uniset.add (OpamPackage.create name v))
+          pinned OpamPackage.Uniset.empty
       in
       let compiler =
         let version = match OpamStd.String.cut_at c '+' with
@@ -497,13 +497,13 @@ let from_1_2_to_1_3_dev2 ~on_the_fly:_ root config =
                 let v, _ = OpamPackage.Name.Map.find name pinned in
                 OpamPackage.create name v
               with Not_found ->
-              try OpamPackage.max_version installed name
+              try OpamPackage.Uniset.find name installed
               with Not_found ->
                 OpamPackage.create name
                   (OpamPackage.Version.of_string "~unknown")
             in
-            OpamPackage.Set.add nv acc)
-          OpamPackage.Set.empty atoms
+            OpamPackage.Uniset.add nv acc)
+          OpamPackage.Uniset.empty atoms
       in
       OpamFile.LegacyState.write (OpamFile.make (switch_dir // "state"))
         { sel_installed = installed;
@@ -514,7 +514,7 @@ let from_1_2_to_1_3_dev2 ~on_the_fly:_ root config =
       OpamFilename.remove installed_roots_f;
       OpamFilename.remove pinned_f;
       (* Move .config files back *)
-      OpamPackage.Set.iter (fun nv ->
+      OpamPackage.Uniset.iter (fun nv ->
           let name = nv.name in
           let src =
             switch_dir / "lib" / OpamPackage.Name.to_string name //
@@ -664,9 +664,9 @@ let from_1_3_dev2_to_1_3_dev5 ~on_the_fly:_ root conf =
                 OpamFile.Dot_config.bindings config)
                switch_config);
           { selections with
-            sel_installed = OpamPackage.Set.add nv selections.sel_installed;
-            sel_compiler = OpamPackage.Set.add nv selections.sel_compiler;
-            sel_roots = OpamPackage.Set.add nv selections.sel_roots; }
+            sel_installed = OpamPackage.Uniset.add nv selections.sel_installed;
+            sel_compiler = OpamPackage.Uniset.add nv selections.sel_compiler;
+            sel_roots = OpamPackage.Uniset.add nv selections.sel_roots; }
         else selections
       in
       OpamFile.SwitchSelections.write selections_f selections;
@@ -716,7 +716,7 @@ let from_1_3_dev6_to_1_3_dev7 ~on_the_fly:_ root conf =
         .sel_installed
       in
       OpamFilename.mkdir (meta_dir / "packages");
-      OpamPackage.Set.iter (fun nv ->
+      OpamPackage.Uniset.iter (fun nv ->
           let dstdir =
             meta_dir / "packages" / OpamPackage.to_string nv
           in
@@ -818,7 +818,7 @@ let from_2_0_alpha_to_2_0_alpha2 ~on_the_fly:_ root conf =
       let selections_file = OpamFile.make (meta_dir // "switch-state") in
       let selections = OpamFile.SwitchSelections.BestEffort.safe_read selections_file in
       let new_compilers =
-        OpamPackage.Set.map (fun nv ->
+        OpamPackage.Uniset.map (fun nv ->
             if nv.name <> OpamPackage.Name.of_string "ocaml" then nv else
             let config_f nv =
               OpamFile.make (meta_dir / "config" //
@@ -883,7 +883,7 @@ let from_2_0_alpha_to_2_0_alpha2 ~on_the_fly:_ root conf =
           selections.sel_compiler
       in
       let selections =
-        let open OpamPackage.Set.Op in
+        let open OpamPackage.Uniset.Op in
         { selections with
           sel_installed = selections.sel_installed
                           -- selections.sel_compiler ++ new_compilers;
@@ -894,7 +894,7 @@ let from_2_0_alpha_to_2_0_alpha2 ~on_the_fly:_ root conf =
       OpamFile.SwitchSelections.write selections_file selections;
 
       (* Update pinned overlay opam files *)
-      OpamPackage.Set.iter (fun nv ->
+      OpamPackage.Uniset.iter (fun nv ->
           let pkg_dir =
             meta_dir / "overlay" / OpamPackage.Name.to_string nv.name
           in
@@ -979,10 +979,10 @@ let from_2_0_alpha3_to_2_0_beta ~on_the_fly:_ root conf =
                 OpamFilename.(Base.to_string (basename_dir d))
             in
             let dst =
-              if OpamPackage.has_name state.sel_pinned name then
+              if OpamPackage.Uniset.has_name name state.sel_pinned then
                 sources_dir / OpamPackage.Name.to_string name
               else
-                let nv = OpamPackage.package_of_name state.sel_installed name in
+                let nv = OpamPackage.Uniset.find name state.sel_installed in
                 sources_dir / OpamPackage.to_string nv
             in
             (* Extract version-pinned archives to source dirs *)

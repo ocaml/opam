@@ -160,16 +160,26 @@ users)
 
 # API updates
 ## opam-client
+  * Change `OpamSolution.install_depexts` `~pkg_to_install` and `~pkg_installed` arguments from `package_set` to `package_uniset` [#7224 @NathanReb]
+  * Add `OpamSolution.atoms_of_packages_uset` and `eq_atoms_of_packages_uset` as uniset variants of `atoms_of_packages` and `eq_atoms_of_packages` [#7224 @NathanReb]
+  * Change `OpamLockCommand.select_packages` return type from `package_set` to `package_uniset` [#7224 @NathanReb]
+  * Change `OpamAuxCommands.copy_files_to_dest_dir`, `remove_files_from_destdir` and `OpamClient.post_pin_action`'s `package_set` argument to `package_uniset` [#7224 @NathanReb]
 
 ## opam-repository
   * `OpamGit`: git calls now will all carry git config `safe.directory=.` (current directory) [#6980 @kit-ty-kate - fix #6963]
 
 ## opam-state
   * `OpamSwitchState.update_sys_packages` (new in 2.6.0) was removed in favour of the already existing `update_package_metadata` or `update_pin` functions [#7158 @kit-ty-kate]
+  * Use `OpamPackage.Uniset` to represent `switch_state`'s `installed`, `pinned`, `installed_roots` and `compiler_packages` and subsets of those [#7224 @NathanReb]
+  * Add `OpamSwitchState.installed_dependencies` and `installed_rev_deps` as uniset variants of `dependencies` and `reverse_dependencies`. [#7224 @NathanReb]
 
 ## opam-solver
+  * Change `OpamSolver.new_packages` and `OpamSolver.removed_packages` return type from a `package_set` to a `package_uniset` [#7224 @NathanReb]
 
 ## opam-format
+  * Add `OpamPackage.Uniset` to represent sets of package with at most one version of any given package. [#7224 @NathanReb]
+  * Add `package_uniset` variants of `OpamFormula.packages` and `OpamFormula.packages_of_atoms` [#7224 @NathanReb]
+  * Change `OpamFormula.satisfies_depends` first argument from a `package_set` to a `package_uniset` [#7224 @NathanReb]
 
 ## opam-core
   * `OpamCmdliner` was upgraded to version 2.1.1 [#6867 @BrianWard @kit-ty-kate]

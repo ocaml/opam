@@ -640,17 +640,17 @@ let new_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->
       match action with
       | `Install p | `Change (_,_,p) ->
-        OpamPackage.Set.add (OpamCudf.cudf2opam p) packages
+        OpamPackage.Uniset.add (OpamCudf.cudf2opam p) packages
       | `Reinstall _ | `Remove _ | `Build _ | `Fetch _ -> packages
-  ) sol OpamPackage.Set.empty
+  ) sol OpamPackage.Uniset.empty
 
 let removed_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->
       match action with
       | `Remove p | `Change (_,p,_) ->
-        OpamPackage.Set.add (OpamCudf.cudf2opam p) packages
+        OpamPackage.Uniset.add (OpamCudf.cudf2opam p) packages
       | `Install _ | `Reinstall _ | `Build _ | `Fetch _ -> packages
-  ) sol OpamPackage.Set.empty
+  ) sol OpamPackage.Uniset.empty
 
 let all_packages sol =
   OpamCudf.ActionGraph.fold_vertex (fun action packages ->

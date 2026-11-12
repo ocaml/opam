@@ -135,6 +135,128 @@ val list: OpamFilename.Dir.t -> Set.t
     their eventual prefixes). *)
 val prefixes: OpamFilename.Dir.t -> string option Map.t
 
+module Uniset : sig
+  (** Set of packages containing at most one version of any given package name *)
+
+  exception Multiple_versions of Name.t
+
+  type package = t
+  type t
+
+  val empty : t
+  val is_empty : t -> bool
+  val is_singleton : t -> bool
+  val compare : t -> t -> int
+  val find : Name.t -> t -> package
+  val find_opt : Name.t -> t -> package option
+  val find_set : Name.Set.t -> t -> t
+  val choose : t -> package
+  val has_name : Name.t -> t -> bool
+  val mem : package -> t -> bool
+  val elements : t -> package list
+  val fold : (package -> 'acc -> 'acc) -> t -> 'acc -> 'acc
+  val iter : (package -> unit) -> t -> unit
+  val filter : (package -> bool) -> t -> t
+  val exists : (package -> bool) -> t -> bool
+
+  (** [map ~conflict f t] returns the uniset [t'] containing the results
+      of applying [f] to elements of [t]. [conflict] is called to determine
+      what to do with conflicting versions of the same package. *)
+  val map :
+    ?conflict:(package -> package -> package option) ->
+    (package -> package) ->
+    t ->
+    t
+
+  (** [partition pred t] returns [t1 , t2] where [t1] is all elements of [t]
+      that satisfy [pred] and [t2] all elements that do not. *)
+  val partition: (package -> bool) -> t -> t * t
+
+  (** [add pkg t] adds package [pkg] to the uniset [t]. If another version of this
+      package was already in [t], replace it with [pkg]. *)
+  val add : package -> t -> t
+
+  (** [remove pkg t] removes [pkg] from [t] if it was included in the uniset,
+      returns it unchanged otherwise. *)
+  val remove : package -> t -> t
+
+  (** [remove_name name t] removes the package named [name] from the [t] if present,
+      returns [t] unchanged otherwise. *)
+  val remove_name : Name.t -> t -> t
+
+  (** [union ~on_conflit t1 t2] returns the union of the uniset [t1] and [t2].
+      When [t1] and [t2] contain a different version of a given package each,
+      [conflict] is called to determine what to do.
+      By default, [conflict] will choose the version from the second
+      argument. *)
+  val union :
+    ?conflict: (package -> package -> package option) -> t -> t -> t
+
+  val strict_union : t -> t -> Set.t
+
+  (** [inter ~on_conflit t1 t2] returns the intersection of the uniset
+      [t1] and [t2]. *)
+  val inter : t -> t -> t
+
+  (** [diff ~on_conflit t1 t2] returns the diff of the uniset [t1] and [t2],
+      i.e. packages that are in [t1] and not in [t2]. *)
+  val diff : t -> t -> t
+
+  (** [union_set t set] returns the union of the given uniset and set. *)
+  val union_set : t -> Set.t -> Set.t
+
+  (** [set_inter t set] returns the intersection between the given uniset and
+      set, i.e. elements of [t] that are also in [set]. *)
+  val set_inter : t -> Set.t -> t
+
+  (** [set_diff t set] returns the diff between the given uniset and
+      set, i.e. elements of [t] that are not in [set]. *)
+  val set_diff : t -> Set.t -> t
+
+  (** opposite of {!set_diff}. *)
+  val diff_set : Set.t -> t -> Set.t
+
+  (** Builds a uniset from a set of packages.
+      When the given set contains more than one version of a given package,
+      [conflict] is called (first argument is the one already in the uniset).
+      By default, raises [Multiple_version _] if the given set contains more
+      than one version of any given package. *)
+  val of_set :
+    ?conflict: (package -> package -> package option) -> Set.t -> t
+
+  val to_set : t -> Set.t
+
+  (** Same as {!of_set} but with keys of a package map. *)
+  val of_map :
+    ?conflict: (package -> package -> package option) -> _ Map.t -> t
+
+  (** Same as {!of_set} but with list input. *)
+  val of_list :
+    ?conflict: (package -> package -> package option) -> package list -> t
+
+  val to_list : t -> package list
+
+  val to_list_map : (package -> 'a) -> t -> 'a list
+
+  val names : t -> Name.Set.t
+
+  (** [to_string t] returns a pretty-printed version of [t] for debugging
+      purposes. *)
+  val to_string : t -> string
+
+  module Op : sig
+
+    (** Infix uniset union with default conflict handling *)
+    val (++) : t -> t -> t
+
+    (** Infix uniset difference *)
+    val (--) : t -> t -> t
+
+    (** Infix uniset intersection *)
+    val (%%) : t -> t -> t
+  end
+end
+
 (** {2 Errors} *)
 
 (** Parallel executions. *)
