@@ -503,6 +503,7 @@ module Sys : sig
           | Cygwin
           | Win32
           | Haiku
+          | Illumos
           | Unix
           | Other of string
 

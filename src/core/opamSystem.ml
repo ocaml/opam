@@ -932,7 +932,7 @@ module Tar = struct
 
   let tar_cmd = lazy (
     match OpamStd.Sys.os () with
-    | OpamStd.Sys.OpenBSD -> "gtar"
+    | OpamStd.Sys.OpenBSD | OpamStd.Sys.Illumos -> "gtar"
     | _ -> "tar"
   )
 

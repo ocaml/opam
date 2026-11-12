@@ -8,6 +8,7 @@ DEBUG=
 MAKESELF=
 INSTALL_PACKAGES=()
 TARGET=
+TAR=${TAR:-tar}
 
 help() {
     echo "Usage: $0 [OPTIONS] PACKAGES..."
@@ -92,7 +93,7 @@ else
     wget "$OPAM_REPO/index.tar.gz" -O "$REPO.tar.gz"
     mkdir -p "$REPO"
     cd "$REPO"
-    tar xzf "$REPO.tar.gz"
+    "$TAR" xzf "$REPO.tar.gz"
     rm -f "$REPO.tar.gz"
 fi
 cd "$REPO"
@@ -148,7 +149,7 @@ else
    title "Bootstrap: compiling OCaml"
 
    echo "This may take a while. Output is in \$LOG"
-   logged_cmd "Uncompressing" tar xzf repo/archives/ocaml-base-compiler."$OCAMLV"/*
+   logged_cmd "Uncompressing" "$TAR" xzf repo/archives/ocaml-base-compiler."$OCAMLV"/*
    cd "ocaml-$OCAMLV"
    logged_cmd "Configuring" ./configure -prefix "\$PREFIX"
    logged_cmd "Compiling" make world world.opt
@@ -162,7 +163,7 @@ else
    title "Bootstrap: compiling opam"
 
    echo "This may take a while. Output is in \$LOG"
-   logged_cmd "Uncompressing" tar xzf "opam-full-$OPAMTAG.tar.gz"
+   logged_cmd "Uncompressing" "$TAR" xzf "opam-full-$OPAMTAG.tar.gz"
    cd "opam-full-$OPAMTAG"
    logged_cmd "Configuring" ./configure --prefix "\$PREFIX" --with-vendored-deps
    logged_cmd "Compiling" make
@@ -225,6 +226,6 @@ cd $(dirname "$CONTENT")
 if [ -n "$MAKESELF" ]; then
     makeself $(basename "$CONTENT") "$TARGET" "$(basename "${TARGET%%.*}")" ./compile.sh
 else
-    tar cz $(basename "$CONTENT") -f "$TARGET"
+    "$TAR" cz $(basename "$CONTENT") -f "$TARGET"
 fi
 echo "Bundle has been generated as $TARGET"
