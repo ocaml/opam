@@ -27,6 +27,7 @@ users)
 
   * Fix a bug triggering unnecessary reinstallation of packages not directly involved in the solution [#7154 @NathanReb]
   * Fix a bug where `opam install --depext-only` would try to install depexts of packages that needed to be removed or upgraded [#7166, @NathanReb]
+  * Fix a bug where opam wouldn't properly report that version pinned package cannot be installed because of missing depexts [#7206, @NathanReb]
 
 ## Build (package)
 

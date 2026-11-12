@@ -160,3 +160,29 @@ Now run 'opam upgrade' to apply any package updates.
 
 No solution found, exiting
 # Return code 20 #
+### :IX: Pinned AND missing depext
+### : This case a little bit tricky. Our target package a depends on b.
+### : We have two versions of b: b.1 which has a missing depext and b.2 which
+### : has not.
+### : We pin b to 1 so b.2 is excluded because of the pinning and the only
+### : remaining valid candidate, b.1, is excluded because of the missing depext.
+### : This should be reported as a Missing depext case.
+### <pkg:a.1>
+opam-version: "2.0"
+depends: ["b"]
+### <pkg:b.1>
+opam-version: "2.0"
+depexts: ["missing-depext"]
+### <pkg:b.2>
+opam-version: "2.0"
+### opam pin add -n b 1
+[NOTE] Pinning unchanged
+b is now pinned to version 1
+### opam install a.1
+[ERROR] Package conflict!
+  * Missing dependency:
+    - a -> b
+    depends on the unavailable system package 'missing-depext'. Use `--no-depexts' to attempt installation anyway, or it is possible that a depext package name in the opam file is incorrect.
+
+No solution found, exiting
+# Return code 20 #
