@@ -1482,6 +1482,7 @@ let default_subcommand cli =
   Cmd.info "opam admin"
     ~version:(OpamVersion.to_string OpamVersion.current)
     ~sdocs:OpamArg.global_option_section
+    ~exits:[]
     ~doc:admin_command_doc
     ~man
 

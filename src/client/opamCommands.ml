@@ -4604,6 +4604,7 @@ let default cli =
   Cmd.info "opam"
     ~version:(OpamVersion.to_string OpamVersion.current)
     ~sdocs:global_option_section
+    ~exits:[]
     ~doc
     ~man
 
