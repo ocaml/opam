@@ -10,6 +10,7 @@
 
 let () =
   OpamUnit.run_tests @@ fun ctxt ->
+  TestOpamStd.test ~ctxt ();
   TestOpamFilename.test ~ctxt ();
   TestOpamSystem.test ~ctxt ();
   ()
