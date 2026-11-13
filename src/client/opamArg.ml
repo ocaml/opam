@@ -1116,7 +1116,7 @@ let mk_enum_opt ~cli validity ?(section=Manpage.s_options) flags value states
 let term_info ~cli title ~doc ~man =
   let man = man @ help_sections cli in
   Cmd.info ~sdocs:global_option_section ~docs:Manpage.s_commands
-    ~doc ~man title
+    ~exits:[] ~doc ~man title
 
 let mk_command ~cli validity name ~doc ~man =
   mk_command ~cli validity term_info name ~doc ~man
@@ -1142,7 +1142,7 @@ let make_command_alias ~cli cmd ?(options="") name =
   term,
   Cmd.info name
     ~docs:"COMMAND ALIASES" ~sdocs:global_option_section
-    ~doc ~man
+    ~exits:[] ~doc ~man
 
 let arg_list name doc kind =
   let doc = Arg.info ~docv:name ~doc [] in
