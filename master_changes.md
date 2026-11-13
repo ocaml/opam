@@ -155,6 +155,7 @@ users)
   * Update the documentation about the latest opam release [#7150 #7194 @kit-ty-kate]
   * Document the Git environment variables in the FAQ [#7187 @kit-ty-kate @MisterDA - fix #7152]
   * Fix link to bubblewrap repository [#7237 @halbaroth]
+  * Stop listing cmdliner's default exit codes (123, 124, 125), which opam doesn't use, in the manual pages [#0000 @Lotion-3 - fix #5744]
 
 ## Security fixes
 
