@@ -19,6 +19,10 @@ install: "true"
 ### opam pin add format-errors 1 --no-action
 format-errors is now pinned to version 1
 ### OPAMEDITOR=cat opam pin edit format-errors --no-action
+[ERROR] In the opam file for format-errors.1 from repository default:
+          - At packages/format-errors/format-errors.1/opam:2:24-2:29::
+            expected [ident-or-string ?{?filter-expression}]
+        'build' has been ignored.
 opam-version: "2.0"
 install: [ "true" ]
 name: "format-errors"
@@ -39,6 +43,10 @@ build: [ ["echo" "foo"] "bar" ]
 install: [ "true" ]
 ### OPAMEDITOR=cat opam pin add ./format-errors-src --edit --no-action
 [NOTE] Package format-errors-src does not exist in opam repositories registered in the current switch.
+[ERROR] In the opam file in ${BASEDIR}/format-errors-src:
+          - At ${BASEDIR}/format-errors-src/format-errors-src.opam:3:24-3:29::
+            expected [ident-or-string ?{?filter-expression}]
+        'build' has been ignored.
 opam-version: "2.0"
 version: "1"
 install: [ "true" ]

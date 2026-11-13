@@ -245,6 +245,9 @@ let edit st ?version name =
         | None -> OpamFileTools.template new_nv
         | Some o -> OpamFile.OPAM.with_version new_nv.version o
      in
+     (* Fields with format errors were dropped when the opam file was read,
+        so they won't be in the file to edit *)
+     OpamFile.OPAM.print_errors base_opam;
      OpamFile.OPAM.write_with_preserved_format
        ?format_from:(OpamPinned.orig_opam_file st name base_opam)
        temp_file base_opam);
@@ -584,9 +587,10 @@ and source_pin
         OpamFile.OPAM.with_url_opt urlf opam_base
       in
       if not (OpamFile.exists temp_file) then
-        OpamFile.OPAM.write_with_preserved_format
-          ?format_from:(OpamPinned.orig_opam_file st name opam_base)
-          temp_file opam_base;
+        (OpamFile.OPAM.print_errors opam_base;
+         OpamFile.OPAM.write_with_preserved_format
+           ?format_from:(OpamPinned.orig_opam_file st name opam_base)
+           temp_file opam_base);
       edit_raw name temp_file >>|
       (* Preserve metadata_dir so that copy_files below works *)
       OpamFile.OPAM.(with_metadata_dir (metadata_dir opam_base))
