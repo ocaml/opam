@@ -1,0 +1,66 @@
+N0REP0
+### :: Test case for issue #6884: when an opam file has fields that are ignored
+### :: because of format errors, opam pin edit should say so
+### OPAMYES=1
+### opam switch create format-errors --empty
+### <pkg:format-errors.1>
+opam-version: "2.0"
+build: [ ["echo" "foo"] "bar" ]
+install: [ "true" ]
+### opam show --raw format-errors
+[ERROR] In the opam file for format-errors.1 from repository default:
+          - At packages/format-errors/format-errors.1/opam:2:24-2:29::
+            expected [ident-or-string ?{?filter-expression}]
+        'build' has been ignored.
+opam-version: "2.0"
+name: "format-errors"
+version: "1"
+install: "true"
+### opam pin add format-errors 1 --no-action
+format-errors is now pinned to version 1
+### OPAMEDITOR=cat opam pin edit format-errors --no-action
+[ERROR] In the opam file for format-errors.1 from repository default:
+          - At packages/format-errors/format-errors.1/opam:2:24-2:29::
+            expected [ident-or-string ?{?filter-expression}]
+        'build' has been ignored.
+opam-version: "2.0"
+install: [ "true" ]
+name: "format-errors"
+version: "1"
+[WARNING] The opam file didn't pass validation:
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+             error 57: Synopsis must not be empty
+           warning 68: Missing field 'license'
+Proceed anyway ('no' will re-edit)? [Y/n] y
+You can edit this file again with "opam pin edit format-errors", export it with "opam show format-errors --raw"
+### <format-errors-src/format-errors-src.opam>
+opam-version: "2.0"
+version: "1"
+build: [ ["echo" "foo"] "bar" ]
+install: [ "true" ]
+### OPAMEDITOR=cat opam pin add ./format-errors-src --edit --no-action
+[NOTE] Package format-errors-src does not exist in opam repositories registered in the current switch.
+[ERROR] In the opam file in ${BASEDIR}/format-errors-src:
+          - At ${BASEDIR}/format-errors-src/format-errors-src.opam:3:24-3:29::
+            expected [ident-or-string ?{?filter-expression}]
+        'build' has been ignored.
+opam-version: "2.0"
+version: "1"
+install: [ "true" ]
+url {
+  src: "file://${BASEDIR}/format-errors-src"
+}
+[WARNING] The opam file didn't pass validation:
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+           warning 37: Missing field 'dev-repo'
+             error 57: Synopsis must not be empty
+           warning 68: Missing field 'license'
+Proceed anyway ('no' will re-edit)? [Y/n] y
+You can edit this file again with "opam pin edit format-errors-src", export it with "opam show format-errors-src --raw"
+format-errors-src is now pinned to file://${BASEDIR}/format-errors-src (version 1)

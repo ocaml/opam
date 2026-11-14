@@ -43,6 +43,7 @@ users)
 ## Config
 
 ## Pin
+  * `opam pin edit` and `opam pin --edit` now show the errors of an opam file that has fields ignored because of format errors, as those fields are missing from the file to edit [#7239 @Lotion-3 - fix #6884]
 
 ## List
 
@@ -140,6 +141,7 @@ users)
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
   * Add reftests for unavailability reason on unsolvable request in `unavailable-reason.test` [#7206 @NathanReb]
   * Cleanup leftovers from dual cmdliner 1.0 and 1.1 support [#7216 @kit-ty-kate]
+  * Add a test for `opam pin edit` and `opam pin --edit` with an opam file that has fields ignored because of format errors [#7239 @Lotion-3]
 
 ### Engine
 
