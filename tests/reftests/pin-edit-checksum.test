@@ -1,0 +1,38 @@
+N0REP0
+### :: Test case for issue #7143: opam pin edit on a package that is not pinned
+### :: yet should keep the checksum of its url
+### OPAMYES=1
+### opam switch create pin-edit-checksum --empty
+### <pkg:foo.1>
+opam-version: "2.0"
+url {
+  src: "https://example.com/foo-1.tgz"
+  checksum: "md5=d41d8cd98f00b204e9800998ecf8427e"
+}
+### OPAMEDITOR=cat opam pin edit foo --no-action
+Package foo is not pinned. Edit as a new pinning to version 1? [Y/n] y
+opam-version: "2.0"
+url {
+  src: "https://example.com/foo-1.tgz"
+}
+name: "foo"
+version: "1"
+[WARNING] The opam file didn't pass validation:
+             error 23: Missing field 'maintainer'
+           warning 25: Missing field 'authors'
+           warning 35: Missing field 'homepage'
+           warning 36: Missing field 'bug-reports'
+           warning 37: Missing field 'dev-repo'
+             error 57: Synopsis must not be empty
+           warning 59: url doesn't contain a checksum
+           warning 68: Missing field 'license'
+Proceed anyway ('no' will re-edit)? [Y/n] y
+You can edit this file again with "opam pin edit foo", export it with "opam show foo --raw"
+foo is now pinned to https://example.com/foo-1.tgz (version 1)
+### opam show --raw foo
+opam-version: "2.0"
+name: "foo"
+version: "1"
+url {
+  src: "https://example.com/foo-1.tgz"
+}
