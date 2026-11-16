@@ -14,6 +14,7 @@ users)
   * Bump version to `2.7.0~alpha1~dev` [#7064 @kit-ty-kate]
 
 ## Global CLI
+  * Add cli version 2.6 [#7229 @mtelvers]
 
 ## Plugins
 
@@ -93,6 +94,7 @@ users)
   * Make x86\_32 binaries take full advantage of i686 [#7120 @kit-ty-kate]
   * Ensure arm32 binaries are really armhf as advertised instead of armv7 [#7120 @kit-ty-kate]
   * Enhance the release documentation with mentions of macOS 27 and IRC [#7194 @kit-ty-kate]
+  * Add a missing check to the release readme [#7229 @kit-ty-kate @rjbou]
 
 ## Install script
   * Add opam 2.6.0\~rc1 to the install scripts [#7135 @kit-ty-kate]
