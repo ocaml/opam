@@ -50,6 +50,7 @@ users)
 ## Show
 
 ## Var/Option
+  * Fix `opam option wrap-remove-commands` setting, it was updating `pre-remove-session` field [#7251 @rjbou]
 
 ## Update / Upgrade
 

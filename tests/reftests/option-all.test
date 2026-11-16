@@ -292,7 +292,7 @@ Added '["another-wrap.sh" "install"]' to field wrap-install-commands in global c
 ### opam option --global 'wrap-remove-commands+=["another-wrap.sh" "remove"]'
 Added '["another-wrap.sh" "remove"]' to field wrap-remove-commands in global configuration
 ### opam option --global wrap-remove-commands
-["wrap.sh" "remove"]
+[["another-wrap.sh" "remove"] ["wrap.sh" "remove"]]
 ### :I:3: Revert
 ### opam option --global archive-mirrors=
 Reverted field archive-mirrors in global configuration
@@ -405,9 +405,9 @@ Reverted field wrap-install-commands in global configuration
 ### opam option --global wrap-install-commands
 ["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
 ### opam option --global wrap-remove-commands=
-No modification in global configuration
+Reverted field wrap-remove-commands in global configuration
 ### opam option --global wrap-remove-commands
-["wrap.sh" "remove"]
+["%{hooks}%/sandbox.sh" "remove"] {os = "linux" | os = "macos"}
 ### :::::::::::::::::::
 ### :II: Switch options
 ### :::::::::::::::::::
@@ -541,7 +541,7 @@ Added '["sw-another-wrap.sh" "install"]' to field wrap-install-commands in switc
 ### opam option --switch hctiws 'wrap-remove-commands+=["sw-another-wrap.sh" "remove"]'
 Added '["sw-another-wrap.sh" "remove"]' to field wrap-remove-commands in switch hctiws
 ### opam option --switch hctiws wrap-remove-commands
-["sw-wrap.sh" "remove"]
+[["sw-another-wrap.sh" "remove"] ["sw-wrap.sh" "remove"]]
 ### # ### :II:3: Revert
 ### opam option --switch hctiws depext-bypass=
 Reverted field depext-bypass in switch hctiws
@@ -596,6 +596,6 @@ Reverted field wrap-install-commands in switch hctiws
 ### opam option --switch hctiws wrap-install-commands
 []
 ### opam option --switch hctiws wrap-remove-commands=
-No modification in switch hctiws
+Reverted field wrap-remove-commands in switch hctiws
 ### opam option --switch hctiws wrap-remove-commands
-["sw-wrap.sh" "remove"]
+[]
