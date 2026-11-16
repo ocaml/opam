@@ -513,6 +513,23 @@ and source_pin
 
   let urlf = target_url >>| OpamFile.URL.create ?subpath in
 
+  (* Keep the checksums and mirrors of the package definition's url when
+     pinning to that same url *)
+  let with_target_url opam =
+    let same_subpath u cur =
+      match OpamFile.URL.subpath u, OpamFile.URL.subpath cur with
+      | None, None -> true
+      | Some a, Some b -> OpamFilename.SubPath.equal a b
+      | Some _, None | None, Some _ -> false
+    in
+    match urlf, OpamFile.OPAM.url opam with
+    | Some u, Some cur
+      when OpamUrl.equal (OpamFile.URL.url u) (OpamFile.URL.url cur)
+        && same_subpath u cur ->
+      opam
+    | _ -> OpamFile.OPAM.with_url_opt urlf opam
+  in
+
   let temp_file =
     OpamPath.Switch.Overlay.tmp_opam st.switch_global.root st.switch name
   in
@@ -580,9 +597,7 @@ and source_pin
           OpamFileTools.template nv
         | Some opam -> opam
       in
-      let opam_base =
-        OpamFile.OPAM.with_url_opt urlf opam_base
-      in
+      let opam_base = with_target_url opam_base in
       if not (OpamFile.exists temp_file) then
         OpamFile.OPAM.write_with_preserved_format
           ?format_from:(OpamPinned.orig_opam_file st name opam_base)
@@ -591,7 +606,7 @@ and source_pin
       (* Preserve metadata_dir so that copy_files below works *)
       OpamFile.OPAM.(with_metadata_dir (metadata_dir opam_base))
     else
-      Option.map (OpamFile.OPAM.with_url_opt urlf) opam_opt
+      Option.map with_target_url opam_opt
   in
   match opam_opt with
   | None ->

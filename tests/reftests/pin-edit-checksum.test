@@ -14,6 +14,7 @@ Package foo is not pinned. Edit as a new pinning to version 1? [Y/n] y
 opam-version: "2.0"
 url {
   src: "https://example.com/foo-1.tgz"
+  checksum: "md5=d41d8cd98f00b204e9800998ecf8427e"
 }
 name: "foo"
 version: "1"
@@ -24,7 +25,6 @@ version: "1"
            warning 36: Missing field 'bug-reports'
            warning 37: Missing field 'dev-repo'
              error 57: Synopsis must not be empty
-           warning 59: url doesn't contain a checksum
            warning 68: Missing field 'license'
 Proceed anyway ('no' will re-edit)? [Y/n] y
 You can edit this file again with "opam pin edit foo", export it with "opam show foo --raw"
@@ -35,4 +35,5 @@ name: "foo"
 version: "1"
 url {
   src: "https://example.com/foo-1.tgz"
+  checksum: "md5=d41d8cd98f00b204e9800998ecf8427e"
 }

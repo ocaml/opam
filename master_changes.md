@@ -44,6 +44,7 @@ users)
 ## Config
 
 ## Pin
+  * `opam pin edit` on a package that isn't pinned yet no longer removes the checksums of its url [#7244 @Lotion-3 - fix #7143]
 
 ## List
 
