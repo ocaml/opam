@@ -13,7 +13,7 @@
 
 open Lib
 
-let latest_ocaml4 = "4.14.4"
+let latest_ocaml4 = "4.14.5"
 let latest_ocaml5 = "5.5.0" (* Add this number to ocamls below when the next version comes out *)
 let trunk = "trunk"
 let ocamls = [
@@ -563,8 +563,8 @@ let main oc : unit =
     ("OPAMBSROOT", "~/.cache/.opam.cached");
     ("OPAM12CACHE", "~/.cache/opam1.2/cache");
     ("OPAM_REPO", "https://github.com/ocaml/opam-repository.git");
-    ("OPAM_TEST_REPO_SHA", "3c79a939b221caf909b254fdff9616f8c0266e4f");
-    ("OPAM_REPO_SHA", "3c79a939b221caf909b254fdff9616f8c0266e4f");
+    ("OPAM_TEST_REPO_SHA", "49c3ff00c7cf462380b7c42e8de0412e2a2372d3");
+    ("OPAM_REPO_SHA", "49c3ff00c7cf462380b7c42e8de0412e2a2372d3");
     ("SOLVER", "");
     (* Cygwin configuration *)
     ("CYGWIN_MIRROR", "http://mirrors.kernel.org/sourceware/cygwin/");
