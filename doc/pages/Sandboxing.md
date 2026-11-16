@@ -34,15 +34,16 @@ following list: `$DUNE_CACHE_ROOT`, `$XDG_CACHE_HOME/dune`, `$HOME/.cache/dune`,
 - `ccache` is a directory used by some C compilers and must remain
 writable for build commands.
 
-The sandbox is granted the following access:
-| cmd \ dir | PWD   | switch | .opam-switch | dune cache | ccache | opam root |
+The following table shows, for each command type (rows), the access granted 
+to each directory (columns):
+|           | PWD   | switch | .opam-switch | dune cache | ccache | opam root |
 |-----------|-------|--------|--------------|------------|--------|-----------|
 | build     | rw    | ro     | ro           | rw         | rw     | ro        |
 | install   | rw    | rw     | ro           | ro         | ro     | ro        |
 | remove    | ro/rw | rw     | ro           | ro         | ro     | ro        |
 
 - For remove commands, the `PWD` directory is read-write if and only if it is
-a strict subdirectory of `.opam-switch`,
+not a subdirectory of `.opam-switch`,
 - The `$OPAMROOT` directory is read-only if the variable is defined.
 
 ### Specific directories for Linux
