@@ -60,6 +60,8 @@ Opam was created by [OCamlPro](http://www.ocamlpro.com/) originally and is curre
 * Kate Deplaix (individual, funded by Ahrefs)
 * Nathan Rebours (OCamlPro)
 
-General queries for both the tool and the packages could be addressed on the [OCaml-platform mailing-list](http://lists.ocaml.org/listinfo/platform) and insights and evolution of opam internals can discussed on the [opam-devel mailing-list](http://lists.ocaml.org/listinfo/opam-devel).
+Bug reports and feature requests for the opam tool should be reported on [opam's main issue-tracker](https://github.com/ocaml/opam/issues) or [its alternative issue-tracker](https://codeberg.org/ocaml/opam/issues). Packaging issues or requests for a new package can be reported on the [official repository's issue-tracker](https://github.com/ocaml/opam-repository/issues).
+
+General queries for both the tool and the packages can be posted on the [OCaml forum](https://discuss.ocaml.org/), [OCaml Zulip](https://ocaml.zulipchat.com/#narrow/channel/527832-opam), `#opam` on IRC ([Libera.chat](https://libera.chat/)) or Discord (bridged to IRC).
 
 Support for opam, as well as training and consulting services, are provided by [OCamlPro](http://www.ocamlpro.com/).
