@@ -152,6 +152,7 @@ users)
   * Update the opam-repository SHA to the latest commit [#7145 @kit-ty-kate]
   * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
   * Bump the opam version used to 2.6.1 [#7151 #7194 @kit-ty-kate @rjbou]
+  * Upgrade to the new version of GitHub issue templates [#7249 @kit-ty-kate @rjbou @dra27]
 
 ## Doc
   * Update the documentation about the latest opam release [#7150 #7194 @kit-ty-kate]
