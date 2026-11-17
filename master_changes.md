@@ -160,6 +160,7 @@ users)
   * Fix link to bubblewrap repository [#7237 @halbaroth]
   * Update the documentation to include the list of maintainers [#7249 @kit-ty-kate @dra27]
   * Update the preferred contact methods in the documentation [#7249 @kit-ty-kate @dra27]
+  * Add an AI Policy [#7249 @kit-ty-kate @dra27 @rjbou @NathanReb]
 
 ## Security fixes
 

@@ -11,6 +11,10 @@ If your issue concerns failures with the opam.ocaml.org website, please use
 https://github.com/ocaml/infrastructure/issues
 -->
 
+<!--
+AI-written bug reports are prohibited (see https://github.com/ocaml/opam/blob/master/AI.md)
+-->
+
 ```
 <include here the output of `opam config report`, if applicable>
 ```
