@@ -57,4 +57,4 @@ Opam has been created and is maintained by [OCamlPro](http://www.ocamlpro.com/).
 
 General queries for both the tool and the packages could be addressed on the [OCaml-platform mailing-list](http://lists.ocaml.org/listinfo/platform) and insights and evolution of opam internals can discussed on the [opam-devel mailing-list](http://lists.ocaml.org/listinfo/opam-devel).
 
-Standard commercial terms and support on opam, as well as training and consulting services, are provided by [OCamlPro](http://www.ocamlpro.com/).
+Support for opam, as well as training and consulting services, are provided by [OCamlPro](http://www.ocamlpro.com/).

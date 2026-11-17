@@ -201,17 +201,11 @@ section](https://opam.ocaml.org/doc/Manual.html#version-ordering) of the user ma
 
 ## Copyright and license
 
-The version comparison function in `src/core/opamVersionCompare.ml` is part of
-the Dose library and Copyright 2011 Ralf Treinen.
-
-All other code is:
-
-Copyright 2012-2020 OCamlPro
-Copyright 2012 INRIA
-
-All rights reserved. Opam is distributed under the terms of the GNU Lesser
+Opam is distributed under the terms of the GNU Lesser
 General Public License version 2.1, with the special exception on linking
 described in the file LICENSE.
+
+Individual copyright owners are displayed at the top of each relevant files.
 
 Opam is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
