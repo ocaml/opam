@@ -6,8 +6,8 @@ N0REP0
 ### <pin:archive-pin/opam>
 opam-version: "2.0"
 ### tar czf archive-pin.tgz archive-pin
-### opam pin ./archive-pin.tgz -n | '[0-9a-f]{16}' -> 'HASH'
-[NOTE] Package HASH does not exist in opam repositories registered in the current switch.
-HASH is now pinned to file://${BASEDIR}/archive-pin.tgz (version dev)
-### opam pin | '[0-9a-f]{16}' -> 'HASH'
-HASH.dev  (uninstalled)  rsync  file://${BASEDIR}/archive-pin.tgz
+### opam pin ./archive-pin.tgz -n
+[NOTE] Package archive-pin does not exist in opam repositories registered in the current switch.
+archive-pin is now pinned to file://${BASEDIR}/archive-pin.tgz (version dev)
+### opam pin
+archive-pin.dev  (uninstalled)  rsync  file://${BASEDIR}/archive-pin.tgz

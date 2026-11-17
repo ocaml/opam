@@ -34,10 +34,11 @@ val url_with_local_branch: url -> url
 val name_and_dir_of_opam_file: ?locked:string -> filename -> name option * dirname
 
 (** From a directory, retrieve its opam files and returns packages name, opam
-    file and subpath option *)
+    file and subpath option. When a package name can only be inferred from the
+    directory name, [project_name] is used instead of it if given. *)
 val opams_of_dir:
   ?locked:string -> ?recurse:bool -> ?subpath:subpath ->
-  OpamFilename.Dir.t -> name_and_file list
+  ?project_name:string -> OpamFilename.Dir.t -> name_and_file list
 
 (** Like {!opams_of_dir}, but changes the pinning_url if needed. If given [url]
     is local dir with vcs backend, and opam files not versioned, its pinning url

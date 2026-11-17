@@ -44,6 +44,7 @@ users)
 ## Config
 
 ## Pin
+  * Name a pinned archive after the archive rather than its temporary directory when no package name can be found in its opam file [#7245 @Lotion-3 - fix #7202]
 
 ## List
 

@@ -78,12 +78,14 @@ let remove_files_from_destdir st pfx packages =
       end
   | _ -> ()
 
-let name_from_project_dirname d =
+let name_from_project_basename b =
   try
-    Some (OpamFilename.(Base.to_string (basename_dir d)) |>
-          Re.(replace_string (compile (seq [char '.'; any]))) ~by:"" |>
+    Some (Re.(replace_string (compile (seq [char '.'; any]))) ~by:"" b |>
           OpamPackage.Name.of_string)
   with Failure _ -> None
+
+let name_from_project_dirname d =
+  name_from_project_basename OpamFilename.(Base.to_string (basename_dir d))
 
 let url_with_local_branch = function
   | { OpamUrl.backend = #OpamUrl.version_control; hash = None; _ } as url ->
@@ -92,7 +94,7 @@ let url_with_local_branch = function
      | None -> url)
   | url -> url
 
-let opams_of_dir_t files_in_source dir =
+let opams_of_dir_t ?project_name files_in_source dir =
   let files = files_in_source dir in
   List.fold_left (fun acc p ->
       let name =
@@ -102,7 +104,10 @@ let opams_of_dir_t files_in_source dir =
         >>+ fun () ->
         match files with
         | [] | _::_::_ -> None
-        | [_] -> name_from_project_dirname dir
+        | [_] ->
+          match project_name with
+          | Some b -> name_from_project_basename b
+          | None -> name_from_project_dirname dir
       in
       match name with
       | Some n -> { p with pin_name = n} :: acc
@@ -114,8 +119,9 @@ let opams_of_dir_t files_in_source dir =
     [] files
 
 
-let opams_of_dir ?locked ?recurse ?subpath dir =
-  opams_of_dir_t (OpamPinned.files_in_source ?locked ?recurse ?subpath)
+let opams_of_dir ?locked ?recurse ?subpath ?project_name dir =
+  opams_of_dir_t ?project_name
+    (OpamPinned.files_in_source ?locked ?recurse ?subpath)
     dir
 
 let opams_of_dir_w_target ?locked ?recurse ?subpath

@@ -3467,7 +3467,7 @@ let pin ?(unpin_only=false) cli =
           | Result _ | Up_to_date _ ->
             let pkgs =
               OpamAuxCommands.opams_of_dir ?locked ~recurse ?subpath
-                pin_cache_dir
+                ~project_name:basename pin_cache_dir
               |> List.map (fun nf ->
                   { pinned_name = nf.pin_name;
                     pinned_version = None;
