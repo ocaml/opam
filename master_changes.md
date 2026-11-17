@@ -140,6 +140,7 @@ users)
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
   * Add reftests for unavailability reason on unsolvable request in `unavailable-reason.test` [#7206 @NathanReb]
   * Cleanup leftovers from dual cmdliner 1.0 and 1.1 support [#7216 @kit-ty-kate]
+  * Add tests showing `opam reinstall` and `opam upgrade --fixup` changing installed versions with the builtin-0install solver [#7241 @samoht]
 
 ### Engine
 

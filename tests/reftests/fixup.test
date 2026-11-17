@@ -1,0 +1,38 @@
+N0REP0
+### :::::: builtin-0install: opam upgrade --fixup changes only what the broken dependency needs (#7240)
+### <pkg:a.1>
+opam-version: "2.0"
+depends: "b"
+### <pkg:b.1>
+opam-version: "2.0"
+### <pkg:b.2>
+opam-version: "2.0"
+### <pkg:c.1>
+opam-version: "2.0"
+### <pkg:c.2>
+opam-version: "2.0"
+### opam switch create fixup --empty
+### opam install a b.1 c.1
+The following actions will be performed:
+=== install 3 packages
+  - install a 1
+  - install b 1
+  - install c 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed b.1
+-> installed a.1
+-> installed c.1
+Done.
+### :::::: a.1 now requires b >= 2, which the installed b.1 does not satisfy
+### <pkg:a.1>
+opam-version: "2.0"
+depends: "b" {>= "2"}
+### OPAMEXTERNALSOLVER=builtin-0install
+### opam upgrade --fixup --show
+The following actions would be performed:
+=== recompile 1 package
+  - recompile a 1
+=== upgrade 2 packages
+  - upgrade   b 1 to 2
+  - upgrade   c 1 to 2

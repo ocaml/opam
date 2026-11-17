@@ -248,3 +248,29 @@ h.install
 ### ls OPAM/recompile-false/bin | unordered
 g-true.bin
 h-true.bin
+### :::::: builtin-0install: reinstall keeps the installed versions of dependencies (#7240)
+### <pkg:x.1>
+opam-version: "2.0"
+depends: "y"
+### <pkg:y.1>
+opam-version: "2.0"
+### <pkg:y.2>
+opam-version: "2.0"
+### opam switch create reinstall-0install --empty
+### opam install x y.1
+The following actions will be performed:
+=== install 2 packages
+  - install x 1
+  - install y 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> installed y.1
+-> installed x.1
+Done.
+### OPAMEXTERNALSOLVER=builtin-0install
+### opam reinstall x --show
+The following actions would be performed:
+=== recompile 1 package
+  - recompile x 1
+=== upgrade 1 package
+  - upgrade   y 1 to 2 [required by x]
