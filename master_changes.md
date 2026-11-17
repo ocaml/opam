@@ -108,6 +108,7 @@ users)
 ## Opam file format
 
 ## Solver
+  * [BUG] builtin-0install: add `-changed` to the fixup criteria, as the other solvers do, so that `opam reinstall` keeps the installed versions [#7241 @samoht - fix #7240]
 
 ## Client
 

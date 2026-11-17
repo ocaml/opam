@@ -272,5 +272,3 @@ Done.
 The following actions would be performed:
 === recompile 1 package
   - recompile x 1
-=== upgrade 1 package
-  - upgrade   y 1 to 2 [required by x]

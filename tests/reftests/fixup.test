@@ -33,6 +33,5 @@ depends: "b" {>= "2"}
 The following actions would be performed:
 === recompile 1 package
   - recompile a 1
-=== upgrade 2 packages
+=== upgrade 1 package
   - upgrade   b 1 to 2
-  - upgrade   c 1 to 2
