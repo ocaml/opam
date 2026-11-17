@@ -53,7 +53,12 @@ Apr 2014 and expose quality metrics to the repository quality.
 
 ## Getting Support
 
-Opam has been created and is maintained by [OCamlPro](http://www.ocamlpro.com/). Bug reports and feature requests for the opam tool should be reported on [opam's issue-tracker](https://github.com/ocaml/opam/issues). Packaging issues or requests for a new package can be reported on the [official repository's issue-tracker](https://github.com/ocaml/opam-repository/issues).
+Opam was created by [OCamlPro](http://www.ocamlpro.com/) originally and is currently maintained by:
+
+* David Allsopp (Jane Street)
+* Raja Boujbel (OCamlPro)
+* Kate Deplaix (individual, funded by Ahrefs)
+* Nathan Rebours (OCamlPro)
 
 General queries for both the tool and the packages could be addressed on the [OCaml-platform mailing-list](http://lists.ocaml.org/listinfo/platform) and insights and evolution of opam internals can discussed on the [opam-devel mailing-list](http://lists.ocaml.org/listinfo/opam-devel).
 

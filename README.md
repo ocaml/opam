@@ -8,7 +8,12 @@ Opam is a source-based package manager for OCaml. It supports multiple simultane
 compiler installations, flexible package constraints, and a Git-friendly development
 workflow.
 
-Opam was created and is maintained by [OCamlPro](http://www.ocamlpro.com).
+Opam is maintained by:
+
+* @dra27 David Allsopp (Jane Street)
+* @rjbou Raja Boujbel (OCamlPro)
+* @kit-ty-kate Kate Deplaix (individual, funded by Ahrefs)
+* @NathanReb Nathan Rebours (OCamlPro)
 
 To get started, checkout the [Install](http://opam.ocaml.org/doc/Install.html)
 and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
