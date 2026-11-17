@@ -138,6 +138,7 @@ users)
 
 ## Reftests
 ### Tests
+  * Add a test showing that pinning an archive whose package name can't be inferred uses the pin cache directory name [#7245 @Lotion-3]
   * Add an exhaustive test showing the behaviour of the `conflicts` field [#7127 @kit-ty-kate]
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
   * Add reftests for unavailability reason on unsolvable request in `unavailable-reason.test` [#7206 @NathanReb]
