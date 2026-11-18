@@ -53,8 +53,15 @@ Apr 2014 and expose quality metrics to the repository quality.
 
 ## Getting Support
 
-Opam has been created and is maintained by [OCamlPro](http://www.ocamlpro.com/). Bug reports and feature requests for the opam tool should be reported on [opam's issue-tracker](https://github.com/ocaml/opam/issues). Packaging issues or requests for a new package can be reported on the [official repository's issue-tracker](https://github.com/ocaml/opam-repository/issues).
+Opam was created by [OCamlPro](http://www.ocamlpro.com/) originally and is currently maintained by:
 
-General queries for both the tool and the packages could be addressed on the [OCaml-platform mailing-list](http://lists.ocaml.org/listinfo/platform) and insights and evolution of opam internals can discussed on the [opam-devel mailing-list](http://lists.ocaml.org/listinfo/opam-devel).
+* David Allsopp (Jane Street)
+* Raja Boujbel (OCamlPro)
+* Kate Deplaix (individual, funded by Ahrefs)
+* Nathan Rebours (OCamlPro)
 
-Standard commercial terms and support on opam, as well as training and consulting services, are provided by [OCamlPro](http://www.ocamlpro.com/).
+Bug reports and feature requests for the opam tool should be reported on [opam's main issue-tracker](https://github.com/ocaml/opam/issues) or [its alternative issue-tracker](https://codeberg.org/ocaml/opam/issues). Packaging issues or requests for a new package can be reported on the [official repository's issue-tracker](https://github.com/ocaml/opam-repository/issues).
+
+General queries for both the tool and the packages can be posted on the [OCaml forum](https://discuss.ocaml.org/), [OCaml Zulip](https://ocaml.zulipchat.com/#narrow/channel/527832-opam), `#opam` on IRC ([Libera.chat](https://libera.chat/)) or Discord (bridged to IRC).
+
+Support for opam, as well as training and consulting services, are provided by [OCamlPro](http://www.ocamlpro.com/).

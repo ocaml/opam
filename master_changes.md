@@ -152,11 +152,15 @@ users)
   * Update the opam-repository SHA to the latest commit [#7145 @kit-ty-kate]
   * Add a test showing opam using a git repository owned by root [#6980 @kit-ty-kate]
   * Bump the opam version used to 2.6.1 [#7151 #7194 @kit-ty-kate @rjbou]
+  * Upgrade to the new version of GitHub issue templates [#7249 @kit-ty-kate @rjbou @dra27]
 
 ## Doc
   * Update the documentation about the latest opam release [#7150 #7194 @kit-ty-kate]
   * Document the Git environment variables in the FAQ [#7187 @kit-ty-kate @MisterDA - fix #7152]
   * Fix link to bubblewrap repository [#7237 @halbaroth]
+  * Update the documentation to include the list of maintainers [#7249 @kit-ty-kate @dra27]
+  * Update the preferred contact methods in the documentation [#7249 @kit-ty-kate @dra27]
+  * Add an AI Policy [#7249 @kit-ty-kate @dra27 @rjbou @NathanReb]
 
 ## Security fixes
 

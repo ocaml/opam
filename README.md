@@ -8,7 +8,12 @@ Opam is a source-based package manager for OCaml. It supports multiple simultane
 compiler installations, flexible package constraints, and a Git-friendly development
 workflow.
 
-Opam was created and is maintained by [OCamlPro](http://www.ocamlpro.com).
+Opam is maintained by:
+
+* @dra27 David Allsopp (Jane Street)
+* @rjbou Raja Boujbel (OCamlPro)
+* @kit-ty-kate Kate Deplaix (individual, funded by Ahrefs)
+* @NathanReb Nathan Rebours (OCamlPro)
 
 To get started, checkout the [Install](http://opam.ocaml.org/doc/Install.html)
 and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
@@ -201,17 +206,11 @@ section](https://opam.ocaml.org/doc/Manual.html#version-ordering) of the user ma
 
 ## Copyright and license
 
-The version comparison function in `src/core/opamVersionCompare.ml` is part of
-the Dose library and Copyright 2011 Ralf Treinen.
-
-All other code is:
-
-Copyright 2012-2020 OCamlPro
-Copyright 2012 INRIA
-
-All rights reserved. Opam is distributed under the terms of the GNU Lesser
+Opam is distributed under the terms of the GNU Lesser
 General Public License version 2.1, with the special exception on linking
 described in the file LICENSE.
+
+Individual copyright owners are displayed at the top of each relevant files.
 
 Opam is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
