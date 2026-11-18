@@ -22,6 +22,11 @@ REPO/packages
 REPO/repo
 ### cat REPO/repo
 opam-version: "2.0"
+### <which.sh>
+set -euo pipefail
+command -v opam | grep -q '_build'
+### bash which.sh
+# Return code 1 #
 ### ###################
 ### :II: File creation
 ### ###################
