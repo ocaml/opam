@@ -179,6 +179,7 @@ users)
 ## opam-solver
 
 ## opam-format
+  * `OpamFile.Config.criterion,with_criterion`, `OpamFile.InitConfig.criterion`: expose in mli [#7251 @rjbou]
 
 ## opam-core
   * `OpamCmdliner` was upgraded to version 2.1.1 [#6867 @BrianWard @kit-ty-kate]
