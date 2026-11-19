@@ -1743,6 +1743,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:opamrt-reinstall.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-option-all)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff option-all.test option-all.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-option-all)))
+
+(rule
+ (targets option-all.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:option-all.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-orphans)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

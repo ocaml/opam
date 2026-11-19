@@ -1,0 +1,601 @@
+N0REP0
+### :::::::::::::::::::
+### :I: Global options
+### :::::::::::::::::::
+### opam option --global | ' .*' -> ''
+archive-mirrors
+best-effort-prefix-criteria
+default-invariant
+depext
+depext-bypass
+depext-cannot-install
+depext-run-installs
+download-command
+download-jobs
+git-location
+jobs
+post-build-commands
+post-install-commands
+post-remove-commands
+post-session-commands
+pre-build-commands
+pre-install-commands
+pre-remove-commands
+pre-session-commands
+repository-validation-command
+solver
+solver-criteria
+solver-fixup-criteria
+solver-upgrade-criteria
+swh-fallback
+sys-pkg-manager-cmd
+wrap-build-commands
+wrap-install-commands
+wrap-remove-commands
+### :I:1: Set
+### opam option --global archive-mirrors=["file:///path/to/mirror"]
+Set to '["file:///path/to/mirror"]' the field archive-mirrors in global configuration
+### opam option --global archive-mirrors
+"file:///path/to/mirror"
+### opam option --global best-effort-prefix-criteria="--try"
+Set to '"--try"' the field best-effort-prefix-criteria in global configuration
+### opam option --global best-effort-prefix-criteria
+"--try"
+### opam option --global default-invariant=["foo"]
+Set to '["foo"]' the field default-invariant in global configuration
+### opam option --global default-invariant
+["foo"]
+### opam option --global depext=false
+Set to 'false' the field depext in global configuration
+### opam option --global depext
+false
+### opam option --global depext-bypass=["sys-foo"]
+Set to '["sys-foo"]' the field depext-bypass in global configuration
+### opam option --global depext-bypass
+"sys-foo"
+### opam option --global depext-cannot-install=true
+Set to 'true' the field depext-cannot-install in global configuration
+### opam option --global depext-cannot-install
+true
+### opam option --global depext-run-installs=false
+Set to 'false' the field depext-run-installs in global configuration
+### opam option --global depext-run-installs
+false
+### opam option --global download-command=["retrieve"]
+Set to '["retrieve"]' the field download-command in global configuration
+### opam option --global download-command
+"retrieve"
+### opam option --global download-jobs=123
+Set to '123' the field download-jobs in global configuration
+### opam option --global download-jobs
+123
+### opam option --global git-location="/path/to/git"
+Set to '"/path/to/git"' the field git-location in global configuration
+### opam option --global git-location
+"/path/to/git"
+### opam option --global jobs=123
+Set to '123' the field jobs in global configuration
+### opam option --global jobs
+123
+### opam option --global 'post-build-commands=["post.sh" "build"]'
+Set to '["post.sh" "build"]' the field post-build-commands in global configuration
+### opam option --global post-build-commands
+["post.sh" "build"]
+### opam option --global 'post-install-commands=["post.sh" "install"]'
+Set to '["post.sh" "install"]' the field post-install-commands in global configuration
+### opam option --global post-install-commands
+["post.sh" "install"]
+### opam option --global 'post-remove-commands=["post.sh" "remove"]'
+Set to '["post.sh" "remove"]' the field post-remove-commands in global configuration
+### opam option --global post-remove-commands
+["post.sh" "remove"]
+### opam option --global 'post-session-commands=["post.sh" "session"]'
+Set to '["post.sh" "session"]' the field post-session-commands in global configuration
+### opam option --global post-session-commands
+["post.sh" "session"]
+### opam option --global 'pre-build-commands=["pre.sh" "build"]'
+Set to '["pre.sh" "build"]' the field pre-build-commands in global configuration
+### opam option --global pre-build-commands
+["pre.sh" "build"]
+### opam option --global 'pre-install-commands=["pre.sh" "install"]'
+Set to '["pre.sh" "install"]' the field pre-install-commands in global configuration
+### opam option --global pre-install-commands
+["pre.sh" "install"]
+### opam option --global 'pre-remove-commands=["pre.sh" "remove"]'
+Set to '["pre.sh" "remove"]' the field pre-remove-commands in global configuration
+### opam option --global pre-remove-commands
+["pre.sh" "remove"]
+### opam option --global 'pre-session-commands=["pre.sh" "session"]'
+Set to '["pre.sh" "session"]' the field pre-session-commands in global configuration
+### opam option --global pre-session-commands
+["pre.sh" "session"]
+### opam option --global repository-validation-command=["validate"]
+Set to '["validate"]' the field repository-validation-command in global configuration
+### opam option --global repository-validation-command
+"validate"
+### opam option --global solver=["fast"]
+Set to '["fast"]' the field solver in global configuration
+### opam option --global solver
+"fast"
+### # Solver criteria are a special case, internally it is represented as
+### # a single list, we need to check then how the full criteria list is modified
+### opam option --global solver-criteria="--not-changed"
+Set to '"--not-changed"' the field solver-criteria in global configuration
+### opam option --global solver-criteria
+"--not-changed"
+### opam option --global solver-fixup-criteria
+### opam option --global solver-upgrade-criteria
+### opam option --global solver-fixup-criteria="--keep"
+Set to '"--keep"' the field solver-fixup-criteria in global configuration
+### opam option --global solver-criteria
+"--not-changed"
+### opam option --global solver-fixup-criteria
+"--keep"
+### opam option --global solver-upgrade-criteria
+### opam option --global solver-upgrade-criteria="--no-downgrade"
+Set to '"--no-downgrade"' the field solver-upgrade-criteria in global configuration
+### opam option --global solver-upgrade-criteria
+"--no-downgrade"
+### opam option --global solver-criteria
+"--not-changed"
+### opam option --global solver-fixup-criteria
+"--keep"
+### opam option --global swh-fallback=true
+Set to 'true' the field swh-fallback in global configuration
+### opam option --global swh-fallback
+true
+### opam option --global 'sys-pkg-manager-cmd=["xin" "/bin/nix"]'
+Set to '["xin" "/bin/nix"]' the field sys-pkg-manager-cmd in global configuration
+### opam option --global sys-pkg-manager-cmd
+["xin" "/usr/bin/nix"]
+### opam option --global 'wrap-build-commands=["wrap.sh" "build"]'
+Set to '["wrap.sh" "build"]' the field wrap-build-commands in global configuration
+### opam option --global wrap-build-commands
+["wrap.sh" "build"]
+### opam option --global 'wrap-install-commands=["wrap.sh" "install"]'
+Set to '["wrap.sh" "install"]' the field wrap-install-commands in global configuration
+### opam option --global wrap-install-commands
+["wrap.sh" "install"]
+### opam option --global 'wrap-remove-commands=["wrap.sh" "remove"]'
+Set to '["wrap.sh" "remove"]' the field wrap-remove-commands in global configuration
+### opam option --global wrap-remove-commands
+["wrap.sh" "remove"]
+### :I:2: Add
+### opam option --global archive-mirrors+=["https://distant.org/mirror"]
+Added '["https://distant.org/mirror"]' to field archive-mirrors in global configuration
+### opam option --global archive-mirrors
+["https://distant.org/mirror" "file:///path/to/mirror"]
+### opam option --global best-effort-prefix-criteria+="--try-harder"
+[ERROR] Field best-effort-prefix-criteria can't be appended
+# Return code 2 #
+### opam option --global best-effort-prefix-criteria
+"--try"
+### opam option --global default-invariant+=["bar"]
+Added '["bar"]' to field default-invariant in global configuration
+### opam option --global default-invariant
+["bar" "foo"]
+### opam option --global depext+=true
+[ERROR] Field depext can't be appended
+# Return code 2 #
+### opam option --global depext
+false
+### opam option --global depext-bypass+=["bar"]
+Added '["bar"]' to field depext-bypass in global configuration
+### opam option --global depext-bypass
+["bar" "sys-foo"]
+### opam option --global depext-cannot-install+=false
+[ERROR] Field depext-cannot-install can't be appended
+# Return code 2 #
+### opam option --global depext-cannot-install
+true
+### opam option --global depext-run-installs+=true
+[ERROR] Field depext-run-installs can't be appended
+# Return code 2 #
+### opam option --global depext-run-installs
+false
+### opam option --global download-command+=["get"]
+[ERROR] Field download-command can't be appended
+# Return code 2 #
+### opam option --global download-command
+"retrieve"
+### opam option --global download-jobs+=321
+[ERROR] Field download-jobs can't be appended
+# Return code 2 #
+### opam option --global download-jobs
+123
+### opam option --global git-location+="/path/to/tig"
+Fatal error:
+File "src/client/opamConfigCommand.ml", line 609, characters 40-46: Assertion failed
+# Return code 99 #
+### opam option --global git-location
+"/path/to/git"
+### opam option --global jobs+=321
+[ERROR] Field jobs can't be appended
+# Return code 2 #
+### opam option --global jobs
+123
+### opam option --global 'post-build-commands=["another-post.sh" "build"]'
+Set to '["another-post.sh" "build"]' the field post-build-commands in global configuration
+### opam option --global post-build-commands
+["another-post.sh" "build"]
+### opam option --global 'post-install-commands=["another-post.sh" "install"]'
+Set to '["another-post.sh" "install"]' the field post-install-commands in global configuration
+### opam option --global post-install-commands
+["another-post.sh" "install"]
+### opam option --global 'post-remove-commands=["another-post.sh" "remove"]'
+Set to '["another-post.sh" "remove"]' the field post-remove-commands in global configuration
+### opam option --global post-remove-commands
+["another-post.sh" "remove"]
+### opam option --global 'post-session-commands=["another-post.sh" "session"]'
+Set to '["another-post.sh" "session"]' the field post-session-commands in global configuration
+### opam option --global post-session-commands
+["another-post.sh" "session"]
+### opam option --global 'pre-build-commands=["another-pre.sh" "build"]'
+Set to '["another-pre.sh" "build"]' the field pre-build-commands in global configuration
+### opam option --global pre-build-commands
+["another-pre.sh" "build"]
+### opam option --global 'pre-install-commands=["another-pre.sh" "install"]'
+Set to '["another-pre.sh" "install"]' the field pre-install-commands in global configuration
+### opam option --global pre-install-commands
+["another-pre.sh" "install"]
+### opam option --global 'pre-remove-commands=["another-pre.sh" "remove"]'
+Set to '["another-pre.sh" "remove"]' the field pre-remove-commands in global configuration
+### opam option --global pre-remove-commands
+["another-pre.sh" "remove"]
+### opam option --global 'pre-session-commands=["another-pre.sh" "session"]'
+Set to '["another-pre.sh" "session"]' the field pre-session-commands in global configuration
+### opam option --global pre-session-commands
+["another-pre.sh" "session"]
+### opam option --global repository-validation-command+=["double-check"]
+[ERROR] Field repository-validation-command can't be appended
+# Return code 2 #
+### opam option --global repository-validation-command
+"validate"
+### opam option --global solver+=["faster"]
+[ERROR] Field solver can't be appended
+# Return code 2 #
+### opam option --global solver
+"fast"
+### opam option --global solver-criteria+="--same"
+[ERROR] Field solver-criteria can't be appended
+# Return code 2 #
+### opam option --global solver-criteria
+"--not-changed"
+### opam option --global solver-fixup-criteria+="--destroy"
+[ERROR] Field solver-fixup-criteria can't be appended
+# Return code 2 #
+### opam option --global solver-fixup-criteria
+"--keep"
+### opam option --global solver-upgrade-criteria+="--max-version"
+[ERROR] Field solver-upgrade-criteria can't be appended
+# Return code 2 #
+### opam option --global solver-upgrade-criteria
+"--no-downgrade"
+### opam option --global swh-fallback+=false
+[ERROR] Field swh-fallback can't be appended
+# Return code 2 #
+### opam option --global swh-fallback
+true
+### opam option --global 'sys-pkg-manager-cmd+=["tpa" "/bin/tpa"]'
+Added '["tpa" "/bin/tpa"]' to field sys-pkg-manager-cmd in global configuration
+### opam option --global sys-pkg-manager-cmd
+[["tpa" "/usr/bin/tpa"] ["xin" "/usr/bin/nix"]]
+### opam option --global 'wrap-build-commands+==["another-wrap.sh" "build"]'
+[ERROR] Parse error on the value of wrap-build-commands '=["another-wrap.sh" "build"]': Stdlib.Parsing.Parse_error
+# Return code 2 #
+### opam option --global wrap-build-commands
+["wrap.sh" "build"]
+### opam option --global 'wrap-install-commands+=["another-wrap.sh" "install"]'
+Added '["another-wrap.sh" "install"]' to field wrap-install-commands in global configuration
+### opam option --global wrap-install-commands
+[["another-wrap.sh" "install"] ["wrap.sh" "install"]]
+### opam option --global 'wrap-remove-commands+=["another-wrap.sh" "remove"]'
+Added '["another-wrap.sh" "remove"]' to field wrap-remove-commands in global configuration
+### opam option --global wrap-remove-commands
+["wrap.sh" "remove"]
+### :I:3: Revert
+### opam option --global archive-mirrors=
+Reverted field archive-mirrors in global configuration
+### opam option --global archive-mirrors
+### opam option --global best-effort-prefix-criteria=
+Reverted field best-effort-prefix-criteria in global configuration
+### opam option --global best-effort-prefix-criteria
+### opam option --global default-invariant=
+Reverted field default-invariant in global configuration
+### opam option --global default-invariant
+["ocaml" {>= "4.05.0"}]
+### opam option --global depext=
+Reverted field depext in global configuration
+### opam option --global depext
+true
+### opam option --global depext-bypass=
+Reverted field depext-bypass in global configuration
+### opam option --global depext-bypass
+[]
+### opam option --global depext-cannot-install=
+Reverted field depext-cannot-install in global configuration
+### opam option --global depext-cannot-install
+false
+### opam option --global depext-run-installs=
+Reverted field depext-run-installs in global configuration
+### opam option --global depext-run-installs
+true
+### opam option --global download-command=
+Reverted field download-command in global configuration
+### opam option --global download-command
+### opam option --global download-jobs=
+Reverted field download-jobs in global configuration
+### opam option --global download-jobs
+1
+### opam option --global git-location=
+Reverted field git-location in global configuration
+### opam option --global git-location
+### opam option --global jobs=
+Reverted field jobs in global configuration
+### opam option --global jobs
+### opam option --global post-build-commands=
+Reverted field post-build-commands in global configuration
+### opam option --global post-build-commands
+[]
+### opam option --global post-install-commands=
+Reverted field post-install-commands in global configuration
+### opam option --global post-install-commands
+[]
+### opam option --global post-remove-commands=
+Reverted field post-remove-commands in global configuration
+### opam option --global post-remove-commands
+[]
+### opam option --global post-session-commands=
+Reverted field post-session-commands in global configuration
+### opam option --global post-session-commands
+[]
+### opam option --global pre-build-commands=
+Reverted field pre-build-commands in global configuration
+### opam option --global pre-build-commands
+[]
+### opam option --global pre-install-commands=
+Reverted field pre-install-commands in global configuration
+### opam option --global pre-install-commands
+[]
+### opam option --global pre-remove-commands=
+Reverted field pre-remove-commands in global configuration
+### opam option --global pre-remove-commands
+[]
+### opam option --global pre-session-commands=
+Reverted field pre-session-commands in global configuration
+### opam option --global pre-session-commands
+[]
+### opam option --global repository-validation-command=
+Reverted field repository-validation-command in global configuration
+### opam option --global repository-validation-command
+### opam option --global solver=
+Reverted field solver in global configuration
+### opam option --global solver
+### # Solver criteria are a special case, internally it is represented as
+### # a single list, we need to check then how the full criteria list is modified
+### opam option --global solver-criteria=
+Reverted field solver-criteria in global configuration
+### opam option --global solver-upgrade-criteria
+### opam option --global solver-criteria
+### opam option --global solver-fixup-criteria
+### opam option --global solver-fixup-criteria=
+No modification in global configuration
+### opam option --global solver-upgrade-criteria
+### opam option --global solver-criteria
+### opam option --global solver-fixup-criteria
+### opam option --global solver-upgrade-criteria=
+No modification in global configuration
+### opam option --global solver-upgrade-criteria
+### opam option --global solver-criteria
+### opam option --global solver-fixup-criteria
+### opam option --global swh-fallback=
+Reverted field swh-fallback in global configuration
+### opam option --global swh-fallback
+false
+### opam option --global sys-pkg-manager-cmd=
+Reverted field sys-pkg-manager-cmd in global configuration
+### opam option --global sys-pkg-manager-cmd
+[]
+### opam option --global wrap-build-commands=
+Reverted field wrap-build-commands in global configuration
+### opam option --global wrap-build-commands
+["%{hooks}%/sandbox.sh" "build"] {os = "linux" | os = "macos"}
+### opam option --global wrap-install-commands=
+Reverted field wrap-install-commands in global configuration
+### opam option --global wrap-install-commands
+["%{hooks}%/sandbox.sh" "install"] {os = "linux" | os = "macos"}
+### opam option --global wrap-remove-commands=
+No modification in global configuration
+### opam option --global wrap-remove-commands
+["wrap.sh" "remove"]
+### :::::::::::::::::::
+### :II: Switch options
+### :::::::::::::::::::
+### opam switch create hctiws --empty
+### opam option --switch hctiws | ' .*' -> ''
+depext-bypass
+post-build-commands
+post-install-commands
+post-remove-commands
+post-session-commands
+pre-build-commands
+pre-install-commands
+pre-remove-commands
+pre-session-commands
+setenv
+synopsis
+wrap-build-commands
+wrap-install-commands
+wrap-remove-commands
+### :II:1: Set
+### opam option --switch hctiws depext-bypass=["sw-foo"]
+Set to '["sw-foo"]' the field depext-bypass in switch hctiws
+### opam option --switch hctiws depext-bypass
+"sw-foo"
+### opam option --switch hctiws 'post-build-commands=["sw-post.sh" "build"]'
+Set to '["sw-post.sh" "build"]' the field post-build-commands in switch hctiws
+### opam option --switch hctiws post-build-commands
+["sw-post.sh" "build"]
+### opam option --switch hctiws 'post-install-commands=["sw-post.sh" "install"]'
+Set to '["sw-post.sh" "install"]' the field post-install-commands in switch hctiws
+### opam option --switch hctiws post-install-commands
+["sw-post.sh" "install"]
+### opam option --switch hctiws 'post-remove-commands=["sw-post.sh" "remove"]'
+Set to '["sw-post.sh" "remove"]' the field post-remove-commands in switch hctiws
+### opam option --switch hctiws post-remove-commands
+["sw-post.sh" "remove"]
+### opam option --switch hctiws 'post-session-commands=["sw-post.sh" "session"]'
+Set to '["sw-post.sh" "session"]' the field post-session-commands in switch hctiws
+### opam option --switch hctiws post-session-commands
+["sw-post.sh" "session"]
+### opam option --switch hctiws 'pre-build-commands=["sw-pre.sh" "build"]'
+Set to '["sw-pre.sh" "build"]' the field pre-build-commands in switch hctiws
+### opam option --switch hctiws pre-build-commands
+["sw-pre.sh" "build"]
+### opam option --switch hctiws 'pre-install-commands=["sw-pre.sh" "install"]'
+Set to '["sw-pre.sh" "install"]' the field pre-install-commands in switch hctiws
+### opam option --switch hctiws pre-install-commands
+["sw-pre.sh" "install"]
+### opam option --switch hctiws 'pre-remove-commands=["sw-pre.sh" "remove"]'
+Set to '["sw-pre.sh" "remove"]' the field pre-remove-commands in switch hctiws
+### opam option --switch hctiws pre-remove-commands
+["sw-pre.sh" "remove"]
+### opam option --switch hctiws 'pre-session-commands=["sw-pre.sh" "session"]'
+Set to '["sw-pre.sh" "session"]' the field pre-session-commands in switch hctiws
+### opam option --switch hctiws pre-session-commands
+["sw-pre.sh" "session"]
+### opam option --switch hctiws 'setenv=var1="fst"'
+Set to 'var1="fst"' the field setenv in switch hctiws
+### opam option --switch hctiws setenv
+var1 = "fst"
+### opam option --switch hctiws 'synopsis="a long explanation"'
+Set to '"a long explanation"' the field synopsis in switch hctiws
+### opam option --switch hctiws synopsis
+"a long explanation"
+### opam option --switch hctiws 'wrap-build-commands=["sw-wrap.sh" "build"]'
+Set to '["sw-wrap.sh" "build"]' the field wrap-build-commands in switch hctiws
+### opam option --switch hctiws wrap-build-commands
+["sw-wrap.sh" "build"]
+### opam option --switch hctiws 'wrap-install-commands=["sw-wrap.sh" "install"]'
+Set to '["sw-wrap.sh" "install"]' the field wrap-install-commands in switch hctiws
+### opam option --switch hctiws wrap-install-commands
+["sw-wrap.sh" "install"]
+### opam option --switch hctiws 'wrap-remove-commands=["sw-wrap.sh" "remove"]'
+Set to '["sw-wrap.sh" "remove"]' the field wrap-remove-commands in switch hctiws
+### opam option --switch hctiws wrap-remove-commands
+["sw-wrap.sh" "remove"]
+### :II:2: Add
+### opam option --switch hctiws depext-bypass+=["sw-bar"]
+Added '["sw-bar"]' to field depext-bypass in switch hctiws
+### opam option --switch hctiws depext-bypass
+["sw-bar" "sw-foo"]
+### opam option --switch hctiws 'post-build-commands+=["sw-another-post.sh" "build"]'
+Added '["sw-another-post.sh" "build"]' to field post-build-commands in switch hctiws
+### opam option --switch hctiws post-build-commands
+[["sw-another-post.sh" "build"] ["sw-post.sh" "build"]]
+### opam option --switch hctiws 'post-install-commands+=["sw-another-post.sh" "install"]'
+Added '["sw-another-post.sh" "install"]' to field post-install-commands in switch hctiws
+### opam option --switch hctiws post-install-commands
+[["sw-another-post.sh" "install"] ["sw-post.sh" "install"]]
+### opam option --switch hctiws 'post-remove-commands+=["sw-another-post.sh" "remove"]'
+Added '["sw-another-post.sh" "remove"]' to field post-remove-commands in switch hctiws
+### opam option --switch hctiws post-remove-commands
+[["sw-another-post.sh" "remove"] ["sw-post.sh" "remove"]]
+### opam option --switch hctiws 'post-session-commands+=["sw-another-post.sh" "session"]'
+Added '["sw-another-post.sh" "session"]' to field post-session-commands in switch hctiws
+### opam option --switch hctiws post-session-commands
+[["sw-another-post.sh" "session"] ["sw-post.sh" "session"]]
+### opam option --switch hctiws 'pre-build-commands+=["sw-another-pre.sh" "build"]'
+Added '["sw-another-pre.sh" "build"]' to field pre-build-commands in switch hctiws
+### opam option --switch hctiws pre-build-commands
+[["sw-another-pre.sh" "build"] ["sw-pre.sh" "build"]]
+### opam option --switch hctiws 'pre-install-commands+=["sw-another-pre.sh" "install"]'
+Added '["sw-another-pre.sh" "install"]' to field pre-install-commands in switch hctiws
+### opam option --switch hctiws pre-install-commands
+[["sw-another-pre.sh" "install"] ["sw-pre.sh" "install"]]
+### opam option --switch hctiws 'pre-remove-commands+=["sw-another-pre.sh" "remove"]'
+Added '["sw-another-pre.sh" "remove"]' to field pre-remove-commands in switch hctiws
+### opam option --switch hctiws pre-remove-commands
+[["sw-another-pre.sh" "remove"] ["sw-pre.sh" "remove"]]
+### opam option --switch hctiws 'pre-session-commands+=["sw-another-pre.sh" "session"]'
+Added '["sw-another-pre.sh" "session"]' to field pre-session-commands in switch hctiws
+### opam option --switch hctiws pre-session-commands
+[["sw-another-pre.sh" "session"] ["sw-pre.sh" "session"]]
+### opam option --switch hctiws 'setenv+=vat2="snd"'
+Added 'vat2="snd"' to field setenv in switch hctiws
+### opam option --switch hctiws setenv
+[[vat2 = "snd"] [var1 = "fst"]]
+### opam option --switch hctiws 'synopsis+="a much longer explanation"'
+[ERROR] Field synopsis can't be appended
+# Return code 2 #
+### opam option --switch hctiws synopsis
+"a long explanation"
+### opam option --switch hctiws 'wrap-build-commands+=["sw-another-wrap.sh" "build"]'
+Added '["sw-another-wrap.sh" "build"]' to field wrap-build-commands in switch hctiws
+### opam option --switch hctiws wrap-build-commands
+[["sw-another-wrap.sh" "build"] ["sw-wrap.sh" "build"]]
+### opam option --switch hctiws 'wrap-install-commands+=["sw-another-wrap.sh" "install"]'
+Added '["sw-another-wrap.sh" "install"]' to field wrap-install-commands in switch hctiws
+### opam option --switch hctiws wrap-install-commands
+[["sw-another-wrap.sh" "install"] ["sw-wrap.sh" "install"]]
+### opam option --switch hctiws 'wrap-remove-commands+=["sw-another-wrap.sh" "remove"]'
+Added '["sw-another-wrap.sh" "remove"]' to field wrap-remove-commands in switch hctiws
+### opam option --switch hctiws wrap-remove-commands
+["sw-wrap.sh" "remove"]
+### # ### :II:3: Revert
+### opam option --switch hctiws depext-bypass=
+Reverted field depext-bypass in switch hctiws
+### opam option --switch hctiws depext-bypass
+[]
+### opam option --switch hctiws post-build-commands=
+Reverted field post-build-commands in switch hctiws
+### opam option --switch hctiws post-build-commands
+[]
+### opam option --switch hctiws post-install-commands=
+Reverted field post-install-commands in switch hctiws
+### opam option --switch hctiws post-install-commands
+[]
+### opam option --switch hctiws post-remove-commands=
+Reverted field post-remove-commands in switch hctiws
+### opam option --switch hctiws post-remove-commands
+[]
+### opam option --switch hctiws post-session-commands=
+Reverted field post-session-commands in switch hctiws
+### opam option --switch hctiws post-session-commands
+[]
+### opam option --switch hctiws pre-build-commands=
+Reverted field pre-build-commands in switch hctiws
+### opam option --switch hctiws pre-build-commands
+[]
+### opam option --switch hctiws pre-install-commands=
+Reverted field pre-install-commands in switch hctiws
+### opam option --switch hctiws pre-install-commands
+[]
+### opam option --switch hctiws pre-remove-commands=
+Reverted field pre-remove-commands in switch hctiws
+### opam option --switch hctiws pre-remove-commands
+[]
+### opam option --switch hctiws pre-session-commands=
+Reverted field pre-session-commands in switch hctiws
+### opam option --switch hctiws pre-session-commands
+[]
+### opam option --switch hctiws setenv=
+Reverted field setenv in switch hctiws
+### opam option --switch hctiws setenv
+[]
+### opam option --switch hctiws synopsis=
+Reverted field synopsis in switch hctiws
+### opam option --switch hctiws synopsis
+""
+### opam option --switch hctiws wrap-build-commands=
+Reverted field wrap-build-commands in switch hctiws
+### opam option --switch hctiws wrap-build-commands
+[]
+### opam option --switch hctiws wrap-install-commands=
+Reverted field wrap-install-commands in switch hctiws
+### opam option --switch hctiws wrap-install-commands
+[]
+### opam option --switch hctiws wrap-remove-commands=
+No modification in switch hctiws
+### opam option --switch hctiws wrap-remove-commands
+["sw-wrap.sh" "remove"]
