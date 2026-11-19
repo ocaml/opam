@@ -1050,6 +1050,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:filter-variable-resolution.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-fixup)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff fixup.test fixup.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-fixup)))
+
+(rule
+ (targets fixup.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:fixup.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-git)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action

@@ -26,7 +26,7 @@ let default_criteria = {
   crit_default = "-changed,\
                   -count[avoid-version,solution]";
   crit_upgrade = "-count[avoid-version,solution]";
-  crit_fixup = "-count[avoid-version,solution]";
+  crit_fixup = "-changed,-count[avoid-version,solution]";
   crit_best_effort_prefix = None;
 }
 
