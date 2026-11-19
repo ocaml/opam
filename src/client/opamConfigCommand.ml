@@ -901,12 +901,19 @@ let global_allowed_fields, global_allowed_sections =
              c),
         Config.with_git_location_opt
           (InitConfig.git_location in_config ++ Config.git_location Config.empty);
-      ] @ List.map (fun f ->
-          f, Atomic, Config.with_criteria
-            (Config.criteria Config.empty))
-        [ "solver-criteria";
-          "solver-upgrade-criteria";
-          "solver-fixup-criteria" ]
+      ] @ List.map (fun (f, kind) ->
+          f, Atomic,
+          (fun c ->
+             match Config.criterion kind Config.empty with
+             | Some crit -> Config.with_criterion kind crit c
+             | None ->
+               Config.with_criteria
+                 (List.filter (fun (k, _) -> k <> kind)
+                    (Config.criteria c)) c
+          ))
+        [ "solver-criteria", `Default;
+          "solver-upgrade-criteria", `Upgrade;
+          "solver-fixup-criteria", `Fixup ]
       @ allwd_wrappers wrapper_init Config.wrappers Config.with_wrappers
     )
   in

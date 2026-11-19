@@ -51,6 +51,7 @@ users)
 
 ## Var/Option
   * Fix `opam option wrap-remove-commands` setting, it was updating `pre-remove-session` field [#7251 @rjbou]
+  * Fix `opam option` solver criteria reverting, it was reverting the 3 fields (default, fixup and upgrade) of one of them was reverted [#7251 @rjbou]
 
 ## Update / Upgrade
 

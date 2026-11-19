@@ -376,15 +376,18 @@ Reverted field solver in global configuration
 ### opam option --global solver-criteria=
 Reverted field solver-criteria in global configuration
 ### opam option --global solver-upgrade-criteria
+"--no-downgrade"
 ### opam option --global solver-criteria
 ### opam option --global solver-fixup-criteria
+"--keep"
 ### opam option --global solver-fixup-criteria=
-No modification in global configuration
+Reverted field solver-fixup-criteria in global configuration
 ### opam option --global solver-upgrade-criteria
+"--no-downgrade"
 ### opam option --global solver-criteria
 ### opam option --global solver-fixup-criteria
 ### opam option --global solver-upgrade-criteria=
-No modification in global configuration
+Reverted field solver-upgrade-criteria in global configuration
 ### opam option --global solver-upgrade-criteria
 ### opam option --global solver-criteria
 ### opam option --global solver-fixup-criteria
