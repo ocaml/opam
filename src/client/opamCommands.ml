@@ -2461,7 +2461,10 @@ let repository cli =
       OpamRepositoryState.with_ `Lock_write gt (fun rt ->
           let rt = OpamRepositoryCommand.add rt name url trust_anchors in
           let failed, rt =
-            OpamRepositoryCommand.update_with_auto_upgrade rt [name]
+            try OpamRepositoryCommand.update_with_auto_upgrade rt [name]
+            with e ->
+              OpamStd.Exn.finalise e @@ fun () ->
+              OpamRepositoryState.drop @@ OpamRepositoryCommand.remove rt name
           in
           if failed <> [] then
             (OpamRepositoryState.drop @@ OpamRepositoryCommand.remove rt name;
