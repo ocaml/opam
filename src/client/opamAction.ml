@@ -466,6 +466,11 @@ let prepare_package_source st nv dir =
     (slog OpamFilename.Dir.to_string) dir;
   if OpamStateConfig.(!r.dryrun) then Done None else
   let opam = OpamSwitchState.opam st nv in
+  let subpath =
+    OpamStd.Option.map_default OpamFile.URL.subpath None
+      (OpamFile.OPAM.url opam)
+  in
+  let dir = OpamFilename.SubPath.(dir /? subpath) in
   let get_extra_sources_job =
     (* !X The extra sources have normally been prefetched during the dl phase;
        this is, assuming their metadata contains a hash though. *)

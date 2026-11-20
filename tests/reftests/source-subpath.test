@@ -1,0 +1,41 @@
+N0REP0
+### <arch/sub/file>
+hello
+### <arch/sub/p.patch>
+--- a/file
++++ b/file
+@@ -1 +1 @@
+-hello
++patched
+### tar czf origin.tgz arch
+### <pkg:subp.1>
+opam-version: "2.0"
+patches: "p.patch"
+### <mkurl.sh>
+p=subp.1
+file="REPO/packages/${p%.*}/$p/opam"
+MD5=$(openssl md5 origin.tgz | cut -d' ' -f2)
+cat >> "$file" << EOF2
+url {
+  src: "origin.tgz"
+  checksum: "md5=$MD5"
+}
+x-subpath: "sub"
+EOF2
+### sh mkurl.sh
+### opam update
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create phantom --empty
+### opam source subp
+Successfully extracted to ${BASEDIR}/subp.1
+### find subp.1 | unordered
+subp.1
+subp.1/sub
+subp.1/sub/p.patch
+subp.1/sub/file
+subp.1/opam
+### cat subp.1/sub/file
+patched

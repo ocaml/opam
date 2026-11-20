@@ -2247,6 +2247,27 @@
    (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:simulated-pin.test} %{read-lines:testing-env}))))
 
 (rule
+ (alias reftest-source-subpath)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (action
+  (diff source-subpath.test source-subpath.out)))
+
+(alias
+ (name reftest)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (deps (alias reftest-source-subpath)))
+
+(rule
+ (targets source-subpath.out)
+ (deps root-N0REP0)
+ (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
+ (package opam)
+ (action
+  (with-stdout-to
+   %{targets}
+   (run ./run.exe %{exe:../../src/client/opamMain.exe.exe} %{dep:source-subpath.test} %{read-lines:testing-env}))))
+
+(rule
  (alias reftest-source)
  (enabled_if (and  (or (<> %{env:TESTALL=1} 0) (= %{env:TESTN0REP0=0} 1))))
  (action
