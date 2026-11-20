@@ -322,6 +322,8 @@ let environment_variables =
       "display stats at the end of command.";
       "VERBOSEON", cli_from cli2_2, (fun v -> VERBOSEON (env_string_list v)),
       "see option --verbose-on";
+      "FAILFAST", cli_from cli2_7, (fun v -> FAILFAST (env_bool v)),
+      "see option --fail-fast";
       "WORKINGDIR", cli_original, (fun v -> WORKINGDIR (env_bool v)),
       "see option `--working-dir'.";
     ] in
@@ -664,19 +666,20 @@ type build_options = {
   assume_depexts: bool;
   no_depexts    : bool;
   verbose_on    : name list option;
+  failfast      : bool;
 }
 
 let create_build_options
     keep_build_dir reuse_build_dir inplace_build make no_checksums
     req_checksums build_test build_doc dev_setup show dryrun skip_update
     fake jobs ignore_constraints_on ignore_available_on unlock_base locked lock_suffix
-    assume_depexts no_depexts verbose_on
+    assume_depexts no_depexts verbose_on failfast
     =
   {
     keep_build_dir; reuse_build_dir; inplace_build; make; no_checksums;
     req_checksums; build_test; build_doc; dev_setup; show; dryrun; skip_update;
     fake; jobs; ignore_constraints_on; ignore_available_on; unlock_base;
-    locked; lock_suffix; assume_depexts; no_depexts; verbose_on;
+    locked; lock_suffix; assume_depexts; no_depexts; verbose_on; failfast;
   }
 
 let apply_build_options cli b =
@@ -724,6 +727,7 @@ let apply_build_options cli b =
       (b.verbose_on >>= function
         | [] -> None
         | vo -> Some (OpamPackage.Name.Set.of_list vo))
+    ?failfast:(flag b.failfast)
     ~scrubbed_environment_variables
     ()
 
@@ -1582,12 +1586,17 @@ let build_options cli =
        This is equivalent to setting $(b,\\$OPAMVERBOSE)."
       Arg.(some (list package_name)) None
   in
+  let failfast =
+    mk_flag ~cli (cli_from cli2_7) ~section ["fail-fast"]
+      "Fail as soon as possible if an error occured during a build.\
+       This is equivalent to setting $(b,\\$OPAMFAILFAST)."
+  in
   Term.(const create_build_options
         $keep_build_dir $reuse_build_dir $inplace_build $make
         $no_checksums $req_checksums $build_test $build_doc $dev_setup $show
         $dryrun $skip_update $fake $jobs_flag ~section cli cli_original
         $ignore_constraints_on $ignore_available_on $unlock_base $locked
-        $lock_suffix $assume_depexts $no_depexts $verbose_on)
+        $lock_suffix $assume_depexts $no_depexts $verbose_on $failfast)
 
 (* Option common to install commands *)
 let assume_built ?section cli =

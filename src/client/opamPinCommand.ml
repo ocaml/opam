@@ -381,7 +381,11 @@ let fetch_all_pins st ?working_dir pins =
           name srcdir [] [url]
         @@| fun r -> (pinned, r))
     in
-    OpamParallel.map ~jobs:OpamStateConfig.(!r.dl_jobs) ~command pins
+    let is_failure = function
+      | _, Not_available _ -> true
+      | _, (Up_to_date _ | Result _) -> false
+    in
+    OpamParallel.map ~jobs:OpamStateConfig.(!r.dl_jobs) ~command ~is_failure pins
   in
   let errored, to_pin =
     List.fold_left (fun (err, ok) (pinned, result) ->

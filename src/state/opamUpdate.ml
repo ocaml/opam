@@ -257,6 +257,7 @@ let repositories rt repos =
     fun () -> repository rt repo @@|
     fun f -> [], f
   in
+  let is_failure _ = false in
   let merge (failed1, f1) (failed2, f2) =
     failed1 @ failed2,
     match f1, f2 with
@@ -267,7 +268,7 @@ let repositories rt repos =
   let failed, rt_update =
     OpamParallel.reduce
       ~jobs:OpamStateConfig.(!r.dl_jobs)
-      ~command ~merge
+      ~command ~is_failure ~merge
       ~nil:([], None)
       ~dry_run:OpamStateConfig.(!r.dryrun)
       repos
@@ -542,7 +543,7 @@ let dev_packages st ?autolock ?(working_dir=OpamPackage.Set.empty) packages =
   in
   let success, st_update, updated_set =
     OpamParallel.reduce ~jobs:OpamStateConfig.(!r.dl_jobs)
-      ~command
+      ~command ~is_failure:(fun _ -> false)
       ~merge
       ~nil:(true, (fun st -> st), OpamPackage.Set.empty)
       (OpamPackage.Set.elements packages)
@@ -581,7 +582,7 @@ let pinned_packages st ?autolock ?(working_dir=OpamPackage.Name.Set.empty) names
   let st_update, updates =
     OpamParallel.reduce
       ~jobs:(Lazy.force OpamStateConfig.(!r.jobs))
-      ~command
+      ~command ~is_failure:(fun _ -> false)
       ~merge
       ~nil:((fun st -> st), OpamPackage.Name.Set.empty)
       (OpamPackage.Name.Set.elements names)

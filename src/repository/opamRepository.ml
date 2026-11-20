@@ -292,6 +292,9 @@ let pull_tree_t
                  with OpamSystem.Process_error r ->
                    Done (Not_available
                            (Some label, OpamProcess.result_summary r))))
+            ~is_failure:(function
+                | Not_available _ -> true
+                | Up_to_date _ | Result _ -> false)
             dirnames
         in
         let text =
