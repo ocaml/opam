@@ -1096,18 +1096,11 @@ let simulate_new_state state t =
 let dry_run state solution =
   simulate_new_state state (OpamSolver.get_atomic_action_graph solution)
 
-(* Ask confirmation whenever the packages to modify are not exactly
-   the packages in the user request *)
-let confirmation ?ask requested solution =
+let confirmation ?ask solution =
   OpamCoreConfig.answer_is_yes ~name:None () ||
   ask = Some false ||
-  let solution_packages =
-    OpamPackage.names_of_packages (OpamSolver.all_packages solution)
-  in
-  ask <> Some true && OpamPackage.Name.Set.equal requested solution_packages ||
-  let stats = OpamSolver.stats solution in
   OpamConsole.confirm ~name:"proceed-actions" "\nProceed with %s?"
-    (OpamSolver.string_of_stats stats)
+    (OpamSolver.string_of_stats (OpamSolver.stats solution))
 
 let run_hook_job t name ?(local=[]) ?(allow_stdout=false) w =
   let shell_env = OpamEnv.get_full ~set_opamroot:true ~set_opamswitch:true ~force_path:true t in
@@ -1467,7 +1460,7 @@ let apply ?ask t ~requested ?print_requested ?add_roots
       in
       (* Prints the msg about additional depexts to install *)
       (t, Aborted)
-    else if download_only || confirmation ?ask names solution then (
+    else if download_only || confirmation ?ask solution then (
       let t =
         install_depexts t
           ~pkg_to_install:(OpamPackage.Set.inter new_state0.installed
