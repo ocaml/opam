@@ -226,11 +226,26 @@ module Set = struct
       fold (fun x acc -> f x :: acc) set []
 
     let to_string s =
-      if S.cardinal s > max_print then
-        Printf.sprintf "%d elements" (S.cardinal s)
+      let cardinal = S.cardinal s in
+      if cardinal > max_print then
+        Printf.sprintf "%d elements" cardinal
+      else if cardinal = 0 then "{}"
+      else if cardinal = 1 then "{ " ^ (O.to_string (S.choose s)) ^ " }"
       else
-        let l = S.fold (fun nv l -> O.to_string nv :: l) s [] in
-        OpamList.to_string (fun x -> x) (List.rev l)
+        let sep = ", " in
+        let buffer = Buffer.create (cardinal * 20 + 4) in
+        Buffer.add_string buffer "{ ";
+        let _ : int =
+          S.fold
+            (fun o i ->
+               Buffer.add_string buffer (O.to_string o);
+               if i < cardinal then Buffer.add_string buffer sep;
+               i + 1)
+            s
+            1
+        in
+        Buffer.add_string buffer " }";
+        Buffer.contents buffer
 
     exception Found of elt
 
