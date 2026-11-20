@@ -1057,9 +1057,9 @@ let set_var_switch gt ?st svar value =
       OpamConsole.error_and_exit `Bad_arguments
         "%sPackage variables are read-only and \
          cannot be updated using `opam var --global`"
-        (if OpamPackage.package_of_name_opt
+        (if OpamPackage.Uniset.find_opt n
             (OpamStateConfig.Switch.safe_read_selections
-               ~lock_kind:`Lock_read gt sw).sel_installed n = None then
+               ~lock_kind:`Lock_read gt sw).sel_installed = None then
            Printf.sprintf "Package %s is not installed. "
              (OpamPackage.Name.to_string n)
          else "")
@@ -1270,9 +1270,9 @@ let var_show_t resolve gt ?switch v =
        | Some switch -> "switch " ^ (OpamSwitch.to_string switch))
       (match switch, OpamVariable.Full.scope var with
        | Some switch, Package n ->
-         if OpamPackage.package_of_name_opt
+         if OpamPackage.Uniset.find_opt n
              (OpamStateConfig.Switch.safe_read_selections
-                ~lock_kind:`Lock_read gt switch).sel_installed n = None then
+                ~lock_kind:`Lock_read gt switch).sel_installed = None then
            Printf.sprintf "; package %s is not installed in this switch"
              (OpamPackage.Name.to_string n)
          else ""

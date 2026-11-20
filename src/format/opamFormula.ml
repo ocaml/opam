@@ -320,26 +320,38 @@ let check (name,cstr) package =
   | None -> true
   | Some (relop, v) -> eval_relop relop (OpamPackage.version package) v
 
-let packages_of_atoms ?(disj=false) pkgset atoms =
-  (* Conjunction for constraints over the same name (unless [disj] is
-     specified), but disjunction on the package names *)
+let packages_of_atoms_helper ~disj atoms f empty =
   let ffilter = if disj then List.exists else List.for_all in
-  let by_name =
+  let atoms_by_name =
     List.fold_left (fun acc (n,_ as atom) ->
         OpamPackage.Name.Map.add_to_list n atom acc)
       OpamPackage.Name.Map.empty atoms
   in
-  OpamPackage.Name.Map.fold (fun name atoms acc ->
-      OpamPackage.Set.union acc @@
-      OpamPackage.Set.filter
-        (fun nv -> ffilter (fun a -> check a nv) atoms)
-        (OpamPackage.packages_of_name pkgset name))
-    by_name OpamPackage.Set.empty
+  let check atoms nv = ffilter (fun a -> check a nv) atoms in
+  OpamPackage.Name.Map.fold (f ~check) atoms_by_name empty
 
-let satisfies_depends pkgset f =
+let packages_of_atoms ?(disj=false) pkgset atoms =
+  packages_of_atoms_helper ~disj atoms
+    (fun ~check name atoms acc ->
+       OpamPackage.Set.union acc @@
+       OpamPackage.Set.filter (check atoms)
+         (OpamPackage.packages_of_name pkgset name))
+    OpamPackage.Set.empty
+
+let packages_uset_of_atoms ?(disj=false) pkguset atoms =
+  packages_of_atoms_helper ~disj atoms
+    (fun ~check name atoms acc ->
+       match OpamPackage.Uniset.find_opt name pkguset with
+       | Some nv when check atoms nv ->
+         OpamPackage.Uniset.add nv acc
+       | _ -> acc)
+    OpamPackage.Uniset.empty
+
+let satisfies_depends uset f =
   eval (fun (name, cstr) ->
-      OpamPackage.Set.exists (fun nv -> check_version_formula cstr nv.version)
-        (OpamPackage.packages_of_name pkgset name))
+      match OpamPackage.Uniset.find_opt name uset with
+      | None -> false
+      | Some nv -> check_version_formula cstr nv.version)
     f
 
 let to_string t =
@@ -411,6 +423,13 @@ let all_names f =
       OpamPackage.Name.Set.add name acc)
     OpamPackage.Name.Set.empty f
 
+(* Filter out conjonctions where [name] does not appear *)
+let dnf_for_name name dnf =
+  map (fun ((n, _) as a) -> if n = name then Atom a else Empty) dnf
+
+let satisfies_named_dnf named_dnf version =
+  eval (fun (_name, cstr) -> check_version_formula cstr version) named_dnf
+
 let packages pkgset f =
   let names = all_names f in
   (* dnf allows us to transform the formula into a union of intervals, where
@@ -418,16 +437,25 @@ let packages pkgset f =
   let dnf = dnf_of_formula f in
   OpamPackage.Name.Set.fold (fun name acc ->
       (* Ignore conjunctions where [name] doesn't appear *)
-      let name_formula =
-        map (fun ((n, _) as a) -> if n = name then Atom a else Empty) dnf
-      in
+      let name_formula = dnf_for_name name dnf in
       OpamPackage.Set.union acc @@
-      OpamPackage.Set.filter (fun nv ->
-          let v = OpamPackage.version nv in
-          eval (fun (_name, cstr) -> check_version_formula cstr v)
-            name_formula)
+      OpamPackage.Set.filter
+        (fun nv -> satisfies_named_dnf name_formula nv.version)
         (OpamPackage.packages_of_name pkgset name))
     names OpamPackage.Set.empty
+
+let packages_uset pkguset f =
+  let names = all_names f in
+  let dnf = dnf_of_formula f in
+  OpamPackage.Name.Set.fold
+    (fun name acc ->
+       let name_formula = dnf_for_name name dnf in
+       match OpamPackage.Uniset.find_opt name pkguset with
+       | Some nv when satisfies_named_dnf name_formula nv.version ->
+         OpamPackage.Uniset.add nv acc
+       | _ -> acc)
+    names
+    OpamPackage.Uniset.empty
 
 (* Convert a t an atom formula *)
 let to_atom_formula (t:t): atom formula =

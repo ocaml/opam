@@ -31,7 +31,7 @@ val package: 'a switch_state -> name -> package
 val package_opt: 'a switch_state -> name -> package option
 
 (** The set of all pinned packages with their pinning versions *)
-val packages: 'a switch_state -> package_set
+val packages: 'a switch_state -> package_uniset
 
 (** Looks up an 'opam' file for the given named package in a source directory. *)
 val find_opam_file_in_source:

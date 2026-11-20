@@ -370,3 +370,65 @@ The following actions will be performed:
 -> installed foo-vcs.1
 -> installed bar-vcs.1
 Done.
+### : Upgrade and downgrade a package that have the same archive across versions
+### : shared fetch is between 2 versions of a package
+### <shared.ml>
+print_endline "I am a shared code"
+### tar czf shared.tgz shared.ml
+### <pkg:to-upgrade.1>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+remove: "true"
+### <pkg:to-upgrade.2>
+opam-version: "2.0"
+build: [ "ocaml" "shared.ml" ]
+remove: "true"
+### <mkurl.sh>
+arch=$1
+shift
+for p in "$@"; do
+  file="REPO/packages/${p%.*}/$p/opam"
+  MD5=$(openssl md5 $arch.tgz | cut -d' ' -f2)
+  cat >> "$file" << EOF
+url {
+  src: "$arch.tgz"
+  checksum: "md5=$MD5"
+}
+EOF
+done
+### sh mkurl.sh shared to-upgrade.1 to-upgrade.2
+### opam update default
+
+<><> Updating package repositories ><><><><><><><><><><><><><><><><><><><><><><>
+[default] synchronised from file://${BASEDIR}/REPO
+Now run 'opam upgrade' to apply any package updates.
+### opam switch create up-and-down --empty
+### opam install to-upgrade.1
+The following actions will be performed:
+=== install 1 package
+  - install to-upgrade 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved to-upgrade.1  (file://${BASEDIR}/shared.tgz)
+-> installed to-upgrade.1
+Done.
+### opam upgrade to-upgrade
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade to-upgrade 1 to 2
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved to-upgrade.1, to-upgrade.2  (cached)
+-> removed   to-upgrade.1
+-> installed to-upgrade.2
+Done.
+### opam install to-upgrade.1
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade to-upgrade 2 to 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved to-upgrade.1, to-upgrade.2  (cached)
+-> removed   to-upgrade.2
+-> installed to-upgrade.1
+Done.

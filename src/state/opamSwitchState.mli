@@ -52,7 +52,7 @@ val load_selections:
     precomputed in global_state.available_packages once the state is loaded) *)
 val compute_available_packages:
   'a global_state -> switch -> OpamFile.Switch_config.t ->
-  pinned:package_set -> opams:OpamFile.OPAM.t package_map ->
+  pinned:package_uniset -> opams:OpamFile.OPAM.t package_map ->
   package_set
 
 (** Raw function to compute the conflicts for all packages, given
@@ -148,7 +148,7 @@ val is_pinned: 'a switch_state -> name -> bool
 val is_version_pinned: 'a switch_state -> name -> bool
 
 (** The set of all "dev packages" (see {!is_dev_package} for a definition) *)
-val dev_packages: 'a switch_state -> package_set
+val dev_packages: 'a switch_state -> package_uniset
 
 (** Returns the local source mirror for the given package
     ({!OpamPath.Switch.sources} or {!OpamPath.Switch.pinned_package}, depending
@@ -187,10 +187,24 @@ val dependencies:
   'a switch_state -> build:bool -> post:bool -> depopts:bool ->
   installed:bool -> unavailable:bool -> package_set -> package_set
 
+(** Same as {!dependencies} but only considers installed packages.
+    Note that in [installed_dependencies st ~build ~post ~depotps uset]
+    [uset] does not have to be installed, their dependencies will be looked up
+    in the set [st.installed ++ uset]. In case of version conflict between
+    [st.installed] and [uset], the version from [uset] is retained. *)
+val installed_dependencies :
+  'a switch_state -> build:bool -> post:bool -> depopts:bool ->
+   package_uniset -> package_uniset
+
 (** Same as {!dependencies} but for reverse dependencies. *)
 val reverse_dependencies:
   'a switch_state -> build:bool -> post:bool -> depopts:bool ->
   installed:bool -> unavailable:bool -> package_set -> package_set
+
+(** Same as {!reverse_dependencies} but only considers installed packages. *)
+val installed_rev_deps:
+  'a switch_state -> build:bool -> post:bool -> depopts:bool ->
+   package_uniset -> package_uniset
 
 (** Returns required system packages of each of the given packages (elements are
     not added to the map  if they don't have system dependencies) *)
@@ -205,6 +219,11 @@ val depexts_unavailable: 'a switch_state -> package -> OpamSysPkg.Set.t option
     backward conflict definition or common conflict-class. Packages in [subset]
     (all their versions) are excluded from the result. *)
 val conflicts_with: 'a switch_state -> package_set -> package_set -> package_set
+
+(** Same as [conflicts_with] but operates on package unisets rather than
+    sets *)
+val conflicts_with_uset:
+  'a switch_state -> package_set -> package_uniset -> package_uniset
 
 (** Put the package data in a form suitable for the solver, pre-computing some
     maps and sets. Packages in the [requested] set are the ones that will get
@@ -255,14 +274,14 @@ val update_repositories:
 (** {2 Invariant computation} *)
 
 (* Returns installed root packages of switch invariant *)
-val invariant_root_packages: 'a switch_state -> package_set
+val invariant_root_packages: 'a switch_state -> package_uniset
 
 (* Compute installed invariant dependency cone *)
-val compute_invariant_packages: 'a switch_state -> package_set
+val compute_invariant_packages: 'a switch_state -> package_uniset
 
 (* Returns set of packages of installed compiler packages and their
    dependencies (only build & depopts) *)
-val compiler_packages: 'a switch_state -> package_set
+val compiler_packages: 'a switch_state -> package_uniset
 
 (** {2 User interaction and reporting } *)
 

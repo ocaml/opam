@@ -270,7 +270,7 @@ let download_shared_source st url nvs =
     (* filter out version-pinned packages since we already have their source *)
     List.filter (fun nv ->
         let dir = OpamSwitchState.source_dir st nv in
-        not (OpamPackage.Set.mem nv st.pinned &&
+        not (OpamPackage.Uniset.mem nv st.pinned &&
              OpamFilename.exists_dir dir &&
              OpamStd.Option.Op.(
                OpamPinned.find_opam_file_in_source nv.name dir >>|
@@ -686,9 +686,9 @@ let make_command st opam ?dir ?text_command (cmd, args) =
          (OpamSysPoll.os env +! "unknown")
          (OpamSysPoll.arch env +! "unknown"));
       (OpamStd.List.concat_map " " OpamPackage.to_string
-         OpamPackage.Set.(elements @@
+         OpamPackage.Uniset.(elements @@
                           OpamSwitchState.invariant_root_packages st));
-      if OpamPackage.Set.mem nv st.pinned then
+      if OpamPackage.Uniset.mem nv st.pinned then
         match OpamFile.OPAM.url opam with
         | None -> "pinned"
         | Some url ->
@@ -932,10 +932,10 @@ let cleanup_package_artefacts t nv =
   let remove_dir = OpamPath.Switch.remove t.switch_global.root t.switch nv in
   if OpamFilename.exists_dir remove_dir then OpamFilename.rmdir remove_dir;
   let dev_dir = OpamSwitchState.source_dir t nv in
-  if not (OpamPackage.Set.mem nv t.installed) then
+  if not (OpamPackage.Uniset.mem nv t.installed) then
     (log "Removing the local metadata";
      OpamSwitchAction.remove_metadata t (OpamPackage.Set.singleton nv);
-     if not (OpamPackage.Set.mem nv t.pinned) then
+     if not (OpamPackage.Uniset.mem nv t.pinned) then
        OpamFilename.rmdir dev_dir)
 
 let sources_needed st g =

@@ -124,7 +124,7 @@ let is_dev_package st opam =
   | Some urlf ->
     match OpamFile.URL.(url urlf, checksum urlf) with
     | { OpamUrl.backend = `http; _ }, _
-      when not (OpamPackage.Set.mem (OpamFile.OPAM.package opam) st.pinned) ->
+      when not (OpamPackage.Uniset.mem (OpamFile.OPAM.package opam) st.pinned) ->
       false
     | _, _::_ -> false
     | _, [] -> true
@@ -164,9 +164,7 @@ let all_installed_deps st opam =
   List.fold_left
     (fun deps (n,cstr) ->
        try
-         let nv =
-           OpamPackage.Set.find (fun nv -> nv.name = n) st.installed
-         in
+         let nv = OpamPackage.Uniset.find n st.installed in
          let version = nv.version in
          match cstr with
          | None -> OpamPackage.Set.add nv deps
@@ -253,7 +251,7 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
       | Some o when OpamFile.OPAM.name o = name -> opam_arg
       | _ ->
         try
-          let nv = OpamPackage.package_of_name st.installed name in
+          let nv = OpamPackage.Uniset.find name st.installed in
           Some (OpamPackage.Map.find nv st.opams)
         with Not_found -> None
     in
@@ -261,11 +259,11 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     let root = st.switch_global.root in
     match var_str, opam with
     | "installed", Some _ ->
-      Some (bool (OpamPackage.has_name st.installed name))
+      Some (bool (OpamPackage.Uniset.has_name name st.installed))
     | "installed", None ->
       Some (bool false)
     | "pinned", _ ->
-      Some (bool (OpamPackage.has_name st.pinned name))
+      Some (bool (OpamPackage.Uniset.has_name name st.pinned))
     | "name", opam ->
       (* On reinstall, orphan packages are not present in the state, and we
          need to resolve their internal name variable *)
@@ -311,9 +309,9 @@ let resolve st ?opam:opam_arg ?(local=OpamVariable.Map.empty) v =
     | "opamfile", Some opam ->
       let nv = get_nv opam in
       let ret file = Some (string (OpamFile.to_string file)) in
-      if OpamPackage.Set.mem nv st.installed then
+      if OpamPackage.Uniset.mem nv st.installed then
         ret (OpamPath.Switch.installed_opam st.switch_global.root st.switch nv)
-      else if OpamPackage.Set.mem nv st.pinned then
+      else if OpamPackage.Uniset.mem nv st.pinned then
         ret (OpamPath.Switch.Overlay.opam st.switch_global.root st.switch (OpamPackage.name nv))
       else if OpamPackage.Set.mem nv st.packages then
         let opam = OpamPackage.Map.find nv st.opams in

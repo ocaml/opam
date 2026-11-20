@@ -96,7 +96,8 @@ val install_sys_packages:
    launched, without asking user (used by the `--depext-only` option). If
    [force_depext] is true, it overrides [OpamFile.Config.depext] value. *)
 val install_depexts: ?force_depext:bool -> ?confirm:bool -> rw switch_state ->
-  pkg_to_install:package_set -> pkg_installed:package_set -> rw switch_state
+  pkg_to_install:package_uniset -> pkg_installed:package_uniset ->
+  rw switch_state
 
 (** {2 Atoms} *)
 
@@ -113,8 +114,12 @@ val eq_atom_of_package: package -> atom
     from a set of packages *)
 val atoms_of_packages: package_set -> atom list
 
+val atoms_of_packages_uset: package_uniset -> atom list
+
 (** Return a list of constrained atoms from a set of packages *)
 val eq_atoms_of_packages: package_set -> atom list
+
+val eq_atoms_of_packages_uset: package_uniset -> atom list
 
 (** Checks that the atoms can possibly be verified (individually) in a package
     set. Displays an error and exits otherwise. [permissive] just changes the

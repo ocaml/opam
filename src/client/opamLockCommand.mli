@@ -19,7 +19,7 @@ open OpamStateTypes
     with non present packages pinned, and kept packages. *)
 val select_packages:
   [ `Atom of atom | `Filename of filename | `Dirname of dirname ] list ->
-  'a switch_state -> 'a switch_state * package_set
+  'a switch_state -> 'a switch_state * package_uniset
 
 (** Returns the locked opam file, according its depends, depopts, and pins.
     If [only_direct] is set to true, it only adds direct dependencies specified

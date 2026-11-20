@@ -486,6 +486,24 @@ module PkgList = LineFile (struct
 
   end)
 
+module PkgUList = LineFile (struct
+
+    let internal = "package-version-ulist"
+
+    type t = package_uniset
+
+    let empty = OpamPackage.Uniset.empty
+
+    let pp =
+      OpamPackage.Uniset.(OpamFormat.lines_set ~empty ~add ~fold) @@
+      (Pp.of_module "pkg-name" (module OpamPackage.Name) ^+
+       Pp.last -| Pp.of_module "pkg-version" (module OpamPackage.Version))
+      -| Pp.pp
+        (fun ~pos:_ (n,v) -> OpamPackage.create n v)
+        (fun nv -> nv.name, nv.version)
+
+  end)
+
 (** Lists of pinned packages (<switch>/pinned): table
     <name> <pin-kind> <target>
 
@@ -774,10 +792,10 @@ module StateTable = struct
   type t = switch_selections
 
   let empty = {
-    sel_installed = OpamPackage.Set.empty;
-    sel_roots = OpamPackage.Set.empty;
-    sel_compiler = OpamPackage.Set.empty;
-    sel_pinned = OpamPackage.Set.empty;
+    sel_installed = OpamPackage.Uniset.empty;
+    sel_roots = OpamPackage.Uniset.empty;
+    sel_compiler = OpamPackage.Uniset.empty;
+    sel_pinned = OpamPackage.Uniset.empty;
   }
 
   let pp_state =
@@ -813,25 +831,25 @@ module StateTable = struct
               {
                 sel_installed = (match state with
                     | `Installed | `Root | `Compiler ->
-                      OpamPackage.Set.add nv t.sel_installed
+                      OpamPackage.Uniset.add nv t.sel_installed
                     | `Uninstalled | `Uninstalled_compiler ->
                       t.sel_installed);
                 sel_roots = (match state with
                     | `Root | `Compiler ->
-                      OpamPackage.Set.add nv t.sel_roots
+                      OpamPackage.Uniset.add nv t.sel_roots
                     | `Installed | `Uninstalled | `Uninstalled_compiler ->
                       t.sel_roots);
                 sel_compiler = (match state with
                     | `Compiler | `Uninstalled_compiler ->
-                      OpamPackage.Set.add nv t.sel_compiler
+                      OpamPackage.Uniset.add nv t.sel_compiler
                     | `Root | `Installed | `Uninstalled ->
                       t.sel_compiler);
                 sel_pinned = (match pin with
                     | Some (Pinned_legacy.Version v) ->
-                      OpamPackage.Set.add (OpamPackage.create name v)
+                      OpamPackage.Uniset.add (OpamPackage.create name v)
                         t.sel_pinned
                     | Some _ ->
-                      OpamPackage.Set.add (OpamPackage.create name version)
+                      OpamPackage.Uniset.add (OpamPackage.create name version)
                         t.sel_pinned
                     | None -> t.sel_pinned);
               })
@@ -839,15 +857,15 @@ module StateTable = struct
            empty)
       (fun t ->
          M.empty |>
-         OpamPackage.Set.fold (fun nv ->
+         OpamPackage.Uniset.fold (fun nv ->
              M.add nv.name
                (nv.version, (`Installed, None)))
            t.sel_installed |>
-         OpamPackage.Set.fold (fun nv ->
+         OpamPackage.Uniset.fold (fun nv ->
              M.add nv.name
                (nv.version, (`Root, None)))
            t.sel_roots |>
-         OpamPackage.Set.fold (fun nv acc ->
+         OpamPackage.Uniset.fold (fun nv acc ->
              let name = nv.name in
              try
                let (v, _) = M.find name acc in
@@ -857,7 +875,7 @@ module StateTable = struct
                  (nv.version, (`Uninstalled_compiler, None))
                  acc)
            t.sel_compiler |>
-         OpamPackage.Set.fold (fun nv map ->
+         OpamPackage.Uniset.fold (fun nv map ->
              let state =
                try let _, (state, _) = M.find nv.name map in state
                with Not_found -> `Uninstalled
@@ -2152,10 +2170,10 @@ module SwitchSelectionsSyntax = struct
   type t = switch_selections
 
   let empty = {
-    sel_installed = OpamPackage.Set.empty;
-    sel_roots = OpamPackage.Set.empty;
-    sel_compiler = OpamPackage.Set.empty;
-    sel_pinned = OpamPackage.Set.empty;
+    sel_installed = OpamPackage.Uniset.empty;
+    sel_roots = OpamPackage.Uniset.empty;
+    sel_compiler = OpamPackage.Uniset.empty;
+    sel_pinned = OpamPackage.Uniset.empty;
   }
 
   let pp_package =
@@ -2163,7 +2181,8 @@ module SwitchSelectionsSyntax = struct
 
   let pp_pkglist =
     Pp.V.map_list (Pp.V.string -| pp_package) -|
-    Pp.pp (fun ~pos:_ -> OpamPackage.Set.of_list) OpamPackage.Set.elements
+    Pp.pp (fun ~pos:_ l -> OpamPackage.Uniset.of_list l)
+      OpamPackage.Uniset.elements
 
   let fields = [
     "opam-version", Pp.ppacc
@@ -2189,7 +2208,8 @@ module SwitchSelectionsSyntax = struct
              contained in the overlay only *)
           Pp.pp (fun ~pos:_ (nv,_) -> nv) (fun nv -> nv, []) -|
           Pp.V.string -| pp_package) -|
-       Pp.of_pair "Package set" OpamPackage.Set.(of_list, elements))
+       Pp.of_pair "Package Uniset"
+         OpamPackage.Uniset.((fun x -> of_list x), elements))
   ]
 
   let pp_cond ?f ?condition () =

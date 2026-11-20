@@ -16,7 +16,7 @@ open OpamStd.Option.Op
 
 let log fmt = OpamConsole.log "PIN" fmt
 
-let package st name = OpamPackage.package_of_name st.pinned name
+let package st name = OpamPackage.Uniset.find name st.pinned
 
 let package_opt st name = try Some (package st name) with Not_found -> None
 

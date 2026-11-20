@@ -30,10 +30,10 @@ val string_of_request: atom request -> string
 val stats: solution -> stats
 
 (** Return the new packages in the solution *)
-val new_packages: solution -> package_set
+val new_packages: solution -> package_uniset
 
-(** Return removed new packages in the solution *)
-val removed_packages: solution -> package_set
+(** Return removed packages in the solution *)
+val removed_packages: solution -> package_uniset
 
 (** Return all packages appearing in the solution *)
 val all_packages: solution -> package_set

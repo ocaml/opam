@@ -60,6 +60,10 @@ val check: atom -> OpamPackage.t -> bool
 val packages_of_atoms:
   ?disj:bool -> OpamPackage.Set.t -> atom list -> OpamPackage.Set.t
 
+(** Same as [packages_of_atoms] but operates on unisets rather than sets. *)
+val packages_uset_of_atoms:
+  ?disj:bool -> OpamPackage.Uniset.t -> atom list -> OpamPackage.Uniset.t
+
 (** AND formulas *)
 type 'a conjunction = 'a list
 
@@ -177,8 +181,8 @@ val equal: t -> t -> bool
     formula) *)
 val verifies: t -> OpamPackage.t -> bool
 
-(** Checks if a given set of (installed) packages satisfies a formula *)
-val satisfies_depends: OpamPackage.Set.t -> t -> bool
+(** Checks if a given uniset of (installed) packages satisfies a formula *)
+val satisfies_depends: OpamPackage.Uniset.t -> t -> bool
 
 (** Returns the set of names referred to in a formula *)
 val all_names: (OpamPackage.Name.t * 'a) formula -> OpamPackage.Name.Set.t
@@ -186,6 +190,8 @@ val all_names: (OpamPackage.Name.t * 'a) formula -> OpamPackage.Name.Set.t
 (** Returns the subset of packages possibly matching the formula (i.e. including
     all disjunction cases) *)
 val packages: OpamPackage.Set.t -> t -> OpamPackage.Set.t
+
+val packages_uset: OpamPackage.Uniset.t -> t -> OpamPackage.Uniset.t
 
 val compare_nc:
   (OpamPackage.Name.t * version_formula) ->

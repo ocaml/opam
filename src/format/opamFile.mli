@@ -845,6 +845,9 @@ end
     migrate from 1.2 repository, and for reinstall) *)
 module PkgList: IO_FILE with type t = package_set
 
+(** A list of packages with at most one version of any given package. *)
+module PkgUList: IO_FILE with type t = package_uniset
+
 (** Cached environment updates (<switch>/environment) *)
 module Environment : sig
   include IO_FILE with type t = (spf_resolved, euok_writeable) env_update list

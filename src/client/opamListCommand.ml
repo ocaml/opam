@@ -243,15 +243,16 @@ let uses_depexts = function
 
 let apply_selector ~base st = function
   | Any -> base
-  | Installed -> st.installed
-  | Root -> st.installed_roots
-  | Compiler -> OpamSwitchState.invariant_root_packages st
+  | Installed -> OpamPackage.Uniset.to_set st.installed
+  | Root -> OpamPackage.Uniset.to_set st.installed_roots
+  | Compiler ->
+    OpamPackage.Uniset.to_set (OpamSwitchState.invariant_root_packages st)
   | Available -> Lazy.force st.available_packages
   | Installable ->
     OpamSolver.installable_subset
       (OpamSwitchState.universe st ~requested:OpamPackage.Set.empty Query)
       base
-  | Pinned -> OpamPinned.packages st
+  | Pinned -> OpamPackage.Uniset.to_set (OpamPinned.packages st)
   | Latests_only ->
     OpamPackage.Name.Map.fold (fun n vset base ->
         OpamPackage.Set.add
@@ -299,7 +300,8 @@ let apply_selector ~base st = function
     in
     (match OpamSolver.resolve universe
              (OpamSolver.request ~install:atoms ()) with
-    | Success s -> OpamSolver.new_packages s
+    | Success s ->
+      OpamPackage.Uniset.to_set (OpamSolver.new_packages s)
     | Conflicts cs ->
       OpamConsole.error_and_exit `No_solution
         "No solution%s for %s: %s"
@@ -402,7 +404,7 @@ let apply_selector ~base st = function
            in
            try
              OpamPackage.Set.add
-               (OpamPackage.package_of_name selections.sel_installed name)
+               (OpamPackage.Uniset.find name selections.sel_installed)
                acc
            with Not_found -> acc)
          OpamPackage.Set.empty matching_change_files
@@ -520,7 +522,7 @@ let version_color installed st nv =
         (OpamFile.OPAM.available (get_opam st nv))
     with Not_found -> false
   in
-  if OpamPackage.Set.mem nv st.installed then [`bold;`magenta] else
+  if OpamPackage.Uniset.mem nv st.installed then [`bold;`magenta] else
     (if OpamPackage.Map.mem nv installed then [`bold] else []) @
     (if is_available nv then
        match OpamSwitchState.opam_opt st nv with
@@ -547,7 +549,7 @@ let detail_printer ?prettify ?normalise ?(sort=false) installed st nv =
   let open OpamStd.Option.Op in
   let (%) s cols = OpamConsole.colorise' cols s in
   let root_sty =
-    if OpamPackage.Set.mem nv st.installed_roots then [`underline]
+    if OpamPackage.Uniset.mem nv st.installed_roots then [`underline]
     else []
   in
   let get_opam =
@@ -611,21 +613,21 @@ let detail_printer ?prettify ?normalise ?(sort=false) installed st nv =
        mini_field_printer ?prettify ?normalise value
      with Not_found -> "")
   | Installed_version ->
-    (try OpamPackage.package_of_name st.installed nv.name |> fun inst_nv ->
+    (try OpamPackage.Uniset.find nv.name st.installed |> fun inst_nv ->
          OpamPackage.version_to_string inst_nv |> fun s ->
-         if OpamPackage.Set.mem inst_nv st.pinned then s % [`blue] else
-         if OpamPackage.has_name st.pinned nv.name then s % [`bold;`red] else
+         if OpamPackage.Uniset.mem inst_nv st.pinned then s % [`blue] else
+         if OpamPackage.Uniset.has_name nv.name st.pinned then s % [`bold;`red] else
          (* If package is not installed one, check if it is part of invariant
             formula package, and if it checks formula *)
          if nv <> inst_nv
-         && (not (OpamPackage.Set.mem inst_nv
-                    (OpamFormula.packages st.installed st.switch_invariant))
+         && (not (OpamPackage.Uniset.mem inst_nv
+                    (OpamFormula.packages_uset st.installed st.switch_invariant))
              || OpamFormula.verifies st.switch_invariant nv)
          then s % [`bold;`yellow] else
            s % [`magenta]
      with Not_found -> "--" % [`cyan])
   | Pinning_target ->
-    if OpamPackage.Set.mem nv st.pinned then
+    if OpamPackage.Uniset.mem nv st.pinned then
       let opam = get_opam st nv in
       OpamStd.Option.to_string ~none:"--" OpamUrl.to_string
         (OpamFile.OPAM.get_url opam)
@@ -721,11 +723,11 @@ let display st format packages =
   let packages =
     if format.all_versions then packages else
       OpamPackage.Name.Set.fold (fun name ->
-          let pkgs = OpamPackage.packages_of_name packages name in
           let nv =
+            try OpamPackage.Uniset.find name st.installed with Not_found ->
+            try OpamPackage.Uniset.find name st.pinned with Not_found ->
             let get = OpamPackage.Set.max_elt in
-            try get (pkgs %% st.installed) with Not_found ->
-            try get (pkgs %% st.pinned) with Not_found ->
+            let pkgs = OpamPackage.packages_of_name packages name in
             try get (pkgs %% Lazy.force st.available_packages) with Not_found ->
               get pkgs
           in
@@ -905,8 +907,8 @@ let info st ~fields ~raw ~where ?normalise ?(show_empty=false)
          OpamPackage.Set.iter output_package nvs)
       else
         (let choose =
-           try OpamPackage.Set.choose (nvs %% st.pinned) with Not_found ->
-           try OpamPackage.Set.choose (nvs %% st.installed) with Not_found ->
+           try OpamPackage.Uniset.find name st.pinned with Not_found ->
+           try OpamPackage.Uniset.find name st.installed with Not_found ->
            try OpamPackage.Set.max_elt (nvs %% Lazy.force st.available_packages)
            with Not_found ->
              OpamPackage.Set.max_elt nvs

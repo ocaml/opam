@@ -170,6 +170,6 @@ module PIN: sig
   (** Runs an install/upgrade on the listed packages if necessary.
       [post_pin_action st was_pinned names] takes the set of packages pinned
       beforehand, and a list of newly pinned packages *)
-  val post_pin_action: rw switch_state -> package_set -> name list -> rw switch_state
+  val post_pin_action: rw switch_state -> package_uniset -> name list -> rw switch_state
 
 end
