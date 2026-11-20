@@ -39,10 +39,10 @@ No solution found, exiting
 ### opam pin
 ### :I:1:c: Deps only without pin depends
 ### opam switch create pin-deps-I-1-c --empty
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes opam install --deps-only ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes opam install --deps-only ./local-with-pin-deps
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 [ERROR] Package conflict!
   * Missing dependency:
@@ -54,10 +54,10 @@ No solution found, exiting
 ### opam pin
 ### :I:1:d: Deps only with pin depends
 ### opam switch create pin-deps-I-1-d --empty
-### OPAMAUTOANSWER=install-pin-depends=yes:proceed-actions=yes opam install --deps-only ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=yes:proceed-actions=yes opam install --deps-only ./local-with-pin-deps
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package pin-dep does not exist in opam repositories registered in the current switch.
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
@@ -75,11 +75,11 @@ Done.
 pin-dep.dev    rsync  file://${BASEDIR}/pin-dep
 ### :I:1:e: install without pin depends
 ### opam switch create pin-deps-I-1-e --empty
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes opam install ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes opam install ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
 [ERROR] Package conflict!
@@ -93,11 +93,11 @@ No solution found, exiting
 local-with-pin-deps.dev  (uninstalled)  rsync  file://${BASEDIR}/local-with-pin-deps
 ### :I:1:f: install with pin depends
 ### opam switch create pin-deps-I-1-f --empty
-### OPAMAUTOANSWER=install-pin-depends=yes:proceed-actions=yes opam install ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=yes:proceed-actions=yes opam install ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package pin-dep does not exist in opam repositories registered in the current switch.
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
@@ -147,10 +147,10 @@ Done.
 ### opam pin
 ### :I:2:c: Deps only without pin depends
 ### opam switch create pin-deps-I-2-c --empty
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:proceed-actions=yes opam install --deps-only ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes:proceed-actions=yes opam install --deps-only ./local-with-pin-deps
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 The following actions will be performed:
 === install 1 package
@@ -164,10 +164,10 @@ Done.
 ### opam pin
 ### :I:2:d: Deps only without pin depends
 ### opam switch create pin-deps-I-2-d --empty
-### OPAMAUTOANSWER=install-pin-depends=yes:proceed-actions=yes opam install --deps-only ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=yes:proceed-actions=yes opam install --deps-only ./local-with-pin-deps
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
 The following actions will be performed:
@@ -182,11 +182,11 @@ Proceed with 1 installation? [Y/n] y
 Done.
 ### :I:2:e: install without pin depends
 ### opam switch create pin-deps-I-2-e --empty
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:proceed-actions=yes opam install ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes:proceed-actions=yes opam install ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
 The following actions will be performed:
@@ -205,11 +205,11 @@ Done.
 local-with-pin-deps.dev    rsync  file://${BASEDIR}/local-with-pin-deps
 ### :I:2:f: install with pin depends
 ### opam switch create pin-deps-I-2-f --empty
-### OPAMAUTOANSWER=install-pin-depends=yes:proceed-actions=yes opam install ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=yes:proceed-actions=yes opam install ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
 local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
@@ -238,10 +238,10 @@ pin-dep.dev                rsync  file://${BASEDIR}/pin-dep
 [default] synchronised from file://${BASEDIR}/REPO
 Now run 'opam upgrade' to apply any package updates.
 ### :II:1:a: Answer no to pin depends install deps-only
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps --deps-only
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps --deps-only
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -261,11 +261,11 @@ Switch initialisation failed: clean up? ('n' will leave the switch partially ins
 The compiler switch ${BASEDIR}/local-with-pin-deps does not exist.
 # Return code 5 #
 ### :II:1:b: Answer no to pin depends install
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
 
@@ -286,10 +286,10 @@ Switch initialisation failed: clean up? ('n' will leave the switch partially ins
 The compiler switch ${BASEDIR}/local-with-pin-deps does not exist.
 # Return code 5 #
 ### :II:1:c: Answer yes to pin depends install deps-only
-### OPAMAUTOANSWER=install-pin-depends=yes:proceed-actions=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps --deps-only
+### OPAMAUTOANSWER=pin-pin-depends=yes:proceed-actions=yes:switch-clean-up=yes opam switch create ./local-with-pin-deps --deps-only
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package pin-dep does not exist in opam repositories registered in the current switch.
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
@@ -312,11 +312,11 @@ pin-dep.dev    rsync  file://${BASEDIR}/pin-dep
 ### opam switch remove ./local-with-pin-deps -y
 Switch ${BASEDIR}/local-with-pin-deps and all its packages will be wiped. Are you sure? [Y/n] y
 ### :II:1:d: Answer yes to pin depends install
-### OPAMAUTOANSWER=install-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package pin-dep does not exist in opam repositories registered in the current switch.
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
@@ -347,10 +347,10 @@ Switch ${BASEDIR}/local-with-pin-deps and all its packages will be wiped. Are yo
 ### <pkg:pin-dep.1>
 opam-version: "2.0"
 ### :II:2:a: Answer no to pin depends install deps only
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps --deps-only
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps --deps-only
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 
 <><> Installing new switch packages <><><><><><><><><><><><><><><><><><><><><><>
@@ -369,11 +369,11 @@ Done.
 ### opam switch remove ./local-with-pin-deps -y
 Switch ${BASEDIR}/local-with-pin-deps and all its packages will be wiped. Are you sure? [Y/n] y
 ### :II:2:b: Answer no to pin depends install
-### OPAMAUTOANSWER=install-pin-depends=no:ignore-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=no:ignore-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] n
+Pin them? [Y/n] n
 Try to install anyway, assuming `--ignore-pin-depends'? [Y/n] y
 local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
 
@@ -397,10 +397,10 @@ local-with-pin-deps.dev    rsync  file://${BASEDIR}/local-with-pin-deps
 ### opam switch remove ./local-with-pin-deps -y
 Switch ${BASEDIR}/local-with-pin-deps and all its packages will be wiped. Are you sure? [Y/n] y
 ### :II:2:c: Answer yes to pin depends install deps-only
-### OPAMAUTOANSWER=install-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps --deps-only
+### OPAMAUTOANSWER=pin-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps --deps-only
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
 
@@ -422,11 +422,11 @@ pin-dep.dev    rsync  file://${BASEDIR}/pin-dep
 ### opam switch remove ./local-with-pin-deps -y
 Switch ${BASEDIR}/local-with-pin-deps and all its packages will be wiped. Are you sure? [Y/n] y
 ### :II:2:d: Answer yes to pin depends install
-### OPAMAUTOANSWER=install-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps
+### OPAMAUTOANSWER=pin-pin-depends=yes:proceed-actions=yes opam switch create ./local-with-pin-deps
 [NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by local-with-pin-deps.dev:
   - pin-dep.dev at file://${BASEDIR}/pin-dep
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [pin-dep.dev] synchronised (no changes)
 pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
 local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
@@ -452,3 +452,136 @@ local-with-pin-deps.dev    rsync  file://${BASEDIR}/local-with-pin-deps
 pin-dep.dev                rsync  file://${BASEDIR}/pin-dep
 ### opam switch remove ./local-with-pin-deps -y
 Switch ${BASEDIR}/local-with-pin-deps and all its packages will be wiped. Are you sure? [Y/n] y
+### :III: Pinned but not installed
+### <pin:local-with-pin-deps/opam>
+opam-version: "2.0"
+depends: "pin-dep" {with-test & = "dev"}
+### <add-pin-depends.sh>
+basedir=$(printf '%s' "$BASEDIR" | sed 's/\\/\\\\/g')
+cat >> local-with-pin-deps/opam << EOF
+pin-depends: ["pin-dep.dev" "file://$basedir/pin-dep"]
+EOF
+### sh add-pin-depends.sh
+### opam switch create pin-only --empty
+### OPAMYES=1 opam install local-with-pin-deps/
+[NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by local-with-pin-deps.dev:
+  - pin-dep.dev at file://${BASEDIR}/pin-dep
+Pin them? [Y/n] y
+[pin-dep.dev] synchronised (no changes)
+pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
+local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
+The following actions will be performed:
+=== install 1 package
+  - install local-with-pin-deps dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-with-pin-deps.dev  (file://${BASEDIR}/local-with-pin-deps)
+-> installed local-with-pin-deps.dev
+Done.
+### OPAMYES=1 opam unpin local-with-pin-deps pin-dep
+Ok, pin-dep is no longer pinned to file://${BASEDIR}/pin-dep (version dev)
+Ok, local-with-pin-deps is no longer pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
+The following actions will be performed:
+=== remove 1 package
+  - remove local-with-pin-deps dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   local-with-pin-deps.dev
+Done.
+### OPAMYES=1 opam install local-with-pin-deps/ --with-test
+[NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by local-with-pin-deps.dev:
+  - pin-dep.dev at file://${BASEDIR}/pin-dep
+Pin them? [Y/n] y
+[pin-dep.dev] synchronised (no changes)
+pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
+local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
+The following actions will be performed:
+=== install 2 packages
+  - install local-with-pin-deps dev (pinned)
+  - install pin-dep             dev (pinned) [required by local-with-pin-deps]
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-with-pin-deps.dev  (file://${BASEDIR}/local-with-pin-deps)
+-> retrieved pin-dep.dev  (file://${BASEDIR}/pin-dep)
+-> installed pin-dep.dev
+-> installed local-with-pin-deps.dev
+Done.
+### OPAMYES=1 opam unpin local-with-pin-deps pin-dep
+Ok, pin-dep is no longer pinned to file://${BASEDIR}/pin-dep (version dev)
+Ok, local-with-pin-deps is no longer pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade pin-dep             dev to 1
+=== remove 1 package
+  - remove    local-with-pin-deps dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   local-with-pin-deps.dev
+-> removed   pin-dep.dev
+-> installed pin-dep.1
+Done.
+### OPAMYES=1 opam pin add local-with-pin-deps/
+[NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by local-with-pin-deps.dev:
+  - pin-dep.dev at file://${BASEDIR}/pin-dep
+Pin them? [Y/n] y
+[pin-dep.dev] synchronised (no changes)
+pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
+local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
+
+The following actions will be performed:
+=== install 1 package
+  - install local-with-pin-deps dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-with-pin-deps.dev  (file://${BASEDIR}/local-with-pin-deps)
+-> installed local-with-pin-deps.dev
+Done.
+### OPAMYES=1 opam unpin local-with-pin-deps pin-dep
+Ok, pin-dep is no longer pinned to file://${BASEDIR}/pin-dep (version dev)
+Ok, local-with-pin-deps is no longer pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
+The following actions will be performed:
+=== remove 1 package
+  - remove local-with-pin-deps dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   local-with-pin-deps.dev
+Done.
+### OPAMYES=1 opam pin add local-with-pin-deps/ --with-test
+[NOTE] Package local-with-pin-deps does not exist in opam repositories registered in the current switch.
+The following additional pinnings are required by local-with-pin-deps.dev:
+  - pin-dep.dev at file://${BASEDIR}/pin-dep
+Pin them? [Y/n] y
+[pin-dep.dev] synchronised (no changes)
+pin-dep is now pinned to file://${BASEDIR}/pin-dep (version dev)
+local-with-pin-deps is now pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
+
+The following actions will be performed:
+=== upgrade 1 package
+  - upgrade pin-dep             1 to dev (pinned) [required by local-with-pin-deps]
+=== install 1 package
+  - install local-with-pin-deps dev (pinned)
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved local-with-pin-deps.dev  (file://${BASEDIR}/local-with-pin-deps)
+-> retrieved pin-dep.dev  (file://${BASEDIR}/pin-dep)
+-> removed   pin-dep.1
+-> installed pin-dep.dev
+-> installed local-with-pin-deps.dev
+Done.
+### OPAMYES=1 opam unpin local-with-pin-deps pin-dep
+Ok, pin-dep is no longer pinned to file://${BASEDIR}/pin-dep (version dev)
+Ok, local-with-pin-deps is no longer pinned to file://${BASEDIR}/local-with-pin-deps (version dev)
+The following actions will be performed:
+=== downgrade 1 package
+  - downgrade pin-dep             dev to 1
+=== remove 1 package
+  - remove    local-with-pin-deps dev
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> removed   local-with-pin-deps.dev
+-> removed   pin-dep.dev
+-> installed pin-dep.1
+Done.

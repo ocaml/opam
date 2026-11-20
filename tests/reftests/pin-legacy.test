@@ -99,7 +99,7 @@ depexts: [ "another-inexistant" ]
 [NOTE] Package bar does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by bar.dev:
   - qux.dev at file://${BASEDIR}/qux
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package qux does not exist in opam repositories registered in the current switch.
 [qux.dev] synchronised (no changes)
 qux is now pinned to file://${BASEDIR}/qux (version dev)
@@ -108,7 +108,7 @@ bar is now pinned to file://${BASEDIR}/bar (version dev)
 The following actions will be performed:
 === install 2 packages
   - install bar dev (pinned)
-  - install qux dev (pinned)
+  - install qux dev (pinned) [required by bar]
 
 The following system packages will first need to be installed:
     another-inexistant inexistant
@@ -149,7 +149,7 @@ Done.
 [NOTE] Package bar does not exist in opam repositories registered in the current switch.
 The following additional pinnings are required by bar.dev:
   - qux.dev at file://${BASEDIR}/qux
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [NOTE] Package qux does not exist in opam repositories registered in the current switch.
 [qux.dev] synchronised (no changes)
 qux is now pinned to file://${BASEDIR}/qux (version dev)
@@ -212,7 +212,7 @@ Ok, bar is no longer pinned to file://${BASEDIR}/bar (version dev)
 ### opam pin ./bar
 The following additional pinnings are required by bar.dev:
   - qux.dev at file://${BASEDIR}/qux
-Pin and install them? [Y/n] y
+Pin them? [Y/n] y
 [qux.dev] synchronised (no changes)
 qux is now pinned to file://${BASEDIR}/qux (version dev)
 bar is now pinned to file://${BASEDIR}/bar (version dev)
