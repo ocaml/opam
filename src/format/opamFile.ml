@@ -3675,9 +3675,17 @@ module OPAM = struct
     }
 
   let effectively_equal ?(modulo_state=false) o1 o2 =
+    (* The extra polymorphic comparison here are used for performance reason
+       as it avoids two unnecessary allocations and processing if the two
+       parameters are strictly equal *)
+    o1 = (o2 : t) ||
     effective_part ~modulo_state o1 = effective_part ~modulo_state o2
 
   let equal o1 o2 =
+    (* The extra polymorphic comparison here are used for performance reason
+       as it avoids two unnecessary allocations and processing if the two
+       parameters are strictly equal *)
+    o1 = (o2 : t) ||
     with_metadata_dir None o1 = with_metadata_dir None o2
 
   let get_extra_files ~get_repo_files o =
