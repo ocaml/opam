@@ -128,3 +128,7 @@ external is_executable : string -> bool = "opam_is_executable"
 external nproc : unit -> nativeint = "opam_nproc"
 (** Returns the number of logical processors of the current machine.
     Any value below [1] is an error. *)
+
+external total_ram : unit -> int64 = "opam_total_ram"
+(** Returns the total amount of RAM of the current system in MB.
+    Returns [0L] if that information couldn't be acquired. *)
