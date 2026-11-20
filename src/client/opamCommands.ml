@@ -4234,7 +4234,7 @@ let clean cli =
     let top_internal_structure =
       (* man dirs are in man, and stublibs & toplevel are in lib *)
       OpamPath.Switch.[ lib_dir; doc_dir; etc_dir ; man_dir;
-                        bin; sbin; ]
+                        bin; sbin; share_dir ]
     in
     let internal_structure =
       (List.map (fun p -> p root sw st.switch_config)
