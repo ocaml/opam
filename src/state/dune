@@ -13,7 +13,7 @@
 
 (rule
   (targets opamScript.ml)
-  (deps    ../../shell/crunch.ml (glob_files shellscripts/*.*sh))
+  (deps    ../../shell/crunch.ml (glob_files shellscripts/*.*sh) (glob_files shellscripts/*.ps1))
   (action  (with-stdout-to %{targets} (run ocaml %{deps}))))
 
 ; Embedded Cygwin mechanism (done in the configure script on Windows if requested)
