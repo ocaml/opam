@@ -40,7 +40,7 @@ val with_:
     configured, or querying packages directly from the repos *)
 val load_virtual:
   ?repos_list: repository_name list -> ?avail_default: bool ->
-  'a global_state -> 'b repos_state -> unlocked switch_state
+  'a global_state -> 'b repos_state -> _ switch_state
 
 (** Load the switch's state file, without constructing the package maps: much
     faster than loading the full switch state *)

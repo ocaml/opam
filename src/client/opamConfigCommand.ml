@@ -781,7 +781,7 @@ let set_opt_switch_t ?inner gt switch switch_config field value =
 let set_opt_switch gt ?st field value =
   with_switch ~display:false gt `Lock_write st @@ fun sw swc ->
   let switch_config = set_opt_switch_t ~inner:false gt sw swc field value in
-  Stdlib.Option.map (fun st -> { st with switch_config }) st
+  Stdlib.Option.map (OpamStateTypes.Abs.update_config switch_config) st
 
 let global_allowed_fields, global_allowed_sections =
   let allowed_fields =
@@ -1064,7 +1064,7 @@ let set_var_switch gt ?st svar value =
              (OpamPackage.Name.to_string n)
          else "")
   in
-  Stdlib.Option.map (fun st -> { st with switch_config }) st
+  Stdlib.Option.map (OpamStateTypes.Abs.update_config switch_config) st
 
 (** Option and var list display *)
 

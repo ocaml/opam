@@ -2114,7 +2114,8 @@ let assume_built_restrictions ?available_packages t atoms =
       (OpamPackage.Set.elements pinned @
        OpamPackage.Set.elements installed_dependencies)
   in
-  { t with available_packages }, fixed_atoms
+  let t = OpamStateTypes.Abs.update_available t available_packages in
+  (t, fixed_atoms)
 
 let filter_unpinned_locally t atoms f =
   List.filter_map (fun at ->
@@ -2206,7 +2207,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
             in
             let t =
               if OpamPackage.Set.mem nv t.installed
-              then {t with installed = OpamPackage.Set.add dnv t.installed}
+              then OpamStateTypes.Abs.update_installed_only t (OpamPackage.Set.add dnv t.installed)
               else t
             in
             OpamSwitchState.update_package_metadata dnv dopam t,
@@ -2247,8 +2248,8 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
                 OpamConsole.note
                   "Package %s is already installed as a root."
                   (OpamPackage.Name.to_string nv.name);
-              { t with installed_roots =
-                         OpamPackage.Set.add nv t.installed_roots }
+              OpamStateTypes.Abs.update_installed_roots t
+                (OpamPackage.Set.add nv t.installed_roots)
             | Some false ->
               if OpamPackage.Set.mem nv t.installed_roots then begin
                 if OpamPackage.Set.mem nv t.compiler_packages then
@@ -2256,8 +2257,8 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
                     "Package %s is part of the switch invariant and won't be \
                      uninstalled unless the invariant is updated."
                     (OpamPackage.name_to_string nv);
-                { t with installed_roots =
-                           OpamPackage.Set.remove nv t.installed_roots }
+                OpamStateTypes.Abs.update_installed_roots t
+                  (OpamPackage.Set.remove nv t.installed_roots)
               end else
                 (OpamConsole.note
                    "Package %s is already marked as 'installed automatically'."
@@ -2290,13 +2291,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
      opam files. *)
   let t =
     if deps_only then
-      let opams, pinned =
-        OpamPackage.Map.fold (fun nv (was_pinned, opam) (opams, pinned) ->
-            OpamPackage.Map.add nv opam opams,
-            if was_pinned then pinned else OpamPackage.Set.remove nv pinned)
-          t.overwrote_opams (t.opams, OpamPinned.packages t)
-      in
-      {t with opams; pinned; overwrote_opams = OpamPackage.Map.empty}
+      OpamStateTypes.Abs.pin_overwrotes t
     else
       t
   in
@@ -2326,7 +2321,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
       ~requested:packages
       ?reinstall
       request in
-  let t = {t with installed = t.installed -- deps_of_packages} in
+  let t = OpamStateTypes.Abs.update_installed_only t (t.installed -- deps_of_packages) in
   let t, solution = match solution with
     | Conflicts cs ->
       log "conflict!";

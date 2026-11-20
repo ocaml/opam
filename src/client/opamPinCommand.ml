@@ -672,10 +672,9 @@ let pin_current st nv =
 
 (* pure *)
 let unpin_one st nv =
-  let st =
-    { st with pinned = OpamPackage.Set.remove nv st.pinned }
-  in
+  let st = OpamStateTypes.Abs.remove_pinned st nv in
   (* Restore availability of other versions of this package from the repos *)
+  (* TODO: The following two lets should be done in the second match clause *)
   let repo_package =
     OpamPackage.Map.filter (fun nv2 _ -> nv2.name = nv.name)
       st.repos_package_index
@@ -693,7 +692,7 @@ let unpin_one st nv =
     OpamSwitchState.remove_package_metadata nv st
   | Some opam, _ | None, Some opam -> (* forget about overlay *)
     let st = OpamSwitchState.update_package_metadata nv opam st in
-    { st with available_packages }
+    OpamStateTypes.Abs.update_available st available_packages
 
 let unpin st names =
   log "unpin %a"

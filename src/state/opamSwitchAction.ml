@@ -122,7 +122,8 @@ let add_to_reinstall st ~unpinned_only packages =
     OpamFilename.remove (OpamFile.filename reinstall_file)
   else
     OpamFile.PkgList.write reinstall_file reinstall;
-  { st with reinstall = lazy (Lazy.force st.reinstall ++ add_reinst_packages) }
+  OpamStateTypes.Abs.update_reinstall st
+    (lazy (Lazy.force st.reinstall ++ add_reinst_packages))
 
 let set_current_switch gt st =
   if OpamSwitch.is_external st.switch then
@@ -134,8 +135,7 @@ let set_current_switch gt st =
   let config = OpamFile.Config.with_switch st.switch gt.config in
   let gt = { gt with config } in
   OpamGlobalState.write gt;
-  let rt = { st.switch_repos with repos_global = gt } in
-  let st = { st with switch_global = gt; switch_repos = rt } in
+  let st = OpamStateTypes.Abs.update_gt st gt in
   OpamEnv.write_dynamic_init_scripts st;
   st
 
@@ -175,29 +175,19 @@ let remove_metadata st packages =
     packages
 
 let update_switch_state ?installed ?installed_roots ?reinstall ?pinned st =
-  let open OpamStd.Option.Op in
-  let open OpamPackage.Set.Op in
-  let installed = installed +! st.installed in
-  let reinstall0 = Lazy.force st.reinstall in
-  let reinstall = (reinstall +! reinstall0) %% installed in
   let old_selections = OpamSwitchState.selections st in
+  let reinstall0 = Lazy.force st.reinstall in
   let st =
-    { st with
-      installed;
-      installed_roots = installed_roots +! st.installed_roots;
-      reinstall = lazy reinstall;
-      pinned = pinned +! st.pinned;
-       }
+    OpamStateTypes.Abs.update_installed st
+      ?installed ?installed_roots ?reinstall ?pinned
+      ~compute_invariant_packages:OpamSwitchState.compute_invariant_packages
   in
-  let compiler_packages =
-    OpamSwitchState.compute_invariant_packages st
-  in
-  let st = { st with compiler_packages } in
   if not OpamStateConfig.(!r.dryrun) then (
     if not (OpamTypesBase.switch_selections_equal
               (OpamSwitchState.selections st)
               old_selections) then
       write_selections st;
+    let reinstall = Lazy.force st.reinstall in
     if not (OpamPackage.Set.equal reinstall0 reinstall) then
       OpamFile.PkgList.write
         (OpamPath.Switch.reinstall st.switch_global.root st.switch)
@@ -222,7 +212,10 @@ let add_to_installed st ?(root=false) nv =
     OpamFile.Dot_config.safe_read
       (OpamPath.Switch.config st.switch_global.root st.switch nv.name)
   in
-  let st = { st with conf_files = OpamPackage.Name.Map.add nv.name conf st.conf_files } in
+  let st =
+    OpamStateTypes.Abs.update_conf_files st
+      (OpamPackage.Name.Map.add nv.name conf st.conf_files)
+  in
   if not OpamStateConfig.(!r.dryrun) then (
     install_metadata st nv;
     if OpamFile.OPAM.env opam <> [] &&
@@ -250,4 +243,5 @@ let remove_from_installed ?(keep_as_root=false) st nv =
   then
     (* note: don't remove_metadata just yet *)
     OpamEnv.write_dynamic_init_scripts st;
-  { st with conf_files = OpamPackage.Name.Map.remove nv.name st.conf_files }
+  OpamStateTypes.Abs.update_conf_files st
+    (OpamPackage.Name.Map.remove nv.name st.conf_files)

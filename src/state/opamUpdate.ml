@@ -500,9 +500,7 @@ let pinned_package st ?version ?(autolock=false) ?(working_dir=false) name =
       (* The new opam is not _effectively_ different from the old, so no need to
          confirm, but use it still (e.g. descr may have changed) *)
       let opam = save_overlay new_opam in
-      Done
-        ((fun st -> {st with opams = OpamPackage.Map.add nv opam st.opams}),
-         true)
+      Done (OpamSwitchState.update_package_metadata nv opam, true)
     | Result  _, _ ->
       Done ((fun st -> st), true)
 
