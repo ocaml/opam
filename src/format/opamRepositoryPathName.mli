@@ -16,3 +16,8 @@ val repo_d : string
 val packages_d : string
 val download_cache_d : string
 val files_d : string
+
+(** {1 Deprecated files: still valid for opam 2.0 but deprecated} *)
+
+val legacy_url_f : string
+val legacy_descr_f : string

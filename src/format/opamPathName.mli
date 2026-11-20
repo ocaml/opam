@@ -30,6 +30,8 @@ val opamswitch_d: string
 (** {2 Files} *)
 val config_f: string
 val opam_f: string
+val legacy_url_f: string
+val legacy_descr_f: string
 val lock_f: string
 val environment_f: string
 

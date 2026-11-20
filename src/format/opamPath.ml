@@ -278,9 +278,9 @@ module Switch = struct
 
     let tmp_opam t a n = package t a n /- "opam_"
 
-    let url t a n = package t a n /- "url"
+    let url t a n = package t a n /- OpamPathName.legacy_url_f
 
-    let descr t a n = package t a n /- "descr"
+    let descr t a n = package t a n /- OpamPathName.legacy_descr_f
 
     let files t a n = package t a n / OpamPathName.files_d
 

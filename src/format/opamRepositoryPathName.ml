@@ -14,3 +14,6 @@ let repo_f = "repo"
 let packages_d = "packages"
 let download_cache_d = "download-cache"
 let files_d = "files"
+
+let legacy_url_f = "url"
+let legacy_descr_f = "descr"
