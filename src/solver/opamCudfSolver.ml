@@ -230,9 +230,9 @@ let make_custom_solver name args criteria =
 
 
 let default_solver_selection =
+  (module OpamBuiltin0install: S) ::
   OpamBuiltinMccs.all_backends @ [
     (module OpamBuiltinZ3: S);
-    (module OpamBuiltin0install: S);
     (module Aspcud: S);
     (module Mccs: S);
     (module Aspcud_old: S);

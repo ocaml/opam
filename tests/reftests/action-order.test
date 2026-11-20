@@ -75,13 +75,5 @@ The following actions would be performed:
   - remove    remove    1      [conflicts with reinstall]
 ### opam remove --show remove
 The following actions would be performed:
-=== recompile 1 package
-  - recompile reinstall 1      [uses remove]
 === remove 1 package
-  - remove    remove    1
-=== upgrade 1 package
-  - upgrade   upgrade   1 to 2 [required by reinstall]
-=== downgrade 1 package
-  - downgrade downgrade 2 to 1 [required by reinstall]
-=== install 1 package
-  - install   install   1      [required by reinstall]
+  - remove remove 1

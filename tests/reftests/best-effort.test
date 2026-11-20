@@ -10,4 +10,11 @@ opam-version: "2.0"
 opam-version: "2.0"
 depends: ["unavailable"]
 ### opam install --show --best-effort test.2
-Nothing to do.
+[WARNING] Your solver configuration does not support --best-effort, the option was ignored (you need to specify variable OPAMBESTEFFORTCRITERIA, or set your criteria to maximise the count for cudf attribute 'opam-query')
+[ERROR] Package conflict!
+  * Missing dependency:
+    - test >= 2 -> unavailable
+    unmet availability conditions: 'false'
+
+No solution found, exiting
+# Return code 20 #
