@@ -64,6 +64,9 @@ let poll_arch () =
         | Some "32", "ppc64" -> Some "ppc32"
         | _ -> normalised
         | exception (Unix.Unix_error _ | Sys_error _ | Not_found) -> normalised)
+     | Some "i86pc" -> Some "x86_64" (* SunOS/illumos doesn't support 32bit kernels anymore,
+                                        so we assume the compiler to build x86_64 binaries by default.
+                                        TODO: https://github.com/ocaml/opam/pull/5587 *)
      | _ -> normalised)
   | _ -> normalised
 let arch = Lazy.from_fun poll_arch

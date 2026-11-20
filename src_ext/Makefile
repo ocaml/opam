@@ -9,6 +9,7 @@ include Makefile.config
 endif
 
 PATCH ?= patch
+TAR ?= tar
 
 URL_ocaml = https://github.com/ocaml/ocaml/archive/refs/tags/4.14.4.tar.gz
 MD5_ocaml = 92d7bd721302001ceb9aa19819712c8b
@@ -130,7 +131,7 @@ GET_ARCHIVE=\
 
 %.stamp: %.download
 	$(SILENT)mkdir -p tmp-$*
-	$(SILENT)cd tmp-$* && $(if $(patsubst %.tar.gz,,$(URL_$*)),bunzip2,gunzip) -c ../$(call ARCHIVE_FILE,$*) | tar xf -
+	$(SILENT)cd tmp-$* && $(if $(patsubst %.tar.gz,,$(URL_$*)),bunzip2,gunzip) -c ../$(call ARCHIVE_FILE,$*) | $(TAR) xf -
 	$(SILENT)rm -rf $*
 	@for ii in tmp-$*/*; do if [ -d $${ii} ]; then mv $${ii} $*; fi; done; \
    rm -rf tmp-$*

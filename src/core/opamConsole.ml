@@ -757,7 +757,7 @@ let tcsetattr ~tcflush ~cont set =
 
 let termios_support = lazy begin
   match OpamStd.Sys.os () with
-  | Linux | Darwin | FreeBSD | OpenBSD | NetBSD | DragonFly
+  | Linux | Darwin | FreeBSD | OpenBSD | NetBSD | DragonFly | Illumos
   | Unix | Other _ ->
     let echonl f = f () in
     {os_supports_termios = true; tcflush = Unix.tcflush; echonl}

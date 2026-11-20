@@ -1,6 +1,9 @@
-#!/bin/sh -e
+#!/bin/sh
+
+set -e
 
 GEN_CONFIG_ONLY=${GEN_CONFIG_ONLY:-0}
+TAR=${TAR:-tar}
 
 if command -v curl > /dev/null; then
   CURL="curl -OLSfs"
@@ -37,7 +40,7 @@ else
 fi
 
 if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
-  tar -zxf ${V}.tar.gz
+  "$TAR" zxf ${V}.tar.gz
 else
   mkdir -p ocaml-${V}
 fi
@@ -134,7 +137,7 @@ if [ -n "$1" -a -n "${COMSPEC}" -a -x "${COMSPEC}" ] ; then
   PREFIX=`cd .. ; pwd`/ocaml
   WINPREFIX=`echo ${PREFIX} | cygpath -f - -m`
   if [ ${GEN_CONFIG_ONLY} -eq 0 ] ; then
-    tar -xzf $BOOTSTRAP_ROOT/${FLEXDLL}
+    "$TAR" xzf $BOOTSTRAP_ROOT/${FLEXDLL}
     rm -rf flexdll
     mv flexdll-* flexdll
     PATH="${PATH_PREPEND}${PREFIX}/bin:${PATH}" \
