@@ -220,7 +220,7 @@ let regenerate_env ~set_opamroot ~set_opamswitch ~force_path
     gt switch env_file =
   OpamSwitchState.with_ `Lock_none ~switch gt @@ fun st ->
   let upd =
-    OpamEnv.updates ~set_opamroot ~set_opamswitch ~force_path st
+    OpamEnv.updates ~set_opamroot ~set_opamswitch ~force_path ~build_env:[] st
   in
   if not (OpamCoreConfig.(!r.safe_mode)) then
     (let _, st =
