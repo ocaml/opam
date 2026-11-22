@@ -82,7 +82,7 @@ val scan: normalise:bool -> recurse:bool -> ?subpath:subpath -> url -> unit
 (** Detect if a string is a normalised format of [scan]. *)
 val looks_like_normalised: string list -> bool
 
-(** Parse the normalised form of [scan], and returns pinning informations. *)
+(** Parse the normalised form of [scan], and returns pinning information. *)
 val parse_pins:
   string list -> pinned_opam list
 

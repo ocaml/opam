@@ -217,10 +217,10 @@ type provenance = [ `Env          (** Environment variable *)
                   | `Default      (** Default value *)
                   ]
 
-(** Pinned opam files informations *)
+(** Pinned opam files information *)
 
 (**/**)
-(* Opam file to pin informations.
+(* Opam file to pin information.
    {!_topin_opamfile} and {!_topin_name_and_opamfile} are not meant to be used
    directly ; use rather below defined types ;*)
 type 'url _topin_opamfile = {
@@ -240,7 +240,7 @@ type name_and_file_w_url = (name, url) _topin_name_and_opamfile
 type nameopt_and_file = (name option, unit) _topin_name_and_opamfile
 type nameopt_and_file_w_url = (name option, url) _topin_name_and_opamfile
 
-(* Pinned package informations *)
+(* Pinned package information *)
 type pinned_opam = {
   pinned_name : name;
   pinned_version : version option;
