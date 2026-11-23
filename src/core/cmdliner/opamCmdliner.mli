@@ -281,7 +281,7 @@ end
 
 (** Commands.
 
-    Command line syntaxes are implicitely defined by {!Term.t}
+    Command line syntaxes are implicitly defined by {!Term.t}
     values. A command value binds a term and its documentation to a
     command name.
 
@@ -384,7 +384,7 @@ module Cmd : sig
         {- [deprecated], if specified the environment variable is
            deprecated.  Use of the variable warns on dep[stderr] This
            message which should be a capitalized sentence is
-           preprended to [doc] and output on standard error when the
+           prepended to [doc] and output on standard error when the
            environment variable ends up being used.}}
 
         In [doc] and [deprecated] the {{!page-tool_man.doclang}documentation
@@ -417,7 +417,7 @@ module Cmd : sig
       {- [deprecated], if specified the command is deprecated. Use of the
           variable warns on [stderr]. This
           message which should be a capitalized sentence is
-          preprended to [doc] and output on standard error when the
+          prepended to [doc] and output on standard error when the
           environment variable ends up being used.}
       {- [doc] is a one line description of the command used
          for the [NAME] section of the command's man page and in command
@@ -447,7 +447,7 @@ module Cmd : sig
       {- [$(cmd.name)] the command's name.}
       {- [$(cmd.parent)] the command's parent or the main command if none.}}
 
-      Previously some of these names were refered to as [$(tname)],
+      Previously some of these names were referred to as [$(tname)],
       [$(mname)] and [$(iname)], they still work but do not use them,
       they are obscure. *)
 
@@ -563,7 +563,7 @@ module Cmd : sig
       {- [help] is the formatter used to print help, version messages
          or completions, (defaults to {!Format.std_formatter}). Note
          that the completion protocol needs to output ['\n'] line ending,
-         if you are outputing to a channel make sure it is in binary
+         if you are outputting to a channel make sure it is in binary
          mode to avoid newline translation (this is done automatically
          before completion when [help] is {!Format.std_formatter}).}
       {- [err] is the formatter used to print error messages
@@ -676,10 +676,10 @@ module Arg : sig
         tools like [sudo -- TOOL [ARG]…]. For the latter a restart
         completion should be added on all positional arguments.  If
         you allow [TOOL] to be only a restricted set of tools known to
-        your program you'd eschew [restart] on the first postional
+        your program you'd eschew [restart] on the first positional
         argument but add it to the remaining ones.
 
-        {b Warning.} A [restart] directive is eventually emited only
+        {b Warning.} A [restart] directive is eventually emitted only
         if the completion is requested after a [--] token. In this
         case other completions returned alongside by {!func} are
         ignored. Educate your users to use the [--], for example
@@ -730,7 +730,7 @@ module Arg : sig
     val make : ?context:'ctx Term.t -> ('ctx, 'a) func -> 'a t
     (** [make ~context func] uses [func] to complete.
 
-        [context] defines a commmand line fragment that is evaluated
+        [context] defines a command line fragment that is evaluated
         before performing the completion. It the evaluation is
         successful the result is given to the completion
         function. Otherwise [None] is given.
@@ -793,8 +793,8 @@ module Arg : sig
 
     val docv : 'a t -> string
     (** [docv c] is [c]'s documentation meta-variable. This value can
-        be refered to as [$(docv)] in the documentation strings of
-        arguments.  It can be overriden by the {!val-info} value of an
+        be referred to as [$(docv)] in the documentation strings of
+        arguments.  It can be overridden by the {!val-info} value of an
         argument. *)
 
     val parser : 'a t -> 'a parser
@@ -871,7 +871,7 @@ module Arg : sig
       {- [deprecated], if specified the argument is deprecated. Use of the
           variable warns on [stderr]. This
           message which should be a capitalized sentence is
-          preprended to [doc] and output on standard error when the
+          prepended to [doc] and output on standard error when the
           environment variable ends up being used.}
       {- [absent], if specified a documentation string that indicates
          what happens when the argument is absent. The document language

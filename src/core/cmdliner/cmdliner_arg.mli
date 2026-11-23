@@ -96,7 +96,7 @@ val man_format : Cmdliner_manpage.format Cmdliner_term.t
 val stdopt_version : docs:string -> bool Cmdliner_term.t
 val stdopt_help : docs:string -> Cmdliner_manpage.format option Cmdliner_term.t
 
-(* Predifined converters *)
+(* Predefined converters *)
 
 val bool : bool conv
 val char : char conv
