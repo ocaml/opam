@@ -262,11 +262,7 @@ module Arg_info = struct
     type t = e_conv Map.t
     let find_opt k m = try Some (Map.find k m) with Not_found -> None
     let elements m = List.map fst (bindings m)
-    let union a b =
-      Map.merge (fun k v v' ->
-        match v, v' with
-        | Some v, _ | _, Some v -> Some v
-        | None, None -> assert false) a b
+    let union a b = Map.union (fun _key va _vb -> Some va) a b
   end
 end
 

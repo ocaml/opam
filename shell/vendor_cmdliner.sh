@@ -12,7 +12,7 @@ echo ----
 
 trap "rm -rf tmp-vendor" EXIT
 git clone https://github.com/dbuenzli/cmdliner tmp-vendor
-git -C tmp-vendor switch --detach v2.1.1
+git -C tmp-vendor switch --detach v2.1.2
 
 mv tmp-vendor/src/*.{ml,mli} .
 rm -rf tmp-vendor
