@@ -163,6 +163,8 @@ users)
   * Update the preferred contact methods in the documentation [#7249 @kit-ty-kate @dra27]
   * Add an AI Policy [#7249 @kit-ty-kate @dra27 @rjbou @NathanReb]
 
+  * Add Makefile command to convert HTML man pages to markdown with YAML header using `pandoc`.
+
 ## Security fixes
 
 # API updates
