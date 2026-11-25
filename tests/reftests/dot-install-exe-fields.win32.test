@@ -69,6 +69,14 @@ let files =
   | None -> []
   | Some f -> [ root / f ]
 
+(** NOTE: OCaml >= 4.13 *)
+let string_starts_with ~prefix s =
+  let x = String.length prefix in
+  let n = String.length s in
+  n >= x &&
+  let rec chk i = i >= x || prefix.[i] = s.[i] && chk (i+1) in
+  chk 0
+
 (* retrieve all files names 'installed-file' in switch prefix *)
 let files =
   let rec aux files cwd =
@@ -84,7 +92,7 @@ let files =
     let files =
       files
       @ List.filter_map (fun f ->
-          if String.starts_with ~prefix:bname f then
+          if string_starts_with ~prefix:bname f then
             Some (cwd / f) else None)
         cwd_files
     in
