@@ -15,6 +15,8 @@ Opam is maintained by:
 * @kit-ty-kate Kate Deplaix (individual, funded by Ahrefs)
 * @NathanReb Nathan Rebours (OCamlPro)
 
+See the [MAINTAINERS](./MAINTAINERS) file for the list of maintainers.
+
 To get started, checkout the [Install](http://opam.ocaml.org/doc/Install.html)
 and [Usage](http://opam.ocaml.org/doc/Usage.html) guides.
 
