@@ -7,7 +7,7 @@ let p = succ p in
 let _ocaml_minor = String.sub Sys.ocaml_version p (String.index_from Sys.ocaml_version p '.' - p) |> int_of_string in
 match Sys.argv.(1) with
 | "flags" ->
-    print_string "()"
+    print_string "(-w +4)"
 | "mingw-arch" ->
     if Config.system = "mingw64" then
       print_string "x86_64"
