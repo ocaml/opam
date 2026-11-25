@@ -114,6 +114,8 @@ Remove them? [Y/n] y
 stray
 ### opam clean --untracked --dry-run
 Cleaning up switch clean
+rm -rf ${BASEDIR}/OPAM/clean/share/stray/file
+rm -rf ${BASEDIR}/OPAM/clean/share/stray
 rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/backup"/*
 rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/build"/*
 rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/remove"/*
