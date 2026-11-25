@@ -56,8 +56,7 @@ static LPFN_ISWOW64PROCESS2 pIsWow64Process2 = NULL;
 static value alloc_process_status(HANDLE pid, int status)
 {
   CAMLparam0();
-  CAMLlocal1(st);
-  value res;
+  CAMLlocal2(st, res);
 
   st = caml_alloc_small(1, 0);
   Field(st, 0) = Val_int(status);
@@ -78,14 +77,15 @@ static HKEY roots[] =
 char* InjectSetEnvironmentVariable(DWORD, LPCWSTR, LPCWSTR);
 
 /* Actual primitives from here */
-CAMLprim value OPAMW_GetCurrentProcessID(value unit)
+CAMLprim value OPAMW_GetCurrentProcessID(value _unit)
 {
   return caml_copy_int32(GetCurrentProcessId());
 }
 
 CAMLprim value OPAMW_GetStdHandle(value nStdHandle)
 {
-  value result;
+  CAMLparam1(nStdHandle);
+  CAMLlocal1(result);
 
   HANDLE hResult;
 
@@ -95,14 +95,13 @@ CAMLprim value OPAMW_GetStdHandle(value nStdHandle)
   result = caml_alloc_custom(&HandleOps, sizeof(HANDLE), 0, 1);
   HANDLE_val(result) = hResult;
 
-  return result;
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_GetConsoleScreenBufferInfo(value hConsoleOutput)
 {
-  CAMLparam0();
-  CAMLlocal1(result);
-  value coord;
+  CAMLparam1(hConsoleOutput);
+  CAMLlocal1(result, coord);
   CONSOLE_SCREEN_BUFFER_INFO buffer;
 
   if (!GetConsoleScreenBufferInfo(HANDLE_val(hConsoleOutput), &buffer))
@@ -191,16 +190,17 @@ CAMLprim value OPAMW_SetConsoleMode(value hConsoleMode, value dwMode)
   return Val_bool(result);
 }
 
-CAMLprim value OPAMW_GetWindowsVersion(value unit)
+CAMLprim value OPAMW_GetWindowsVersion(value _unit)
 {
-  value result;
+  CAMLlocal1(result);
+
   result = caml_alloc_small(4, 0);
   Field(result, 0) = Val_int(caml_win32_major);
   Field(result, 1) = Val_int(caml_win32_minor);
   Field(result, 2) = Val_int(caml_win32_build);
   Field(result, 3) = Val_int(caml_win32_revision);
 
-  return result;
+  CAMLreturn(result);
 }
 
 static inline value get_native_cpu_architecture(void)
@@ -340,7 +340,7 @@ CAMLprim value OPAMW_waitpids(value vpid_reqs, value vpid_len)
 CAMLprim value OPAMW_ReadRegistry(value hKey, value sub_key,
                                   value value_name, value value_type)
 {
-  CAMLparam0();
+  CAMLparam4(hKey, sub_key, value_name, value_type);
   CAMLlocal2(result, v);
 
   HKEY key;
@@ -425,9 +425,9 @@ CAMLprim value OPAMW_ReadRegistry(value hKey, value sub_key,
 
 CAMLprim value OPAMW_RegEnumValue(value hKey, value sub_key, value value_type)
 {
-  CAMLparam0();
+  CAMLparam3(hKey, sub_key, value_type);
   CAMLlocal5(result, tail, v, v_name, v_data);
-  value cell;
+  CAMLlocal1(cell);
 
   LPWSTR lpEnvironment;
 
@@ -582,7 +582,7 @@ CAMLprim value OPAMW_WriteRegistry(value hKey,
   return Val_unit;
 }
 
-CAMLprim value OPAMW_GetConsoleOutputCP(value unit)
+CAMLprim value OPAMW_GetConsoleOutputCP(value _unit)
 {
   return Val_int(GetConsoleOutputCP());
 }
@@ -590,11 +590,11 @@ CAMLprim value OPAMW_GetConsoleOutputCP(value unit)
 CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
                                              value bMaximumWindow)
 {
-  CAMLparam0();
-  CAMLlocal1(result);
-  value coord;
+  CAMLparam2(hConsoleOutput, bMaximumWindow);
+  CAMLlocal2(result, coord);
   int len;
   CONSOLE_FONT_INFOEX fontInfo;
+
   fontInfo.cbSize = sizeof(fontInfo);
 
   if (GetCurrentConsoleFontEx(HANDLE_val(hConsoleOutput),
@@ -621,9 +621,8 @@ CAMLprim value OPAMW_GetCurrentConsoleFontEx(value hConsoleOutput,
 
 CAMLprim value OPAMW_CreateGlyphChecker(value fontName)
 {
-  CAMLparam0();
-  CAMLlocal1(result);
-  value handle;
+  CAMLparam1(fontName);
+  CAMLlocal2(result, handle);
   HDC hDC;
 
   if (!caml_string_is_c_safe(fontName))
@@ -747,13 +746,14 @@ CAMLprim value OPAMW_process_putenv(value pid, value key, value val)
 
 static value OPAMW_SHGetKnownFolderPath(REFKNOWNFOLDERID rfid)
 {
+  CAMLparam0();
+  CAMLlocal1(result);
   PWSTR path = NULL;
-  value result;
 
   if (SUCCEEDED(SHGetKnownFolderPath(rfid, 0, NULL, &path))) {
     result = caml_copy_string_of_utf16(path);
     CoTaskMemFree(path);
-    return result;
+    CAMLreturn(result);
   } else {
     CoTaskMemFree(path);
     caml_failwith("OPAMW_SHGetKnownFolderPath");
@@ -777,7 +777,9 @@ CAMLprim value OPAMW_SendMessageTimeout(value vhWnd,
                                         value vwParam,
                                         value vlParam)
 {
-  value result;
+  CAMLparam5(vhWnd, uTimeout, fuFlags, vmsg, vwParam);
+  CAMLparam1(vlParam);
+  CAMLlocal1(result);
 
   DWORD_PTR dwReturnValue;
   HRESULT lResult;
@@ -811,7 +813,7 @@ CAMLprim value OPAMW_SendMessageTimeout(value vhWnd,
   result = caml_alloc_small(2, 0);
   Field(result, 0) = Val_int(lResult);
   Field(result, 1) = Val_int(dwReturnValue);
-  return result;
+  CAMLreturn(result);
 }
 
 CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
@@ -819,13 +821,12 @@ CAMLprim value OPAMW_SendMessageTimeout_byte(value * v, int n)
   return OPAMW_SendMessageTimeout(v[0], v[1], v[2], v[3], v[4], v[5]);
 }
 
-CAMLprim value OPAMW_GetProcessAncestry(value unit)
+CAMLprim value OPAMW_GetProcessAncestry(value _unit)
 {
   CAMLparam0();
-  CAMLlocal3(result, tail, info);
+  CAMLlocal4(result, tail, info, cell);
   PROCESSENTRY32 entry;
   HANDLE hProcessSnapshot, hProcess;
-  value cell;
   ULARGE_INTEGER *processes, *cur;
   int capacity = 512;
   int length = 0;
@@ -929,7 +930,8 @@ CAMLprim value OPAMW_GetProcessAncestry(value unit)
 
 CAMLprim value OPAMW_GetConsoleAlias(value alias, value exe_name)
 {
-  value result;
+  CAMLparam2(alias, exe_name);
+  CAMLlocal1(result);
 
   DWORD nLength = 8192;
   LPWSTR lpSource, lpTargetBuffer, lpExeName;
@@ -959,10 +961,10 @@ CAMLprim value OPAMW_GetConsoleAlias(value alias, value exe_name)
   caml_stat_free(lpExeName);
   caml_stat_free(lpSource);
 
-  return result;
+  CAMLreturn(result);
 }
 
-CAMLprim value OPAMW_GetConsoleWindowClass(value unit)
+CAMLprim value OPAMW_GetConsoleWindowClass(value _unit)
 {
   CAMLparam0();
   CAMLlocal1(result);
@@ -1000,7 +1002,7 @@ CAMLprim value OPAMW_SetConsoleToUTF8(value _unit) {
 
 CAMLprim value OPAMW_GetVersionInfo(value file)
 {
-  CAMLparam0();
+  CAMLparam1(file);
   CAMLlocal5(result, v1, v2, v3, v4);
   CAMLlocal1(str);
 
@@ -1107,11 +1109,10 @@ CAMLprim value OPAMW_GetVersionInfo(value file)
   CAMLreturn(result);
 }
 
-CAMLprim value OPAMW_CreateEnvironmentBlock(value unit)
+CAMLprim value OPAMW_CreateEnvironmentBlock(value _unit)
 {
   CAMLparam0();
-  CAMLlocal3(result, tail, str);
-  value cell;
+  CAMLlocal4(result, tail, str, cell);
 
   LPWSTR lpEnvironment;
 
