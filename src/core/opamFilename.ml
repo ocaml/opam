@@ -371,10 +371,8 @@ let dir_starts_with prefix dir =
   OpamCompat.String.starts_with ~prefix dir
 
 let remove_prefix prefix filename =
-  let prefix =
-    let str = Dir.to_string prefix in
-    if str = "" then "" else Filename.concat str "" in
-  let filename = to_string filename in
+  let prefix = cmpable_dir_string prefix in
+  let filename = cmpable_file_string filename in
   OpamStd.String.remove_prefix ~prefix filename
 
 let remove_prefix_dir prefix dir =
