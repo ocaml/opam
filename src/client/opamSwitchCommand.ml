@@ -242,23 +242,6 @@ let install_compiler
       "No invariant was set, you may want to use `opam switch set-invariant' \
        to keep a stable compiler version on upgrades.";
   let t =
-    if t.switch_config.OpamFile.Switch_config.synopsis = "" then
-      let synopsis =
-        if invariant = OpamFormula.Empty then
-          OpamSwitch.to_string t.switch
-        else
-          OpamFormula.to_string invariant
-      in
-      let switch_config =
-        { t.switch_config with OpamFile.Switch_config.synopsis }
-      in
-      if not (OpamStateConfig.(!r.dryrun) || OpamClientConfig.(!r.show)) then
-        OpamSwitchAction.install_switch_config t.switch_global.root t.switch
-          switch_config;
-      { t with switch_config }
-    else t
-  in
-  let t =
     let base_comp =
       OpamSwitchState.compute_invariant_packages
         { t with installed = t.installed
