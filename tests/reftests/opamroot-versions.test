@@ -650,7 +650,7 @@ let clean_repo () =
      Printf.sprintf "repo/state-%s.cache" hash);
     "repo/root-config/repo";
   ];
-  List.iter (fun d -> try Sys.rmdir (Filename.concat opamroot d) with Sys_error _ -> ()) [
+  List.iter (fun d -> try Unix.rmdir (Filename.concat opamroot d) with Unix.Unix_error _ -> ()) [
     "repo/root-config/packages";
     "repo/root-config";
   ]

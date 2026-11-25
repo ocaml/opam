@@ -131,8 +131,7 @@ module List = struct
   let rec equal eq x y = match x, y with
     | [], [] -> true
     | [], _::_ | _::_, [] -> false
-    | x::_, y::_ when eq x y -> true
-    | _::xs, _::ys -> equal eq xs ys
+    | x::xs, y::ys -> eq x y && equal eq xs ys
 
   include Stdlib.List
 end

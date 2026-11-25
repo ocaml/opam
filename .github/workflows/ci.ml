@@ -15,20 +15,24 @@ open Lib
 
 let latest_ocaml4 = "4.14.4"
 let latest_ocaml5 = "5.5.0" (* Add this number to ocamls below when the next version comes out *)
+let oldest_ocamlv = "4.11.2"
 let trunk = "trunk"
 let ocamls = [
   (* Fully supported versions *)
-  "4.11.2"; "4.12.1"; "4.13.1";
+  "4.12.1"; "4.13.1";
   "5.0.0"; "5.1.1"; "5.2.1"; "5.3.0"; "5.4.1";
 
   (* Optionally supported versions *)
   trunk;
 
+  (* The oldest + LTS + latest will be used for the tests on linux *)
+  oldest_ocamlv;
+
   (* The last elements of the list after 4.14 will be used as default versions *)
   latest_ocaml4; latest_ocaml5;
 ]
 let start_latests_ocaml = latest_ocaml4
-let oldest_ocamlv = List.hd ocamls
+let start_latests_ocaml_plus_oldest = oldest_ocamlv
 
 (* Entry point for the workflow. Workflows are specified as continuations where
    each job is passed as a continuation to the [workflow], terminated with
@@ -378,7 +382,7 @@ let main_build_job ~analyse_job ~cygwin_job ?section runner start_version ~oc ~w
     ++ only_on Windows (run "Test (reftests)" ["bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}"])
     ++ end_job f
 
-let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macOS_job:_ ?section runner ~oc ~workflow f =
+let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macOS_job:_ ?section runner start_version ~oc ~workflow f =
   let platform = os_of_platform runner in
   let _ = assert (platform <> Windows) in
   let only_on target = only_on platform target in
@@ -388,7 +392,7 @@ let main_test_job ~analyse_job ~build_linux_job ~build_windows_job:_ ~build_macO
     | MacOS -> [analyse_job]  (* This isn't gated on build_macOS_job for speed *)
     | Linux -> [analyse_job; build_linux_job]
   in
-  let matrix = platform_ocaml_matrix ~fail_fast:false start_latests_ocaml in
+  let matrix = platform_ocaml_matrix ~fail_fast:false start_version in
   let host = host_of_platform platform in
   let ocamlv = "${{ matrix.ocamlv }}" in
   job ~oc ~workflow ?section ~runs_on:(Runner [runner])
@@ -581,11 +585,11 @@ let main oc : unit =
   workflow ~oc ~env "Builds, tests & co"
   ++ analyse_job ~keys ~platforms:[Linux]
   @@ fun analyse_job -> cygwin_job ~analyse_job
-  @@ fun cygwin_job -> main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux oldest_ocamlv
+  @@ fun cygwin_job -> main_build_job ~analyse_job ~cygwin_job ~section:"Build" Linux (List.hd ocamls)
   @@ fun build_linux_job -> main_build_job ~analyse_job ~cygwin_job Windows start_latests_ocaml
   @@ fun build_windows_job -> main_build_job ~analyse_job ~cygwin_job MacOS start_latests_ocaml
-  @@ fun build_macOS_job -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux
-  @@ fun _ -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS
+  @@ fun build_macOS_job -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam tests" Linux start_latests_ocaml_plus_oldest
+  @@ fun _ -> main_test_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job MacOS start_latests_ocaml
   @@ fun _ -> cold_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Opam cold" Linux
   @@ fun _ -> doc_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile doc" Linux
   @@ fun _ -> solvers_job ~analyse_job ~build_linux_job ~build_windows_job ~build_macOS_job ~section:"Compile solver backends" Linux

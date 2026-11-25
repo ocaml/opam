@@ -111,7 +111,7 @@ jobs:
     needs: Analyse
     strategy:
       matrix:
-        ocamlv: [ 4.11.2, 4.12.1, 4.13.1, 5.0.0, 5.1.1, 5.2.1, 5.3.0, 5.4.1, trunk, 4.14.4, 5.5.0 ]
+        ocamlv: [ 4.12.1, 4.13.1, 5.0.0, 5.1.1, 5.2.1, 5.3.0, 5.4.1, trunk, 4.11.2, 4.14.4, 5.5.0 ]
       fail-fast: true
     steps:
     - name: Update APT
@@ -300,7 +300,7 @@ jobs:
     needs: [ Analyse, Build-Linux ]
     strategy:
       matrix:
-        ocamlv: [ 4.14.4, 5.5.0 ]
+        ocamlv: [ 4.11.2, 4.14.4, 5.5.0 ]
       fail-fast: false
     env:
       OPAM_TEST: 1
