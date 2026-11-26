@@ -1088,6 +1088,13 @@ let install_package t ?(test=false) ?(doc=false) ?(dev_setup=false) ?build_dir
           Left config
         with e -> Right e
   in
+  let exept_opamswitch =
+    let rel_meta_dir =
+      OpamFilename.(Base.of_string (remove_prefix_dir switch_prefix
+                                      (OpamPath.Switch.meta root t.switch)))
+    in
+    OpamFilename.Base.Set.singleton rel_meta_dir
+  in
   let install_and_track_job () =
     pre_install ()
     @@+ function
@@ -1098,6 +1105,7 @@ let install_package t ?(test=false) ?(doc=false) ?(dev_setup=false) ?build_dir
         preprocess_dot_install t nv dir
       in
       OpamDirTrack.track_files ~prefix:switch_prefix installed_files
+        ~except:exept_opamswitch
         (fun () -> process_dot_install () ; Done None)
       @@+ function
       | _, changes -> Done (Left config, changes)
@@ -1137,15 +1145,11 @@ let install_package t ?(test=false) ?(doc=false) ?(dev_setup=false) ?build_dir
       in
       Done (Left config, changes)
   in
-  let rel_meta_dir =
-    OpamFilename.(Base.of_string (remove_prefix_dir switch_prefix
-                                    (OpamPath.Switch.meta root t.switch)))
-  in
   (if commands = [] && pre_install_wrappers = [] then
      install_and_track_job ()
    else
      OpamDirTrack.track switch_prefix
-       ~except:(OpamFilename.Base.Set.singleton rel_meta_dir)
+       ~except:exept_opamswitch
        install_job)
   @@+ fun (status, changes) -> post_install status changes
   @@+ function

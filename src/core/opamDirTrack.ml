@@ -153,22 +153,30 @@ let track_t to_track ?(except=OpamFilename.Base.Set.empty) job_f =
         let prefix = OpamFilename.Dir.to_string prefix in
         List.fold_left (fun acc f ->
             let _, acc =
-              List.fold_left (fun (path, acc) dir ->
-                  let path =
-                    match path with
-                    | Some path -> Filename.concat path dir
-                    | None -> dir
-                  in
-                  let rel = Filename.concat prefix path in
-                  let item = item_of_filename_opt rel in
-                  let acc =
-                    match item with
-                    | None -> acc
-                    | Some item -> SM.add path item acc
-                  in
-                  Some path, acc)
-                (None, acc)
-                (Re.(split (compile (rep1 (str Filename.dir_sep)))) f)
+              try
+                List.fold_left (fun (path, acc) dir ->
+                    let path =
+                      match path with
+                      | Some path -> Filename.concat path dir
+                      | None -> dir
+                    in
+                    let rel = Filename.concat prefix path in
+                    if OpamFilename.Base.Set.exists (fun except ->
+                        String.starts_with
+                          ~prefix:(OpamFilename.Base.to_string except) path)
+                        except then
+                      raise Exit
+                    else
+                      let item = item_of_filename_opt rel in
+                      let acc =
+                        match item with
+                        | None -> acc
+                        | Some item -> SM.add path item acc
+                      in
+                      Some path, acc)
+                  (None, acc)
+                  (Re.(split (compile (rep1 (str Filename.dir_sep)))) f)
+              with Exit -> None, acc
             in
             acc)
           SM.empty files
@@ -191,11 +199,11 @@ let track_t to_track ?(except=OpamFilename.Base.Set.empty) job_f =
             if perma = permb then None
             else Some (Perm_changed (item_digest item))
           else
-          match a, b with
-          | File _, File _ | Link _, Link _
-          | Dir, Dir | Special _, Special _ ->
-            Some (Contents_changed (item_digest item))
-          | _ -> Some (Kind_changed (item_digest item)))
+            match a, b with
+            | File _, File _ | Link _, Link _
+            | Dir, Dir | Special _, Special _ ->
+              Some (Contents_changed (item_digest item))
+            | _ -> Some (Kind_changed (item_digest item)))
       before after
   in
   log "after install: %a elements, %a added, scanned in %.3fs"

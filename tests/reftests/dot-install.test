@@ -1000,11 +1000,7 @@ The following actions will be performed:
 Done.
 ### cat OPAM/x/.opam-switch/install/foo-inst.changes
 opam-version: "2.0"
-added: [
-  ".opam-switch/config/foo-inst.config"
-    {"F:b02694e04bb5f326335930ec4bffb7df"}
-  "bin/file-foo-inst" {"F:ff961dc5e8da688fa78540651160b223"}
-]
+added: "bin/file-foo-inst" {"F:ff961dc5e8da688fa78540651160b223"}
 ### cat OPAM/x/.opam-switch/install/foo-inst.install
 opam-version: "2.0"
 bin: "file-foo-inst"
