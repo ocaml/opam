@@ -267,8 +267,15 @@ let versions_of_packages nvset =
     nvset
     Version.Set.empty
 
+let first_of_name set name =
+  match Set.find_first (fun nv -> Name.compare nv.name name >= 0) set with
+  | nv when Name.equal nv.name name -> nv
+  | _ -> raise Not_found
+
 let has_name nvset n =
-  Set.exists (fun nv -> name nv = n) nvset
+  match first_of_name nvset n with
+  | _nv -> true
+  | exception Not_found -> false
 
 let names_of_packages nvset =
   Set.fold
@@ -295,10 +302,10 @@ let packages_of_name_map nv n =
     nv n
 
 let package_of_name nvset n =
-  Set.choose (packages_of_name nvset n)
+  first_of_name nvset n
 
 let package_of_name_opt nvset n =
-  try Some (package_of_name nvset n) with Not_found -> None
+  try Some (first_of_name nvset n) with Not_found -> None
 
 let packages_of_names nvset nameset =
   Name.Set.fold
