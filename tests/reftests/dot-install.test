@@ -951,3 +951,146 @@ SYSTEM                          LOCK ${BASEDIR}/OPAM/config.lock (none => none)
 Not found: ${BASEDIR}/OPAM/escapability/share/eskape-abs/a-file
 ==> eskape-abs changes
 opam-version: "2.0"
+### ######
+### OPAMDEBUG=0 OPAMVERBOSE=0
+### # only install command
+### <pkg:foo-cmd.1>
+opam-version: "2.0"
+install: [ "touch" "%{lib}%/file-foo-cmd" ]
+url { src:"file://./sources" }
+### <sources/foo-cmd.config>
+opam-version: "2.0"
+variables { cmdv: "hej!!" }
+### opam switch create x --empty
+### opam install foo-cmd
+The following actions will be performed:
+=== install 1 package
+  - install foo-cmd 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-cmd.1  (file://./sources)
+-> installed foo-cmd.1
+Done.
+### cat OPAM/x/.opam-switch/install/foo-cmd.changes
+opam-version: "2.0"
+added: "lib/file-foo-cmd" {"F:d41d8cd98f00b204e9800998ecf8427e"}
+### cat OPAM/x/.opam-switch/install/foo-cmd.install
+cat: OPAM/x/.opam-switch/install/foo-cmd.install: No such file or directory
+# Return code 1 #
+### test -f OPAM/x/.opam-switch/config/foo-cmd.config
+### # only install file
+### <pkg:foo-inst.1>
+opam-version: "2.0"
+url { src:"file://./sources" }
+### <sources/foo-inst.install>
+bin: [ "file-foo-inst" ]
+### <sources/file-foo-inst>
+hej
+### <sources/foo-inst.config>
+opam-version: "2.0"
+variables { instv: "hej!!" }
+### opam install foo-inst
+The following actions will be performed:
+=== install 1 package
+  - install foo-inst 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-inst.1  (file://./sources)
+-> installed foo-inst.1
+Done.
+### cat OPAM/x/.opam-switch/install/foo-inst.changes
+opam-version: "2.0"
+added: "bin/file-foo-inst" {"F:ff961dc5e8da688fa78540651160b223"}
+### cat OPAM/x/.opam-switch/install/foo-inst.install
+opam-version: "2.0"
+bin: "file-foo-inst"
+### test -f OPAM/x/.opam-switch/config/foo-inst.config
+### # Install file & command
+### <pkg:foo-cmd-inst.1>
+opam-version: "2.0"
+install: [ "touch" "%{lib}%/file-foo-cmd-int" ]
+url { src:"file://./sources" }
+### <sources/foo-cmd-inst.install>
+bin: [ "file-foo-cmd-inst" ]
+### <sources/file-foo-cmd-inst>
+hej
+### <sources/foo-cmd-inst.config>
+opam-version: "2.0"
+variables { cmdinstv: "hej!!" }
+### opam install foo-cmd-inst
+The following actions will be performed:
+=== install 1 package
+  - install foo-cmd-inst 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-cmd-inst.1  (file://./sources)
+-> installed foo-cmd-inst.1
+Done.
+### cat OPAM/x/.opam-switch/install/foo-cmd-inst.changes
+opam-version: "2.0"
+added: [
+  "bin/file-foo-cmd-inst" {"F:ff961dc5e8da688fa78540651160b223"}
+  "lib/file-foo-cmd-int" {"F:d41d8cd98f00b204e9800998ecf8427e"}
+]
+### cat OPAM/x/.opam-switch/install/foo-cmd-inst.install
+opam-version: "2.0"
+bin: "file-foo-cmd-inst"
+### test -f OPAM/x/.opam-switch/config/foo-cmd-inst.config
+### :: with preinstall command
+### # only install command
+### opam option 'pre-install-commands=["true"]' --global
+Set to '["true"]' the field pre-install-commands in global configuration
+### opam switch create xx --empty
+### opam install foo-cmd
+The following actions will be performed:
+=== install 1 package
+  - install foo-cmd 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-cmd.1  (file://./sources)
+-> installed foo-cmd.1
+Done.
+### cat OPAM/xx/.opam-switch/install/foo-cmd.changes
+opam-version: "2.0"
+added: "lib/file-foo-cmd" {"F:d41d8cd98f00b204e9800998ecf8427e"}
+### cat OPAM/xx/.opam-switch/install/foo-cmd.install
+cat: OPAM/xx/.opam-switch/install/foo-cmd.install: No such file or directory
+# Return code 1 #
+### test -f OPAM/xx/.opam-switch/config/foo-cmd.config
+### # only install file
+### opam install foo-inst
+The following actions will be performed:
+=== install 1 package
+  - install foo-inst 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-inst.1  (file://./sources)
+-> installed foo-inst.1
+Done.
+### cat OPAM/xx/.opam-switch/install/foo-inst.changes
+opam-version: "2.0"
+added: "bin/file-foo-inst" {"F:ff961dc5e8da688fa78540651160b223"}
+### cat OPAM/xx/.opam-switch/install/foo-inst.install
+opam-version: "2.0"
+bin: "file-foo-inst"
+### test -f OPAM/xx/.opam-switch/config/foo-inst.config
+### # Install file & command
+### opam install foo-cmd-inst
+The following actions will be performed:
+=== install 1 package
+  - install foo-cmd-inst 1
+
+<><> Processing actions <><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+-> retrieved foo-cmd-inst.1  (file://./sources)
+-> installed foo-cmd-inst.1
+Done.
+### cat OPAM/xx/.opam-switch/install/foo-cmd-inst.changes
+opam-version: "2.0"
+added: [
+  "bin/file-foo-cmd-inst" {"F:ff961dc5e8da688fa78540651160b223"}
+  "lib/file-foo-cmd-int" {"F:d41d8cd98f00b204e9800998ecf8427e"}
+]
+### cat OPAM/xx/.opam-switch/install/foo-cmd-inst.install
+opam-version: "2.0"
+bin: "file-foo-cmd-inst"
+### test -f OPAM/xx/.opam-switch/config/foo-cmd-inst.config
