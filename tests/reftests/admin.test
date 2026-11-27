@@ -854,6 +854,11 @@ no-extra.1
 no-extra.2
 ### opam admin list --short --all-versions --latests-only
 no-extra.2
+### opam admin list --paths
+${BASEDIR}/packages/no-extra/no-extra.1/opam
+${BASEDIR}/packages/no-extra/no-extra.2/opam
+### opam admin list --paths no-extra.2
+${BASEDIR}/packages/no-extra/no-extra.2/opam
 ### ::: Test opam repo version warning
 ### rm -rf packages
 ### <packages/dummy/dummy.1/opam>

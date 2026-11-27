@@ -1160,9 +1160,13 @@ let list_command cli =
     `S OpamArg.package_listing_section;
   ]
   in
+  let paths_arg =
+    OpamArg.mk_flag ~cli OpamArg.cli_original ["paths"]
+      "Output the paths to the opam files of selected packages"
+  in
   let cmd
       global_options package_selection disjunction state_selection
-      package_listing env packages () =
+      package_listing env packages paths () =
     OpamArg.apply_global_options cli global_options;
     let repo_root = checked_repo_root () in
     let format =
@@ -1194,18 +1198,33 @@ let list_command cli =
       ]
     in
     let st = get_virtual_switch_state repo_root env in
-    if not format.OpamListCommand.short && filter <> OpamFormula.Empty then
+    if not paths &&
+       not format.OpamListCommand.short &&
+       filter <> OpamFormula.Empty then
       OpamConsole.msg "# Packages matching: %s\n"
         (OpamListCommand.string_of_formula filter);
     let results =
       OpamListCommand.filter ~base:st.packages st filter
     in
-    OpamListCommand.display st format results
+    if paths then
+      let pkg_prefixes =
+        OpamRepository.packages_with_prefixes repo_root
+      in
+      OpamPackage.Map.iter (fun nv prefix ->
+          if OpamPackage.Set.mem nv results then
+            let opam_file =
+              OpamRepositoryRoot.Dir.Path.opam repo_root prefix nv
+            in
+            OpamConsole.msg "%s\n"
+              (OpamFilename.to_string (OpamFile.filename opam_file)))
+        pkg_prefixes
+    else
+      OpamListCommand.display st format results
   in
-  OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
+  OpamArg.mk_command ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ OpamArg.package_selection cli $
         or_arg cli $ state_selection_arg cli $ OpamArg.package_listing cli $
-        env_arg cli $ pattern_list_arg)
+        env_arg cli $ pattern_list_arg $ paths_arg)
 
 let filter_command_doc = "Filters a repository to only keep selected packages"
 let filter_command cli =
