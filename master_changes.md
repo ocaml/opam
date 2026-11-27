@@ -102,6 +102,7 @@ users)
   * Add opam 2.6.1 to the install scripts [#7193 @kit-ty-kate]
 
 ## Admin
+  * ◈ Add `--paths` option to `opam admin list` to output paths to selected package metadata files [#6359 @adithn875]
 
 ## Opam installer
 
