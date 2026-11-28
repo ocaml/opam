@@ -513,7 +513,7 @@ module OPAM: sig
   val version: t -> version
   val version_opt: t -> version option
 
-  (** The informations in both the name and version fields, as a package *)
+  (** The information in both the name and version fields, as a package *)
   val package: t -> package
 
   (** Availability formula (OS + compiler constraints) *)
