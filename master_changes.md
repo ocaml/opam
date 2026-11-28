@@ -50,6 +50,8 @@ users)
 ## Show
 
 ## Var/Option
+  * Fix `opam option wrap-remove-commands` setting, it was updating `pre-remove-session` field [#7251 @rjbou]
+  * Fix `opam option` solver criteria reverting, it was reverting the 3 fields (default, fixup and upgrade) of one of them was reverted [#7251 @rjbou]
 
 ## Update / Upgrade
 
@@ -142,6 +144,7 @@ users)
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
   * Add reftests for unavailability reason on unsolvable request in `unavailable-reason.test` [#7206 @NathanReb]
   * Cleanup leftovers from dual cmdliner 1.0 and 1.1 support [#7216 @kit-ty-kate]
+  * Add a complete test for `opam option` arguments [#7251 @rjbou]
 
 ### Engine
 
@@ -178,6 +181,7 @@ users)
 ## opam-solver
 
 ## opam-format
+  * `OpamFile.Config.criterion,with_criterion`, `OpamFile.InitConfig.criterion`: expose in mli [#7251 @rjbou]
 
 ## opam-core
   * `OpamCmdliner` was upgraded to version 2.1.1 [#6867 @BrianWard @kit-ty-kate]
