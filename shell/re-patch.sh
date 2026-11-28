@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+TAR=${TAR:-tar}
+
 if [[ ! -d patches ]] ; then
   if [[ ! -e Makefile.sources ]] ; then
     echo 'Run this script from the src_ext directory'>&2
@@ -46,7 +48,7 @@ for package in $(cd patches ; find . -maxdepth 1 -mindepth 1 -type d | sed -e 's
     rm -rf tmp-$package.$mode
     mkdir tmp-$package.$mode
     cd tmp-$package.$mode
-    tar -x$tar_flag -f ../$tarball
+    "$TAR" x$tar_flag -f ../$tarball
     while IFS= read -r -d '' dir ; do
       if [[ $dir = "." || $dir = ".." ]] ; then continue ; fi
       mv "$dir" a
