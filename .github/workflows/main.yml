@@ -254,7 +254,7 @@ jobs:
       run: bash -exu .github/scripts/main/reftests.sh ${{ matrix.host }}
 
   Build-macOS:
-    runs-on: macos-24.04
+    runs-on: macos-latest
     needs: Analyse
     strategy:
       matrix:
@@ -355,7 +355,7 @@ jobs:
       run: bash -exu .github/scripts/main/opam-rt.sh
 
   Test-macOS:
-    runs-on: macos-24.04
+    runs-on: macos-latest
     needs: Analyse
     strategy:
       matrix:

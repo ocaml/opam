@@ -111,8 +111,8 @@ let emit_runs_on ~oc runs_on =
   let runner_of_platform (type a) (platform : a platform) =
     match platform with
     | Windows -> "windows-2022"
-    | MacOS
-    | Linux as platform -> os_name_of_platform platform ^ "-24.04"
+    | MacOS -> "macos-latest"
+    | Linux -> "ubuntu-24.04"
     | Specific (platform, version) -> os_name_of_platform platform ^ "-" ^ version
   in
   let value =
