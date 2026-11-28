@@ -154,6 +154,7 @@ users)
   * Bump the opam version used to 2.6.1 [#7151 #7194 @kit-ty-kate @rjbou]
   * Upgrade to the new version of GitHub issue templates [#7249 @kit-ty-kate @rjbou @dra27]
   * Use `ubuntu-24.04` instead of `ubuntu-latest` to fix breakages with newer versions of GCC [#7265 @kit-ty-kate]
+  * Fix the depexts-nix run [#7267 @kit-ty-kate]
 
 ## Doc
   * Update the documentation about the latest opam release [#7150 #7194 @kit-ty-kate]
