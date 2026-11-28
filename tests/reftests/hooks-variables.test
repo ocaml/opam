@@ -258,7 +258,7 @@ Processing  3/3: [i-am-a-repo-pkg: a-install-command]
 - installed-files:
 - a-install-command
 Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
-+ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-installing..." "opam-version:++current++" "switch:global-wrappers" "jobs:2" "root:${BASEDIR}/OPAM" "make:make" "name:i-am-a-repo-pkg" "version:1" "depends:dep.1" "installed:false" "enable:" "pinned:false" "bin:${BASEDIR}/OPAM/global-wrappers/bin" "sbin:${BASEDIR}/OPAM/global-wrappers/sbin" "lib:${BASEDIR}/OPAM/global-wrappers/lib" "man:${BASEDIR}/OPAM/global-wrappers/man" "doc:${BASEDIR}/OPAM/global-wrappers/doc" "share:${BASEDIR}/OPAM/global-wrappers/share" "etc:${BASEDIR}/OPAM/global-wrappers/etc" "build:${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1" "hash:md5=+archive-hash+" "dev:false" "build-id:+hash+" "opamfile:${OPAMTMP}/opam" "installed-files:etc etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-installing..." "opam-version:++current++" "switch:global-wrappers" "jobs:2" "root:${BASEDIR}/OPAM" "make:make" "name:i-am-a-repo-pkg" "version:1" "depends:dep.1" "installed:false" "enable:" "pinned:false" "bin:${BASEDIR}/OPAM/global-wrappers/bin" "sbin:${BASEDIR}/OPAM/global-wrappers/sbin" "lib:${BASEDIR}/OPAM/global-wrappers/lib" "man:${BASEDIR}/OPAM/global-wrappers/man" "doc:${BASEDIR}/OPAM/global-wrappers/doc" "share:${BASEDIR}/OPAM/global-wrappers/share" "etc:${BASEDIR}/OPAM/global-wrappers/etc" "build:${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1" "hash:md5=+archive-hash+" "dev:false" "build-id:+hash+" "opamfile:${OPAMTMP}/opam" "installed-files:etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer" (CWD=${BASEDIR}/OPAM/global-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
 - ...post-installing...
 - opam-version:++current++
 - switch:global-wrappers
@@ -283,7 +283,7 @@ Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
 - dev:false
 - build-id:+hash+
 - opamfile:${OPAMTMP}/opam
-- installed-files:etc etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer
+- installed-files:etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer
 -> installed i-am-a-repo-pkg.1
 Done.
 ### opam remove i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | sed-hash $MD5 archive-hash | sed-cmd bash tar
@@ -558,7 +558,7 @@ Processing  3/3: [i-am-a-repo-pkg: a-install-command]
 - installed-files:
 - a-install-command
 Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
-+ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-installing..." "opam-version:++current++" "switch:switch-wrappers" "jobs:2" "root:${BASEDIR}/OPAM" "make:make" "name:i-am-a-repo-pkg" "version:1" "depends:dep.1" "installed:false" "enable:" "pinned:false" "bin:${BASEDIR}/OPAM/switch-wrappers/bin" "sbin:${BASEDIR}/OPAM/switch-wrappers/sbin" "lib:${BASEDIR}/OPAM/switch-wrappers/lib" "man:${BASEDIR}/OPAM/switch-wrappers/man" "doc:${BASEDIR}/OPAM/switch-wrappers/doc" "share:${BASEDIR}/OPAM/switch-wrappers/share" "etc:${BASEDIR}/OPAM/switch-wrappers/etc" "build:${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1" "hash:md5=+archive-hash+" "dev:false" "build-id:+hash+" "opamfile:${OPAMTMP}/opam" "installed-files:etc etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer" "installed-files:etc etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
++ bash "${BASEDIR}/OPAM/opam-init/hooks/printer.sh" "...post-installing..." "opam-version:++current++" "switch:switch-wrappers" "jobs:2" "root:${BASEDIR}/OPAM" "make:make" "name:i-am-a-repo-pkg" "version:1" "depends:dep.1" "installed:false" "enable:" "pinned:false" "bin:${BASEDIR}/OPAM/switch-wrappers/bin" "sbin:${BASEDIR}/OPAM/switch-wrappers/sbin" "lib:${BASEDIR}/OPAM/switch-wrappers/lib" "man:${BASEDIR}/OPAM/switch-wrappers/man" "doc:${BASEDIR}/OPAM/switch-wrappers/doc" "share:${BASEDIR}/OPAM/switch-wrappers/share" "etc:${BASEDIR}/OPAM/switch-wrappers/etc" "build:${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1" "hash:md5=+archive-hash+" "dev:false" "build-id:+hash+" "opamfile:${OPAMTMP}/opam" "installed-files:etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer" "installed-files:etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer" (CWD=${BASEDIR}/OPAM/switch-wrappers/.opam-switch/build/i-am-a-repo-pkg.1)
 - ...post-installing...
 - opam-version:++current++
 - switch:switch-wrappers
@@ -583,8 +583,8 @@ Processing  3/3: [i-am-a-repo-pkg: bash ...post-installing...]
 - dev:false
 - build-id:+hash+
 - opamfile:${OPAMTMP}/opam
-- installed-files:etc etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer
-- installed-files:etc etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer
+- installed-files:etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer
+- installed-files:etc/i-am-a-repo-pkg etc/i-am-a-repo-pkg/printer
 -> installed i-am-a-repo-pkg.1
 Done.
 ### opam remove i-am-a-repo-pkg -vv | "${OPAMVERSION}" -> "++current++" | '[0-9a-z]{64}' -> '+hash+' | sed-hash $MD5 archive-hash | sed-cmd bash tar

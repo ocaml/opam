@@ -683,16 +683,16 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-share.1
 ACTION                          prepare_package_source: pkg-share.1 at ${BASEDIR}/OPAM/sw-share/.opam-switch/build/pkg-share.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-share.1.
 
 ACTION                          creating ${BASEDIR}/OPAM/sw-share/share/pkg-share
-TRACK                           after install: 3 elements, 3 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-share.1: 3 items (addition: 3)
+TRACK                           after install: 3 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-share.1: 2 items (addition: 2)
 -> installed pkg-share.1
 Done.
 ### opam-cat OPAM/sw-share/.opam-switch/install/pkg-share.changes
-added: ["share" {"D"} "share/pkg-share" {"D"} "share/pkg-share/installed-file" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+added: ["share/pkg-share" {"D"} "share/pkg-share/installed-file" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
 opam-version: "2.0"
 ### ocaml cat.ml sw-share pkg-share
 ==> ${BASEDIR}/OPAM/sw-share/share/pkg-share/installed-file
@@ -729,16 +729,16 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-share.1
 ACTION                          prepare_package_source: pkg-share.1 at ${BASEDIR}/OPAM/sw-share/.opam-switch/build/pkg-share.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-share.1.
 
 ACTION                          creating ${BASEDIR}/OPAM/sw-share/share/pkg-share
-TRACK                           after install: 3 elements, 3 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-share.1: 3 items (addition: 3)
+TRACK                           after install: 3 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-share.1: 2 items (addition: 2)
 -> installed pkg-share.1
 Done.
 ### opam-cat OPAM/sw-share/.opam-switch/install/pkg-share.changes
-added: ["share" {"D"} "share/pkg-share" {"D"} "share/pkg-share/installed-file.share" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+added: ["share/pkg-share" {"D"} "share/pkg-share/installed-file.share" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
 opam-version: "2.0"
 ### ocaml cat.ml sw-share pkg-share
 ==> ${BASEDIR}/OPAM/sw-share/share/pkg-share/installed-file.share
@@ -775,17 +775,17 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-share.1
 ACTION                          prepare_package_source: pkg-share.1 at ${BASEDIR}/OPAM/sw-share/.opam-switch/build/pkg-share.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-share.1.
 
 ACTION                          creating ${BASEDIR}/OPAM/sw-share/share/pkg-share
 ACTION                          Not installing ${BASEDIR}/OPAM/sw-share/.opam-switch/build/pkg-share.1/finst is not present and optional.
-TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-share.1: 2 items (addition: 2)
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-share.1: 1 items (addition: 1)
 -> installed pkg-share.1
 Done.
 ### opam-cat OPAM/sw-share/.opam-switch/install/pkg-share.changes
-added: ["share" {"D"} "share/pkg-share" {"D"}]
+added: "share/pkg-share" {"D"}
 opam-version: "2.0"
 ### ocaml cat.ml sw-share pkg-share
 ==> No 'installed-file' found
@@ -822,7 +822,7 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-share.1
 ACTION                          prepare_package_source: pkg-share.1 at ${BASEDIR}/OPAM/sw-share/.opam-switch/build/pkg-share.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-share.1.
 
 ACTION                          creating ${BASEDIR}/OPAM/sw-share/share/pkg-share
@@ -863,16 +863,15 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-share_root.1
 ACTION                          prepare_package_source: pkg-share_root.1 at ${BASEDIR}/OPAM/sw-share_root/.opam-switch/build/pkg-share_root.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-share_root.1.
 
-ACTION                          creating ${BASEDIR}/OPAM/sw-share_root/share
-TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-share_root.1: 2 items (addition: 2)
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-share_root.1: 1 items (addition: 1)
 -> installed pkg-share_root.1
 Done.
 ### opam-cat OPAM/sw-share_root/.opam-switch/install/pkg-share_root.changes
-added: ["share" {"D"} "share/installed-file" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+added: "share/installed-file" {"F:a611026bf7b99362c57473c4e1ef30a0"}
 opam-version: "2.0"
 ### ocaml cat.ml sw-share_root pkg-share_root
 ==> ${BASEDIR}/OPAM/sw-share_root/share/installed-file
@@ -909,16 +908,15 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-share_root.1
 ACTION                          prepare_package_source: pkg-share_root.1 at ${BASEDIR}/OPAM/sw-share_root/.opam-switch/build/pkg-share_root.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-share_root.1.
 
-ACTION                          creating ${BASEDIR}/OPAM/sw-share_root/share
-TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-share_root.1: 2 items (addition: 2)
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-share_root.1: 1 items (addition: 1)
 -> installed pkg-share_root.1
 Done.
 ### opam-cat OPAM/sw-share_root/.opam-switch/install/pkg-share_root.changes
-added: ["share" {"D"} "share/installed-file.share_root" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+added: "share/installed-file.share_root" {"F:a611026bf7b99362c57473c4e1ef30a0"}
 opam-version: "2.0"
 ### ocaml cat.ml sw-share_root pkg-share_root
 ==> ${BASEDIR}/OPAM/sw-share_root/share/installed-file.share_root
@@ -955,17 +953,15 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-share_root.1
 ACTION                          prepare_package_source: pkg-share_root.1 at ${BASEDIR}/OPAM/sw-share_root/.opam-switch/build/pkg-share_root.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-share_root.1.
 
-ACTION                          creating ${BASEDIR}/OPAM/sw-share_root/share
 ACTION                          Not installing ${BASEDIR}/OPAM/sw-share_root/.opam-switch/build/pkg-share_root.1/finst is not present and optional.
-TRACK                           after install: 1 elements, 1 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-share_root.1: 1 items (addition: 1)
+TRACK                           after install: 1 elements, 0 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-share_root.1: 0 items
 -> installed pkg-share_root.1
 Done.
 ### opam-cat OPAM/sw-share_root/.opam-switch/install/pkg-share_root.changes
-added: "share" {"D"}
 opam-version: "2.0"
 ### ocaml cat.ml sw-share_root pkg-share_root
 ==> No 'installed-file' found
@@ -1001,10 +997,9 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-share_root.1
 ACTION                          prepare_package_source: pkg-share_root.1 at ${BASEDIR}/OPAM/sw-share_root/.opam-switch/build/pkg-share_root.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-share_root.1.
 
-ACTION                          creating ${BASEDIR}/OPAM/sw-share_root/share
 [ERROR] Installation of pkg-share_root.1 failed
 
 Some files in ${BASEDIR}/OPAM/sw-share_root/.opam-switch/install/pkg-share_root.install couldn't be installed:
@@ -1042,16 +1037,16 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-etc.1
 ACTION                          prepare_package_source: pkg-etc.1 at ${BASEDIR}/OPAM/sw-etc/.opam-switch/build/pkg-etc.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-etc.1.
 
 ACTION                          creating ${BASEDIR}/OPAM/sw-etc/etc/pkg-etc
-TRACK                           after install: 3 elements, 3 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-etc.1: 3 items (addition: 3)
+TRACK                           after install: 3 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etc.1: 2 items (addition: 2)
 -> installed pkg-etc.1
 Done.
 ### opam-cat OPAM/sw-etc/.opam-switch/install/pkg-etc.changes
-added: ["etc" {"D"} "etc/pkg-etc" {"D"} "etc/pkg-etc/installed-file" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+added: ["etc/pkg-etc" {"D"} "etc/pkg-etc/installed-file" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
 opam-version: "2.0"
 ### ocaml cat.ml sw-etc pkg-etc
 ==> ${BASEDIR}/OPAM/sw-etc/etc/pkg-etc/installed-file
@@ -1088,16 +1083,16 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-etc.1
 ACTION                          prepare_package_source: pkg-etc.1 at ${BASEDIR}/OPAM/sw-etc/.opam-switch/build/pkg-etc.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-etc.1.
 
 ACTION                          creating ${BASEDIR}/OPAM/sw-etc/etc/pkg-etc
-TRACK                           after install: 3 elements, 3 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-etc.1: 3 items (addition: 3)
+TRACK                           after install: 3 elements, 2 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etc.1: 2 items (addition: 2)
 -> installed pkg-etc.1
 Done.
 ### opam-cat OPAM/sw-etc/.opam-switch/install/pkg-etc.changes
-added: ["etc" {"D"} "etc/pkg-etc" {"D"} "etc/pkg-etc/installed-file.etc" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
+added: ["etc/pkg-etc" {"D"} "etc/pkg-etc/installed-file.etc" {"F:a611026bf7b99362c57473c4e1ef30a0"}]
 opam-version: "2.0"
 ### ocaml cat.ml sw-etc pkg-etc
 ==> ${BASEDIR}/OPAM/sw-etc/etc/pkg-etc/installed-file.etc
@@ -1134,17 +1129,17 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-etc.1
 ACTION                          prepare_package_source: pkg-etc.1 at ${BASEDIR}/OPAM/sw-etc/.opam-switch/build/pkg-etc.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-etc.1.
 
 ACTION                          creating ${BASEDIR}/OPAM/sw-etc/etc/pkg-etc
 ACTION                          Not installing ${BASEDIR}/OPAM/sw-etc/.opam-switch/build/pkg-etc.1/finst is not present and optional.
-TRACK                           after install: 2 elements, 2 added, scanned in 0.000s
-ACTION                          changes recorded for pkg-etc.1: 2 items (addition: 2)
+TRACK                           after install: 2 elements, 1 added, scanned in 0.000s
+ACTION                          changes recorded for pkg-etc.1: 1 items (addition: 1)
 -> installed pkg-etc.1
 Done.
 ### opam-cat OPAM/sw-etc/.opam-switch/install/pkg-etc.changes
-added: ["etc" {"D"} "etc/pkg-etc" {"D"}]
+added: "etc/pkg-etc" {"D"}
 opam-version: "2.0"
 ### ocaml cat.ml sw-etc pkg-etc
 ==> No 'installed-file' found
@@ -1181,7 +1176,7 @@ The following actions will be performed:
 FILE(config)                    Read ${BASEDIR}/OPAM/config in 0.000s
 ACTION                          download_package: pkg-etc.1
 ACTION                          prepare_package_source: pkg-etc.1 at ${BASEDIR}/OPAM/sw-etc/.opam-switch/build/pkg-etc.1
-TRACK                           before install: 0 elements scanned in 0.000s
+TRACK                           before install: 1 elements scanned in 0.000s
 ACTION                          Installing pkg-etc.1.
 
 ACTION                          creating ${BASEDIR}/OPAM/sw-etc/etc/pkg-etc

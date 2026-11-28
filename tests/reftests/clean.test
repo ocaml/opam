@@ -109,3 +109,14 @@ Remaining files:
   - ${BASEDIR}/OPAM/clean/bin/first
 
 Remove them? [Y/n] y
+### : untracked files in share :
+### <OPAM/clean/share/stray/file>
+stray
+### opam clean --untracked --dry-run
+Cleaning up switch clean
+rm -rf ${BASEDIR}/OPAM/clean/share/stray/file
+rm -rf ${BASEDIR}/OPAM/clean/share/stray
+rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/backup"/*
+rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/build"/*
+rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/remove"/*
+rm -rf "${BASEDIR}/OPAM/clean/.opam-switch/extra-files-cache"/*

@@ -40,6 +40,7 @@ users)
   * On command-line failures, usages are now displayed at the end [#6867 @WardBrian]
 
 ## Switch
+  * Create `share_dir` and `etc_dir` when a switch is created. [#7205 @mtelvers]
 
 ## Config
 
@@ -66,6 +67,7 @@ users)
 ## Lock
 
 ## Clean
+  * `opam clean --untracked` now also checks the `share` directory for untracked files [#7205 @kit-ty-kate]
 
 ## Env
 
@@ -143,6 +145,8 @@ users)
   * Add more depexts related tests to the testsuite (pins, autopins, deps-only, …) [#7158 @kit-ty-kate @rjbou]
   * Add reftests for unavailability reason on unsolvable request in `unavailable-reason.test` [#7206 @NathanReb]
   * Cleanup leftovers from dual cmdliner 1.0 and 1.1 support [#7216 @kit-ty-kate]
+  * Update tests now that `share` and `etc` are created with the switch [#7205 @mtelvers]
+  * Add a test for `opam clean --untracked` with untracked files in `share` [#7205 @mtelvers]
 
 ### Engine
 
