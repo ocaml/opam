@@ -543,6 +543,7 @@ depends: "lorem"
 ### <packages/elit/elit.1/opam>
 opam-version: "2.0"
 depends: "lorem" { > "1" }
+conflicts: "ipsum"
 ### opam admin add-constraint lorem=1.2 --packages not-found,non.1,sed,elit.2,amet
 [WARNING] Not found packages not-found and elit.2. Ignoring them.
 ### opam show --just-file ./packages/non/non.1/opam --field depends
@@ -551,6 +552,22 @@ depends: "lorem" { > "1" }
 "lorem" {= "1.2"}
 ### opam show --just-file ./packages/elit/elit.1/opam --field depends
 "lorem" {> "1"}
+### : add-conflict, no constraint :
+### opam admin add-conflict lorem --packages non
+### opam show --just-file ./packages/non/non.1/opam --field conflicts
+lorem
+### opam show --just-file ./packages/sed/sed.1/opam --field conflicts
+
+### : add-conflict, with a version constraint :
+### opam admin add-conflict 'lorem>=1.2' --packages sed
+### opam show --just-file ./packages/sed/sed.1/opam --field conflicts
+"lorem" {>= "1.2"}
+### opam show --just-file ./packages/non/non.1/opam --field conflicts
+lorem
+### : add-conflict, preserving an existing conflict :
+### opam admin add-conflict lorem --packages elit
+### opam show --just-file ./packages/elit/elit.1/opam --field conflicts
+ipsum, lorem
 ### sh add-content.sh
 ### ::::::::::::::::
 ### :V: add-hashes :

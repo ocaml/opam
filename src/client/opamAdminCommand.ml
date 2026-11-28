@@ -1297,6 +1297,8 @@ let filter_command cli =
 
 let add_constraint_command_doc =
   "Adds version constraints on all dependencies towards a given package"
+let add_conflict_command_doc =
+  "Adds conflicts against a given package in the repository"
 let add_constraint_command cli =
   let command = "add-constraint" in
   let doc = add_constraint_command_doc in
@@ -1405,7 +1407,62 @@ let add_constraint_command cli =
   in
   OpamArg.mk_command  ~cli OpamArg.cli_original command ~doc ~man
   Term.(const cmd $ global_options cli $ force_arg $ atom_arg $ packages)
-
+let add_conflict_command cli =
+  let command = "add-conflict" in
+  let doc = add_conflict_command_doc in
+  let man = [
+    `S Manpage.s_description;
+    `P "This command scans the packages of a repository and adds a conflict \
+        with a given package to the $(b,conflicts) field of each of them. \
+        If a version constraint is given, the conflict only applies to \
+        versions of that package matching the constraint; otherwise it \
+        applies to all of its versions. The new conflict is added as an \
+        additional alternative: existing conflicts, including other entries \
+        for the same package name, are preserved. Use $(b,--packages) to \
+        restrict the modification to the listed repository packages.";
+    `S Manpage.s_arguments;
+    `S Manpage.s_options;
+  ]
+  in
+  let atom_arg =
+    Arg.(required & pos 0 (some OpamArg.atom) None
+         & info [] ~docv:"PACKAGE" ~doc:
+           "A package name with an optional version constraint, e.g. \
+            $(b,name>=version). If no version constraint is specified, the \
+            conflict applies to all versions of that package. A version \
+            constraint restricts the conflict to matching versions.")
+  in
+  let packages =
+    OpamArg.mk_opt ~cli OpamArg.(cli_from cli2_2) ["p";"packages"]
+      "PACKAGES" "Only add the conflict to the given repository packages. \
+                  By default, all packages in the repository are modified."
+      Arg.(list OpamArg.package) []
+  in
+  let cmd global_options atom packages () =
+    OpamArg.apply_global_options cli global_options;
+    let repo_root = checked_repo_root () in
+    let pkg_prefixes = packages_with_prefixes repo_root packages in
+    let name, cstr_opt = atom in
+    let cstr = match cstr_opt with
+      | Some (relop, v) ->
+        OpamFormula.Atom
+          (Constraint (relop, FString (OpamPackage.Version.to_string v)))
+      | None ->
+        OpamFormula.Empty
+    in
+     OpamPackage.Map.iter (fun nv prefix ->
+        let opam_file = OpamRepositoryRoot.Dir.Path.opam repo_root prefix nv in
+        let opam = OpamFile.OPAM.read opam_file in
+        let conflicts0 = OpamFile.OPAM.conflicts opam in
+        let new_conflict = OpamFormula.Atom (name, cstr) in
+        let conflicts = OpamFormula.ors [ conflicts0; new_conflict ] in
+        if conflicts <> conflicts0 then
+          OpamFile.OPAM.write_with_preserved_format opam_file
+            (OpamFile.OPAM.with_conflicts conflicts opam))
+      pkg_prefixes
+  in
+  OpamArg.mk_command ~cli OpamArg.cli_original command ~doc ~man
+    Term.(const cmd $ global_options cli $ atom_arg $ packages)
 (* HELP *)
 let help =
   let doc = "Display help about opam admin and opam admin subcommands." in
@@ -1447,6 +1504,7 @@ let admin_subcommands cli =
     list_command cli;
     filter_command cli;
     add_constraint_command cli;
+    add_conflict_command cli;
     add_hashes_command cli;
     update_extrafiles_command cli;
     migrate_extrafiles_command cli;
